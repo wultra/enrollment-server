@@ -1,0 +1,76 @@
+/*
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2019 Wultra s.r.o.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.wultra.app.enrollmentserver.configuration;
+
+import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthAnnotationInterceptor;
+import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryptionArgumentResolver;
+import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthWebArgumentResolver;
+import io.getlime.security.powerauth.rest.api.spring.filter.PowerAuthRequestFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
+
+/**
+ * Web Application Configuration. Class responsible for registration of PowerAuth related components.
+ *
+ * @author Petr Dvorak, petr@wultra.com
+ */
+@Component
+public class WebApplicationConfig implements WebMvcConfigurer {
+
+    @Bean
+    public PowerAuthWebArgumentResolver powerAuthWebArgumentResolver() {
+        return new PowerAuthWebArgumentResolver();
+    }
+
+    @Bean
+    public PowerAuthEncryptionArgumentResolver powerAuthEncryptionArgumentResolver() {
+        return new PowerAuthEncryptionArgumentResolver();
+    }
+
+    @Bean
+    public PowerAuthAnnotationInterceptor powerAuthInterceptor() {
+        return new PowerAuthAnnotationInterceptor();
+    }
+
+    @Bean
+    public FilterRegistrationBean<PowerAuthRequestFilter> powerAuthFilterRegistration () {
+        FilterRegistrationBean<PowerAuthRequestFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new PowerAuthRequestFilter());
+        registrationBean.setMatchAfter(true);
+        return registrationBean;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(powerAuthInterceptor());
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+        argumentResolvers.add(powerAuthWebArgumentResolver());
+        argumentResolvers.add(powerAuthEncryptionArgumentResolver());
+    }
+
+}
