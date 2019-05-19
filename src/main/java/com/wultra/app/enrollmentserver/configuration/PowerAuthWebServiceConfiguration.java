@@ -21,6 +21,7 @@ package com.wultra.app.enrollmentserver.configuration;
 import io.getlime.security.powerauth.soap.spring.client.PowerAuthServiceClient;
 import org.apache.wss4j.dom.WSConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,7 @@ import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Configuration
+@ConfigurationProperties("ext")
 @ComponentScan(basePackages = {"io.getlime.security.powerauth"})
 public class PowerAuthWebServiceConfiguration {
 
