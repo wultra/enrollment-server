@@ -46,7 +46,6 @@ public class PowerAuthWebServiceConfiguration {
     @Value("${powerauth.service.security.clientSecret}")
     private String clientSecret;
 
-
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
