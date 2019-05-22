@@ -16,17 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver;
+package com.wultra.app.enrollmentserver.errorhandling;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class EnrollmentServerApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(EnrollmentServerApplication.class, args);
-    }
-
+/**
+ * Exception used when invalid request object is received on the server side.
+ *
+ * @author Petr Dvorak, petr@wultra.com
+ */
+public class InvalidRequestObjectException extends Exception {
 }
-

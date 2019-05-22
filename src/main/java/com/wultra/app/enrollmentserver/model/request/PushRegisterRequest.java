@@ -16,17 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver;
+package com.wultra.app.enrollmentserver.model.request;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+/**
+ * @author Petr Dvorak, petr@wultra.com
+ */
+public class PushRegisterRequest {
 
-@SpringBootApplication
-public class EnrollmentServerApplication {
+    private String platform;
+    private String token;
 
-    public static void main(String[] args) {
-        SpringApplication.run(EnrollmentServerApplication.class, args);
+    public String getPlatform() {
+        return platform;
     }
 
-}
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+}

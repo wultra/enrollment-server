@@ -42,7 +42,10 @@ public class SwaggerConfig  {
         return new Docket(DocumentationType.SWAGGER_2)
                 .ignoredParameterTypes(AuthenticationPrincipal.class)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("io.getlime.security.powerauth"))
+                .apis(Predicates.or(
+                        RequestHandlerSelectors.basePackage("io.getlime.security.powerauth"),
+                        RequestHandlerSelectors.basePackage("com.wultra.app.enrollmentserver.controller.api")
+                ))
                 .paths(PathSelectors.any())
                 .build();
     }
