@@ -23,6 +23,14 @@ powerauth.service.security.clientToken=
 powerauth.service.security.clientSecret=
 ```
 
+## Configuring Push Server
+
+The Enrollment Server also allows simple device registration to push notifications by calling PowerAuth Push Server API. While configuring this URL is technically optional, it is strongly suggested to configure the push server URL:
+
+```bash
+powerauth.push.service.url=http://localhost:8080/powerauth-push-server
+```
+
 ## Deploying Enrollment Server
 
 You can deploy Enrollment Server into any Java EE container.
