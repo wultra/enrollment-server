@@ -19,7 +19,9 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
+ * Exception used when invalid request object is received on the server side.
+ *
  * @author Petr Dvorak, petr@wultra.com
  */
-public class InvalidRequestObjectException extends Throwable {
+public class InvalidRequestObjectException extends Exception {
 }

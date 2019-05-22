@@ -84,7 +84,7 @@ The `application-ext.properties` file is used to override default configuration 
 powerauth.service.url=http://[host]:[port]/powerauth-java-server/soap
 
 # PowerAuth Push Server configuration
-powerauth.push.service.url=http://[host]:[port]/powerauth-push-server/ 
+powerauth.push.service.url=http://[host]:[port]/powerauth-push-server
 ```
 
 Enrollment Server Spring application uses the `ext` Spring profile which activates overriding of default properties by `application-ext.properties`.

@@ -19,7 +19,9 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
+ * Exception thrown in case push server registration fails for any reason.
+ *
  * @author Petr Dvorak, petr@wultra.com
  */
-public class PushRegistrationFailedException extends Throwable {
+public class PushRegistrationFailedException extends Exception {
 }
