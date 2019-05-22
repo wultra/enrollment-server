@@ -58,6 +58,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-ext-jdk15on</artifactId>
             <version>1.61</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Spring Dependencies -->
