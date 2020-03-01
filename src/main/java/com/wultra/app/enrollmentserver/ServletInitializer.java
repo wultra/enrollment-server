@@ -18,8 +18,6 @@
 
 package com.wultra.app.enrollmentserver;
 
-import io.getlime.security.powerauth.crypto.lib.config.PowerAuthConfiguration;
-import io.getlime.security.powerauth.provider.CryptoProviderUtilFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
@@ -33,7 +31,6 @@ public class ServletInitializer extends SpringBootServletInitializer {
 
 		// Register BC provider and tell PowerAuth components to use it.
 		Security.addProvider(new BouncyCastleProvider());
-		PowerAuthConfiguration.INSTANCE.setKeyConvertor(CryptoProviderUtilFactory.getCryptoProviderUtils());
 
 		return application.sources(EnrollmentServerApplication.class);
 	}
