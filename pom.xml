@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ PowerAuth Enrollment Server
-  ~ Copyright (C) 2019 Wultra s.r.o.
+  ~ Copyright (C) 2020 Wultra s.r.o.
   ~
   ~ This program is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU Affero General Public License as published
@@ -24,13 +24,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.5.RELEASE</version>
+        <version>2.2.6.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <groupId>com.wultra</groupId>
     <artifactId>enrollment-server</artifactId>
-    <version>0.24.0-SNAPSHOT</version>
+    <version>0.24.0</version>
     <packaging>war</packaging>
     <name>enrollment-server</name>
     <description>Base implementation of the enrollment server, usable as the stub for project bootstrapping.</description>
@@ -45,19 +45,19 @@
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-restful-security-spring</artifactId>
-            <version>0.24.0-SNAPSHOT</version>
+            <version>0.24.0</version>
         </dependency>
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-push-client</artifactId>
-            <version>0.24.0-SNAPSHOT</version>
+            <version>0.24.0</version>
         </dependency>
 
         <!-- Bouncy Castle -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-ext-jdk15on</artifactId>
-            <version>1.64</version>
+            <version>1.65</version>
             <scope>provided</scope>
         </dependency>
 
