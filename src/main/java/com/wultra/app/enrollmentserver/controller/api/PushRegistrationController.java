@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
@@ -40,13 +41,14 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
+@ConditionalOnPropertyNotEmpty(value="powerauth.push.service.url")
 @RestController
 @RequestMapping(value = "api/push")
 public class PushRegistrationController {
 
     private static final Logger logger = LoggerFactory.getLogger(PushRegistrationController.class);
 
-    private PushServerClient client;
+    private final PushServerClient client;
 
     @Autowired
     public PushRegistrationController(PushServerClient client) {
