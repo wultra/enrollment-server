@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PushServiceConfig {
 
-    @Value("${powerauth.push.service.url}")
+    @Value("${powerauth.push.service.url:}")
     private String powerAuthPushServiceUrl;
 
     @Bean
