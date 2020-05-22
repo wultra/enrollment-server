@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2019 Wultra s.r.o.
+ * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PushServiceConfig {
 
-    @Value("${powerauth.push.service.url}")
+    @Value("${powerauth.push.service.url:}")
     private String powerAuthPushServiceUrl;
 
     @Bean
