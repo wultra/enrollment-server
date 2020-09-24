@@ -18,7 +18,9 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
-import io.getlime.security.powerauth.soap.spring.client.PowerAuthServiceClient;
+import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.rest.client.PowerAuthRestClient;
+import com.wultra.security.powerauth.rest.client.PowerAuthRestClientConfiguration;
 import org.apache.wss4j.dom.WSConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -56,31 +58,16 @@ public class PowerAuthWebServiceConfiguration {
     }
 
     @Bean
-    public PowerAuthServiceClient powerAuthClient(Jaxb2Marshaller marshaller) {
-        PowerAuthServiceClient client = new PowerAuthServiceClient();
-        client.setDefaultUri(powerAuthServiceUrl);
-        client.setMarshaller(marshaller);
-        client.setUnmarshaller(marshaller);
-
-        // Spring WS-Security interceptor
+    public PowerAuthClient powerAuthClient() {
+        // Endpoint security is on
         if (clientToken != null && !clientToken.isEmpty()) {
-            ClientInterceptor interceptor = securityInterceptor();
-            client.setInterceptors(new ClientInterceptor[]{
-                    interceptor
-            });
+            PowerAuthRestClientConfiguration config = new PowerAuthRestClientConfiguration();
+            config.setPowerAuthClientToken(clientToken);
+            config.setPowerAuthClientSecret(clientSecret);
+            return new PowerAuthRestClient(powerAuthServiceUrl, config);
+        } else {
+            return new PowerAuthRestClient(powerAuthServiceUrl);
         }
-
-        return client;
-    }
-
-    @Bean
-    public Wss4jSecurityInterceptor securityInterceptor() {
-        Wss4jSecurityInterceptor wss4jSecurityInterceptor = new Wss4jSecurityInterceptor();
-        wss4jSecurityInterceptor.setSecurementActions("UsernameToken");
-        wss4jSecurityInterceptor.setSecurementUsername(clientToken);
-        wss4jSecurityInterceptor.setSecurementPassword(clientSecret);
-        wss4jSecurityInterceptor.setSecurementPasswordType(WSConstants.PW_TEXT);
-        return wss4jSecurityInterceptor;
     }
 
 }
