@@ -30,7 +30,7 @@
 
     <groupId>com.wultra</groupId>
     <artifactId>enrollment-server</artifactId>
-    <version>0.24.0</version>
+    <version>0.24.1</version>
     <packaging>war</packaging>
     <name>enrollment-server</name>
     <description>Base implementation of the enrollment server, usable as the stub for project bootstrapping.</description>
