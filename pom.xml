@@ -126,7 +126,6 @@
         </dependency>
 
         <!-- Documentation -->
-        <!-- Documentation -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
