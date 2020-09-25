@@ -19,6 +19,10 @@
 package com.wultra.app.enrollmentserver.model.request;
 
 /**
+ * Class representing a device registration request. The supported platform
+ * values are 'ios' and 'android'. The push token is the value received from
+ * APNS or FCM services without any modification.
+ *
  * @author Petr Dvorak, petr@wultra.com
  */
 public class PushRegisterRequest {
