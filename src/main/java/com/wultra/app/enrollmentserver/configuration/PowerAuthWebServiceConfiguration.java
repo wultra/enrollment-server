@@ -21,15 +21,11 @@ package com.wultra.app.enrollmentserver.configuration;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.rest.client.PowerAuthRestClient;
 import com.wultra.security.powerauth.rest.client.PowerAuthRestClientConfiguration;
-import org.apache.wss4j.dom.WSConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.oxm.jaxb.Jaxb2Marshaller;
-import org.springframework.ws.client.support.interceptor.ClientInterceptor;
-import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 
 /**
  * PowerAuth service configuration class.
@@ -49,13 +45,6 @@ public class PowerAuthWebServiceConfiguration {
 
     @Value("${powerauth.service.security.clientSecret}")
     private String clientSecret;
-
-    @Bean
-    public Jaxb2Marshaller marshaller() {
-        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setContextPaths("io.getlime.powerauth.soap.v2", "io.getlime.powerauth.soap.v3");
-        return marshaller;
-    }
 
     @Bean
     public PowerAuthClient powerAuthClient() {
