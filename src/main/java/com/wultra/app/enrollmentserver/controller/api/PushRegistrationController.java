@@ -17,16 +17,13 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
 import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
-import com.wultra.app.enrollmentserver.model.validator.PushRegisterRequestValidator;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.push.client.MobilePlatform;
-import io.getlime.push.client.PushServerClient;
-import io.getlime.push.client.PushServerClientException;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.base.exception.PowerAuthAuthenticationException;
@@ -48,11 +45,11 @@ public class PushRegistrationController {
 
     private static final Logger logger = LoggerFactory.getLogger(PushRegistrationController.class);
 
-    private final PushServerClient client;
+    private final PushRegistrationService pushRegistrationService;
 
     @Autowired
-    public PushRegistrationController(PushServerClient client) {
-        this.client = client;
+    public PushRegistrationController(PushRegistrationService pushRegistrationService) {
+        this.pushRegistrationService = pushRegistrationService;
     }
 
     @RequestMapping(value = "device/register", method = RequestMethod.POST)
@@ -75,7 +72,10 @@ public class PushRegistrationController {
         return registerDeviceImpl(request, apiAuthentication);
     }
 
-    private Response registerDeviceImpl(ObjectRequest<PushRegisterRequest> request, PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
+    private Response registerDeviceImpl(
+            ObjectRequest<PushRegisterRequest> request,
+            PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, PushRegistrationFailedException, InvalidRequestObjectException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {
@@ -83,49 +83,13 @@ public class PushRegistrationController {
             throw new PowerAuthAuthenticationException("Unable to verify device registration");
         }
 
-        logger.info("Push registration started, user ID: {}", apiAuthentication.getUserId());
-
-        // Check the request body presence
-        final PushRegisterRequest requestObject = request.getRequestObject();
-        final String error = PushRegisterRequestValidator.validate(requestObject);
-        if (error != null) {
-            logger.error("Invalid request object in push registration - {}, user ID: {}", error, apiAuthentication.getUserId());
-            throw new InvalidRequestObjectException();
-        }
-
-        // Get the values from the request
-        String platform = requestObject.getPlatform();
-        String token = requestObject.getToken();
-
         // Check if the context is authenticated - if it is, add activation ID.
         // This assures that the activation is assigned with a correct device.
+        String userId = apiAuthentication.getUserId();
         String activationId = apiAuthentication.getActivationId();
         Long applicationId = apiAuthentication.getApplicationId();
 
-        // Verify that applicationId and activationId are set
-        if (applicationId == null || activationId == null) {
-            logger.error("Invalid activation in push registration, user ID: {}", apiAuthentication.getUserId());
-            throw new PushRegistrationFailedException();
-        }
-
-        // Register the device and return response
-        MobilePlatform mobilePlatform = MobilePlatform.Android;
-        if ("ios".equalsIgnoreCase(platform)) {
-            mobilePlatform = MobilePlatform.iOS;
-        }
-        try {
-            boolean result = client.createDevice(applicationId, token, mobilePlatform, activationId);
-            if (result) {
-                logger.info("Push registration succeeded, user ID: {}", apiAuthentication.getUserId());
-                return new Response();
-            } else {
-                logger.warn("Push registration failed, user ID: {}", apiAuthentication.getUserId());
-                throw new PushRegistrationFailedException();
-            }
-        } catch (PushServerClientException ex) {
-            logger.error("Push registration failed", ex);
-            throw new PushRegistrationFailedException();
-        }
+        return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);
     }
 
 }
