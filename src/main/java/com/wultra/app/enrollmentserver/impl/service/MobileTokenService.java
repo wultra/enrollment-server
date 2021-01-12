@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
@@ -85,7 +86,7 @@ public class MobileTokenService {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         final OperationDetailResponse operationDetailResponse = powerAuthClient.operationDetail(operationDetailRequest);
-        String status = operationDetailResponse.getStatus();
+        OperationStatus status = operationDetailResponse.getStatus();
         handleStatus(status);
 
         final com.wultra.security.powerauth.client.model.request.OperationApproveRequest approveRequest = new com.wultra.security.powerauth.client.model.request.OperationApproveRequest();
@@ -114,7 +115,7 @@ public class MobileTokenService {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         final OperationDetailResponse operationDetailResponse = powerAuthClient.operationDetail(operationDetailRequest);
-        String status = operationDetailResponse.getStatus();
+        OperationStatus status = operationDetailResponse.getStatus();
         handleStatus(status);
 
         final com.wultra.security.powerauth.client.model.request.OperationRejectRequest rejectRequest = new com.wultra.security.powerauth.client.model.request.OperationRejectRequest();
@@ -135,24 +136,25 @@ public class MobileTokenService {
         throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
     }
 
-    private void handleStatus(String status) throws MobileTokenException {
+    private void handleStatus(OperationStatus status) throws MobileTokenException {
         switch (status) {
-            case "PENDING": {
+            case PENDING: {
                 // OK, this operation is still pending
                 break;
             }
-            case "CANCELLED": {
+            case CANCELED: {
                 throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already cancelled");
             }
-            case "EXPIRED": {
-                throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
-            }
-            case "APPROVED":
-            case "REJECTED": {
+            case APPROVED:
+            case REJECTED: {
                 throw new MobileTokenException("OPERATION_ALREADY_FINISHED", "Operation was already completed");
             }
-            case "FAILED": {
+            case FAILED: {
                 throw new MobileTokenException("OPERATION_ALREADY_FAILED", "Operation already failed");
+            }
+            case EXPIRED:
+            default: {
+                throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
             }
         }
     }
