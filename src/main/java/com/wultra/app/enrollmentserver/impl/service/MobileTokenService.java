@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
+import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
@@ -104,8 +105,8 @@ public class MobileTokenService {
             final OperationDetailResponse operation = approveResponse.getOperation();
             status = operation.getStatus();
             handleStatus(status);
+            throw new MobileTokenAuthException();
         }
-        throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
     }
 
     public Response operationReject(
@@ -132,8 +133,8 @@ public class MobileTokenService {
             final OperationDetailResponse operation = rejectResponse.getOperation();
             status = operation.getStatus();
             handleStatus(status);
+            throw new MobileTokenAuthException();
         }
-        throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
     }
 
     private void handleStatus(OperationStatus status) throws MobileTokenException {

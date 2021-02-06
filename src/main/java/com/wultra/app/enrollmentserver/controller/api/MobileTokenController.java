@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
@@ -76,11 +77,11 @@ public class MobileTokenController {
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language);
                 return new ObjectResponse<>(listResponse);
             } else {
-                throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+                throw new MobileTokenAuthException();
             }
         } catch (PowerAuthClientException e) {
             logger.error("Unable to call upstream service.", e);
-            throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+            throw new MobileTokenAuthException();
         }
 
     }
@@ -96,7 +97,7 @@ public class MobileTokenController {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
             if (requestObject == null) {
-                throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+                throw new MobileTokenAuthException();
             }
 
             if (auth != null && auth.getUserId() != null) {
@@ -107,11 +108,11 @@ public class MobileTokenController {
                 final String signatureFactors = auth.getSignatureFactors().toString();
                 return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors);
             } else {
-                throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+                throw new MobileTokenAuthException();
             }
         } catch (PowerAuthClientException e) {
             logger.error("Unable to call upstream service.", e);
-            throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+            throw new MobileTokenAuthException();
         }
     }
 
@@ -124,7 +125,7 @@ public class MobileTokenController {
 
             final OperationRejectRequest requestObject = request.getRequestObject();
             if (requestObject == null) {
-                throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+                throw new MobileTokenAuthException();
             }
 
             if (auth != null && auth.getUserId() != null) {
@@ -133,11 +134,11 @@ public class MobileTokenController {
                 String operationId = requestObject.getId();
                 return mobileTokenService.operationReject(userId, applicationId, operationId);
             } else {
-                throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+                throw new MobileTokenAuthException();
             }
         } catch (PowerAuthClientException e) {
             logger.error("Unable to call upstream service.", e);
-            throw new MobileTokenException("POWERAUTH_AUTH_FAIL", "Authentication failed");
+            throw new MobileTokenAuthException();
         }
     }
 
