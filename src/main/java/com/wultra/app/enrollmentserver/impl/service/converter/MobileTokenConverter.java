@@ -28,6 +28,7 @@ import io.getlime.security.powerauth.lib.mtoken.model.entity.AllowedSignatureTyp
 import io.getlime.security.powerauth.lib.mtoken.model.entity.FormData;
 import io.getlime.security.powerauth.lib.mtoken.model.entity.Operation;
 import io.getlime.security.powerauth.lib.mtoken.model.entity.attributes.*;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,9 +76,17 @@ public class MobileTokenConverter {
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
 
+            // Prepare title and message with substituted attributes
             final FormData formData = new FormData();
-            formData.setTitle(operationTemplate.getTitle());
-            formData.setMessage(operationTemplate.getMessage());
+            final Map<String, String> parameters = operationDetail.getParameters();
+            if (parameters != null && parameters.keySet().size() > 0) {
+                final StringSubstitutor sub = new StringSubstitutor(parameters);
+                formData.setTitle(sub.replace(operationTemplate.getTitle()));
+                formData.setMessage(sub.replace(operationTemplate.getMessage()));
+            } else {
+                formData.setTitle(operationTemplate.getTitle());
+                formData.setMessage(operationTemplate.getMessage());
+            }
 
             final String attributes = operationTemplate.getAttributes();
             if (attributes != null) {
@@ -85,7 +94,7 @@ public class MobileTokenConverter {
                         attributes, OperationTemplateParam[].class
                 );
                 for (OperationTemplateParam templateParam : operationTemplateParams) {
-                    final Attribute attribute = buildAttribute(templateParam, operationDetail.getParameters());
+                    final Attribute attribute = buildAttribute(templateParam, parameters);
                     if (attribute != null) {
                         formData.getAttributes().add(attribute);
                     }
