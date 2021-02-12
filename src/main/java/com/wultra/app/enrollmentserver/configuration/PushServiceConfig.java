@@ -18,7 +18,11 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import io.getlime.push.client.PushServerClient;
+import io.getlime.push.client.PushServerClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,12 +35,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PushServiceConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(PushServiceConfig.class);
+
     @Value("${powerauth.push.service.url:}")
     private String powerAuthPushServiceUrl;
 
     @Bean
     public PushServerClient pushServerClient() {
-        return new PushServerClient(powerAuthPushServiceUrl);
+        try {
+            return new PushServerClient(powerAuthPushServiceUrl);
+        } catch (PushServerClientException ex) {
+            // Log the error in case Rest client initialization failed
+            logger.error(ex.getMessage(), ex);
+            return null;
+        }
     }
 
 
