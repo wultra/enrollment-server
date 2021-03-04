@@ -18,16 +18,17 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
-import io.getlime.security.powerauth.soap.spring.client.PowerAuthServiceClient;
-import org.apache.wss4j.dom.WSConstants;
+import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.rest.client.PowerAuthRestClient;
+import com.wultra.security.powerauth.rest.client.PowerAuthRestClientConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.oxm.jaxb.Jaxb2Marshaller;
-import org.springframework.ws.client.support.interceptor.ClientInterceptor;
-import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 
 /**
  * PowerAuth service configuration class.
@@ -39,6 +40,8 @@ import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 @ComponentScan(basePackages = {"io.getlime.security.powerauth"})
 public class PowerAuthWebServiceConfiguration {
 
+    private static final Logger logger = LoggerFactory.getLogger(PowerAuthWebServiceConfiguration.class);
+
     @Value("${powerauth.service.url}")
     private String powerAuthServiceUrl;
 
@@ -49,38 +52,22 @@ public class PowerAuthWebServiceConfiguration {
     private String clientSecret;
 
     @Bean
-    public Jaxb2Marshaller marshaller() {
-        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setContextPaths("io.getlime.powerauth.soap.v2", "io.getlime.powerauth.soap.v3");
-        return marshaller;
-    }
-
-    @Bean
-    public PowerAuthServiceClient powerAuthClient(Jaxb2Marshaller marshaller) {
-        PowerAuthServiceClient client = new PowerAuthServiceClient();
-        client.setDefaultUri(powerAuthServiceUrl);
-        client.setMarshaller(marshaller);
-        client.setUnmarshaller(marshaller);
-
-        // Spring WS-Security interceptor
-        if (clientToken != null && !clientToken.isEmpty()) {
-            ClientInterceptor interceptor = securityInterceptor();
-            client.setInterceptors(new ClientInterceptor[]{
-                    interceptor
-            });
+    public PowerAuthClient powerAuthClient() {
+        try {
+            // Endpoint security is on
+            if (clientToken != null && !clientToken.isEmpty()) {
+                PowerAuthRestClientConfiguration config = new PowerAuthRestClientConfiguration();
+                config.setPowerAuthClientToken(clientToken);
+                config.setPowerAuthClientSecret(clientSecret);
+                return new PowerAuthRestClient(powerAuthServiceUrl, config);
+            } else {
+                return new PowerAuthRestClient(powerAuthServiceUrl);
+            }
+        } catch (PowerAuthClientException ex) {
+            // Log the error in case Rest client initialization failed
+            logger.error(ex.getMessage(), ex);
+            return null;
         }
-
-        return client;
-    }
-
-    @Bean
-    public Wss4jSecurityInterceptor securityInterceptor() {
-        Wss4jSecurityInterceptor wss4jSecurityInterceptor = new Wss4jSecurityInterceptor();
-        wss4jSecurityInterceptor.setSecurementActions("UsernameToken");
-        wss4jSecurityInterceptor.setSecurementUsername(clientToken);
-        wss4jSecurityInterceptor.setSecurementPassword(clientSecret);
-        wss4jSecurityInterceptor.setSecurementPasswordType(WSConstants.PW_TEXT);
-        return wss4jSecurityInterceptor;
     }
 
 }

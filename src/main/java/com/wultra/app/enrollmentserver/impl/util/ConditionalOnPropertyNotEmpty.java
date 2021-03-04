@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.impl.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -32,8 +33,8 @@ import java.util.Objects;
 
 /**
  * Annotation for conditional component autowiring based on a property presence.
- * In the case the property value is null or empty string (after trimming), the
- * component will not autowire.
+ * In the case the property value is null or blank string (empty or whitespace only),
+ * the component will not autowire.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
@@ -51,7 +52,7 @@ public @interface ConditionalOnPropertyNotEmpty {
             Map<String, Object> attrs = metadata.getAnnotationAttributes(ConditionalOnPropertyNotEmpty.class.getName());
             String propertyName = (String) Objects.requireNonNull(attrs).get("value");
             String val = context.getEnvironment().getProperty(propertyName);
-            return val != null && !val.trim().isEmpty();
+            return StringUtils.isNotBlank(val);
         }
     }
 

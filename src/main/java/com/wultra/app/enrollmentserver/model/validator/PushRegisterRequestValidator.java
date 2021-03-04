@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.model.validator;
 
 import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Validator class for push registration request object.
@@ -42,14 +43,15 @@ public class PushRegisterRequestValidator {
 
         // Validate mobile platform
         final String platform = request.getPlatform();
-        if (platform == null || platform.isEmpty()) {
+        if (StringUtils.isBlank(platform)) {
             return "No mobile platform was provided when registering for push messages.";
         } else if (!"ios".equalsIgnoreCase(platform) && !"android".equalsIgnoreCase(platform)) { // must be iOS or Android
             return "Unknown mobile platform was provided when registering for push messages.";
         }
 
         // Validate push token
-        if (request.getToken() == null || request.getToken().isEmpty()) {
+        final String token = request.getToken();
+        if (StringUtils.isBlank(token)) {
             return "No push registration token was provided when registering for push messages.";
         }
 
