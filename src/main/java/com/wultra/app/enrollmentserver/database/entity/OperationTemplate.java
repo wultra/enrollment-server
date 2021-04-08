@@ -33,22 +33,24 @@ import java.io.Serializable;
 @Table(name = "es_operation_template")
 public class OperationTemplate implements Serializable {
 
+    private static final long serialVersionUID = 5914420785283118800L;
+
     @Id
     @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq")
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_operation_template")
-    @Column(name = "id")
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "placeholder")
+    @Column(name = "placeholder", nullable = false)
     private String placeholder;
 
-    @Column(name = "language")
+    @Column(name = "language", nullable = false)
     private String language;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "message")
+    @Column(name = "message", nullable = false)
     private String message;
 
     @Column(name = "attributes")

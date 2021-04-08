@@ -144,7 +144,7 @@ public class MobileTokenService {
                 break;
             }
             case CANCELED: {
-                throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already cancelled");
+                throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already canceled");
             }
             case APPROVED:
             case REJECTED: {

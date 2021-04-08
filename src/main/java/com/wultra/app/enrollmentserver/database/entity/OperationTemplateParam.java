@@ -22,6 +22,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -32,9 +33,11 @@ import java.util.Map;
 @Data
 public class OperationTemplateParam implements Serializable {
 
+    private static final long serialVersionUID = -1881010348580035348L;
+
     private String type;
     private String id;
     private String text;
-    private final Map<String, String> params = new HashMap<>();
+    private final Map<String, String> params = new LinkedHashMap<>();
 
 }

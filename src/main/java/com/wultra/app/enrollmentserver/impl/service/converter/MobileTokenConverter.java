@@ -134,12 +134,26 @@ public class MobileTokenConverter {
             case "NOTE": {
                 final String noteKey = templateParam.getParams().get("note");
                 final String note = params.get(noteKey);
+                if (note == null) { // invalid element, does not contain note at all
+                    return null;
+                }
                 return new NoteAttribute(id, text, note);
             }
-            case "KEY_VALUE":
-            default: { // attempt fallback to key-value type
+            case "KEY_VALUE": {
                 final String valueKey = templateParam.getParams().get("value");
                 final String value = params.get(valueKey);
+                if (value == null) { // invalid element, does not contain note at all
+                    return null;
+                }
+                return new KeyValueAttribute(id, text, value);
+            }
+            default: { // attempt fallback to key-value type
+                logger.error("Invalid operation attribute type: {}", type);
+                final String valueKey = templateParam.getParams().get("value");
+                final String value = params.get(valueKey);
+                if (value == null) { // invalid element, does not contain note at all
+                    return null;
+                }
                 return new KeyValueAttribute(id, text, value);
             }
         }
