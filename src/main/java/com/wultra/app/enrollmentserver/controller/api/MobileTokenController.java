@@ -36,6 +36,7 @@ import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -48,6 +49,11 @@ import java.util.Locale;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
+@ConditionalOnProperty(
+        value = "enrollment-server.mtoken.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 @RestController
 @RequestMapping("/api/auth/token/app")
 public class MobileTokenController {

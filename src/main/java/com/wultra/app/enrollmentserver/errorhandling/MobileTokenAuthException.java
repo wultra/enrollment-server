@@ -25,6 +25,8 @@ package com.wultra.app.enrollmentserver.errorhandling;
  */
 public class MobileTokenAuthException extends MobileTokenException {
 
+    private static final long serialVersionUID = -4602362062047233809L;
+
     public MobileTokenAuthException() {
         super("POWERAUTH_AUTH_FAIL", "Authentication failed");
     }
