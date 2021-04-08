@@ -16,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 1 START WITH 1 CACHE 20;
-
 CREATE TABLE es_operation_template (
     "id" BIGINT NOT NULL PRIMARY KEY,
     "placeholder" VARCHAR(255) NOT NULL,

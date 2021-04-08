@@ -36,8 +36,6 @@ public class OperationTemplate implements Serializable {
     private static final long serialVersionUID = 5914420785283118800L;
 
     @Id
-    @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq")
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_operation_template")
     @Column(name = "id", nullable = false)
     private Long id;
 

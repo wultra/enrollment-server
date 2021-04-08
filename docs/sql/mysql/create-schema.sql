@@ -17,12 +17,12 @@
  */
 
 CREATE TABLE es_operation_template (
-    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT NOT NULL PRIMARY KEY,
     placeholder VARCHAR(255) NOT NULL,
     language VARCHAR(8) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     attributes TEXT
-) ENGINE=InnoDB AUTO_INCREMENT=1 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
