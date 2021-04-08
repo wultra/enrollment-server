@@ -16,21 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.model.request;
-
-import lombok.Data;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Class representing a device registration request. The supported platform
- * values are 'ios' and 'android'. The push token is the value received from
- * APNS or FCM services without any modification.
+ * Exception related to mobile token functionality.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Data
-public class PushRegisterRequest {
+public class MobileTokenException extends Exception {
 
-    private String platform;
-    private String token;
+    private final String code;
 
+    public MobileTokenException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
+    }
 }

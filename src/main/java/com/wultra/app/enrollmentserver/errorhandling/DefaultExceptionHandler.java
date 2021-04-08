@@ -86,5 +86,40 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("POWERAUTH_AUTH_FAIL", "Unable to verify device registration.");
     }
 
+    /**
+     * Handling of mtoken exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(MobileTokenException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleMobileTokenException(MobileTokenException ex) {
+        logger.warn("Mobile token operation failed: {}", ex.getMessage());
+        return new ErrorResponse(ex.getCode(), ex.getMessage());
+    }
+
+    /**
+     * Handling of mtoken auth exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(MobileTokenAuthException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public @ResponseBody ErrorResponse handleMobileTokenAuthException(MobileTokenAuthException ex) {
+        logger.warn("Mobile token operation failed due to authorization error: {}", ex.getMessage());
+        return new ErrorResponse(ex.getCode(), ex.getMessage());
+    }
+
+    /**
+     * Handling of mtoken configuration exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(MobileTokenConfigurationException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public @ResponseBody ErrorResponse handleMobileTokenConfigurationException(MobileTokenConfigurationException ex) {
+        logger.warn("Mobile token back-end is incorrectly configured: {}", ex.getMessage());
+        return new ErrorResponse(ex.getCode(), ex.getMessage());
+    }
 
 }

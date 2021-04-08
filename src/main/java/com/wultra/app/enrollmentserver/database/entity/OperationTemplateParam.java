@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2020 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -16,21 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.database.entity;
 
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
- * Class representing a device registration request. The supported platform
- * values are 'ios' and 'android'. The push token is the value received from
- * APNS or FCM services without any modification.
+ * Class representing an operation template attribute.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
-public class PushRegisterRequest {
+public class OperationTemplateParam implements Serializable {
 
-    private String platform;
-    private String token;
+    private static final long serialVersionUID = -1881010348580035348L;
+
+    private String type;
+    private String id;
+    private String text;
+    private final Map<String, String> params = new LinkedHashMap<>();
 
 }

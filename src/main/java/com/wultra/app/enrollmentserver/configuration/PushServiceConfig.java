@@ -18,7 +18,6 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
 import org.slf4j.Logger;
@@ -50,6 +49,5 @@ public class PushServiceConfig {
             return null;
         }
     }
-
 
 }

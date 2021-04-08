@@ -1,5 +1,5 @@
 /*
- * PowerAuth Enrollment Server
+ * PowerAuth Cloud
  * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,21 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.model.request;
+CREATE TABLE es_operation_template (
+    id BIGINT NOT NULL PRIMARY KEY,
+    placeholder VARCHAR(255) NOT NULL,
+    language VARCHAR(8) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    attributes TEXT
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-import lombok.Data;
-
-/**
- * Class representing a device registration request. The supported platform
- * values are 'ios' and 'android'. The push token is the value received from
- * APNS or FCM services without any modification.
- *
- * @author Petr Dvorak, petr@wultra.com
- */
-@Data
-public class PushRegisterRequest {
-
-    private String platform;
-    private String token;
-
-}
+CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
