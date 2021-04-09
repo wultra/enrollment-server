@@ -24,4 +24,5 @@ package com.wultra.app.enrollmentserver.errorhandling;
  * @author Petr Dvorak, petr@wultra.com
  */
 public class InvalidRequestObjectException extends Exception {
+    private static final long serialVersionUID = 1383969189713398388L;
 }

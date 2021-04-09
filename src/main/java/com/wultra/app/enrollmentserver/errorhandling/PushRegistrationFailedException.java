@@ -24,4 +24,5 @@ package com.wultra.app.enrollmentserver.errorhandling;
  * @author Petr Dvorak, petr@wultra.com
  */
 public class PushRegistrationFailedException extends Exception {
+    private static final long serialVersionUID = 4749754972312518198L;
 }

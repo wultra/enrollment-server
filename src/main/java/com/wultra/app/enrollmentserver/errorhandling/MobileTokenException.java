@@ -25,6 +25,8 @@ package com.wultra.app.enrollmentserver.errorhandling;
  */
 public class MobileTokenException extends Exception {
 
+    private static final long serialVersionUID = 776366296246280138L;
+
     private final String code;
 
     public MobileTokenException(String code, String message) {
