@@ -58,7 +58,7 @@ public class MobileTokenConverter {
     private AllowedSignatureType convert(List<String> signatureType) {
         final AllowedSignatureType allowedSignatureType = new AllowedSignatureType();
         if (signatureType.contains("possession")) {
-            allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_2FA);
+            allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_1FA);
         } else {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_2FA);
             allowedSignatureType.setVariants(signatureType);
