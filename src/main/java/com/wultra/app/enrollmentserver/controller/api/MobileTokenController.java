@@ -111,7 +111,7 @@ public class MobileTokenController {
                 final Long applicationId = auth.getApplicationId();
                 final String operationId = requestObject.getId();
                 final String data = requestObject.getData();
-                final String signatureFactors = auth.getSignatureFactors().toString();
+                final PowerAuthSignatureTypes signatureFactors = auth.getSignatureFactors();
                 return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors);
             } else {
                 throw new MobileTokenAuthException();

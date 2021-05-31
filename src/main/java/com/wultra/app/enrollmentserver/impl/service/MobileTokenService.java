@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
+import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
@@ -32,6 +33,7 @@ import com.wultra.security.powerauth.client.model.request.OperationListForUserRe
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
 import io.getlime.core.rest.model.base.response.Response;
+import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.lib.mtoken.model.entity.Operation;
 import io.getlime.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +84,7 @@ public class MobileTokenService {
             @NotNull Long applicationId,
             @NotNull String operationId,
             @NotNull String data,
-            @NotNull String signatureFactors) throws MobileTokenException, PowerAuthClientException {
+            @NotNull PowerAuthSignatureTypes signatureFactors) throws MobileTokenException, PowerAuthClientException {
 
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
@@ -94,7 +96,7 @@ public class MobileTokenService {
         approveRequest.setOperationId(operationId);
         approveRequest.setData(data);
         approveRequest.setUserId(userId);
-        approveRequest.setSignatureType(signatureFactors);
+        approveRequest.setSignatureType(SignatureType.enumFromString(signatureFactors.name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(applicationId);
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest);
 

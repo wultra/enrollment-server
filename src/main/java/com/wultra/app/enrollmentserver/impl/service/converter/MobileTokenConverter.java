@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
+import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import io.getlime.security.powerauth.lib.mtoken.model.entity.AllowedSignatureType;
 import io.getlime.security.powerauth.lib.mtoken.model.entity.FormData;
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,13 +57,20 @@ public class MobileTokenConverter {
         this.objectMapper = objectMapper;
     }
 
-    private AllowedSignatureType convert(List<String> signatureType) {
+    private AllowedSignatureType convert(List<SignatureType> signatureType) {
         final AllowedSignatureType allowedSignatureType = new AllowedSignatureType();
-        if (signatureType.contains("possession")) {
+        if (signatureType.contains(SignatureType.POSSESSION)) {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_1FA);
         } else {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_2FA);
-            allowedSignatureType.setVariants(signatureType);
+            final List<String> variants = new ArrayList<>();
+            if (signatureType.contains(SignatureType.POSSESSION_KNOWLEDGE)) {
+                variants.add("possession_knowledge");
+            }
+            if (signatureType.contains(SignatureType.POSSESSION_BIOMETRY)) {
+                variants.add("possession_biometry");
+            }
+            allowedSignatureType.setVariants(variants);
         }
         return allowedSignatureType;
     }
