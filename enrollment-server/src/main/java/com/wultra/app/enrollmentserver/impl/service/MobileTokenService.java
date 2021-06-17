@@ -34,8 +34,8 @@ import com.wultra.security.powerauth.client.model.response.OperationDetailRespon
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import io.getlime.security.powerauth.lib.mtoken.model.entity.Operation;
-import io.getlime.security.powerauth.lib.mtoken.model.response.OperationListResponse;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
+import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

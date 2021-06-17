@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationProperties("ext")
-@ComponentScan(basePackages = {"io.getlime.security.powerauth"})
+@ComponentScan(basePackages = {"io.getlime.security.powerauth","com.wultra.security.powerauth"})
 public class PowerAuthWebServiceConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(PowerAuthWebServiceConfiguration.class);
