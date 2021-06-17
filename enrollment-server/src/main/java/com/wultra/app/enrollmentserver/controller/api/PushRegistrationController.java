@@ -47,11 +47,26 @@ public class PushRegistrationController {
 
     private final PushRegistrationService pushRegistrationService;
 
+    /**
+     * Constructor with autowired dependencies.
+     *
+     * @param pushRegistrationService Push registration service.
+     */
     @Autowired
     public PushRegistrationController(PushRegistrationService pushRegistrationService) {
         this.pushRegistrationService = pushRegistrationService;
     }
 
+    /**
+     * Register device for the push notifications.
+     *
+     * @param request Push registration request.
+     * @param apiAuthentication Authentication object.
+     * @return Simple response.
+     * @throws PowerAuthAuthenticationException In case authentication fails.
+     * @throws InvalidRequestObjectException In case object validation fails.
+     * @throws PushRegistrationFailedException In case push registration fails.
+     */
     @RequestMapping(value = "device/register", method = RequestMethod.POST)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
@@ -62,6 +77,16 @@ public class PushRegistrationController {
         return registerDeviceImpl(request, apiAuthentication);
     }
 
+    /**
+     * Register device for the push notifications. This method is present for the compatibility reasons only.
+     *
+     * @param request Push registration request.
+     * @param apiAuthentication Authentication object.
+     * @return Simple response.
+     * @throws PowerAuthAuthenticationException In case authentication fails.
+     * @throws InvalidRequestObjectException In case object validation fails.
+     * @throws PushRegistrationFailedException In case push registration fails.
+     */
     @RequestMapping(value = "device/register/token", method = RequestMethod.POST)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,

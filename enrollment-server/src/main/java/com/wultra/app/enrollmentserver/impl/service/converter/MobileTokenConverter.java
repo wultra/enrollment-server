@@ -84,6 +84,7 @@ public class MobileTokenConverter {
             operation.setData(operationDetail.getData());
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
+            operation.setStatus(operationDetail.getStatus().name());
 
             // Prepare title and message with substituted attributes
             final FormData formData = new FormData();

@@ -30,6 +30,7 @@ public class Operation {
     private String id;
     private String name;
     private String data;
+    private String status;
     private Date operationCreated;
     private Date operationExpires;
     private AllowedSignatureType allowedSignatureType;

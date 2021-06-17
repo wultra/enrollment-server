@@ -62,11 +62,25 @@ public class MobileTokenController {
 
     private final MobileTokenService mobileTokenService;
 
+    /**
+     * Default constructor with autowired dependencies.
+     *
+     * @param mobileTokenService Mobile token service.
+     */
     @Autowired
     public MobileTokenController(MobileTokenService mobileTokenService) {
         this.mobileTokenService = mobileTokenService;
     }
 
+    /**
+     * Get the list of pending operations.
+     *
+     * @param auth Authentication object.
+     * @param locale Locale.
+     * @return List of pending operations.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     */
     @RequestMapping(value = "/operation/list", method = RequestMethod.POST)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
@@ -80,7 +94,7 @@ public class MobileTokenController {
                 final String userId = auth.getUserId();
                 final Long applicationId = auth.getApplicationId();
                 final String language = locale.getLanguage();
-                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language);
+                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, true);
                 return new ObjectResponse<>(listResponse);
             } else {
                 throw new MobileTokenAuthException();
@@ -89,9 +103,47 @@ public class MobileTokenController {
             logger.error("Unable to call upstream service.", e);
             throw new MobileTokenAuthException();
         }
-
     }
 
+    /**
+     * Get the list of all operations.
+     *
+     * @param auth Authentication object.
+     * @param locale Locale.
+     * @return List of all operations.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     */
+    @RequestMapping(value = "/operation/history", method = RequestMethod.POST)
+    @PowerAuth(resourceId = "/operation/history", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    })
+    public ObjectResponse<OperationListResponse> operationListAll(PowerAuthApiAuthentication auth, Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
+        try {
+            if (auth != null) {
+                final String userId = auth.getUserId();
+                final Long applicationId = auth.getApplicationId();
+                final String language = locale.getLanguage();
+                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, false);
+                return new ObjectResponse<>(listResponse);
+            } else {
+                throw new MobileTokenAuthException();
+            }
+        } catch (PowerAuthClientException e) {
+            logger.error("Unable to call upstream service.", e);
+            throw new MobileTokenAuthException();
+        }
+    }
+
+    /**
+     * Authorize operation.
+     *
+     * @param request Request for operation approval.
+     * @param auth Authentication object.
+     * @return Simple response object.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     */
     @RequestMapping(value = "/operation/authorize", method = RequestMethod.POST)
     @PowerAuth(resourceId = "/operation/authorize", signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
@@ -106,14 +158,20 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
+            final String operationId = requestObject.getId();
+            final String data = requestObject.getData();
+            if (operationId == null) {
+                throw new MobileTokenAuthException();
+            }
+
             if (auth != null && auth.getUserId() != null) {
                 final String userId = auth.getUserId();
                 final Long applicationId = auth.getApplicationId();
-                final String operationId = requestObject.getId();
-                final String data = requestObject.getData();
                 final PowerAuthSignatureTypes signatureFactors = auth.getSignatureFactors();
                 return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors);
             } else {
+                // make sure to fail operation as well, to increase the failed number
+                mobileTokenService.operationFailApprove(operationId);
                 throw new MobileTokenAuthException();
             }
         } catch (PowerAuthClientException e) {
@@ -122,6 +180,14 @@ public class MobileTokenController {
         }
     }
 
+    /**
+     * Operation reject.
+     *
+     * @param request Operation reject request.
+     * @param auth Authentication object.
+     * @return Simple response object.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     */
     @RequestMapping(value = "/operation/cancel", method = RequestMethod.POST)
     @PowerAuth(resourceId = "/operation/cancel", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
