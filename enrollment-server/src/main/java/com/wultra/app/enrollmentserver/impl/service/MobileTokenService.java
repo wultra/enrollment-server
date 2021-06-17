@@ -71,12 +71,14 @@ public class MobileTokenService {
     }
 
     /**
-     * Get the operation list with pending operations of a given users.
+     * Get the operation list with operations of a given users. The service either returns only pending
+     * operations or all operations, depending on the provided flag.
      *
      * @param userId User ID.
      * @param applicationId Application ID.
      * @param language Language.
-     * @return Response with pending operations.
+     * @param pendingOnly Flag indicating if only pending or all operation should be returned.
+     * @return Response with pending or all operations, depending on the "pendingOnly" flag.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
