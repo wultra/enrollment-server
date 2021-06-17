@@ -17,6 +17,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -27,13 +28,18 @@ import java.util.Date;
 @Data
 public class Operation {
 
+    @NotNull
     private String id;
+    @NotNull
     private String name;
+    @NotNull
     private String data;
     private String status;
     private Date operationCreated;
     private Date operationExpires;
+    @NotNull
     private AllowedSignatureType allowedSignatureType;
-    private FormData formData;
+    @NotNull
+    private FormData formData = new FormData();
 
 }

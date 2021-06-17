@@ -17,6 +17,8 @@ package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Request to register for sending push messages.
  *
@@ -25,7 +27,9 @@ import lombok.Data;
 @Data
 public class PushRegisterRequest {
 
+    @NotNull
     private String platform;
+    @NotNull
     private String token;
 
 }
