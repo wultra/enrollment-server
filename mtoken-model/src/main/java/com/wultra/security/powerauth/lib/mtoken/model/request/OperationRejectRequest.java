@@ -17,6 +17,8 @@ package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Request to cancel an operation.
  *
@@ -25,6 +27,7 @@ import lombok.Data;
 @Data
 public class OperationRejectRequest {
 
+    @NotNull
     private String id;
     private String reason;
 
