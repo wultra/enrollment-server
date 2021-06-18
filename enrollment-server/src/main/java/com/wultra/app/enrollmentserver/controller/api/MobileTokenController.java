@@ -155,12 +155,14 @@ public class MobileTokenController {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
             if (requestObject == null) {
+                logger.warn("Request object is null when approving operation.");
                 throw new MobileTokenAuthException();
             }
 
             final String operationId = requestObject.getId();
             final String data = requestObject.getData();
             if (operationId == null) {
+                logger.warn("Operation ID is null when approving operation.");
                 throw new MobileTokenAuthException();
             }
 
@@ -172,6 +174,7 @@ public class MobileTokenController {
             } else {
                 // make sure to fail operation as well, to increase the failed number
                 mobileTokenService.operationFailApprove(operationId);
+                logger.debug("Operation approval failed due to failed user authentication, operation ID: {}.", operationId);
                 throw new MobileTokenAuthException();
             }
         } catch (PowerAuthClientException e) {
