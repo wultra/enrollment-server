@@ -18,6 +18,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,9 @@ public class AllowedSignatureType {
         }
     }
 
+    @NotNull
     private Type type;
-    private List<String> variants;
+    @NotNull
+    private List<String> variants = new ArrayList<>();
 
 }

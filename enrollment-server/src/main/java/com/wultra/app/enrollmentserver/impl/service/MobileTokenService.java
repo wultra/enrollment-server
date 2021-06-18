@@ -29,6 +29,7 @@ import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
+import com.wultra.security.powerauth.client.model.request.OperationFailApprovalRequest;
 import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
@@ -49,10 +50,19 @@ import javax.validation.constraints.NotNull;
 @Service
 public class MobileTokenService {
 
+    private static final int OPERATION_LIST_LIMIT = 100;
+
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
     private final OperationTemplateService operationTemplateService;
 
+    /**
+     * Default constructor with autowired dependencies.
+     *
+     * @param powerAuthClient PowerAuth Client.
+     * @param mobileTokenConverter Converter for mobile token objects.
+     * @param operationTemplateService Operation template service.
+     */
     @Autowired
     public MobileTokenService(PowerAuthClient powerAuthClient, MobileTokenConverter mobileTokenConverter, OperationTemplateService operationTemplateService) {
         this.powerAuthClient = powerAuthClient;
@@ -60,25 +70,54 @@ public class MobileTokenService {
         this.operationTemplateService = operationTemplateService;
     }
 
+    /**
+     * Get the operation list with operations of a given users. The service either returns only pending
+     * operations or all operations, depending on the provided flag.
+     *
+     * @param userId User ID.
+     * @param applicationId Application ID.
+     * @param language Language.
+     * @param pendingOnly Flag indicating if only pending or all operation should be returned.
+     * @return Response with pending or all operations, depending on the "pendingOnly" flag.
+     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
+     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     */
     public OperationListResponse operationListForUser(
             @NotNull String userId,
             @NotNull Long applicationId,
-            @NotNull String language) throws PowerAuthClientException, MobileTokenConfigurationException {
+            @NotNull String language,
+            boolean pendingOnly) throws PowerAuthClientException, MobileTokenConfigurationException {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
         request.setApplicationId(applicationId);
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList = powerAuthClient.operationPendingList(request);
+        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList = pendingOnly ?
+                powerAuthClient.operationPendingList(request) : powerAuthClient.operationList(request);
 
         final OperationListResponse responseObject = new OperationListResponse();
         for (OperationDetailResponse operationDetail: pendingList) {
             final OperationTemplate operationTemplate = operationTemplateService.prepareTemplate(operationDetail.getOperationType(), language);
             final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate);
             responseObject.add(operation);
+            if (responseObject.size() >= OPERATION_LIST_LIMIT) { // limit the list size in response
+                break;
+            }
         }
         return responseObject;
     }
 
+    /**
+     * Approve an operation.
+     *
+     * @param userId User ID.
+     * @param applicationId Application ID.
+     * @param operationId Operation ID.
+     * @param data Operation Data.
+     * @param signatureFactors Used signature factors.
+     * @return Simple response.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
+     */
     public Response operationApprove(
             @NotNull String userId,
             @NotNull Long applicationId,
@@ -111,6 +150,32 @@ public class MobileTokenService {
         }
     }
 
+    /**
+     * Fail operation approval (increase operation counter).
+     *
+     * @param operationId Operation ID.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
+     */
+    public void operationFailApprove(String operationId) throws PowerAuthClientException, MobileTokenException {
+        final OperationFailApprovalRequest request = new OperationFailApprovalRequest();
+        request.setOperationId(operationId);
+        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
+
+        final OperationDetailResponse operation = failApprovalResponse.getOperation();
+        handleStatus(operation.getStatus());
+    }
+
+    /**
+     * Reject an operation.
+     *
+     * @param userId User ID.
+     * @param applicationId Application ID.
+     * @param operationId Operation ID.
+     * @return Simple response.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
+     */
     public Response operationReject(
             @NotNull String userId,
             @NotNull Long applicationId,

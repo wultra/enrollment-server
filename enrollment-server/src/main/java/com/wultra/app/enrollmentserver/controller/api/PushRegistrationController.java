@@ -28,6 +28,7 @@ import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.base.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,28 +48,53 @@ public class PushRegistrationController {
 
     private final PushRegistrationService pushRegistrationService;
 
+    /**
+     * Constructor with autowired dependencies.
+     *
+     * @param pushRegistrationService Push registration service.
+     */
     @Autowired
     public PushRegistrationController(PushRegistrationService pushRegistrationService) {
         this.pushRegistrationService = pushRegistrationService;
     }
 
+    /**
+     * Register device for the push notifications.
+     *
+     * @param request Push registration request.
+     * @param apiAuthentication Authentication object.
+     * @return Simple response.
+     * @throws PowerAuthAuthenticationException In case authentication fails.
+     * @throws InvalidRequestObjectException In case object validation fails.
+     * @throws PushRegistrationFailedException In case push registration fails.
+     */
     @RequestMapping(value = "device/register", method = RequestMethod.POST)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
-    public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
+    public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         return registerDeviceImpl(request, apiAuthentication);
     }
 
+    /**
+     * Register device for the push notifications. This method is present for the compatibility reasons only.
+     *
+     * @param request Push registration request.
+     * @param apiAuthentication Authentication object.
+     * @return Simple response.
+     * @throws PowerAuthAuthenticationException In case authentication fails.
+     * @throws InvalidRequestObjectException In case object validation fails.
+     * @throws PushRegistrationFailedException In case push registration fails.
+     */
     @RequestMapping(value = "device/register/token", method = RequestMethod.POST)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
-    public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
+    public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         return registerDeviceImpl(request, apiAuthentication);
     }
 
