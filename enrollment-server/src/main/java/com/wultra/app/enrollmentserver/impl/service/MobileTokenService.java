@@ -154,12 +154,16 @@ public class MobileTokenService {
      * Fail operation approval (increase operation counter).
      *
      * @param operationId Operation ID.
+     * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
-    public void operationFailApprove(String operationId) throws PowerAuthClientException {
+    public void operationFailApprove(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationFailApprovalRequest request = new OperationFailApprovalRequest();
         request.setOperationId(operationId);
-        powerAuthClient.failApprovalOperation(request);
+        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
+
+        final OperationDetailResponse operation = failApprovalResponse.getOperation();
+        handleStatus(operation.getStatus());
     }
 
     /**
