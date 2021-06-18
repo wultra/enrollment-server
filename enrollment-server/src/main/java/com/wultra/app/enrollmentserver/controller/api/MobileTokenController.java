@@ -33,6 +33,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResp
 import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,7 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<OperationListResponse> operationList(PowerAuthApiAuthentication auth, Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
+    public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
@@ -119,7 +120,7 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
-    public ObjectResponse<OperationListResponse> operationListAll(PowerAuthApiAuthentication auth, Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
+    public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
@@ -150,7 +151,7 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY
     })
-    public Response operationApprove(@RequestBody ObjectRequest<OperationApproveRequest> request, PowerAuthApiAuthentication auth) throws MobileTokenException {
+    public Response operationApprove(@RequestBody ObjectRequest<OperationApproveRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication auth) throws MobileTokenException {
         try {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
@@ -195,7 +196,7 @@ public class MobileTokenController {
     @PowerAuth(resourceId = "/operation/cancel", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response operationReject(@RequestBody ObjectRequest<OperationRejectRequest> request, PowerAuthApiAuthentication auth) throws MobileTokenException {
+    public Response operationReject(@RequestBody ObjectRequest<OperationRejectRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication auth) throws MobileTokenException {
         try {
 
             final OperationRejectRequest requestObject = request.getRequestObject();

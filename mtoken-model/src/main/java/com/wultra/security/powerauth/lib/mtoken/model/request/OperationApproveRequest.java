@@ -17,6 +17,8 @@ package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Request for online token signature verification.
  *
@@ -25,7 +27,9 @@ import lombok.Data;
 @Data
 public class OperationApproveRequest {
 
+    @NotNull
     private String id;
+    @NotNull
     private String data;
 
 }
