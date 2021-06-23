@@ -17,12 +17,12 @@
  */
 
 CREATE TABLE es_operation_template (
-    "id" BIGINT NOT NULL PRIMARY KEY,
-    "placeholder" VARCHAR(255) NOT NULL,
-    "language" VARCHAR(8) NOT NULL,
-    "title" VARCHAR(255) NOT NULL,
-    "message" TEXT NOT NULL,
-    "attributes" TEXT
+    id BIGINT NOT NULL PRIMARY KEY,
+    placeholder VARCHAR(255) NOT NULL,
+    language VARCHAR(8) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    attributes TEXT
 );
 
-CREATE UNIQUE INDEX "es_operation_template_placeholder" ON "es_operation_template"("placeholder", "language");
+CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
