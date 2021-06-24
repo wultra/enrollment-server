@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-CREATE TABLE es_operation_template (
-    id BIGINT NOT NULL PRIMARY KEY,
-    placeholder VARCHAR(255) NOT NULL,
-    language VARCHAR(8) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    attributes TEXT
+CREATE TABLE ES_OPERATION_TEMPLATE (
+    ID NUMBER(19) NOT NULL PRIMARY KEY,
+    PLACEHOLDER VARCHAR2(255 CHAR) NOT NULL,
+    LANGUAGE VARCHAR2(8 CHAR) NOT NULL,
+    TITLE VARCHAR2(255 CHAR) NOT NULL,
+    MESSAGE BLOB NOT NULL,
+    ATTRIBUTES BLOB
 );
 
-CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
+CREATE UNIQUE INDEX ES_OPERATION_TEMPLATE_PLACEHOLDER ON ES_OPERATION_TEMPLATE(PLACEHOLDER, LANGUAGE);
