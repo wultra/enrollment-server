@@ -8,7 +8,7 @@ You can download the latest `enrollment-server.war` from the [Enrollment Server 
 
 ## Configuring Enrollment Server
 
-The default implementation of a Enrollment Server has only one compulsory configuration parameter `powerauth.service.url` that configures the SOAP endpoint location of a PowerAuth Server. The default value for this property points to `localhost`:
+The default implementation of an Enrollment Server has only one compulsory configuration parameter `powerauth.service.url` that configures the SOAP endpoint location of a PowerAuth Server. The default value for this property points to `localhost`:
 
 ```bash
 powerauth.service.url=http://localhost:8080/powerauth-java-server/soap
@@ -25,7 +25,7 @@ powerauth.service.security.clientSecret=
 
 ## Configuring Push Server
 
-The Enrollment Server also allows simple device registration to push notifications by calling PowerAuth Push Server API. While configuring this URL is technically optional, it is strongly suggested to configure the push server URL:
+The Enrollment Server also allows simple device registration to push notifications by calling PowerAuth Push Server API. While configuring this URL is technically optional, we recommend configuring the push server URL:
 
 ```bash
 powerauth.push.service.url=http://localhost:8080/powerauth-push-server
