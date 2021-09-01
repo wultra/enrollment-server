@@ -122,4 +122,16 @@ public class DefaultExceptionHandler {
         return new ErrorResponse(ex.getCode(), ex.getMessage());
     }
 
+    /**
+     * Handling of activation code exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(ActivationCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleActivationCodeException(ActivationCodeException ex) {
+        logger.warn("Unable to fetch activation code", ex);
+        return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
+    }
+
 }
