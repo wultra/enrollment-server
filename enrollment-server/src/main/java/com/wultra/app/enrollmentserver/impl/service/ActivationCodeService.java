@@ -48,7 +48,7 @@ public class ActivationCodeService {
     private final PowerAuthClient powerAuthClient;
     private final ActivationCodeConverter activationCodeConverter;
 
-    private ActivationCodeDelegate activationCodeDelegate;
+    private DelegatingActivationCodeHandler delegatingActivationCodeHandler;
 
     /**
      * Autowiring constructor.
@@ -63,13 +63,13 @@ public class ActivationCodeService {
     }
 
     /**
-     * Set activation code delegate via auto-wiring.
+     * Set delegating activation code handler via auto-wiring.
      *
-     * @param activationCodeDelegate Activation code delegate bean.
+     * @param delegatingActivationCodeHandler Delegating activation code handler bean.
      */
     @Autowired(required = false)
-    public void setActivationCodeDelegate(ActivationCodeDelegate activationCodeDelegate) {
-        this.activationCodeDelegate = activationCodeDelegate;
+    public void setActivationCodeDelegate(DelegatingActivationCodeHandler delegatingActivationCodeHandler) {
+        this.delegatingActivationCodeHandler = delegatingActivationCodeHandler;
     }
 
     /**
@@ -92,9 +92,9 @@ public class ActivationCodeService {
 
         logger.info("Activation code registration started, user ID: {}", sourceUserId);
 
-        // Verify that activation code delegate is implemented
-        if (activationCodeDelegate == null) {
-            logger.error("Missing activation code implementation");
+        // Verify that delegating activation code handler is implemented
+        if (delegatingActivationCodeHandler == null) {
+            logger.error("Missing delegating activation code handler implementation");
             throw new ActivationCodeException();
         }
 
@@ -109,7 +109,7 @@ public class ActivationCodeService {
         final String otp = request.getOtp();
         final String applicationId = request.getApplicationId();
 
-        final Long destinationAppId = activationCodeDelegate.destinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
+        final Long destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
         if (destinationAppId == null) {
             logger.error("Invalid application ID. The provided source app ID: {} cannot activate the destination app ID: {}.", sourceAppId, applicationId);
             throw new ActivationCodeException();
@@ -124,13 +124,13 @@ public class ActivationCodeService {
             logger.info("Successfully obtained a new activation with ID: {}", iar.getActivationId());
 
             // Notify systems about newly created activation
-            activationCodeDelegate.didReturnActivationCode(
+            delegatingActivationCodeHandler.didReturnActivationCode(
                     sourceActivationId, sourceUserId, sourceAppId, destinationAppId,
                     iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
             );
 
             // Add the activation flags
-            final List<String> flags = activationCodeDelegate.addActivationFlags(
+            final List<String> flags = delegatingActivationCodeHandler.addActivationFlags(
                     sourceActivationId, sourceActivationFlags, sourceUserId, sourceAppId, sourceApplicationRoles, destinationAppId,
                     iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
             );

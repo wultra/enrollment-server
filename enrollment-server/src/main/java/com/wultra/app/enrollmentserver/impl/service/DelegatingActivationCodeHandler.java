@@ -20,15 +20,16 @@ package com.wultra.app.enrollmentserver.impl.service;
 import java.util.List;
 
 /**
- * Callback provider for lifecycle events of activation code.
+ * Delegating callback handler for lifecycle events of activation code.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-public interface ActivationCodeDelegate {
+public interface DelegatingActivationCodeHandler {
 
     /**
-     * Fetch destination application ID value based in application ID. Check if the source app can
-     * activate the destination one.
+     * Fetch destination application ID value based on application ID. Check if the source app can
+     * activate the destination one - if the source application cannot activate destination app, this
+     * method should return null.
      *
      * @param applicationId Application identifier for app lookup.
      * @param sourceAppId Source application ID.
@@ -36,7 +37,7 @@ public interface ActivationCodeDelegate {
      * @param applicationRoles Application roles.
      * @return Destination application ID.
      */
-    Long destinationApplicationId(String applicationId, Long sourceAppId, List<String> activationFlags, List<String> applicationRoles);
+    Long fetchDestinationApplicationId(String applicationId, Long sourceAppId, List<String> activationFlags, List<String> applicationRoles);
 
     /**
      * Callback method to add new activation flags to activation.

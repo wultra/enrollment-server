@@ -32,17 +32,17 @@ public class ActivationCodeConverter {
     /**
      * Convert the PowerAuth Server InitActivationResponse into ActivationCodeResponse.
      *
-     * @param iar Original response.
+     * @param initActivationResponse Original response.
      * @return Converted response.
      */
-    public ActivationCodeResponse convert(InitActivationResponse iar) {
-        if (iar == null) {
+    public ActivationCodeResponse convert(InitActivationResponse initActivationResponse) {
+        if (initActivationResponse == null) {
             return null;
         }
         final ActivationCodeResponse response = new ActivationCodeResponse();
-        response.setActivationId(iar.getActivationId());
-        response.setActivationCode(iar.getActivationCode());
-        response.setActivationSignature(iar.getActivationSignature());
+        response.setActivationId(initActivationResponse.getActivationId());
+        response.setActivationCode(initActivationResponse.getActivationCode());
+        response.setActivationSignature(initActivationResponse.getActivationSignature());
         return response;
     }
 
