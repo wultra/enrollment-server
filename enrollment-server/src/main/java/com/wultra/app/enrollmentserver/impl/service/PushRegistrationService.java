@@ -24,7 +24,7 @@ import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.model.validator.PushRegisterRequestValidator;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.push.client.MobilePlatform;
+import io.getlime.push.model.enumeration.MobilePlatform;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
 import org.slf4j.Logger;
@@ -74,8 +74,8 @@ public class PushRegistrationService {
         }
 
         // Get the values from the request
-        String platform = requestObject.getPlatform();
-        String token = requestObject.getToken();
+        final String platform = requestObject.getPlatform();
+        final String token = requestObject.getToken();
 
         // Register the device and return response
         MobilePlatform mobilePlatform = MobilePlatform.Android;
@@ -83,7 +83,7 @@ public class PushRegistrationService {
             mobilePlatform = MobilePlatform.iOS;
         }
         try {
-            boolean result = client.createDevice(applicationId, token, mobilePlatform, activationId);
+            final boolean result = client.createDevice(applicationId, token, mobilePlatform, activationId);
             if (result) {
                 logger.info("Push registration succeeded, user ID: {}", userId);
                 return new Response();
