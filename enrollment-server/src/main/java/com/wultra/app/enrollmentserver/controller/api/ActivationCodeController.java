@@ -27,6 +27,7 @@ import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.base.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.base.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
@@ -83,11 +84,24 @@ public class ActivationCodeController {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
-    public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException {
+    public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request,
+                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
             throw new PowerAuthAuthenticationException("Unable to verify device registration when fetching activation code");
+        }
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when fetching activation code");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed when fetching activation code");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when fetching activation code");
+            throw new PowerAuthAuthenticationException("Invalid request received when fetching activation code");
         }
 
         // Request the activation code details.
