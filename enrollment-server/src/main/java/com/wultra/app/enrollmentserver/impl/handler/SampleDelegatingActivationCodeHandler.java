@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.demo;
+package com.wultra.app.enrollmentserver.impl.handler;
 
 import com.wultra.app.enrollmentserver.impl.service.DelegatingActivationCodeHandler;
 import com.wultra.security.powerauth.client.PowerAuthClient;
@@ -25,24 +25,29 @@ import com.wultra.security.powerauth.client.v3.GetApplicationListResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
- * Delegating activation code handler demo.
+ * Delegating activation code handler demonstration sample.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Component
-public class DelegatingActivationCodeHandlerDemo implements DelegatingActivationCodeHandler {
+@ConditionalOnProperty(
+        value = "enrollment-server.activation-spawn.sample-handler.enabled",
+        havingValue = "true"
+)
+public class SampleDelegatingActivationCodeHandler implements DelegatingActivationCodeHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(DelegatingActivationCodeHandlerDemo.class);
+    private static final Logger logger = LoggerFactory.getLogger(SampleDelegatingActivationCodeHandler.class);
 
     private final PowerAuthClient powerAuthClient;
 
     @Autowired
-    public DelegatingActivationCodeHandlerDemo(PowerAuthClient powerAuthClient) {
+    public SampleDelegatingActivationCodeHandler(PowerAuthClient powerAuthClient) {
         this.powerAuthClient = powerAuthClient;
     }
 
