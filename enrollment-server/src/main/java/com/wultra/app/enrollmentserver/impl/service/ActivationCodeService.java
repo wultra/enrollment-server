@@ -117,7 +117,7 @@ public class ActivationCodeService {
 
         try {
             // Create a new activation
-            logger.info("Calling PowerAuth Server with new activation request, user ID: {}, app ID: {}, otp: {}, ", sourceUserId, destinationAppId, otp);
+            logger.info("Calling PowerAuth Server with new activation request, user ID: {}, app ID: {}", sourceUserId, destinationAppId);
             final InitActivationResponse iar = powerAuthClient.initActivation(
                     sourceUserId, destinationAppId, ActivationOtpValidation.ON_KEY_EXCHANGE, otp
             );
