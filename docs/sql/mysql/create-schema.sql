@@ -1,5 +1,5 @@
 /*
- * PowerAuth Cloud
+ * PowerAuth Enrollment Server
  * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,3 +26,111 @@ CREATE TABLE es_operation_template (
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
+
+CREATE TABLE es_onboarding_process (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    identification_data TEXT NOT NULL,
+    user_id VARCHAR(256),
+    status VARCHAR(32) NOT NULL,
+    error_detail VARCHAR(256),
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated DATETIME,
+    timestamp_finished DATETIME
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX document_process_status ON es_onboarding_process (status);
+CREATE INDEX document_process_timestamp_1 ON es_onboarding_process (timestamp_created);
+CREATE INDEX document_process_timestamp_2 ON es_onboarding_process (timestamp_last_updated);
+
+CREATE TABLE es_onboarding_otp (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    process_id VARCHAR(36) NOT NULL,
+    otp_code VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    error_detail VARCHAR(256),
+    failed_attempts INTEGER,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated DATETIME,
+    timestamp_verified DATETIME,
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX document_otp_status ON es_onboarding_otp (status);
+CREATE INDEX document_otp_timestamp_1 ON es_onboarding_otp (timestamp_created);
+CREATE INDEX document_otp_timestamp_2 ON es_onboarding_otp (timestamp_last_updated);
+
+CREATE TABLE es_document_verification (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    activation_id VARCHAR(36) NOT NULL,
+    type VARCHAR(32) NOT NULL,
+    side VARCHAR(5),
+    other_side_id VARCHAR(36),
+    status VARCHAR(32) NOT NULL,
+    filename VARCHAR(256) NOT NULL,
+    upload_id VARCHAR(36),
+    verification_id VARCHAR(36),
+    verification_score INTEGER,
+    reject_reason VARCHAR(256),
+    error_detail VARCHAR(256),
+    original_document_id VARCHAR(36),
+    used_for_verification TINYINT DEFAULT 0,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_uploaded DATETIME,
+    timestamp_verified DATETIME,
+    timestamp_disposed DATETIME,
+    timestamp_last_updated DATETIME
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX document_verif_activation ON es_document_verification (activation_id);
+CREATE INDEX document_verif_status ON es_document_verification (status);
+CREATE INDEX document_verif_timestamp_1 ON es_document_verification (timestamp_created);
+CREATE INDEX document_verif_timestamp_2 ON es_document_verification (timestamp_last_updated);
+
+CREATE TABLE es_document_data (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    activation_id VARCHAR(36) NOT NULL,
+    filename VARCHAR(256) NOT NULL,
+    data BLOB NOT NULL,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX document_data_activation ON es_document_data (activation_id);
+CREATE INDEX document_data_timestamp ON es_document_data (timestamp_created);
+
+CREATE TABLE es_document_result (
+    id BIGINT NOT NULL PRIMARY KEY,
+    document_id VARCHAR(36) NOT NULL,
+    phase VARCHAR(32) NOT NULL,
+    data TEXT,
+    verification_result TEXT,
+    errors TEXT,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_id) REFERENCES es_document_verification (id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX document_result ON es_document_result (document_id);
+
+CREATE TABLE es_identity_verification (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    activation_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(256) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    reject_reason VARCHAR(256),
+    error_detail VARCHAR(256),
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated DATETIME
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
+CREATE INDEX identity_verif_user ON es_identity_verification (user_id);
+CREATE INDEX identity_verif_status ON es_identity_verification (status);
+CREATE INDEX identity_verif_timestamp_1 ON es_identity_verification (timestamp_created);
+CREATE INDEX identity_verif_timestamp_2 ON es_identity_verification (timestamp_last_updated);
+
+CREATE TABLE es_identity_document (
+    identity_verification_id VARCHAR(36) NOT NULL,
+    document_verification_id VARCHAR(36) NOT NULL,
+    PRIMARY KEY (identity_verification_id, document_verification_id),
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id),
+    FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

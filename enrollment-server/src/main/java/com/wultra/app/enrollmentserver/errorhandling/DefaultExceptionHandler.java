@@ -134,4 +134,29 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
     }
 
+    /**
+     * Handling of identity verification exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(IdentityVerificationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
+        logger.warn("Identity verification failed", ex);
+        return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
+    }
+
+    /**
+     * Handling of invalid document exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(InvalidDocumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleInvalidDocumentException(InvalidDocumentException ex) {
+        logger.warn("Document is invalid", ex);
+        return new ErrorResponse("INVALID_DOCUMENT", "Document is invalid.");
+    }
+
+
 }

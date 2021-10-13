@@ -25,53 +25,52 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing an operation template.
+ * Entity representing document data.
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_operation_template")
-public class OperationTemplate implements Serializable {
+@Table(name = "es_document_data")
+public class DocumentData implements Serializable {
 
-    private static final long serialVersionUID = 5914420785283118800L;
+    private static final long serialVersionUID = 7685715667785423079L;
 
     @Id
     @Column(name = "id", nullable = false)
-    private Long id;
+    private String id;
 
-    @Column(name = "placeholder", nullable = false)
-    private String placeholder;
+    @Column(name = "activation_id", nullable = false)
+    private String activationId;
 
-    @Column(name = "language", nullable = false)
-    private String language;
+    @Column(name = "filename", nullable = false)
+    private String filename;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+    @Column(name = "data", nullable = false)
+    private byte[] data;
 
-    @Column(name = "message", nullable = false)
-    private String message;
-
-    @Column(name = "attributes")
-    private String attributes;
+    @Column(name = "timestamp_created", nullable = false)
+    private Date timestampCreated;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OperationTemplate)) return false;
-        OperationTemplate that = (OperationTemplate) o;
-        return placeholder.equals(that.placeholder) && language.equals(that.language) && title.equals(that.title) && message.equals(that.message);
+        if (!(o instanceof DocumentData)) return false;
+        DocumentData that = (DocumentData) o;
+        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(placeholder, language, title, message);
+        return Objects.hash(filename, timestampCreated);
     }
 
 }
+

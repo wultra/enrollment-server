@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2020 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -16,19 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver;
+package com.wultra.app.enrollmentserver.database;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.wultra.app.enrollmentserver.database.entity.IdentityDocument;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-@SpringBootApplication
-@EnableScheduling
-public class EnrollmentServerApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(EnrollmentServerApplication.class, args);
-    }
+/**
+ * Repository for identity verification and document verification binding.
+ *
+ * @author Roman Strobl, roman.strobl@wultra.com
+ */
+@Repository
+public interface IdentityDocumentRepository extends CrudRepository<IdentityDocument, IdentityDocument.IdentityDocumentKey> {
 
 }
-

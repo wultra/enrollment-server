@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2020 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,20 +15,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.enrollmentserver.model.enumeration;
 
-package com.wultra.app.enrollmentserver;
+/**
+ * Identity verification status enumeration.
+ *
+ * @author Roman Strobl, roman.strobl@wultra.com
+ */
+public enum IdentityVerificationStatus {
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+    /**
+     * Upload or verification of submitted documents is in progress.
+     */
+    IN_PROGRESS,
 
-@SpringBootApplication
-@EnableScheduling
-public class EnrollmentServerApplication {
+    /**
+     * All submitted documents have been verified and accepted as valid documents.
+     */
+    ACCEPTED,
 
-    public static void main(String[] args) {
-        SpringApplication.run(EnrollmentServerApplication.class, args);
-    }
+    /**
+     * One or more documents have been rejected.
+     */
+    REJECTED,
+
+    /**
+     * An unrecoverable error occurred during document analysis.
+     */
+    FAILED
 
 }
-
