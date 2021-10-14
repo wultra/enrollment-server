@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
         havingValue = "true"
 )
 @RestController
-@RequestMapping(value = "v1/api/onboarding")
+@RequestMapping(value = "api/onboarding")
 public class OnboardingController {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingController.class);
