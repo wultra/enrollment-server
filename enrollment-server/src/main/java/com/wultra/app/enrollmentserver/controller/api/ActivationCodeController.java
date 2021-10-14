@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
         havingValue = "true"
 )
 @RestController
-@RequestMapping(value = "v1/api/activation")
+@RequestMapping(value = "api/activation")
 public class ActivationCodeController {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivationCodeController.class);
