@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @ConditionalOnPropertyNotEmpty(value="powerauth.push.service.url")
 @RestController
-@RequestMapping(value = "v1/api/push")
+@RequestMapping(value = "api/push")
 public class PushRegistrationController {
 
     private static final Logger logger = LoggerFactory.getLogger(PushRegistrationController.class);
