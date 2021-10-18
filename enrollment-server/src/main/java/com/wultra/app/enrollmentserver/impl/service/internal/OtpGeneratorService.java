@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
@@ -47,7 +48,8 @@ public class OtpGeneratorService {
             throw new OnboardingProcessException();
         }
         SecureRandom random = new SecureRandom();
-        int number = random.nextInt(10 ^ length - 1);
+        BigInteger bound = BigInteger.TEN.pow(length).add(BigInteger.ONE.negate());
+        long number = Math.abs(random.nextLong() % bound.longValue());
         return String.format("%0" + length + "d", number);
     }
 
