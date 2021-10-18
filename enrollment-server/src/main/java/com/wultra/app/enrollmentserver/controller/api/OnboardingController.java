@@ -80,13 +80,13 @@ public class OnboardingController {
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
+            logger.error("ECIES encryption failed during onboarding");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
+            logger.error("Invalid request received during onboarding");
+            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
         }
 
         OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject());
@@ -108,13 +108,13 @@ public class OnboardingController {
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
+            logger.error("ECIES encryption failed during onboarding");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
+            logger.error("Invalid request received during onboarding");
+            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
         }
 
         return onboardingService.resendOtp(request.getRequestObject());
@@ -135,13 +135,13 @@ public class OnboardingController {
                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
+            logger.error("ECIES encryption failed during onboarding");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
+            logger.error("Invalid request received during onboarding");
+            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
         }
 
         OnboardingStatusResponse response = onboardingService.getStatus(request.getRequestObject());
@@ -163,13 +163,13 @@ public class OnboardingController {
                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
+            logger.error("ECIES encryption failed during onboarding");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
+            logger.error("Invalid request received during onboarding");
+            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
         }
 
         return onboardingService.performCleanup(request.getRequestObject());

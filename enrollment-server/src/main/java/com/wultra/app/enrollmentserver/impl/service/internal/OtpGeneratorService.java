@@ -17,10 +17,12 @@
  */
 package com.wultra.app.enrollmentserver.impl.service.internal;
 
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.UUID;
 
 /**
  * Service class used for generating OTP codes.
@@ -30,15 +32,23 @@ import java.util.UUID;
 @Service
 public class OtpGeneratorService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OtpGeneratorService.class);
+
+    private static final int OTP_MIN_LENGTH = 4;
+    private static final int OTP_MAX_LENGTH = 12;
+
     /**
      * Generate an OTP code.
      * @return OTP code.
      */
-    public String generateOtpCode() {
-        // TODO - configuration of number of digits
+    public String generateOtpCode(int length) throws OnboardingProcessException {
+        if (length < OTP_MIN_LENGTH || length > OTP_MAX_LENGTH) {
+            logger.warn("Invalid OTP length: " + length);
+            throw new OnboardingProcessException();
+        }
         SecureRandom random = new SecureRandom();
-        int number = random.nextInt(99999999);
-        return String.format("%08d", number);
+        int number = random.nextInt(10 ^ length - 1);
+        return String.format("%0" + length + "d", number);
     }
 
 }

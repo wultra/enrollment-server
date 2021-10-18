@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.OnboardingOtpRepository;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingOtp;
@@ -37,12 +38,11 @@ import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service implementing the onboarding process.
@@ -59,6 +59,7 @@ public class OnboardingService {
     private final JsonSerializationService serializer;
     private final IdGeneratorService idGenerator;
     private final OtpGeneratorService otpGeneratorService;
+    private final OnboardingConfig config;
 
     private OnboardingProvider onboardingProvider;
 
@@ -69,13 +70,15 @@ public class OnboardingService {
      * @param serializer JSON serialization service.
      * @param idGenerator ID generator service.
      * @param otpGeneratorService OTP generator service.
+     * @param config Onboarding configuration.
      */
-    public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, JsonSerializationService serializer, IdGeneratorService idGenerator, OtpGeneratorService otpGeneratorService) {
+    public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, JsonSerializationService serializer, IdGeneratorService idGenerator, OtpGeneratorService otpGeneratorService, OnboardingConfig config) {
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.serializer = serializer;
         this.idGenerator = idGenerator;
         this.otpGeneratorService = otpGeneratorService;
+        this.config = config;
     }
 
     /**
@@ -99,7 +102,6 @@ public class OnboardingService {
             logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
             throw new OnboardingProcessException();
         }
-        // TODO - check for brute force attacks
         Map<String, Object> identification = request.getIdentification();
         String identificationData = serializer.serialize(identification);
         String processId = idGenerator.generateProcessId();
@@ -112,15 +114,33 @@ public class OnboardingService {
             logger.warn("User look failed, error: {}", e.getMessage(), e);
             throw new OnboardingProcessException();
         }
-        // TODO - check for existing processes for given user, join process if it is IN_PROGRESS
 
-        // Create an onboarding process
-        OnboardingProcess process = new OnboardingProcess();
-        process.setId(processId);
-        process.setIdentificationData(identificationData);
-        process.setStatus(OnboardingStatus.IN_PROGRESS);
-        process.setUserId(userId);
-        process.setTimestampCreated(new Date());
+        // Check for brute force attacks
+        Calendar c = GregorianCalendar.getInstance();
+        c.add(Calendar.HOUR, -24);
+        Date timestampCheckStart = c.getTime();
+        int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
+        if (existingProcessCount >= config.getMaxProcessCountPerDay()) {
+            logger.warn("Maximum number of processes per day reached for user: " + userId);
+            throw new OnboardingProcessException();
+        }
+
+        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findExistingProcess(userId);
+        OnboardingProcess process;
+        if (processOptional.isPresent()) {
+            // Resume an existing process
+            process = processOptional.get();
+            // Use latest identification data
+            process.setIdentificationData(identificationData);
+            process.setTimestampLastUpdated(new Date());
+        } else {
+            // Create an onboarding process
+            process = new OnboardingProcess();
+            process.setId(processId);
+            process.setStatus(OnboardingStatus.IN_PROGRESS);
+            process.setUserId(userId);
+            process.setTimestampCreated(new Date());
+        }
         onboardingProcessRepository.save(process);
         // Create an OTP code
         String otpCode = createOtpCode(processId);
@@ -145,9 +165,19 @@ public class OnboardingService {
      */
     @Transactional
     public Response resendOtp(OtpResendRequest request) throws OnboardingProcessException {
-        // TODO - check for spamming attempts
         String processId = request.getProcessId();
         OnboardingProcess process = findProcess(processId);
+        // Do not allow spamming by OTP codes
+        Date lastDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId);
+        int resendPeriod = config.getResendPeriod();
+        Calendar c = GregorianCalendar.getInstance();
+        c.setTime(lastDate);
+        c.add(Calendar.SECOND, resendPeriod);
+        Date allowedDate = c.getTime();
+        if (allowedDate.after(new Date())) {
+            logger.warn("Resend OTP functionality is not available yet for process ID: {}", processId);
+            throw new OnboardingProcessException();
+        }
         String userId = process.getUserId();
         Optional<OnboardingOtp> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
         if (!otpOptional.isPresent()) {
@@ -189,21 +219,23 @@ public class OnboardingService {
         // Verify OTP code
         boolean verified = false;
         int remainingAttempts = 0;
-        // TODO - failed attempts must take into account all OTPs within process!
-        if (otp.getStatus() == OtpStatus.ACTIVE && otp.getFailedAttempts() < 3) {
-            // TODO - configuration of max failed attempts
-            // TODO - timeout check
+        int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId);
+        int maxFailedAttempts = config.getMaxFailedAttempts();
+        if (otp.getStatus() == OtpStatus.ACTIVE && failedAttempts < maxFailedAttempts) {
             if (otp.getOtpCode().equals(otpCode)) {
                 verified = true;
                 otp.setStatus(OtpStatus.VERIFIED);
                 otp.setTimestampVerified(new Date());
-                finishOnboarding(processId);
             } else {
                 otp.setFailedAttempts(otp.getFailedAttempts() + 1);
-                if (otp.getFailedAttempts() == 3) {
+                failedAttempts++;
+                if (failedAttempts >= maxFailedAttempts) {
                     otp.setStatus(OtpStatus.FAILED);
-                    // Onboarding process is failed
+                    otp.setErrorDetail("maxFailedAttempts");
+                    // Onboarding process is failed, update it
                     process.setStatus(OnboardingStatus.FAILED);
+                    process.setTimestampLastUpdated(new Date());
+                    process.setErrorDetail("maxFailedAttempts");
                     process = onboardingProcessRepository.save(process);
                 }
             }
@@ -261,24 +293,30 @@ public class OnboardingService {
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(new Date());
+                otp.setErrorDetail("canceled");
                 onboardingOtpRepository.save(otp);
             }
         }
         OnboardingProcess process = processOptional.get();
         process.setStatus(OnboardingStatus.FAILED);
         process.setTimestampLastUpdated(new Date());
+        process.setErrorDetail("canceled");
         onboardingProcessRepository.save(process);
         return new Response();
     }
 
-    // TODO - a service which checks for inactive processes and terminates them
-
-    private void finishOnboarding(String processId) throws OnboardingProcessException {
-        // TODO - this needs to be done in activation provider
-        OnboardingProcess process = findProcess(processId);
-        process.setStatus(OnboardingStatus.FINISHED);
-        process.setActivationId(null); // TODO
-        onboardingProcessRepository.save(process);
+    /**
+     * Check for inactive processes and terminate them.
+     */
+    @Transactional
+    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
+    public void terminateInactiveProcesses() {
+        int expirationSeconds = config.getProcessExpirationTime();
+        Calendar c = GregorianCalendar.getInstance();
+        c.add(Calendar.SECOND, -expirationSeconds);
+        Date expirationDate = c.getTime();
+        onboardingProcessRepository.terminateOldProcesses(expirationDate);
+        onboardingOtpRepository.terminateOldOtps(expirationDate);
     }
 
     /**
@@ -301,11 +339,11 @@ public class OnboardingService {
      * @param processId Process ID.
      * @return Generated OTP code.
      */
-    private String createOtpCode(String processId) {
-        // TODO - add OTP configuration
+    private String createOtpCode(String processId) throws OnboardingProcessException {
         OnboardingOtp otp = new OnboardingOtp();
         String otpId = idGenerator.generateOtpId();
-        String otpCode = otpGeneratorService.generateOtpCode();
+        int otpLength = config.getOtpLength();
+        String otpCode = otpGeneratorService.generateOtpCode(otpLength);
         otp.setId(otpId);
         otp.setProcessId(processId);
         otp.setOtpCode(otpCode);

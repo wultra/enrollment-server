@@ -28,12 +28,21 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @Data
-public class IdentityVerificationConfig {
+public class OnboardingConfig {
 
-    @Value("${enrollment-server.identity-verification.data-retention.hours:1}")
-    private int dataRetentionTime;
+    @Value("${enrollment-server.identity-verification.otp.length:8}")
+    private int otpLength;
 
-    @Value("${enrollment-server.identity-verification.expiration.seconds:300}")
-    private int verificationExpirationTime;
+    @Value("${enrollment-server.onboarding-process.expiration.seconds:300}")
+    private int processExpirationTime;
+
+    @Value("${enrollment-server.onboarding-process.max-failed-attempts:5}")
+    private int maxFailedAttempts;
+
+    @Value("${enrollment-server.onboarding-process.resend-period.seconds:30}")
+    private int resendPeriod;
+
+    @Value("${enrollment-server.onboarding-process.max-processes-per-day:5}")
+    private int maxProcessCountPerDay;
 
 }

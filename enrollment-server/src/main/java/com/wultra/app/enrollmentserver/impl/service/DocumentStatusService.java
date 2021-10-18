@@ -90,7 +90,7 @@ public class DocumentStatusService {
     }
 
     private Date getProcessExpirationTimestamp() {
-        int expirationTime = identityVerificationConfig.getProcessExpirationTime();
+        int expirationTime = identityVerificationConfig.getVerificationExpirationTime();
         Calendar dateExpiration = GregorianCalendar.getInstance();
         dateExpiration.add(Calendar.SECOND, expirationTime);
         return dateExpiration.getTime();

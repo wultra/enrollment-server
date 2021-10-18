@@ -19,10 +19,12 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.OnboardingOtp;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcess;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -34,5 +36,19 @@ import java.util.Optional;
 public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtp, String> {
 
     Optional<OnboardingOtp> findFirstByProcessIdOrderByTimestampCreatedDesc(String processId);
+
+    @Modifying
+    @Query("UPDATE OnboardingOtp o SET o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
+            "o.timestampLastUpdated = CURRENT_TIMESTAMP, " +
+            "o.errorDetail = 'expired' " +
+            "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
+            "AND o.timestampCreated < :dateCreatedBefore")
+    void terminateOldOtps(Date dateCreatedBefore);
+
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtp o WHERE o.processId = :processId")
+    int getFailedAttemptsByProcess(String processId);
+
+    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtp o WHERE o.processId = :processId")
+    Date getNewestOtpCreatedTimestamp(String processId);
 
 }

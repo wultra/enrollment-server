@@ -19,9 +19,12 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcess;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -33,5 +36,21 @@ import java.util.Optional;
 public interface OnboardingProcessRepository extends CrudRepository<OnboardingProcess, String> {
 
     Optional<OnboardingProcess> findById(String processId);
+
+    @Query("SELECT p FROM OnboardingProcess p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+            "AND p.userId = :userId " +
+            "ORDER BY p.timestampCreated DESC")
+    Optional<OnboardingProcess> findExistingProcess(String userId);
+
+    @Query("SELECT count(p) FROM OnboardingProcess p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
+    int countProcessesAfterTimestamp(String userId, Date dateAfter);
+
+    @Modifying
+    @Query("UPDATE OnboardingProcess p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
+            "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
+            "p.errorDetail = 'expired' " +
+            "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+            "AND p.timestampCreated < :dateCreatedBefore")
+    void terminateOldProcesses(Date dateCreatedBefore);
 
 }
