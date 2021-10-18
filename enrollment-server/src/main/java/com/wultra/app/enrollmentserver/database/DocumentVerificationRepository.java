@@ -42,7 +42,7 @@ public interface DocumentVerificationRepository extends CrudRepository<DocumentV
 
     @Modifying
     @Query("UPDATE DocumentVerification d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
-            "WHERE d.timestampLastUpdated < :dateCleanup " +
+            "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
     int failObsoleteVerifications(Date cleanupDate);
 

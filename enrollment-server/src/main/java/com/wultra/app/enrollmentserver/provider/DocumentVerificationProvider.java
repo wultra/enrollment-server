@@ -15,22 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
-
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
-
-import java.util.Map;
+package com.wultra.app.enrollmentserver.provider;
 
 /**
- * Response class used when starting the onboarding process.
+ * Provider which allows customization of the document verification process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
-
-    private String processId;
-    private OnboardingStatus onboardingStatus;
+public interface DocumentVerificationProvider {
 
 }

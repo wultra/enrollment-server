@@ -17,10 +17,11 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.model.request.*;
 import com.wultra.app.enrollmentserver.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.model.response.OnboardingStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.VerifyOtpResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -53,11 +54,15 @@ public class OnboardingController {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingController.class);
 
+    private final OnboardingService onboardingService;
+
     /**
      * Controller constructor.
+     * @param onboardingService Onboarding service.
      */
     @Autowired
-    public OnboardingController() {
+    public OnboardingController(OnboardingService onboardingService) {
+        this.onboardingService = onboardingService;
     }
 
     /**
@@ -67,11 +72,12 @@ public class OnboardingController {
      * @param eciesContext ECIES context.
      * @return Start onboarding process response.
      * @throws PowerAuthAuthenticationException Thrown when request is invalid.
+     * @throws OnboardingProcessException Thrown in case onboarding process fails.
      */
     @RequestMapping(value = "start", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException {
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -83,8 +89,8 @@ public class OnboardingController {
             throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
         }
 
-        // TODO
-        return null;
+        OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject());
+        return new ObjectResponse<>(response);
     }
 
     /**
@@ -94,11 +100,12 @@ public class OnboardingController {
      * @param eciesContext ECIES context.
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws OnboardingProcessException Thrown when onboarding process fails.
      */
     @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public Response resendOtp(@EncryptedRequestBody ObjectRequest<ResendOtpRequest> request,
-                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException {
+    public Response resendOtp(@EncryptedRequestBody ObjectRequest<OtpResendRequest> request,
+                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -110,35 +117,7 @@ public class OnboardingController {
             throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
         }
 
-        // TODO
-        return null;
-    }
-
-    /**
-     * Verify an onboarding OTP code.
-     *
-     * @param request Verify OTP code request.
-     * @param eciesContext ECIES context.
-     * @return Verify OTP code response.
-     * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
-     */
-    @RequestMapping(value = "otp/verify", method = RequestMethod.POST)
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public ObjectResponse<VerifyOtpResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<VerifyOtpRequest> request,
-                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException {
-        // Check if the request was correctly decrypted
-        if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
-        }
-
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
-        }
-
-        // TODO
-        return null;
+        return onboardingService.resendOtp(request.getRequestObject());
     }
 
     /**
@@ -148,11 +127,12 @@ public class OnboardingController {
      * @param eciesContext ECIES context.
      * @return Onboarding status response.
      * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStatusResponse> getStatus(@EncryptedRequestBody ObjectRequest<OnboardingStatusRequest> request,
-                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException {
+                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -164,8 +144,8 @@ public class OnboardingController {
             throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
         }
 
-        // TODO
-        return null;
+        OnboardingStatusResponse response = onboardingService.getStatus(request.getRequestObject());
+        return new ObjectResponse<>(response);
     }
 
     /**
@@ -175,11 +155,12 @@ public class OnboardingController {
      * @param eciesContext ECIES context.
      * @return Onboarding cleanup response.
      * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @RequestMapping(value = "cleanup", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response performCleanup(@EncryptedRequestBody ObjectRequest<OnboardingCleanupRequest> request,
-                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException {
+                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -191,8 +172,7 @@ public class OnboardingController {
             throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
         }
 
-        // TODO
-        return null;
+        return onboardingService.performCleanup(request.getRequestObject());
     }
 
 }

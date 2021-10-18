@@ -15,20 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
-
-import lombok.Data;
-
-import java.util.Map;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Request class used when resending an OTP code.
+ * Exception thrown in case onboarding provider fails.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class ResendOtpRequest {
+public class OnboardingProviderException extends Exception {
 
-    private String processId;
+    private static final long serialVersionUID = 787256528155796393L;
 
 }

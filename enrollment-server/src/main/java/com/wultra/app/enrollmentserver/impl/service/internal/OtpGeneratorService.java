@@ -15,22 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
+package com.wultra.app.enrollmentserver.impl.service.internal;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
+import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.security.SecureRandom;
+import java.util.UUID;
 
 /**
- * Response class used when starting the onboarding process.
+ * Service class used for generating OTP codes.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
+@Service
+public class OtpGeneratorService {
 
-    private String processId;
-    private OnboardingStatus onboardingStatus;
+    /**
+     * Generate an OTP code.
+     * @return OTP code.
+     */
+    public String generateOtpCode() {
+        // TODO - configuration of number of digits
+        SecureRandom random = new SecureRandom();
+        int number = random.nextInt(99999999);
+        return String.format("%08d", number);
+    }
 
 }

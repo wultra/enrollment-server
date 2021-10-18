@@ -54,6 +54,9 @@ public class OnboardingProcess implements Serializable {
     @Column(name = "user_id")
     private String userId;
 
+    @Column(name = "activation_id")
+    private String activationId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OnboardingStatus status;

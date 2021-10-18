@@ -28,10 +28,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class IdentityVerificationConfig {
 
-    @Value("${enrollment-server.identity-verification.data-retention.hours}:1")
+    @Value("${enrollment-server.identity-verification.data-retention.hours:1}")
     private int dataRetentionTime;
 
-    @Value("${enrollment-server.identity-verification.expiration.seconds}:300")
+    @Value("${enrollment-server.identity-verification.expiration.seconds:300}")
     private int verificationExpirationTime;
 
     /**

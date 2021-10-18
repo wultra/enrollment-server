@@ -117,6 +117,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document upload response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws InvalidDocumentException Thrown when document is invalid.
      */
     @RequestMapping(value = "upload", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)

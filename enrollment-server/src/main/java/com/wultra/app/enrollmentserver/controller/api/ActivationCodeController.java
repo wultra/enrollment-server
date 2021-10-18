@@ -72,6 +72,7 @@ public class ActivationCodeController {
      * Controller request handler for requesting the activation code.
      *
      * @param request Request with activation OTP.
+     * @param eciesContext ECIES context.
      * @param apiAuthentication Authentication object with user and app details.
      * @return New activation code, activation code signature and activation ID.
      * @throws PowerAuthAuthenticationException In case user authentication fails.

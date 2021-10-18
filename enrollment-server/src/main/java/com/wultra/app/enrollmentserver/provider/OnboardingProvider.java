@@ -15,22 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
+package com.wultra.app.enrollmentserver.provider;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
 
 import java.util.Map;
 
 /**
- * Response class used when starting the onboarding process.
+ * Provider which allows customization of the onboarding process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
+public interface OnboardingProvider {
 
-    private String processId;
-    private OnboardingStatus onboardingStatus;
+    String lookupUser(Map<String, Object> identification) throws OnboardingProviderException;
+
+    void sendOtpCode(String userId, String otpCode, boolean resend) throws OnboardingProviderException;
 
 }

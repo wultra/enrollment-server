@@ -15,22 +15,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
+package com.wultra.app.enrollmentserver.database;
 
-import java.util.Map;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingOtp;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcess;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 /**
- * Response class used when starting the onboarding process.
+ * Repository for onboarding OTP codes.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
+@Repository
+public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtp, String> {
 
-    private String processId;
-    private OnboardingStatus onboardingStatus;
+    Optional<OnboardingOtp> findFirstByProcessIdOrderByTimestampCreatedDesc(String processId);
 
 }

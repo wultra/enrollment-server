@@ -15,19 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
-
-import lombok.Data;
+package com.wultra.app.enrollmentserver.provider;
 
 /**
- * Request class used when verifying an OTP code.
+ * Provider which allows customization of the identity verification process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class VerifyOtpRequest {
-
-    private String processId;
-    private String otpCode;
+public interface IdentityVerificationProvider {
 
 }

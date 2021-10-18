@@ -158,5 +158,16 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("INVALID_DOCUMENT", "Document is invalid.");
     }
 
+    /**
+     * Handling of onboarding process exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(OnboardingProcessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleOnboardingProcessException(OnboardingProcessException ex) {
+        logger.warn("Onboarding process failed", ex);
+        return new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
+    }
 
 }

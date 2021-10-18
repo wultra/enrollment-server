@@ -15,22 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
-
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
-
-import java.util.Map;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Response class used when starting the onboarding process.
+ * Exception thrown in case onboarding process fails.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
+public class OnboardingProcessException extends Exception {
 
-    private String processId;
-    private OnboardingStatus onboardingStatus;
+    private static final long serialVersionUID = 7558022671624330227L;
 
 }

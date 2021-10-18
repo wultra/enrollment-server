@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.model.response;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
 /**
@@ -25,9 +26,10 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class VerifyOtpResponse {
+public class OtpVerifyResponse {
 
     private String processId;
+    private OnboardingStatus onboardingStatus;
     private boolean verified;
     private Integer remainingAttempts;
 

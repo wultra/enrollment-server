@@ -81,6 +81,7 @@ public class IdentityVerificationService {
      * Upload a single document related to identity verification.
      * @param requestData Binary document data.
      * @return Document upload response.
+     * @throws InvalidDocumentException Thrown when document is invalid.
      */
     @Transactional
     public DocumentUploadResponse uploadDocument(byte[] requestData) throws InvalidDocumentException {
