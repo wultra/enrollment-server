@@ -56,7 +56,7 @@ import java.util.Locale;
         matchIfMissing = true
 )
 @RestController
-@RequestMapping("/api/auth/token/app")
+@RequestMapping("api/auth/token/app")
 public class MobileTokenController {
 
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);

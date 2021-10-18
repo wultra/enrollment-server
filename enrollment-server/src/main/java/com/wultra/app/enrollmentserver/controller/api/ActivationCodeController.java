@@ -80,7 +80,7 @@ public class ActivationCodeController {
      */
     @RequestMapping(value = "code", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "api/activation/code", signatureType = {
+    @PowerAuth(resourceId = "/api/activation/code", signatureType = {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
