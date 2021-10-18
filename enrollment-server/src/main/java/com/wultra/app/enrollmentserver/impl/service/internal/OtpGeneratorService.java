@@ -40,7 +40,9 @@ public class OtpGeneratorService {
 
     /**
      * Generate an OTP code.
+     * @param length Length of generated OTP code.
      * @return OTP code.
+     * @throws OnboardingProcessException Thrown in case OTP code generation fails.
      */
     public String generateOtpCode(int length) throws OnboardingProcessException {
         if (length < OTP_MIN_LENGTH || length > OTP_MAX_LENGTH) {
@@ -48,7 +50,7 @@ public class OtpGeneratorService {
             throw new OnboardingProcessException();
         }
         SecureRandom random = new SecureRandom();
-        BigInteger bound = BigInteger.TEN.pow(length).add(BigInteger.ONE.negate());
+        BigInteger bound = BigInteger.TEN.pow(length).subtract(BigInteger.ONE);
         long number = Math.abs(random.nextLong() % bound.longValue());
         return String.format("%0" + length + "d", number);
     }

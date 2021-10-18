@@ -27,7 +27,7 @@ import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ActivationOtpValidation;
 import com.wultra.security.powerauth.client.v3.InitActivationResponse;
-import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
