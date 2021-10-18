@@ -324,6 +324,15 @@ public class OnboardingService {
     }
 
     /**
+     * Update a process entity in database.
+     * @param process Onboarding process entity.
+     * @return Updated onboarding process entity.
+     */
+    public OnboardingProcess updateProcess(OnboardingProcess process) {
+        return onboardingProcessRepository.save(process);
+    }
+
+    /**
      * Check for inactive processes and terminate them.
      */
     @Transactional
