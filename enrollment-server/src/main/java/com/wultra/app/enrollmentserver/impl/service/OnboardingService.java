@@ -309,6 +309,21 @@ public class OnboardingService {
     }
 
     /**
+     * Find an onboarding process.
+     * @param processId Process identifier.
+     * @return Onboarding process.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    public OnboardingProcess findProcess(String processId) throws OnboardingProcessException {
+        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findById(processId);
+        if (!processOptional.isPresent()) {
+            logger.warn("Onboarding process not found, process ID: {}", processId);
+            throw new OnboardingProcessException();
+        }
+        return processOptional.get();
+    }
+
+    /**
      * Check for inactive processes and terminate them.
      */
     @Transactional
@@ -320,21 +335,6 @@ public class OnboardingService {
         Date expirationDate = c.getTime();
         onboardingProcessRepository.terminateOldProcesses(expirationDate);
         onboardingOtpRepository.terminateOldOtps(expirationDate);
-    }
-
-    /**
-     * Find an onboarding process.
-     * @param processId Process identifier.
-     * @return Onboarding process.
-     * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     */
-    private OnboardingProcess findProcess(String processId) throws OnboardingProcessException {
-        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
-            logger.warn("Onboarding process not found, process ID: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        return processOptional.get();
     }
 
     /**
