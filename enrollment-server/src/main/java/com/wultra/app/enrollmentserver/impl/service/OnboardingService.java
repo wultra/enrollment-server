@@ -104,7 +104,6 @@ public class OnboardingService {
         }
         Map<String, Object> identification = request.getIdentification();
         String identificationData = serializer.serialize(identification);
-        String processId = idGenerator.generateProcessId();
 
         // Lookup user using identification attributes
         String userId;
@@ -127,21 +126,25 @@ public class OnboardingService {
 
         Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findExistingProcess(userId);
         OnboardingProcess process;
+        String processId;
         if (processOptional.isPresent()) {
             // Resume an existing process
             process = processOptional.get();
+            processId = process.getId();
             // Use latest identification data
             process.setIdentificationData(identificationData);
             process.setTimestampLastUpdated(new Date());
         } else {
             // Create an onboarding process
+            processId = idGenerator.generateProcessId();
             process = new OnboardingProcess();
+            process.setIdentificationData(identificationData);
             process.setId(processId);
             process.setStatus(OnboardingStatus.IN_PROGRESS);
             process.setUserId(userId);
             process.setTimestampCreated(new Date());
         }
-        onboardingProcessRepository.save(process);
+        process = onboardingProcessRepository.save(process);
         // Create an OTP code
         String otpCode = createOtpCode(processId);
         // Send the OTP code
