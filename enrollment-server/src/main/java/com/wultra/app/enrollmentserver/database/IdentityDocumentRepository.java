@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.IdentityDocument;
+import com.wultra.app.enrollmentserver.database.entity.IdentityDocumentEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -28,6 +28,6 @@ import org.springframework.stereotype.Repository;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface IdentityDocumentRepository extends CrudRepository<IdentityDocument, IdentityDocument.IdentityDocumentKey> {
+public interface IdentityDocumentRepository extends CrudRepository<IdentityDocumentEntity, IdentityDocumentEntity.IdentityDocumentKey> {
 
 }

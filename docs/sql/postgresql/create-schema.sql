@@ -66,10 +66,12 @@ CREATE TABLE es_document_verification (
     type VARCHAR(32) NOT NULL,
     side VARCHAR(5),
     other_side_id VARCHAR(36),
+    provider_name VARCHAR(64),
     status VARCHAR(32) NOT NULL,
     filename VARCHAR(256) NOT NULL,
     upload_id VARCHAR(36),
     verification_id VARCHAR(36),
+    photo_id VARCHAR(256),
     verification_score INTEGER,
     reject_reason VARCHAR(256),
     error_detail VARCHAR(256),
@@ -100,22 +102,24 @@ CREATE INDEX document_data_timestamp ON es_document_data (timestamp_created);
 
 CREATE TABLE es_document_result (
     id BIGINT NOT NULL PRIMARY KEY,
-    document_id VARCHAR(36) NOT NULL,
+    document_verification_id VARCHAR(36) NOT NULL,
     phase VARCHAR(32) NOT NULL,
-    data TEXT,
+    reject_reason TEXT,
     verification_result TEXT,
-    errors TEXT,
+    error_detail TEXT,
+    extracted_data TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (document_id) REFERENCES es_document_verification (id)
+    FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)
 );
 
-CREATE INDEX document_result ON es_document_result (document_id);
+CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
 
 CREATE TABLE es_identity_verification (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     activation_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(256) NOT NULL,
     status VARCHAR(32) NOT NULL,
+    phase VARCHAR(32) NOT NULL,
     reject_reason VARCHAR(256),
     error_detail VARCHAR(256),
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -15,15 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.errorhandling;
+package com.wultra.app.enrollmentserver.model.integration;
+
+import lombok.Data;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * Exception thrown in case uploaded document is invalid.
+ * Information about a presence check session.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class InvalidDocumentException extends Exception {
+@Data
+public class SessionInfo {
 
-    private static final long serialVersionUID = -5868335942741210351L;
+    private Map<String, Object> sessionAttributes = new LinkedHashMap<>();
 
 }

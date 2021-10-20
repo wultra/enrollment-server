@@ -18,18 +18,19 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import lombok.*;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing document data.
+ * Entity representing an onboarding OTP code.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -38,39 +39,52 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_document_data")
-public class DocumentData implements Serializable {
+@Table(name = "es_onboarding_otp")
+public class OnboardingOtpEntity implements Serializable {
 
-    private static final long serialVersionUID = 7685715667785423079L;
+    private static final long serialVersionUID = -5626187612981527923L;
 
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "activation_id", nullable = false)
-    private String activationId;
+    // TODO - FK relationship
+    @Column(name = "process_id", nullable = false)
+    private String processId;
 
-    @Column(name = "filename", nullable = false)
-    private String filename;
+    @Column(name = "otp_code", nullable = false)
+    private String otpCode;
 
-    @Column(name = "data", nullable = false)
-    private byte[] data;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private OtpStatus status;
+
+    @Column(name = "error_detail")
+    private String errorDetail;
+
+    @Column(name = "failed_attempts")
+    private int failedAttempts;
 
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    @Column(name = "timestamp_last_updated")
+    private Date timestampLastUpdated;
+
+    @Column(name = "timestamp_verified")
+    private Date timestampVerified;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentData)) return false;
-        DocumentData that = (DocumentData) o;
-        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
+        if (!(o instanceof OnboardingOtpEntity)) return false;
+        OnboardingOtpEntity that = (OnboardingOtpEntity) o;
+        return processId.equals(that.processId) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(filename, timestampCreated);
+        return Objects.hash(processId, timestampCreated);
     }
-
 }
 

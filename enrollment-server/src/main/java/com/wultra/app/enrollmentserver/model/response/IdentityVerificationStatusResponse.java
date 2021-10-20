@@ -15,15 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.errorhandling;
+package com.wultra.app.enrollmentserver.model.response;
+
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import lombok.Data;
 
 /**
- * Exception thrown in case an identity check fails.
+ * Response class used when checking identity verification status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class IdentityVerificationException extends Exception {
+@Data
+public class IdentityVerificationStatusResponse {
 
-    private static final long serialVersionUID = 3977949988982066411L;
+    private IdentityVerificationStatus identityVerificationStatus;
+    private IdentityVerificationPhase identityVerificationPhase;
 
 }

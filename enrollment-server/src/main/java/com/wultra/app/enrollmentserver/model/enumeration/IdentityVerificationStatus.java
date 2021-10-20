@@ -30,6 +30,11 @@ public enum IdentityVerificationStatus {
     IN_PROGRESS,
 
     /**
+     * All submitted documents are waiting for verification.
+     */
+    VERIFICATION_PENDING,
+
+    /**
      * All submitted documents have been verified and accepted as valid documents.
      */
     ACCEPTED,

@@ -15,13 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.provider;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Provider which allows customization of the identity verification process.
+ * Exception thrown in case presence check fails.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public interface IdentityVerificationProvider {
+public class PresenceCheckException extends Exception {
+
+    private static final long serialVersionUID = 3977949988982066411L;
 
 }

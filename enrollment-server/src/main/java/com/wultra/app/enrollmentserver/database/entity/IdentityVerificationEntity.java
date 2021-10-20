@@ -18,11 +18,9 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -30,7 +28,7 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing an onboarding process.
+ * Entity representing identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -39,29 +37,33 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_onboarding_process")
-public class OnboardingProcess implements Serializable {
+@Table(name = "es_identity_verification")
+public class IdentityVerificationEntity implements Serializable {
 
-    private static final long serialVersionUID = -438495244269415158L;
+    private static final long serialVersionUID = 6307591849271145826L;
 
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "identification_data", nullable = false)
-    private String identificationData;
-
-    @Column(name = "user_id")
-    private String userId;
-
-    @Column(name = "activation_id")
+    @Column(name = "activation_id", nullable = false)
     private String activationId;
+
+    @Column(name = "user_id", nullable = false)
+    private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private OnboardingStatus status;
+    private IdentityVerificationStatus status;
 
-    @Column(name = "error_detail")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "phase", nullable = false)
+    private IdentityVerificationPhase phase;
+
+    @Column(name = "reject_reason")
+    private String rejectReason;
+
+    @Column(name = "error_details")
     private String errorDetail;
 
     @Column(name = "timestamp_created", nullable = false)
@@ -70,20 +72,16 @@ public class OnboardingProcess implements Serializable {
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
-    @Column(name = "timestamp_finished")
-    private Date timestampFinished;
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingProcess)) return false;
-        OnboardingProcess that = (OnboardingProcess) o;
-        return identificationData.equals(that.identificationData) && timestampCreated.equals(that.timestampCreated);
+        if (!(this instanceof IdentityVerificationEntity)) return false;
+        IdentityVerificationEntity that = (IdentityVerificationEntity) o;
+        return activationId.equals(that.activationId) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identificationData, timestampCreated);
+        return Objects.hash(activationId, timestampCreated);
     }
 }
-

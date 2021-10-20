@@ -139,9 +139,9 @@ public class DefaultExceptionHandler {
      * @param ex Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(IdentityVerificationException.class)
+    @ExceptionHandler(PresenceCheckException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
+    public @ResponseBody ErrorResponse handleIdentityVerificationException(PresenceCheckException ex) {
         logger.warn("Identity verification failed", ex);
         return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
     }
@@ -151,9 +151,9 @@ public class DefaultExceptionHandler {
      * @param ex Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(InvalidDocumentException.class)
+    @ExceptionHandler(DocumentVerificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleInvalidDocumentException(InvalidDocumentException ex) {
+    public @ResponseBody ErrorResponse handleInvalidDocumentException(DocumentVerificationException ex) {
         logger.warn("Document is invalid", ex);
         return new ErrorResponse("INVALID_DOCUMENT", "Document is invalid.");
     }
@@ -170,4 +170,15 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
     }
 
+    /**
+     * Handling of too many onboarding processes exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(TooManyProcessesException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleTooManyProcessesException(TooManyProcessesException ex) {
+        logger.warn("Too many onboarding processes started by the user", ex);
+        return new ErrorResponse("ONBOARDING_FAILED", "Too many onboarding processes started by the user.");
+    }
 }

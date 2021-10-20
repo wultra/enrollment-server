@@ -18,8 +18,11 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import lombok.*;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -27,7 +30,7 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing identity verification.
+ * Entity representing an onboarding process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -36,29 +39,29 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_identity_verification")
-public class IdentityVerification implements Serializable {
+@Table(name = "es_onboarding_process")
+public class OnboardingProcessEntity implements Serializable {
 
-    private static final long serialVersionUID = 6307591849271145826L;
+    private static final long serialVersionUID = -438495244269415158L;
 
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "activation_id", nullable = false)
-    private String activationId;
+    @Column(name = "identification_data", nullable = false)
+    private String identificationData;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private String userId;
+
+    @Column(name = "activation_id")
+    private String activationId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private IdentityVerificationStatus status;
+    private OnboardingStatus status;
 
-    @Column(name = "reject_reason")
-    private String rejectReason;
-
-    @Column(name = "error_details")
+    @Column(name = "error_detail")
     private String errorDetail;
 
     @Column(name = "timestamp_created", nullable = false)
@@ -67,16 +70,20 @@ public class IdentityVerification implements Serializable {
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
+    @Column(name = "timestamp_finished")
+    private Date timestampFinished;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(this instanceof IdentityVerification)) return false;
-        IdentityVerification that = (IdentityVerification) o;
-        return activationId.equals(that.activationId) && timestampCreated.equals(that.timestampCreated);
+        if (!(o instanceof OnboardingProcessEntity)) return false;
+        OnboardingProcessEntity that = (OnboardingProcessEntity) o;
+        return identificationData.equals(that.identificationData) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(activationId, timestampCreated);
+        return Objects.hash(identificationData, timestampCreated);
     }
 }
+

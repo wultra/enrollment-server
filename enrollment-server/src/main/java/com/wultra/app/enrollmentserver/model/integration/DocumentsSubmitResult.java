@@ -15,30 +15,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.enrollmentserver.model.integration;
 
-package com.wultra.app.enrollmentserver.database;
+import lombok.Data;
 
-import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Repository for document data records.
+ * Result of submission of multiple identity-related documents.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Repository
-public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
+@Data
+public class DocumentsSubmitResult {
 
-    @Modifying
-    int deleteAllByActivationId(String activationId);
-
-    @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
+    private List<DocumentSubmitResult> results = new ArrayList<>();
+    private String rejectReason;
+    private String errorDetail;
+    private String extractedPhotoId;
 
 }

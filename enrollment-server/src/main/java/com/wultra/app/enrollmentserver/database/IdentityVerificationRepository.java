@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.IdentityVerification;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -29,9 +29,9 @@ import org.springframework.stereotype.Repository;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface IdentityVerificationRepository extends CrudRepository<IdentityVerification, String> {
+public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    @Query("UPDATE IdentityVerification i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
+    @Query("UPDATE IdentityVerificationEntity i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
     int failInProgressVerifications(String activationId);

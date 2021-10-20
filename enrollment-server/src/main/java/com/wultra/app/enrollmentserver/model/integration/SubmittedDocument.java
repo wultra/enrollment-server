@@ -15,30 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.enrollmentserver.model.integration;
 
-package com.wultra.app.enrollmentserver.database;
-
-import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Date;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import lombok.Data;
 
 /**
- * Repository for document data records.
+ * An identity-related document submitted for verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Repository
-public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
+@Data
+public class SubmittedDocument {
 
-    @Modifying
-    int deleteAllByActivationId(String activationId);
-
-    @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
+    private String documentId;
+    private DocumentType type;
+    private CardSide side;
+    private Image photo;
 
 }

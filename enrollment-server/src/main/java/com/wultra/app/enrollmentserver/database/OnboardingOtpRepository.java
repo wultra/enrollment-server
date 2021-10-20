@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.OnboardingOtp;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingOtpEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -33,22 +33,22 @@ import java.util.Optional;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtp, String> {
+public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEntity, String> {
 
-    Optional<OnboardingOtp> findFirstByProcessIdOrderByTimestampCreatedDesc(String processId);
+    Optional<OnboardingOtpEntity> findFirstByProcessIdOrderByTimestampCreatedDesc(String processId);
 
     @Modifying
-    @Query("UPDATE OnboardingOtp o SET o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
+    @Query("UPDATE OnboardingOtpEntity o SET o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
             "o.timestampLastUpdated = CURRENT_TIMESTAMP, " +
             "o.errorDetail = 'expired' " +
             "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
             "AND o.timestampCreated < :dateCreatedBefore")
     void terminateOldOtps(Date dateCreatedBefore);
 
-    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtp o WHERE o.processId = :processId")
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.processId = :processId")
     int getFailedAttemptsByProcess(String processId);
 
-    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtp o WHERE o.processId = :processId")
+    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.processId = :processId")
     Date getNewestOtpCreatedTimestamp(String processId);
 
 }

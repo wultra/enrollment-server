@@ -38,7 +38,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
-public class OperationTemplate implements Serializable {
+public class OperationTemplateEntity implements Serializable {
 
     private static final long serialVersionUID = 5914420785283118800L;
 
@@ -64,8 +64,8 @@ public class OperationTemplate implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OperationTemplate)) return false;
-        OperationTemplate that = (OperationTemplate) o;
+        if (!(o instanceof OperationTemplateEntity)) return false;
+        OperationTemplateEntity that = (OperationTemplateEntity) o;
         return placeholder.equals(that.placeholder) && language.equals(that.language) && title.equals(that.title) && message.equals(that.message);
     }
 

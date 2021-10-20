@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.DocumentVerification;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -32,16 +32,16 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface DocumentVerificationRepository extends CrudRepository<DocumentVerification, String> {
+public interface DocumentVerificationRepository extends CrudRepository<DocumentVerificationEntity, String> {
 
     @Modifying
-    @Query("UPDATE DocumentVerification d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
+    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
             "WHERE d.activationId = :activationId " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
     int failInProgressVerifications(String activationId);
 
     @Modifying
-    @Query("UPDATE DocumentVerification d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
+    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
     int failObsoleteVerifications(Date cleanupDate);

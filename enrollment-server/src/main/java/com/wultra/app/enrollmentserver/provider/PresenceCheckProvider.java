@@ -17,26 +17,25 @@
  */
 package com.wultra.app.enrollmentserver.provider;
 
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.model.integration.*;
-
-import java.util.List;
+import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 
 /**
- * Provider which allows customization of the document verification process.
+ * Provider which allows customization of the presence check.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public interface DocumentVerificationProvider {
+public interface PresenceCheckProvider {
 
-    DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException;
+    SessionInfo initPresenceCheck(OwnerId id) throws PresenceCheckException;
 
-    DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException;
+    void startPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException;
 
-    DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws DocumentVerificationException;
+    PresenceCheckResult getResult(OwnerId id) throws PresenceCheckException;
 
-    Image getPhoto(String photoId) throws DocumentVerificationException;
-
-    void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException;
+    void cleanupIdentityData(OwnerId id) throws PresenceCheckException;
 
 }

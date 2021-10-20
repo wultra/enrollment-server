@@ -35,7 +35,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_identity_document")
-public class IdentityDocument implements Serializable {
+public class IdentityDocumentEntity implements Serializable {
 
     private static final long serialVersionUID = -3766573464682729277L;
 
@@ -45,8 +45,8 @@ public class IdentityDocument implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof IdentityDocument)) return false;
-        IdentityDocument that = (IdentityDocument) o;
+        if (!(o instanceof IdentityDocumentEntity)) return false;
+        IdentityDocumentEntity that = (IdentityDocumentEntity) o;
         return id.equals(that.id);
     }
 

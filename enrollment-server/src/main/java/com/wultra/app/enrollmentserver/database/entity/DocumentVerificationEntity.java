@@ -39,7 +39,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_verification")
-public class DocumentVerification implements Serializable {
+public class DocumentVerificationEntity implements Serializable {
 
     private static final long serialVersionUID = -8237002126712707796L;
 
@@ -61,6 +61,9 @@ public class DocumentVerification implements Serializable {
     @Column(name = "other_side_id")
     private String otherSideId;
 
+    @Column(name = "provider_name")
+    private String providerName;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private DocumentStatus status;
@@ -73,6 +76,9 @@ public class DocumentVerification implements Serializable {
 
     @Column(name = "verification_id")
     private String verificationId;
+
+    @Column(name = "photo_id")
+    private String photoId;
 
     @Column(name = "verification_score")
     private Integer verificationScore;
@@ -107,8 +113,8 @@ public class DocumentVerification implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentVerification)) return false;
-        DocumentVerification that = (DocumentVerification) o;
+        if (!(o instanceof DocumentVerificationEntity)) return false;
+        DocumentVerificationEntity that = (DocumentVerificationEntity) o;
         return type == that.type && side == that.side && filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 

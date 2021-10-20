@@ -37,7 +37,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_result")
-public class DocumentVerificationResult implements Serializable {
+public class DocumentResultEntity implements Serializable {
 
     private static final long serialVersionUID = -760284276164288362L;
 
@@ -46,21 +46,24 @@ public class DocumentVerificationResult implements Serializable {
     private Long id;
 
     // TODO - FK relationship
-    @Column(name = "document_id", nullable = false)
-    private String documentId;
+    @Column(name = "document_verification_id", nullable = false)
+    private String documentVerificationId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "phase", nullable = false)
     private DocumentProcessingPhase phase;
 
-    @Column(name = "data")
-    private String data;
+    @Column(name = "reject_reason")
+    private String rejectReason;
 
-    @Column(name = "validation_result")
-    private String validationResult;
+    @Column(name = "verification_result")
+    private String verificationResult;
 
-    @Column(name = "errors")
-    private String errors;
+    @Column(name = "error_detail")
+    private String errorDetail;
+
+    @Column(name = "extracted_data")
+    private String extractedData;
 
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
@@ -68,13 +71,13 @@ public class DocumentVerificationResult implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentVerificationResult)) return false;
-        DocumentVerificationResult that = (DocumentVerificationResult) o;
-        return documentId.equals(that.documentId) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
+        if (!(o instanceof DocumentResultEntity)) return false;
+        DocumentResultEntity that = (DocumentResultEntity) o;
+        return documentVerificationId.equals(that.documentVerificationId) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(documentId, phase, timestampCreated);
+        return Objects.hash(documentVerificationId, phase, timestampCreated);
     }
 }

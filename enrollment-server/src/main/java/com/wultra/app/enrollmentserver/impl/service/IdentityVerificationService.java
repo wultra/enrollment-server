@@ -20,13 +20,15 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
-import com.wultra.app.enrollmentserver.errorhandling.InvalidDocumentException;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
 import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
+import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
@@ -67,6 +69,17 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Check status of identity verification.
+     * @param request Identity verification status request.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Identity verification status response.
+     */
+    @Transactional
+    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
+        return new IdentityVerificationStatusResponse();
+    }
+
+    /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param apiAuthentication PowerAuth authentication.
@@ -81,10 +94,10 @@ public class IdentityVerificationService {
      * Upload a single document related to identity verification.
      * @param requestData Binary document data.
      * @return Document upload response.
-     * @throws InvalidDocumentException Thrown when document is invalid.
+     * @throws DocumentVerificationException Thrown when document is invalid.
      */
     @Transactional
-    public DocumentUploadResponse uploadDocument(byte[] requestData) throws InvalidDocumentException {
+    public DocumentUploadResponse uploadDocument(byte[] requestData) throws DocumentVerificationException {
         Document document = dataExtractionService.extractDocument(requestData);
         DocumentUploadResponse response = new DocumentUploadResponse();
         response.setFilename(document.getFilename());
@@ -99,7 +112,7 @@ public class IdentityVerificationService {
      * @return Document status response.
      */
     @Transactional
-    public DocumentStatusResponse checkStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
+    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
         return new DocumentStatusResponse();
     }
 

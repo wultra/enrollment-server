@@ -15,30 +15,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package com.wultra.app.enrollmentserver.database;
-
-import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Date;
+package com.wultra.app.enrollmentserver.model.enumeration;
 
 /**
- * Repository for document data records.
+ * Presence check status enumeration.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Repository
-public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
+public enum PresenceCheckStatus {
 
-    @Modifying
-    int deleteAllByActivationId(String activationId);
+    /**
+     * User presence is being checked.
+     */
+    IN_PROGRESS,
 
-    @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
+    /**
+     * User presence check was accepted.
+     */
+    ACCEPTED,
+
+    /**
+     * User presence check was rejected.
+     */
+    REJECTED,
+
+    /**
+     * User presence check failed due to an unrecoverable error.
+     */
+    FAILED
 
 }

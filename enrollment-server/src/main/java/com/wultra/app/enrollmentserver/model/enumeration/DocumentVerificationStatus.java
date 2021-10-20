@@ -18,34 +18,29 @@
 package com.wultra.app.enrollmentserver.model.enumeration;
 
 /**
- * Document verification status enumeration.
+ * Documents verification status enumeration.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 public enum DocumentVerificationStatus {
 
     /**
-     * Document has been verified, and it is accepted as a valid document.
+     * Documents are being verified, asynchronous processing is required.
+     */
+    IN_PROGRESS,
+
+    /**
+     * Documents have been verified and accepted.
      */
     ACCEPTED,
 
     /**
-     * Document upload is in progress into the identity verification system.
-     */
-    UPLOAD_IN_PROGRESS,
-
-    /**
-     * Document is currently being verified in the identity verification system.
-     */
-    VERIFICATION_IN_PROGRESS,
-
-    /**
-     * Document has been rejected.
+     * Documents have been rejected.
      */
     REJECTED,
 
     /**
-     * An unrecoverable error occurred during document analysis.
+     * An unrecoverable error occurred during analysis of documents.
      */
     FAILED
 

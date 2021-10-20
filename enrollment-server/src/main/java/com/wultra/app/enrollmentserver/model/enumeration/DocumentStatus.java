@@ -25,27 +25,32 @@ package com.wultra.app.enrollmentserver.model.enumeration;
 public enum DocumentStatus {
 
     /**
-     * Document is being uploaded.
-     */
-    UPLOAD_IN_PROGRESS,
-
-    /**
-     * Document is being verified.
-     */
-    VERIFICATION_IN_PROGRESS,
-
-    /**
-     * Document was accepted.
+     * Document has been verified, and it is accepted as a valid document.
      */
     ACCEPTED,
 
     /**
-     * Document was rejected.
+     * Document upload is in progress into the identity verification system.
+     */
+    UPLOAD_IN_PROGRESS,
+
+    /**
+     * Document is waiting for verification.
+     */
+    VERIFICATION_PENDING,
+
+    /**
+     * Document is currently being verified in the identity verification system.
+     */
+    VERIFICATION_IN_PROGRESS,
+
+    /**
+     * Document has been rejected.
      */
     REJECTED,
 
     /**
-     * Document verification failed.
+     * An unrecoverable error occurred during document analysis.
      */
     FAILED
 

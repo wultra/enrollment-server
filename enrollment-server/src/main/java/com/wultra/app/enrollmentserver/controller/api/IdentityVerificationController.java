@@ -17,13 +17,15 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.errorhandling.InvalidDocumentException;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
 import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
+import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -79,9 +81,48 @@ public class IdentityVerificationController {
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      */
-    @RequestMapping(value = "submit", method = RequestMethod.POST)
+    @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/submit", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/status", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    })
+    public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
+                                                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+        // Check if the authentication object is present
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration when checking identity verification status");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration when checking identity verification status");
+        }
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when checking identity verification status");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed when checking identity verification status");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when checking identity verification status");
+            throw new PowerAuthAuthenticationException("Invalid request received when checking identity verification status");
+        }
+
+        // Submit documents for verification
+        final IdentityVerificationStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
+        return new ObjectResponse<>(response);
+    }
+
+    /**
+     * Submit identity-related documents for verification.
+     * @param request Document submit request.
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Document submit response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     */
+    @RequestMapping(value = "document/submit", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/document/submit", signatureType = {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
@@ -117,16 +158,16 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document upload response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws InvalidDocumentException Thrown when document is invalid.
+     * @throws DocumentVerificationException Thrown when document is invalid.
      */
-    @RequestMapping(value = "upload", method = RequestMethod.POST)
+    @RequestMapping(value = "document/upload", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/upload", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/document/upload", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                 @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidDocumentException {
+                                                                 @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when uploading document for verification");
@@ -157,14 +198,14 @@ public class IdentityVerificationController {
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      */
-    @RequestMapping(value = "status", method = RequestMethod.POST)
+    @RequestMapping(value = "document/status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/status", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/document/status", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<DocumentStatusResponse> checkStatus(@EncryptedRequestBody ObjectRequest<DocumentStatusRequest> request,
-                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+    public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(@EncryptedRequestBody ObjectRequest<DocumentStatusRequest> request,
+                                                                      @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -183,7 +224,7 @@ public class IdentityVerificationController {
         }
 
         // Process upload document request
-        final DocumentStatusResponse response = identityVerificationService.checkStatus(request.getRequestObject(), apiAuthentication);
+        final DocumentStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
         return new ObjectResponse<>(response);
     }
 

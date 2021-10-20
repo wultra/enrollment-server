@@ -18,18 +18,15 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
-import com.wultra.app.enrollmentserver.database.entity.DocumentData;
-import com.wultra.app.enrollmentserver.errorhandling.InvalidDocumentException;
+import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.print.Doc;
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,18 +53,18 @@ public class DataExtractionService {
      * Extract request data and return a singled document.
      * @param requestData ZIP archive with a single zipped file.
      * @return Extracted document.
-     * @throws InvalidDocumentException Thrown in case input data is invalid.
+     * @throws DocumentVerificationException Thrown in case input data is invalid.
      */
-    public Document extractDocument(byte[] requestData) throws InvalidDocumentException {
+    public Document extractDocument(byte[] requestData) throws DocumentVerificationException {
         if (requestData == null) {
             logger.warn("Missing request data");
-            throw new InvalidDocumentException();
+            throw new DocumentVerificationException();
         }
         List<Document> extractedDocuments = decompress(requestData);
         if (extractedDocuments.size() != 1) {
             // Exactly 1 document is expected to be present in the archive
             logger.warn("Input data does not contain a single document");
-            throw new InvalidDocumentException();
+            throw new DocumentVerificationException();
         }
         Document document = extractedDocuments.get(0);
         // Persist extracted document
@@ -78,12 +75,12 @@ public class DataExtractionService {
      * Extract request data and return list of extracted documents.
      * @param requestData ZIP archive with one or more documents.
      * @return Extracted documents.
-     * @throws InvalidDocumentException Thrown in case input data is invalid.
+     * @throws DocumentVerificationException Thrown in case input data is invalid.
      */
-    public List<Document> extractDocuments(byte[] requestData) throws InvalidDocumentException {
+    public List<Document> extractDocuments(byte[] requestData) throws DocumentVerificationException {
         if (requestData == null) {
             logger.warn("Missing request data");
-            throw new InvalidDocumentException();
+            throw new DocumentVerificationException();
         }
         List<Document> extractedDocuments = decompress(requestData);
         List<Document> persistedDocuments = new ArrayList<>();
@@ -100,7 +97,7 @@ public class DataExtractionService {
      * @return Persisted document metadata.
      */
     private Document persistDocument(Document document) {
-        DocumentData documentData = new DocumentData();
+        DocumentDataEntity documentData = new DocumentDataEntity();
         documentData.setFilename(documentData.getFilename());
         documentData.setData(document.getData());
         documentData.setTimestampCreated(new Date());
@@ -117,9 +114,9 @@ public class DataExtractionService {
      * Decompress an archive with documents.
      * @param inputData Compressed input data.
      * @return Extracted documents.
-     * @throws InvalidDocumentException Thrown in case input data is invalid.
+     * @throws DocumentVerificationException Thrown in case input data is invalid.
      */
-    private List<Document> decompress(byte[] inputData) throws InvalidDocumentException {
+    private List<Document> decompress(byte[] inputData) throws DocumentVerificationException {
         List<Document> extractedDocuments = new ArrayList<>();
         try {
             ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(inputData));
@@ -128,7 +125,7 @@ public class DataExtractionService {
                 // Directories are expected not to be present in the archive
                 if (entry.isDirectory()) {
                     logger.warn("Archive with documents contains a directory, this is not allowed.");
-                    throw new InvalidDocumentException();
+                    throw new DocumentVerificationException();
                 }
                 byte[] entryData = new byte[(int) entry.getSize()];
                 int i = 0;
@@ -143,7 +140,7 @@ public class DataExtractionService {
             zis.close();
         } catch (IOException ex) {
             logger.warn(ex.getMessage(), ex);
-            throw new InvalidDocumentException();
+            throw new DocumentVerificationException();
         }
         return extractedDocuments;
     }

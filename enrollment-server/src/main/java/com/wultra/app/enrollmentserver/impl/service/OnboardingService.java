@@ -20,8 +20,8 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.OnboardingOtpRepository;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingOtp;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcess;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingOtpEntity;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.enrollmentserver.impl.service.internal.IdGeneratorService;
@@ -124,8 +124,8 @@ public class OnboardingService {
             throw new OnboardingProcessException();
         }
 
-        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findExistingProcess(userId);
-        OnboardingProcess process;
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcess(userId);
+        OnboardingProcessEntity process;
         String processId;
         if (processOptional.isPresent()) {
             // Resume an existing process
@@ -137,7 +137,7 @@ public class OnboardingService {
         } else {
             // Create an onboarding process
             processId = idGenerator.generateProcessId();
-            process = new OnboardingProcess();
+            process = new OnboardingProcessEntity();
             process.setIdentificationData(identificationData);
             process.setId(processId);
             process.setStatus(OnboardingStatus.IN_PROGRESS);
@@ -169,7 +169,7 @@ public class OnboardingService {
     @Transactional
     public Response resendOtp(OtpResendRequest request) throws OnboardingProcessException {
         String processId = request.getProcessId();
-        OnboardingProcess process = findProcess(processId);
+        OnboardingProcessEntity process = findProcess(processId);
         // Do not allow spamming by OTP codes
         Date lastDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId);
         int resendPeriod = config.getResendPeriod();
@@ -182,12 +182,12 @@ public class OnboardingService {
             throw new OnboardingProcessException();
         }
         String userId = process.getUserId();
-        Optional<OnboardingOtp> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
+        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
         if (!otpOptional.isPresent()) {
             logger.warn("Onboarding OTP not found for process ID: {}", processId);
             throw new OnboardingProcessException();
         }
-        OnboardingOtp existingOtp = otpOptional.get();
+        OnboardingOtpEntity existingOtp = otpOptional.get();
         existingOtp.setStatus(OtpStatus.FAILED);
         existingOtp.setTimestampLastUpdated(new Date());
         onboardingOtpRepository.save(existingOtp);
@@ -212,13 +212,13 @@ public class OnboardingService {
      */
     @Transactional
     public OtpVerifyResponse verifyOtp(String processId, String otpCode) throws OnboardingProcessException {
-        OnboardingProcess process = findProcess(processId);
-        Optional<OnboardingOtp> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
+        OnboardingProcessEntity process = findProcess(processId);
+        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
         if (!otpOptional.isPresent()) {
             logger.warn("Onboarding OTP not found for process ID: {}", processId);
             throw new OnboardingProcessException();
         }
-        OnboardingOtp otp = otpOptional.get();
+        OnboardingOtpEntity otp = otpOptional.get();
         // Verify OTP code
         boolean verified = false;
         int remainingAttempts = 0;
@@ -263,12 +263,12 @@ public class OnboardingService {
     @Transactional
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
         String processId = request.getProcessId();
-        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findById(processId);
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
         if (!processOptional.isPresent()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
-        OnboardingProcess process = processOptional.get();
+        OnboardingProcessEntity process = processOptional.get();
         OnboardingStatusResponse response = new OnboardingStatusResponse();
         response.setProcessId(processId);
         response.setOnboardingStatus(process.getStatus());
@@ -284,15 +284,15 @@ public class OnboardingService {
     @Transactional
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         String processId = request.getProcessId();
-        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findById(processId);
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
         if (!processOptional.isPresent()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
-        Optional<OnboardingOtp> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
+        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
         // Fail current OTP, if it is present
         if (otpOptional.isPresent()) {
-            OnboardingOtp otp = otpOptional.get();
+            OnboardingOtpEntity otp = otpOptional.get();
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(new Date());
@@ -300,7 +300,7 @@ public class OnboardingService {
                 onboardingOtpRepository.save(otp);
             }
         }
-        OnboardingProcess process = processOptional.get();
+        OnboardingProcessEntity process = processOptional.get();
         process.setStatus(OnboardingStatus.FAILED);
         process.setTimestampLastUpdated(new Date());
         process.setErrorDetail("canceled");
@@ -314,8 +314,8 @@ public class OnboardingService {
      * @return Onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    public OnboardingProcess findProcess(String processId) throws OnboardingProcessException {
-        Optional<OnboardingProcess> processOptional = onboardingProcessRepository.findById(processId);
+    public OnboardingProcessEntity findProcess(String processId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
         if (!processOptional.isPresent()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
             throw new OnboardingProcessException();
@@ -328,7 +328,7 @@ public class OnboardingService {
      * @param process Onboarding process entity.
      * @return Updated onboarding process entity.
      */
-    public OnboardingProcess updateProcess(OnboardingProcess process) {
+    public OnboardingProcessEntity updateProcess(OnboardingProcessEntity process) {
         return onboardingProcessRepository.save(process);
     }
 
@@ -352,7 +352,7 @@ public class OnboardingService {
      * @return Generated OTP code.
      */
     private String createOtpCode(String processId) throws OnboardingProcessException {
-        OnboardingOtp otp = new OnboardingOtp();
+        OnboardingOtpEntity otp = new OnboardingOtpEntity();
         String otpId = idGenerator.generateOtpId();
         int otpLength = config.getOtpLength();
         String otpCode = otpGeneratorService.generateOtpCode(otpLength);

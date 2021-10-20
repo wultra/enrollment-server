@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcess;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -33,20 +33,20 @@ import java.util.Optional;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface OnboardingProcessRepository extends CrudRepository<OnboardingProcess, String> {
+public interface OnboardingProcessRepository extends CrudRepository<OnboardingProcessEntity, String> {
 
-    Optional<OnboardingProcess> findById(String processId);
+    Optional<OnboardingProcessEntity> findById(String processId);
 
-    @Query("SELECT p FROM OnboardingProcess p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
             "AND p.userId = :userId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcess> findExistingProcess(String userId);
+    Optional<OnboardingProcessEntity> findExistingProcess(String userId);
 
-    @Query("SELECT count(p) FROM OnboardingProcess p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
+    @Query("SELECT count(p) FROM OnboardingProcessEntity p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
     int countProcessesAfterTimestamp(String userId, Date dateAfter);
 
     @Modifying
-    @Query("UPDATE OnboardingProcess p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
+    @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
             "p.errorDetail = 'expired' " +
             "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
