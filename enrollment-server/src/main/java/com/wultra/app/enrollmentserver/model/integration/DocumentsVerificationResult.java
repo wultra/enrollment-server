@@ -33,6 +33,7 @@ public class DocumentsVerificationResult {
     private String verificationId;
     private DocumentVerificationStatus status;
     private List<DocumentVerificationResult> results;
+    // TODO to be removed?
     private Boolean accepted;
     private Integer verificationScore;
     private String rejectReason;

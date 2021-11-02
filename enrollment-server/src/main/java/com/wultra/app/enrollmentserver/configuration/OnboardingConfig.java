@@ -30,6 +30,9 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class OnboardingConfig {
 
+    @Value("${enrollment-server.document-verification.provider:mock}")
+    private String documentVerificationProvider;
+
     @Value("${enrollment-server.identity-verification.otp.length:8}")
     private int otpLength;
 
@@ -44,5 +47,8 @@ public class OnboardingConfig {
 
     @Value("${enrollment-server.onboarding-process.max-processes-per-day:5}")
     private int maxProcessCountPerDay;
+
+    @Value("${enrollment-server.presence-check.provider:mock}")
+    private String presenceCheckProvider;
 
 }

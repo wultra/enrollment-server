@@ -30,11 +30,11 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
  */
 public interface PresenceCheckProvider {
 
-    SessionInfo initPresenceCheck(OwnerId id) throws PresenceCheckException;
+    SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException;
 
-    void startPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException;
+    void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException;
 
-    PresenceCheckResult getResult(OwnerId id) throws PresenceCheckException;
+    PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException;
 
     void cleanupIdentityData(OwnerId id) throws PresenceCheckException;
 
