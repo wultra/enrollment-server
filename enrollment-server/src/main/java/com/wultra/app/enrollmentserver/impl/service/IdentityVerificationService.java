@@ -30,7 +30,7 @@ import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
 import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
 import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

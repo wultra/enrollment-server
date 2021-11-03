@@ -79,8 +79,6 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             throw new PresenceCheckException("Unexpected error when initializing a presence check");
         }
 
-        // TODO allow replacing an already existing image?
-
         if (responseEntityToken.getBody() == null) {
             logger.error("Missing response body when generating an enrol token in iProov, " + id);
             throw new PresenceCheckException("Unexpected error when generating an enrol token in iProov, " + id);
@@ -198,7 +196,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                 byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 
                 Image photo = new Image();
-                photo.setFilename("selfie_photo.jpg"); // TODO dynamic file name?
+                photo.setFilename("person_photo_from_id.jpg");
                 photo.setData(photoData);
 
                 result.setPhoto(photo);

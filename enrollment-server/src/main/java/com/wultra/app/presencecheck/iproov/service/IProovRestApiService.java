@@ -113,7 +113,7 @@ public class IProovRestApiService {
     }
 
     public ResponseEntity<String> deleteUserPersona(OwnerId id) {
-        // TODO implement with oauth call on DELETE /users/{userId}
+        // TODO implement with oauth call on DELETE /users/{activationId}
         throw new IllegalStateException("Not implemented yet");
     }
 
@@ -121,8 +121,7 @@ public class IProovRestApiService {
         ServerClaimRequest request = new ServerClaimRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
-        // TODO configurable
-        request.setAssuranceType(ServerClaimRequest.AssuranceTypeEnum.GENUINE_PRESENCE);
+        request.setAssuranceType(configProps.getAssuranceType());
         request.setResource(I_PROOV_RESOURCE);
         request.setRiskProfile(configProps.getRiskProfile());
         request.setUserId(id.getActivationId());

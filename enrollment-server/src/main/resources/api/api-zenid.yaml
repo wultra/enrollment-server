@@ -459,7 +459,7 @@ paths:
           description: Date of birth of the person whose documents are searched for
           required: false
           type: string
-          format: date
+          format: date-time
         - name: deleteType
           in: query
           description: >-
@@ -1109,7 +1109,7 @@ definitions:
     type: object
     properties:
       BirthDate:
-        format: date
+        format: date-time
         description: Date of the birth - can be parsed from RC identifier
         type: string
       Checksum:
@@ -1131,7 +1131,7 @@ definitions:
     type: object
     properties:
       Date:
-        format: date
+        format: date-time
         type: string
       Text:
         type: string
@@ -1336,14 +1336,14 @@ definitions:
         description: Inner value of MRZ ExpiryDate checksum.
         type: integer
       BirthDateParsed:
-        format: date
+        format: date-time
         description: >-
           Inner machine-readable value of BirthDate (in DateTime structure).
           Low-level data, use value from MineAllResult object.
         type: string
         readOnly: true
       ExpiryDateParsed:
-        format: date
+        format: date-time
         description: >-
           Inner machine-readable value of ExpiryDate (in DateTime structure).
           Low-level data, use value from MineAllResult object.
@@ -1838,7 +1838,7 @@ definitions:
         items:
           $ref: '#/definitions/ZenidWeb.Controllers.SelfCheck.SelfCheckItem'
       LicenseExpiration:
-        format: date
+        format: date-time
         type: string
       LicenseRemaining:
         $ref: '#/definitions/ZenidShared.LicenseCountables'

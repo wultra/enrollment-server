@@ -21,6 +21,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -36,7 +37,7 @@ public class IProovConfig {
     @Bean("restTemplateIProov")
     public RestTemplate restTemplateIProov(IProovConfigProps configProps, RestTemplateBuilder builder) {
         return builder
-                .defaultHeader("Host", configProps.getServiceHostname())
+                .defaultHeader(HttpHeaders.HOST, configProps.getServiceHostname())
                 .rootUri(configProps.getServiceBaseUrl())
                 .build();
     }

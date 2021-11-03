@@ -334,7 +334,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
 
         // TODO compute verification score
-        // result.setVerificationScore(); // TODO
+        // result.setVerificationScore();
 
         DocumentVerificationStatus verificationStatus = toStatus(response.getState());
         if (result.getResults() != null) {

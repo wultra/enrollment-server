@@ -138,9 +138,9 @@
             <version>1.5.9</version>
         </dependency>
         <dependency>
-            <groupId>io.swagger</groupId>
+            <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>1.6.3</version>
+            <version>${swagger-annotations.version}</version>
         </dependency>
 
     </dependencies>
@@ -175,6 +175,57 @@
                 <configuration>
                     <excludedGroups>external-service</excludedGroups>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.swagger.codegen.v3</groupId>
+                <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>${maven-swagger-codegen-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>swagger-definitions-iproov</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>false</verbose>
+                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.yaml</inputSpec>
+                            <language>spring</language>
+                            <library>spring-boot</library>
+                            <generateApis>false</generateApis>
+                            <generateModels>true</generateModels>
+                            <generateModelTests>false</generateModelTests>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <dateLibrary>java8</dateLibrary>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <modelPackage>com.wultra.app.presencecheck.iproov.model.api</modelPackage>
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>swagger-definitions-zenid</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>false</verbose>
+                            <inputSpec>${basedir}/src/main/resources/api/api-zenid.yaml</inputSpec>
+                            <language>spring</language>
+                            <library>spring-boot</library>
+                            <generateApis>false</generateApis>
+                            <generateModels>true</generateModels>
+                            <generateModelTests>false</generateModelTests>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <dateLibrary>java8</dateLibrary>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <modelPackage>com.wultra.app.docverify.zenid.model.api</modelPackage>
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

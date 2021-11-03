@@ -16,6 +16,7 @@
  */
 package com.wultra.app.presencecheck.iproov.config;
 
+import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
@@ -43,6 +44,11 @@ public class IProovConfigProps {
      * API key
      */
     private String apiSecret;
+
+    /**
+     * The assurance type of the claim
+     */
+    private ServerClaimRequest.AssuranceTypeEnum assuranceType;
 
     /**
      * The pre-defined risk profile to use (optional value)

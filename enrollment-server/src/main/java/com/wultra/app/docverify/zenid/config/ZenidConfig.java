@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.wultra.app.docverify.zenid.model.deserializer.CustomOffsetDateTimeDeserializer;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -39,6 +40,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.function.Supplier;
 
@@ -56,7 +58,7 @@ public class ZenidConfig {
     public CloseableHttpClient httpClient(ZenidConfigProps configProps) {
         String user = configProps.getNtlmUsername();
         String password = configProps.getNtlmPassword();
-        String domain = "USER_DOMAIN"; // TODO domain
+        String domain = configProps.getNtlmDomain();
 
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(user, password, null, domain));
@@ -77,7 +79,10 @@ public class ZenidConfig {
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid() {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule())
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        // Add custom deserialization to support also the ISO DATE format data where ISO DATE TIME expected (ZenID bug?)
+        javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
+        mapper.registerModule(javaTimeModule)
                 .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
                 .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -115,7 +120,8 @@ public class ZenidConfig {
             HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
                     httpClient(configProps)
             );
-            // Prevent usage of streamed request which is not repeatable and cannot be for a standard not-preemptive NTLM auth
+            // Prevent usage of streamed request which is not repeatable and
+            // cannot be used in a standard not-preemptive NTLM auth
             requestFactory.setBufferRequestBody(true);
             return requestFactory;
         }

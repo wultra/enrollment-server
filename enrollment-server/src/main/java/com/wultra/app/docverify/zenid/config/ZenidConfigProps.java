@@ -18,6 +18,7 @@ package com.wultra.app.docverify.zenid.config;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +40,11 @@ public class ZenidConfigProps {
     private boolean asyncProcessingEnabled;
 
     /**
+     * NTLM domain to authenticate within
+     */
+    private String ntlmDomain;
+
+    /**
      * NTLM password
      */
     private String ntlmPassword;
@@ -52,5 +58,9 @@ public class ZenidConfigProps {
      * Service base URL
      */
     private String serviceBaseUrl;
+
+    public void setNtlmDomain(String ntlmDomain) {
+        this.ntlmDomain = Strings.isNotBlank(ntlmDomain) ? ntlmDomain : null;
+    }
 
 }
