@@ -19,12 +19,15 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository for document verification records.
@@ -32,7 +35,7 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface DocumentVerificationRepository extends CrudRepository<DocumentVerificationEntity, String> {
+public interface DocumentVerificationRepository extends JpaRepository<DocumentVerificationEntity, String> {
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
@@ -45,5 +48,15 @@ public interface DocumentVerificationRepository extends CrudRepository<DocumentV
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
     int failObsoleteVerifications(Date cleanupDate);
+
+    @Modifying
+    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING " +
+            "WHERE d.activationId = :activationId AND d.status = :currentStatus")
+    int setVerificationPending(String activationId, DocumentStatus currentStatus);
+
+    @Query("SELECT d.uploadId FROM DocumentVerificationEntity d WHERE d.activationId = :activationId")
+    List<String> findAllUploadIds(String activationId);
+
+    Optional<DocumentVerificationEntity> findByActivationIdAndPhotoIdNotNull(String activationId);
 
 }

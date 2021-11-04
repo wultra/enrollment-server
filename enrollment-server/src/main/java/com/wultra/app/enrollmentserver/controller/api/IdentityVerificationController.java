@@ -17,26 +17,29 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
+import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
-import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
-import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.request.InitPresenceCheckRequest;
+import com.wultra.app.enrollmentserver.model.response.*;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
-import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +48,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -63,14 +69,20 @@ public class IdentityVerificationController {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final PresenceCheckService presenceCheckService;
+
     /**
      * Controller constructor.
      *
      * @param identityVerificationService Activation code service.
+     * @param presenceCheckService Presence check service.
      */
     @Autowired
-    public IdentityVerificationController(IdentityVerificationService identityVerificationService) {
+    public IdentityVerificationController(
+            IdentityVerificationService identityVerificationService,
+            PresenceCheckService presenceCheckService) {
         this.identityVerificationService = identityVerificationService;
+        this.presenceCheckService = presenceCheckService;
     }
 
     /**
@@ -147,7 +159,14 @@ public class IdentityVerificationController {
         }
 
         // Submit documents for verification
-        final DocumentSubmitResponse response = identityVerificationService.submitDocuments(request.getRequestObject(), apiAuthentication);
+        List<DocumentVerificationEntity> docVerificationEntities =
+                identityVerificationService.submitDocuments(request.getRequestObject(), apiAuthentication);
+
+        DocumentSubmitResponse response = new DocumentSubmitResponse();
+        List<DocumentSubmitResponse.DocumentMetadata> respsMetadata =
+                createResponseDocMetadataList(docVerificationEntities);
+        response.setDocuments(respsMetadata);
+
         return new ObjectResponse<>(response);
     }
 
@@ -229,6 +248,50 @@ public class IdentityVerificationController {
     }
 
     /**
+     * Initialize presence check verification.
+     * @param request Presence check initialization request.
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Document submit response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     */
+    @RequestMapping(value = "presence-check/init", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    })
+    public ObjectResponse<InitPresenceCheckResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<InitPresenceCheckRequest> request,
+                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
+        // Check if the authentication object is present
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration when initiating presence check");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration when initiating presence check");
+        }
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when initiating presence check");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed when initiating presence check");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when initiating presence check");
+            throw new PowerAuthAuthenticationException("Invalid request received when initiating presence check");
+        }
+
+        presenceCheckService.init(apiAuthentication);
+        SessionInfo sessionInfo = presenceCheckService.start(apiAuthentication);
+        // TODO mark verification pending
+
+        final InitPresenceCheckResponse response = new InitPresenceCheckResponse();
+        response.setSessionAttributes(sessionInfo.getSessionAttributes());
+        return new ObjectResponse<>(response);
+    }
+
+    /**
      * Cleanup documents related to identity verification.
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
@@ -238,7 +301,8 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/cleanup", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response cleanup(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+    public Response cleanup(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when performing document cleanup");
@@ -246,6 +310,29 @@ public class IdentityVerificationController {
         }
 
         // Process cleanup request
-        return identityVerificationService.cleanup(apiAuthentication);
+        identityVerificationService.cleanup(apiAuthentication);
+        presenceCheckService.cleanup(apiAuthentication);
+
+        return new Response();
     }
+
+    private List<DocumentSubmitResponse.DocumentMetadata> createResponseDocMetadataList(List<DocumentVerificationEntity> docVerificationEntities) {
+        return docVerificationEntities.stream()
+                .map(docVerificationEntity -> {
+                    DocumentSubmitResponse.DocumentMetadata responseMetadata = new DocumentSubmitResponse.DocumentMetadata();
+
+                    responseMetadata.setId(docVerificationEntity.getId());
+                    responseMetadata.setFilename(docVerificationEntity.getFilename());
+                    responseMetadata.setSide(docVerificationEntity.getSide());
+                    responseMetadata.setType(docVerificationEntity.getType());
+                    responseMetadata.setStatus(docVerificationEntity.getStatus());
+                    if (DocumentStatus.FAILED.equals(docVerificationEntity.getStatus())) {
+                        responseMetadata.setErrors(List.of(docVerificationEntity.getErrorDetail()));
+                    }
+
+                    return responseMetadata;
+                })
+                .collect(Collectors.toList());
+    }
+
 }

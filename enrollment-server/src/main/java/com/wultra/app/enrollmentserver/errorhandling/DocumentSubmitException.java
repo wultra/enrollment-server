@@ -15,25 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.integration;
-
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import lombok.Data;
-import lombok.ToString;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * An identity-related document submitted for verification.
+ * Exception thrown in of an error during document submit.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@Data
-@ToString(of = {"documentId", "side", "type"})
-public class SubmittedDocument {
+public class DocumentSubmitException extends Exception {
 
-    private String documentId;
-    private DocumentType type;
-    private CardSide side;
-    private Image photo;
+    private static final long serialVersionUID = -5868335942741210351L;
+
+    public DocumentSubmitException(String message) {
+        super(message);
+    }
 
 }

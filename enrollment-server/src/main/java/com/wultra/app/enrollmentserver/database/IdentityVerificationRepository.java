@@ -19,9 +19,14 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 /**
  * Repository for identity verification records.
@@ -35,5 +40,19 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
     int failInProgressVerifications(String activationId);
+
+    @Modifying
+    @Query("UPDATE IdentityVerificationEntity i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING " +
+            "WHERE i.activationId = :activationId AND i.status = :currentStatus")
+    int setVerificationPending(String activationId, IdentityVerificationStatus currentStatus);
+
+    Optional<IdentityVerificationEntity> findByActivationIdAndPhaseAndStatus(
+            String activationId,
+            IdentityVerificationPhase phase,
+            IdentityVerificationStatus status);
+
+    Optional<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(
+            String activationId
+    );
 
 }
