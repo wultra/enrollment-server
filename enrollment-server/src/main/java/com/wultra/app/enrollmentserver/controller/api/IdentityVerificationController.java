@@ -24,7 +24,6 @@ import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
@@ -261,7 +260,8 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<InitPresenceCheckResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<InitPresenceCheckRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing presence check");
