@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.database.OnboardingOtpRepository;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingOtpEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.enrollmentserver.impl.service.internal.IdGeneratorService;
@@ -72,6 +73,7 @@ public class OnboardingService {
      * @param otpGeneratorService OTP generator service.
      * @param config Onboarding configuration.
      */
+    @Autowired
     public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, JsonSerializationService serializer, IdGeneratorService idGenerator, OtpGeneratorService otpGeneratorService, OnboardingConfig config) {
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.onboardingOtpRepository = onboardingOtpRepository;
@@ -97,7 +99,7 @@ public class OnboardingService {
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      */
     @Transactional
-    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException {
+    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         if (onboardingProvider == null) {
             logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
             throw new OnboardingProcessException();
@@ -152,7 +154,7 @@ public class OnboardingService {
             onboardingProvider.sendOtpCode(userId, otpCode, false);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingProcessException();
+            throw new OnboardingOtpDeliveryException();
         }
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(processId);
@@ -167,7 +169,11 @@ public class OnboardingService {
      * @throws OnboardingProcessException Thrown when OTP resend fails.
      */
     @Transactional
-    public Response resendOtp(OtpResendRequest request) throws OnboardingProcessException {
+    public Response resendOtp(OtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+        if (onboardingProvider == null) {
+            logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
+            throw new OnboardingProcessException();
+        }
         String processId = request.getProcessId();
         OnboardingProcessEntity process = findProcess(processId);
         // Do not allow spamming by OTP codes
@@ -179,7 +185,7 @@ public class OnboardingService {
         Date allowedDate = c.getTime();
         if (allowedDate.after(new Date())) {
             logger.warn("Resend OTP functionality is not available yet for process ID: {}", processId);
-            throw new OnboardingProcessException();
+            throw new OnboardingOtpDeliveryException();
         }
         String userId = process.getUserId();
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findFirstByProcessIdOrderByTimestampCreatedDesc(processId);
@@ -198,7 +204,7 @@ public class OnboardingService {
             onboardingProvider.sendOtpCode(userId, otpCode, true);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
-            throw new OnboardingProcessException();
+            throw new OnboardingOtpDeliveryException();
         }
         return new Response();
     }
