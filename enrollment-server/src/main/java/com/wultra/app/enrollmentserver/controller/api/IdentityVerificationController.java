@@ -22,10 +22,8 @@ import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
-import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
-import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.request.InitPresenceCheckRequest;
+import com.wultra.app.enrollmentserver.model.response.*;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -84,8 +82,7 @@ public class IdentityVerificationController {
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/status", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+            PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
@@ -123,8 +120,7 @@ public class IdentityVerificationController {
     @RequestMapping(value = "document/submit", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/document/submit", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+            PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
@@ -225,6 +221,44 @@ public class IdentityVerificationController {
 
         // Process upload document request
         final DocumentStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
+        return new ObjectResponse<>(response);
+    }
+
+    /**
+     * Submit identity-related documents for verification.
+     * @param request Document submit request.
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Document submit response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     */
+    @RequestMapping(value = "presence-check/init", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION
+    })
+    public ObjectResponse<InitPresenceCheckResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<InitPresenceCheckRequest> request,
+                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+        // Check if the authentication object is present
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration when initializing presence check");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing presence check");
+        }
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when initializing presence check");
+            throw new PowerAuthAuthenticationException("ECIES decryption failed when initializing presence check");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when initializing presence check");
+            throw new PowerAuthAuthenticationException("Invalid request received when initializing presence check");
+        }
+
+        // Initialize a presence check session
+        final InitPresenceCheckResponse response = identityVerificationService.initPresenceCheck(request.getRequestObject(), apiAuthentication);
         return new ObjectResponse<>(response);
     }
 

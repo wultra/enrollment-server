@@ -25,10 +25,8 @@ import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
-import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentSubmitResponse;
-import com.wultra.app.enrollmentserver.model.response.DocumentUploadResponse;
-import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.request.InitPresenceCheckRequest;
+import com.wultra.app.enrollmentserver.model.response.*;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
@@ -114,6 +112,17 @@ public class IdentityVerificationService {
     @Transactional
     public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
         return new DocumentStatusResponse();
+    }
+
+    /**
+     * Initialize a presence check session.
+     * @param request Initialize presence check request.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Initialize presence check response.
+     */
+    @Transactional
+    public InitPresenceCheckResponse initPresenceCheck(InitPresenceCheckRequest request, PowerAuthApiAuthentication apiAuthentication) {
+        return new InitPresenceCheckResponse();
     }
 
     /**

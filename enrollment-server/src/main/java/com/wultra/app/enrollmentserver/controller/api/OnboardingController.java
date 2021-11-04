@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.model.request.*;
@@ -73,11 +74,12 @@ public class OnboardingController {
      * @return Start onboarding process response.
      * @throws PowerAuthAuthenticationException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
+     * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
      */
     @RequestMapping(value = "start", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");
@@ -101,11 +103,12 @@ public class OnboardingController {
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process fails.
+     * @throws OnboardingOtpDeliveryException Thrown when onboarding OTP delivery fails.
      */
     @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<OtpResendRequest> request,
-                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
+                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");

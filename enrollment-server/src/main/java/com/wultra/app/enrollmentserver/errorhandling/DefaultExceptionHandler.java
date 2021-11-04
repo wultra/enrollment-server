@@ -171,6 +171,18 @@ public class DefaultExceptionHandler {
     }
 
     /**
+     * Handling of onboarding OTP delivery exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(OnboardingOtpDeliveryException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleOnboardingOtpDeliveryException(OnboardingOtpDeliveryException ex) {
+        logger.warn("Onboarding OTP delivery failed", ex);
+        return new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
+    }
+
+    /**
      * Handling of too many onboarding processes exceptions.
      * @param ex Exception.
      * @return Response with error details.
