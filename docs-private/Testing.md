@@ -25,4 +25,4 @@ Following system variables need to be defined:
 - ZENID_ASYNC_PROCESSING_ENABLED - allows asynchronous processing, accepts `true` or `false` values
 - ZENID_NTLM_USERNAME - a username value for the ntlm authentication
 - ZENID_NTLM_PASSWORD - a password value for the ntlm authentication
-- ZENID_SERVICE_BASE_URL- hostname value where the service runs, used in the `Host` header, e.g. `secure.iproov.me`
+- ZENID_SERVICE_BASE_URL - hostname value where the service runs, used in the `Host` header, e.g. `secure.iproov.me`

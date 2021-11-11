@@ -42,7 +42,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     private static final Logger logger = LoggerFactory.getLogger(WultraMockDocumentVerificationProvider.class);
 
-    private final Cache<String,List<String>> verificationUploadIds;
+    private final Cache<String, List<String>> verificationUploadIds;
 
     public WultraMockDocumentVerificationProvider() {
         logger.warn("Using mocked version of {}", DocumentVerificationProvider.class.getName());
@@ -70,7 +70,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         result.setExtractedPhotoId("extracted-photo-id");
         result.setResults(submitResults);
 
-        logger.warn("Mock - submitted documents, " + id);
+        logger.info("Mock - submitted documents, {}", id);
         return result;
     }
 
@@ -84,7 +84,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
         verificationUploadIds.put(verificationId, uploadIds);
 
-        logger.warn("Mock - verifying documents uploadIds={}, {}", uploadIds, id);
+        logger.info("Mock - verifying documents uploadIds={}, {}", uploadIds, id);
         return result;
     }
 
@@ -111,7 +111,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
             result.setVerificationId(verificationId);
         }
 
-        logger.warn("Mock - getting verification result verificationId={}, {}", verificationId, id);
+        logger.info("Mock - getting verification result verificationId={}, {}", verificationId, id);
         return result;
     }
 
@@ -121,13 +121,13 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         photo.setData(new byte[]{});
         photo.setFilename("id_photo.jpg");
 
-        logger.warn("Mock - getting photoId={} from document verification", photoId);
+        logger.info("Mock - getting photoId={} from document verification", photoId);
         return photo;
     }
 
     @Override
     public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
-        logger.warn("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
+        logger.info("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
     }
 
 }
