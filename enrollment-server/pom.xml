@@ -125,6 +125,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${db-h2.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Documentation -->
         <dependency>

@@ -19,6 +19,8 @@ package com.wultra.app.enrollmentserver.model.integration;
 
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * Identification of an owner of an identity-related document.
  *
@@ -28,6 +30,9 @@ import lombok.Data;
 public class OwnerId {
 
     private String activationId;
+
     private String userId;
+
+    private Date timestamp = new Date();
 
 }

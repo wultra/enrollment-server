@@ -36,20 +36,28 @@ import java.util.Optional;
 @Repository
 public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    @Query("UPDATE IdentityVerificationEntity i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
+    // TODO update timestampLastUpdated
+
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
     int failInProgressVerifications(String activationId);
 
     @Modifying
-    @Query("UPDATE IdentityVerificationEntity i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING " +
-            "WHERE i.activationId = :activationId AND i.status = :currentStatus")
-    int setVerificationPending(String activationId, IdentityVerificationStatus currentStatus);
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING " +
+            "WHERE i.activationId = :activationId")
+    int setVerificationPending(String activationId);
 
-    Optional<IdentityVerificationEntity> findByActivationIdAndPhaseAndStatus(
-            String activationId,
-            IdentityVerificationPhase phase,
-            IdentityVerificationStatus status);
+    @Modifying
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.phase = :phase," +
+            "    i.status = :status " +
+            "WHERE i.activationId = :activationId")
+    void setVerificationPhaseAndStatus(String activationId, IdentityVerificationPhase phase, IdentityVerificationStatus status);
+
+    Optional<IdentityVerificationEntity> findByActivationId(String activationId);
 
     Optional<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(
             String activationId

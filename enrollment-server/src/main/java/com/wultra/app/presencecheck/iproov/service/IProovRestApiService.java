@@ -20,6 +20,7 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.presencecheck.iproov.model.api.ClaimValidateRequest;
+import com.wultra.app.presencecheck.iproov.model.api.EnrolImageBody;
 import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,6 +71,7 @@ public class IProovRestApiService {
         body.add("api_key", configProps.getApiKey());
         body.add("secret", configProps.getApiSecret());
         body.add("rotation", 0);
+        body.add("source", EnrolImageBody.SourceEnum.SELFIE.toString());
         body.add("image", new ByteArrayResource(photo.getData()) {
 
             @Override
@@ -101,8 +103,8 @@ public class IProovRestApiService {
         ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
-        request.setClient("Wultra Enrollment Server"); // TODO value from the device??
-        request.setIp("192.168.1.1"); // TODO deprecated but still required?
+        request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId()); // TODO value from the device
+        request.setIp("192.168.1.1"); // TODO deprecated but still required
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
         request.setUserId(id.getActivationId());

@@ -99,6 +99,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             documentSubmitResult.setUploadId(response.getSampleID());
 
             if (response.getMinedData() != null) {
+                // Photo hash of the person is optionally present at /MinedData/Photo/ImageData/ImageHash
                 ZenidSharedMinedPhoto photo = response.getMinedData().getPhoto();
                 if (photo != null && photo.getImageData() != null && photo.getImageData().getImageHash() != null) {
                     logger.info("Extracted a photoId from submitted {} to ZenID, " + id, document);
@@ -107,8 +108,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
                 String extractedData = toExtractedData(id, response.getMinedData());
                 documentSubmitResult.setExtractedData(extractedData);
-                // TODO validationResult??
-                // documentSubmitResult.setValidationResult();
             }
 
             if (ZenidWebUploadSampleResponse.StateEnum.REJECTED.equals(response.getState())) {
@@ -309,7 +308,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 verificationResult.setExtractedData(extractedData);
                 verificationResult.setUploadId(sampleId);
 
-                // TODO sort the validations by difference between the actual score and the accept score values?
+                // TODO  sort the validations by difference between the actual score and the accept score values?
                 // Find a first failed validation,its description as the rejected reason for the sample id document
                 Optional<ZenidWebInvestigationValidatorResponse> failedValidation =
                         validations.stream().filter(validation -> !validation.isOk()).findFirst();
@@ -349,10 +348,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             }
         }
         result.setStatus(verificationStatus);
-
-        // TODO to be removed?
-        // result.setAccepted();
-
         return result;
     }
 

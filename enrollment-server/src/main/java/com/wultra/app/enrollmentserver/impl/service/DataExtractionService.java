@@ -17,20 +17,18 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
-import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.zip.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Service implementing extraction and basic verification of uploaded documents.
@@ -41,13 +39,6 @@ import java.util.zip.*;
 public class DataExtractionService {
 
     private static final Logger logger = LoggerFactory.getLogger(DataExtractionService.class);
-
-    private final DocumentDataRepository documentDataRepository;
-
-    @Autowired
-    public DataExtractionService(DocumentDataRepository documentDataRepository) {
-        this.documentDataRepository = documentDataRepository;
-    }
 
     /**
      * Extract request data and return a singled document.
@@ -66,9 +57,7 @@ public class DataExtractionService {
             logger.warn("Input data does not contain a single document");
             throw new DocumentVerificationException();
         }
-        Document document = extractedDocuments.get(0);
-        // Persist extracted document
-        return persistDocument(document);
+        return extractedDocuments.get(0);
     }
 
     /**
@@ -82,32 +71,7 @@ public class DataExtractionService {
             logger.warn("Missing request data");
             throw new DocumentVerificationException();
         }
-        List<Document> extractedDocuments = decompress(requestData);
-        List<Document> persistedDocuments = new ArrayList<>();
-        extractedDocuments.forEach(document -> {
-            Document persistedDocument = persistDocument(document);
-            persistedDocuments.add(persistedDocument);
-        });
-        return persistedDocuments;
-    }
-
-    /**
-     * Persist a document into database.
-     * @param document Document to be extracted.
-     * @return Persisted document metadata.
-     */
-    private Document persistDocument(Document document) {
-        DocumentDataEntity documentData = new DocumentDataEntity();
-        documentData.setFilename(documentData.getFilename());
-        documentData.setData(document.getData());
-        documentData.setTimestampCreated(new Date());
-        documentData = documentDataRepository.save(documentData);
-        document.setId(documentData.getId());
-        // Return document metadata only
-        Document persistedDocument = new Document();
-        persistedDocument.setFilename(documentData.getFilename());
-        persistedDocument.setId(documentData.getId());
-        return persistedDocument;
+        return decompress(requestData);
     }
 
     /**

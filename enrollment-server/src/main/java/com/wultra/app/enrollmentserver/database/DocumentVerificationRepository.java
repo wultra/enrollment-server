@@ -19,7 +19,6 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -37,6 +36,8 @@ import java.util.Optional;
 @Repository
 public interface DocumentVerificationRepository extends JpaRepository<DocumentVerificationEntity, String> {
 
+    // TODO update timestampLastUpdated
+
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
             "WHERE d.activationId = :activationId " +
@@ -50,11 +51,32 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     int failObsoleteVerifications(Date cleanupDate);
 
     @Modifying
-    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING " +
-            "WHERE d.activationId = :activationId AND d.status = :currentStatus")
-    int setVerificationPending(String activationId, DocumentStatus currentStatus);
+    @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING " +
+            "WHERE d.activationId = :activationId")
+    int setVerificationPending(String activationId);
 
-    @Query("SELECT d.uploadId FROM DocumentVerificationEntity d WHERE d.activationId = :activationId")
+    @Modifying
+    @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS " +
+            "WHERE d.id IN :docVerificationIds")
+    int setVerificationInProgress(List<String> docVerificationIds);
+
+    @Query("SELECT d " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.activationId = :activationId " +
+            "AND d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING")
+    List<DocumentVerificationEntity> findAllPendingVerifications(String activationId);
+
+    @Query("SELECT d " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.activationId = :activationId " +
+            "AND d.usedForVerification = true")
+    List<DocumentVerificationEntity> findAllUsedForVerification(String activationId);
+
+    @Query("SELECT d.uploadId " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.activationId = :activationId")
     List<String> findAllUploadIds(String activationId);
 
     Optional<DocumentVerificationEntity> findByActivationIdAndPhotoIdNotNull(String activationId);

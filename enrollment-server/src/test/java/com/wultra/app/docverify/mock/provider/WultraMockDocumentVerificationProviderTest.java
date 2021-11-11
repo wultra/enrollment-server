@@ -85,7 +85,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
 
         // Check status of an existing verification
         DocumentsVerificationResult verificationResults = provider.getVerificationResult(ownerId, result.getVerificationId());
-        assertTrue(verificationResults.getAccepted());
+        assertTrue(verificationResults.isAccepted());
         assertEquals(DocumentVerificationStatus.ACCEPTED, verificationResults.getStatus());
 
         List<DocumentVerificationResult> documentResults = verificationResults.getResults();

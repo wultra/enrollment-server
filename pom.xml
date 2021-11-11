@@ -87,6 +87,7 @@
         <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
         <maven-swagger-codegen-plugin.version>3.0.29</maven-swagger-codegen-plugin.version>
 
+        <db-h2.version>1.4.200</db-h2.version>
         <swagger-annotations.version>2.1.11</swagger-annotations.version>
     </properties>
 

@@ -106,7 +106,6 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
                     })
                     .collect(Collectors.toList());
 
-            result.setAccepted(Boolean.TRUE);
             result.setResults(verificationResults);
             result.setStatus(DocumentVerificationStatus.ACCEPTED);
             result.setVerificationId(verificationId);

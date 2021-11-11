@@ -207,7 +207,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         } else if (HttpStatus.BAD_REQUEST.equals(responseEntity.getStatusCode())) {
             ClientErrorResponse clientErrorResponse = parseResponse(responseEntity.getBody(), ClientErrorResponse.class);
             if (ClientErrorResponse.ErrorEnum.INVALID_TOKEN.equals(clientErrorResponse.getError())) {
-                // TODO "error_description": "Invalid token state"
+                // TODO same response when validating the verification using same token repeatedly
                 result.setStatus(PresenceCheckStatus.IN_PROGRESS);
             } else {
                 failed = true;

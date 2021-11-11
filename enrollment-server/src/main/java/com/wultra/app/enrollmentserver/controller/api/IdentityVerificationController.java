@@ -18,10 +18,13 @@
 package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
+import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
@@ -67,6 +70,8 @@ public class IdentityVerificationController {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationController.class);
 
+    private final DocumentProcessingService documentProcessingService;
+
     private final IdentityVerificationService identityVerificationService;
 
     private final PresenceCheckService presenceCheckService;
@@ -74,13 +79,16 @@ public class IdentityVerificationController {
     /**
      * Controller constructor.
      *
+     * @param documentProcessingService Document processing service.
      * @param identityVerificationService Activation code service.
      * @param presenceCheckService Presence check service.
      */
     @Autowired
     public IdentityVerificationController(
+            DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             PresenceCheckService presenceCheckService) {
+        this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.presenceCheckService = presenceCheckService;
     }
@@ -138,7 +146,8 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws DocumentSubmitException, PowerAuthAuthenticationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when submitting documents for verification");
@@ -148,7 +157,7 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when submitting documents for verification");
+            throw new PowerAuthAuthenticationException("ECIES encryption failed when submitting documents for verification");
         }
 
         if (request == null || request.getRequestObject() == null) {
@@ -193,17 +202,21 @@ public class IdentityVerificationController {
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when uploading document for verification");
+            logger.error("ECIES encryption failed when uploading document for verification");
+            throw new PowerAuthAuthenticationException("ECIES encryption failed when uploading document for verification");
         }
 
         if (requestData == null) {
-            logger.error("Invalid request received when submitting documents for verification");
+            logger.error("Invalid request received when uploading document for verification");
             throw new PowerAuthAuthenticationException("Invalid request received when uploading document for verification");
         }
 
-        // Process upload document request
-        final DocumentUploadResponse response = identityVerificationService.uploadDocument(requestData);
+        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(requestData, apiAuthentication);
+
+        DocumentUploadResponse response = new DocumentUploadResponse();
+        response.setFilename(uploadedDocument.getFilename());
+        response.setId(uploadedDocument.getId());
+
         return new ObjectResponse<>(response);
     }
 
@@ -232,7 +245,7 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when checking document verification status");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when checking document verification status");
+            throw new PowerAuthAuthenticationException("ECIES encryption failed when checking document verification status");
         }
 
         if (request == null || request.getRequestObject() == null) {
@@ -271,7 +284,7 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when initializing presence check");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when initializing presence check");
+            throw new PowerAuthAuthenticationException("ECIES encryption failed when initializing presence check");
         }
 
         if (request == null || request.getRequestObject() == null) {
@@ -281,7 +294,6 @@ public class IdentityVerificationController {
 
         presenceCheckService.init(apiAuthentication);
         SessionInfo sessionInfo = presenceCheckService.start(apiAuthentication);
-        // TODO mark verification pending
 
         final InitPresenceCheckResponse response = new InitPresenceCheckResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());
