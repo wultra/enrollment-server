@@ -36,31 +36,28 @@ import java.util.Optional;
 @Repository
 public interface DocumentVerificationRepository extends JpaRepository<DocumentVerificationEntity, String> {
 
-    // TODO update timestampLastUpdated
-
     @Modifying
-    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
+    @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.activationId = :activationId " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
-    int failInProgressVerifications(String activationId);
+    int failInProgressVerifications(String activationId, Date timestamp);
 
     @Modifying
-    @Query("UPDATE DocumentVerificationEntity d SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED " +
+    @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
-    int failObsoleteVerifications(Date cleanupDate);
+    int failObsoleteVerifications(Date cleanupDate, Date timestamp);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING, " +
+            "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.activationId = :activationId")
-    int setVerificationPending(String activationId);
-
-    @Modifying
-    @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS " +
-            "WHERE d.id IN :docVerificationIds")
-    int setVerificationInProgress(List<String> docVerificationIds);
+    int setVerificationPending(String activationId, Date timestamp);
 
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +

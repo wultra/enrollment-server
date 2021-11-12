@@ -157,7 +157,7 @@ public class PresenceCheckService {
 
             documentVerificationRepository.save(docVerificationEntity);
 
-            documentVerificationRepository.setVerificationPending(ownerId.getActivationId());
+            documentVerificationRepository.setVerificationPending(ownerId.getActivationId(), ownerId.getTimestamp());
         }
         return result;
     }

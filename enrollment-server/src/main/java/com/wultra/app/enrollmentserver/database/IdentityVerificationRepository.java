@@ -19,13 +19,11 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -36,20 +34,12 @@ import java.util.Optional;
 @Repository
 public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    // TODO update timestampLastUpdated
-
     @Query("UPDATE IdentityVerificationEntity i " +
-            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED, " +
+            "    i.timestampLastUpdated = :timestamp " +
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
-    int failInProgressVerifications(String activationId);
-
-    @Modifying
-    @Query("UPDATE IdentityVerificationEntity i " +
-            "SET i.phase = :phase," +
-            "    i.status = :status " +
-            "WHERE i.activationId = :activationId")
-    void setVerificationPhaseAndStatus(String activationId, IdentityVerificationPhase phase, IdentityVerificationStatus status);
+    int failInProgressVerifications(String activationId, Date timestamp);
 
     Optional<IdentityVerificationEntity> findByActivationId(String activationId);
 

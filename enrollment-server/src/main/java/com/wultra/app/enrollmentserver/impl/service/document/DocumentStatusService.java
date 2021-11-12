@@ -79,7 +79,7 @@ public class DocumentStatusService {
     @Transactional
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
     public void cleanupObsoleteVerificationProcesses() {
-        documentVerificationRepository.failObsoleteVerifications(getProcessExpirationTimestamp());
+        documentVerificationRepository.failObsoleteVerifications(getProcessExpirationTimestamp(), new Date());
     }
 
     private Date getDataRetentionTimestamp() {

@@ -126,9 +126,10 @@ public class IdentityVerificationService {
             logger.info("Switching {} from {} to {} due to new documents submit, {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
-            identityVerificationRepository.setVerificationPhaseAndStatus(
-                    ownerId.getActivationId(), IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS
-            );
+            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerificationRepository.save(idVerification);
         } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
                     idVerification.getStatus(), IdentityVerificationStatus.IN_PROGRESS, ownerId
@@ -162,9 +163,10 @@ public class IdentityVerificationService {
 
         identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
         identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        identityVerificationRepository.save(identityVerification);
+        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         docVerifications.forEach(docVerification -> {
+            docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
             docVerification.setVerificationId(result.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
@@ -225,6 +227,7 @@ public class IdentityVerificationService {
                 );
                 idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
                 idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             }
         }
 
@@ -251,9 +254,9 @@ public class IdentityVerificationService {
         // Delete all large documents by activation ID
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
         // Set status of all in-progress document verifications to failed
-        documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId());
+        documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
         // Set status of all in-progress identity verifications to failed
-        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId());
+        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
     }
 
     public Image getPhotoById(String photoId) throws DocumentVerificationException {

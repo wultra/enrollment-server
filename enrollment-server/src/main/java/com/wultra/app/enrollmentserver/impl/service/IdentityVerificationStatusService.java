@@ -108,6 +108,7 @@ public class IdentityVerificationStatusService {
                 logger.error("Checking presence verification failed due to invalid session info, " + ownerId);
                 idVerification.setErrorDetail("Unable to deserialize session info");
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             } else {
                 PresenceCheckResult presenceCheckResult = null;
                 try {
@@ -117,6 +118,7 @@ public class IdentityVerificationStatusService {
                     logger.error("Checking presence verification failed, " + ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());
                     idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                    idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 }
 
                 if (presenceCheckResult != null) {
@@ -130,8 +132,10 @@ public class IdentityVerificationStatusService {
             } catch (DocumentVerificationException e) {
                 idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Verification start failed, " + ownerId, e);
             }
+
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             // TODO check verification result, set final status to identity and finish documents verification
@@ -148,11 +152,13 @@ public class IdentityVerificationStatusService {
         switch (result.getStatus()) {
             case ACCEPTED:
                 idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.info("Presence check accepted, {}", ownerId);
                 break;
             case FAILED:
                 idVerification.setErrorDetail(result.getErrorDetail());
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
                 break;
             case IN_PROGRESS:
@@ -161,11 +167,11 @@ public class IdentityVerificationStatusService {
             case REJECTED:
                 idVerification.setRejectReason(result.getRejectReason());
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:
-                // TODO
-                break;
+                throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
         }
     }
 
