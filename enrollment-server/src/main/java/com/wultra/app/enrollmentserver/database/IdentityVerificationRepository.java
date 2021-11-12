@@ -46,12 +46,6 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
 
     @Modifying
     @Query("UPDATE IdentityVerificationEntity i " +
-            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING " +
-            "WHERE i.activationId = :activationId")
-    int setVerificationPending(String activationId);
-
-    @Modifying
-    @Query("UPDATE IdentityVerificationEntity i " +
             "SET i.phase = :phase," +
             "    i.status = :status " +
             "WHERE i.activationId = :activationId")

@@ -299,8 +299,7 @@ public class IdentityVerificationController {
             throw new PowerAuthAuthenticationException("Invalid request received when initializing presence check");
         }
 
-        presenceCheckService.init(apiAuthentication);
-        SessionInfo sessionInfo = presenceCheckService.start(apiAuthentication);
+        SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
 
         final InitPresenceCheckResponse response = new InitPresenceCheckResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());

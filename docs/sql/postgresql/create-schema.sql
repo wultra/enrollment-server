@@ -122,6 +122,7 @@ CREATE TABLE es_identity_verification (
     phase VARCHAR(32) NOT NULL,
     reject_reason VARCHAR(256),
     error_detail VARCHAR(256),
+    session_info TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP
 );

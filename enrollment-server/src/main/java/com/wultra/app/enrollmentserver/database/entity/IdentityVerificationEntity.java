@@ -66,6 +66,9 @@ public class IdentityVerificationEntity implements Serializable {
     @Column(name = "error_details")
     private String errorDetail;
 
+    @Column(name = "session_info")
+    private String sessionInfo;
+
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 

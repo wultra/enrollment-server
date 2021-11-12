@@ -21,10 +21,10 @@ import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -53,21 +53,26 @@ public class IdentityVerificationStatusService {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final JsonSerializationService jsonSerializationService;
+
     private final PresenceCheckService presenceCheckService;
 
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
      * @param identityVerificationService Identity verification service.
+     * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckService Presence check service.
      */
     @Autowired
     public IdentityVerificationStatusService(
             IdentityVerificationRepository identityVerificationRepository,
             IdentityVerificationService identityVerificationService,
+            JsonSerializationService jsonSerializationService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
+        this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckService = presenceCheckService;
     }
 
@@ -91,55 +96,77 @@ public class IdentityVerificationStatusService {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
             return response;
         }
-        IdentityVerificationEntity identityVerificationEntity = idVerificationOptional.get();
+        IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
-        if (IdentityVerificationPhase.PRESENCE_CHECK.equals(identityVerificationEntity.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(identityVerificationEntity.getStatus())) {
-            SessionInfo sessionInfo = new SessionInfo();
-            // TODO use previously stored session info
-            PresenceCheckResult presenceCheckResult;
-            try {
-                presenceCheckResult =
-                        presenceCheckService.checkPresenceVerification(apiAuthentication, sessionInfo);
-            } catch (DocumentVerificationException | PresenceCheckException e) {
-                logger.error("Checking presence verification failed, " + ownerId, e);
-                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
-                return response;
+        if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
+            response.setIdentityVerificationPhase(IdentityVerificationPhase.PRESENCE_CHECK);
+
+            SessionInfo sessionInfo =
+                    jsonSerializationService.deserialize(idVerification.getSessionInfo(), SessionInfo.class);
+            if (sessionInfo == null) {
+                logger.error("Checking presence verification failed due to invalid session info, " + ownerId);
+                idVerification.setErrorDetail("Unable to deserialize session info");
+                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+            } else {
+                PresenceCheckResult presenceCheckResult = null;
+                try {
+                    presenceCheckResult =
+                            presenceCheckService.checkPresenceVerification(apiAuthentication, sessionInfo);
+                } catch (DocumentVerificationException | PresenceCheckException e) {
+                    logger.error("Checking presence verification failed, " + ownerId, e);
+                    idVerification.setErrorDetail(e.getMessage());
+                    idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                }
+
+                if (presenceCheckResult != null) {
+                    evaluatePresenceCheckResult(ownerId, idVerification, presenceCheckResult);
+                }
             }
-
-            PresenceCheckStatus presenceCheckStatus = presenceCheckResult.getStatus();
-
-            if (PresenceCheckStatus.IN_PROGRESS.equals(presenceCheckStatus)) {
-                logger.debug("Presence check still in progress, {}", ownerId);
-            } else if (PresenceCheckStatus.ACCEPTED.equals(presenceCheckStatus)) {
-                identityVerificationEntity.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-                logger.info("Presence check accepted, {}", ownerId);
-            } else if (PresenceCheckStatus.FAILED.equals(presenceCheckStatus)) {
-                identityVerificationEntity.setErrorDetail(presenceCheckResult.getErrorDetail());
-                identityVerificationEntity.setStatus(IdentityVerificationStatus.FAILED);
-                logger.warn("Presence check failed, {}", ownerId);
-            } else if (PresenceCheckStatus.REJECTED.equals(presenceCheckStatus)) {
-                identityVerificationEntity.setRejectReason(presenceCheckResult.getRejectReason());
-                identityVerificationEntity.setStatus(IdentityVerificationStatus.REJECTED);
-                logger.warn("Presence check rejected, {}", ownerId);
-            }
-        } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(identityVerificationEntity.getPhase())
-                && IdentityVerificationStatus.VERIFICATION_PENDING.equals(identityVerificationEntity.getStatus())) {
+        } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             try {
                 identityVerificationService.startVerification(ownerId);
             } catch (DocumentVerificationException e) {
-                identityVerificationEntity.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-                identityVerificationEntity.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
+                idVerification.setStatus(IdentityVerificationStatus.FAILED);
                 logger.warn("Verification start failed, " + ownerId, e);
             }
-        } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(identityVerificationEntity.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(identityVerificationEntity.getStatus())) {
+        } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             // TODO check verification result, set final status to identity and finish documents verification
         }
 
-        response.setIdentityVerificationStatus(identityVerificationEntity.getStatus());
-        response.setIdentityVerificationPhase(identityVerificationEntity.getPhase());
+        response.setIdentityVerificationStatus(idVerification.getStatus());
+        response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
+    }
+
+    private void evaluatePresenceCheckResult(OwnerId ownerId,
+                                             IdentityVerificationEntity idVerification,
+                                             PresenceCheckResult result) {
+        switch (result.getStatus()) {
+            case ACCEPTED:
+                idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                logger.info("Presence check accepted, {}", ownerId);
+                break;
+            case FAILED:
+                idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
+                break;
+            case IN_PROGRESS:
+                logger.debug("Presence check still in progress, {}", ownerId);
+                break;
+            case REJECTED:
+                idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setStatus(IdentityVerificationStatus.REJECTED);
+                logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
+                break;
+            default:
+                // TODO
+                break;
+        }
     }
 
 }

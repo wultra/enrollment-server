@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -52,6 +53,8 @@ public class PresenceCheckService {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final JsonSerializationService jsonSerializationService;
+
     private final PresenceCheckProvider presenceCheckProvider;
 
     @Autowired
@@ -59,15 +62,17 @@ public class PresenceCheckService {
             DocumentVerificationRepository documentVerificationRepository,
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
+            JsonSerializationService jsonSerializationService,
             PresenceCheckProvider presenceCheckProvider) {
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
+        this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckProvider = presenceCheckProvider;
     }
 
     @Transactional
-    public void init(PowerAuthApiAuthentication apiAuthentication)
+    public SessionInfo init(PowerAuthApiAuthentication apiAuthentication)
             throws DocumentVerificationException, PresenceCheckException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
@@ -94,10 +99,6 @@ public class PresenceCheckService {
             throw new PresenceCheckException("Unable to initialize presence check");
         }
 
-        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-
         Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
                 documentVerificationRepository.findByActivationIdAndPhotoIdNotNull(ownerId.getActivationId());
 
@@ -109,15 +110,20 @@ public class PresenceCheckService {
             logger.error("Missing selfie photo to initialize presence check, {}", ownerId);
             throw new PresenceCheckException("Unable to initialize presence check");
         }
-    }
-
-    @Transactional
-    public SessionInfo start(PowerAuthApiAuthentication apiAuthentication) throws PresenceCheckException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
-        identityVerificationService.markVerificationPending(apiAuthentication);
-        // TODO store session info to the database
+
+        String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
+        if (sessionInfoJson == null) {
+            logger.error("JSON serialization of session info failed, {}", ownerId);
+            throw new PresenceCheckException("Unable to initialize presence check");
+        }
+
+        idVerification.setSessionInfo(sessionInfoJson);
+        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
+        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+
         return sessionInfo;
     }
 
