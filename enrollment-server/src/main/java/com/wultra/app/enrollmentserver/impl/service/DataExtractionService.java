@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,21 +85,23 @@ public class DataExtractionService {
         List<Document> extractedDocuments = new ArrayList<>();
         try {
             ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(inputData));
-            ZipEntry entry = zis.getNextEntry();
-            if (entry != null) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
                 // Directories are expected not to be present in the archive
                 if (entry.isDirectory()) {
                     logger.warn("Archive with documents contains a directory, this is not allowed.");
                     throw new DocumentVerificationException();
                 }
-                byte[] entryData = new byte[(int) entry.getSize()];
-                int i = 0;
-                while (i < entryData.length) {
-                    i += zis.read(entryData, i, entryData.length - i);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int read;
+                while ((read = zis.read(buffer)) != -1) {
+                    baos.write(buffer, 0, read);
                 }
                 Document document = new Document();
                 document.setFilename(entry.getName());
-                document.setData(entryData);
+                document.setData(baos.toByteArray());
+                extractedDocuments.add(document);
             }
             zis.closeEntry();
             zis.close();
