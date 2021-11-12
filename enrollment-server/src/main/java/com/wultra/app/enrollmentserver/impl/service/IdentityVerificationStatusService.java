@@ -98,7 +98,10 @@ public class IdentityVerificationStatusService {
         }
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
-        if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
+        if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
+            identityVerificationService.checkIdentityDocumentsForVerification(ownerId, idVerification);
+        } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             response.setIdentityVerificationPhase(IdentityVerificationPhase.PRESENCE_CHECK);
 

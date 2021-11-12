@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,6 +68,8 @@ public class IdentityVerificationService {
 
     private final DocumentProcessingService documentProcessingService;
 
+    private final IdentityVerificationCreateService identityVerificationCreateService;
+
     private final DocumentVerificationProvider documentVerificationProvider;
 
     /**
@@ -75,6 +78,7 @@ public class IdentityVerificationService {
      * @param documentVerificationRepository Document verification repository.
      * @param identityVerificationRepository Identity verification repository.
      * @param documentProcessingService Document processing service.
+     * @param identityVerificationCreateService Identity verification create service.
      * @param documentVerificationProvider Document verification provider.
      */
     @Autowired
@@ -83,17 +87,19 @@ public class IdentityVerificationService {
             DocumentVerificationRepository documentVerificationRepository,
             IdentityVerificationRepository identityVerificationRepository,
             DocumentProcessingService documentProcessingService,
+            IdentityVerificationCreateService identityVerificationCreateService,
             DocumentVerificationProvider documentVerificationProvider) {
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationRepository = identityVerificationRepository;
 
         this.documentProcessingService = documentProcessingService;
+        this.identityVerificationCreateService = identityVerificationCreateService;
 
         this.documentVerificationProvider = documentVerificationProvider;
     }
 
-    Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
+    public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
         return identityVerificationRepository.findByActivationId(ownerId.getActivationId());
     }
 
@@ -103,7 +109,6 @@ public class IdentityVerificationService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document verification entities.
      */
-    @Transactional
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             PowerAuthApiAuthentication apiAuthentication)
             throws DocumentSubmitException {
@@ -112,17 +117,16 @@ public class IdentityVerificationService {
         // Find an already existing identity verification
         Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
 
-        IdentityVerificationEntity idVerification;
-        idVerification = idVerificationOptional.orElseGet(() -> createIdentityVerification(ownerId));
+        IdentityVerificationEntity idVerification = idVerificationOptional.orElseGet(
+                () -> identityVerificationCreateService.createIdentityVerification(ownerId)
+        );
 
         if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
                     idVerification.getPhase(), IdentityVerificationPhase.DOCUMENT_UPLOAD, ownerId
             );
             throw new DocumentSubmitException("Not allowed submit of documents during not upload phase");
-        }
-
-        if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             logger.info("Switching {} from {} to {} due to new documents submit, {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
@@ -137,7 +141,11 @@ public class IdentityVerificationService {
             throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
         }
 
-        return documentProcessingService.submitDocuments(idVerification, request, apiAuthentication);
+        List<DocumentVerificationEntity> docsVerifications =
+                documentProcessingService.submitDocuments(idVerification, request, apiAuthentication);
+        checkIdentityDocumentsForVerification(ownerId, idVerification);
+        identityVerificationRepository.save(idVerification);
+        return docsVerifications;
     }
 
     @Transactional
@@ -183,9 +191,14 @@ public class IdentityVerificationService {
     public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
         DocumentStatusResponse response = new DocumentStatusResponse();
 
-        List<String> documentIds = request.getFilter().stream()
-                .map(DocumentStatusRequest.DocumentFilter::getDocumentId)
-                .collect(Collectors.toList());
+        List<String> documentIds;
+        if (request.getFilter() != null) {
+            documentIds = request.getFilter().stream()
+                    .map(DocumentStatusRequest.DocumentFilter::getDocumentId)
+                    .collect(Collectors.toList());
+        } else {
+            documentIds = Collections.emptyList();
+        }
 
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
@@ -201,34 +214,22 @@ public class IdentityVerificationService {
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
         // Ensure that all entities are related to the identity verification
-        List<DocumentVerificationEntity> entities =
-                Streamable.of(documentVerificationRepository.findAllById(documentIds)).toList();
-        for (DocumentVerificationEntity entity : entities) {
-            if (!entity.getVerificationId().equals(idVerification.getId())) {
-                logger.error("Not related {} to {}, {}", entity, idVerification, ownerId);
-                response.setStatus(IdentityVerificationStatus.FAILED);
-                return response;
+        List<DocumentVerificationEntity> entities = Collections.emptyList();
+        if (!documentIds.isEmpty()) {
+            entities = Streamable.of(documentVerificationRepository.findAllById(documentIds)).toList();
+            for (DocumentVerificationEntity entity : entities) {
+                if (!entity.getVerificationId().equals(idVerification.getId())) {
+                    logger.error("Not related {} to {}, {}", entity, idVerification, ownerId);
+                    response.setStatus(IdentityVerificationStatus.FAILED);
+                    return response;
+                }
             }
         }
 
         // Check statuses of all documents used for the verification, update identity verification status accordingly
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            List<DocumentVerificationEntity> docVerifications =
-                    documentVerificationRepository.findAllUsedForVerification(ownerId.getActivationId());
-
-            if (docVerifications.stream()
-                    .allMatch(docVerification ->
-                            DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
-                    )
-            ) {
-                logger.info("All documents are pending verification, changing status of {} to {}",
-                        idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
-                );
-                idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-                idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            }
+            checkIdentityDocumentsForVerification(ownerId, idVerification);
         }
 
         List<DocumentStatusResponse.DocumentMetadata> docsMetadata = createDocsMetadata(entities);
@@ -263,14 +264,32 @@ public class IdentityVerificationService {
         return documentVerificationProvider.getPhoto(photoId);
     }
 
-    private IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) {
-        IdentityVerificationEntity entity = new IdentityVerificationEntity();
-        entity.setActivationId(ownerId.getActivationId());
-        entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-        entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        entity.setTimestampCreated(ownerId.getTimestamp());
-        entity.setUserId(ownerId.getUserId());
-        return identityVerificationRepository.save(entity);
+    /**
+     * Check documents used for verification on their status
+     * <p>
+     *     When all of the documents are {@link DocumentStatus#VERIFICATION_PENDING} the identity verification is set
+     *     also to {@link IdentityVerificationStatus#VERIFICATION_PENDING}
+     * </p>
+     * @param idVerification Identity verification entity.
+     * @param ownerId Owner identification
+     */
+    @Transactional
+    public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+        List<DocumentVerificationEntity> docVerifications =
+                documentVerificationRepository.findAllUsedForVerification(ownerId.getActivationId());
+
+        if (docVerifications.stream()
+                .allMatch(docVerification ->
+                        DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
+                )
+        ) {
+            logger.info("All documents are pending verification, changing status of {} to {}",
+                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
+            );
+            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        }
     }
 
     private List<DocumentStatusResponse.DocumentMetadata> createDocsMetadata(List<DocumentVerificationEntity> entities) {

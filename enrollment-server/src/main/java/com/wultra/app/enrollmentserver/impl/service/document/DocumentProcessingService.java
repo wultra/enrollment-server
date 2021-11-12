@@ -106,7 +106,7 @@ public class DocumentProcessingService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document verification entities.
      */
-    @Transactional
+    @Transactional(value = Transactional.TxType.REQUIRES_NEW)
     public List<DocumentVerificationEntity> submitDocuments(
             IdentityVerificationEntity idVerification,
             DocumentSubmitRequest request,

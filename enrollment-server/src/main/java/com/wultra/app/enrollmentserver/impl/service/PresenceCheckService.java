@@ -94,7 +94,7 @@ public class PresenceCheckService {
             throw new PresenceCheckException("Unable to initialize presence check");
         } else if (!IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
-                    idVerification.getPhase(), IdentityVerificationStatus.VERIFICATION_PENDING, ownerId
+                    idVerification.getStatus(), IdentityVerificationStatus.VERIFICATION_PENDING, ownerId
             );
             throw new PresenceCheckException("Unable to initialize presence check");
         }
