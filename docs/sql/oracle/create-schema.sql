@@ -17,11 +17,11 @@
  */
 
 --
---  Create sequences. Maximum value for PostgreSQL is 9223372036854775807.
---- See: https://www.postgresql.org/docs/9.6/sql-createsequence.html
+--  Create sequences. Maximum value for Oracle is the maximum value of the data type (28 digits).
+--- See: https://www.postgresql.org/docs/10/sql-createsequence.html
 --
-CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
-CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
+CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 10 START WITH 1 CACHE 20;
+CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 10 START WITH 1 CACHE 20;
 
 CREATE TABLE ES_OPERATION_TEMPLATE (
     ID NUMBER(19) NOT NULL PRIMARY KEY,
