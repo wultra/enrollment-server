@@ -33,9 +33,12 @@ public class DocumentsVerificationResult {
     private String verificationId;
     private DocumentVerificationStatus status;
     private List<DocumentVerificationResult> results;
-    private Boolean accepted;
     private Integer verificationScore;
     private String rejectReason;
     private String errorDetail;
+
+    public boolean isAccepted() {
+        return DocumentVerificationStatus.ACCEPTED.equals(status);
+    }
 
 }

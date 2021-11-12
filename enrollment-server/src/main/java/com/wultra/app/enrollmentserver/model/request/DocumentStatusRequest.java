@@ -31,6 +31,7 @@ public class DocumentStatusRequest {
 
     private List<DocumentFilter> filter;
 
+    @Data
     public static class DocumentFilter {
 
         private String documentId;

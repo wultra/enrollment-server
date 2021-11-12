@@ -17,8 +17,8 @@
  */
 package com.wultra.app.enrollmentserver.model.request;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
 
 import java.util.List;

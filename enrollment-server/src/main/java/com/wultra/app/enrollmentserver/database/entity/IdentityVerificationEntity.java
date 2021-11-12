@@ -34,7 +34,7 @@ import java.util.Objects;
  */
 @Getter
 @Setter
-@ToString
+@ToString(of = {"id", "activationId", "phase"})
 @NoArgsConstructor
 @Entity
 @Table(name = "es_identity_verification")

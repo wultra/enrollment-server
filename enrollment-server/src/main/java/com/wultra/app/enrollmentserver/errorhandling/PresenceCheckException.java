@@ -26,4 +26,11 @@ public class PresenceCheckException extends Exception {
 
     private static final long serialVersionUID = 3977949988982066411L;
 
+    public PresenceCheckException() {
+    }
+
+    public PresenceCheckException(String message) {
+        super(message);
+    }
+
 }

@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Class representing a document.
@@ -25,10 +26,9 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class Document {
+@EqualsAndHashCode(callSuper = true)
+public class Document extends DocumentMetadata {
 
-    private String id;
-    private String filename;
     private byte[] data;
 
 }

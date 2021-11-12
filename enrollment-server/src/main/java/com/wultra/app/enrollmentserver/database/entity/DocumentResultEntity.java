@@ -46,6 +46,8 @@ public class DocumentResultEntity implements Serializable {
     private Long id;
 
     // TODO - FK relationship
+    // @OneToOne(targetEntity = DocumentVerificationEntity.class)
+    // @JoinColumn(name = "document_verification_id", referencedColumnName = "id", nullable = false)
     @Column(name = "document_verification_id", nullable = false)
     private String documentVerificationId;
 

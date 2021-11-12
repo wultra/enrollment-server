@@ -19,9 +19,14 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 /**
  * Repository for identity verification records.
@@ -31,9 +36,31 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    @Query("UPDATE IdentityVerificationEntity i SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
+    // TODO update timestampLastUpdated
+
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
     int failInProgressVerifications(String activationId);
+
+    @Modifying
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING " +
+            "WHERE i.activationId = :activationId")
+    int setVerificationPending(String activationId);
+
+    @Modifying
+    @Query("UPDATE IdentityVerificationEntity i " +
+            "SET i.phase = :phase," +
+            "    i.status = :status " +
+            "WHERE i.activationId = :activationId")
+    void setVerificationPhaseAndStatus(String activationId, IdentityVerificationPhase phase, IdentityVerificationStatus status);
+
+    Optional<IdentityVerificationEntity> findByActivationId(String activationId);
+
+    Optional<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(
+            String activationId
+    );
 
 }

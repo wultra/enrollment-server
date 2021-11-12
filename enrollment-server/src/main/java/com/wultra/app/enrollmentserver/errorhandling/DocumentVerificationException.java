@@ -26,4 +26,11 @@ public class DocumentVerificationException extends Exception {
 
     private static final long serialVersionUID = -5868335942741210351L;
 
+    public DocumentVerificationException() {
+    }
+
+    public DocumentVerificationException(String message) {
+        super(message);
+    }
+
 }

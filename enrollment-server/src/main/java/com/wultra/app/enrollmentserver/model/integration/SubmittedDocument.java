@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.model.integration;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * An identity-related document submitted for verification.
@@ -27,6 +28,7 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@ToString(of = {"documentId", "side", "type"})
 public class SubmittedDocument {
 
     private String documentId;

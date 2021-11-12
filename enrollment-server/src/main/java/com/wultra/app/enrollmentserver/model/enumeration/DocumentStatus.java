@@ -30,6 +30,11 @@ public enum DocumentStatus {
     ACCEPTED,
 
     /**
+     * Document has been disposed by resubmit of new version into the identity verification system.
+     */
+    DISPOSED,
+
+    /**
      * Document upload is in progress into the identity verification system.
      */
     UPLOAD_IN_PROGRESS,
