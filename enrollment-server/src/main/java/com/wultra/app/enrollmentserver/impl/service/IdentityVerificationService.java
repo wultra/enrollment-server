@@ -260,12 +260,6 @@ public class IdentityVerificationService {
         return documentVerificationProvider.getPhoto(photoId);
     }
 
-    @Transactional
-    public void markVerificationPending(PowerAuthApiAuthentication apiAuthentication) {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        identityVerificationRepository.setVerificationPending(ownerId.getActivationId());
-    }
-
     private IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) {
         IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());

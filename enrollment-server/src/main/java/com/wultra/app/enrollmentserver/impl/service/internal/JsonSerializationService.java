@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
+
 /**
  * Service class used for JSON serialization.
  *
@@ -36,6 +38,21 @@ public class JsonSerializationService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
+     * Deserialize an object from JSON.
+     * @param json Serialized JSON representation of the object..
+     * @return Deserialized object
+     */
+    @Nullable
+    public <T> T deserialize(String json, Class<T> cls) {
+        try {
+            return objectMapper.readValue(json, cls);
+        } catch (JsonProcessingException e) {
+            logger.error("JSON serialization failed due to an error: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
      * Serialize an object into JSON.
      * @param object Object.
      * @return Serialized JSON representation of the object.
@@ -44,7 +61,7 @@ public class JsonSerializationService {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            logger.error("JSON serialization failed due to an error: {}", e.getMessage(), e);
+            logger.error("JSON serialization failed due to an error: " + e.getMessage(), e);
             return null;
         }
     }
