@@ -63,7 +63,7 @@ public class IdentityVerificationEntity implements Serializable {
     @Column(name = "reject_reason")
     private String rejectReason;
 
-    @Column(name = "error_details")
+    @Column(name = "error_detail")
     private String errorDetail;
 
     @Column(name = "timestamp_created", nullable = false)

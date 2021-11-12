@@ -63,10 +63,10 @@ public class IdentityDocumentEntity implements Serializable {
 
         private static final long serialVersionUID = -5100158130822709117L;
 
-        @Column(name = "identity_id", nullable = false)
+        @Column(name = "identity_verification_id", nullable = false)
         private String identityId;
 
-        @Column(name = "document_id", nullable = false)
+        @Column(name = "document_verification_id", nullable = false)
         private String documentId;
 
         @Override
