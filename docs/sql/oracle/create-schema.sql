@@ -16,10 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
---
---  Create sequences. Maximum value for Oracle is the maximum value of the data type (28 digits).
---- See: https://www.postgresql.org/docs/10/sql-createsequence.html
---
 CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 10 START WITH 1 CACHE 20;
 CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 10 START WITH 1 CACHE 20;
 
