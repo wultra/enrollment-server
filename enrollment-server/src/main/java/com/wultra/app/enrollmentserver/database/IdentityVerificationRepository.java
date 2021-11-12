@@ -26,6 +26,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -36,20 +37,20 @@ import java.util.Optional;
 @Repository
 public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    // TODO update timestampLastUpdated
-
     @Query("UPDATE IdentityVerificationEntity i " +
-            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED " +
+            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED, " +
+            "    i.timestampLastUpdated = :timestamp " +
             "WHERE i.activationId = :activationId " +
             "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
-    int failInProgressVerifications(String activationId);
+    int failInProgressVerifications(String activationId, Date timestamp);
 
     @Modifying
     @Query("UPDATE IdentityVerificationEntity i " +
             "SET i.phase = :phase," +
-            "    i.status = :status " +
+            "    i.status = :status, " +
+            "    i.timestampLastUpdated = :timestamp " +
             "WHERE i.activationId = :activationId")
-    void setVerificationPhaseAndStatus(String activationId, IdentityVerificationPhase phase, IdentityVerificationStatus status);
+    void setVerificationPhaseAndStatus(String activationId, IdentityVerificationPhase phase, IdentityVerificationStatus status, Date timestamp);
 
     Optional<IdentityVerificationEntity> findByActivationId(String activationId);
 

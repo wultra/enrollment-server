@@ -127,7 +127,10 @@ public class IdentityVerificationService {
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
             identityVerificationRepository.setVerificationPhaseAndStatus(
-                    ownerId.getActivationId(), IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS
+                    ownerId.getActivationId(),
+                    IdentityVerificationPhase.DOCUMENT_UPLOAD,
+                    IdentityVerificationStatus.IN_PROGRESS,
+                    ownerId.getTimestamp()
             );
         } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
@@ -251,9 +254,9 @@ public class IdentityVerificationService {
         // Delete all large documents by activation ID
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
         // Set status of all in-progress document verifications to failed
-        documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId());
+        documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
         // Set status of all in-progress identity verifications to failed
-        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId());
+        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
     }
 
     public Image getPhotoById(String photoId) throws DocumentVerificationException {
