@@ -18,12 +18,12 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -43,6 +43,8 @@ public class OperationTemplateEntity implements Serializable {
     private static final long serialVersionUID = 5914420785283118800L;
 
     @Id
+    @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq", allocationSize = 10)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_operation_template")
     @Column(name = "id", nullable = false)
     private Long id;
 

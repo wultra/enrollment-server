@@ -19,7 +19,10 @@
 package com.wultra.app.enrollmentserver.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -42,6 +45,8 @@ public class DocumentResultEntity implements Serializable {
     private static final long serialVersionUID = -760284276164288362L;
 
     @Id
+    @SequenceGenerator(name = "es_document_result", sequenceName = "es_document_result_seq", allocationSize = 10)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_document_result")
     @Column(name = "id", nullable = false)
     private Long id;
 
