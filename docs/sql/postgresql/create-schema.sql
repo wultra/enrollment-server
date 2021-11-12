@@ -16,6 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+--
+--  Create sequences. Maximum value for PostgreSQL is 9223372036854775807.
+--- See: https://www.postgresql.org/docs/9.6/sql-createsequence.html
+--
+CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
+CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
+
 CREATE TABLE es_operation_template (
     id BIGINT NOT NULL PRIMARY KEY,
     placeholder VARCHAR(255) NOT NULL,

@@ -101,7 +101,7 @@ CREATE INDEX document_data_activation ON es_document_data (activation_id);
 CREATE INDEX document_data_timestamp ON es_document_data (timestamp_created);
 
 CREATE TABLE es_document_result (
-    id BIGINT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     document_verification_id VARCHAR(36) NOT NULL,
     phase VARCHAR(32) NOT NULL,
     reject_reason TEXT,

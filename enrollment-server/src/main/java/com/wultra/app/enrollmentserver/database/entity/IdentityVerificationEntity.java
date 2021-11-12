@@ -21,6 +21,7 @@ package com.wultra.app.enrollmentserver.database.entity;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -43,6 +44,8 @@ public class IdentityVerificationEntity implements Serializable {
     private static final long serialVersionUID = 6307591849271145826L;
 
     @Id
+    @GeneratedValue(generator = "uuid")
+    @GenericGenerator(name = "uuid", strategy = "uuid2")
     @Column(name = "id", nullable = false)
     private String id;
 
