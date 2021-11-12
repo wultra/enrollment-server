@@ -28,7 +28,6 @@ import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
@@ -47,7 +46,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -285,16 +283,6 @@ public class IdentityVerificationService {
             docsMetadata.add(docMetadata);
         });
         return docsMetadata;
-    }
-
-    public void test() {
-        DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
-        docVerification.setActivationId("activationId");
-        docVerification.setFilename("filename");
-        docVerification.setStatus(DocumentStatus.FAILED);
-        docVerification.setTimestampCreated(new Date());
-        docVerification.setType(DocumentType.ID_CARD);
-        documentVerificationRepository.save(docVerification);
     }
 
 }
