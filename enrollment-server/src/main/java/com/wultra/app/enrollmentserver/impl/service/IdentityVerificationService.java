@@ -35,9 +35,7 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
-import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
@@ -141,33 +139,7 @@ public class IdentityVerificationService {
         return documentProcessingService.submitDocuments(idVerification, request, apiAuthentication);
     }
 
-    /**
-     * Check status of identity verification.
-     * @param request Identity verification status request.
-     * @param apiAuthentication PowerAuth authentication.
-     * @return Identity verification status response.
-     */
     @Transactional
-    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
-        IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
-
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-
-        Optional<IdentityVerificationEntity> idVerificationOptional =
-                identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-
-        if (idVerificationOptional.isPresent()) {
-            IdentityVerificationEntity identityVerificationEntity = idVerificationOptional.get();
-            response.setIdentityVerificationStatus(identityVerificationEntity.getStatus());
-            response.setIdentityVerificationPhase(identityVerificationEntity.getPhase());
-        } else {
-            logger.error("Checking identity verification status on not existing entity, {}", ownerId);
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
-        }
-
-        return response;
-    }
-
     public void startVerification(OwnerId ownerId) throws DocumentVerificationException {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
                 identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
@@ -184,6 +156,8 @@ public class IdentityVerificationService {
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
 
+        // TODO find and fill relations between both sides of an id document
+
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 
         identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
@@ -195,8 +169,6 @@ public class IdentityVerificationService {
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
         documentVerificationRepository.saveAll(docVerifications);
-
-        // TODO process result
     }
 
     /**

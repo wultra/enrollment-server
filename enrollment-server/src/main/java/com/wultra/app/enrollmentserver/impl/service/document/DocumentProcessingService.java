@@ -145,8 +145,6 @@ public class DocumentProcessingService {
 
         documentVerificationRepository.saveAll(docVerifications);
 
-        // TODO find the other sides of documents
-
         for (int i = 0; i < docVerifications.size(); i++) {
             DocumentVerificationEntity docVerificationEntity = docVerifications.get(i);
             docResults.get(i).setDocumentVerificationId(docVerificationEntity.getId());

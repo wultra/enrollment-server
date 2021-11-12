@@ -23,6 +23,8 @@ import com.wultra.app.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.presencecheck.iproov.model.api.ClaimValidateRequest;
 import com.wultra.app.presencecheck.iproov.model.api.EnrolImageBody;
 import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,6 +46,8 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnProperty(value = "enrollment-server.presence-check.provider", havingValue = "iproov")
 @Service
 public class IProovRestApiService {
+
+    private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
 
     public static final String I_PROOV_RESOURCE = "presence_check";
 
@@ -116,8 +120,13 @@ public class IProovRestApiService {
     }
 
     public ResponseEntity<String> deleteUserPersona(OwnerId id) {
-        // TODO implement with oauth call on DELETE /users/{activationId}
-        throw new IllegalStateException("Not implemented yet");
+        // TODO implement this, oauth call on DELETE /users/activationId
+        logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
+        return ResponseEntity.ok("{\n" +
+                "  \"user_id\": \"" + id.getActivationId() + "\",\n" +
+                "  \"name\": null,\n" +
+                "  \"status\": \"Deleted\"\n" +
+                "}");
     }
 
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {

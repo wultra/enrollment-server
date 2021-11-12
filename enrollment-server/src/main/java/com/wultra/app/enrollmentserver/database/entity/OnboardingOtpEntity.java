@@ -49,6 +49,8 @@ public class OnboardingOtpEntity implements Serializable {
     private String id;
 
     // TODO - FK relationship
+    // @OneToOne(targetEntity = OnboardingProcessEntity.class)
+    // @JoinColumn(name = "process_id", referencedColumnName = "id", nullable = false)
     @Column(name = "process_id", nullable = false)
     private String processId;
 

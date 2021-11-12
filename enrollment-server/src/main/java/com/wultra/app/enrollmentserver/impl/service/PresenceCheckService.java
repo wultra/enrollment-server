@@ -78,13 +78,16 @@ public class PresenceCheckService {
         }
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
-        if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
+        if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase()) &&
+            IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+            logger.error("The presence check is already accepted, not allowed to initialize it again, {}", ownerId);
+            throw new PresenceCheckException("Unable to initialize presence check");
+        } else if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
                     idVerification.getPhase(), IdentityVerificationPhase.DOCUMENT_UPLOAD, ownerId
             );
             throw new PresenceCheckException("Unable to initialize presence check");
-        }
-        if (!IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+        } else if (!IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
                     idVerification.getPhase(), IdentityVerificationStatus.VERIFICATION_PENDING, ownerId
             );
@@ -93,6 +96,7 @@ public class PresenceCheckService {
 
         idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
         idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
                 documentVerificationRepository.findByActivationIdAndPhotoIdNotNull(ownerId.getActivationId());
@@ -113,12 +117,12 @@ public class PresenceCheckService {
 
         SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
         identityVerificationService.markVerificationPending(apiAuthentication);
-
+        // TODO store session info to the database
         return sessionInfo;
     }
 
     @Transactional
-    public PresenceCheckStatus checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication, SessionInfo sessionInfo)
+    public PresenceCheckResult checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication, SessionInfo sessionInfo)
             throws DocumentVerificationException, PresenceCheckException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
@@ -148,10 +152,8 @@ public class PresenceCheckService {
             documentVerificationRepository.save(docVerificationEntity);
 
             documentVerificationRepository.setVerificationPending(ownerId.getActivationId());
-
-            identityVerificationService.startVerification(ownerId);
         }
-        return result.getStatus();
+        return result;
     }
 
     public void cleanup(PowerAuthApiAuthentication apiAuthentication) throws PresenceCheckException {

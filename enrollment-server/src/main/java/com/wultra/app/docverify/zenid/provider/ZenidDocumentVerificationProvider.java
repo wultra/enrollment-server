@@ -308,10 +308,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 verificationResult.setExtractedData(extractedData);
                 verificationResult.setUploadId(sampleId);
 
-                // TODO  sort the validations by difference between the actual score and the accept score values?
-                // Find a first failed validation,its description as the rejected reason for the sample id document
-                Optional<ZenidWebInvestigationValidatorResponse> failedValidation =
-                        validations.stream().filter(validation -> !validation.isOk()).findFirst();
+                // Find a first failed validation, use its description as the rejected reason for the document
+                Optional<ZenidWebInvestigationValidatorResponse> failedValidation = validations.stream()
+                        .filter(validation -> !validation.isOk())
+                        // Sort the validations by difference between the actual score and the accepted score value
+                        .max(Comparator.comparingInt((value -> value.getAcceptScore() - value.getScore())));
                 if (failedValidation.isPresent()) {
                     String rejectReason = failedValidation.get().getIssues().get(0).getIssueDescription();
                     verificationResult.setRejectReason(rejectReason);

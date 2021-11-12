@@ -231,9 +231,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
     public void cleanupIdentityData(OwnerId id) throws PresenceCheckException {
         ResponseEntity<String> responseEntity;
         try {
-            responseEntity = new ResponseEntity<>("{\"status\":\"Deleted\"}", HttpStatus.OK);
-            logger.error("Skipped call to iProov service to delete a user persona, not implemented yet");
-            //responseEntity = iProovRestApiService.deleteUserPersona(id);
+            responseEntity = iProovRestApiService.deleteUserPersona(id);
         } catch (HttpClientErrorException e) {
             responseEntity = new ResponseEntity<>(e.getResponseBodyAsString(), e.getStatusCode());
         } catch (RestClientException e) {

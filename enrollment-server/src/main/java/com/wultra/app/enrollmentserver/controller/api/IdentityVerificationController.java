@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
+import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationStatusService;
 import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
@@ -74,22 +75,27 @@ public class IdentityVerificationController {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final IdentityVerificationStatusService identityVerificationStatusService;
+
     private final PresenceCheckService presenceCheckService;
 
     /**
      * Controller constructor.
      *
      * @param documentProcessingService Document processing service.
-     * @param identityVerificationService Activation code service.
+     * @param identityVerificationService Identity verification service.
+     * @param identityVerificationStatusService Identity verification status service.
      * @param presenceCheckService Presence check service.
      */
     @Autowired
     public IdentityVerificationController(
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
+            IdentityVerificationStatusService identityVerificationStatusService,
             PresenceCheckService presenceCheckService) {
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
+        this.identityVerificationStatusService = identityVerificationStatusService;
         this.presenceCheckService = presenceCheckService;
     }
 
@@ -126,8 +132,9 @@ public class IdentityVerificationController {
             throw new PowerAuthAuthenticationException("Invalid request received when checking identity verification status");
         }
 
-        // Submit documents for verification
-        final IdentityVerificationStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
+        // Check verification status
+        final IdentityVerificationStatusResponse response =
+                identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
         return new ObjectResponse<>(response);
     }
 
