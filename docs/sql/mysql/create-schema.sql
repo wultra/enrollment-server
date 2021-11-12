@@ -17,7 +17,7 @@
  */
 
 CREATE TABLE es_operation_template (
-    id BIGINT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     placeholder VARCHAR(255) NOT NULL,
     language VARCHAR(8) NOT NULL,
     title VARCHAR(255) NOT NULL,
