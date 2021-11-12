@@ -25,7 +25,6 @@ import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.enrollmentserver.impl.service.internal.IdGeneratorService;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.impl.service.internal.OtpGeneratorService;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
@@ -58,7 +57,6 @@ public class OnboardingService {
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final OnboardingOtpRepository onboardingOtpRepository;
     private final JsonSerializationService serializer;
-    private final IdGeneratorService idGenerator;
     private final OtpGeneratorService otpGeneratorService;
     private final OnboardingConfig config;
 
@@ -69,16 +67,14 @@ public class OnboardingService {
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingOtpRepository Onboarding OTP code repository.
      * @param serializer JSON serialization service.
-     * @param idGenerator ID generator service.
      * @param otpGeneratorService OTP generator service.
      * @param config Onboarding configuration.
      */
     @Autowired
-    public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, JsonSerializationService serializer, IdGeneratorService idGenerator, OtpGeneratorService otpGeneratorService, OnboardingConfig config) {
+    public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, JsonSerializationService serializer, OtpGeneratorService otpGeneratorService, OnboardingConfig config) {
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.serializer = serializer;
-        this.idGenerator = idGenerator;
         this.otpGeneratorService = otpGeneratorService;
         this.config = config;
     }
@@ -132,23 +128,20 @@ public class OnboardingService {
         if (processOptional.isPresent()) {
             // Resume an existing process
             process = processOptional.get();
-            processId = process.getId();
             // Use latest identification data
             process.setIdentificationData(identificationData);
             process.setTimestampLastUpdated(new Date());
         } else {
             // Create an onboarding process
-            processId = idGenerator.generateProcessId();
             process = new OnboardingProcessEntity();
             process.setIdentificationData(identificationData);
-            process.setId(processId);
             process.setStatus(OnboardingStatus.IN_PROGRESS);
             process.setUserId(userId);
             process.setTimestampCreated(new Date());
         }
         process = onboardingProcessRepository.save(process);
         // Create an OTP code
-        String otpCode = createOtpCode(processId);
+        String otpCode = createOtpCode(process.getId());
         // Send the OTP code
         try {
             onboardingProvider.sendOtpCode(userId, otpCode, false);
@@ -157,7 +150,7 @@ public class OnboardingService {
             throw new OnboardingOtpDeliveryException();
         }
         OnboardingStartResponse response = new OnboardingStartResponse();
-        response.setProcessId(processId);
+        response.setProcessId(process.getId());
         response.setOnboardingStatus(process.getStatus());
         return response;
     }
@@ -359,10 +352,8 @@ public class OnboardingService {
      */
     private String createOtpCode(String processId) throws OnboardingProcessException {
         OnboardingOtpEntity otp = new OnboardingOtpEntity();
-        String otpId = idGenerator.generateOtpId();
         int otpLength = config.getOtpLength();
         String otpCode = otpGeneratorService.generateOtpCode(otpLength);
-        otp.setId(otpId);
         otp.setProcessId(processId);
         otp.setOtpCode(otpCode);
         otp.setStatus(OtpStatus.ACTIVE);
