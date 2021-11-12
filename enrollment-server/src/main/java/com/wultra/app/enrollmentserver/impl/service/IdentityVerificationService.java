@@ -126,12 +126,10 @@ public class IdentityVerificationService {
             logger.info("Switching {} from {} to {} due to new documents submit, {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
-            identityVerificationRepository.setVerificationPhaseAndStatus(
-                    ownerId.getActivationId(),
-                    IdentityVerificationPhase.DOCUMENT_UPLOAD,
-                    IdentityVerificationStatus.IN_PROGRESS,
-                    ownerId.getTimestamp()
-            );
+            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerificationRepository.save(idVerification);
         } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
                     idVerification.getStatus(), IdentityVerificationStatus.IN_PROGRESS, ownerId
@@ -165,9 +163,10 @@ public class IdentityVerificationService {
 
         identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
         identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        identityVerificationRepository.save(identityVerification);
+        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         docVerifications.forEach(docVerification -> {
+            docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
             docVerification.setVerificationId(result.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
@@ -228,6 +227,7 @@ public class IdentityVerificationService {
                 );
                 idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
                 idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             }
         }
 

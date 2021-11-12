@@ -59,13 +59,6 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "WHERE d.activationId = :activationId")
     int setVerificationPending(String activationId, Date timestamp);
 
-    @Modifying
-    @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS, " +
-            "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.id IN :docVerificationIds")
-    int setVerificationInProgress(List<String> docVerificationIds, Date timestamp);
-
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
             "WHERE d.activationId = :activationId " +
