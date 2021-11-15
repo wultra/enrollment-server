@@ -288,10 +288,6 @@ public class IdentityVerificationService {
         return response;
     }
 
-    public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        // TODO get all
-    }
-
     /**
      * Cleanup documents related to identity verification.
      * @param apiAuthentication PowerAuth authentication.
