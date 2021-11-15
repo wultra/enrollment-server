@@ -97,6 +97,7 @@ public class IdentityVerificationStatusService {
             return response;
         }
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        response.setIdentityVerificationPhase(idVerification.getPhase());
 
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
@@ -141,7 +142,14 @@ public class IdentityVerificationStatusService {
 
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            // TODO check verification result, set final status to identity and finish documents verification
+
+            try {
+                identityVerificationService.checkVerificationResult(ownerId, idVerification);
+            } catch (DocumentVerificationException e) {
+                logger.error("Checking identity verification result failed, " + ownerId, e);
+                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+                return response;
+            }
         }
 
         response.setIdentityVerificationStatus(idVerification.getStatus());

@@ -26,6 +26,7 @@ import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
@@ -45,10 +46,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +68,8 @@ public class IdentityVerificationService {
 
     private final IdentityVerificationCreateService identityVerificationCreateService;
 
+    private final VerificationProcessingService verificationProcessingService;
+
     private final DocumentVerificationProvider documentVerificationProvider;
 
     /**
@@ -79,6 +79,7 @@ public class IdentityVerificationService {
      * @param identityVerificationRepository Identity verification repository.
      * @param documentProcessingService Document processing service.
      * @param identityVerificationCreateService Identity verification create service.
+     * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      */
     @Autowired
@@ -88,6 +89,7 @@ public class IdentityVerificationService {
             IdentityVerificationRepository identityVerificationRepository,
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
+            VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider) {
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -95,7 +97,7 @@ public class IdentityVerificationService {
 
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationCreateService = identityVerificationCreateService;
-
+        this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
     }
 
@@ -159,7 +161,7 @@ public class IdentityVerificationService {
         IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
 
         List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllPendingVerifications(ownerId.getActivationId());
+                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_PENDING);
         List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
@@ -178,6 +180,53 @@ public class IdentityVerificationService {
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
         documentVerificationRepository.saveAll(docVerifications);
+    }
+
+    @Transactional
+    public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
+            throws DocumentVerificationException {
+        List<DocumentVerificationEntity> allDocVerifications =
+                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_IN_PROGRESS);
+        Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
+
+        for (DocumentVerificationEntity docVerification : allDocVerifications) {
+            verificationsById.computeIfAbsent(docVerification.getVerificationId(), (verificationId) -> new ArrayList<>())
+                    .add(docVerification);
+        }
+
+        for (String verificationId: verificationsById.keySet()) {
+            DocumentsVerificationResult docVerificationResult =
+                    documentVerificationProvider.getVerificationResult(ownerId, verificationId);
+            List<DocumentVerificationEntity> docVerifications = verificationsById.get(verificationId);
+            verificationProcessingService.processVerificationResult(ownerId, docVerifications, docVerificationResult);
+        }
+
+        if (allDocVerifications.stream()
+                .anyMatch(docVerification -> DocumentStatus.VERIFICATION_IN_PROGRESS.equals(docVerification.getStatus()))) {
+            return;
+        }
+        if (allDocVerifications.stream()
+                .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+            idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+        } else {
+            allDocVerifications.stream()
+                    .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
+                    .findAny()
+                    .ifPresent(failed -> {
+                        idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                        idVerification.setErrorDetail(failed.getErrorDetail());
+                    });
+
+            allDocVerifications.stream()
+                    .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
+                    .findAny()
+                    .ifPresent(failed -> {
+                        idVerification.setStatus(IdentityVerificationStatus.REJECTED);
+                        idVerification.setErrorDetail(failed.getRejectReason());
+                    });
+        }
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(idVerification);
     }
 
     /**

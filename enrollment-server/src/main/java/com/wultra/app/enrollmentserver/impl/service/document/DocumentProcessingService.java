@@ -20,7 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service.document;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
-import com.wultra.app.enrollmentserver.database.DocumentVerificationResultRepository;
+import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.IdentityDocumentRepository;
 import com.wultra.app.enrollmentserver.database.entity.*;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
@@ -63,7 +63,7 @@ public class DocumentProcessingService {
 
     private final DocumentVerificationRepository documentVerificationRepository;
 
-    private final DocumentVerificationResultRepository documentVerificationResultRepository;
+    private final DocumentResultRepository documentResultRepository;
 
     private final IdentityDocumentRepository identityDocumentRepository;
 
@@ -76,7 +76,7 @@ public class DocumentProcessingService {
      * @param onboardingConfig Onboarding configuration.
      * @param documentDataRepository Document data repository.
      * @param documentVerificationRepository Document verification repository.
-     * @param documentVerificationResultRepository Document verification result repository.
+     * @param documentResultRepository Document verification result repository.
      * @param identityDocumentRepository Identity document repository.
      * @param dataExtractionService Data extraction service.
      * @param documentVerificationProvider Document verification provider.
@@ -86,14 +86,14 @@ public class DocumentProcessingService {
             OnboardingConfig onboardingConfig,
             DocumentDataRepository documentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
-            DocumentVerificationResultRepository documentVerificationResultRepository,
+            DocumentResultRepository documentResultRepository,
             IdentityDocumentRepository identityDocumentRepository,
             DataExtractionService dataExtractionService,
             DocumentVerificationProvider documentVerificationProvider) {
         this.onboardingConfig = onboardingConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
-        this.documentVerificationResultRepository = documentVerificationResultRepository;
+        this.documentResultRepository = documentResultRepository;
         this.identityDocumentRepository = identityDocumentRepository;
         this.dataExtractionService = dataExtractionService;
         this.documentVerificationProvider = documentVerificationProvider;
@@ -151,7 +151,7 @@ public class DocumentProcessingService {
             DocumentVerificationEntity docVerificationEntity = docVerifications.get(i);
             docResults.get(i).setDocumentVerificationId(docVerificationEntity.getId());
         }
-        documentVerificationResultRepository.saveAll(docResults);
+        documentResultRepository.saveAll(docResults);
 
         List<IdentityDocumentEntity> identityDocumentEntities = createIdentityDocumentEntities(
                 idVerification, docVerifications

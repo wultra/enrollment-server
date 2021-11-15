@@ -28,6 +28,6 @@ import org.springframework.stereotype.Repository;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Repository
-public interface DocumentVerificationResultRepository extends CrudRepository<DocumentResultEntity, Long> {
+public interface DocumentResultRepository extends CrudRepository<DocumentResultEntity, Long> {
 
 }
