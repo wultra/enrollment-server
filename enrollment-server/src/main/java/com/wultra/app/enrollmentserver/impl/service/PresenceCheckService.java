@@ -145,6 +145,7 @@ public class PresenceCheckService {
             submittedDoc.setType(DocumentType.SELFIE_PHOTO);
 
             DocumentVerificationEntity docVerificationEntity = new DocumentVerificationEntity();
+            docVerificationEntity.setActivationId(ownerId.getActivationId());
             docVerificationEntity.setStatus(DocumentStatus.VERIFICATION_PENDING);
             docVerificationEntity.setType(DocumentType.SELFIE_PHOTO);
             docVerificationEntity.setTimestampCreated(ownerId.getTimestamp());
