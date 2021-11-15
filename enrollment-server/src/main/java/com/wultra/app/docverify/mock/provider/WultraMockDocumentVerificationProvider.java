@@ -59,9 +59,9 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
                     String docId = document.getDocumentId();
                     DocumentSubmitResult submitResult = new DocumentSubmitResult();
                     submitResult.setDocumentId(docId);
-                    submitResult.setExtractedData("{\"extracted\": \"data\"" + docId + "\"}");
+                    submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
                     submitResult.setUploadId(docId + "-uploaded");
-                    submitResult.setValidationResult("{\"validationResult\": \"data" + docId + "\"}");
+                    submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
                     return submitResult;
                 })
                 .collect(Collectors.toList());;
