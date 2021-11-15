@@ -42,6 +42,11 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "ORDER BY p.timestampCreated DESC")
     Optional<OnboardingProcessEntity> findExistingProcess(String userId);
 
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED " +
+            "AND p.activationId = :activationId " +
+            "ORDER BY p.timestampCreated DESC")
+    Optional<OnboardingProcessEntity> findFinishedProcess(String activationId);
+
     @Query("SELECT count(p) FROM OnboardingProcessEntity p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
     int countProcessesAfterTimestamp(String userId, Date dateAfter);
 

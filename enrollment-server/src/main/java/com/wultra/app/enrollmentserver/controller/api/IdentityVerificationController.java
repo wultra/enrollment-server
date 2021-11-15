@@ -18,15 +18,19 @@
 package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationStatusService;
+import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
@@ -72,31 +76,30 @@ public class IdentityVerificationController {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationController.class);
 
     private final DocumentProcessingService documentProcessingService;
-
     private final IdentityVerificationService identityVerificationService;
-
     private final IdentityVerificationStatusService identityVerificationStatusService;
-
     private final PresenceCheckService presenceCheckService;
+    private final OnboardingService onboardingService;
 
     /**
      * Controller constructor.
-     *
-     * @param documentProcessingService Document processing service.
+     *  @param documentProcessingService Document processing service.
      * @param identityVerificationService Identity verification service.
      * @param identityVerificationStatusService Identity verification status service.
      * @param presenceCheckService Presence check service.
+     * @param onboardingService Onboarding service.
      */
     @Autowired
     public IdentityVerificationController(
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
-            PresenceCheckService presenceCheckService) {
+            PresenceCheckService presenceCheckService, OnboardingService onboardingService) {
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.identityVerificationStatusService = identityVerificationStatusService;
         this.presenceCheckService = presenceCheckService;
+        this.onboardingService = onboardingService;
     }
 
     /**
@@ -142,25 +145,16 @@ public class IdentityVerificationController {
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param eciesContext ECIES context.
-     * @param apiAuthentication PowerAuth authentication.
      * @return Document submit response.
+     * @throws DocumentSubmitException Thrown when document submission fails.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     @RequestMapping(value = "document/submit", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document/submit", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
-    })
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
-                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws DocumentSubmitException, PowerAuthAuthenticationException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when submitting documents for verification");
-        }
-
+                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+            throws DocumentSubmitException, PowerAuthAuthenticationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -172,12 +166,18 @@ public class IdentityVerificationController {
             throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
         }
 
-        // Submit documents for verification
-        List<DocumentVerificationEntity> docVerificationEntities =
-                identityVerificationService.submitDocuments(request.getRequestObject(), apiAuthentication);
+        // Extract user ID from finished onboarding process for current activation
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findFinishedProcessByActivationId(eciesContext.getActivationId());
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(onboardingProcess.getActivationId());
+        ownerId.setUserId(onboardingProcess.getUserId());
 
-        DocumentSubmitResponse response = new DocumentSubmitResponse();
-        List<DocumentSubmitResponse.DocumentMetadata> respsMetadata =
+        // Submit documents for verification
+        final List<DocumentVerificationEntity> docVerificationEntities =
+                identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
+
+        final DocumentSubmitResponse response = new DocumentSubmitResponse();
+        final List<DocumentSubmitResponse.DocumentMetadata> respsMetadata =
                 createResponseDocMetadataList(docVerificationEntities);
         response.setDocuments(respsMetadata);
 
@@ -188,25 +188,15 @@ public class IdentityVerificationController {
      * Upload a single document related to identity verification. This endpoint is used for upload of large documents.
      * @param requestData Binary request data.
      * @param eciesContext ECIES context.
-     * @param apiAuthentication PowerAuth authentication.
      * @return Document upload response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws DocumentVerificationException Thrown when document is invalid.
+     * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     @RequestMapping(value = "document/upload", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document/upload", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
-    })
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
-                                                                 @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                 @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when uploading document for verification");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when uploading document for verification");
-        }
-
+                                                                 @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, DocumentVerificationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when uploading document for verification");
@@ -218,9 +208,15 @@ public class IdentityVerificationController {
             throw new PowerAuthAuthenticationException("Invalid request received when uploading document for verification");
         }
 
-        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(requestData, apiAuthentication);
+        // Extract user ID from finished onboarding process for current activation
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findFinishedProcessByActivationId(eciesContext.getActivationId());
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(onboardingProcess.getActivationId());
+        ownerId.setUserId(onboardingProcess.getUserId());
 
-        DocumentUploadResponse response = new DocumentUploadResponse();
+        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(requestData, ownerId);
+
+        final DocumentUploadResponse response = new DocumentUploadResponse();
         response.setFilename(uploadedDocument.getFilename());
         response.setId(uploadedDocument.getId());
 
@@ -299,7 +295,7 @@ public class IdentityVerificationController {
             throw new PowerAuthAuthenticationException("Invalid request received when initializing presence check");
         }
 
-        SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
+        final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
 
         final InitPresenceCheckResponse response = new InitPresenceCheckResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());
