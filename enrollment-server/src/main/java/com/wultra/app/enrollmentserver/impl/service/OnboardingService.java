@@ -323,6 +323,21 @@ public class OnboardingService {
     }
 
     /**
+     * Find a finished onboarding process by activation identifier.
+     * @param activationId Activation identifier.
+     * @return Onboarding process.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    public OnboardingProcessEntity findFinishedProcessByActivationId(String activationId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findFinishedProcess(activationId);
+        if (!processOptional.isPresent()) {
+            logger.warn("Onboarding process not found, activation ID: {}", activationId);
+            throw new OnboardingProcessException();
+        }
+        return processOptional.get();
+    }
+
+    /**
      * Update a process entity in database.
      * @param process Onboarding process entity.
      * @return Updated onboarding process entity.

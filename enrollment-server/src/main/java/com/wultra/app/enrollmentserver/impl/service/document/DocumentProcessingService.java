@@ -103,15 +103,14 @@ public class DocumentProcessingService {
      * Submit identity-related documents for verification.
      * @param idVerification Identity verification entity.
      * @param request Document submit request.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @return Document verification entities.
      */
     @Transactional(value = Transactional.TxType.REQUIRES_NEW)
     public List<DocumentVerificationEntity> submitDocuments(
             IdentityVerificationEntity idVerification,
             DocumentSubmitRequest request,
-            PowerAuthApiAuthentication apiAuthentication) throws DocumentSubmitException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+            OwnerId ownerId) throws DocumentSubmitException {
 
         List<Document> documents = getDocuments(ownerId, request);
 
@@ -220,13 +219,12 @@ public class DocumentProcessingService {
     /**
      * Upload a single document related to identity verification.
      * @param requestData Binary document data.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @return Persisted document metadata of the uploaded document.
      * @throws DocumentVerificationException Thrown when document is invalid.
      */
     @Transactional
-    public DocumentMetadata uploadDocument(byte[] requestData, PowerAuthApiAuthentication apiAuthentication) throws DocumentVerificationException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+    public DocumentMetadata uploadDocument(byte[] requestData, OwnerId ownerId) throws DocumentVerificationException {
         Document document = dataExtractionService.extractDocument(requestData);
         return persistDocumentData(ownerId, document);
     }

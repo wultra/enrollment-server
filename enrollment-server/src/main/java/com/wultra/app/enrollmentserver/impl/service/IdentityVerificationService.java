@@ -106,13 +106,12 @@ public class IdentityVerificationService {
     /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @return Document verification entities.
      */
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
-                                                            PowerAuthApiAuthentication apiAuthentication)
+                                                            OwnerId ownerId)
             throws DocumentSubmitException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         // Find an already existing identity verification
         Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
@@ -142,7 +141,7 @@ public class IdentityVerificationService {
         }
 
         List<DocumentVerificationEntity> docsVerifications =
-                documentProcessingService.submitDocuments(idVerification, request, apiAuthentication);
+                documentProcessingService.submitDocuments(idVerification, request, ownerId);
         checkIdentityDocumentsForVerification(ownerId, idVerification);
         identityVerificationRepository.save(idVerification);
         return docsVerifications;
