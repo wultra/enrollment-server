@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -62,8 +63,8 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
             "WHERE d.activationId = :activationId " +
-            "AND d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING")
-    List<DocumentVerificationEntity> findAllPendingVerifications(String activationId);
+            "AND d.status = :status")
+    List<DocumentVerificationEntity> findAllDocumentVerifications(String activationId, DocumentStatus status);
 
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
