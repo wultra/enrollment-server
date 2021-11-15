@@ -218,7 +218,7 @@ public class IdentityVerificationService {
         if (!documentIds.isEmpty()) {
             entities = Streamable.of(documentVerificationRepository.findAllById(documentIds)).toList();
             for (DocumentVerificationEntity entity : entities) {
-                if (!entity.getVerificationId().equals(idVerification.getId())) {
+                if (entity.getVerificationId() != null && !entity.getVerificationId().equals(idVerification.getId())) {
                     logger.error("Not related {} to {}, {}", entity, idVerification, ownerId);
                     response.setStatus(IdentityVerificationStatus.FAILED);
                     return response;
