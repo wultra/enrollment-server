@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.google.common.base.Ascii;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
@@ -140,7 +141,10 @@ public class PresenceCheckService {
             }
 
             SubmittedDocument submittedDoc = new SubmittedDocument();
-            submittedDoc.setDocumentId(ownerId.getActivationId() + "-selfie-photo");
+            // TODO use different random id approach
+            submittedDoc.setDocumentId(
+                    Ascii.truncate("selfie-photo-" + ownerId.getActivationId(), 36, "...")
+            );
             submittedDoc.setPhoto(photo);
             submittedDoc.setType(DocumentType.SELFIE_PHOTO);
 

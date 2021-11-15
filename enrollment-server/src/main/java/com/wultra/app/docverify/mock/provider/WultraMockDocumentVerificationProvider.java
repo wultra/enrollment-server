@@ -17,6 +17,7 @@
  */
 package com.wultra.app.docverify.mock.provider;
 
+import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
@@ -60,7 +61,9 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
                     DocumentSubmitResult submitResult = new DocumentSubmitResult();
                     submitResult.setDocumentId(docId);
                     submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
-                    submitResult.setUploadId(docId + "-uploaded");
+                    submitResult.setUploadId(
+                            Ascii.truncate("uploaded-" + docId, 36, "...")
+                    );
                     submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
                     return submitResult;
                 })
