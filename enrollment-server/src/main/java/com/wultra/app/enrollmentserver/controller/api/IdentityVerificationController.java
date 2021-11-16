@@ -28,14 +28,12 @@ import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationStatusSe
 import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
-import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
-import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
-import com.wultra.app.enrollmentserver.model.request.InitPresenceCheckRequest;
+import com.wultra.app.enrollmentserver.model.request.*;
 import com.wultra.app.enrollmentserver.model.response.*;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
@@ -100,6 +98,37 @@ public class IdentityVerificationController {
         this.identityVerificationStatusService = identityVerificationStatusService;
         this.presenceCheckService = presenceCheckService;
         this.onboardingService = onboardingService;
+    }
+
+    /**
+     * Initialize identity verification.
+     * @param request Initialize identity verification request.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws DocumentVerificationException Thrown when identity verification initialization fails.
+     */
+    @RequestMapping(value = "init", method = RequestMethod.POST)
+    @PowerAuth(resourceId = "/api/identity/init", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION
+    })
+    public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
+                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
+        // Check if the authentication object is present
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration when initializing identity verification");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing identity verification");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when initializing identity verification");
+            throw new PowerAuthAuthenticationException("Invalid request received when initializing identity verification");
+        }
+
+        // Initialize identity verification
+        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        identityVerificationService.initializeIdentityVerification(ownerId);
+        return new Response();
     }
 
     /**
@@ -274,7 +303,7 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<InitPresenceCheckResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<InitPresenceCheckRequest> request,
+    public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
@@ -297,7 +326,7 @@ public class IdentityVerificationController {
 
         final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
 
-        final InitPresenceCheckResponse response = new InitPresenceCheckResponse();
+        final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());
         return new ObjectResponse<>(response);
     }

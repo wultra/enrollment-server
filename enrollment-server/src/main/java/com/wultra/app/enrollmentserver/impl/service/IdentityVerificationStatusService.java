@@ -43,6 +43,7 @@ import java.util.Optional;
  * Service implementing document identity verification status services.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
 public class IdentityVerificationStatusService {
@@ -50,12 +51,10 @@ public class IdentityVerificationStatusService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final IdentityVerificationRepository identityVerificationRepository;
-
     private final IdentityVerificationService identityVerificationService;
-
     private final JsonSerializationService jsonSerializationService;
-
     private final PresenceCheckService presenceCheckService;
+    private final IdentityVerificationFinishService identityVerificationFinishService;
 
     /**
      * Service constructor.
@@ -63,17 +62,19 @@ public class IdentityVerificationStatusService {
      * @param identityVerificationService Identity verification service.
      * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckService Presence check service.
+     * @param identityVerificationFinishService Identity verification finish service.
      */
     @Autowired
     public IdentityVerificationStatusService(
             IdentityVerificationRepository identityVerificationRepository,
             IdentityVerificationService identityVerificationService,
             JsonSerializationService jsonSerializationService,
-            PresenceCheckService presenceCheckService) {
+            PresenceCheckService presenceCheckService, IdentityVerificationFinishService identityVerificationFinishService) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
         this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckService = presenceCheckService;
+        this.identityVerificationFinishService = identityVerificationFinishService;
     }
 
     /**
@@ -92,8 +93,8 @@ public class IdentityVerificationStatusService {
                 identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!idVerificationOptional.isPresent()) {
-            logger.error("Checking identity verification status on not existing entity, {}", ownerId);
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
             return response;
         }
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
@@ -145,6 +146,9 @@ public class IdentityVerificationStatusService {
 
             try {
                 identityVerificationService.checkVerificationResult(ownerId, idVerification);
+                if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+                    identityVerificationFinishService.finishIdentityVerification(ownerId);
+                }
             } catch (DocumentVerificationException e) {
                 logger.error("Checking identity verification result failed, " + ownerId, e);
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
