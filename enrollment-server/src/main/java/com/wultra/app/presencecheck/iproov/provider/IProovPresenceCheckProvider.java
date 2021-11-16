@@ -194,6 +194,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                 result.setStatus(PresenceCheckStatus.ACCEPTED);
 
                 String frameJpeg = response.getFrameJpeg();
+                frameJpeg = unescapeSlashes(frameJpeg);
                 byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 
                 Image photo = new Image();
@@ -264,6 +265,10 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             logger.error("Unable to parse JSON response {} to {}", body, cls);
             throw new PresenceCheckException("Unable to process a response from the REST service");
         }
+    }
+
+    private String unescapeSlashes(String value) {
+        return value.replace("\\", "");
     }
 
 }

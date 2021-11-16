@@ -20,3 +20,4 @@ Present and True if there is frame available for returning to the integrator.
 
 Enabled on a per service provider basis. Contact support@iproov.com to request this functionality.
 ```
+- the jpeg is base64 encoded with escaped slashes (https://stackoverflow.com/questions/1580647/json-why-are-forward-slashes-escaped)
