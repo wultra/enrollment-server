@@ -10,5 +10,5 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:300` in your browser to initiate the iProov demo and enter a token for verification.
+Open `http://localhost:3000` in your browser to initiate the iProov demo and enter a token for verification.
 Alternatively open directly `http://localhost:3000/verify-token?value=YOUR_TOKEN_VALUE`.
