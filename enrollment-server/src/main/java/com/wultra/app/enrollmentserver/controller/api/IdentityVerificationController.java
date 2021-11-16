@@ -113,14 +113,14 @@ public class IdentityVerificationController {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
-                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
+                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing identity verification");
             throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing identity verification");
         }
 
-        if (request == null || request.getRequestObject() == null) {
+        if (request == null) {
             logger.error("Invalid request received when initializing identity verification");
             throw new PowerAuthAuthenticationException("Invalid request received when initializing identity verification");
         }
