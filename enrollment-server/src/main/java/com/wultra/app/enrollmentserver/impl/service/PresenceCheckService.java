@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.google.common.base.Ascii;
+import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
@@ -48,6 +49,8 @@ public class PresenceCheckService {
 
     private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     private final DocumentVerificationRepository documentVerificationRepository;
 
     private final DocumentProcessingService documentProcessingService;
@@ -60,11 +63,13 @@ public class PresenceCheckService {
 
     @Autowired
     public PresenceCheckService(
+            IdentityVerificationConfig identityVerificationConfig,
             DocumentVerificationRepository documentVerificationRepository,
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             JsonSerializationService jsonSerializationService,
             PresenceCheckProvider presenceCheckProvider) {
+        this.identityVerificationConfig = identityVerificationConfig;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
@@ -170,7 +175,11 @@ public class PresenceCheckService {
     public void cleanup(PowerAuthApiAuthentication apiAuthentication) throws PresenceCheckException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
-        presenceCheckProvider.cleanupIdentityData(ownerId);
+        if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
+            presenceCheckProvider.cleanupIdentityData(ownerId);
+        } else {
+            logger.debug("Skipped cleanup of presence check data at the provider (not enabled), {}", ownerId);
+        }
     }
 
 }

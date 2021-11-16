@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
@@ -60,6 +61,8 @@ public class IdentityVerificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     private final DocumentDataRepository documentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final IdentityVerificationRepository identityVerificationRepository;
@@ -74,6 +77,7 @@ public class IdentityVerificationService {
 
     /**
      * Service constructor.
+     * @param identityVerificationConfig Identity verification config.
      * @param documentDataRepository Document data repository.
      * @param documentVerificationRepository Document verification repository.
      * @param identityVerificationRepository Identity verification repository.
@@ -84,6 +88,7 @@ public class IdentityVerificationService {
      */
     @Autowired
     public IdentityVerificationService(
+            IdentityVerificationConfig identityVerificationConfig,
             DocumentDataRepository documentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
             IdentityVerificationRepository identityVerificationRepository,
@@ -91,6 +96,7 @@ public class IdentityVerificationService {
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider) {
+        this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationRepository = identityVerificationRepository;
@@ -298,7 +304,11 @@ public class IdentityVerificationService {
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
 
-        documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
+        if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
+            documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
+        } else {
+            logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
+        }
 
         // Delete all large documents by activation ID
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
