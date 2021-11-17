@@ -25,6 +25,6 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class InitPresenceCheckRequest {
+public class PresenceCheckInitRequest {
 
 }
