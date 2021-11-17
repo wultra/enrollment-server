@@ -27,7 +27,7 @@ import java.util.Map;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class InitPresenceCheckResponse {
+public class PresenceCheckInitResponse {
 
     private Map<String, Object> sessionAttributes;
 

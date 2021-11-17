@@ -17,11 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
-import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -32,60 +28,48 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Service implementing creating of identity verification.
+ * Service implementing finishing of identity verification.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
-public class IdentityVerificationCreateService {
+public class IdentityVerificationFinishService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationCreateService.class);
+    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationFinishService.class);
 
-    private static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
-    private final IdentityVerificationRepository identityVerificationRepository;
     private final PowerAuthClient powerAuthClient;
 
     /**
      * Service constructor.
-     * @param identityVerificationRepository Identity verification repository.
      * @param powerAuthClient PowerAuth client.
      */
     @Autowired
-    public IdentityVerificationCreateService(IdentityVerificationRepository identityVerificationRepository, PowerAuthClient powerAuthClient) {
-        this.identityVerificationRepository = identityVerificationRepository;
+    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient) {
         this.powerAuthClient = powerAuthClient;
     }
 
     @Transactional
-    public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void finishIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
-            List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
-            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
-                throw new DocumentVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
+            List<String> activationFlags = response.getActivationFlags();
+            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+                // Identity verification has already been finished in PowerAuth server
+                return;
             }
-            activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
-            activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-            powerAuthClient.updateActivationFlags(ownerId.getActivationId(), activationFlags);
+            powerAuthClient.removeActivationFlags(ownerId.getActivationId(), Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
             throw new DocumentVerificationException("Communication with PowerAuth server failed");
         }
-        IdentityVerificationEntity entity = new IdentityVerificationEntity();
-        entity.setActivationId(ownerId.getActivationId());
-        entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-        entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        entity.setTimestampCreated(ownerId.getTimestamp());
-        entity.setUserId(ownerId.getUserId());
-        return identityVerificationRepository.save(entity);
     }
 
 }

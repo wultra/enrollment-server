@@ -15,43 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.enumeration;
+package com.wultra.app.enrollmentserver.model.request;
+
+import lombok.Data;
 
 /**
- * Identity verification status enumeration.
+ * Request class used when initializing identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public enum IdentityVerificationStatus {
-
-    /**
-     * Default state before initialization of identity verification.
-     */
-    NOT_INITIALIZED,
-
-    /**
-     * Upload or verification of submitted documents is in progress.
-     */
-    IN_PROGRESS,
-
-    /**
-     * All submitted documents are waiting for verification.
-     */
-    VERIFICATION_PENDING,
-
-    /**
-     * All submitted documents have been verified and accepted as valid documents.
-     */
-    ACCEPTED,
-
-    /**
-     * One or more documents have been rejected.
-     */
-    REJECTED,
-
-    /**
-     * An unrecoverable error occurred during document analysis.
-     */
-    FAILED
+@Data
+public class IdentityVerificationInitRequest {
 
 }

@@ -106,6 +106,14 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Initialize identity verification.
+     * @param ownerId Owner identification.
+     */
+    public void initializeIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+        identityVerificationCreateService.createIdentityVerification(ownerId);
+    }
+
+    /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param ownerId Owner identification.
@@ -118,9 +126,12 @@ public class IdentityVerificationService {
         // Find an already existing identity verification
         Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
 
-        IdentityVerificationEntity idVerification = idVerificationOptional.orElseGet(
-                () -> identityVerificationCreateService.createIdentityVerification(ownerId)
-        );
+        if (!idVerificationOptional.isPresent()) {
+            logger.error("Identity verification has not been initialized, {}", ownerId);
+            throw new DocumentSubmitException("Identity verification has not been initialized");
+        }
+
+        IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
         if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
