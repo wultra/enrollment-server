@@ -344,13 +344,6 @@ public class DocumentProcessingService {
                 logger.error("Unable to extract documents from {}, {}", request, ownerId);
                 documents = Collections.emptyList();
             }
-            documents = documents.stream()
-                    .map(doc -> {
-                        DocumentMetadata documentMetadata = persistDocumentData(ownerId, doc);
-                        doc.setId(documentMetadata.getId());
-                        return doc;
-                    })
-                    .collect(Collectors.toList());
         }
         return documents;
     }
