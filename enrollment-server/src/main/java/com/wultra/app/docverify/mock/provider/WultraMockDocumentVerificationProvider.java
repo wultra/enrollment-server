@@ -58,6 +58,10 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(document -> {
                     String docId = document.getDocumentId();
+                    if (docId == null) {
+                        // document from the submit request has no documentId, generate one
+                        docId = UUID.randomUUID().toString();
+                    }
                     DocumentSubmitResult submitResult = new DocumentSubmitResult();
                     submitResult.setDocumentId(docId);
                     submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
