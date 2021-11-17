@@ -37,6 +37,11 @@ public enum IdentityVerificationPhase {
     /**
      * Document verification is in progress.
      */
-    DOCUMENT_VERIFICATION
+    DOCUMENT_VERIFICATION,
+
+    /**
+     * The identity verification is in the final state.
+     */
+    COMPLETED
 
 }

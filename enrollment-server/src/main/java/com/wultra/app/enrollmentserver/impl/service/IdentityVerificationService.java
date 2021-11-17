@@ -224,12 +224,14 @@ public class IdentityVerificationService {
         }
         if (allDocVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+            idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
         } else {
             allDocVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
+                        idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
                     });
@@ -238,6 +240,7 @@ public class IdentityVerificationService {
                     .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
+                        idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
                     });
