@@ -51,10 +51,22 @@ public class IProovRestApiService {
 
     public static final String I_PROOV_RESOURCE = "presence_check";
 
+    /**
+     * Configuration properties.
+     */
     private final IProovConfigProps configProps;
 
+    /**
+     * REST template for iProov calls.
+     */
     private final RestTemplate restTemplate;
 
+    /**
+     * Service constructor.
+     *
+     * @param configProps Configuration properties.
+     * @param restTemplate REST template for IProov calls.
+     */
     @Autowired
     public IProovRestApiService(
             IProovConfigProps configProps,
@@ -63,6 +75,12 @@ public class IProovRestApiService {
         this.restTemplate = restTemplate;
     }
 
+    /**
+     * Generates an enrolment token for a new user to enrol the service
+     *
+     * @param id Owner identification.
+     * @return Response entity with the result json
+     */
     public ResponseEntity<String> generateEnrolToken(OwnerId id) {
         ServerClaimRequest request = createServerClaimRequest(id);
 
@@ -71,6 +89,13 @@ public class IProovRestApiService {
         return restTemplate.postForEntity("/claim/enrol/token", requestEntity, String.class);
     }
 
+    /**
+     * Enrols a user through a photo that is trusted.
+     *
+     * @param token An enrolment token value
+     * @param photo Trusted photo of a person
+     * @return Response entity with the result json
+     */
     public ResponseEntity<String> enrolUserImageForToken(String token, Image photo) {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("api_key", configProps.getApiKey());
@@ -96,6 +121,12 @@ public class IProovRestApiService {
         return restTemplate.postForEntity("/claim/enrol/image", requestEntity, String.class);
     }
 
+    /**
+     * Generates a token for initializing a person verification process
+     *
+     * @param id Owner identification.
+     * @return Response entity with the result json
+     */
     public ResponseEntity<String> generateVerificationToken(OwnerId id) {
         ServerClaimRequest request = createServerClaimRequest(id);
 
@@ -104,6 +135,13 @@ public class IProovRestApiService {
         return restTemplate.postForEntity("/claim/verify/token", requestEntity, String.class);
     }
 
+    /**
+     * Validates the result of a person verification process
+     *
+     * @param id Owner identification.
+     * @param token Token value used for initializing the person verification process
+     * @return Response entity with the result json
+     */
     public ResponseEntity<String> validateVerification(OwnerId id, String token) {
         ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
@@ -119,12 +157,18 @@ public class IProovRestApiService {
         return restTemplate.postForEntity("/claim/verify/validate", requestEntity, String.class);
     }
 
+    /**
+     * Deletes user person data
+     *
+     * @param id Owner identification.
+     * @return Response entity with the result json
+     */
     public ResponseEntity<String> deleteUserPersona(OwnerId id) {
         // TODO implement this, oauth call on DELETE /users/activationId
         logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
         return ResponseEntity.ok("{\n" +
                 "  \"user_id\": \"" + id.getActivationId() + "\",\n" +
-                "  \"name\": null,\n" +
+                "  \"name\": \"user name\",\n" +
                 "  \"status\": \"Deleted\"\n" +
                 "}");
     }

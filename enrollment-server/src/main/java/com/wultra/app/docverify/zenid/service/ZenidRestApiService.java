@@ -46,16 +46,23 @@ import java.util.stream.Collectors;
 @Service
 public class ZenidRestApiService {
 
+    /**
+     * Configuration properties.
+     */
     private final ZenidConfigProps configProps;
 
+    /**
+     * REST template for ZenID calls.
+     */
     private final RestTemplate restTemplate;
 
     /**
      * Service constructor.
+     *
      * @param configProps Configuration properties.
      * @param restTemplate REST template for ZenID calls.
      */
-     @Autowired
+    @Autowired
     public ZenidRestApiService(
             ZenidConfigProps configProps,
             @Qualifier("restTemplateZenid") RestTemplate restTemplate) {

@@ -24,6 +24,9 @@ package com.wultra.app.presencecheck.mock;
  */
 public class MockConst {
 
+    /**
+     * Session parameter name of the verification token
+     */
     public static final String VERIFICATION_TOKEN = "mock-verification-token";
 
 }

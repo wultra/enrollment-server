@@ -35,6 +35,12 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class IProovConfig {
 
+    /**
+     * Prepares REST template specific to iProov
+     * @param configProps Configuration properties
+     * @param builder REST template builder
+     * @return REST template for iProov service API calls
+     */
     @Bean("restTemplateIProov")
     public RestTemplate restTemplateIProov(IProovConfigProps configProps, RestTemplateBuilder builder) {
         return builder
