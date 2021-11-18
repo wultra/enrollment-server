@@ -20,6 +20,8 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +63,8 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     public void submitDocumentsTest() throws Exception {
         SubmittedDocument document = new SubmittedDocument();
         document.setDocumentId("documentId");
+        document.setType(DocumentType.ID_CARD);
+        document.setSide(CardSide.FRONT);
 
         List<SubmittedDocument> documents = ImmutableList.of(document);
 
