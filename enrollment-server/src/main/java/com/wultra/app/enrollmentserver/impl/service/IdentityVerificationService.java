@@ -61,7 +61,9 @@ public class IdentityVerificationService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final DocumentDataRepository documentDataRepository;
+
     private final DocumentVerificationRepository documentVerificationRepository;
+
     private final IdentityVerificationRepository identityVerificationRepository;
 
     private final DocumentProcessingService documentProcessingService;
@@ -101,6 +103,11 @@ public class IdentityVerificationService {
         this.documentVerificationProvider = documentVerificationProvider;
     }
 
+    /**
+     * Finds the current verification identity
+     * @param ownerId Owner identification.
+     * @return Optional entity of the verification identity
+     */
     public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
         return identityVerificationRepository.findByActivationId(ownerId.getActivationId());
     }
@@ -160,6 +167,12 @@ public class IdentityVerificationService {
         return docsVerifications;
     }
 
+    /**
+     * Starts the verification process
+     *
+     * @param ownerId Owner identification.
+     * @throws DocumentVerificationException When an error occurred
+     */
     @Transactional
     public void startVerification(OwnerId ownerId) throws DocumentVerificationException {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
@@ -193,6 +206,13 @@ public class IdentityVerificationService {
         documentVerificationRepository.saveAll(docVerifications);
     }
 
+    /**
+     * Checks verification result and evaluates the final state of the identity verification process
+     *
+     * @param ownerId Owner identification.
+     * @param idVerification Verification identity
+     * @throws DocumentVerificationException When an error during verification check occurred
+     */
     @Transactional
     public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws DocumentVerificationException {
@@ -319,6 +339,12 @@ public class IdentityVerificationService {
         identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
     }
 
+    /**
+     * Provides photo data
+     * @param photoId Identification of the photo
+     * @return Photo image
+     * @throws DocumentVerificationException When an error occurred during
+     */
     public Image getPhotoById(String photoId) throws DocumentVerificationException {
         return documentVerificationProvider.getPhoto(photoId);
     }

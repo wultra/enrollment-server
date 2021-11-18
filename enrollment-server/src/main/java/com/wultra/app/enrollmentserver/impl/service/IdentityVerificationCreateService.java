@@ -49,7 +49,14 @@ public class IdentityVerificationCreateService {
     private static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
+    /**
+     * Identity verification repository.
+     */
     private final IdentityVerificationRepository identityVerificationRepository;
+
+    /**
+     * PowerAuth client.
+     */
     private final PowerAuthClient powerAuthClient;
 
     /**
@@ -63,28 +70,39 @@ public class IdentityVerificationCreateService {
         this.powerAuthClient = powerAuthClient;
     }
 
+    /**
+     * Creates new identity for the verification process.
+     *
+     * @param ownerId Owner identification.
+     * @return Identity verification entity
+     * @throws DocumentVerificationException When an error occurred
+     */
     @Transactional
     public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
+
             List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
                 throw new DocumentVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
             }
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
             activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+
             powerAuthClient.updateActivationFlags(ownerId.getActivationId(), activationFlags);
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
             throw new DocumentVerificationException("Communication with PowerAuth server failed");
         }
+
         IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
         entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
         entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUserId(ownerId.getUserId());
+
         return identityVerificationRepository.save(entity);
     }
 
