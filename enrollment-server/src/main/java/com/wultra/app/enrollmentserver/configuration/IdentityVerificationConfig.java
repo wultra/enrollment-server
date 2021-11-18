@@ -30,6 +30,18 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class IdentityVerificationConfig {
 
+    @Value("${enrollment-server.document-verification.provider:mock}")
+    private String documentVerificationProvider;
+
+    @Value("${enrollment-server.document-verification.cleanupEnabled:false}")
+    private boolean documentVerificationCleanupEnabled;
+
+    @Value("${enrollment-server.presence-check.provider:mock}")
+    private String presenceCheckProvider;
+
+    @Value("${enrollment-server.presence-check.cleanupEnabled:false}")
+    private boolean presenceCheckCleanupEnabled;
+
     @Value("${enrollment-server.identity-verification.data-retention.hours:1}")
     private int dataRetentionTime;
 

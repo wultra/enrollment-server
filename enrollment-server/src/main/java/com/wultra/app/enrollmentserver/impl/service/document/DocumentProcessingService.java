@@ -17,16 +17,15 @@
  */
 package com.wultra.app.enrollmentserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
+import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
-import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
+import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityDocumentRepository;
 import com.wultra.app.enrollmentserver.database.entity.*;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.impl.service.DataExtractionService;
-import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
@@ -34,7 +33,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +55,7 @@ public class DocumentProcessingService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
 
-    private final OnboardingConfig onboardingConfig;
+    private final IdentityVerificationConfig identityVerificationConfig;
 
     private final DocumentDataRepository documentDataRepository;
 
@@ -73,7 +71,7 @@ public class DocumentProcessingService {
 
     /**
      * Service constructor.
-     * @param onboardingConfig Onboarding configuration.
+     * @param identityVerificationConfig Identity verification configuration.
      * @param documentDataRepository Document data repository.
      * @param documentVerificationRepository Document verification repository.
      * @param documentResultRepository Document verification result repository.
@@ -83,14 +81,14 @@ public class DocumentProcessingService {
      */
     @Autowired
     public DocumentProcessingService(
-            OnboardingConfig onboardingConfig,
+            IdentityVerificationConfig identityVerificationConfig,
             DocumentDataRepository documentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
             DocumentResultRepository documentResultRepository,
             IdentityDocumentRepository identityDocumentRepository,
             DataExtractionService dataExtractionService,
             DocumentVerificationProvider documentVerificationProvider) {
-        this.onboardingConfig = onboardingConfig;
+        this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentResultRepository = documentResultRepository;
@@ -208,7 +206,7 @@ public class DocumentProcessingService {
             docVerification.setRejectReason(docSubmitResult.getRejectReason());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
-            docVerification.setProviderName(onboardingConfig.getDocumentVerificationProvider());
+            docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
             docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
             docVerification.setTimestampUploaded(ownerId.getTimestamp());
             docVerification.setUploadId(docSubmitResult.getUploadId());
@@ -225,6 +223,7 @@ public class DocumentProcessingService {
      */
     @Transactional
     public DocumentMetadata uploadDocument(byte[] requestData, OwnerId ownerId) throws DocumentVerificationException {
+        // TODO consider limiting the amount (count, space) of currently uploaded documents per ownerId
         Document document = dataExtractionService.extractDocument(requestData);
         return persistDocumentData(ownerId, document);
     }
@@ -345,13 +344,6 @@ public class DocumentProcessingService {
                 logger.error("Unable to extract documents from {}, {}", request, ownerId);
                 documents = Collections.emptyList();
             }
-            documents = documents.stream()
-                    .map(doc -> {
-                        DocumentMetadata documentMetadata = persistDocumentData(ownerId, doc);
-                        doc.setId(documentMetadata.getId());
-                        return doc;
-                    })
-                    .collect(Collectors.toList());
         }
         return documents;
     }
