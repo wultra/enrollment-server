@@ -17,6 +17,9 @@
  */
 package com.wultra.app.presencecheck.iproov.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +37,17 @@ import org.springframework.web.client.RestTemplate;
 @ComponentScan(basePackages = {"com.wultra.app.presencecheck"})
 @Configuration
 public class IProovConfig {
+
+    /**
+     * @return Object mapper bean specific to iProov json format
+     */
+    @Bean("objectMapperIproov")
+    public ObjectMapper objectMapperIproov() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        return mapper;
+    }
 
     /**
      * Prepares REST template specific to iProov

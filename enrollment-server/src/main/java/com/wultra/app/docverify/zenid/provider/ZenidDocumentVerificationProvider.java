@@ -77,7 +77,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             ResponseEntity<ZenidWebUploadSampleResponse> responseEntity;
 
             try {
-                responseEntity = zenidApiService.uploadSample(id, sessionId, document.getPhoto());
+                responseEntity = zenidApiService.uploadSample(id, sessionId, document);
             } catch (RestClientException e) {
                 logger.warn("Failed REST call to submit documents to ZenID, " + id, e);
                 throw new DocumentVerificationException("Unable to submit documents due to a REST call failure");

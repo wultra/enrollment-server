@@ -93,6 +93,7 @@ public class ZenidConfig {
         javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
         mapper.registerModule(javaTimeModule)
                 .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);

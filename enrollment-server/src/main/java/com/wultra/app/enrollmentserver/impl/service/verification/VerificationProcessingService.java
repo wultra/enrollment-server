@@ -91,18 +91,20 @@ public class VerificationProcessingService {
             }
             logger.info("Finished verification of {} with status: {}, {}", docVerification, result.getStatus(), ownerId);
 
-            Optional<DocumentVerificationResult> docResult = result.getResults().stream()
-                    .filter(value -> value.getUploadId().equals(docVerification.getUploadId()))
-                    .findFirst();
-            if (docResult.isPresent()) {
-                DocumentResultEntity docResultEntity = createDocumentResult(docResult.get());
-                docResultEntity.setDocumentVerificationId(docVerification.getId());
-                docResultEntity.setTimestampCreated(ownerId.getTimestamp());
-                documentResultRepository.save(docResultEntity);
-            } else {
-                logger.error("Missing verification result for {} with uploadId: {}, {}",
-                        docVerification, docVerification.getUploadId(), ownerId
-                );
+            if (!DocumentStatus.FAILED.equals(docVerification.getStatus())) {
+                Optional<DocumentVerificationResult> docResult = result.getResults().stream()
+                        .filter(value -> value.getUploadId().equals(docVerification.getUploadId()))
+                        .findFirst();
+                if (docResult.isPresent()) {
+                    DocumentResultEntity docResultEntity = createDocumentResult(docResult.get());
+                    docResultEntity.setDocumentVerificationId(docVerification.getId());
+                    docResultEntity.setTimestampCreated(ownerId.getTimestamp());
+                    documentResultRepository.save(docResultEntity);
+                } else {
+                    logger.error("Missing verification result for {} with uploadId: {}, {}",
+                            docVerification, docVerification.getUploadId(), ownerId
+                    );
+                }
             }
         }
     }

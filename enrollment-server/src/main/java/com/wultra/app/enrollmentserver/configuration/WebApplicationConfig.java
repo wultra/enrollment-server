@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.getlime.security.powerauth.rest.api.spring.annotation.support.PowerAuthAnnotationInterceptor;
 import io.getlime.security.powerauth.rest.api.spring.annotation.support.PowerAuthEncryptionArgumentResolver;
 import io.getlime.security.powerauth.rest.api.spring.annotation.support.PowerAuthWebArgumentResolver;
@@ -25,6 +26,8 @@ import io.getlime.security.powerauth.rest.api.spring.filter.PowerAuthRequestFilt
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -71,6 +74,17 @@ public class WebApplicationConfig implements WebMvcConfigurer {
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(powerAuthWebArgumentResolver());
         argumentResolvers.add(powerAuthEncryptionArgumentResolver());
+    }
+
+    /**
+     * Global primary object mapper
+     * @param builder Jackson's object mapper builder
+     * @return Object mapper bean
+     */
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
+        return builder.build();
     }
 
 }

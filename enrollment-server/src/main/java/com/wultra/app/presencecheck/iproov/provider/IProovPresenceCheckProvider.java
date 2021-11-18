@@ -33,6 +33,7 @@ import com.wultra.app.presencecheck.iproov.service.IProovRestApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +65,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
      */
     @Autowired
     public IProovPresenceCheckProvider(
+            @Qualifier("objectMapperIproov")
             ObjectMapper objectMapper,
             IProovRestApiService iProovRestApiService) {
         this.objectMapper = objectMapper;
@@ -156,6 +158,10 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             throw new PresenceCheckException("Unable to start a presence check due to a service error");
         }
 
+        /**
+         * {"fallback":[{"type":"Info","message":"Token created successfully"}],"token":"de1e139742721e6ff6662af73aaa3636749441c0f687769d2137d7d01801vi07","primary":"iProov","user_id":"149a2bdc-1362-4822-b91a-771697fbaf24","pod":"cluster","biometric":"face"}
+         */
+
         ClaimResponse claimResponse = parseResponse(responseEntity.getBody(), ClaimResponse.class);
         String token = claimResponse.getToken();
 
@@ -198,7 +204,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             if (response.isPassed()) {
                 result.setStatus(PresenceCheckStatus.ACCEPTED);
 
-                String frameJpeg = response.getFrameJpeg();
+                String frameJpeg = response.getFrame();
                 frameJpeg = unescapeSlashes(frameJpeg);
                 byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 
