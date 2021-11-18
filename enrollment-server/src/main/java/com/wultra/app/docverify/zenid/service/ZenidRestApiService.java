@@ -34,7 +34,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,12 @@ public class ZenidRestApiService {
 
     private final RestTemplate restTemplate;
 
-    @Autowired
+    /**
+     * Service constructor.
+     * @param configProps Configuration properties.
+     * @param restTemplate REST template for ZenID calls.
+     */
+     @Autowired
     public ZenidRestApiService(
             ZenidConfigProps configProps,
             @Qualifier("restTemplateZenid") RestTemplate restTemplate) {
@@ -59,7 +63,15 @@ public class ZenidRestApiService {
         this.restTemplate = restTemplate;
     }
 
-    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, Image photo) throws IOException {
+    /**
+     * Uploads photo data as a sample DocumentPicture
+     *
+     * @param ownerId Owner identification.
+     * @param sessionId Session id which allows to link several uploads together.
+     * @param photo Photo image.
+     * @return Response entity with the upload result
+     */
+    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, Image photo) {
         String apiPath = String.format("/api/sample?" +
                 "expectedSampleType=DocumentPicture" +
                 "&customData=%s" +
@@ -82,6 +94,12 @@ public class ZenidRestApiService {
         return restTemplate.postForEntity(apiPath, requestEntity, ZenidWebUploadSampleResponse.class);
     }
 
+    /**
+     * Investigates uploaded samples
+     *
+     * @param sampleIds Ids of previously uploaded samples.
+     * @return Response entity with the investigation result
+     */
     public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds) {
         Preconditions.checkArgument(sampleIds.size() > 0, "Missing sample ids for investigation");
 
@@ -98,18 +116,35 @@ public class ZenidRestApiService {
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
     }
 
+    /**
+     * Deletes an uploaded sample
+     *
+     * @param sampleId Id of previously uploaded sample.
+     * @return Response entity with the deletion result
+     */
     public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) {
         String apiPath = String.format("/api/deleteSample?sampleId=%s", sampleId);
         HttpEntity<Void> entity = createDefaultRequestEntity();
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebDeleteSampleResponse.class);
     }
 
+    /**
+     * Gets image data belonging to the specified hash
+     * @param imageHash Image hash
+     * @return Response entity with the image data
+     */
     public ResponseEntity<byte[]> getImage(String imageHash) {
         String apiPath = String.format("/History/Image/%s", imageHash);
         HttpEntity<Void> entity = createAcceptOctetStreamRequestEntity();
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, byte[].class);
     }
 
+    /**
+     * Provides result of an investigation
+     *
+     * @param investigationId Id of a previously run investigation
+     * @return Response entity with the investigation result
+     */
     public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId) {
         String apiPath = String.format("/api/investigation/%s", investigationId);
         HttpEntity<Void> entity = createDefaultRequestEntity();

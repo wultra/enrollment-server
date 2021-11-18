@@ -54,7 +54,12 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private final ZenidRestApiService zenidApiService;
 
-    @Autowired
+    /**
+     * Service constructor.
+     * @param objectMapper Object mapper.
+     * @param zenidApiService ZenID API service.
+     */
+     @Autowired
     public ZenidDocumentVerificationProvider(
             @Qualifier("objectMapperZenid")
             ObjectMapper objectMapper,

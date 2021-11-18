@@ -46,7 +46,7 @@ import java.util.Collections;
 import java.util.function.Supplier;
 
 /**
- * Zenid configuration.
+ * ZenID configuration.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
@@ -55,7 +55,12 @@ import java.util.function.Supplier;
 @Configuration
 public class ZenidConfig {
 
-    @Bean
+    /**
+     * Definition of HTTP client with NTLM authentication support
+     *
+     * @param configProps Configuration properties
+     * @return Instance of an HTTP client with NTLM authentication support
+     */
     public CloseableHttpClient httpClient(ZenidConfigProps configProps) {
         String user = configProps.getNtlmUsername();
         String password = configProps.getNtlmPassword();
@@ -77,6 +82,9 @@ public class ZenidConfig {
                 .build();
     }
 
+    /**
+     * @return Object mapper bean specific to ZenID json format
+     */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid() {
         ObjectMapper mapper = new ObjectMapper();
@@ -96,6 +104,12 @@ public class ZenidConfig {
         return new MappingJackson2HttpMessageConverter(mapper);
     }
 
+    /**
+     * Prepares REST template specific to ZenID
+     * @param configProps Configuration properties
+     * @param builder REST template builder
+     * @return REST template for ZenID service API calls
+     */
     @Bean("restTemplateZenid")
     public RestTemplate restTemplateZenid(
             ZenidConfigProps configProps,
@@ -108,6 +122,9 @@ public class ZenidConfig {
                 .build();
     }
 
+    /**
+     * Supplier of the HTTP client request factory based on HTTP client with NTLM authentication
+     */
     class ZenidRequestFactorySupplier implements Supplier<ClientHttpRequestFactory> {
 
         private final ZenidConfigProps configProps;
