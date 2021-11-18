@@ -158,10 +158,6 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             throw new PresenceCheckException("Unable to start a presence check due to a service error");
         }
 
-        /**
-         * {"fallback":[{"type":"Info","message":"Token created successfully"}],"token":"de1e139742721e6ff6662af73aaa3636749441c0f687769d2137d7d01801vi07","primary":"iProov","user_id":"149a2bdc-1362-4822-b91a-771697fbaf24","pod":"cluster","biometric":"face"}
-         */
-
         ClaimResponse claimResponse = parseResponse(responseEntity.getBody(), ClaimResponse.class);
         String token = claimResponse.getToken();
 
