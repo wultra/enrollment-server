@@ -33,6 +33,7 @@ import com.wultra.app.presencecheck.iproov.service.IProovRestApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +65,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
      */
     @Autowired
     public IProovPresenceCheckProvider(
+            @Qualifier("objectMapperIproov")
             ObjectMapper objectMapper,
             IProovRestApiService iProovRestApiService) {
         this.objectMapper = objectMapper;
@@ -198,7 +200,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             if (response.isPassed()) {
                 result.setStatus(PresenceCheckStatus.ACCEPTED);
 
-                String frameJpeg = response.getFrameJpeg();
+                String frameJpeg = response.getFrame();
                 frameJpeg = unescapeSlashes(frameJpeg);
                 byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 

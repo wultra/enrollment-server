@@ -21,6 +21,7 @@ import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
@@ -42,6 +43,9 @@ import java.util.stream.Collectors;
 public class WultraMockDocumentVerificationProvider implements DocumentVerificationProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(WultraMockDocumentVerificationProvider.class);
+
+    private static final List<DocumentType> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO =
+            List.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
 
     private final Cache<String, List<String>> verificationUploadIds;
 
@@ -74,7 +78,10 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
                 .collect(Collectors.toList());;
 
         DocumentsSubmitResult result = new DocumentsSubmitResult();
-        result.setExtractedPhotoId("extracted-photo-id");
+        if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {
+            // set extracted photo id only on a relevant documents submit
+            result.setExtractedPhotoId("extracted-photo-id");
+        }
         result.setResults(submitResults);
 
         logger.info("Mock - submitted documents, {}", id);

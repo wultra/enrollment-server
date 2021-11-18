@@ -22,8 +22,9 @@ import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebDeleteSampleResponse;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebInvestigateResponse;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebUploadSampleResponse;
-import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -75,20 +76,21 @@ public class ZenidRestApiService {
      *
      * @param ownerId Owner identification.
      * @param sessionId Session id which allows to link several uploads together.
-     * @param photo Photo image.
+     * @param document Submitted document.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, Image photo) {
+    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+        Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
         String apiPath = String.format("/api/sample?" +
-                "expectedSampleType=DocumentPicture" +
+                "expectedSampleType=%s" +
                 "&customData=%s" +
-                "&uploadSessionID=%s", ownerId.getActivationId(), sessionId);
+                "&uploadSessionID=%s", toSampleType(document.getType()).toString(), ownerId.getActivationId(), sessionId);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(photo.getData()) {
+        body.add("file", new ByteArrayResource(document.getPhoto().getData()) {
             @Override
             public String getFilename() {
-                return photo.getFilename();
+                return document.getPhoto().getFilename();
             }
         });
 
@@ -117,7 +119,7 @@ public class ZenidRestApiService {
                 .collect(Collectors.joining("&"));
         apiPath += "?" + querySampleIds;
 
-        apiPath += "?async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase();
+        apiPath += "&async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase();
 
         HttpEntity<Void> entity = createDefaultRequestEntity();
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
@@ -168,6 +170,19 @@ public class ZenidRestApiService {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         return new HttpEntity<>(headers);
+    }
+
+    private ZenidWebUploadSampleResponse.SampleTypeEnum toSampleType(DocumentType type) {
+        switch (type) {
+            case ID_CARD:
+            case DRIVING_LICENSE:
+            case PASSPORT:
+                return ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
+            case SELFIE_PHOTO:
+                return ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
+            default:
+                throw new IllegalStateException("Not supported documentType: " + type);
+        }
     }
 
 }
