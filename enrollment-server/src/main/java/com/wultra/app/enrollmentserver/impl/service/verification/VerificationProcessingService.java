@@ -56,6 +56,13 @@ public class VerificationProcessingService {
         this.documentResultRepository = documentResultRepository;
     }
 
+    /**
+     * Processes documents verification result and updates the tracked verification state
+     *
+     * @param ownerId Owner identification.
+     * @param docVerifications Tracked state of documents verification.
+     * @param result Verification result from the provider.
+     */
     public void processVerificationResult(OwnerId ownerId,
                                           List<DocumentVerificationEntity> docVerifications,
                                           DocumentsVerificationResult result) {

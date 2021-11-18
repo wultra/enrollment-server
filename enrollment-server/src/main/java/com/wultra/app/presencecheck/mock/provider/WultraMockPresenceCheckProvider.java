@@ -43,6 +43,9 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(WultraMockPresenceCheckProvider.class);
 
+    /**
+     * Service constructor.
+     */
     public WultraMockPresenceCheckProvider() {
         logger.warn("Using mocked version of {}", PresenceCheckProvider.class.getName());
     }

@@ -57,6 +57,11 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
     private final IProovRestApiService iProovRestApiService;
 
+    /**
+     * Service constructor.
+     * @param objectMapper Object mapper.
+     * @param iProovRestApiService REST API service for iProov calls.
+     */
     @Autowired
     public IProovPresenceCheckProvider(
             ObjectMapper objectMapper,

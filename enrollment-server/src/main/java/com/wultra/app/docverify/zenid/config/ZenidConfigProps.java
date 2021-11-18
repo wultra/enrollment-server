@@ -61,6 +61,7 @@ public class ZenidConfigProps {
     private String serviceBaseUrl;
 
     public void setNtlmDomain(String ntlmDomain) {
+        // prevent blank value which is invalid and potentially hard to catch
         this.ntlmDomain = Strings.isNotBlank(ntlmDomain) ? ntlmDomain : null;
     }
 

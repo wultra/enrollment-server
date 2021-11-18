@@ -24,6 +24,9 @@ package com.wultra.app.presencecheck.iproov;
  */
 public class IProovConst {
 
+    /**
+     * Session parameter name of the verification token
+     */
     public static final String VERIFICATION_TOKEN = "iproov-verification-token";
 
 }

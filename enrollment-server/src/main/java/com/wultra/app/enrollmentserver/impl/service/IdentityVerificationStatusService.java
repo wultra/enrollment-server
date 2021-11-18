@@ -51,9 +51,13 @@ public class IdentityVerificationStatusService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final IdentityVerificationRepository identityVerificationRepository;
+
     private final IdentityVerificationService identityVerificationService;
+
     private final JsonSerializationService jsonSerializationService;
+
     private final PresenceCheckService presenceCheckService;
+
     private final IdentityVerificationFinishService identityVerificationFinishService;
 
     /**

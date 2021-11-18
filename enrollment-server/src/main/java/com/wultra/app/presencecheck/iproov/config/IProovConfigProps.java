@@ -37,12 +37,12 @@ import org.springframework.context.annotation.Configuration;
 public class IProovConfigProps {
 
     /**
-     * API secret
+     * API key
      */
     private String apiKey;
 
     /**
-     * API key
+     * API secret
      */
     private String apiSecret;
 
@@ -67,6 +67,7 @@ public class IProovConfigProps {
     private String serviceHostname;
 
     public void setRiskProfile(String riskProfile) {
+        // prevent blank value which is invalid and potentially hard to catch
         this.riskProfile = Strings.isNotBlank(riskProfile) ? riskProfile : null;
     }
 

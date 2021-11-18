@@ -58,6 +58,14 @@ public class PresenceCheckService {
 
     private final PresenceCheckProvider presenceCheckProvider;
 
+    /**
+     * Service constructor.
+     * @param documentVerificationRepository Document verification repository.
+     * @param documentProcessingService Document processing service.
+     * @param identityVerificationService Identity verification service.
+     * @param jsonSerializationService JSON serialization service.
+     * @param presenceCheckProvider Presence check provider.
+     */
     @Autowired
     public PresenceCheckService(
             DocumentVerificationRepository documentVerificationRepository,
@@ -72,6 +80,14 @@ public class PresenceCheckService {
         this.presenceCheckProvider = presenceCheckProvider;
     }
 
+    /**
+     * Initializes presence check process.
+     *
+     * @param apiAuthentication Authentication object.
+     * @return Session info with data needed to start the presence check process
+     * @throws DocumentVerificationException When an error during obtaining the user personal image occurred
+     * @throws PresenceCheckException When an error during initializing the presence check occurred
+     */
     @Transactional
     public SessionInfo init(PowerAuthApiAuthentication apiAuthentication)
             throws DocumentVerificationException, PresenceCheckException {
@@ -128,6 +144,18 @@ public class PresenceCheckService {
         return sessionInfo;
     }
 
+    /**
+     * Checks presence verification result.
+     * <p>
+     *     When is the presence check accepted the person image is submitted to document verification provider.
+     * </p>
+     *
+     * @param apiAuthentication Authentication object.
+     * @param sessionInfo Session info with presence check data.
+     * @return Result of the presence check
+     * @throws DocumentVerificationException
+     * @throws PresenceCheckException
+     */
     @Transactional
     public PresenceCheckResult checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication, SessionInfo sessionInfo)
             throws DocumentVerificationException, PresenceCheckException {
@@ -167,6 +195,12 @@ public class PresenceCheckService {
         return result;
     }
 
+    /**
+     * Cleans identity data used in the presence check process.
+     *
+     * @param apiAuthentication Authentication object.
+     * @throws PresenceCheckException When an error during cleanup occurred.
+     */
     public void cleanup(PowerAuthApiAuthentication apiAuthentication) throws PresenceCheckException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
