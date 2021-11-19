@@ -13,6 +13,11 @@ Enrollment Server contains the following configuration in `jboss-deployment-stru
 			<subsystem name="logging" />
 		</exclude-subsystems>
 
+		<resources>
+			<!-- use WAR provided Bouncy Castle -->
+			<resource-root path="WEB-INF/lib/bcprov-jdk15on-${BC_VERSION}.jar" use-physical-code-source="true"/>
+		</resources>
+
 		<dependencies>
 			<module name="com.wultra.powerauth.enrollment-server.conf" />
 		</dependencies>
@@ -81,7 +86,7 @@ Use the `logback.xml` file to configure logging, for example:
 The `application-ext.properties` file is used to override default configuration properties, for example:
 ```
 # PowerAuth Client configuration
-powerauth.service.url=http://[host]:[port]/powerauth-java-server/soap
+powerauth.service.url=http://[host]:[port]/powerauth-java-server/rest
 
 # PowerAuth Push Server configuration
 powerauth.push.service.url=http://[host]:[port]/powerauth-push-server
@@ -91,7 +96,4 @@ Enrollment Server Spring application uses the `ext` Spring profile which activat
 
 ### Bouncy Castle Installation
 
-The Bouncy Castle module for JBoss / Wildfly needs to be enabled as a global module for Enrollment Server.
-
-Follow the instructions in the [Installing Bouncy Castle](https://github.com/wultra/powerauth-server/blob/develop/docs/Installing-Bouncy-Castle.md) chapter of PowerAuth Server documentation. 
-Note that the instructions differ based on Java version and application server type.
+Since Enrollment Server in version `1.1.x`, installing the Bouncy Castle into Wildfy Server is no longer required. The latest version is bundled with the app and cryptographic primitives should work out of the box.
