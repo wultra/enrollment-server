@@ -46,9 +46,7 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             ")")
     int failRunningVerifications(String activationId, Date timestamp);
 
-    Optional<IdentityVerificationEntity> findByActivationId(String activationId);
-
-    Optional<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(
+    Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(
             String activationId
     );
 
