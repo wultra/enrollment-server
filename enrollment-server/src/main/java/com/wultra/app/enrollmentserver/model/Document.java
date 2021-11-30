@@ -19,16 +19,19 @@ package com.wultra.app.enrollmentserver.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Class representing a document.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+@ToString(callSuper = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Document extends DocumentMetadata {
 
+    @ToString.Exclude
     private byte[] data;
 
 }

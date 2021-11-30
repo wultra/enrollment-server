@@ -128,7 +128,7 @@ public class DocumentProcessingService {
             } catch (DocumentSubmitException e) {
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(e.getMessage());
-                continue;
+                return docVerifications;
             }
 
             DocumentSubmitResult docSubmitResult = submitDocumentToProvider(ownerId, docVerification, submittedDoc);
