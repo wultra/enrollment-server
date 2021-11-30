@@ -87,10 +87,9 @@ public class DataExtractionService {
             ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(inputData));
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                // Directories are expected not to be present in the archive
                 if (entry.isDirectory()) {
-                    logger.warn("Archive with documents contains a directory, this is not allowed.");
-                    throw new DocumentVerificationException();
+                    // Directories are skipped, data is extracted from regular files
+                    continue;
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 byte[] buffer = new byte[1024];
