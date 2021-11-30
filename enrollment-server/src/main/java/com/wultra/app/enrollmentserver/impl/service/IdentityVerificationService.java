@@ -343,8 +343,8 @@ public class IdentityVerificationService {
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
         // Set status of all in-progress document verifications to failed
         documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
-        // Set status of all in-progress identity verifications to failed
-        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
+        // Set status of all currently running identity verifications to failed
+        identityVerificationRepository.failRunningVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
         // Reset activation flags, the client is expected to call /api/identity/init for the next round of verification
         identityVerificationResetService.resetIdentityVerification(ownerId);
     }
