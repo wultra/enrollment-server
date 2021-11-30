@@ -58,6 +58,7 @@ public class DataExtractionService {
             logger.warn("Input data does not contain a single document");
             throw new DocumentVerificationException();
         }
+        logger.info("Extracted documents {} from request data", extractedDocuments);
         return extractedDocuments.get(0);
     }
 
