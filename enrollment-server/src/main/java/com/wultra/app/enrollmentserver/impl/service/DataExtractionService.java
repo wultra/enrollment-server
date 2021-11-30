@@ -58,7 +58,7 @@ public class DataExtractionService {
             logger.warn("Input data does not contain a single document");
             throw new DocumentVerificationException();
         }
-        logger.info("Extracted documents {} from request data", extractedDocuments);
+        logger.info("Extracted document {} from request data", extractedDocuments);
         return extractedDocuments.get(0);
     }
 
@@ -73,7 +73,9 @@ public class DataExtractionService {
             logger.warn("Missing request data");
             throw new DocumentVerificationException();
         }
-        return decompress(requestData);
+        List<Document> extractedDocuments = decompress(requestData);
+        logger.info("Extracted documents {} from request data", extractedDocuments);
+        return extractedDocuments;
     }
 
     /**
