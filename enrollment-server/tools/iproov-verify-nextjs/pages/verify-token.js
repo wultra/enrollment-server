@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
+import Script from 'next/script'
 
 // Import the library in browser
 const iProovMe = dynamic(
@@ -13,8 +14,8 @@ export default function VerifyToken({ token }) {
             <Head>
                 <title>iProov demo - token verification</title>
                 <meta name="description" content="iProov demo - token verification"/>
-                <script src="https://cdn.jsdelivr.net/npm/@iproov/web"/>
             </Head>
+            <Script src="https://cdn.jsdelivr.net/npm/@iproov/web" strategy="beforeInteractive"/>
 
             <iproov-me
                 token={token}
