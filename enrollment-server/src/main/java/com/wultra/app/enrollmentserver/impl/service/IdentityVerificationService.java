@@ -62,20 +62,14 @@ public class IdentityVerificationService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
     private final DocumentDataRepository documentDataRepository;
-
     private final DocumentVerificationRepository documentVerificationRepository;
-
     private final IdentityVerificationRepository identityVerificationRepository;
-
     private final DocumentProcessingService documentProcessingService;
-
     private final IdentityVerificationCreateService identityVerificationCreateService;
-
     private final VerificationProcessingService verificationProcessingService;
-
     private final DocumentVerificationProvider documentVerificationProvider;
+    private final IdentityVerificationResetService identityVerificationResetService;
 
     /**
      * Service constructor.
@@ -87,6 +81,7 @@ public class IdentityVerificationService {
      * @param identityVerificationCreateService Identity verification create service.
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
+     * @param identityVerificationResetService Identity verification reset service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -97,16 +92,16 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider) {
+            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationRepository = identityVerificationRepository;
-
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationCreateService = identityVerificationCreateService;
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
+        this.identityVerificationResetService = identityVerificationResetService;
     }
 
     /**
@@ -348,8 +343,10 @@ public class IdentityVerificationService {
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
         // Set status of all in-progress document verifications to failed
         documentVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
-        // Set status of all in-progress identity verifications to failed
-        identityVerificationRepository.failInProgressVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
+        // Set status of all currently running identity verifications to failed
+        identityVerificationRepository.failRunningVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
+        // Reset activation flags, the client is expected to call /api/identity/init for the next round of verification
+        identityVerificationResetService.resetIdentityVerification(ownerId);
     }
 
     /**

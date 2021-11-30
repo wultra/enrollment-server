@@ -40,8 +40,11 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED, " +
             "    i.timestampLastUpdated = :timestamp " +
             "WHERE i.activationId = :activationId " +
-            "AND i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS")
-    int failInProgressVerifications(String activationId, Date timestamp);
+            "AND i.status IN (" +
+                "com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS, " +
+                "com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING" +
+            ")")
+    int failRunningVerifications(String activationId, Date timestamp);
 
     Optional<IdentityVerificationEntity> findByActivationId(String activationId);
 
