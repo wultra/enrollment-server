@@ -110,7 +110,7 @@ public class IdentityVerificationService {
      * @return Optional entity of the verification identity
      */
     public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
-        return identityVerificationRepository.findByActivationId(ownerId.getActivationId());
+        return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
     }
 
     /**
@@ -177,7 +177,7 @@ public class IdentityVerificationService {
     @Transactional
     public void startVerification(OwnerId ownerId) throws DocumentVerificationException {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
-                identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!identityVerificationOptional.isPresent()) {
             logger.error("No identity verification entity found to start the verification, {}", ownerId);
@@ -286,7 +286,7 @@ public class IdentityVerificationService {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
-                identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!idVerificationOptional.isPresent()) {
             logger.error("Checking identity verification status on a not existing entity, {}", ownerId);

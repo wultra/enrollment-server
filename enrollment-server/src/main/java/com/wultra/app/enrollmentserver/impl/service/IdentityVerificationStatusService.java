@@ -94,7 +94,7 @@ public class IdentityVerificationStatusService {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
-                identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!idVerificationOptional.isPresent()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
