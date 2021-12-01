@@ -122,7 +122,7 @@ public class IdentityVerificationStatusService {
                 PresenceCheckResult presenceCheckResult = null;
                 try {
                     presenceCheckResult =
-                            presenceCheckService.checkPresenceVerification(apiAuthentication, sessionInfo);
+                            presenceCheckService.checkPresenceVerification(apiAuthentication, idVerification, sessionInfo);
                 } catch (DocumentVerificationException | PresenceCheckException e) {
                     logger.error("Checking presence verification failed, " + ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());

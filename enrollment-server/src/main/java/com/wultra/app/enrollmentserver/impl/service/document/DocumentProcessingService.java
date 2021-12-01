@@ -111,7 +111,7 @@ public class DocumentProcessingService {
 
         List<DocumentSubmitRequest.DocumentMetadata> docsMetadata = request.getDocuments();
         for (DocumentSubmitRequest.DocumentMetadata docMetadata : docsMetadata) {
-            DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, docMetadata);
+            DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, docMetadata);
             docVerification.setIdentityVerification(idVerification);
             docVerifications.add(docVerification);
 
@@ -150,8 +150,8 @@ public class DocumentProcessingService {
     }
 
     public void checkDocumentResubmit(OwnerId ownerId,
-                                       DocumentSubmitRequest request,
-                                       DocumentVerificationEntity docVerification) throws DocumentSubmitException {
+                                      DocumentSubmitRequest request,
+                                      DocumentVerificationEntity docVerification) throws DocumentSubmitException {
         if (request.isResubmit() && docVerification.getOriginalDocumentId() == null) {
             logger.error("Detected a resubmit request without specified originalDocumentId for {}, {}", docVerification, ownerId);
             throw new DocumentSubmitException("Missing originalDocumentId in a resubmit request");
@@ -252,9 +252,10 @@ public class DocumentProcessingService {
         return entity;
     }
 
-    private DocumentVerificationEntity createDocumentVerification(OwnerId ownerId, DocumentSubmitRequest.DocumentMetadata docMetadata) {
+    private DocumentVerificationEntity createDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification, DocumentSubmitRequest.DocumentMetadata docMetadata) {
         DocumentVerificationEntity entity = new DocumentVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
+        entity.setIdentityVerification(identityVerification);
         entity.setFilename(docMetadata.getFilename());
         entity.setOriginalDocumentId(docMetadata.getOriginalDocumentId());
         entity.setSide(docMetadata.getSide());
