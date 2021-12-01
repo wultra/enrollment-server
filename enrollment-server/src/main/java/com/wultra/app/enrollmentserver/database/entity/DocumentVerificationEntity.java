@@ -27,7 +27,9 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entity representing a document verification record.
@@ -52,6 +54,10 @@ public class DocumentVerificationEntity implements Serializable {
 
     @Column(name = "activation_id", nullable = false)
     private String activationId;
+
+    @ManyToOne
+    @JoinColumn(name = "identity_verification_id", referencedColumnName = "id", nullable = false)
+    private IdentityVerificationEntity identityVerification;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
@@ -112,6 +118,10 @@ public class DocumentVerificationEntity implements Serializable {
 
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
+
+    @OneToMany(mappedBy = "documentVerification", cascade = CascadeType.ALL)
+    @OrderBy("timestampCreated")
+    private Set<DocumentResultEntity> results = new LinkedHashSet<>();
 
     @Override
     public boolean equals(Object o) {

@@ -46,9 +46,9 @@ CREATE TABLE es_onboarding_process (
     timestamp_finished TIMESTAMP
 );
 
-CREATE INDEX document_process_status ON es_onboarding_process (status);
-CREATE INDEX document_process_timestamp_1 ON es_onboarding_process (timestamp_created);
-CREATE INDEX document_process_timestamp_2 ON es_onboarding_process (timestamp_last_updated);
+CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
+CREATE INDEX onboarding_process_timestamp_1 ON es_onboarding_process (timestamp_created);
+CREATE INDEX onboarding_process_timestamp_2 ON es_onboarding_process (timestamp_last_updated);
 
 CREATE TABLE es_onboarding_otp (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
@@ -63,13 +63,35 @@ CREATE TABLE es_onboarding_otp (
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 );
 
-CREATE INDEX document_otp_status ON es_onboarding_otp (status);
-CREATE INDEX document_otp_timestamp_1 ON es_onboarding_otp (timestamp_created);
-CREATE INDEX document_otp_timestamp_2 ON es_onboarding_otp (timestamp_last_updated);
+-- PostgreSQL does not create indexes on foreign keys automatically
+CREATE INDEX onboarding_process ON es_onboarding_otp (process_id);
+CREATE INDEX onboarding_otp_status ON es_onboarding_otp (status);
+CREATE INDEX onboarding_otp_timestamp_1 ON es_onboarding_otp (timestamp_created);
+CREATE INDEX onboarding_otp_timestamp_2 ON es_onboarding_otp (timestamp_last_updated);
+
+CREATE TABLE es_identity_verification (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    activation_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(256) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    phase VARCHAR(32) NOT NULL,
+    reject_reason VARCHAR(256),
+    error_detail VARCHAR(256),
+    session_info TEXT,
+    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated TIMESTAMP
+);
+
+CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
+CREATE INDEX identity_verif_user ON es_identity_verification (user_id);
+CREATE INDEX identity_verif_status ON es_identity_verification (status);
+CREATE INDEX identity_verif_timestamp_1 ON es_identity_verification (timestamp_created);
+CREATE INDEX identity_verif_timestamp_2 ON es_identity_verification (timestamp_last_updated);
 
 CREATE TABLE es_document_verification (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     activation_id VARCHAR(36) NOT NULL,
+    identity_verification_id VARCHAR(36) NOT NULL,
     type VARCHAR(32) NOT NULL,
     side VARCHAR(5),
     other_side_id VARCHAR(36),
@@ -88,9 +110,12 @@ CREATE TABLE es_document_verification (
     timestamp_uploaded TIMESTAMP,
     timestamp_verified TIMESTAMP,
     timestamp_disposed TIMESTAMP,
-    timestamp_last_updated TIMESTAMP
+    timestamp_last_updated TIMESTAMP,
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
 );
 
+-- PostgreSQL does not create indexes on foreign keys automatically
+CREATE INDEX document_ident_verif ON es_document_verification (identity_verification_id);
 CREATE INDEX document_verif_activation ON es_document_verification (activation_id);
 CREATE INDEX document_verif_status ON es_document_verification (status);
 CREATE INDEX document_verif_timestamp_1 ON es_document_verification (timestamp_created);
@@ -119,31 +144,5 @@ CREATE TABLE es_document_result (
     FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)
 );
 
+-- PostgreSQL does not create indexes on foreign keys automatically
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
-
-CREATE TABLE es_identity_verification (
-    id VARCHAR(36) NOT NULL PRIMARY KEY,
-    activation_id VARCHAR(36) NOT NULL,
-    user_id VARCHAR(256) NOT NULL,
-    status VARCHAR(32) NOT NULL,
-    phase VARCHAR(32) NOT NULL,
-    reject_reason VARCHAR(256),
-    error_detail VARCHAR(256),
-    session_info TEXT,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_last_updated TIMESTAMP
-);
-
-CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
-CREATE INDEX identity_verif_user ON es_identity_verification (user_id);
-CREATE INDEX identity_verif_status ON es_identity_verification (status);
-CREATE INDEX identity_verif_timestamp_1 ON es_identity_verification (timestamp_created);
-CREATE INDEX identity_verif_timestamp_2 ON es_identity_verification (timestamp_last_updated);
-
-CREATE TABLE es_identity_document (
-    identity_verification_id VARCHAR(36) NOT NULL,
-    document_verification_id VARCHAR(36) NOT NULL,
-    PRIMARY KEY (identity_verification_id, document_verification_id),
-    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id),
-    FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)
-);

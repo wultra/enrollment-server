@@ -45,10 +45,10 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
             "AND o.timestampCreated < :dateCreatedBefore")
     void terminateOldOtps(Date dateCreatedBefore);
 
-    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.processId = :processId")
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId")
     int getFailedAttemptsByProcess(String processId);
 
-    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.processId = :processId")
+    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId")
     Date getNewestOtpCreatedTimestamp(String processId);
 
 }

@@ -106,7 +106,7 @@ public class PresenceCheckService {
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
         if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase()) &&
-            IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+                IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
             logger.error("The presence check is already accepted, not allowed to initialize it again, {}", ownerId);
             throw new PresenceCheckException("Unable to initialize presence check");
         } else if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
@@ -121,8 +121,9 @@ public class PresenceCheckService {
             throw new PresenceCheckException("Unable to initialize presence check");
         }
 
+        // TODO - use a better way to locate the photo to be used in presence check
         Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
-                documentVerificationRepository.findByActivationIdAndPhotoIdNotNull(ownerId.getActivationId());
+                documentVerificationRepository.findFirstByActivationIdAndPhotoIdNotNull(ownerId.getActivationId());
 
         if (docVerificationEntityWithPhoto.isPresent()) {
             String photoId = docVerificationEntityWithPhoto.get().getPhotoId();
@@ -162,7 +163,7 @@ public class PresenceCheckService {
      * @throws PresenceCheckException
      */
     @Transactional
-    public PresenceCheckResult checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication, SessionInfo sessionInfo)
+    public PresenceCheckResult checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication, IdentityVerificationEntity idVerification,  SessionInfo sessionInfo)
             throws DocumentVerificationException, PresenceCheckException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
@@ -183,6 +184,7 @@ public class PresenceCheckService {
 
             DocumentVerificationEntity docVerificationEntity = new DocumentVerificationEntity();
             docVerificationEntity.setActivationId(ownerId.getActivationId());
+            docVerificationEntity.setIdentityVerification(idVerification);
             docVerificationEntity.setFilename(result.getPhoto().getFilename());
             docVerificationEntity.setStatus(DocumentStatus.VERIFICATION_PENDING);
             docVerificationEntity.setTimestampCreated(ownerId.getTimestamp());

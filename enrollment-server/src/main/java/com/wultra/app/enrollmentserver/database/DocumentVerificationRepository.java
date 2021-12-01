@@ -77,6 +77,6 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "WHERE d.activationId = :activationId")
     List<String> findAllUploadIds(String activationId);
 
-    Optional<DocumentVerificationEntity> findByActivationIdAndPhotoIdNotNull(String activationId);
+    Optional<DocumentVerificationEntity> findFirstByActivationIdAndPhotoIdNotNull(String activationId);
 
 }

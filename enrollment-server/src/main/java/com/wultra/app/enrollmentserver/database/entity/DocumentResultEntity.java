@@ -50,11 +50,9 @@ public class DocumentResultEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    // TODO - FK relationship
-    // @OneToOne(targetEntity = DocumentVerificationEntity.class)
-    // @JoinColumn(name = "document_verification_id", referencedColumnName = "id", nullable = false)
-    @Column(name = "document_verification_id", nullable = false)
-    private String documentVerificationId;
+    @ManyToOne
+    @JoinColumn(name = "document_verification_id", referencedColumnName = "id", nullable = false)
+    private DocumentVerificationEntity documentVerification;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "phase", nullable = false)
@@ -80,11 +78,11 @@ public class DocumentResultEntity implements Serializable {
         if (this == o) return true;
         if (!(o instanceof DocumentResultEntity)) return false;
         DocumentResultEntity that = (DocumentResultEntity) o;
-        return documentVerificationId.equals(that.documentVerificationId) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
+        return documentVerification.equals(that.documentVerification) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(documentVerificationId, phase, timestampCreated);
+        return Objects.hash(documentVerification, phase, timestampCreated);
     }
 }

@@ -141,7 +141,7 @@ public class OnboardingService {
         }
         process = onboardingProcessRepository.save(process);
         // Create an OTP code
-        String otpCode = createOtpCode(process.getId());
+        String otpCode = createOtpCode(process);
         // Send the OTP code
         try {
             onboardingProvider.sendOtpCode(userId, otpCode, false);
@@ -191,7 +191,7 @@ public class OnboardingService {
         existingOtp.setTimestampLastUpdated(new Date());
         onboardingOtpRepository.save(existingOtp);
         // Create an OTP code
-        String otpCode = createOtpCode(processId);
+        String otpCode = createOtpCode(process);
         // Resend the OTP code
         try {
             onboardingProvider.sendOtpCode(userId, otpCode, true);
@@ -362,14 +362,14 @@ public class OnboardingService {
 
     /**
      * Create an OTP code.
-     * @param processId Process ID.
+     * @param process Onboarding process.
      * @return Generated OTP code.
      */
-    private String createOtpCode(String processId) throws OnboardingProcessException {
+    private String createOtpCode(OnboardingProcessEntity process) throws OnboardingProcessException {
         OnboardingOtpEntity otp = new OnboardingOtpEntity();
         int otpLength = config.getOtpLength();
         String otpCode = otpGeneratorService.generateOtpCode(otpLength);
-        otp.setProcessId(processId);
+        otp.setProcess(process);
         otp.setOtpCode(otpCode);
         otp.setStatus(OtpStatus.ACTIVE);
         otp.setTimestampCreated(new Date());
