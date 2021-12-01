@@ -97,7 +97,7 @@ public class VerificationProcessingService {
                         .findFirst();
                 if (docResult.isPresent()) {
                     DocumentResultEntity docResultEntity = createDocumentResult(docResult.get());
-                    docResultEntity.setDocumentVerificationId(docVerification.getId());
+                    docResultEntity.setDocumentVerification(docVerification);
                     docResultEntity.setTimestampCreated(ownerId.getTimestamp());
                     documentResultRepository.save(docResultEntity);
                 } else {

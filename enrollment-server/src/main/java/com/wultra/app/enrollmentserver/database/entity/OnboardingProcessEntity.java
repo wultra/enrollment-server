@@ -28,7 +28,9 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entity representing an onboarding process.
@@ -75,6 +77,11 @@ public class OnboardingProcessEntity implements Serializable {
 
     @Column(name = "timestamp_finished")
     private Date timestampFinished;
+
+    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
+    @OrderBy("timestampCreated")
+    @ToString.Exclude
+    private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
 
     @Override
     public boolean equals(Object o) {

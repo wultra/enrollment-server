@@ -51,11 +51,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private String id;
 
-    // TODO - FK relationship
-    // @OneToOne(targetEntity = OnboardingProcessEntity.class)
-    // @JoinColumn(name = "process_id", referencedColumnName = "id", nullable = false)
-    @Column(name = "process_id", nullable = false)
-    private String processId;
+    @ManyToOne
+    @JoinColumn(name = "process_id", referencedColumnName = "id", nullable = false)
+    private OnboardingProcessEntity process;
 
     @Column(name = "otp_code", nullable = false)
     private String otpCode;
@@ -84,12 +82,12 @@ public class OnboardingOtpEntity implements Serializable {
         if (this == o) return true;
         if (!(o instanceof OnboardingOtpEntity)) return false;
         OnboardingOtpEntity that = (OnboardingOtpEntity) o;
-        return processId.equals(that.processId) && timestampCreated.equals(that.timestampCreated);
+        return process.equals(that.process) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(processId, timestampCreated);
+        return Objects.hash(process, timestampCreated);
     }
 }
 

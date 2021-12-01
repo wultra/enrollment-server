@@ -21,7 +21,6 @@ import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
-import com.wultra.app.enrollmentserver.database.IdentityDocumentRepository;
 import com.wultra.app.enrollmentserver.database.entity.*;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
@@ -63,8 +62,6 @@ public class DocumentProcessingService {
 
     private final DocumentResultRepository documentResultRepository;
 
-    private final IdentityDocumentRepository identityDocumentRepository;
-
     private final DataExtractionService dataExtractionService;
 
     private final DocumentVerificationProvider documentVerificationProvider;
@@ -75,7 +72,6 @@ public class DocumentProcessingService {
      * @param documentDataRepository Document data repository.
      * @param documentVerificationRepository Document verification repository.
      * @param documentResultRepository Document verification result repository.
-     * @param identityDocumentRepository Identity document repository.
      * @param dataExtractionService Data extraction service.
      * @param documentVerificationProvider Document verification provider.
      */
@@ -85,14 +81,12 @@ public class DocumentProcessingService {
             DocumentDataRepository documentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
             DocumentResultRepository documentResultRepository,
-            IdentityDocumentRepository identityDocumentRepository,
             DataExtractionService dataExtractionService,
             DocumentVerificationProvider documentVerificationProvider) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentResultRepository = documentResultRepository;
-        this.identityDocumentRepository = identityDocumentRepository;
         this.dataExtractionService = dataExtractionService;
         this.documentVerificationProvider = documentVerificationProvider;
     }
@@ -118,6 +112,7 @@ public class DocumentProcessingService {
         List<DocumentSubmitRequest.DocumentMetadata> docsMetadata = request.getDocuments();
         for (DocumentSubmitRequest.DocumentMetadata docMetadata : docsMetadata) {
             DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, docMetadata);
+            docVerification.setIdentityVerification(idVerification);
             docVerifications.add(docVerification);
 
             checkDocumentResubmit(ownerId, request, docVerification);
@@ -147,14 +142,9 @@ public class DocumentProcessingService {
 
         for (int i = 0; i < docVerifications.size(); i++) {
             DocumentVerificationEntity docVerificationEntity = docVerifications.get(i);
-            docResults.get(i).setDocumentVerificationId(docVerificationEntity.getId());
+            docResults.get(i).setDocumentVerification(docVerificationEntity);
         }
         documentResultRepository.saveAll(docResults);
-
-        List<IdentityDocumentEntity> identityDocumentEntities = createIdentityDocumentEntities(
-                idVerification, docVerifications
-        );
-        identityDocumentRepository.saveAll(identityDocumentEntities);
 
         return docVerifications;
     }
@@ -273,22 +263,6 @@ public class DocumentProcessingService {
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);
         return documentVerificationRepository.save(entity);
-    }
-
-    private List<IdentityDocumentEntity> createIdentityDocumentEntities(
-            IdentityVerificationEntity identityVerificationEntity,
-            List<DocumentVerificationEntity> documentVerificationEntities) {
-        return documentVerificationEntities.stream()
-                .map(document -> {
-                    IdentityDocumentEntity.IdentityDocumentKey key = new IdentityDocumentEntity.IdentityDocumentKey();
-                    key.setIdentityId(identityVerificationEntity.getId());
-                    key.setDocumentId(document.getId());
-
-                    IdentityDocumentEntity entity = new IdentityDocumentEntity();
-                    entity.setId(key);
-
-                    return entity;
-                }).collect(Collectors.toList());
     }
 
     private SubmittedDocument createSubmittedDocument(

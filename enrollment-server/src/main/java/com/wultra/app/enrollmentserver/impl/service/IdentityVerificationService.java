@@ -274,15 +274,6 @@ public class IdentityVerificationService {
     public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
         DocumentStatusResponse response = new DocumentStatusResponse();
 
-        List<String> documentIds;
-        if (request.getFilter() != null) {
-            documentIds = request.getFilter().stream()
-                    .map(DocumentStatusRequest.DocumentFilter::getDocumentId)
-                    .collect(Collectors.toList());
-        } else {
-            documentIds = Collections.emptyList();
-        }
-
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
@@ -296,10 +287,20 @@ public class IdentityVerificationService {
 
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
-        // Ensure that all entities are related to the identity verification
-        List<DocumentVerificationEntity> entities = Collections.emptyList();
-        if (!documentIds.isEmpty()) {
+        final List<DocumentVerificationEntity> entities;
+        if (request.getFilter() != null) {
+            final List<String> documentIds = request.getFilter().stream()
+                    .map(DocumentStatusRequest.DocumentFilter::getDocumentId)
+                    .collect(Collectors.toList());
             entities = Streamable.of(documentVerificationRepository.findAllById(documentIds)).toList();
+        } else {
+            entities = idVerification.getDocumentVerifications().stream()
+                    .filter(DocumentVerificationEntity::isUsedForVerification)
+                    .collect(Collectors.toList());
+        }
+
+        // Ensure that all entities are related to the identity verification
+        if (!entities.isEmpty()) {
             for (DocumentVerificationEntity entity : entities) {
                 if (entity.getVerificationId() != null && !entity.getVerificationId().equals(idVerification.getId())) {
                     logger.error("Not related {} to {}, {}", entity, idVerification, ownerId);

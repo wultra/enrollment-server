@@ -26,7 +26,9 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Entity representing identity verification.
@@ -77,6 +79,10 @@ public class IdentityVerificationEntity implements Serializable {
 
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
+
+    @OneToMany(mappedBy = "identityVerification", cascade = CascadeType.ALL)
+    @OrderBy("timestampCreated")
+    private Set<DocumentVerificationEntity> documentVerifications = new LinkedHashSet<>();
 
     @Override
     public boolean equals(Object o) {
