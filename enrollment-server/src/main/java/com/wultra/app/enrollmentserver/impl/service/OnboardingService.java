@@ -124,7 +124,6 @@ public class OnboardingService {
 
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcess(userId);
         OnboardingProcessEntity process;
-        String processId;
         if (processOptional.isPresent()) {
             // Resume an existing process
             process = processOptional.get();
