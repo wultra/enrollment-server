@@ -122,11 +122,18 @@ public class OnboardingService {
             throw new OnboardingProcessException();
         }
 
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcess(userId);
+        // Make sure that an onboarding process does was not finished already for this user ID
+        Optional<OnboardingProcessEntity> finishedProcessOptional = onboardingProcessRepository.findFinishedProcess(userId);
+        if (finishedProcessOptional.isPresent()) {
+            logger.warn("Onboarding process is already finished for user: " + userId);
+            throw new OnboardingProcessException();
+        }
+
+        Optional<OnboardingProcessEntity> existingProcessOptional = onboardingProcessRepository.findExistingProcess(userId);
         OnboardingProcessEntity process;
-        if (processOptional.isPresent()) {
+        if (existingProcessOptional.isPresent()) {
             // Resume an existing process
-            process = processOptional.get();
+            process = existingProcessOptional.get();
             // Use latest identification data
             process.setIdentificationData(identificationData);
             process.setTimestampLastUpdated(new Date());
