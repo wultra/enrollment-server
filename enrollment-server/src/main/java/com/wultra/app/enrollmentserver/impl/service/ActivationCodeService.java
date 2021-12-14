@@ -27,7 +27,7 @@ import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ActivationOtpValidation;
 import com.wultra.security.powerauth.client.v3.InitActivationResponse;
-import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,10 +84,10 @@ public class ActivationCodeService {
     public ActivationCodeResponse requestActivationCode(ActivationCodeRequest request, PowerAuthApiAuthentication apiAuthentication) throws InvalidRequestObjectException, ActivationCodeException {
 
         // Fetch information from the authentication object
-        final String sourceActivationId = apiAuthentication.getActivationId();
+        final String sourceActivationId = apiAuthentication.getActivationContext().getActivationId();
         final String sourceUserId = apiAuthentication.getUserId();
         final Long sourceAppId = apiAuthentication.getApplicationId();
-        final List<String> sourceActivationFlags = apiAuthentication.getActivationFlags();
+        final List<String> sourceActivationFlags = apiAuthentication.getActivationContext().getActivationFlags();
         final List<String> sourceApplicationRoles = apiAuthentication.getApplicationRoles();
 
         logger.info("Activation code registration started, user ID: {}", sourceUserId);

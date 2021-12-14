@@ -25,9 +25,9 @@ import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedExcep
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
-import io.getlime.security.powerauth.rest.api.base.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +112,7 @@ public class PushRegistrationController {
         // Check if the context is authenticated - if it is, add activation ID.
         // This assures that the activation is assigned with a correct device.
         final String userId = apiAuthentication.getUserId();
-        final String activationId = apiAuthentication.getActivationId();
+        final String activationId = apiAuthentication.getActivationContext().getActivationId();
         final Long applicationId = apiAuthentication.getApplicationId();
 
         return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);
