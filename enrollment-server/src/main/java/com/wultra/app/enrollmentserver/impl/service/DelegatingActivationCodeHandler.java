@@ -45,27 +45,29 @@ public interface DelegatingActivationCodeHandler {
      * @param sourceActivationId Source activation ID (activation used to fetch the code).
      * @param sourceActivationFlags Source activation flags (flags of the activation that initiated the transfer).
      * @param userId User ID (user ID who requested the activation).
+     * @param applicationId Application identifier which was used for app lookup (String identifier sent from client).
      * @param sourceAppId Source app ID (the app that initiated the process).
-     * @param sourceApplicationRoles Source application roles (roles of the app that intiated the transfer).
+     * @param sourceApplicationRoles Source application roles (roles of the app that initiated the transfer).
      * @param destinationAppId Destination app ID (the app that is to be activated).
      * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
      * @param activationCode Activation code of the new activation.
      * @param activationCodeSignature Activation code signature of the new activation code.
      * @return List of new activation flags for the destination activation.
      */
-    List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, Long sourceAppId, List<String> sourceApplicationRoles, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
+    List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, Long sourceAppId, List<String> sourceApplicationRoles, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
 
     /**
      * Callback method with newly created activation code information.
      *
      * @param sourceActivationId Source activation ID (activation used to fetch the code).
      * @param userId User ID (user ID who requested the activation).
+     * @param applicationId Application identifier which was used for app lookup (String identifier sent from client).
      * @param sourceAppId Source app ID (the app that initiated the process).
      * @param destinationAppId Destination app ID (the app that is to be activated).
      * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
      * @param activationCode Activation code of the new activation.
      * @param activationCodeSignature Activation code signature of the new activation code.
      */
-    void didReturnActivationCode(String sourceActivationId, String userId, Long sourceAppId, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
+    void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, Long sourceAppId, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
 
 }
