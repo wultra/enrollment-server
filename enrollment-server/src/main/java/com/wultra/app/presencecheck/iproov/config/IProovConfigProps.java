@@ -20,7 +20,7 @@ package com.wultra.app.presencecheck.iproov.config;
 import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +68,7 @@ public class IProovConfigProps {
 
     public void setRiskProfile(String riskProfile) {
         // prevent blank value which is invalid and potentially hard to catch
-        this.riskProfile = Strings.isNotBlank(riskProfile) ? riskProfile : null;
+        this.riskProfile = StringUtils.isNotBlank(riskProfile) ? riskProfile : null;
     }
 
 }
