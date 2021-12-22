@@ -17,6 +17,8 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
+
 import java.util.List;
 
 /**
@@ -36,8 +38,9 @@ public interface DelegatingActivationCodeHandler {
      * @param activationFlags Activation flags.
      * @param applicationRoles Application roles.
      * @return Destination application ID.
+     * @throws ActivationCodeException Thrown in case destination application ID could not be retrieved.
      */
-    Long fetchDestinationApplicationId(String applicationId, Long sourceAppId, List<String> activationFlags, List<String> applicationRoles);
+    Long fetchDestinationApplicationId(String applicationId, Long sourceAppId, List<String> activationFlags, List<String> applicationRoles) throws ActivationCodeException;
 
     /**
      * Callback method to add new activation flags to activation.
@@ -53,8 +56,9 @@ public interface DelegatingActivationCodeHandler {
      * @param activationCode Activation code of the new activation.
      * @param activationCodeSignature Activation code signature of the new activation code.
      * @return List of new activation flags for the destination activation.
+     * @throws ActivationCodeException Thrown in case activation flag processing fails.
      */
-    List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, Long sourceAppId, List<String> sourceApplicationRoles, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
+    List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, Long sourceAppId, List<String> sourceApplicationRoles, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException;
 
     /**
      * Callback method with newly created activation code information.
@@ -67,7 +71,8 @@ public interface DelegatingActivationCodeHandler {
      * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
      * @param activationCode Activation code of the new activation.
      * @param activationCodeSignature Activation code signature of the new activation code.
+     * @throws ActivationCodeException Thrown in case activation code processing fails.
      */
-    void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, Long sourceAppId, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature);
+    void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, Long sourceAppId, Long destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException;
 
 }
