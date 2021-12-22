@@ -23,16 +23,16 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +170,7 @@ public class MobileTokenController {
             if (auth != null && auth.getUserId() != null) {
                 final String userId = auth.getUserId();
                 final Long applicationId = auth.getApplicationId();
-                final PowerAuthSignatureTypes signatureFactors = auth.getSignatureFactors();
+                final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors);
             } else {
                 // make sure to fail operation as well, to increase the failed number

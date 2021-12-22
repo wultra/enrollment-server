@@ -17,25 +17,22 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
-import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
 import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
 import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
+import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
-import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller with services related to Push Server registration.
@@ -115,7 +112,7 @@ public class PushRegistrationController {
         // Check if the context is authenticated - if it is, add activation ID.
         // This assures that the activation is assigned with a correct device.
         final String userId = apiAuthentication.getUserId();
-        final String activationId = apiAuthentication.getActivationId();
+        final String activationId = apiAuthentication.getActivationContext().getActivationId();
         final Long applicationId = apiAuthentication.getApplicationId();
 
         return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);

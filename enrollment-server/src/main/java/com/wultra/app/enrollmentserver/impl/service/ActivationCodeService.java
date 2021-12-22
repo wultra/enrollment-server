@@ -84,10 +84,10 @@ public class ActivationCodeService {
     public ActivationCodeResponse requestActivationCode(ActivationCodeRequest request, PowerAuthApiAuthentication apiAuthentication) throws InvalidRequestObjectException, ActivationCodeException {
 
         // Fetch information from the authentication object
-        final String sourceActivationId = apiAuthentication.getActivationId();
+        final String sourceActivationId = apiAuthentication.getActivationContext().getActivationId();
         final String sourceUserId = apiAuthentication.getUserId();
         final Long sourceAppId = apiAuthentication.getApplicationId();
-        final List<String> sourceActivationFlags = apiAuthentication.getActivationFlags();
+        final List<String> sourceActivationFlags = apiAuthentication.getActivationContext().getActivationFlags();
         final List<String> sourceApplicationRoles = apiAuthentication.getApplicationRoles();
 
         logger.info("Activation code registration started, user ID: {}", sourceUserId);
