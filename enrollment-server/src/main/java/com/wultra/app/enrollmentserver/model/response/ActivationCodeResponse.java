@@ -1,6 +1,6 @@
 /*
- * PowerAuth Mobile Token Model
- * Copyright (C) 2017 Wultra s.r.o.
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,25 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.security.powerauth.lib.mtoken.model.entity;
+package com.wultra.app.enrollmentserver.model.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * Class representing party information.
+ * Response with a new activation code.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Petr Dvorak, petr@wultra.com
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PartyInfo {
+public class ActivationCodeResponse {
 
-    private String logoUrl;
-    private String name;
-    private String description;
-    private String websiteUrl;
+    private String activationId;
+    private String activationCode;
+    private String activationSignature;
 
 }

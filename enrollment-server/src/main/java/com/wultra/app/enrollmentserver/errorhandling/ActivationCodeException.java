@@ -1,6 +1,6 @@
 /*
- * PowerAuth Mobile Token Model
- * Copyright (C) 2017 Wultra s.r.o.
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,25 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.security.powerauth.lib.mtoken.model.entity;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Class representing party information.
+ * Exception thrown in case activation code cannot be fetched for any reason.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Petr Dvorak, petr@wultra.com
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PartyInfo {
-
-    private String logoUrl;
-    private String name;
-    private String description;
-    private String websiteUrl;
-
+public class ActivationCodeException extends Exception {
+    private static final long serialVersionUID = 368452747764248241L;
 }

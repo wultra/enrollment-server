@@ -19,7 +19,7 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 import io.getlime.core.rest.model.base.response.ErrorResponse;
-import io.getlime.security.powerauth.rest.api.base.exception.PowerAuthAuthenticationException;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -120,6 +120,18 @@ public class DefaultExceptionHandler {
     public @ResponseBody ErrorResponse handleMobileTokenConfigurationException(MobileTokenConfigurationException ex) {
         logger.warn("Mobile token back-end is incorrectly configured: {}", ex.getMessage());
         return new ErrorResponse(ex.getCode(), ex.getMessage());
+    }
+
+    /**
+     * Handling of activation code exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(ActivationCodeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleActivationCodeException(ActivationCodeException ex) {
+        logger.warn("Unable to fetch activation code", ex);
+        return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
     }
 
 }

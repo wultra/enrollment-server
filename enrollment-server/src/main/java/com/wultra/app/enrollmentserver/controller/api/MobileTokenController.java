@@ -30,9 +30,9 @@ import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
-import io.getlime.security.powerauth.rest.api.base.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ import java.util.Locale;
         matchIfMissing = true
 )
 @RestController
-@RequestMapping("/api/auth/token/app")
+@RequestMapping("api/auth/token/app")
 public class MobileTokenController {
 
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);
@@ -170,7 +170,7 @@ public class MobileTokenController {
             if (auth != null && auth.getUserId() != null) {
                 final String userId = auth.getUserId();
                 final Long applicationId = auth.getApplicationId();
-                final PowerAuthSignatureTypes signatureFactors = auth.getSignatureFactors();
+                final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors);
             } else {
                 // make sure to fail operation as well, to increase the failed number
