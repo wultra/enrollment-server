@@ -46,6 +46,7 @@ import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncrypt
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +139,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -146,7 +148,7 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking identity verification status");
@@ -156,12 +158,12 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when checking identity verification status");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when checking identity verification status");
+            throw new PowerAuthEncryptionException("ECIES decryption failed when checking identity verification status");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when checking identity verification status");
-            throw new PowerAuthAuthenticationException("Invalid request received when checking identity verification status");
+            throw new PowerAuthEncryptionException("Invalid request received when checking identity verification status");
         }
 
         // Check verification status
@@ -176,23 +178,23 @@ public class IdentityVerificationController {
      * @param eciesContext ECIES context.
      * @return Document submit response.
      * @throws DocumentSubmitException Thrown when document submission fails.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     @RequestMapping(value = "document/submit", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext)
-            throws DocumentSubmitException, PowerAuthAuthenticationException, OnboardingProcessException {
+            throws DocumentSubmitException, PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("ECIES encryption failed when submitting documents for verification");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when submitting documents for verification");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when submitting documents for verification");
+            throw new PowerAuthEncryptionException("Invalid request received when submitting documents for verification");
         }
 
         // Extract user ID from finished onboarding process for current activation
@@ -218,23 +220,23 @@ public class IdentityVerificationController {
      * @param requestData Binary request data.
      * @param eciesContext ECIES context.
      * @return Document upload response.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentVerificationException Thrown when document is invalid.
      * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     @RequestMapping(value = "document/upload", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
-                                                                 @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, DocumentVerificationException, OnboardingProcessException {
+                                                                 @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when uploading document for verification");
-            throw new PowerAuthAuthenticationException("ECIES encryption failed when uploading document for verification");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when uploading document for verification");
         }
 
         if (requestData == null) {
             logger.error("Invalid request received when uploading document for verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when uploading document for verification");
+            throw new PowerAuthEncryptionException("Invalid request received when uploading document for verification");
         }
 
         // Extract user ID from finished onboarding process for current activation
@@ -259,6 +261,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @RequestMapping(value = "document/status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -267,7 +270,7 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(@EncryptedRequestBody ObjectRequest<DocumentStatusRequest> request,
                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+                                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -277,12 +280,12 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when checking document verification status");
-            throw new PowerAuthAuthenticationException("ECIES encryption failed when checking document verification status");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when checking document verification status");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when checking document verification status");
-            throw new PowerAuthAuthenticationException("Invalid request received when checking document verification status");
+            throw new PowerAuthEncryptionException("Invalid request received when checking document verification status");
         }
 
         // Process upload document request
@@ -297,6 +300,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @RequestMapping(value = "presence-check/init", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -306,7 +310,7 @@ public class IdentityVerificationController {
     public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, PowerAuthEncryptionException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing presence check");
@@ -316,12 +320,12 @@ public class IdentityVerificationController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when initializing presence check");
-            throw new PowerAuthAuthenticationException("ECIES encryption failed when initializing presence check");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when initializing presence check");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when initializing presence check");
-            throw new PowerAuthAuthenticationException("Invalid request received when initializing presence check");
+            throw new PowerAuthEncryptionException("Invalid request received when initializing presence check");
         }
 
         final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);

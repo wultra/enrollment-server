@@ -34,6 +34,7 @@ import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionC
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,23 +76,23 @@ public class OnboardingController {
      * @param request Start onboarding process request.
      * @param eciesContext ECIES context.
      * @return Start onboarding process response.
-     * @throws PowerAuthAuthenticationException Thrown when request is invalid.
+     * @throws PowerAuthEncryptionException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
      */
     @RequestMapping(value = "start", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException, OnboardingOtpDeliveryException {
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
+            throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received during onboarding");
-            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
+            throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
         OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject());
@@ -104,23 +105,23 @@ public class OnboardingController {
      * @param request Resend an OTP code request.
      * @param eciesContext ECIES context.
      * @return Response.
-     * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown when onboarding OTP delivery fails.
      */
     @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<OtpResendRequest> request,
-                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException, OnboardingOtpDeliveryException {
+                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
+            throw new PowerAuthEncryptionException("ECIES decryption failed while resending OTP code");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received during onboarding");
-            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
+            throw new PowerAuthEncryptionException("Invalid request received while resending OTP code");
         }
 
         return onboardingService.resendOtp(request.getRequestObject());
@@ -132,22 +133,22 @@ public class OnboardingController {
      * @param request Onboarding status request.
      * @param eciesContext ECIES context.
      * @return Onboarding status response.
-     * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStatusResponse> getStatus(@EncryptedRequestBody ObjectRequest<OnboardingStatusRequest> request,
-                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
+                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
+            throw new PowerAuthEncryptionException("ECIES decryption failed while getting status");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received during onboarding");
-            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
+            throw new PowerAuthEncryptionException("Invalid request received while getting status");
         }
 
         OnboardingStatusResponse response = onboardingService.getStatus(request.getRequestObject());
@@ -160,22 +161,22 @@ public class OnboardingController {
      * @param request Onboarding cleanup request.
      * @param eciesContext ECIES context.
      * @return Onboarding cleanup response.
-     * @throws PowerAuthAuthenticationException Thrown when request encryption fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @RequestMapping(value = "cleanup", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response performCleanup(@EncryptedRequestBody ObjectRequest<OnboardingCleanupRequest> request,
-                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthAuthenticationException, OnboardingProcessException {
+                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed during onboarding");
+            throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received during onboarding");
-            throw new PowerAuthAuthenticationException("Invalid request received during onboarding");
+            throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
         return onboardingService.performCleanup(request.getRequestObject());
