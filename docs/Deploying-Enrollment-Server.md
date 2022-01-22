@@ -58,7 +58,7 @@ The default configuration works best with Apache Tomcat server running on defaul
 
 To deploy Enrollment Server to Apache Tomcat, simply copy the WAR file in your `webapps` folder or deploy it using the "Tomcat Web Application Manager" application (usually deployed on default Tomcat address `http://localhost:8080/manager`).
 
-Running PowerAuth Admin application from console using the `java -jar` command is not supported.
+Running Enrollment Server from console using the `java -jar` command is not supported.
 
 ## Deploying Enrollment Server On JBoss / Wildfly
 
