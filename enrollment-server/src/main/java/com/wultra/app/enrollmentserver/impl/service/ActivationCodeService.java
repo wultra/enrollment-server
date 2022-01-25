@@ -125,13 +125,13 @@ public class ActivationCodeService {
 
             // Notify systems about newly created activation
             delegatingActivationCodeHandler.didReturnActivationCode(
-                    sourceActivationId, sourceUserId, sourceAppId, destinationAppId,
+                    sourceActivationId, sourceUserId, applicationId, sourceAppId, destinationAppId,
                     iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
             );
 
             // Add the activation flags
             final List<String> flags = delegatingActivationCodeHandler.addActivationFlags(
-                    sourceActivationId, sourceActivationFlags, sourceUserId, sourceAppId, sourceApplicationRoles, destinationAppId,
+                    sourceActivationId, sourceActivationFlags, applicationId, sourceUserId, sourceAppId, sourceApplicationRoles, destinationAppId,
                     iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
             );
             if (flags != null && !flags.isEmpty()) {
