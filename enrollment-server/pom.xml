@@ -180,6 +180,13 @@
                 <groupId>io.swagger.codegen.v3</groupId>
                 <artifactId>swagger-codegen-maven-plugin</artifactId>
                 <version>${maven-swagger-codegen-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.jknack</groupId>
+                        <artifactId>handlebars</artifactId>
+                        <version>${maven-swagger-codegen-handlebars.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>swagger-definitions-iproov</id>
