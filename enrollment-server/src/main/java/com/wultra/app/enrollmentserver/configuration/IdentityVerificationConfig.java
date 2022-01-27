@@ -36,6 +36,9 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server.document-verification.cleanupEnabled:false}")
     private boolean documentVerificationCleanupEnabled;
 
+    @Value("${enrollment-server.presence-check.enabled:true}")
+    private boolean presenceCheckEnabled;
+
     @Value("${enrollment-server.presence-check.provider:mock}")
     private String presenceCheckProvider;
 

@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
@@ -50,6 +51,8 @@ public class IdentityVerificationStatusService {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     private final IdentityVerificationRepository identityVerificationRepository;
 
     private final IdentityVerificationService identityVerificationService;
@@ -62,6 +65,7 @@ public class IdentityVerificationStatusService {
 
     /**
      * Service constructor.
+     * @param identityVerificationConfig Identity verification configuration.
      * @param identityVerificationRepository Identity verification repository.
      * @param identityVerificationService Identity verification service.
      * @param jsonSerializationService JSON serialization service.
@@ -70,10 +74,12 @@ public class IdentityVerificationStatusService {
      */
     @Autowired
     public IdentityVerificationStatusService(
+            IdentityVerificationConfig identityVerificationConfig,
             IdentityVerificationRepository identityVerificationRepository,
             IdentityVerificationService identityVerificationService,
             JsonSerializationService jsonSerializationService,
             PresenceCheckService presenceCheckService, IdentityVerificationFinishService identityVerificationFinishService) {
+        this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
         this.jsonSerializationService = jsonSerializationService;
@@ -136,15 +142,12 @@ public class IdentityVerificationStatusService {
             }
         } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
-            try {
-                identityVerificationService.startVerification(ownerId);
-            } catch (DocumentVerificationException e) {
-                idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-                idVerification.setStatus(IdentityVerificationStatus.FAILED);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.warn("Verification start failed, " + ownerId, e);
-            }
-
+            startVerification(ownerId, idVerification);
+        } else if (!identityVerificationConfig.isPresenceCheckEnabled()
+                && IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+            logger.info("Starting verification, pending verification without presence check is automatically started");
+            startVerification(ownerId, idVerification);
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
 
@@ -191,6 +194,23 @@ public class IdentityVerificationStatusService {
                 break;
             default:
                 throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
+        }
+    }
+
+    /**
+     *
+     *
+     * @param ownerId Owner identification.
+     * @param idVerification Verification identity.
+     */
+    private void startVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+        try {
+            identityVerificationService.startVerification(ownerId);
+        } catch (DocumentVerificationException e) {
+            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
+            idVerification.setStatus(IdentityVerificationStatus.FAILED);
+            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            logger.warn("Verification start failed, " + ownerId, e);
         }
     }
 
