@@ -39,7 +39,7 @@ export default function Home() {
                                         <label htmlFor="tokenValue">Token value </label>
                                         <input className="ml-1" id="tokenValue" name="tokenValue" type="text" value={token} onChange={handleChange} autoComplete="off" required />
                                         <button className="ml-1" type="submit">
-                                            <Link href={{pathname: '/verify-token', query: {value: token}}} prefetch={false}>
+                                            <Link href={{pathname: 'verify-token', query: {value: token}}} prefetch={false}>
                                                 <a className="text-reset" target="_blank" rel="noreferrer">Verify</a>
                                             </Link>
                                         </button>

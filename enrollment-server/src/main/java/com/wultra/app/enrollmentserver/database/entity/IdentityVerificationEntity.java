@@ -20,15 +20,15 @@ package com.wultra.app.enrollmentserver.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Entity representing identity verification.
@@ -96,4 +96,22 @@ public class IdentityVerificationEntity implements Serializable {
     public int hashCode() {
         return Objects.hash(activationId, timestampCreated);
     }
+
+    /**
+     * Checks if the presence check was initialized or not
+     * <p>
+     *     Any of the statuses [{@link IdentityVerificationStatus#FAILED},
+     *     {@link IdentityVerificationStatus#IN_PROGRESS}, {@link IdentityVerificationStatus#REJECTED}]
+     *     means an already initialized presence check.
+     * </p>
+     * @return true when the presence check is already initialized
+     */
+    @Transient
+    public boolean isPresenceCheckInitialized() {
+        return IdentityVerificationPhase.PRESENCE_CHECK.equals(phase) &&
+                List.of(IdentityVerificationStatus.FAILED,
+                        IdentityVerificationStatus.IN_PROGRESS,
+                        IdentityVerificationStatus.REJECTED).contains(status);
+    }
+
 }
