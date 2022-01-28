@@ -36,6 +36,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -80,6 +81,17 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         } catch (Exception e) {
             logger.warn("Unable to cleanup documents during teardown", e);
         }
+    }
+
+    @Test
+    public void checkDocumentUploadTest() throws Exception {
+        SubmittedDocument document = createIdCardFrontDocument();
+        List<SubmittedDocument> documents = List.of(document);
+
+        provider.submitDocuments(ownerId, documents);
+        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, document);
+
+        assertSubmittedDocuments(ownerId, List.of(document), result);
     }
 
     @Test
@@ -152,6 +164,13 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     private List<SubmittedDocument> createSubmittedDocuments() throws Exception {
+        return ImmutableList.of(
+                createIdCardFrontDocument(),
+                createIdCardBackDocument()
+        );
+    }
+
+    private SubmittedDocument createIdCardFrontDocument() throws IOException {
         SubmittedDocument idCardFront = new SubmittedDocument();
         idCardFront.setDocumentId(DOC_ID_CARD_FRONT);
         Image idCardFrontPhoto = TestUtil.loadPhoto("/images/specimen_id_front.jpg");
@@ -159,6 +178,10 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         idCardFront.setSide(CardSide.FRONT);
         idCardFront.setType(DocumentType.ID_CARD);
 
+        return idCardFront;
+    }
+
+    private SubmittedDocument createIdCardBackDocument() throws IOException {
         SubmittedDocument idCardBack = new SubmittedDocument();
         idCardBack.setDocumentId(DOC_ID_CARD_BACK);
         Image idCardBackPhoto = TestUtil.loadPhoto("/images/specimen_id_back.jpg");
@@ -166,7 +189,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         idCardBack.setSide(CardSide.BACK);
         idCardBack.setType(DocumentType.ID_CARD);
 
-        return ImmutableList.of(idCardFront, idCardBack);
+        return idCardBack;
     }
 
     private OwnerId createOwnerId() {

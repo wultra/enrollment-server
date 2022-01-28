@@ -96,7 +96,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
         ZenidWebUploadSampleResponse response = responseEntity.getBody();
         DocumentSubmitResult documentSubmitResult = createDocumentSubmitResult(id, document, response);
-        checkForMinedPhoto(id, document, result, response);
+        if (response.getMinedData() != null) {
+            checkForMinedPhoto(id, document, result, response.getMinedData());
+        }
         result.setResults(List.of(documentSubmitResult));
 
         return result;
@@ -133,7 +135,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
             ZenidWebUploadSampleResponse response = responseEntity.getBody();
             DocumentSubmitResult documentSubmitResult = createDocumentSubmitResult(id, document, response);
-            checkForMinedPhoto(id, document, result, response);
+            if (response.getMinedData() != null) {
+                checkForMinedPhoto(id, document, result, response.getMinedData());
+            }
             result.getResults().add(documentSubmitResult);
         }
         return result;
@@ -301,9 +305,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             OwnerId id,
             SubmittedDocument document,
             DocumentsSubmitResult result,
-            ZenidWebUploadSampleResponse response) {
+            ZenidSharedMineAllResult minedData) {
         // Photo hash of the person is optionally present at /MinedData/Photo/ImageData/ImageHash
-        ZenidSharedMinedPhoto photo = response.getMinedData().getPhoto();
+        ZenidSharedMinedPhoto photo = minedData.getPhoto();
         if (photo != null && photo.getImageData() != null && photo.getImageData().getImageHash() != null) {
             logger.info("Extracted a photoId from submitted {} to ZenID, " + id, document);
             result.setExtractedPhotoId(photo.getImageData().getImageHash().getAsText());
