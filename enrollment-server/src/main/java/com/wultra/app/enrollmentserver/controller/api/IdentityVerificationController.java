@@ -20,10 +20,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationStatusService;
 import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
@@ -317,11 +314,8 @@ public class IdentityVerificationController {
     public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, PowerAuthEncryptionException {
-
-        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
-            // TODO not enabled
-        }
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
+            PresenceCheckNotEnabledException, PowerAuthEncryptionException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {
@@ -338,6 +332,10 @@ public class IdentityVerificationController {
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when initializing presence check");
             throw new PowerAuthEncryptionException("Invalid request received when initializing presence check");
+        }
+
+        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
+            throw new PresenceCheckNotEnabledException();
         }
 
         final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
