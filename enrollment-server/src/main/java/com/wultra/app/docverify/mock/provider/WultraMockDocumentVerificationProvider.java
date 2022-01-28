@@ -58,6 +58,12 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
+    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, SubmittedDocument document) throws DocumentVerificationException {
+        // TOOD implement
+        return null;
+    }
+
+    @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
         List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(document -> {

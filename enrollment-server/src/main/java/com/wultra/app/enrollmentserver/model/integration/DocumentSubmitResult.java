@@ -27,11 +27,15 @@ import lombok.Data;
 @Data
 public class DocumentSubmitResult {
 
+    public static final String NO_DATA_EXTRACTED = "{}";
+
     private String documentId;
     private String uploadId;
     private String rejectReason;
     private String validationResult;
     private String errorDetail;
+
+    // TODO comment
     private String extractedData;
 
 }

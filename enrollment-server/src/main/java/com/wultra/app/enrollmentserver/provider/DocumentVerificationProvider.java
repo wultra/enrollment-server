@@ -30,6 +30,16 @@ import java.util.List;
 public interface DocumentVerificationProvider {
 
     /**
+     * Check document submit result and return data extracted from the document (including photo) and identifiers
+     *
+     * @param id Owner identification.
+     * @param document Submitted document.
+     * @return Result of the document submit
+     * @throws DocumentVerificationException When an error during submitting of documents occurred
+     */
+    DocumentsSubmitResult checkDocumentUpload(OwnerId id, SubmittedDocument document) throws DocumentVerificationException;
+
+    /**
      * Analyze documents and return data extracted from documents (including photo) and identifiers
      *
      * @param id Owner identification.

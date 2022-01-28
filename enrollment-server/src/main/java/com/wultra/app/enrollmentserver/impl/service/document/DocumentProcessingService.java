@@ -21,7 +21,10 @@ import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
-import com.wultra.app.enrollmentserver.database.entity.*;
+import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.impl.service.DataExtractionService;
@@ -42,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Service implementing document processing features.
@@ -197,7 +199,11 @@ public class DocumentProcessingService {
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
-            docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+            if (docSubmitResult.getExtractedData() == null) {
+                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+            } else {
+                docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+            }
             docVerification.setTimestampUploaded(ownerId.getTimestamp());
             docVerification.setUploadId(docSubmitResult.getUploadId());
         }

@@ -69,6 +69,40 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
+    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, SubmittedDocument document) throws DocumentVerificationException {
+        DocumentsSubmitResult result = new DocumentsSubmitResult();
+        ResponseEntity<ZenidWebUploadSampleResponse> responseEntity;
+
+        try {
+            responseEntity = zenidApiService.syncSample(id, document.getDocumentId());
+        } catch (RestClientException e) {
+            logger.warn("Failed REST call to check " + document + " upload in ZenID, " + id, e);
+            throw new DocumentVerificationException("Unable to check document upload due to a REST call failure");
+        } catch (Exception e) {
+            logger.error("Unexpected error when checking " + document + " upload in ZenID, " + id, e);
+            throw new DocumentVerificationException("Unexpected error when checking document upload");
+        }
+
+        if (responseEntity.getBody() == null) {
+            logger.error("Missing response body when checking " + document + " upload in ZenID, " + id);
+            throw new DocumentVerificationException("Unexpected error when checking document upload");
+        }
+
+        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
+            logger.error("Failed to check " + document + " upload in ZenID, statusCode={}, responseBody='{}', {}",
+                    responseEntity.getStatusCode(), responseEntity.getBody(), id);
+            throw new DocumentVerificationException("Unable to check document upload due to a service error");
+        }
+
+        ZenidWebUploadSampleResponse response = responseEntity.getBody();
+        DocumentSubmitResult documentSubmitResult = createDocumentSubmitResult(id, document, response);
+        checkForMinedPhoto(id, document, result, response);
+        result.setResults(List.of(documentSubmitResult));
+
+        return result;
+    }
+
+    @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
         DocumentsSubmitResult result = new DocumentsSubmitResult();
 
@@ -98,36 +132,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             }
 
             ZenidWebUploadSampleResponse response = responseEntity.getBody();
-
-            DocumentSubmitResult documentSubmitResult = new DocumentSubmitResult();
-            documentSubmitResult.setDocumentId(document.getDocumentId());
-            documentSubmitResult.setUploadId(response.getSampleID());
-
-            if (response.getMinedData() != null) {
-                // Photo hash of the person is optionally present at /MinedData/Photo/ImageData/ImageHash
-                ZenidSharedMinedPhoto photo = response.getMinedData().getPhoto();
-                if (photo != null && photo.getImageData() != null && photo.getImageData().getImageHash() != null) {
-                    logger.info("Extracted a photoId from submitted {} to ZenID, " + id, document);
-                    result.setExtractedPhotoId(photo.getImageData().getImageHash().getAsText());
-                }
-
-                String extractedData = toExtractedData(id, response.getMinedData());
-                documentSubmitResult.setExtractedData(extractedData);
-            }
-
-            if (ZenidWebUploadSampleResponse.StateEnum.REJECTED.equals(response.getState())) {
-                documentSubmitResult.setRejectReason(response.getErrorText());
-            } else if (!ZenidWebUploadSampleResponse.StateEnum.DONE.equals(response.getState())) {
-                logger.warn("Unexpected upload response: {} for documentId= {}, {}",
-                        response.getState(), document.getDocumentId(), id);
-                throw new DocumentVerificationException("Unable to upload a document");
-            }
-
-            if (response.getErrorCode() != null) {
-                documentSubmitResult.setErrorDetail("ZenID error: " + response.getErrorCode() +
-                        (response.getErrorText() != null ? ", " + response.getErrorText() : ""));
-            }
-
+            DocumentSubmitResult documentSubmitResult = createDocumentSubmitResult(id, document, response);
+            checkForMinedPhoto(id, document, result, response);
             result.getResults().add(documentSubmitResult);
         }
         return result;
@@ -254,6 +260,54 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             }
         }
         logger.info("{} Cleaned up uploaded documents {} from ZenID.", id, uploadIds);
+    }
+
+    private DocumentSubmitResult createDocumentSubmitResult(OwnerId id,
+                                                            SubmittedDocument document,
+                                                            ZenidWebUploadSampleResponse response)
+            throws DocumentVerificationException {
+        DocumentSubmitResult documentSubmitResult = new DocumentSubmitResult();
+        documentSubmitResult.setDocumentId(document.getDocumentId());
+        documentSubmitResult.setUploadId(response.getSampleID());
+
+        if (response.getMinedData() != null) {
+            String extractedData = toExtractedData(id, response.getMinedData());
+            documentSubmitResult.setExtractedData(extractedData);
+        }
+
+        if (ZenidWebUploadSampleResponse.StateEnum.DONE.equals(response.getState())) {
+            if (documentSubmitResult.getExtractedData() == null) {
+                logger.info("No data extracted from {} in ZenID, defaulting to empty json data, {}", document, id);
+                documentSubmitResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
+            }
+        } else if (ZenidWebUploadSampleResponse.StateEnum.NOTDONE.equals(response.getState())) {
+            logger.debug("Document upload of {} is still in progress in ZenID, {}", document, id);
+        } else if (ZenidWebUploadSampleResponse.StateEnum.REJECTED.equals(response.getState())) {
+            documentSubmitResult.setRejectReason(response.getErrorText());
+        } else {
+            logger.warn("Unexpected upload response from ZenID: {} for documentId= {}, {}",
+                    response.getState(), document.getDocumentId(), id);
+            throw new DocumentVerificationException("Unable to upload a document");
+        }
+
+        if (response.getErrorCode() != null) {
+            documentSubmitResult.setErrorDetail("ZenID error: " + response.getErrorCode() +
+                    (response.getErrorText() != null ? ", " + response.getErrorText() : ""));
+        }
+        return documentSubmitResult;
+    }
+
+    private void checkForMinedPhoto(
+            OwnerId id,
+            SubmittedDocument document,
+            DocumentsSubmitResult result,
+            ZenidWebUploadSampleResponse response) {
+        // Photo hash of the person is optionally present at /MinedData/Photo/ImageData/ImageHash
+        ZenidSharedMinedPhoto photo = response.getMinedData().getPhoto();
+        if (photo != null && photo.getImageData() != null && photo.getImageData().getImageHash() != null) {
+            logger.info("Extracted a photoId from submitted {} to ZenID, " + id, document);
+            result.setExtractedPhotoId(photo.getImageData().getImageHash().getAsText());
+        }
     }
 
     private String getContentDispositionFilename(HttpHeaders headers) {
