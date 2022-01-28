@@ -88,7 +88,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
-        assertSubmitDocumentsTest(ownerId, documents, result);
+        assertSubmittedDocuments(ownerId, documents, result);
     }
 
     @Test

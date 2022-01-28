@@ -60,17 +60,22 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void submitDocumentsTest() throws Exception {
-        SubmittedDocument document = new SubmittedDocument();
-        document.setDocumentId("documentId");
-        document.setType(DocumentType.ID_CARD);
-        document.setSide(CardSide.FRONT);
+    public void checkDocumentUploadTest() throws Exception {
+        SubmittedDocument document = createSubmittedDocument();
 
+        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, document);
+
+        assertSubmittedDocuments(ownerId, List.of(document), result);
+    }
+
+    @Test
+    public void submitDocumentsTest() throws Exception {
+        SubmittedDocument document = createSubmittedDocument();
         List<SubmittedDocument> documents = ImmutableList.of(document);
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
-        assertSubmitDocumentsTest(ownerId, documents, result);
+        assertSubmittedDocuments(ownerId, documents, result);
     }
 
     @Test
@@ -127,6 +132,15 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
         ownerId.setActivationId("activation-id");
         ownerId.setUserId("user-id");
         return ownerId;
+    }
+
+    private SubmittedDocument createSubmittedDocument() {
+        SubmittedDocument document = new SubmittedDocument();
+        document.setDocumentId("documentId");
+        document.setType(DocumentType.ID_CARD);
+        document.setSide(CardSide.FRONT);
+
+        return document;
     }
 
 }

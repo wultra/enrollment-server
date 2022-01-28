@@ -59,28 +59,21 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, SubmittedDocument document) throws DocumentVerificationException {
-        // TOOD implement
-        return null;
+        DocumentsSubmitResult result = new DocumentsSubmitResult();
+        if (DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(document.getType())) {
+            // set extracted photo id only on a relevant documents submit
+            result.setExtractedPhotoId("extracted-photo-id");
+        }
+        result.setResults(List.of(toDocumentSubmitResult(document)));
+
+        logger.info("Mock - check document upload, {}", id);
+        return result;
     }
 
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
         List<DocumentSubmitResult> submitResults = documents.stream()
-                .map(document -> {
-                    String docId = document.getDocumentId();
-                    if (docId == null) {
-                        // document from the submit request has no documentId, generate one
-                        docId = UUID.randomUUID().toString();
-                    }
-                    DocumentSubmitResult submitResult = new DocumentSubmitResult();
-                    submitResult.setDocumentId(docId);
-                    submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
-                    submitResult.setUploadId(
-                            Ascii.truncate("uploaded-" + docId, 36, "...")
-                    );
-                    submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
-                    return submitResult;
-                })
+                .map(this::toDocumentSubmitResult)
                 .collect(Collectors.toList());;
 
         DocumentsSubmitResult result = new DocumentsSubmitResult();
@@ -148,6 +141,22 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     @Override
     public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
         logger.info("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
+    }
+
+    private DocumentSubmitResult toDocumentSubmitResult(SubmittedDocument document) {
+        String docId = document.getDocumentId();
+        if (docId == null) {
+            // document from the submit request has no documentId, generate one
+            docId = UUID.randomUUID().toString();
+        }
+        DocumentSubmitResult submitResult = new DocumentSubmitResult();
+        submitResult.setDocumentId(docId);
+        submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
+        submitResult.setUploadId(
+                Ascii.truncate("uploaded-" + docId, 36, "...")
+        );
+        submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
+        return submitResult;
     }
 
 }

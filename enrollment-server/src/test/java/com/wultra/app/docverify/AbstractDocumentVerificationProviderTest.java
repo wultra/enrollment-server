@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AbstractDocumentVerificationProviderTest {
 
-    public void assertSubmitDocumentsTest(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) throws Exception {
+    public void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) throws Exception {
         assertEquals(documents.size(), result.getResults().size(), "Different size of submitted documents than expected");
         assertNotNull(result.getExtractedPhotoId(), "Missing extracted photoId");
 
