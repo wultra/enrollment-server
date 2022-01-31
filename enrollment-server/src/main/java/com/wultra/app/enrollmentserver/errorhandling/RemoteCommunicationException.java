@@ -18,18 +18,18 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Exception thrown in case of an error during document verification.
+ * Exception thrown in case of an error during communication with remote system.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class DocumentVerificationException extends Exception {
+public class RemoteCommunicationException extends Exception {
 
-    private static final long serialVersionUID = -5868335942741210351L;
+    private static final long serialVersionUID = -6809966084351557214L;
 
-    public DocumentVerificationException() {
+    public RemoteCommunicationException() {
     }
 
-    public DocumentVerificationException(String message) {
+    public RemoteCommunicationException(String message) {
         super(message);
     }
 

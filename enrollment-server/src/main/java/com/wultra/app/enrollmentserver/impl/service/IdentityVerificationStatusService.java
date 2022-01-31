@@ -20,7 +20,9 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
@@ -30,6 +32,9 @@ import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
+import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -60,6 +66,10 @@ public class IdentityVerificationStatusService {
 
     private final IdentityVerificationFinishService identityVerificationFinishService;
 
+    private final PowerAuthClient powerAuthClient;
+
+    private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
+
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
@@ -67,18 +77,20 @@ public class IdentityVerificationStatusService {
      * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckService Presence check service.
      * @param identityVerificationFinishService Identity verification finish service.
+     * @param powerAuthClient PowerAuth client.
      */
     @Autowired
     public IdentityVerificationStatusService(
             IdentityVerificationRepository identityVerificationRepository,
             IdentityVerificationService identityVerificationService,
             JsonSerializationService jsonSerializationService,
-            PresenceCheckService presenceCheckService, IdentityVerificationFinishService identityVerificationFinishService) {
+            PresenceCheckService presenceCheckService, IdentityVerificationFinishService identityVerificationFinishService, PowerAuthClient powerAuthClient) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
         this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckService = presenceCheckService;
         this.identityVerificationFinishService = identityVerificationFinishService;
+        this.powerAuthClient = powerAuthClient;
     }
 
     /**
@@ -86,9 +98,11 @@ public class IdentityVerificationStatusService {
      * @param request Identity verification status request.
      * @param apiAuthentication PowerAuth authentication.
      * @return Identity verification status response.
+     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
+    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, RemoteCommunicationException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
@@ -101,6 +115,23 @@ public class IdentityVerificationStatusService {
             response.setIdentityVerificationPhase(null);
             return response;
         }
+
+        // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
+        try {
+            ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(ownerId.getActivationId());
+            List<String> flags = flagResponse.getActivationFlags();
+            if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+                // Initialization is required because verification is not in progress for current identity verification
+                response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+                response.setIdentityVerificationPhase(null);
+                return response;
+            }
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setIdentityVerificationPhase(idVerification.getPhase());
 

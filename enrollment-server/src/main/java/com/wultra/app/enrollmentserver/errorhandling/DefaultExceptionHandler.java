@@ -135,27 +135,51 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Handling of identity verification exceptions.
+     * Handling of presence check exceptions.
      * @param ex Exception.
      * @return Response with error details.
      */
     @ExceptionHandler(PresenceCheckException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleIdentityVerificationException(PresenceCheckException ex) {
+    public @ResponseBody ErrorResponse handlePresenceCheckException(PresenceCheckException ex) {
+        logger.warn("Presence check failed", ex);
+        return new ErrorResponse("PRESENCE_CHECK_FAILED", "Presence check failed.");
+    }
+
+    /**
+     * Handling of identity verification exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(IdentityVerificationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
         logger.warn("Identity verification failed", ex);
         return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
     }
 
     /**
-     * Handling of invalid document exceptions.
+     * Handling of document verification exceptions.
      * @param ex Exception.
      * @return Response with error details.
      */
     @ExceptionHandler(DocumentVerificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleInvalidDocumentException(DocumentVerificationException ex) {
-        logger.warn("Document is invalid", ex);
-        return new ErrorResponse("INVALID_DOCUMENT", "Document is invalid.");
+    public @ResponseBody ErrorResponse handleDocumentVerificationException(DocumentVerificationException ex) {
+        logger.warn("Document verification failed", ex);
+        return new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
+    }
+
+    /**
+     * Handling of document verification exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(RemoteCommunicationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleRemoteExceptionException(RemoteCommunicationException ex) {
+        logger.warn("Communication with remote system failed", ex);
+        return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
     }
 
     /**

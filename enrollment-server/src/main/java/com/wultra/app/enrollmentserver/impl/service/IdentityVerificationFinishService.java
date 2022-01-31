@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -55,8 +55,14 @@ public class IdentityVerificationFinishService {
         this.powerAuthClient = powerAuthClient;
     }
 
+    /**
+     * Finish identity verification by removing the VERIFICATION_IN_PROGRESS flag.
+     *
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
     @Transactional
-    public void finishIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void finishIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
             List<String> activationFlags = response.getActivationFlags();
@@ -68,7 +74,7 @@ public class IdentityVerificationFinishService {
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
-            throw new DocumentVerificationException("Communication with PowerAuth server failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
     }
 
