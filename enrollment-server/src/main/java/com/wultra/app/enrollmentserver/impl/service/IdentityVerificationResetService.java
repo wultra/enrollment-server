@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,9 +61,9 @@ public class IdentityVerificationResetService {
      * Reset identity verification by setting activation flag to VERIFICATION_PENDING.
      *
      * @param ownerId Owner identification.
-     * @throws DocumentVerificationException Thrown in case communication with PowerAuth server fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
-    public void resetIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
 
@@ -81,7 +80,7 @@ public class IdentityVerificationResetService {
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
-            throw new DocumentVerificationException("Communication with PowerAuth server failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
     }
 

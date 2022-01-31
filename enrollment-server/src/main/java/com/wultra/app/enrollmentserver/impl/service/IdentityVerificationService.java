@@ -23,9 +23,7 @@ import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
@@ -116,8 +114,10 @@ public class IdentityVerificationService {
     /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
+     * @throws IdentityVerificationException When identity verification initialization fails.
+     * @throws RemoteCommunicationException When communication with PowerAuth server fails.
      */
-    public void initializeIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void initializeIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         identityVerificationCreateService.createIdentityVerification(ownerId);
     }
 
@@ -172,16 +172,17 @@ public class IdentityVerificationService {
      * Starts the verification process
      *
      * @param ownerId Owner identification.
-     * @throws DocumentVerificationException When an error occurred
+     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @throws DocumentVerificationException Thrown when document verification fails.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void startVerification(OwnerId ownerId) throws IdentityVerificationException, DocumentVerificationException {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!identityVerificationOptional.isPresent()) {
             logger.error("No identity verification entity found to start the verification, {}", ownerId);
-            throw new DocumentVerificationException("Unable to start verification");
+            throw new IdentityVerificationException("Unable to start verification");
         }
         IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
 
@@ -326,10 +327,13 @@ public class IdentityVerificationService {
     /**
      * Cleanup documents related to identity verification.
      * @param apiAuthentication PowerAuth authentication.
+     * @throws DocumentVerificationException Thrown when document cleanup fails
+     * @throws PresenceCheckException Thrown when presence check cleanup fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
     public void cleanup(PowerAuthApiAuthentication apiAuthentication)
-            throws DocumentVerificationException, PresenceCheckException {
+            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());

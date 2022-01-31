@@ -19,7 +19,8 @@ package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -75,16 +76,17 @@ public class IdentityVerificationCreateService {
      *
      * @param ownerId Owner identification.
      * @return Identity verification entity
-     * @throws DocumentVerificationException When an error occurred
+     * @throws IdentityVerificationException Thrown when identity verification initialization fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
 
             List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
-                throw new DocumentVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
+                throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
             }
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
             activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
@@ -93,7 +95,7 @@ public class IdentityVerificationCreateService {
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
-            throw new DocumentVerificationException("Communication with PowerAuth server failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
 
         IdentityVerificationEntity entity = new IdentityVerificationEntity();
