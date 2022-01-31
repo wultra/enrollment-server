@@ -51,8 +51,6 @@ public class AbstractDocumentVerificationProviderTest {
             assertNotNull(submitResult.getExtractedData());
             assertNotNull(submitResult.getUploadId());
         });
-
-        assertNotNull(result.getExtractedPhotoId());
     }
 
 }

@@ -169,7 +169,12 @@ public class ZenidRestApiService {
     }
 
     /**
-     * Provides result of an investigation
+     * Provides result of an investigation.
+     *
+     * <p>
+     *   Only failed validation results are returned. All document samples without a validation constraint
+     *   are considered as passed.
+     * </p>
      *
      * @param investigationId Id of a previously run investigation
      * @return Response entity with the investigation result

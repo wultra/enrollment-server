@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.configuration;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,6 +33,7 @@ import javax.sql.DataSource;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
+@ConditionalOnProperty(name = "enrollment-server.scheduler.enabled", havingValue = "true")
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtLeastFor = "15s", defaultLockAtMostFor = "1m")
 @Configuration

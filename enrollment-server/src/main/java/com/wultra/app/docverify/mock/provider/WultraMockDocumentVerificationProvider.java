@@ -152,9 +152,13 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         DocumentSubmitResult submitResult = new DocumentSubmitResult();
         submitResult.setDocumentId(docId);
         submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
-        submitResult.setUploadId(
-                Ascii.truncate("uploaded-" + docId, 36, "...")
-        );
+        String uploadedDocId;
+        if (docId.startsWith("upload")) {
+            uploadedDocId = docId;
+        } else {
+            uploadedDocId = Ascii.truncate("uploaded-" + docId, 36, "...");
+        }
+        submitResult.setUploadId(uploadedDocId);
         submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
         return submitResult;
     }

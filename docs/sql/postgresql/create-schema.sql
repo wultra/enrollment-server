@@ -146,3 +146,12 @@ CREATE TABLE es_document_result (
 
 -- PostgreSQL does not create indexes on foreign keys automatically
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
+
+-- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
+CREATE TABLE scheduler_lock(
+    name VARCHAR(64) NOT NULL,
+    lock_until TIMESTAMP NOT NULL,
+    locked_at TIMESTAMP NOT NULL,
+    locked_by VARCHAR(255) NOT NULL,
+    PRIMARY KEY (name)
+);

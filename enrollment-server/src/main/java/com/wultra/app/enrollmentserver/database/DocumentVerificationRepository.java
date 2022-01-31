@@ -48,10 +48,11 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.errorDetail = :errorMessage, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
-    int failObsoleteVerifications(Date cleanupDate, Date timestamp);
+    int failObsoleteVerifications(Date cleanupDate, Date timestamp, String errorMessage);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
@@ -72,10 +73,15 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.usedForVerification = true")
     List<DocumentVerificationEntity> findAllUsedForVerification(String activationId);
 
+    /**
+     * Find all upload identifiers related to a verification.
+     * @param verificationId Identification of the verification at the provider side.
+     * @return List of remote uploadIds related to the specified verification id
+     */
     @Query("SELECT d.uploadId " +
             "FROM DocumentVerificationEntity d " +
-            "WHERE d.activationId = :activationId")
-    List<String> findAllUploadIds(String activationId);
+            "WHERE d.verificationId = :verificationId")
+    List<String> findAllUploadIds(String verificationId);
 
     Optional<DocumentVerificationEntity> findFirstByActivationIdAndPhotoIdNotNull(String activationId);
 

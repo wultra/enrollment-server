@@ -196,7 +196,6 @@ public class DocumentProcessingService {
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
         }
-        // TODO check too long in progress document, mark as rejected, with no extracted data
         documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
         documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
         documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());

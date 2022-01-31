@@ -19,6 +19,8 @@ package com.wultra.app.enrollmentserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 /**
@@ -48,8 +51,9 @@ public class DocumentProcessingBatchService {
      * @param documentProcessingService Document processing service.
      */
     @Autowired
-    public DocumentProcessingBatchService(DocumentResultRepository documentResultRepository,
-                                          DocumentProcessingService documentProcessingService) {
+    public DocumentProcessingBatchService(
+            DocumentResultRepository documentResultRepository,
+            DocumentProcessingService documentProcessingService) {
         this.documentResultRepository = documentResultRepository;
         this.documentProcessingService = documentProcessingService;
     }
@@ -59,10 +63,12 @@ public class DocumentProcessingBatchService {
      */
     @Transactional
     public void checkInProgressDocumentSubmits() {
+        AtomicInteger countFinished = new AtomicInteger(0);
         try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmits()) {
             stream.forEach(docResult -> {
+                DocumentVerificationEntity docVerification = docResult.getDocumentVerification();
                 final OwnerId ownerId = new OwnerId();
-                ownerId.setActivationId(docResult.getDocumentVerification().getActivationId());
+                ownerId.setActivationId(docVerification.getActivationId());
                 ownerId.setUserId("wultra-enrollment-server-task");
 
                 try {
@@ -70,7 +76,15 @@ public class DocumentProcessingBatchService {
                 } catch (Exception e) {
                     logger.error("Unable to check submit status of {} at provider, {}", docResult, ownerId);
                 }
+
+                if (!DocumentStatus.UPLOAD_IN_PROGRESS.equals(docVerification.getStatus())) {
+                    logger.debug("Synced {} status to {} with the provider, {}", docVerification, docVerification.getStatus(), ownerId);
+                    countFinished.incrementAndGet();
+                }
             });
+        }
+        if (countFinished.get() > 0) {
+            logger.debug("Finished {} documents which were in progress", countFinished.get());
         }
     }
 

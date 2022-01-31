@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.docverify.zenid.service.ZenidRestApiService;
+import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -53,19 +54,24 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private final ObjectMapper objectMapper;
 
+    private final DocumentVerificationRepository documentVerificationRepository;
+
     private final ZenidRestApiService zenidApiService;
 
     /**
      * Service constructor.
      * @param objectMapper Object mapper.
+     * @param documentVerificationRepository Document verification repository.
      * @param zenidApiService ZenID API service.
      */
      @Autowired
     public ZenidDocumentVerificationProvider(
             @Qualifier("objectMapperZenid")
             ObjectMapper objectMapper,
+            DocumentVerificationRepository documentVerificationRepository,
             ZenidRestApiService zenidApiService) {
         this.objectMapper = objectMapper;
+        this.documentVerificationRepository = documentVerificationRepository;
         this.zenidApiService = zenidApiService;
     }
 
@@ -170,7 +176,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             throw new DocumentVerificationException("Unable to verify documents due to a service error");
         }
 
-        return toResult(id, responseEntity.getBody());
+        return toResult(id, responseEntity.getBody(), uploadIds);
     }
 
     @Override
@@ -197,7 +203,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             throw new DocumentVerificationException("Unable to get a verification result");
         }
 
-        return toResult(id, responseEntity.getBody());
+        List<String> uploadIds = documentVerificationRepository.findAllUploadIds(verificationId);
+        return toResult(id, responseEntity.getBody(), uploadIds);
     }
 
     @Override
@@ -331,7 +338,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         return filename;
     }
 
-    private DocumentsVerificationResult toResult(OwnerId id, ZenidWebInvestigateResponse response)
+    private DocumentsVerificationResult toResult(OwnerId id, ZenidWebInvestigateResponse response, List<String> knownSampleIds)
             throws DocumentVerificationException {
         DocumentsVerificationResult result = new DocumentsVerificationResult();
         result.setVerificationId(String.valueOf(response.getInvestigationID()));
@@ -341,6 +348,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                     (response.getErrorText() != null ? ", " + response.getErrorText() : ""));
         } else {
             Map<String, List<ZenidWebInvestigationValidatorResponse>> sampleIdsValidations = new HashMap<>();
+            // Only sampleIds with failed validations are in the response, prefill with all known sampleIds
+            knownSampleIds.forEach(sampleId -> {
+                sampleIdsValidations.put(sampleId, new ArrayList<>());
+            });
+
             List<ZenidWebInvestigationValidatorResponse> globalValidations = new ArrayList<>();
             for (ZenidWebInvestigationValidatorResponse validatorResult : response.getValidatorResults()) {
                 if (validatorResult.getIssues().isEmpty()) {

@@ -69,7 +69,8 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
 
         DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
 
-        assertSubmittedDocuments(ownerId, List.of(document), result);
+        assertEquals(1, result.getResults().size());
+        assertEquals(docVerification.getUploadId(), result.getResults().get(0).getUploadId());
     }
 
     @Test
