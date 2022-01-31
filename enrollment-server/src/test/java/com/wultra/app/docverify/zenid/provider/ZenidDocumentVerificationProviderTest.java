@@ -20,6 +20,7 @@ package com.wultra.app.docverify.zenid.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -88,8 +89,12 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         SubmittedDocument document = createIdCardFrontDocument();
         List<SubmittedDocument> documents = List.of(document);
 
-        provider.submitDocuments(ownerId, documents);
-        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, document);
+        DocumentsSubmitResult docsSubmitResult = provider.submitDocuments(ownerId, documents);
+        DocumentSubmitResult docSubmitResult = docsSubmitResult.getResults().get(0);
+        DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
+        docVerification.setType(document.getType());
+        docVerification.setUploadId(docSubmitResult.getUploadId());
+        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
 
         assertSubmittedDocuments(ownerId, List.of(document), result);
     }

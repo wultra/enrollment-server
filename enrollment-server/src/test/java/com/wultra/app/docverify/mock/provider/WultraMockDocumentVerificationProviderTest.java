@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -62,8 +63,11 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     @Test
     public void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
+        DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
+        docVerification.setType(document.getType());
+        docVerification.setUploadId("uploadId");
 
-        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, document);
+        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
 
         assertSubmittedDocuments(ownerId, List.of(document), result);
     }

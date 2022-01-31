@@ -19,8 +19,11 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.stream.Stream;
 
 /**
  * Repository for document verification result records.
@@ -29,5 +32,14 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface DocumentResultRepository extends CrudRepository<DocumentResultEntity, Long> {
+
+    /**
+     * @return All not finished document uploads (in progress status and no extracted data filled)
+     */
+    @Query("select doc from DocumentResultEntity doc where" +
+            " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
+            " and doc.extractedData is null " +
+            " order by doc.timestampCreated asc")
+    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmits();
 
 }

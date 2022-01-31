@@ -23,19 +23,44 @@ import lombok.Data;
  * Result of submission of a single identity-related document.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Data
 public class DocumentSubmitResult {
 
+    /**
+     * Simple JSON to cover the case of no extracted data.
+     */
     public static final String NO_DATA_EXTRACTED = "{}";
 
+    /**
+     * Identification of the document in our database
+     */
     private String documentId;
+
+    /**
+     * Remotely generated document upload identifier
+     */
     private String uploadId;
+
+    /**
+     * A reason why document was rejected in case the document was not accepted
+     */
     private String rejectReason;
+
+    /**
+     * Validation result in JSON format
+     */
     private String validationResult;
+
+    /**
+     * Error detail used in case the document processing failed
+     */
     private String errorDetail;
 
-    // TODO comment
+    /**
+     * Extracted data from document in JSON format. A document submit in progress contains null extracted data.
+     */
     private String extractedData;
 
 }
