@@ -20,6 +20,7 @@ package com.wultra.app.docverify.zenid.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -29,11 +30,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -49,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("external-service")
+@ActiveProfiles({"external-service"})
 @ComponentScan(basePackages = {"com.wultra.app.docverify.zenid"})
 @EnableConfigurationProperties
 @Tag("external-service")
@@ -61,14 +64,13 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
 
     private final String DOC_ID_CARD_FRONT = "idCardFront";
 
-    private ZenidDocumentVerificationProvider provider;
-
     private OwnerId ownerId;
 
+    @MockBean
+    private DocumentVerificationRepository documentVerificationRepository;
+
     @Autowired
-    public void setProvider(ZenidDocumentVerificationProvider provider) {
-        this.provider = provider;
-    }
+    private ZenidDocumentVerificationProvider provider;
 
     @BeforeEach
     public void init() {
@@ -120,6 +122,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
                 .collect(Collectors.toList());
 
         DocumentsVerificationResult verificationResult = provider.verifyDocuments(ownerId, uploadIds);
+
         assertNotNull(verificationResult.getVerificationId());
         assertEquals(uploadIds.size(), verificationResult.getResults().size());
     }
@@ -134,13 +137,14 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
                 .map(DocumentSubmitResult::getUploadId)
                 .collect(Collectors.toList());
 
-        DocumentsVerificationResult verificationResult1 = provider.verifyDocuments(ownerId, uploadIds);
+        DocumentsVerificationResult verifyDocumentsResult = provider.verifyDocuments(ownerId, uploadIds);
+        Mockito.when(documentVerificationRepository.findAllUploadIds(verifyDocumentsResult.getVerificationId()))
+                .thenReturn(uploadIds);
 
-        DocumentsVerificationResult verificationResult2 = provider.getVerificationResult(ownerId, verificationResult1.getVerificationId());
+        DocumentsVerificationResult verificationResult = provider.getVerificationResult(ownerId, verifyDocumentsResult.getVerificationId());
 
-        assertEquals(verificationResult1.getVerificationId(), verificationResult2.getVerificationId());
-        // TODO resolve later, documentVerificationRepository.findAllUploadIds(verificationId) returns no results
-        //assertEquals(uploadIds.size(), verificationResult2.getResults().size());
+        assertEquals(verifyDocumentsResult.getVerificationId(), verificationResult.getVerificationId());
+        assertEquals(uploadIds.size(), verificationResult.getResults().size());
     }
 
     @Test
