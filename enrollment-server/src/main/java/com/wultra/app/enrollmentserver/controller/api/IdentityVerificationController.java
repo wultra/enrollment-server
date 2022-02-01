@@ -111,14 +111,15 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws DocumentVerificationException Thrown when identity verification initialization fails.
+     * @throws IdentityVerificationException Thrown when identity verification initialization fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @RequestMapping(value = "init", method = RequestMethod.POST)
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
-                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, DocumentVerificationException {
+                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing identity verification");
@@ -144,6 +145,8 @@ public class IdentityVerificationController {
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws IdentityVerificationException Thrown when identity verification status fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -152,7 +155,7 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException {
+                                                                                              @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking identity verification status");
@@ -349,14 +352,17 @@ public class IdentityVerificationController {
      * Cleanup documents related to identity verification.
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthAuthenticationException Thrown when PowerAuth signature verification fails.
+     * @throws DocumentVerificationException Thrown when document cleanup fails
+     * @throws PresenceCheckException Thrown when presence check cleanup fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @RequestMapping(value = "cleanup", method = RequestMethod.POST)
     @PowerAuth(resourceId = "/api/identity/cleanup", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response cleanup(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when performing document cleanup");

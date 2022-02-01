@@ -50,13 +50,13 @@ public class DataExtractionService {
     public Document extractDocument(byte[] requestData) throws DocumentVerificationException {
         if (requestData == null) {
             logger.warn("Missing request data");
-            throw new DocumentVerificationException();
+            throw new DocumentVerificationException("Invalid data received");
         }
         List<Document> extractedDocuments = decompress(requestData);
         if (extractedDocuments.size() != 1) {
             // Exactly 1 document is expected to be present in the archive
             logger.warn("Input data does not contain a single document");
-            throw new DocumentVerificationException();
+            throw new DocumentVerificationException("Invalid data received");
         }
         logger.info("Extracted document {} from request data", extractedDocuments);
         return extractedDocuments.get(0);
@@ -71,7 +71,7 @@ public class DataExtractionService {
     public List<Document> extractDocuments(byte[] requestData) throws DocumentVerificationException {
         if (requestData == null) {
             logger.warn("Missing request data");
-            throw new DocumentVerificationException();
+            throw new DocumentVerificationException("Invalid data received");
         }
         List<Document> extractedDocuments = decompress(requestData);
         logger.info("Extracted documents {} from request data", extractedDocuments);
@@ -109,7 +109,7 @@ public class DataExtractionService {
             zis.close();
         } catch (IOException ex) {
             logger.warn(ex.getMessage(), ex);
-            throw new DocumentVerificationException();
+            throw new DocumentVerificationException("Invalid data received");
         }
         return extractedDocuments;
     }
