@@ -21,7 +21,10 @@ import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
-import com.wultra.app.enrollmentserver.database.entity.*;
+import com.wultra.app.enrollmentserver.database.entity.DocumentDataEntity;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.impl.service.DataExtractionService;
@@ -42,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Service implementing document processing features.
@@ -176,6 +178,30 @@ public class DocumentProcessingService {
         }
     }
 
+    /**
+     * Checks document submit status and data at the provider.
+     * @param ownerId Owner identification.
+     * @param documentResultEntity Document result entity to be checked at the provider.
+     */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void checkDocumentSubmitWithProvider(OwnerId ownerId, DocumentResultEntity documentResultEntity) {
+        DocumentVerificationEntity docVerification = documentResultEntity.getDocumentVerification();
+        DocumentsSubmitResult docsSubmitResults;
+        DocumentSubmitResult docSubmitResult;
+        try {
+            docsSubmitResults = documentVerificationProvider.checkDocumentUpload(ownerId, docVerification);
+            docSubmitResult = docsSubmitResults.getResults().get(0);
+        } catch (DocumentVerificationException e) {
+            docsSubmitResults = new DocumentsSubmitResult();
+            docSubmitResult = new DocumentSubmitResult();
+            docSubmitResult.setErrorDetail(e.getMessage());
+        }
+        documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
+        documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
+        documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
+        processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
+    }
+
     public DocumentSubmitResult submitDocumentToProvider(OwnerId ownerId, DocumentVerificationEntity docVerification, SubmittedDocument submittedDoc) {
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
@@ -188,19 +214,7 @@ public class DocumentProcessingService {
             docSubmitResult.setErrorDetail(e.getMessage());
         }
 
-        if (docSubmitResult.getErrorDetail() != null) {
-            docVerification.setStatus(DocumentStatus.FAILED);
-            docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
-        } else if (docSubmitResult.getRejectReason() != null) {
-            docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(docSubmitResult.getRejectReason());
-        } else {
-            docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
-            docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
-            docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-            docVerification.setTimestampUploaded(ownerId.getTimestamp());
-            docVerification.setUploadId(docSubmitResult.getUploadId());
-        }
+        processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
         return docSubmitResult;
     }
 
@@ -321,6 +335,27 @@ public class DocumentProcessingService {
             }
         }
         return documents;
+    }
+
+    private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
+                                          DocumentsSubmitResult docsSubmitResults, DocumentSubmitResult docSubmitResult) {
+        if (docSubmitResult.getErrorDetail() != null) {
+            docVerification.setStatus(DocumentStatus.FAILED);
+            docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
+        } else if (docSubmitResult.getRejectReason() != null) {
+            docVerification.setStatus(DocumentStatus.REJECTED);
+            docVerification.setRejectReason(docSubmitResult.getRejectReason());
+        } else {
+            docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
+            docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
+            if (docSubmitResult.getExtractedData() == null) {
+                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+            } else { // a finished upload contains extracted data
+                docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+            }
+            docVerification.setTimestampUploaded(ownerId.getTimestamp());
+            docVerification.setUploadId(docSubmitResult.getUploadId());
+        }
     }
 
 }

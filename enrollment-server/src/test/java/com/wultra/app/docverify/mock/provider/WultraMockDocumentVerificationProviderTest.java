@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -60,17 +61,26 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void submitDocumentsTest() throws Exception {
-        SubmittedDocument document = new SubmittedDocument();
-        document.setDocumentId("documentId");
-        document.setType(DocumentType.ID_CARD);
-        document.setSide(CardSide.FRONT);
+    public void checkDocumentUploadTest() throws Exception {
+        SubmittedDocument document = createSubmittedDocument();
+        DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
+        docVerification.setType(document.getType());
+        docVerification.setUploadId("uploadId");
 
+        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
+
+        assertEquals(1, result.getResults().size());
+        assertEquals(docVerification.getUploadId(), result.getResults().get(0).getUploadId());
+    }
+
+    @Test
+    public void submitDocumentsTest() throws Exception {
+        SubmittedDocument document = createSubmittedDocument();
         List<SubmittedDocument> documents = ImmutableList.of(document);
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
-        assertSubmitDocumentsTest(ownerId, documents, result);
+        assertSubmittedDocuments(ownerId, documents, result);
     }
 
     @Test
@@ -127,6 +137,15 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
         ownerId.setActivationId("activation-id");
         ownerId.setUserId("user-id");
         return ownerId;
+    }
+
+    private SubmittedDocument createSubmittedDocument() {
+        SubmittedDocument document = new SubmittedDocument();
+        document.setDocumentId("documentId");
+        document.setType(DocumentType.ID_CARD);
+        document.setSide(CardSide.FRONT);
+
+        return document;
     }
 
 }

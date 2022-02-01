@@ -136,3 +136,12 @@ CREATE TABLE es_document_result (
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- MySQL creates indexes on foreign keys automatically
+
+-- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
+CREATE TABLE IF NOT EXISTS shedlock(
+    name VARCHAR(64) NOT NULL,
+    lock_until TIMESTAMP(3) NOT NULL,
+    locked_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    locked_by VARCHAR(255) NOT NULL,
+    PRIMARY KEY (name)
+);

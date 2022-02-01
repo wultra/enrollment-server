@@ -142,3 +142,20 @@ CREATE TABLE ES_DOCUMENT_RESULT (
 
 -- Oracle does not create indexes on foreign keys automatically
 CREATE INDEX DOCUMENT_VERIF_RESULT ON ES_DOCUMENT_RESULT (DOCUMENT_VERIFICATION_ID);
+
+-- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
+BEGIN EXECUTE IMMEDIATE '
+    CREATE TABLE shedlock(
+                                   name VARCHAR(64) NOT NULL,
+                                   lock_until TIMESTAMP(3) NOT NULL,
+                                   locked_at TIMESTAMP(3) NOT NULL,
+                                   locked_by VARCHAR(255) NOT NULL,
+                                   PRIMARY KEY (name)
+    )';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -955 THEN
+         RAISE;
+      END IF;
+END;
+/
