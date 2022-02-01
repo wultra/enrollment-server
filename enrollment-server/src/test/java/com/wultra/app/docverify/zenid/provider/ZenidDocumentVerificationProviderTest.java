@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles({"external-service"})
+@ActiveProfiles("external-service")
 @ComponentScan(basePackages = {"com.wultra.app.docverify.zenid"})
 @EnableConfigurationProperties
 @Tag("external-service")
