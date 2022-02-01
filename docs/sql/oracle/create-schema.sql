@@ -145,7 +145,7 @@ CREATE INDEX DOCUMENT_VERIF_RESULT ON ES_DOCUMENT_RESULT (DOCUMENT_VERIFICATION_
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
 BEGIN EXECUTE IMMEDIATE '
-    CREATE TABLE shedlock2(
+    CREATE TABLE shedlock(
                                    name VARCHAR(64) NOT NULL,
                                    lock_until TIMESTAMP(3) NOT NULL,
                                    locked_at TIMESTAMP(3) NOT NULL,
