@@ -148,7 +148,7 @@ CREATE TABLE es_document_result (
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
-CREATE TABLE IF NOT EXISTS scheduler_lock(
+CREATE TABLE IF NOT EXISTS shedlock(
     name VARCHAR(64) NOT NULL,
     lock_until TIMESTAMP NOT NULL,
     locked_at TIMESTAMP NOT NULL,
