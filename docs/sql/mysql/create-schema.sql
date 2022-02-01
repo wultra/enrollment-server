@@ -138,7 +138,7 @@ CREATE TABLE es_document_result (
 -- MySQL creates indexes on foreign keys automatically
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
-CREATE TABLE scheduler_lock(
+CREATE TABLE IF NOT EXISTS scheduler_lock(
     name VARCHAR(64) NOT NULL,
     lock_until TIMESTAMP(3) NOT NULL,
     locked_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

@@ -48,7 +48,6 @@ public class SchedulerConfig {
                 JdbcTemplateLockProvider.Configuration.builder()
                         .usingDbTime()
                         .withJdbcTemplate(new JdbcTemplate(dataSource))
-                        .withTableName("scheduler_lock")
                         .build()
         );
     }
