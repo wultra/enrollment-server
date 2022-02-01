@@ -15,20 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
+package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * Response class used when initializing presence check.
+ * Request class used when starting the onboarding process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class PresenceCheckInitResponse {
+public class OnboardingStartRequest {
 
-    private Map<String, Object> sessionAttributes;
+    private Map<String, Object> identification;
 
 }

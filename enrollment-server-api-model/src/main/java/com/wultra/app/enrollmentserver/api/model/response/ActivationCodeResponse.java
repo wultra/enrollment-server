@@ -15,34 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.response;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * Request class used when submitting documents for identity verification.
+ * Response with a new activation code.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Petr Dvorak, petr@wultra.com
  */
 @Data
-public class DocumentSubmitRequest {
+public class ActivationCodeResponse {
 
-    private byte[] data;
-    private boolean resubmit;
-    private List<DocumentMetadata> documents;
+    private String activationId;
+    private String activationCode;
+    private String activationSignature;
 
-    @Data
-    public static class DocumentMetadata {
-
-        private String filename;
-        private DocumentType type;
-        private CardSide side;
-        private String uploadId;
-        private String originalDocumentId;
-
-    }
 }

@@ -17,6 +17,10 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OtpResendRequest;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.OnboardingOtpRepository;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
@@ -29,10 +33,10 @@ import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationSe
 import com.wultra.app.enrollmentserver.impl.service.internal.OtpGeneratorService;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
-import com.wultra.app.enrollmentserver.model.request.*;
-import com.wultra.app.enrollmentserver.model.response.OnboardingStartResponse;
-import com.wultra.app.enrollmentserver.model.response.OnboardingStatusResponse;
-import com.wultra.app.enrollmentserver.model.response.OtpVerifyResponse;
+import com.wultra.app.enrollmentserver.api.model.request.*;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.provider.OnboardingProvider;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;

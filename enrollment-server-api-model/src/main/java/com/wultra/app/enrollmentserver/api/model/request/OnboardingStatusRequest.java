@@ -15,19 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
-import java.util.Map;
-
 /**
- * Request class used when resending an OTP code.
+ * Request class used when checking onboarding process status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class OtpResendRequest {
+public class OnboardingStatusRequest {
 
     private String processId;
 

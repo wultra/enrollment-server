@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.model.validator;
 
-import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import com.wultra.app.enrollmentserver.api.model.request.PushRegisterRequest;
 import org.apache.commons.lang3.StringUtils;
 
 /**

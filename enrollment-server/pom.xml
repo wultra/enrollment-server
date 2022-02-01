@@ -37,6 +37,18 @@
 
     <dependencies>
 
+        <!-- Enrollment Server Dependencies -->
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-domain-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-api-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- PowerAuth Dependencies -->
         <dependency>
             <groupId>com.wultra.security</groupId>
@@ -111,12 +123,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>1.9</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Test Dependencies -->

@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.model.validator;
 
-import com.wultra.app.enrollmentserver.model.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
 import org.apache.commons.lang3.StringUtils;
 
 /**
