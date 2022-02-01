@@ -231,15 +231,16 @@ public class IdentityVerificationStatusService {
     }
 
     /**
-     *
+     * Starts the verification
      *
      * @param ownerId Owner identification.
      * @param idVerification Verification identity.
+     * @throws IdentityVerificationException When an error during verification start occurred.
      */
-    private void startVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+    private void startVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) throws IdentityVerificationException {
         try {
             identityVerificationService.startVerification(ownerId);
-        } catch (DocumentVerificationException | IdentityVerificationException e) {
+        } catch (DocumentVerificationException e) {
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
             idVerification.setStatus(IdentityVerificationStatus.FAILED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
