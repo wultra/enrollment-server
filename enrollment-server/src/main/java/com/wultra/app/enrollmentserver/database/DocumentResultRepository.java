@@ -36,10 +36,10 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
     /**
      * @return All not finished document uploads (in progress status and no extracted data filled)
      */
-    @Query("select doc from DocumentResultEntity doc where" +
+    @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
             " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
-            " and doc.extractedData is null " +
-            " order by doc.timestampCreated asc")
+            " AND doc.extractedData IS NULL " +
+            " ORDER BY doc.timestampCreated ASC")
     Stream<DocumentResultEntity> streamAllInProgressDocumentSubmits();
 
 }
