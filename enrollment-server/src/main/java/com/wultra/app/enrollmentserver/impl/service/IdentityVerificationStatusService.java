@@ -239,7 +239,7 @@ public class IdentityVerificationStatusService {
     private void startVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
         try {
             identityVerificationService.startVerification(ownerId);
-        } catch (DocumentVerificationException e) {
+        } catch (DocumentVerificationException | IdentityVerificationException e) {
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
             idVerification.setStatus(IdentityVerificationStatus.FAILED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
