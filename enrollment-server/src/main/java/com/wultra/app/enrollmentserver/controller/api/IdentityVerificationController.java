@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
@@ -71,6 +72,8 @@ public class IdentityVerificationController {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationController.class);
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     private final DocumentProcessingService documentProcessingService;
     private final IdentityVerificationService identityVerificationService;
     private final IdentityVerificationStatusService identityVerificationStatusService;
@@ -79,7 +82,8 @@ public class IdentityVerificationController {
 
     /**
      * Controller constructor.
-     *  @param documentProcessingService Document processing service.
+     * @param identityVerificationConfig Configuration of identity verification.
+     * @param documentProcessingService Document processing service.
      * @param identityVerificationService Identity verification service.
      * @param identityVerificationStatusService Identity verification status service.
      * @param presenceCheckService Presence check service.
@@ -87,15 +91,18 @@ public class IdentityVerificationController {
      */
     @Autowired
     public IdentityVerificationController(
+            IdentityVerificationConfig identityVerificationConfig,
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
-            PresenceCheckService presenceCheckService, OnboardingService onboardingService) {
+            OnboardingService onboardingService,
+            PresenceCheckService presenceCheckService) {
+        this.identityVerificationConfig = identityVerificationConfig;
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.identityVerificationStatusService = identityVerificationStatusService;
-        this.presenceCheckService = presenceCheckService;
         this.onboardingService = onboardingService;
+        this.presenceCheckService = presenceCheckService;
     }
 
     /**
@@ -310,7 +317,9 @@ public class IdentityVerificationController {
     public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, PowerAuthEncryptionException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
+            PresenceCheckNotEnabledException, PowerAuthEncryptionException {
+
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing presence check");
@@ -326,6 +335,10 @@ public class IdentityVerificationController {
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when initializing presence check");
             throw new PowerAuthEncryptionException("Invalid request received when initializing presence check");
+        }
+
+        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
+            throw new PresenceCheckNotEnabledException();
         }
 
         final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
@@ -358,7 +371,11 @@ public class IdentityVerificationController {
 
         // Process cleanup request
         identityVerificationService.cleanup(apiAuthentication);
-        presenceCheckService.cleanup(apiAuthentication);
+        if (identityVerificationConfig.isPresenceCheckEnabled()) {
+            presenceCheckService.cleanup(apiAuthentication);
+        } else {
+            logger.debug("Skipped presence check cleanup, not enabled");
+        }
 
         return new Response();
     }

@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Exception handler for RESTful API issues.
  *
@@ -156,6 +158,19 @@ public class DefaultExceptionHandler {
     public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
         logger.warn("Identity verification failed", ex);
         return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
+    }
+
+    /**
+     * Handling of not enabled presence check exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(PresenceCheckNotEnabledException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handlePresenceCheckNotEnabledException(
+            PresenceCheckNotEnabledException ex, HttpServletRequest request) {
+        logger.warn("Calling a service on a not enabled presence check service, requestUri: " + request.getRequestURI(), ex);
+        return new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
     }
 
     /**
