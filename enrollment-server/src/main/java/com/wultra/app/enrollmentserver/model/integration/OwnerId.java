@@ -17,8 +17,12 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import io.getlime.security.powerauth.crypto.lib.util.Hash;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 
+import java.util.Base64;
 import java.util.Date;
 
 /**
@@ -29,10 +33,39 @@ import java.util.Date;
 @Data
 public class OwnerId {
 
+    /**
+     * Activation identifier.
+     */
     private String activationId;
 
+    /**
+     * User ID (user ID who requested the activation).
+     */
     private String userId;
 
+    /**
+     * Secured userId value which can be used safely at external providers
+     * <p>
+     *     An userId can typically contain a sensitive data (e.g. e-mail address, phone number)
+     * </p>
+     */
+    @Setter(AccessLevel.NONE)
+    private String userIdSecured;
+
+    /**
+     * Timestamp of the identification context
+     */
     private Date timestamp = new Date();
+
+    /**
+     * @return Securely hashed user identification.
+     * This can be used to hide the original possibly sensitive identity value.
+     */
+    public String getUserIdSecured() {
+        if (userIdSecured == null) {
+            userIdSecured = new String(Base64.getEncoder().encode(Hash.sha256(userId)));
+        }
+        return userIdSecured;
+    }
 
 }

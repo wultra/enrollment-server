@@ -36,8 +36,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -88,6 +87,27 @@ public class IProovPresenceCheckProviderTest {
         PresenceCheckResult result = provider.getResult(ownerId, sessionInfo);
 
         assertEquals(PresenceCheckStatus.IN_PROGRESS, result.getStatus());
+    }
+
+    @Test
+    public void repeatPresenceCheckStartTest() throws Exception {
+        initPresenceCheck(ownerId);
+
+        SessionInfo sessionInfo1 = provider.startPresenceCheck(ownerId);
+        assertNotNull(
+                sessionInfo1.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                "Missing presence check verification token in session 1"
+        );
+
+        SessionInfo sessionInfo2 = provider.startPresenceCheck(ownerId);
+        assertNotNull(
+                sessionInfo2.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                "Missing presence check verification token in session 2"
+        );
+        assertNotEquals(
+                sessionInfo1.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                sessionInfo2.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                "Same presence check verification tokens between session 1 and session 2");
     }
 
     private OwnerId createOwnerId() {

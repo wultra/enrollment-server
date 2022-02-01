@@ -18,18 +18,18 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Exception thrown in case of an error during document verification.
+ * Exception thrown in case of an error during identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class DocumentVerificationException extends Exception {
+public class IdentityVerificationException extends Exception {
 
-    private static final long serialVersionUID = -5868335942741210351L;
+    private static final long serialVersionUID = 678593206284581851L;
 
-    public DocumentVerificationException() {
+    public IdentityVerificationException() {
     }
 
-    public DocumentVerificationException(String message) {
+    public IdentityVerificationException(String message) {
         super(message);
     }
 
