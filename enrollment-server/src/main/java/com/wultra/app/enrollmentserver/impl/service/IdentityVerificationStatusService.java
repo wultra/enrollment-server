@@ -20,12 +20,8 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
-import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -36,7 +32,6 @@ import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatus
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,16 +99,14 @@ public class IdentityVerificationStatusService {
     /**
      * Check status of identity verification.
      * @param request Identity verification status request.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identifier.
      * @return Identity verification status response.
      * @throws IdentityVerificationException Thrown when identity verification could not be started.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, RemoteCommunicationException {
+    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
-
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
@@ -142,6 +135,7 @@ public class IdentityVerificationStatusService {
 
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setIdentityVerificationPhase(idVerification.getPhase());
+        response.setProcessId(idVerification.getProcessId());
 
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
@@ -161,7 +155,7 @@ public class IdentityVerificationStatusService {
                 PresenceCheckResult presenceCheckResult = null;
                 try {
                     presenceCheckResult =
-                            presenceCheckService.checkPresenceVerification(apiAuthentication, idVerification, sessionInfo);
+                            presenceCheckService.checkPresenceVerification(ownerId, idVerification, sessionInfo);
                 } catch (PresenceCheckException e) {
                     logger.error("Checking presence verification failed, " + ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());
@@ -191,6 +185,10 @@ public class IdentityVerificationStatusService {
                 }
             } catch (DocumentVerificationException e) {
                 logger.error("Checking identity verification result failed, " + ownerId, e);
+                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+                return response;
+            } catch (OnboardingProcessException e) {
+                logger.error("Updating onboarding process failed, " + ownerId, e);
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
                 return response;
             }

@@ -80,7 +80,7 @@ public class IdentityVerificationCreateService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
+    public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
 
@@ -104,6 +104,7 @@ public class IdentityVerificationCreateService {
         entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUserId(ownerId.getUserId());
+        entity.setProcessId(processId);
 
         return identityVerificationRepository.save(entity);
     }

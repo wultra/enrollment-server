@@ -73,6 +73,7 @@ CREATE TABLE es_identity_verification (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     activation_id VARCHAR(36) NOT NULL,
     user_id VARCHAR(256) NOT NULL,
+    process_id VARCHAR(36) NOT NULL,
     status VARCHAR(32) NOT NULL,
     phase VARCHAR(32) NOT NULL,
     reject_reason VARCHAR(256),

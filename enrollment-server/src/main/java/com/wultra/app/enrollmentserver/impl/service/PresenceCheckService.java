@@ -88,16 +88,22 @@ public class PresenceCheckService {
     /**
      * Initializes presence check process.
      *
-     * @param apiAuthentication Authentication object.
+     * @param ownerId Owner identification.
+     * @param processId Process identifier.
      * @return Session info with data needed to perform the presence check process
      * @throws DocumentVerificationException When an error during obtaining the user personal image occurred
      * @throws PresenceCheckException When an error during initializing the presence check occurred
      */
     @Transactional
-    public SessionInfo init(PowerAuthApiAuthentication apiAuthentication)
+    public SessionInfo init(OwnerId ownerId, String processId)
             throws DocumentVerificationException, PresenceCheckException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
+
+        String processIdOnboarding = idVerification.getProcessId();
+        if (!processIdOnboarding.equals(processId)) {
+            logger.warn("Invalid process ID received in request: {}", processId);
+            throw new PresenceCheckException("Invalid process ID");
+        }
 
         if (!idVerification.isPresenceCheckInitialized()) {
             // TODO - use a better way to locate the photo to be used in presence check
@@ -122,16 +128,16 @@ public class PresenceCheckService {
      *     When is the presence check accepted the person image is submitted to document verification provider.
      * </p>
      *
-     * @param apiAuthentication Authentication object.
+     * @param ownerId Owner identifier.
+     * @param idVerification Identity verification entity.
      * @param sessionInfo Session info with presence check data.
      * @return Result of the presence check
      * @throws PresenceCheckException When an error during the presence check verification occurred
      */
     @Transactional
-    public PresenceCheckResult checkPresenceVerification(PowerAuthApiAuthentication apiAuthentication,
+    public PresenceCheckResult checkPresenceVerification(OwnerId ownerId,
                                                          IdentityVerificationEntity idVerification,
                                                          SessionInfo sessionInfo) throws PresenceCheckException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
 
         if (!PresenceCheckStatus.ACCEPTED.equals(result.getStatus())) {

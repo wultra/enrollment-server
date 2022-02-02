@@ -57,6 +57,9 @@ public class IdentityVerificationEntity implements Serializable {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "process_id", nullable = false)
+    private String processId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private IdentityVerificationStatus status;

@@ -27,4 +27,6 @@ import lombok.Data;
 @Data
 public class IdentityVerificationInitRequest {
 
+    private String processId;
+
 }

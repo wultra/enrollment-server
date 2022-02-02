@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
@@ -68,6 +69,7 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
+    private final OnboardingService onboardingService;
 
     /**
      * Service constructor.
@@ -80,6 +82,7 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
+     * @param onboardingService Onboarding service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -90,7 +93,7 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService) {
+            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -100,6 +103,7 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
+        this.onboardingService = onboardingService;
     }
 
     /**
@@ -114,11 +118,20 @@ public class IdentityVerificationService {
     /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
-     * @throws IdentityVerificationException When identity verification initialization fails.
-     * @throws RemoteCommunicationException When communication with PowerAuth server fails.
+     * @param processId Process identifier.
+     * @throws IdentityVerificationException Thrown when identity verification initialization fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void initializeIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
-        identityVerificationCreateService.createIdentityVerification(ownerId);
+    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
+        // Check that process ID matches onboarding process ID
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        String processIdOnboarding = processEntity.getId();
+        if (!processIdOnboarding.equals(processId)) {
+            logger.warn("Invalid process ID received in request: {}", processId);
+            throw new IdentityVerificationException("Invalid process ID");
+        }
+        identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
     /**
@@ -140,6 +153,12 @@ public class IdentityVerificationService {
         }
 
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
+
+        String processId = idVerification.getProcessId();
+        if (!processId.equals(request.getProcessId())) {
+            logger.warn("Invalid process ID in request: {}", processId);
+            throw new DocumentSubmitException("Invalid process ID");
+        }
 
         if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
@@ -268,14 +287,13 @@ public class IdentityVerificationService {
     /**
      * Check status of document verification related to identity.
      * @param request Document status request.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @return Document status response.
+     * @throws IdentityVerificationException Thrown when identity verification fails.
      */
     @Transactional
-    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
+    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, OwnerId ownerId) throws IdentityVerificationException {
         DocumentStatusResponse response = new DocumentStatusResponse();
-
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
@@ -286,7 +304,13 @@ public class IdentityVerificationService {
             return response;
         }
 
-        IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
+
+        String processId = idVerification.getProcessId();
+        if (!processId.equals(request.getProcessId())) {
+            logger.warn("Invalid process ID in request: {}", processId);
+            throw new IdentityVerificationException("Invalid process ID");
+        }
 
         final List<DocumentVerificationEntity> entities;
         if (request.getFilter() != null) {

@@ -29,6 +29,7 @@ import java.util.List;
 @Data
 public class DocumentStatusRequest {
 
+    private String processId;
     private List<DocumentFilter> filter;
 
     @Data

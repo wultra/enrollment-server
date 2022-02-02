@@ -41,6 +41,7 @@ import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
@@ -113,27 +114,29 @@ public class IdentityVerificationController {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @RequestMapping(value = "init", method = RequestMethod.POST)
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
-                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException {
+                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing identity verification");
             throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing identity verification");
         }
 
-        if (request == null) {
+        if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when initializing identity verification");
             throw new PowerAuthAuthenticationException("Invalid request received when initializing identity verification");
         }
 
         // Initialize identity verification
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        identityVerificationService.initializeIdentityVerification(ownerId);
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = request.getRequestObject().getProcessId();
+        identityVerificationService.initializeIdentityVerification(ownerId, processId);
         return new Response();
     }
 
@@ -150,8 +153,10 @@ public class IdentityVerificationController {
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/status", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
@@ -173,9 +178,11 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("Invalid request received when checking identity verification status");
         }
 
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+
         // Check verification status
         final IdentityVerificationStatusResponse response =
-                identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
+                identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
         return new ObjectResponse<>(response);
     }
 
@@ -205,7 +212,7 @@ public class IdentityVerificationController {
         }
 
         // Extract user ID from finished onboarding process for current activation
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findFinishedProcessByActivationId(eciesContext.getActivationId());
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(eciesContext.getActivationId());
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
@@ -247,7 +254,7 @@ public class IdentityVerificationController {
         }
 
         // Extract user ID from finished onboarding process for current activation
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findFinishedProcessByActivationId(eciesContext.getActivationId());
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(eciesContext.getActivationId());
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
@@ -269,15 +276,18 @@ public class IdentityVerificationController {
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws IdentityVerificationException Thrown when identity verification fails.
      */
     @RequestMapping(value = "document/status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document/status", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(@EncryptedRequestBody ObjectRequest<DocumentStatusRequest> request,
                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException {
+                                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -295,8 +305,10 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("Invalid request received when checking document verification status");
         }
 
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+
         // Process upload document request
-        final DocumentStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
+        final DocumentStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
         return new ObjectResponse<>(response);
     }
 
@@ -341,7 +353,10 @@ public class IdentityVerificationController {
             throw new PresenceCheckNotEnabledException();
         }
 
-        final SessionInfo sessionInfo = presenceCheckService.init(apiAuthentication);
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = request.getRequestObject().getProcessId();
+
+        final SessionInfo sessionInfo = presenceCheckService.init(ownerId, processId);
 
         final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());
