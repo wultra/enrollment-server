@@ -41,6 +41,8 @@ public class DocumentStatusService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentStatusService.class);
 
+    public static final String MESSAGE_OBSOLETE_VERIFICATION_PROCESS = "Obsolete verification process";
+
     private final DocumentVerificationRepository documentVerificationRepository;
     private final DocumentDataRepository documentDataRepository;
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -79,7 +81,14 @@ public class DocumentStatusService {
     @Transactional
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
     public void cleanupObsoleteVerificationProcesses() {
-        documentVerificationRepository.failObsoleteVerifications(getProcessExpirationTimestamp(), new Date());
+        int count = documentVerificationRepository.failObsoleteVerifications(
+                getProcessExpirationTimestamp(),
+                new Date(),
+                MESSAGE_OBSOLETE_VERIFICATION_PROCESS
+        );
+        if (count > 0) {
+            logger.info("Failed {} obsolete verification processes", count);
+        }
     }
 
     private Date getDataRetentionTimestamp() {

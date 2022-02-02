@@ -30,9 +30,24 @@ import java.util.List;
 @Data
 public class DocumentsSubmitResult {
 
+    /**
+     * List of document upload results
+     */
     private List<DocumentSubmitResult> results = new ArrayList<>();
+
+    /**
+     * Overall reason why documents were not accepted
+     */
     private String rejectReason;
+
+    /**
+     * Overall error in case of a common upload error
+     */
     private String errorDetail;
+
+    /**
+     * Identifier of extracted photograph in case submitted documents contained an ID card
+     */
     private String extractedPhotoId;
 
 }
