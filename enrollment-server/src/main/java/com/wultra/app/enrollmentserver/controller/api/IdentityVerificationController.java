@@ -117,6 +117,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @RequestMapping(value = "init", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
@@ -154,9 +155,7 @@ public class IdentityVerificationController {
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+            PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
@@ -197,6 +196,9 @@ public class IdentityVerificationController {
      */
     @RequestMapping(value = "document/submit", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION
+    })
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws DocumentSubmitException, PowerAuthEncryptionException, OnboardingProcessException {
@@ -240,6 +242,9 @@ public class IdentityVerificationController {
      */
     @RequestMapping(value = "document/upload", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION
+    })
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
         // Check if the request was correctly decrypted
@@ -281,9 +286,7 @@ public class IdentityVerificationController {
     @RequestMapping(value = "document/status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+            PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(@EncryptedRequestBody ObjectRequest<DocumentStatusRequest> request,
                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
