@@ -81,10 +81,12 @@ public class ZenidRestApiService {
      */
     public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document) {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
-        String apiPath = String.format("/api/sample?" +
-                "expectedSampleType=%s" +
-                "&customData=%s" +
-                "&uploadSessionID=%s", toSampleType(document.getType()).toString(), ownerId.getActivationId(), sessionId);
+        String apiPath = "/api/sample" +
+                "?" +
+                "async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase() +
+                "&expectedSampleType=" + toSampleType(document.getType()) +
+                "&customData=" + ownerId.getActivationId() +
+                "&uploadSessionID=" + sessionId;
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new ByteArrayResource(document.getPhoto().getData()) {
@@ -101,6 +103,24 @@ public class ZenidRestApiService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         return restTemplate.postForEntity(apiPath, requestEntity, ZenidWebUploadSampleResponse.class);
+    }
+
+    /**
+     * Synchronizes submitted document result of a previous upload.
+     *
+     * @param ownerId Owner identification.
+     * @param documentId Submitted document id.
+     * @return Response entity with the upload result
+     */
+    public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(OwnerId ownerId, String documentId) {
+        String apiPath = "/api/sample/" + documentId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(apiPath, HttpMethod.GET, requestEntity, ZenidWebUploadSampleResponse.class);
     }
 
     /**
@@ -149,7 +169,12 @@ public class ZenidRestApiService {
     }
 
     /**
-     * Provides result of an investigation
+     * Provides result of an investigation.
+     *
+     * <p>
+     *   Only failed validation results are returned. All document samples without a validation constraint
+     *   are considered as passed.
+     * </p>
      *
      * @param investigationId Id of a previously run investigation
      * @return Response entity with the investigation result

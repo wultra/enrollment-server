@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -58,23 +59,22 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
+    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws DocumentVerificationException {
+        DocumentsSubmitResult result = new DocumentsSubmitResult();
+        if (DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(document.getType())) {
+            // set extracted photo id only on a relevant documents submit
+            result.setExtractedPhotoId("extracted-photo-id");
+        }
+        result.setResults(List.of(toDocumentSubmitResult(document.getUploadId())));
+
+        logger.info("Mock - check document upload, {}", id);
+        return result;
+    }
+
+    @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
         List<DocumentSubmitResult> submitResults = documents.stream()
-                .map(document -> {
-                    String docId = document.getDocumentId();
-                    if (docId == null) {
-                        // document from the submit request has no documentId, generate one
-                        docId = UUID.randomUUID().toString();
-                    }
-                    DocumentSubmitResult submitResult = new DocumentSubmitResult();
-                    submitResult.setDocumentId(docId);
-                    submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
-                    submitResult.setUploadId(
-                            Ascii.truncate("uploaded-" + docId, 36, "...")
-                    );
-                    submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
-                    return submitResult;
-                })
+                .map(doc -> toDocumentSubmitResult(doc.getDocumentId()))
                 .collect(Collectors.toList());;
 
         DocumentsSubmitResult result = new DocumentsSubmitResult();
@@ -142,6 +142,25 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     @Override
     public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
         logger.info("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
+    }
+
+    private DocumentSubmitResult toDocumentSubmitResult(String docId) {
+        if (docId == null) {
+            // document from the submit request has no documentId, generate one
+            docId = UUID.randomUUID().toString();
+        }
+        DocumentSubmitResult submitResult = new DocumentSubmitResult();
+        submitResult.setDocumentId(docId);
+        submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
+        String uploadedDocId;
+        if (docId.startsWith("upload")) {
+            uploadedDocId = docId;
+        } else {
+            uploadedDocId = Ascii.truncate("uploaded-" + docId, 36, "...");
+        }
+        submitResult.setUploadId(uploadedDocId);
+        submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
+        return submitResult;
     }
 
 }
