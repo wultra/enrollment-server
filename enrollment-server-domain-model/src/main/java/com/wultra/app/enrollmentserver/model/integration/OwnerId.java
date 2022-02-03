@@ -22,6 +22,7 @@ import io.getlime.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -32,6 +33,7 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@ToString(of = {"activationId", "userId"})
 public class OwnerId {
 
     /**
@@ -73,7 +75,9 @@ public class OwnerId {
             return null;
         }
         if (userIdSecured == null) {
-            userIdSecured = BaseEncoding.base32().omitPadding().encode(Hash.sha256(userId));
+            userIdSecured = BaseEncoding.base32()
+                    .omitPadding()
+                    .encode(Hash.sha256(userId));
             if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
                 userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
             }
