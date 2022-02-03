@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,19 +18,14 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Exception thrown in case of an error during document verification.
+ * Exception thrown in case presence check is not enabled.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class DocumentVerificationException extends Exception {
+public class PresenceCheckNotEnabledException extends Exception {
 
-    private static final long serialVersionUID = -5868335942741210351L;
+    private static final long serialVersionUID = -6830136273098780465L;
 
-    public DocumentVerificationException() {
-    }
-
-    public DocumentVerificationException(String message) {
-        super(message);
-    }
+    public PresenceCheckNotEnabledException() { }
 
 }

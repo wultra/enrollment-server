@@ -18,7 +18,7 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Exception thrown in of an error during document submit.
+ * Exception thrown in case of an error during document submit.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */

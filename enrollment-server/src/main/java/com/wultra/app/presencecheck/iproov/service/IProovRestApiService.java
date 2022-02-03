@@ -41,6 +41,14 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Implementation of the REST service to iProov (https://www.iproov.com/)
  *
+ * <p>
+ *     The userId is filled with a secured user identification
+ *     <ul>
+ *         <li>optimizes API costs which are based on unique users</li>
+ *         <li>hides potentially sensitive data from leaking at the external provider side</li>
+ *     </ul>
+ * </p>
+ *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server.presence-check.provider", havingValue = "iproov")
@@ -49,7 +57,7 @@ public class IProovRestApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
 
-    public static final String I_PROOV_RESOURCE = "presence_check";
+    public static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
 
     /**
      * Configuration properties.
@@ -150,7 +158,7 @@ public class IProovRestApiService {
         request.setIp("192.168.1.1"); // TODO deprecated but still required
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
-        request.setUserId(id.getActivationId());
+        request.setUserId(id.getUserIdSecured());
 
         HttpEntity<ClaimValidateRequest> requestEntity = createDefaultRequestEntity(request);
 
@@ -167,7 +175,7 @@ public class IProovRestApiService {
         // TODO implement this, oauth call on DELETE /users/activationId
         logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
         return ResponseEntity.ok("{\n" +
-                "  \"user_id\": \"" + id.getActivationId() + "\",\n" +
+                "  \"user_id\": \"" + id.getUserIdSecured() + "\",\n" +
                 "  \"name\": \"user name\",\n" +
                 "  \"status\": \"Deleted\"\n" +
                 "}");
@@ -178,9 +186,9 @@ public class IProovRestApiService {
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
         request.setAssuranceType(configProps.getAssuranceType());
-        request.setResource(I_PROOV_RESOURCE);
+        request.setResource(I_PROOV_RESOURCE_CONTEXT + id.getActivationId());
         request.setRiskProfile(configProps.getRiskProfile());
-        request.setUserId(id.getActivationId());
+        request.setUserId(id.getUserIdSecured());
         return request;
     }
 

@@ -23,9 +23,8 @@ import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
@@ -70,6 +69,7 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
+    private final OnboardingService onboardingService;
 
     /**
      * Service constructor.
@@ -82,6 +82,7 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
+     * @param onboardingService Onboarding service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -92,7 +93,7 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService) {
+            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -102,6 +103,7 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
+        this.onboardingService = onboardingService;
     }
 
     /**
@@ -116,9 +118,20 @@ public class IdentityVerificationService {
     /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
+     * @param processId Process identifier.
+     * @throws IdentityVerificationException Thrown when identity verification initialization fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void initializeIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
-        identityVerificationCreateService.createIdentityVerification(ownerId);
+    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
+        // Check that process ID matches onboarding process ID
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        String processIdOnboarding = processEntity.getId();
+        if (!processIdOnboarding.equals(processId)) {
+            logger.warn("Invalid process ID received in request: {}", processId);
+            throw new IdentityVerificationException("Invalid process ID");
+        }
+        identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
     /**
@@ -140,6 +153,12 @@ public class IdentityVerificationService {
         }
 
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
+
+        String processId = idVerification.getProcessId();
+        if (!processId.equals(request.getProcessId())) {
+            logger.warn("Invalid process ID in request: {}", processId);
+            throw new DocumentSubmitException("Invalid process ID");
+        }
 
         if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
@@ -172,16 +191,17 @@ public class IdentityVerificationService {
      * Starts the verification process
      *
      * @param ownerId Owner identification.
-     * @throws DocumentVerificationException When an error occurred
+     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @throws DocumentVerificationException Thrown when document verification fails.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void startVerification(OwnerId ownerId) throws IdentityVerificationException, DocumentVerificationException {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         if (!identityVerificationOptional.isPresent()) {
             logger.error("No identity verification entity found to start the verification, {}", ownerId);
-            throw new DocumentVerificationException("Unable to start verification");
+            throw new IdentityVerificationException("Unable to start verification");
         }
         IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
 
@@ -267,14 +287,13 @@ public class IdentityVerificationService {
     /**
      * Check status of document verification related to identity.
      * @param request Document status request.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @return Document status response.
+     * @throws IdentityVerificationException Thrown when identity verification fails.
      */
     @Transactional
-    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, PowerAuthApiAuthentication apiAuthentication) {
+    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, OwnerId ownerId) throws IdentityVerificationException {
         DocumentStatusResponse response = new DocumentStatusResponse();
-
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
@@ -285,7 +304,13 @@ public class IdentityVerificationService {
             return response;
         }
 
-        IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
+
+        String processId = idVerification.getProcessId();
+        if (!processId.equals(request.getProcessId())) {
+            logger.warn("Invalid process ID in request: {}", processId);
+            throw new IdentityVerificationException("Invalid process ID");
+        }
 
         final List<DocumentVerificationEntity> entities;
         if (request.getFilter() != null) {
@@ -326,10 +351,13 @@ public class IdentityVerificationService {
     /**
      * Cleanup documents related to identity verification.
      * @param apiAuthentication PowerAuth authentication.
+     * @throws DocumentVerificationException Thrown when document cleanup fails
+     * @throws PresenceCheckException Thrown when presence check cleanup fails.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
     public void cleanup(PowerAuthApiAuthentication apiAuthentication)
-            throws DocumentVerificationException, PresenceCheckException {
+            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException {
         OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());

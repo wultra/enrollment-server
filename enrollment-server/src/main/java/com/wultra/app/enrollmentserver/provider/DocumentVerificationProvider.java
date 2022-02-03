@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.provider;
 
+import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.*;
 
@@ -30,7 +31,18 @@ import java.util.List;
 public interface DocumentVerificationProvider {
 
     /**
-     * Analyze documents and return data extracted from documents (including photo) and identifiers
+     * Check document submit result and return data extracted from the document (including photo) and identifiers
+     *
+     * @param id Owner identification.
+     * @param document Document entity.
+     * @return Result of the document submit
+     * @throws DocumentVerificationException When an error during submitting of documents occurred
+     */
+    DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws DocumentVerificationException;
+
+    /**
+     * Analyze documents and return data extracted from documents (including photo) and identifiers. With enabled
+     * asynchronous processing no extracted data are returned. The data has be checked with {@link #checkDocumentUpload(OwnerId, DocumentVerificationEntity)}
      *
      * @param id Owner identification.
      * @param documents Documents to be submitted

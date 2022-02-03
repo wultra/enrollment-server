@@ -122,7 +122,7 @@ public class OnboardingService {
             throw new OnboardingProcessException();
         }
 
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcess(userId);
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForUser(userId);
         OnboardingProcessEntity process;
         if (processOptional.isPresent()) {
             // Resume an existing process
@@ -322,13 +322,13 @@ public class OnboardingService {
     }
 
     /**
-     * Find a finished onboarding process by activation identifier.
+     * Find an existing onboarding process by activation identifier.
      * @param activationId Activation identifier.
      * @return Onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    public OnboardingProcessEntity findFinishedProcessByActivationId(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findFinishedProcess(activationId);
+    public OnboardingProcessEntity findExistingProcess(String activationId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForActivation(activationId);
         if (!processOptional.isPresent()) {
             logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();

@@ -17,7 +17,10 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -45,18 +48,28 @@ public class IdentityVerificationFinishService {
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     private final PowerAuthClient powerAuthClient;
+    private final OnboardingService onboardingService;
 
     /**
      * Service constructor.
      * @param powerAuthClient PowerAuth client.
+     * @param onboardingService Onboarding service.
      */
     @Autowired
-    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient) {
+    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient, OnboardingService onboardingService) {
         this.powerAuthClient = powerAuthClient;
+        this.onboardingService = onboardingService;
     }
 
+    /**
+     * Finish identity verification by removing the VERIFICATION_IN_PROGRESS flag.
+     *
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process termination fails.
+     */
     @Transactional
-    public void finishIdentityVerification(OwnerId ownerId) throws DocumentVerificationException {
+    public void finishIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         try {
             ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
             List<String> activationFlags = response.getActivationFlags();
@@ -68,8 +81,13 @@ public class IdentityVerificationFinishService {
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
-            throw new DocumentVerificationException("Communication with PowerAuth server failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
+
+        // Terminate onboarding process
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        processEntity.setStatus(OnboardingStatus.FINISHED);
+        onboardingService.updateProcess(processEntity);
     }
 
 }

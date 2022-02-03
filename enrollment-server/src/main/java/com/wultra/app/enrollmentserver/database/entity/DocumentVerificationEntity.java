@@ -18,10 +18,13 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -38,7 +41,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@ToString(of = {"id", "type"})
+@ToString(of = {"id", "type", "uploadId"})
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_verification")
