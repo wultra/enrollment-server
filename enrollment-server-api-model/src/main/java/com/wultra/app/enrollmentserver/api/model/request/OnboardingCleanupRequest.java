@@ -15,35 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.request;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * Request class used when submitting documents for identity verification.
+ * Request class used for cleanup related to onboarding process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class DocumentSubmitRequest {
+public class OnboardingCleanupRequest {
 
     private String processId;
-    private byte[] data;
-    private boolean resubmit;
-    private List<DocumentMetadata> documents;
 
-    @Data
-    public static class DocumentMetadata {
-
-        private String filename;
-        private DocumentType type;
-        private CardSide side;
-        private String uploadId;
-        private String originalDocumentId;
-
-    }
 }

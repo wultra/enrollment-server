@@ -74,6 +74,8 @@
 
     <modules>
         <module>mtoken-model</module>
+        <module>enrollment-server-domain-model</module>
+        <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
     </modules>
 
@@ -92,6 +94,15 @@
         <shedlock-spring.version>4.25.0</shedlock-spring.version>
         <swagger-annotations.version>2.1.11</swagger-annotations.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

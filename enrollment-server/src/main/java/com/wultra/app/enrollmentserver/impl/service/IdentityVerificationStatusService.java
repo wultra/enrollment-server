@@ -27,8 +27,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.enrollmentserver.model.request.IdentityVerificationStatusRequest;
-import com.wultra.app.enrollmentserver.model.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.request.IdentityVerificationStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.response.IdentityVerificationStatusResponse;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;

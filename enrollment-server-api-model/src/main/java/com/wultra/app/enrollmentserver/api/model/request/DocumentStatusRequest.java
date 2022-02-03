@@ -15,18 +15,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
 import java.util.List;
 
 /**
- * Request class used when checking identity verification status.
+ * Request class used when checking identity document verification status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class IdentityVerificationStatusRequest {
+public class DocumentStatusRequest {
+
+    private String processId;
+    private List<DocumentFilter> filter;
+
+    @Data
+    public static class DocumentFilter {
+
+        private String documentId;
+
+    }
 
 }

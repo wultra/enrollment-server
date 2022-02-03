@@ -33,7 +33,7 @@ import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
-import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import com.wultra.app.enrollmentserver.api.model.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.model.validator.PushRegisterRequestValidator;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;

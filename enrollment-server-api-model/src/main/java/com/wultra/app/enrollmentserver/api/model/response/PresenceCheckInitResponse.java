@@ -15,18 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.response;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
- * Request class used when initializing identity verification.
+ * Response class used when initializing presence check.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class IdentityVerificationInitRequest {
+public class PresenceCheckInitResponse {
 
-    private String processId;
+    private Map<String, Object> sessionAttributes;
 
 }

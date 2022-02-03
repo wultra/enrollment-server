@@ -15,19 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.response;
 
 import lombok.Data;
 
 /**
- * Request with attributes of a new activation code.
+ * Response with a new activation code.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
-public class ActivationCodeRequest {
+public class ActivationCodeResponse {
 
-    public String applicationId;
-    public String otp;
+    private String activationId;
+    private String activationCode;
+    private String activationSignature;
 
 }

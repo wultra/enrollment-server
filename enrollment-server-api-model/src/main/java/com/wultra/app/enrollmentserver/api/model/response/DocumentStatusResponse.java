@@ -15,18 +15,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.response;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.Data;
 
+import java.util.List;
+
 /**
- * Request class used for cleanup related to onboarding process.
+ * Response class used when checking identity document verification status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class OnboardingCleanupRequest {
+public class DocumentStatusResponse {
 
-    private String processId;
+    private IdentityVerificationStatus status;
+    private List<DocumentMetadata> documents;
+
+    @Data
+    public static class DocumentMetadata {
+
+        private String filename;
+        private String id;
+        private DocumentStatus status;
+        private List<String> errors;
+
+    }
 
 }
