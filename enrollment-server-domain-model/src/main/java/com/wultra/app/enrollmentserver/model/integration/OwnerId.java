@@ -17,12 +17,14 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import com.google.common.io.BaseEncoding;
 import io.getlime.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import lombok.ToString;
 
-import java.util.Base64;
+import javax.annotation.Nullable;
 import java.util.Date;
 
 /**
@@ -31,7 +33,13 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@ToString(of = {"activationId", "userId"})
 public class OwnerId {
+
+    /**
+     * Maximum allowed length of the user identification
+     */
+    public static final int USER_ID_MAX_LENGTH = 255;
 
     /**
      * Activation identifier.
@@ -61,9 +69,18 @@ public class OwnerId {
      * @return Securely hashed user identification.
      * This can be used to hide the original possibly sensitive identity value.
      */
+    @Nullable
     public String getUserIdSecured() {
+        if (userId == null) {
+            return null;
+        }
         if (userIdSecured == null) {
-            userIdSecured = new String(Base64.getEncoder().encode(Hash.sha256(userId)));
+            userIdSecured = BaseEncoding.base32()
+                    .omitPadding()
+                    .encode(Hash.sha256(userId));
+            if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
+                userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
+            }
         }
         return userIdSecured;
     }
