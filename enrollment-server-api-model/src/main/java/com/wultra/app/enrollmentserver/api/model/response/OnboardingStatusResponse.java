@@ -15,35 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
+package com.wultra.app.enrollmentserver.api.model.response;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * Response class used when submitting documents for identity verification.
+ * Response class used when checking onboarding process status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class DocumentSubmitResponse {
+public class OnboardingStatusResponse {
 
-    private List<DocumentMetadata> documents;
-
-    @Data
-    public static class DocumentMetadata {
-
-        private String filename;
-        private String id;
-        private DocumentType type;
-        private CardSide side;
-        private DocumentStatus status;
-        private List<String> errors;
-
-    }
+    private String processId;
+    private OnboardingStatus onboardingStatus;
 
 }

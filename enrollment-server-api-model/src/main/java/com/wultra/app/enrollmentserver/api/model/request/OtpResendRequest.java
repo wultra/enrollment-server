@@ -15,19 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.request;
+package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
- * Request with attributes of a new activation code.
+ * Request class used when resending an OTP code.
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class ActivationCodeRequest {
+public class OtpResendRequest {
 
-    public String applicationId;
-    public String otp;
+    private String processId;
 
 }

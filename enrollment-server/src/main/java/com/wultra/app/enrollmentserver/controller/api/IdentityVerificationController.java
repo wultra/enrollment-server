@@ -17,6 +17,8 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.api.model.request.*;
+import com.wultra.app.enrollmentserver.api.model.response.*;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
@@ -31,8 +33,8 @@ import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.enrollmentserver.model.request.*;
-import com.wultra.app.enrollmentserver.model.response.*;
+import com.wultra.app.enrollmentserver.api.model.request.*;
+import com.wultra.app.enrollmentserver.api.model.response.*;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;

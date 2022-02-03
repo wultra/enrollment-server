@@ -33,9 +33,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.request.DocumentStatusRequest;
-import com.wultra.app.enrollmentserver.model.request.DocumentSubmitRequest;
-import com.wultra.app.enrollmentserver.model.response.DocumentStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;

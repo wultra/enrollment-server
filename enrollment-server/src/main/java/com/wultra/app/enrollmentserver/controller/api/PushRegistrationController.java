@@ -19,7 +19,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
 import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
-import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import com.wultra.app.enrollmentserver.api.model.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
 import io.getlime.core.rest.model.base.request.ObjectRequest;

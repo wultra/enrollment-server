@@ -15,19 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.response;
+package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
- * Response class used when uploading documents for identity verification.
+ * Request class used when checking identity verification status.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class DocumentUploadResponse {
-
-    private String filename;
-    private String id;
+public class IdentityVerificationStatusRequest {
 
 }
