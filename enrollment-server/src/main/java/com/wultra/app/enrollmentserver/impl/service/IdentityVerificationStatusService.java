@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
@@ -53,16 +54,12 @@ public class IdentityVerificationStatusService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
     private final IdentityVerificationRepository identityVerificationRepository;
-
     private final IdentityVerificationService identityVerificationService;
-
     private final JsonSerializationService jsonSerializationService;
-
     private final PresenceCheckService presenceCheckService;
-
     private final IdentityVerificationFinishService identityVerificationFinishService;
+    private final OnboardingService onboardingService;
 
     private final PowerAuthClient powerAuthClient;
 
@@ -76,6 +73,7 @@ public class IdentityVerificationStatusService {
      * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckService Presence check service.
      * @param identityVerificationFinishService Identity verification finish service.
+     * @param onboardingService Onboarding service.
      * @param powerAuthClient PowerAuth client.
      */
     @Autowired
@@ -86,6 +84,7 @@ public class IdentityVerificationStatusService {
             JsonSerializationService jsonSerializationService,
             PresenceCheckService presenceCheckService,
             IdentityVerificationFinishService identityVerificationFinishService,
+            OnboardingService onboardingService,
             PowerAuthClient powerAuthClient) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;
@@ -93,6 +92,7 @@ public class IdentityVerificationStatusService {
         this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckService = presenceCheckService;
         this.identityVerificationFinishService = identityVerificationFinishService;
+        this.onboardingService = onboardingService;
         this.powerAuthClient = powerAuthClient;
     }
 
@@ -114,8 +114,18 @@ public class IdentityVerificationStatusService {
         if (!idVerificationOptional.isPresent()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
+            try {
+                OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(ownerId.getActivationId());
+                response.setProcessId(onboardingProcess.getId());
+            } catch (OnboardingProcessException e) {
+                logger.error("Onboarding process not found, " + ownerId, e);
+                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+            }
             return response;
         }
+
+        IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        response.setProcessId(idVerification.getProcessId());
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
         try {
@@ -133,9 +143,7 @@ public class IdentityVerificationStatusService {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
 
-        IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setIdentityVerificationPhase(idVerification.getPhase());
-        response.setProcessId(idVerification.getProcessId());
 
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
