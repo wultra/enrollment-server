@@ -125,7 +125,7 @@ public class IdentityVerificationService {
      */
     public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         // Check that process ID matches onboarding process ID
-        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         String processIdOnboarding = processEntity.getId();
         if (!processIdOnboarding.equals(processId)) {
             logger.warn("Invalid process ID received in request: {}", processId);

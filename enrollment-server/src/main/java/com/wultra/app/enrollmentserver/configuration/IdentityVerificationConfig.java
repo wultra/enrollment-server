@@ -48,7 +48,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server.identity-verification.data-retention.hours:1}")
     private int dataRetentionTime;
 
-    @Value("${enrollment-server.identity-verification.expiration.seconds:300}")
+    @Value("${enrollment-server.onboarding-process.verification.expiration.seconds:300}")
     private int verificationExpirationTime;
 
 }

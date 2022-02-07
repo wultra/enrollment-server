@@ -103,9 +103,10 @@ public class IdentityVerificationStatusService {
      * @return Identity verification status response.
      * @throws IdentityVerificationException Thrown when identity verification could not be started.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @Transactional
-    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
+    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
@@ -114,13 +115,8 @@ public class IdentityVerificationStatusService {
         if (!idVerificationOptional.isPresent()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
-            try {
-                OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(ownerId.getActivationId());
-                response.setProcessId(onboardingProcess.getId());
-            } catch (OnboardingProcessException e) {
-                logger.error("Onboarding process not found, " + ownerId, e);
-                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
-            }
+            final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+            response.setProcessId(onboardingProcess.getId());
             return response;
         }
 

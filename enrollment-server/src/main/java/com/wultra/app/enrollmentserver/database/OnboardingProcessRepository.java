@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -37,15 +38,20 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
 
     Optional<OnboardingProcessEntity> findById(String processId);
 
-    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.userId = :userId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findExistingProcessForUser(String userId);
+    Optional<OnboardingProcessEntity> findExistingProcessForUser(String userId, OnboardingStatus status);
 
-    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.activationId = :activationId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findExistingProcessForActivation(String activationId);
+    Optional<OnboardingProcessEntity> findExistingProcessForActivation(String activationId, OnboardingStatus status);
+
+    @Query("SELECT p FROM OnboardingProcessEntity p " +
+            "WHERE p.activationId = :activationId " +
+            "ORDER BY p.timestampCreated DESC")
+    Optional<OnboardingProcessEntity> findProcessByActivationId(String activationId);
 
     @Query("SELECT count(p) FROM OnboardingProcessEntity p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
     int countProcessesAfterTimestamp(String userId, Date dateAfter);
@@ -54,8 +60,8 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
             "p.errorDetail = 'expired' " +
-            "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.IN_PROGRESS " +
+            "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateOldProcesses(Date dateCreatedBefore);
+    void terminateOldProcesses(Date dateCreatedBefore, OnboardingStatus status);
 
 }

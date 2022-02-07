@@ -25,9 +25,14 @@ package com.wultra.app.enrollmentserver.model.enumeration;
 public enum OnboardingStatus {
 
     /**
-     * Onboarding process is in progress.
+     * Activation is in progress.
      */
-    IN_PROGRESS,
+    ACTIVATION_IN_PROGRESS,
+
+    /**
+     * User verification after successful activation is in progress.
+     */
+    VERIFICATION_IN_PROGRESS,
 
     /**
      * Onboarding process is finished.

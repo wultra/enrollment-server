@@ -33,8 +33,6 @@ import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.enrollmentserver.api.model.request.*;
-import com.wultra.app.enrollmentserver.api.model.response.*;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -155,6 +153,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws IdentityVerificationException Thrown when identity verification status fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -164,7 +163,7 @@ public class IdentityVerificationController {
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                                               @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking identity verification status");
@@ -226,7 +225,7 @@ public class IdentityVerificationController {
         }
 
         // Extract user ID from finished onboarding process for current activation
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(eciesContext.getActivationId());
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(eciesContext.getActivationId());
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
@@ -279,7 +278,7 @@ public class IdentityVerificationController {
         }
 
         // Extract user ID from finished onboarding process for current activation
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcess(eciesContext.getActivationId());
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(eciesContext.getActivationId());
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
