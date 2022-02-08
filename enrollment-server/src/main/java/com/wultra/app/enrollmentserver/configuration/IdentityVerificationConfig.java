@@ -51,4 +51,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server.onboarding-process.verification.expiration.seconds:300}")
     private int verificationExpirationTime;
 
+    @Value("${enrollment-server.identity-verification.otp.enabled:true}")
+    private boolean verificationOtpEnabled;
+
 }

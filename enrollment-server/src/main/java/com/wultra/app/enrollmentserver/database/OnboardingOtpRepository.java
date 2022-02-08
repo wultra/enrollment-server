@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.OnboardingOtpEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -35,7 +36,8 @@ import java.util.Optional;
 @Repository
 public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEntity, String> {
 
-    Optional<OnboardingOtpEntity> findFirstByProcessIdOrderByTimestampCreatedDesc(String processId);
+    @Query("SELECT o FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type ORDER BY o.timestampCreated DESC")
+    Optional<OnboardingOtpEntity> findLastOtp(String processId, OtpType type);
 
     @Modifying
     @Query("UPDATE OnboardingOtpEntity o SET o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
@@ -45,10 +47,13 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
             "AND o.timestampCreated < :dateCreatedBefore")
     void terminateOldOtps(Date dateCreatedBefore);
 
-    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId")
-    int getFailedAttemptsByProcess(String processId);
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
+    int getFailedAttemptsByProcess(String processId, OtpType type);
 
-    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId")
-    Date getNewestOtpCreatedTimestamp(String processId);
+    @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
+    Date getNewestOtpCreatedTimestamp(String processId, OtpType type);
+
+    @Query("SELECT COUNT(o.id) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
+    int getOtpCount(String processId, OtpType type);
 
 }

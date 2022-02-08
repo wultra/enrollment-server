@@ -23,10 +23,7 @@ import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
-import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
-import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationStatusService;
-import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
-import com.wultra.app.enrollmentserver.impl.service.PresenceCheckService;
+import com.wultra.app.enrollmentserver.impl.service.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
@@ -79,6 +76,7 @@ public class IdentityVerificationController {
     private final DocumentProcessingService documentProcessingService;
     private final IdentityVerificationService identityVerificationService;
     private final IdentityVerificationStatusService identityVerificationStatusService;
+    private final IdentityVerificationOtpService identityVerificationOtpService;
     private final PresenceCheckService presenceCheckService;
     private final OnboardingService onboardingService;
 
@@ -88,8 +86,9 @@ public class IdentityVerificationController {
      * @param documentProcessingService Document processing service.
      * @param identityVerificationService Identity verification service.
      * @param identityVerificationStatusService Identity verification status service.
-     * @param presenceCheckService Presence check service.
+     * @param identityVerificationOtpService Identity OTP verification service.
      * @param onboardingService Onboarding service.
+     * @param presenceCheckService Presence check service.
      */
     @Autowired
     public IdentityVerificationController(
@@ -97,12 +96,13 @@ public class IdentityVerificationController {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
-            OnboardingService onboardingService,
+            IdentityVerificationOtpService identityVerificationOtpService, OnboardingService onboardingService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.identityVerificationStatusService = identityVerificationStatusService;
+        this.identityVerificationOtpService = identityVerificationOtpService;
         this.onboardingService = onboardingService;
         this.presenceCheckService = presenceCheckService;
     }
@@ -384,6 +384,67 @@ public class IdentityVerificationController {
         final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
         response.setSessionAttributes(sessionInfo.getSessionAttributes());
         return new ObjectResponse<>(response);
+    }
+
+    /**
+     * Send or resend OTP code to the user.
+     * @param request Presence check initialization request.
+     * @param eciesContext ECIES context.
+     * @return Send OTP response.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws OnboardingProcessException Thrown when OTP code could not be generated.
+     * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
+     */
+    @RequestMapping(value = "otp/send", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    public Response sendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
+                            @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+            throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when sending OTP during identity verification");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when sending OTP during identity verification");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when sending OTP during identity verification");
+            throw new PowerAuthEncryptionException("Invalid request received when sending OTP during identity verification");
+        }
+
+        final String processId = request.getRequestObject().getProcessId();
+        identityVerificationOtpService.sendOtpCode(processId);
+        return new Response();
+    }
+
+    /**
+     * Verify an OTP code received from the user.
+     * @param request Presence check initialization request.
+     * @param eciesContext ECIES context.
+     * @return Send OTP response.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    @RequestMapping(value = "otp/verify", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
+                                                                           @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+            throws PowerAuthEncryptionException, OnboardingProcessException {
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when verifying OTP during identity verification");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when sending OTP during identity verification");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when verifying OTP during identity verification");
+            throw new PowerAuthEncryptionException("Invalid request received when sending OTP during identity verification");
+        }
+
+        final String processId = request.getRequestObject().getProcessId();
+        final String otpCode = request.getRequestObject().getOtpCode();
+        return new ObjectResponse<>(identityVerificationOtpService.verifyOtpCode(processId, otpCode));
     }
 
     /**

@@ -15,23 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.api.model.response;
+package com.wultra.app.enrollmentserver.api.model.request;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
 /**
- * Response class used when verifying an OTP code during onboarding.
+ * Request class used when verifying an OTP code during identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class OtpVerifyResponse {
+public class IdentityVerificationOtpVerifyRequest {
 
     private String processId;
-    private OnboardingStatus onboardingStatus;
-    private String userId;
-    private boolean verified;
-    private Integer remainingAttempts;
+    private String otpCode;
 
 }

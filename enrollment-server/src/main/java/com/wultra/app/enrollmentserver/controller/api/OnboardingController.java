@@ -23,7 +23,7 @@ import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OtpResendRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
@@ -110,7 +110,7 @@ public class OnboardingController {
      */
     @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public Response resendOtp(@EncryptedRequestBody ObjectRequest<OtpResendRequest> request,
+    public Response resendOtp(@EncryptedRequestBody ObjectRequest<OnboardingOtpResendRequest> request,
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
