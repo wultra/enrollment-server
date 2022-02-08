@@ -64,15 +64,14 @@ public class ActivationProcessService {
     }
 
     /**
-     * Check user identifier for an onboarding process.
+     * Get user identifier for an onboarding process.
      * @param processId Onboarding process identifier.
-     * @param userId User identifier.
-     * @return Onboarding process identifier.
-     * @throws OnboardingProcessException Thrown when onboarding process is not found or the user ID does not match the process.
+     * @return User identifier.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    public void checkUserIdForProcess(String processId, String userId) throws OnboardingProcessException {
+    public String getUserId(String processId) throws OnboardingProcessException {
         OnboardingProcessEntity process = onboardingService.findProcess(processId);
-        checkUserIdForProcess(process, userId);
+        return process.getUserId();
     }
 
     /**
