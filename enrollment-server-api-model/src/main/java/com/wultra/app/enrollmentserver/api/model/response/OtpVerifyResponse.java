@@ -30,7 +30,6 @@ public class OtpVerifyResponse {
 
     private String processId;
     private OnboardingStatus onboardingStatus;
-    private String userId;
     private boolean verified;
     private Integer remainingAttempts;
 

@@ -174,7 +174,6 @@ public class OtpService {
 
         OtpVerifyResponse response = new OtpVerifyResponse();
         response.setProcessId(processId);
-        response.setUserId(process.getUserId());
         response.setOnboardingStatus(process.getStatus());
         response.setVerified(verified);
         response.setRemainingAttempts(remainingAttempts);
