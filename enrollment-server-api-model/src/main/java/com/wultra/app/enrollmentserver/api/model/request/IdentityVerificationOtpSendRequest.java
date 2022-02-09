@@ -15,33 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.model.enumeration;
+package com.wultra.app.enrollmentserver.api.model.request;
+
+import lombok.Data;
 
 /**
- * Enumeration representing onboarding process status.
+ * Request class used when sending or resending an OTP code during identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public enum OnboardingStatus {
+@Data
+public class IdentityVerificationOtpSendRequest {
 
-    /**
-     * Activation is in progress.
-     */
-    ACTIVATION_IN_PROGRESS,
-
-    /**
-     * User verification after successful activation is in progress.
-     */
-    VERIFICATION_IN_PROGRESS,
-
-    /**
-     * Onboarding process is finished.
-     */
-    FINISHED,
-
-    /**
-     * Onboarding process is failed.
-     */
-    FAILED
+    private String processId;
 
 }

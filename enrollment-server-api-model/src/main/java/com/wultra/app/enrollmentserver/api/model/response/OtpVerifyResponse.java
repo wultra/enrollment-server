@@ -21,7 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
 /**
- * Response class used when verifying an OTP code.
+ * Response class used when verifying an OTP code during onboarding.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */

@@ -82,7 +82,7 @@ public class DocumentStatusService {
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
     public void cleanupObsoleteVerificationProcesses() {
         int count = documentVerificationRepository.failObsoleteVerifications(
-                getProcessExpirationTimestamp(),
+                getVerificationExpirationTimestamp(),
                 new Date(),
                 MESSAGE_OBSOLETE_VERIFICATION_PROCESS
         );
@@ -98,7 +98,7 @@ public class DocumentStatusService {
         return dateRetention.getTime();
     }
 
-    private Date getProcessExpirationTimestamp() {
+    private Date getVerificationExpirationTimestamp() {
         int expirationTime = identityVerificationConfig.getVerificationExpirationTime();
         Calendar dateExpiration = GregorianCalendar.getInstance();
         dateExpiration.add(Calendar.SECOND, expirationTime);

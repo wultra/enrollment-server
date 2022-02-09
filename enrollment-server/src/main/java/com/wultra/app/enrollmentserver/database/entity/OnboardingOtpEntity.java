@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -62,6 +63,10 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "status", nullable = false)
     private OtpStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private OtpType type;
+
     @Column(name = "error_detail")
     private String errorDetail;
 
@@ -82,12 +87,12 @@ public class OnboardingOtpEntity implements Serializable {
         if (this == o) return true;
         if (!(o instanceof OnboardingOtpEntity)) return false;
         OnboardingOtpEntity that = (OnboardingOtpEntity) o;
-        return process.equals(that.process) && timestampCreated.equals(that.timestampCreated);
+        return process.equals(that.process) && type.equals(that.type) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(process, timestampCreated);
+        return Objects.hash(process, type, timestampCreated);
     }
 }
 

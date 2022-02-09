@@ -33,8 +33,11 @@ public class OnboardingConfig {
     @Value("${enrollment-server.identity-verification.otp.length:8}")
     private int otpLength;
 
-    @Value("${enrollment-server.onboarding-process.expiration.seconds:300}")
-    private int processExpirationTime;
+    @Value("${enrollment-server.onboarding-process.activation.expiration.seconds:300}")
+    private int activationExpirationTime;
+
+    @Value("${enrollment-server.onboarding-process.otp.expiration.seconds:300}")
+    private int otpExpirationTime;
 
     @Value("${enrollment-server.onboarding-process.max-failed-attempts:5}")
     private int maxFailedAttempts;
