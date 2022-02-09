@@ -17,10 +17,14 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
@@ -34,9 +38,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
-import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
@@ -428,11 +429,37 @@ public class IdentityVerificationService {
     private List<DocumentStatusResponse.DocumentMetadata> createDocsMetadata(List<DocumentVerificationEntity> entities) {
         List<DocumentStatusResponse.DocumentMetadata> docsMetadata = new ArrayList<>();
         entities.forEach(entity -> {
+            List<String> errors = new ArrayList<>();
+            if (entity.getErrorDetail() != null) {
+                errors.add(entity.getErrorDetail());
+            }
+            if (DocumentStatus.REJECTED.equals(entity.getStatus())) {
+                // Add all rejection reasons from the latest document result
+                Optional<DocumentResultEntity> docResultOptional = entity.getResults().stream().findFirst();
+                if (docResultOptional.isPresent()) {
+                    DocumentResultEntity docResult = docResultOptional.get();
+                    List<String> rejectionReasons;
+                    try {
+                        rejectionReasons = documentVerificationProvider.parseRejectionReasons(docResult);
+                    } catch (DocumentVerificationException e) {
+                        logger.debug("Parsing rejection reasons failure", e);
+                        logger.warn("Unable to parse rejection reasons from {} of a rejected {}", docResult, entity);
+                        return;
+                    }
+                    if (rejectionReasons.isEmpty()) {
+                        logger.warn("No rejection reasons found in {} of a rejected {}", docResult, entity);
+                    } else {
+                        errors.addAll(rejectionReasons);
+                    }
+                } else {
+                    logger.warn("Missing document result for {}, defaulting errors to reject reason", entity);
+                    errors.add(entity.getRejectReason());
+                }
+            }
+
             DocumentStatusResponse.DocumentMetadata docMetadata = new DocumentStatusResponse.DocumentMetadata();
             docMetadata.setId(entity.getId());
-            if (entity.getErrorDetail() != null) {
-                docMetadata.setErrors(List.of(entity.getErrorDetail()));
-            }
+            docMetadata.setErrors(errors);
             docMetadata.setFilename(entity.getFilename());
             docMetadata.setStatus(entity.getStatus());
             docsMetadata.add(docMetadata);

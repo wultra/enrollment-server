@@ -18,10 +18,12 @@
 package com.wultra.app.docverify.zenid.provider;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.docverify.zenid.service.ZenidRestApiService;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -60,14 +62,15 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     /**
      * Service constructor.
-     * @param objectMapper Object mapper.
+     *
+     * @param objectMapper                   Object mapper.
      * @param documentVerificationRepository Document verification repository.
-     * @param zenidApiService ZenID API service.
+     * @param zenidApiService                ZenID API service.
      */
-     @Autowired
+    @Autowired
     public ZenidDocumentVerificationProvider(
             @Qualifier("objectMapperZenid")
-            ObjectMapper objectMapper,
+                    ObjectMapper objectMapper,
             DocumentVerificationRepository documentVerificationRepository,
             ZenidRestApiService zenidApiService) {
         this.objectMapper = objectMapper;
@@ -276,6 +279,33 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         logger.info("{} Cleaned up uploaded documents {} from ZenID.", id, uploadIds);
     }
 
+    @Override
+    public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
+        if (docResult.getVerificationResult() == null) {
+            logger.warn("Missing the verification result in {} to parse rejected errors from", docResult);
+            return Collections.emptyList();
+        }
+        List<ZenidWebInvestigationValidatorResponse> validations;
+        try {
+            validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
+        } catch (JsonProcessingException e) {
+            logger.error("Unexpected error when parsing verification result data from " + docResult, e);
+            throw new DocumentVerificationException("Unexpected error when parsing verification result data");
+        }
+
+        final List<String> errors = new ArrayList<>();
+        validations.forEach(validation -> {
+            if (validation.isOk()) {
+                return;
+            }
+            validation.getIssues().forEach(issue -> {
+                errors.add(issue.getIssueDescription());
+            });
+        });
+
+        return errors;
+    }
+
     private DocumentSubmitResult createDocumentSubmitResult(OwnerId id,
                                                             String documentId,
                                                             String uploadContext,
@@ -314,9 +344,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     private void checkForMinedPhoto(OwnerId id,
-            String documentId,
-            DocumentsSubmitResult result,
-            ZenidSharedMineAllResult minedData) {
+                                    String documentId,
+                                    DocumentsSubmitResult result,
+                                    ZenidSharedMineAllResult minedData) {
         // Photo hash of the person is optionally present at /MinedData/Photo/ImageData/ImageHash
         ZenidSharedMinedPhoto photo = minedData.getPhoto();
         if (photo != null && photo.getImageData() != null && photo.getImageData().getImageHash() != null) {

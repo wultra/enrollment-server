@@ -189,10 +189,10 @@ public class DocumentVerificationEntity implements Serializable {
     private Date timestampLastUpdated;
 
     /**
-     * Document results from different phases of processing (upload, verification)
+     * Document results from different phases of processing (upload, verification) starting with the latest entity
      */
     @OneToMany(mappedBy = "documentVerification", cascade = CascadeType.ALL)
-    @OrderBy("timestampCreated")
+    @OrderBy("timestampCreated desc")
     private Set<DocumentResultEntity> results = new LinkedHashSet<>();
 
     @Override

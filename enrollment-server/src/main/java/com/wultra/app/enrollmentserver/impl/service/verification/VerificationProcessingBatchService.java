@@ -79,7 +79,7 @@ public class VerificationProcessingBatchService {
 
                 final OwnerId ownerId = new OwnerId();
                 ownerId.setActivationId(docVerification.getActivationId());
-                ownerId.setUserId("server-task-doc-submits-verifications");
+                ownerId.setUserId("server-task-doc-submit-verifications");
 
                 DocumentsVerificationResult docVerificationResult;
                 try {

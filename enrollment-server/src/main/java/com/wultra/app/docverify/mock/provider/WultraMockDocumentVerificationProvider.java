@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -32,6 +33,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -142,6 +144,15 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     @Override
     public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
         logger.info("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
+    }
+
+    @Override
+    public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
+        if (docResult.getVerificationResult().contains("rejected")) {
+            return List.of("Rejection reason");
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     private DocumentSubmitResult toDocumentSubmitResult(String docId) {

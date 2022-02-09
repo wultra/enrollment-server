@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -33,6 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,6 +132,17 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
         List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
 
         provider.cleanupDocuments(ownerId, uploadIds);
+    }
+
+    @Test
+    public void parseRejectionReasonsTest() throws Exception {
+        DocumentResultEntity docResultRejected = new DocumentResultEntity();
+        docResultRejected.setVerificationResult("{\"reason\":\"rejected\"}");
+        assertEquals(List.of("Rejection reason"), provider.parseRejectionReasons(docResultRejected));
+
+        DocumentResultEntity docResultNotRejected = new DocumentResultEntity();
+        docResultNotRejected.setVerificationResult("{\"reason\":\"ok\"}");
+        assertEquals(Collections.emptyList(), provider.parseRejectionReasons(docResultNotRejected));
     }
 
     private OwnerId createOwnerId() {
