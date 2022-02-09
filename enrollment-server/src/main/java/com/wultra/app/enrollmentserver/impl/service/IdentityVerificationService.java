@@ -69,6 +69,7 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
+    private final IdentityVerificationOtpService identityVerificationOtpService;
     private final OnboardingService onboardingService;
 
     /**
@@ -82,6 +83,7 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
+     * @param identityVerificationOtpService Identity verification OTP service.
      * @param onboardingService Onboarding service.
      */
     @Autowired
@@ -93,7 +95,7 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService) {
+            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, IdentityVerificationOtpService identityVerificationOtpService, OnboardingService onboardingService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -103,6 +105,7 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
+        this.identityVerificationOtpService = identityVerificationOtpService;
         this.onboardingService = onboardingService;
     }
 
@@ -125,7 +128,7 @@ public class IdentityVerificationService {
      */
     public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         // Check that process ID matches onboarding process ID
-        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         String processIdOnboarding = processEntity.getId();
         if (!processIdOnboarding.equals(processId)) {
             logger.warn("Invalid process ID received in request: {}", processId);
@@ -260,7 +263,13 @@ public class IdentityVerificationService {
         if (allDocVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
             idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
-            idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            if (!identityVerificationConfig.isVerificationOtpEnabled() || identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
+                // OTP verification is disabled or OTP verification was successful
+                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            } else {
+                // OTP verification is pending
+                idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
+            }
         } else {
             allDocVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))

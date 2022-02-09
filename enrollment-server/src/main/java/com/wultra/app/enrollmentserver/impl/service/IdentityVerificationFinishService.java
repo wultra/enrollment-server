@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -85,8 +86,9 @@ public class IdentityVerificationFinishService {
         }
 
         // Terminate onboarding process
-        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcess(ownerId.getActivationId());
+        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         processEntity.setStatus(OnboardingStatus.FINISHED);
+        processEntity.setTimestampFinished(new Date());
         onboardingService.updateProcess(processEntity);
     }
 

@@ -55,6 +55,7 @@ CREATE TABLE es_onboarding_otp (
     process_id VARCHAR(36) NOT NULL,
     otp_code VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL,
+    type VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
     failed_attempts INTEGER,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
