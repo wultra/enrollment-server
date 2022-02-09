@@ -20,9 +20,11 @@ package com.wultra.app.enrollmentserver.impl.service.verification;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -70,36 +72,26 @@ public class VerificationProcessingService {
             logger.debug("Verification of the identity is still in progress, {}", ownerId);
             return;
         }
+
         for (DocumentVerificationEntity docVerification : docVerifications) {
-            docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            docVerification.setTimestampVerified(ownerId.getTimestamp());
-            docVerification.setVerificationScore(result.getVerificationScore());
-            switch (result.getStatus()) {
-                case ACCEPTED:
-                    docVerification.setStatus(DocumentStatus.ACCEPTED);
-                    break;
-                case FAILED:
-                    docVerification.setStatus(DocumentStatus.FAILED);
-                    docVerification.setErrorDetail(result.getErrorDetail());
-                    break;
-                case REJECTED:
-                    docVerification.setStatus(DocumentStatus.REJECTED);
-                    docVerification.setRejectReason(result.getRejectReason());
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected verification result status: " + result.getStatus());
-            }
-            logger.info("Finished verification of {} with status: {}, {}", docVerification, result.getStatus(), ownerId);
+            updateDocVerification(ownerId, docVerification, result);
 
             if (!DocumentStatus.FAILED.equals(docVerification.getStatus())) {
-                Optional<DocumentVerificationResult> docResult = result.getResults().stream()
+                Optional<DocumentVerificationResult> docVerificationResult = result.getResults().stream()
                         .filter(value -> value.getUploadId().equals(docVerification.getUploadId()))
                         .findFirst();
-                if (docResult.isPresent()) {
-                    DocumentResultEntity docResultEntity = createDocumentResult(docResult.get());
-                    docResultEntity.setDocumentVerification(docVerification);
-                    docResultEntity.setTimestampCreated(ownerId.getTimestamp());
-                    documentResultRepository.save(docResultEntity);
+                if (docVerificationResult.isPresent()) {
+                    DocumentResultEntity docResult = null;
+                    try {
+                        docResult = getDocumentResultEntity(ownerId, docVerification);
+                    } catch (DocumentVerificationException e) {
+                        logger.warn("Unable to get document result for " + docVerification + ", " + ownerId, e);
+                        docVerification.setStatus(DocumentStatus.FAILED);
+                    }
+                    if (docResult != null) {
+                        updateDocumentResult(docResult, docVerificationResult.get());
+                        documentResultRepository.save(docResult);
+                    }
                 } else {
                     logger.error("Missing verification result for {} with uploadId: {}, {}",
                             docVerification, docVerification.getUploadId(), ownerId
@@ -109,14 +101,82 @@ public class VerificationProcessingService {
         }
     }
 
-    private DocumentResultEntity createDocumentResult(
-            DocumentVerificationResult docVerificationResult) {
-        DocumentResultEntity entity = new DocumentResultEntity();
-        entity.setErrorDetail(docVerificationResult.getErrorDetail());
-        entity.setPhase(DocumentProcessingPhase.VERIFICATION);
-        entity.setRejectReason(docVerificationResult.getRejectReason());
-        entity.setVerificationResult(docVerificationResult.getVerificationResult());
-        return entity;
+    /**
+     * Provides document result entity for verification data update
+     *
+     * @param ownerId Owner identification.
+     * @param docVerification Document verification entity.
+     * @return Document result entity to be updated with verification data
+     */
+    private DocumentResultEntity getDocumentResultEntity(OwnerId ownerId, DocumentVerificationEntity docVerification)
+            throws DocumentVerificationException {
+        IdentityVerificationPhase phase = docVerification.getIdentityVerification().getPhase();
+        DocumentResultEntity docResult;
+        if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(phase)) {
+            List<DocumentResultEntity> docResults =
+                    documentResultRepository.findLatestResults(docVerification.getId(), DocumentProcessingPhase.UPLOAD);
+            if (docResults.isEmpty()) {
+                logger.warn("No document result for upload of {}, creating a new one, {}", docVerification, ownerId);
+                docResult = new DocumentResultEntity();
+                docResult.setDocumentVerification(docVerification);
+                docResult.setPhase(DocumentProcessingPhase.UPLOAD);
+                docResult.setTimestampCreated(ownerId.getTimestamp());
+            } else {
+                docResult = docResults.get(0);
+                if (docResults.size() > 1) {
+                    logger.warn("Too many document results for upload of {}, count: {}, the latest wins, {}",
+                            docVerification, docResults.size(), ownerId);
+                }
+            }
+        } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(phase)) {
+            docResult = new DocumentResultEntity();
+            docResult.setDocumentVerification(docVerification);
+            docResult.setPhase(DocumentProcessingPhase.VERIFICATION);
+            docResult.setTimestampCreated(ownerId.getTimestamp());
+        } else {
+            throw new DocumentVerificationException("Unexpected identity verification phase: " + phase);
+        }
+        return docResult;
+    }
+
+    /**
+     * Update document verification data
+     * @param ownerId Owner identification.
+     * @param docVerification Document verification entity.
+     * @param docVerificationResult Document verification result.
+     */
+    private void updateDocVerification(OwnerId ownerId, DocumentVerificationEntity docVerification, DocumentsVerificationResult docVerificationResult) {
+        docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        docVerification.setTimestampVerified(ownerId.getTimestamp());
+        docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
+        switch (docVerificationResult.getStatus()) {
+            case ACCEPTED:
+                docVerification.setStatus(DocumentStatus.ACCEPTED);
+                break;
+            case FAILED:
+                docVerification.setStatus(DocumentStatus.FAILED);
+                docVerification.setErrorDetail(docVerificationResult.getErrorDetail());
+                break;
+            case REJECTED:
+                docVerification.setStatus(DocumentStatus.REJECTED);
+                docVerification.setRejectReason(docVerificationResult.getRejectReason());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
+        }
+        logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerificationResult.getStatus(), ownerId);
+    }
+
+    /**
+     * Updates document result with the verification result
+     * @param docResult Document result.
+     * @param docVerificationResult Document verification result.
+     */
+    private void updateDocumentResult(DocumentResultEntity docResult,
+                                      DocumentVerificationResult docVerificationResult) {
+        docResult.setErrorDetail(docVerificationResult.getErrorDetail());
+        docResult.setRejectReason(docVerificationResult.getRejectReason());
+        docResult.setVerificationResult(docVerificationResult.getVerificationResult());
     }
 
 }

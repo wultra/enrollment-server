@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,76 +15,89 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.impl.service.document;
+package com.wultra.app.enrollmentserver.impl.service.verification;
 
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 /**
- * Service implementing document processing features.
+ * Service implementing verification processing features.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
-public class DocumentProcessingBatchService {
+public class VerificationProcessingBatchService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DocumentProcessingBatchService.class);
+    private static final Logger logger = LoggerFactory.getLogger(VerificationProcessingBatchService.class);
 
     private final DocumentResultRepository documentResultRepository;
 
-    private final DocumentProcessingService documentProcessingService;
+    private final DocumentVerificationProvider documentVerificationProvider;
+
+    private final VerificationProcessingService verificationProcessingService;
 
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
-     * @param documentProcessingService Document processing service.
+     * @param documentVerificationProvider Document verification provider.
+     * @param verificationProcessingService Verification processing service.
      */
     @Autowired
-    public DocumentProcessingBatchService(
+    public VerificationProcessingBatchService(
             DocumentResultRepository documentResultRepository,
-            DocumentProcessingService documentProcessingService) {
+            DocumentVerificationProvider documentVerificationProvider,
+            VerificationProcessingService verificationProcessingService) {
         this.documentResultRepository = documentResultRepository;
-        this.documentProcessingService = documentProcessingService;
+        this.documentVerificationProvider = documentVerificationProvider;
+        this.verificationProcessingService = verificationProcessingService;
     }
 
     /**
-     * Checks in progress document submits on current provider status and data result
+     * Checks document submit verifications
      */
     @Transactional
-    public void checkInProgressDocumentSubmits() {
+    public void checkDocumentSubmitVerifications() {
         AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmits()) {
+        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmitVerifications()) {
             stream.forEach(docResult -> {
                 DocumentVerificationEntity docVerification = docResult.getDocumentVerification();
+
                 final OwnerId ownerId = new OwnerId();
                 ownerId.setActivationId(docVerification.getActivationId());
-                ownerId.setUserId("server-task-in-progress-submits");
+                ownerId.setUserId("server-task-doc-submits-verifications");
 
+                DocumentsVerificationResult docVerificationResult;
                 try {
-                    this.documentProcessingService.checkDocumentSubmitWithProvider(ownerId, docResult);
-                } catch (Exception e) {
-                    logger.error("Unable to check submit status of {} at provider, {}", docResult, ownerId);
+                    docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, docVerification.getVerificationId());
+                } catch (DocumentVerificationException e) {
+                    logger.error("Checking document submit verification failed, " + ownerId, e);
+                    return;
                 }
+                verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
 
                 if (!DocumentStatus.UPLOAD_IN_PROGRESS.equals(docVerification.getStatus())) {
-                    logger.debug("Synced {} status to {} with the provider, {}", docVerification, docVerification.getStatus(), ownerId);
+                    logger.debug("Finished verification of {} during submit at the provider, {}", docVerification, ownerId);
                     countFinished.incrementAndGet();
                 }
             });
         }
         if (countFinished.get() > 0) {
-            logger.debug("Finished {} documents which were in progress", countFinished.get());
+            logger.debug("Finished {} documents verifications during submit", countFinished.get());
         }
     }
 

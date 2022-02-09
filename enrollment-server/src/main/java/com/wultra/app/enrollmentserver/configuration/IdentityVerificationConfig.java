@@ -33,6 +33,9 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server.document-verification.provider:mock}")
     private String documentVerificationProvider;
 
+    @Value("${enrollment-server.document-verification.verificationWithSubmitEnabled:true}")
+    private boolean documentVerificationWithSubmitEnabled;
+
     @Value("${enrollment-server.document-verification.cleanupEnabled:false}")
     private boolean documentVerificationCleanupEnabled;
 

@@ -19,10 +19,12 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -34,12 +36,30 @@ import java.util.stream.Stream;
 public interface DocumentResultRepository extends CrudRepository<DocumentResultEntity, Long> {
 
     /**
-     * @return All not finished document uploads (in progress status and no extracted data filled)
+     * @return All not finished document uploads (upload is in progress and no extracted data filled)
      */
     @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
             " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
             " AND doc.extractedData IS NULL " +
             " ORDER BY doc.timestampCreated ASC")
     Stream<DocumentResultEntity> streamAllInProgressDocumentSubmits();
+
+    /**
+     * @return All not finished document submit verifications (upload is in progress and verification id exists)
+     */
+    @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
+            " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
+            " AND doc.documentVerification.verificationId IS NOT NULL" +
+            " ORDER BY doc.timestampCreated ASC")
+    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmitVerifications();
+
+    /**
+     * @return All document results for the specified document verification and processing phase
+     */
+    @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
+            " doc.documentVerification.id = :docVerificationId" +
+            " AND doc.phase = :phase" +
+            " ORDER BY doc.timestampCreated DESC")
+    List<DocumentResultEntity> findLatestResults(String docVerificationId, DocumentProcessingPhase phase);
 
 }
