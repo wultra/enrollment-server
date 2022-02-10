@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.provider;
 
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -88,4 +89,13 @@ public interface DocumentVerificationProvider {
      */
     void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException;
 
+    // TODO reconsider this method, mention it in the tldr doc
+    /**
+     * Parses all detected rejection reasons from a JSON result of verification
+     * @param docResult Document result entity
+     * @return List of rejection reasons parsed from the verification result
+     * @throws DocumentVerificationException When an error during parsing rejection reasons occurred
+     */
+    List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException;
+    
 }

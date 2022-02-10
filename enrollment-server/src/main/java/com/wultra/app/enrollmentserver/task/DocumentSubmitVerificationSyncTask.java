@@ -17,32 +17,32 @@
  */
 package com.wultra.app.enrollmentserver.task;
 
-import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingBatchService;
+import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingBatchService;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Task to sync document submit status and data with the provider.
+ * Task to check document submit verification result with the provider.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class DocumentSubmitSyncTask {
+public class DocumentSubmitVerificationSyncTask {
 
-    private final DocumentProcessingBatchService documentProcessingBatchService;
+    private final VerificationProcessingBatchService verificationProcessingBatchService;
 
-    public DocumentSubmitSyncTask(DocumentProcessingBatchService documentProcessingBatchService) {
-        this.documentProcessingBatchService = documentProcessingBatchService;
+    public DocumentSubmitVerificationSyncTask(VerificationProcessingBatchService verificationProcessingBatchService) {
+        this.verificationProcessingBatchService = verificationProcessingBatchService;
     }
 
     /**
-     * Scheduled task to check in progress document submits at the target provider
+     * Scheduled task to check document submit verifications at the target provider
      */
-    @Scheduled(cron = "${enrollment-server.document-verification.checkInProgressDocumentSubmits.cron:0/5 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = "checkInProgressDocumentSubmits", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void checkInProgressDocumentSubmits() {
-        documentProcessingBatchService.checkInProgressDocumentSubmits();
+    @Scheduled(cron = "${enrollment-server.document-verification.checkDocumentSubmitVerifications.cron:0/5 * * * * *}", zone = "UTC")
+    @SchedulerLock(name = "checkDocumentSubmitVerifications", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void checkDocumentSubmitVerifications() {
+        verificationProcessingBatchService.checkDocumentSubmitVerifications();
     }
 
 }

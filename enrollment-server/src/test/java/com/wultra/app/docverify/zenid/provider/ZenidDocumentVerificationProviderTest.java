@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
+import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -166,6 +167,14 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         provider.submitDocuments(ownerId, documents);
 
         cleanupDocuments(ownerId);
+    }
+
+    @Test
+    public void parseRejectionReasonsTest() throws Exception {
+        DocumentResultEntity docResult = new DocumentResultEntity();
+        docResult.setVerificationResult("[{\"Ok\": false, \"Issues\":[{\"IssueDescription\": \"Rejection reason\"}]}]");
+        List<String> rejectionReasons = provider.parseRejectionReasons(docResult);
+        assertEquals(List.of("Rejection reason"), rejectionReasons);
     }
 
     private void cleanupDocuments(OwnerId ownerId) throws Exception {

@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service.document;
 
+import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
@@ -32,8 +33,8 @@ import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,6 +133,7 @@ public class DocumentProcessingService {
 
             DocumentResultEntity docResult = createDocumentResult(docVerification, docSubmitResult);
             docResult.setTimestampCreated(ownerId.getTimestamp());
+
             docResults.add(docResult);
 
             // Delete previously persisted document after a successful upload to the provider
@@ -196,6 +198,7 @@ public class DocumentProcessingService {
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
         }
+
         documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
         documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
         documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
@@ -348,13 +351,31 @@ public class DocumentProcessingService {
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
-            if (docSubmitResult.getExtractedData() == null) {
-                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-            } else { // a finished upload contains extracted data
-                docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-            }
             docVerification.setTimestampUploaded(ownerId.getTimestamp());
             docVerification.setUploadId(docSubmitResult.getUploadId());
+
+            // only finished upload contains extracted data
+            if (docSubmitResult.getExtractedData() == null) {
+                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+            } else if (!DocumentType.SELFIE_PHOTO.equals(docVerification.getType()) &&
+                    identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
+                verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
+                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+            } else { // no document verification during upload, wait for the final all documents verification
+                docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+            }
+        }
+    }
+
+    private void verifyDocumentWithUpload(OwnerId ownerId, DocumentVerificationEntity docVerification, String uploadId) {
+        try {
+            DocumentsVerificationResult docsVerificationResult =
+                    documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
+            docVerification.setVerificationId(docsVerificationResult.getVerificationId());
+        } catch (DocumentVerificationException e) {
+            logger.warn("Unable to verify document with uploadId: " + uploadId, e.getMessage(), ownerId);
+            docVerification.setStatus(DocumentStatus.FAILED);
+            docVerification.setErrorDetail(e.getMessage());
         }
     }
 
