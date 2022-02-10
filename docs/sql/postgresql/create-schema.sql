@@ -81,7 +81,8 @@ CREATE TABLE es_identity_verification (
     error_detail VARCHAR(256),
     session_info TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_last_updated TIMESTAMP
+    timestamp_last_updated TIMESTAMP,
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 );
 
 CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
@@ -150,7 +151,7 @@ CREATE TABLE es_document_result (
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
-CREATE TABLE IF NOT EXISTS shedlock(
+CREATE TABLE IF NOT EXISTS shedlock (
     name VARCHAR(64) NOT NULL,
     lock_until TIMESTAMP NOT NULL,
     locked_at TIMESTAMP NOT NULL,
