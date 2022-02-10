@@ -186,7 +186,6 @@ public class IdentityVerificationService {
 
         List<DocumentVerificationEntity> docsVerifications =
                 documentProcessingService.submitDocuments(idVerification, request, ownerId);
-        checkIdentityDocumentsForVerification(ownerId, idVerification);
         identityVerificationRepository.save(idVerification);
         return docsVerifications;
     }
