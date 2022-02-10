@@ -73,7 +73,8 @@ CREATE TABLE es_identity_verification (
     error_detail VARCHAR(256),
     session_info TEXT,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_last_updated DATETIME
+    timestamp_last_updated DATETIME,
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
@@ -140,7 +141,7 @@ CREATE TABLE es_document_result (
 -- MySQL creates indexes on foreign keys automatically
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
-CREATE TABLE IF NOT EXISTS shedlock(
+CREATE TABLE IF NOT EXISTS shedlock (
     name VARCHAR(64) NOT NULL,
     lock_until TIMESTAMP(3) NOT NULL,
     locked_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
