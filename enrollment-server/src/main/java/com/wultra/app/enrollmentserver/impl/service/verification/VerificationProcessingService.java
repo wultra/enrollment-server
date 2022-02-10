@@ -151,7 +151,12 @@ public class VerificationProcessingService {
         docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
         switch (docVerificationResult.getStatus()) {
             case ACCEPTED:
-                docVerification.setStatus(DocumentStatus.ACCEPTED);
+                // document during upload is only partially verified and cannot be accepted now, it waits for the standard verification process
+                if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(docVerification.getIdentityVerification().getPhase())) {
+                    docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+                } else {
+                    docVerification.setStatus(DocumentStatus.ACCEPTED);
+                }
                 break;
             case FAILED:
                 docVerification.setStatus(DocumentStatus.FAILED);
@@ -164,7 +169,7 @@ public class VerificationProcessingService {
             default:
                 throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
         }
-        logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerificationResult.getStatus(), ownerId);
+        logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerification.getStatus(), ownerId);
     }
 
     /**

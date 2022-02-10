@@ -411,6 +411,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
             String extractedData = toExtractedData(id, response.getMinedData());
             for (String sampleId : sampleIdsValidations.keySet()) {
+                // TODO Consider using an object instead of simple array (call for a standard json)
                 List<ZenidWebInvestigationValidatorResponse> validations = new ArrayList<>(sampleIdsValidations.get(sampleId));
 
                 DocumentVerificationResult verificationResult = new DocumentVerificationResult();
