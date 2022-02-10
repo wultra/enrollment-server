@@ -33,6 +33,7 @@ import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
@@ -356,7 +357,8 @@ public class DocumentProcessingService {
             // only finished upload contains extracted data
             if (docSubmitResult.getExtractedData() == null) {
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-            } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
+            } else if (!DocumentType.SELFIE_PHOTO.equals(docVerification.getType()) &&
+                    identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
                 verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
             } else { // no document verification during upload, wait for the final all documents verification

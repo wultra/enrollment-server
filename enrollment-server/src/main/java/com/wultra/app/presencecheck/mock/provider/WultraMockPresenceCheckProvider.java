@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 /**
@@ -69,8 +71,18 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException {
+        String selfiePhotoPath = "/images/specimen_photo.jpg";
         Image photo = new Image();
-        photo.setData(new byte[]{});
+        try (InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(selfiePhotoPath)) {
+            if (is != null) {
+                photo.setData(is.readAllBytes());
+            }
+        } catch (IOException e) {
+            logger.error("Unable to read image data from: " + selfiePhotoPath);
+        }
+        if (photo.getData() == null) {
+            photo.setData(new byte[]{});
+        }
         photo.setFilename("selfie_photo.jpg");
 
         PresenceCheckResult result = new PresenceCheckResult();
