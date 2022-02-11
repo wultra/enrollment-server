@@ -60,6 +60,7 @@ public class IdentityVerificationStatusService {
     private final PresenceCheckService presenceCheckService;
     private final IdentityVerificationFinishService identityVerificationFinishService;
     private final OnboardingService onboardingService;
+    private final IdentityVerificationOtpService identityVerificationOtpService;
 
     private final PowerAuthClient powerAuthClient;
 
@@ -74,6 +75,7 @@ public class IdentityVerificationStatusService {
      * @param presenceCheckService Presence check service.
      * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService Onboarding service.
+     * @param identityVerificationOtpService Identity verification OTP service.
      * @param powerAuthClient PowerAuth client.
      */
     @Autowired
@@ -85,7 +87,7 @@ public class IdentityVerificationStatusService {
             PresenceCheckService presenceCheckService,
             IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingService onboardingService,
-            PowerAuthClient powerAuthClient) {
+            IdentityVerificationOtpService identityVerificationOtpService, PowerAuthClient powerAuthClient) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
@@ -93,6 +95,7 @@ public class IdentityVerificationStatusService {
         this.presenceCheckService = presenceCheckService;
         this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
+        this.identityVerificationOtpService = identityVerificationOtpService;
         this.powerAuthClient = powerAuthClient;
     }
 
@@ -196,6 +199,16 @@ public class IdentityVerificationStatusService {
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
                 return response;
             }
+        } else if (IdentityVerificationPhase.OTP_VERIFICATION.equals(idVerification.getPhase())
+            && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+
+            if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
+                // OTP verification is complete, switch to final state
+                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+                idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+                identityVerificationFinishService.finishIdentityVerification(ownerId);
+            }
+
         }
 
         response.setIdentityVerificationStatus(idVerification.getStatus());

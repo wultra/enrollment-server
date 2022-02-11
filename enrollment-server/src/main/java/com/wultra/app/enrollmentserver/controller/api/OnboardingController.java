@@ -19,6 +19,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
@@ -78,11 +79,12 @@ public class OnboardingController {
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
+     * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
      */
     @RequestMapping(value = "start", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException {
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");

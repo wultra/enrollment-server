@@ -40,6 +40,11 @@ public enum IdentityVerificationPhase {
     DOCUMENT_VERIFICATION,
 
     /**
+     * OTP code verification is in progress.
+     */
+    OTP_VERIFICATION,
+
+    /**
      * The identity verification is in the final state.
      */
     COMPLETED
