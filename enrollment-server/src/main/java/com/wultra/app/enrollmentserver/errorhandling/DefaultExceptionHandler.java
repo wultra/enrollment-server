@@ -230,6 +230,6 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public @ResponseBody ErrorResponse handleTooManyProcessesException(TooManyProcessesException ex) {
         logger.warn("Too many onboarding processes started by the user", ex);
-        return new ErrorResponse("ONBOARDING_FAILED", "Too many onboarding processes started by the user.");
+        return new ErrorResponse("TOO_MANY_REQUESTS", "Too many onboarding processes started by the user.");
     }
 }

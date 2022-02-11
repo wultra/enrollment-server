@@ -28,6 +28,7 @@ import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.enrollmentserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
@@ -93,9 +94,10 @@ public class OnboardingService {
      * @param request Onboarding start request.
      * @return Onboarding start response.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
+     * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
      */
     @Transactional
-    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException {
         if (onboardingProvider == null) {
             logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
             throw new OnboardingProcessException();
@@ -119,7 +121,7 @@ public class OnboardingService {
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
         if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
             logger.warn("Maximum number of processes per day reached for user: " + userId);
-            throw new OnboardingProcessException();
+            throw new TooManyProcessesException();
         }
 
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForUser(userId, OnboardingStatus.ACTIVATION_IN_PROGRESS);
