@@ -107,9 +107,10 @@ public class IdentityVerificationStatusService {
      * @throws IdentityVerificationException Thrown when identity verification could not be started.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
     @Transactional
-    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
+    public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
         Optional<IdentityVerificationEntity> idVerificationOptional =

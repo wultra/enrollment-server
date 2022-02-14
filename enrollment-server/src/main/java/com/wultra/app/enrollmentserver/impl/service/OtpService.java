@@ -81,16 +81,6 @@ public class OtpService {
     }
 
     /**
-     * Get whether the next generated OTP is going to be a resend OTP for given OTP type.
-     * @param process Onboarding process.
-     * @param otpType OTP type.
-     * @return Whether the next generated OTP is going to be a resend OTP for given OTP type.
-     */
-    public boolean isNextOtpResend(OnboardingProcessEntity process, OtpType otpType) {
-        return onboardingOtpRepository.getOtpCount(process.getId(), otpType) > 0;
-    }
-
-    /**
      * Create an OTP code for onboarding process for resend.
      * @param process Onboarding process.
      * @param otpType OTP type.

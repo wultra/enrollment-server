@@ -75,10 +75,11 @@ public class IdentityVerificationOtpService {
     /**
      * Send or resend an OTP code for a process during identity verification.
      * @param processId Process ID.
+     * @param isResend Whether the OTP code is being resent.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
-    public void sendOtpCode(String processId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+    public void sendOtpCode(String processId, boolean isResend) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         if (onboardingProvider == null) {
             logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
             throw new OnboardingProcessException();
@@ -89,7 +90,6 @@ public class IdentityVerificationOtpService {
             throw new OnboardingProcessException();
         }
         final OnboardingProcessEntity process = processOptional.get();
-        final boolean isResend = otpService.isNextOtpResend(process, OtpType.USER_VERIFICATION);
         // Create an OTP code
         final String otpCode;
         if (isResend) {

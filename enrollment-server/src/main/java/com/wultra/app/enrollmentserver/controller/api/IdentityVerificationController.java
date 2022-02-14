@@ -154,6 +154,7 @@ public class IdentityVerificationController {
      * @throws IdentityVerificationException Thrown when identity verification status fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
     @RequestMapping(value = "status", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -163,7 +164,7 @@ public class IdentityVerificationController {
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                                               @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking identity verification status");
@@ -387,7 +388,7 @@ public class IdentityVerificationController {
     }
 
     /**
-     * Send or resend OTP code to the user.
+     * Resend OTP code to the user.
      * @param request Presence check initialization request.
      * @param eciesContext ECIES context.
      * @return Send OTP response.
@@ -395,10 +396,10 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
-    @RequestMapping(value = "otp/send", method = RequestMethod.POST)
+    @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    public Response sendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
-                            @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+    public Response resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
+                              @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
 
         // Check if the request was correctly decrypted
@@ -413,7 +414,7 @@ public class IdentityVerificationController {
         }
 
         final String processId = request.getRequestObject().getProcessId();
-        identityVerificationOtpService.sendOtpCode(processId);
+        identityVerificationOtpService.sendOtpCode(processId, true);
         return new Response();
     }
 
