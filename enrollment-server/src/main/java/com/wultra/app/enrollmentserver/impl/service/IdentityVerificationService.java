@@ -71,6 +71,7 @@ public class IdentityVerificationService {
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
     private final OnboardingService onboardingService;
+    private final IdentityVerificationOtpService identityVerificationOtpService;
 
     /**
      * Service constructor.
@@ -84,6 +85,7 @@ public class IdentityVerificationService {
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
      * @param onboardingService Onboarding service.
+     * @param identityVerificationOtpService Identity verification OTP service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -94,7 +96,7 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService) {
+            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService, IdentityVerificationOtpService identityVerificationOtpService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -105,6 +107,7 @@ public class IdentityVerificationService {
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
         this.onboardingService = onboardingService;
+        this.identityVerificationOtpService = identityVerificationOtpService;
     }
 
     /**
@@ -232,11 +235,12 @@ public class IdentityVerificationService {
      *
      * @param ownerId Owner identification.
      * @param idVerification Verification identity
-     * @throws DocumentVerificationException When an error during verification check occurred
+     * @throws DocumentVerificationException Thrown when an error during verification check occurred.
+     * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
     @Transactional
     public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws DocumentVerificationException {
+            throws DocumentVerificationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         List<DocumentVerificationEntity> allDocVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_IN_PROGRESS);
         Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
@@ -260,9 +264,10 @@ public class IdentityVerificationService {
         if (allDocVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
             if (identityVerificationConfig.isVerificationOtpEnabled()) {
-                // OTP verification is pending, switch to OTP verification state
+                // OTP verification is pending, switch to OTP verification state and send OTP code
                 idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
                 idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
+                identityVerificationOtpService.sendOtpCode(idVerification.getProcessId(), false);
             } else {
                 // OTP verification is disabled, switch to final state
                 idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);

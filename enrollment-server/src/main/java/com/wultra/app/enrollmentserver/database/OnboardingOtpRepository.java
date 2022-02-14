@@ -36,7 +36,8 @@ import java.util.Optional;
 @Repository
 public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEntity, String> {
 
-    @Query("SELECT o FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type ORDER BY o.timestampCreated DESC")
+    @Query("SELECT o FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type AND o.timestampCreated = " +
+            "(SELECT MAX(o2.timestampCreated) FROM OnboardingOtpEntity o2 WHERE o2.process.id = :processId AND o2.type = :type)")
     Optional<OnboardingOtpEntity> findLastOtp(String processId, OtpType type);
 
     @Modifying
