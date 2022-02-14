@@ -102,7 +102,7 @@ public class OtpService {
         final String processId = process.getId();
         // Do not allow spamming by OTP codes
         Date lastDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId, otpType);
-        int resendPeriod = onboardingConfig.getResendPeriod();
+        int resendPeriod = onboardingConfig.getOtpResendPeriod();
         Calendar c = GregorianCalendar.getInstance();
         c.setTime(lastDate);
         c.add(Calendar.SECOND, resendPeriod);
@@ -149,7 +149,7 @@ public class OtpService {
         boolean verified = false;
         int remainingAttempts = 0;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
-        int maxFailedAttempts = onboardingConfig.getMaxFailedAttempts();
+        int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
         if (otp.getStatus() == OtpStatus.ACTIVE && failedAttempts < maxFailedAttempts) {
             if (otp.getOtpCode().equals(otpCode)) {
                 verified = true;

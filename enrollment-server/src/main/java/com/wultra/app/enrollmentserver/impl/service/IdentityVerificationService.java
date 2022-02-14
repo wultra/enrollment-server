@@ -141,7 +141,7 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @return Document verification entities.
      */
-    public List<DocumentVerificationEntity>  submitDocuments(DocumentSubmitRequest request,
+    public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             OwnerId ownerId)
             throws DocumentSubmitException {
 
