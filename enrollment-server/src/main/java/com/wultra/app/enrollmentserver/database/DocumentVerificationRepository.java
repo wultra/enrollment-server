@@ -64,8 +64,8 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
             "WHERE d.activationId = :activationId " +
-            "AND d.status = :status")
-    List<DocumentVerificationEntity> findAllDocumentVerifications(String activationId, DocumentStatus status);
+            "AND d.status IN (:statuses)")
+    List<DocumentVerificationEntity> findAllDocumentVerifications(String activationId, List<DocumentStatus> statuses);
 
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
