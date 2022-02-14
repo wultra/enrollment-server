@@ -203,12 +203,18 @@ public class IdentityVerificationStatusService {
         } else if (IdentityVerificationPhase.OTP_VERIFICATION.equals(idVerification.getPhase())
             && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
 
-            if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
-                // OTP verification is complete, process document verification result
-                identityVerificationService.processDocumentVerificationResult(ownerId, idVerification);
-                if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
-                    identityVerificationFinishService.finishIdentityVerification(ownerId);
+            try {
+                if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
+                    // OTP verification is complete, process document verification result
+                    identityVerificationService.processDocumentVerificationResult(ownerId, idVerification);
+                    if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+                        identityVerificationFinishService.finishIdentityVerification(ownerId);
+                    }
                 }
+            } catch (OnboardingProcessException e) {
+                logger.error("Updating onboarding process failed, " + ownerId, e);
+                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+                return response;
             }
 
         }
