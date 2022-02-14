@@ -204,10 +204,11 @@ public class IdentityVerificationStatusService {
             && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
 
             if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
-                // OTP verification is complete, switch to final state
-                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
-                idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
-                identityVerificationFinishService.finishIdentityVerification(ownerId);
+                // OTP verification is complete, process document verification result
+                identityVerificationService.processDocumentVerificationResult(ownerId, idVerification);
+                if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+                    identityVerificationFinishService.finishIdentityVerification(ownerId);
+                }
             }
 
         }

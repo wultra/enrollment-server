@@ -73,6 +73,8 @@ public class IdentityVerificationService {
     private final OnboardingService onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
 
+    private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
+
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification config.
@@ -209,7 +211,8 @@ public class IdentityVerificationService {
         IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
 
         List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_PENDING);
+                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(),
+                        Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
         List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
@@ -242,7 +245,8 @@ public class IdentityVerificationService {
     public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws DocumentVerificationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         List<DocumentVerificationEntity> allDocVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_IN_PROGRESS);
+                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(),
+                        Collections.singletonList(DocumentStatus.VERIFICATION_IN_PROGRESS));
         Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
 
         for (DocumentVerificationEntity docVerification : allDocVerifications) {
@@ -261,20 +265,46 @@ public class IdentityVerificationService {
                 .anyMatch(docVerification -> DocumentStatus.VERIFICATION_IN_PROGRESS.equals(docVerification.getStatus()))) {
             return;
         }
-        if (allDocVerifications.stream()
-                .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
-            if (identityVerificationConfig.isVerificationOtpEnabled()) {
-                // OTP verification is pending, switch to OTP verification state and send OTP code
-                idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-                idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-                identityVerificationOtpService.sendOtpCode(idVerification.getProcessId(), false);
-            } else {
-                // OTP verification is disabled, switch to final state
-                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
-                idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
-            }
+
+        // The code below is called only once, right after completed document verification
+        if (identityVerificationConfig.isVerificationOtpEnabled()) {
+            // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
+            idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
+            idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
+            identityVerificationOtpService.sendOtpCode(idVerification.getProcessId(), false);
         } else {
-            allDocVerifications.stream()
+            resolveIdentityVerificationResult(idVerification, allDocVerifications);
+        }
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(idVerification);
+    }
+
+    /**
+     * Process identity verification result for document verifications which have already been previously processed.
+     * @param ownerId Owner identification.
+     * @param idVerification Identity verification entity.
+     */
+    @Transactional
+    public void processDocumentVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+        List<DocumentVerificationEntity> processedDocVerifications =
+                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DOCUMENT_STATUSES_PROCESSED);
+        resolveIdentityVerificationResult(idVerification, processedDocVerifications);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(idVerification);
+    }
+
+    /**
+     * Resolve identity verification result for an identity verification entity using specified document verification results.
+     * @param idVerification Identity verification entity.
+     * @param docVerifications Document verification results.
+     */
+    private void resolveIdentityVerificationResult(IdentityVerificationEntity idVerification, List<DocumentVerificationEntity> docVerifications) {
+        if (docVerifications.stream()
+                .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+            idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+        } else {
+            docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
@@ -283,7 +313,7 @@ public class IdentityVerificationService {
                         idVerification.setErrorDetail(failed.getErrorDetail());
                     });
 
-            allDocVerifications.stream()
+            docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
@@ -292,8 +322,6 @@ public class IdentityVerificationService {
                         idVerification.setErrorDetail(failed.getRejectReason());
                     });
         }
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        identityVerificationRepository.save(idVerification);
     }
 
     /**
