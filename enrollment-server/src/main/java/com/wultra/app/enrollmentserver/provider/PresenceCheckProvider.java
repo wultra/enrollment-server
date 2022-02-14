@@ -31,15 +31,6 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 public interface PresenceCheckProvider {
 
     /**
-     * Starts the presence check process. The process has to be initialized before this call.
-     *
-     * @param id Owner identification.
-     * @return Session info with data related to the presence check.
-     * @throws PresenceCheckException When an error occurred during presence check start.
-     */
-    SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException;
-
-    /**
      * Initializes presence check process.
      *
      * @param id Owner identification.
@@ -47,6 +38,15 @@ public interface PresenceCheckProvider {
      * @throws PresenceCheckException When an error during initialization occurred.
      */
     void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException;
+
+    /**
+     * Starts the presence check process. The process has to be initialized before this call.
+     *
+     * @param id Owner identification.
+     * @return Session info with data related to the presence check.
+     * @throws PresenceCheckException When an error occurred during presence check start.
+     */
+    SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException;
 
     /**
      * Gets the result of presence check process.

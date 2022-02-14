@@ -61,15 +61,6 @@ public class DocumentStatusService {
     }
 
     /**
-     * Check of document status in ID check system.
-     */
-    @Transactional
-    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    public void checkDocumentStatus() {
-        // Check document status for all documents which are in progress using polling
-    }
-
-    /**
      * Cleanup of large documents older than retention time.
      */
     @Transactional

@@ -39,11 +39,11 @@ public class OnboardingConfig {
     @Value("${enrollment-server.onboarding-process.otp.expiration.seconds:300}")
     private int otpExpirationTime;
 
-    @Value("${enrollment-server.onboarding-process.max-failed-attempts:5}")
-    private int maxFailedAttempts;
+    @Value("${enrollment-server.onboarding-process.otp.max-failed-attempts:5}")
+    private int otpMaxFailedAttempts;
 
-    @Value("${enrollment-server.onboarding-process.resend-period.seconds:30}")
-    private int resendPeriod;
+    @Value("${enrollment-server.onboarding-process.otp.resend-period.seconds:30}")
+    private int otpResendPeriod;
 
     @Value("${enrollment-server.onboarding-process.max-processes-per-day:5}")
     private int maxProcessCountPerDay;
