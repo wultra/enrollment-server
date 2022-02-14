@@ -359,8 +359,13 @@ public class DocumentProcessingService {
             // only finished upload contains extracted data
             if (docSubmitResult.getExtractedData() == null) {
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-            } else if (!DocumentType.SELFIE_PHOTO.equals(docVerification.getType()) &&
-                    identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
+            } else if (DocumentType.SELFIE_PHOTO.equals(docVerification.getType())) {
+                if (identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+                    docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+                } else {
+                    docVerification.setStatus(DocumentStatus.ACCEPTED);
+                }
+            } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
                 verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
             } else { // no document verification during upload, wait for the final all documents verification

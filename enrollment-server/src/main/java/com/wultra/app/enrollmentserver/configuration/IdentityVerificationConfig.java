@@ -42,6 +42,9 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server.presence-check.enabled:true}")
     private boolean presenceCheckEnabled;
 
+    @Value("${enrollment-server.presence-check.verifySelfieWithDocumentsEnabled:false}")
+    private boolean verifySelfieWithDocumentsEnabled;
+
     @Value("${enrollment-server.presence-check.provider:mock}")
     private String presenceCheckProvider;
 

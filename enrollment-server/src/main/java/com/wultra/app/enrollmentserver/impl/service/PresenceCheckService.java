@@ -165,10 +165,15 @@ public class PresenceCheckService {
         docVerificationEntity.setActivationId(ownerId.getActivationId());
         docVerificationEntity.setIdentityVerification(idVerification);
         docVerificationEntity.setFilename(result.getPhoto().getFilename());
-        docVerificationEntity.setStatus(DocumentStatus.VERIFICATION_PENDING);
         docVerificationEntity.setTimestampCreated(ownerId.getTimestamp());
         docVerificationEntity.setType(DocumentType.SELFIE_PHOTO);
         docVerificationEntity.setUsedForVerification(true);
+
+        if (identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            docVerificationEntity.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        } else {
+            docVerificationEntity.setStatus(DocumentStatus.ACCEPTED);
+        }
 
         DocumentSubmitResult documentSubmitResult =
                 documentProcessingService.submitDocumentToProvider(ownerId, docVerificationEntity, submittedDoc);

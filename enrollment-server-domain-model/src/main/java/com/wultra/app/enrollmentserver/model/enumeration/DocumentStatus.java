@@ -26,6 +26,7 @@ public enum DocumentStatus {
 
     /**
      * Document has been verified, and it is accepted as a valid document.
+     * Document skipped from verification process (e.g. selfie photo) can also end at this state.
      */
     ACCEPTED,
 
