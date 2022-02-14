@@ -33,6 +33,7 @@ import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingS
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
@@ -210,6 +211,17 @@ public class IdentityVerificationService {
 
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DocumentStatus.VERIFICATION_PENDING);
+
+        List<DocumentVerificationEntity> selfiePhotoVerifications =
+                docVerifications.stream()
+                        .filter(entity -> DocumentType.SELFIE_PHOTO.equals(entity.getType()))
+                        .collect(Collectors.toList());
+
+        // If not enabled then remove selfie photos from the verification process
+        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            docVerifications.removeAll(selfiePhotoVerifications);
+        }
+
         List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
@@ -228,6 +240,15 @@ public class IdentityVerificationService {
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
         documentVerificationRepository.saveAll(docVerifications);
+
+        // If selfie photos are not included in the verification process with documents change their status to ACCEPTED
+        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            selfiePhotoVerifications.forEach(selfiePhotoVerification -> {
+                selfiePhotoVerification.setStatus(DocumentStatus.ACCEPTED);
+                selfiePhotoVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            });
+            documentVerificationRepository.saveAll(selfiePhotoVerifications);
+        }
     }
 
     /**
