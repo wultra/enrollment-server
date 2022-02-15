@@ -365,6 +365,10 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                                             CardSide cardSide,
                                             DocumentSubmitResult documentSubmitResult,
                                             ZenidSharedMineAllResult minedData) {
+        if (DocumentType.SELFIE_PHOTO.equals(documentType)) {
+            logger.debug("Not performing additional validations for selfie photo");
+            return;
+        }
         DocumentType zenIdDocType = minedData.getDocumentRole() == null ?
                 null : toDocumentType(minedData.getDocumentRole());
         if (zenIdDocType == null || documentType != zenIdDocType) {
