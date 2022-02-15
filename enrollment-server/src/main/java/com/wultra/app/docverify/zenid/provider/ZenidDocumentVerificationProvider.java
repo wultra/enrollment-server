@@ -543,7 +543,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     @Nullable
     private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
         switch (documentRoleEnum) {
-            case CAR:
+            case DRV:
                 return DocumentType.DRIVING_LICENSE;
             case IDC:
                 return DocumentType.ID_CARD;
