@@ -17,6 +17,10 @@
  */
 package com.wultra.app.enrollmentserver.model.enumeration;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
+
 /**
  * Enumeration representing document verification status.
  *
@@ -58,6 +62,15 @@ public enum DocumentStatus {
     /**
      * An unrecoverable error occurred during document analysis.
      */
-    FAILED
+    FAILED;
+
+    /**
+     * All not finished statuses
+     */
+    public static final List<DocumentStatus> ALL_NOT_FINISHED = ImmutableList.of(
+            UPLOAD_IN_PROGRESS,
+            VERIFICATION_PENDING,
+            VERIFICATION_IN_PROGRESS
+    );
 
 }
