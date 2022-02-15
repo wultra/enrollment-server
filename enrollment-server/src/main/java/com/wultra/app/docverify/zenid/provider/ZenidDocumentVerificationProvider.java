@@ -44,6 +44,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -539,6 +540,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
     }
 
+    @Nullable
     private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
         switch (documentRoleEnum) {
             case CAR:
