@@ -351,7 +351,7 @@ public class DocumentProcessingService {
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
-            if (docVerification.getTimestampUploaded() != null) {
+            if (docVerification.getTimestampUploaded() == null) {
                 docVerification.setTimestampUploaded(ownerId.getTimestamp());
             }
             docVerification.setUploadId(docSubmitResult.getUploadId());
