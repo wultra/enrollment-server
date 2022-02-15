@@ -20,12 +20,15 @@ package com.wultra.app.docverify.zenid.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.docverify.zenid.service.ZenidRestApiService;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
@@ -54,6 +57,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProvider.class);
 
+    private final ZenidConfigProps zenidConfigProps;
+
     private final ObjectMapper objectMapper;
 
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -63,16 +68,19 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     /**
      * Service constructor.
      *
+     * @param zenidConfigProps               ZenID configuration properties.
      * @param objectMapper                   Object mapper.
      * @param documentVerificationRepository Document verification repository.
      * @param zenidApiService                ZenID API service.
      */
     @Autowired
     public ZenidDocumentVerificationProvider(
+            ZenidConfigProps zenidConfigProps,
             @Qualifier("objectMapperZenid")
-                    ObjectMapper objectMapper,
+            ObjectMapper objectMapper,
             DocumentVerificationRepository documentVerificationRepository,
             ZenidRestApiService zenidApiService) {
+        this.zenidConfigProps = zenidConfigProps;
         this.objectMapper = objectMapper;
         this.documentVerificationRepository = documentVerificationRepository;
         this.zenidApiService = zenidApiService;
@@ -110,6 +118,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         if (response.getMinedData() != null) {
             checkForMinedPhoto(id, document.getUploadId(), result, response.getMinedData());
         }
+
+        if (zenidConfigProps.isAdditionalDocSubmitValidationsEnabled() && response.getMinedData() != null) {
+            checkAdditionalValidations(id, document.getType(), document.getSide(), documentSubmitResult, response.getMinedData());
+        }
+
         result.setResults(List.of(documentSubmitResult));
 
         return result;
@@ -149,6 +162,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                     createDocumentSubmitResult(id, document.getDocumentId(), document.toString(), response);
             if (response.getMinedData() != null) {
                 checkForMinedPhoto(id, document.getDocumentId(), result, response.getMinedData());
+            }
+            if (zenidConfigProps.isAdditionalDocSubmitValidationsEnabled() && response.getMinedData() != null) {
+                checkAdditionalValidations(id, document.getType(), document.getSide(), documentSubmitResult, response.getMinedData());
             }
             result.getResults().add(documentSubmitResult);
         }
@@ -343,6 +359,31 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         return documentSubmitResult;
     }
 
+    private void checkAdditionalValidations(OwnerId id,
+                                            DocumentType documentType,
+                                            CardSide cardSide,
+                                            DocumentSubmitResult documentSubmitResult,
+                                            ZenidSharedMineAllResult minedData) {
+        DocumentType zenIdDocType = minedData.getDocumentRole() == null ?
+                null : toDocumentType(minedData.getDocumentRole());
+        if (zenIdDocType == null || documentType != zenIdDocType) {
+            documentSubmitResult.setRejectReason(
+                    String.format("Different document type %s than expected %s", zenIdDocType, documentType)
+            );
+        }
+        if (documentSubmitResult.getRejectReason() == null) {
+            CardSide zenIdCardSide = minedData.getPageCode() == null ?
+                    null : toCardSide(minedData.getPageCode());
+            if (zenIdCardSide == null && cardSide != null) {
+                logger.warn("Not recognized document side {} in ZenID, {}", cardSide, id);
+            } else if (zenIdCardSide != null && cardSide != null && cardSide != zenIdCardSide) {
+                documentSubmitResult.setRejectReason(
+                        String.format("Different document side %s than expected %s", zenIdCardSide, cardSide)
+                );
+            }
+        }        
+    }
+    
     private void checkForMinedPhoto(OwnerId id,
                                     String documentId,
                                     DocumentsSubmitResult result,
@@ -382,7 +423,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             knownSampleIds.forEach(sampleId -> {
                 sampleIdsValidations.put(sampleId, new ArrayList<>());
             });
-
             List<ZenidWebInvestigationValidatorResponse> globalValidations = new ArrayList<>();
             for (ZenidWebInvestigationValidatorResponse validatorResult : response.getValidatorResults()) {
                 if (validatorResult.getIssues().isEmpty()) {
@@ -496,6 +536,30 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 return DocumentVerificationStatus.REJECTED;
             default:
                 throw new IllegalStateException("Unknown investigation status in ZenID: " + stateEnum);
+        }
+    }
+
+    private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
+        switch (documentRoleEnum) {
+            case CAR:
+                return DocumentType.DRIVING_LICENSE;
+            case IDC:
+                return DocumentType.ID_CARD;
+            case PAS:
+                return DocumentType.PASSPORT;
+            default:
+                return null;
+        }
+    }
+
+    private CardSide toCardSide(ZenidSharedMineAllResult.PageCodeEnum pageCodeEnum) {
+        switch (pageCodeEnum) {
+            case F:
+                return CardSide.FRONT;
+            case B:
+                return CardSide.BACK;
+            default:
+                throw new IllegalStateException("Unexpected side page code value: " + pageCodeEnum);
         }
     }
 

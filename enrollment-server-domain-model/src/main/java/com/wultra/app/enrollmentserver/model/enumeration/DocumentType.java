@@ -27,7 +27,14 @@ public enum DocumentType {
     /**
      * Identity card.
      */
-    ID_CARD,
+    ID_CARD {
+
+        @Override
+        public boolean isTwoSided() {
+            return true;
+        }
+
+    },
 
     /**
      * Passport.
@@ -47,6 +54,10 @@ public enum DocumentType {
     /**
      * Selfie video.
      */
-    SELFIE_VIDEO
+    SELFIE_VIDEO;
+
+    public boolean isTwoSided() {
+        return false;
+    }
 
 }
