@@ -67,6 +67,13 @@ public class IProovPresenceCheckProviderTest {
         initPresenceCheck(ownerId);
     }
 
+    // FIXME temporary testing of repeated initiatilization (not implemented deletion of previous iProov enrollment)
+    @Test
+    public void repeatInitPresenceCheckTest() throws Exception {
+        initPresenceCheck(ownerId);
+        initPresenceCheck(ownerId);
+    }
+
     @Test
     public void startPresenceCheckTest() throws Exception {
         initPresenceCheck(ownerId);
