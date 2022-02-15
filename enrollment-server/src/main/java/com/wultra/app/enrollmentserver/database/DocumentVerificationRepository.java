@@ -42,8 +42,8 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.activationId = :activationId " +
-            "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
-    int failInProgressVerifications(String activationId, Date timestamp);
+            "AND d.status IN (:statuses)")
+    int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
