@@ -42,6 +42,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
 import java.util.Base64;
+import java.util.Calendar;
 
 /**
  * Implementation of the {@link PresenceCheckProvider} with iProov (https://www.iproov.com/)
@@ -74,17 +75,17 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException {
-        ResponseEntity<String> responseEntityToken;
-        try {
-            responseEntityToken = iProovRestApiService.generateEnrolToken(id);
-        } catch (HttpClientErrorException e) {
-            responseEntityToken = new ResponseEntity<>(e.getResponseBodyAsString(), e.getStatusCode());
-        } catch (RestClientException e) {
-            logger.warn("Failed REST call to generate an enrol token in iProov, " + id, e);
-            throw new PresenceCheckException("Unable to init a presence check due to a REST call failure");
-        } catch (Exception e) {
-            logger.error("Unexpected error when generating an enrol token in iProov, " + id, e);
-            throw new PresenceCheckException("Unexpected error when initializing a presence check");
+        ResponseEntity<String> responseEntityToken = callGenerateEnrolToken(id);
+        // FIXME temporary solution of repeated presence check initialization
+        // Deleting the iProov enrollment properly is not implemented yet, use random suffix to the current userId
+        if (responseEntityToken.getBody() != null && responseEntityToken.getBody().contains("already_enrolled")) {
+            logger.warn("Retrying the iProov enrollment with adapted userId");
+            OwnerId adaptedId = new OwnerId();
+            adaptedId.setUserId(id.getUserId() + Calendar.getInstance().toInstant().getEpochSecond());
+            adaptedId.setActivationId(id.getActivationId());
+            adaptedId.setTimestamp(id.getTimestamp());
+            id = adaptedId;
+            responseEntityToken = callGenerateEnrolToken(id);
         }
 
         if (responseEntityToken.getBody() == null) {
@@ -263,6 +264,22 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
         UserResponse userResponse = parseResponse(responseEntity.getBody(), UserResponse.class);
         logger.info("Deleted a user persona in iProov, status={}, {}", userResponse.getStatus(), id);
+    }
+
+    private ResponseEntity<String> callGenerateEnrolToken(OwnerId id) throws PresenceCheckException {
+        ResponseEntity<String> responseEntityToken;
+        try {
+            responseEntityToken = iProovRestApiService.generateEnrolToken(id);
+        } catch (HttpClientErrorException e) {
+            responseEntityToken = new ResponseEntity<>(e.getResponseBodyAsString(), e.getStatusCode());
+        } catch (RestClientException e) {
+            logger.warn("Failed REST call to generate an enrol token in iProov, " + id, e);
+            throw new PresenceCheckException("Unable to init a presence check due to a REST call failure");
+        } catch (Exception e) {
+            logger.error("Unexpected error when generating an enrol token in iProov, " + id, e);
+            throw new PresenceCheckException("Unexpected error when initializing a presence check");
+        }
+        return responseEntityToken;
     }
 
     private <T> T parseResponse(String body, Class<T> cls) throws PresenceCheckException {
