@@ -99,12 +99,6 @@ public class PresenceCheckService {
             throws DocumentVerificationException, PresenceCheckException {
         IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
 
-        String processIdOnboarding = idVerification.getProcessId();
-        if (!processIdOnboarding.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}", processId);
-            throw new PresenceCheckException("Invalid process ID");
-        }
-
         if (!idVerification.isPresenceCheckInitialized()) {
             // TODO - use a better way to locate the photo to be used in presence check
             Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
@@ -185,12 +179,10 @@ public class PresenceCheckService {
     /**
      * Cleans identity data used in the presence check process.
      *
-     * @param apiAuthentication Authentication object.
+     * @param ownerId Owner identification.
      * @throws PresenceCheckException When an error during cleanup occurred.
      */
-    public void cleanup(PowerAuthApiAuthentication apiAuthentication) throws PresenceCheckException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-
+    public void cleanup(OwnerId ownerId) throws PresenceCheckException {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
             presenceCheckProvider.cleanupIdentityData(ownerId);
         } else {

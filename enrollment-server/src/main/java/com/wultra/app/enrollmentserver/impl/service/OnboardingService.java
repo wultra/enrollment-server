@@ -24,16 +24,15 @@ import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequ
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.enrollmentserver.errorhandling.TooManyProcessesException;
+import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.provider.OnboardingProvider;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
@@ -226,6 +225,26 @@ public class OnboardingService {
         process.setErrorDetail("canceled");
         onboardingProcessRepository.save(process);
         return new Response();
+    }
+
+    /**
+     * Verify process identifier.
+     * @param ownerId Owner identification.
+     * @param processId Process identifier from request.
+     * @throws OnboardingProcessException Thrown in case process identifier is invalid.
+     */
+    public void verifyProcessId(OwnerId ownerId, String processId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
+        if (!processOptional.isPresent()) {
+            logger.error("Onboarding process not found, {}", ownerId);
+            throw new OnboardingProcessException();
+        }
+        String expectedProcessId = processOptional.get().getId();
+
+        if (!expectedProcessId.equals(processId)) {
+            logger.warn("Invalid process ID received in request: {}", processId);
+            throw new OnboardingProcessException();
+        }
     }
 
     /**
