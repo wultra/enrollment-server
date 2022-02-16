@@ -212,9 +212,9 @@ public class IdentityVerificationService {
         IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
 
         List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(),
+                documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
-      
+
         List<DocumentVerificationEntity> selfiePhotoVerifications =
                 docVerifications.stream()
                         .filter(entity -> DocumentType.SELFIE_PHOTO.equals(entity.getType()))
@@ -266,7 +266,7 @@ public class IdentityVerificationService {
     public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws DocumentVerificationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         List<DocumentVerificationEntity> allDocVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(),
+                documentVerificationRepository.findAllDocumentVerifications(idVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_IN_PROGRESS));
         Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
 
@@ -308,7 +308,7 @@ public class IdentityVerificationService {
     @Transactional
     public void processDocumentVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification) {
         List<DocumentVerificationEntity> processedDocVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(ownerId.getActivationId(), DOCUMENT_STATUSES_PROCESSED);
+                documentVerificationRepository.findAllDocumentVerifications(idVerification, DOCUMENT_STATUSES_PROCESSED);
         resolveIdentityVerificationResult(idVerification, processedDocVerifications);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
@@ -461,7 +461,7 @@ public class IdentityVerificationService {
     @Transactional
     public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
         List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllUsedForVerification(ownerId.getActivationId());
+                documentVerificationRepository.findAllUsedForVerification(idVerification);
 
         if (docVerifications.stream()
                 .allMatch(docVerification ->

@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service.document;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,8 @@ public class DocumentStatusService {
         int count = documentVerificationRepository.failObsoleteVerifications(
                 getVerificationExpirationTimestamp(),
                 new Date(),
-                MESSAGE_OBSOLETE_VERIFICATION_PROCESS
+                MESSAGE_OBSOLETE_VERIFICATION_PROCESS,
+                DocumentStatus.ALL_NOT_FINISHED
         );
         if (count > 0) {
             logger.info("Failed {} obsolete verification processes", count);

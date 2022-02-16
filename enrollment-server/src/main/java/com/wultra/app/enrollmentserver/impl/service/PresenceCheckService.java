@@ -108,7 +108,7 @@ public class PresenceCheckService {
         if (!idVerification.isPresenceCheckInitialized()) {
             // TODO - use a better way to locate the photo to be used in presence check
             Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
-                    documentVerificationRepository.findFirstByActivationIdAndPhotoIdNotNull(ownerId.getActivationId());
+                    documentVerificationRepository.findFirstByIdentityVerificationAndPhotoIdNotNull(idVerification);
 
             if (docVerificationEntityWithPhoto.isPresent()) {
                 String photoId = docVerificationEntityWithPhoto.get().getPhotoId();
@@ -177,7 +177,7 @@ public class PresenceCheckService {
 
         documentVerificationRepository.save(docVerificationEntity);
 
-        documentVerificationRepository.setVerificationPending(ownerId.getActivationId(), ownerId.getTimestamp());
+        documentVerificationRepository.setVerificationPending(idVerification, ownerId.getTimestamp());
 
         return result;
     }
