@@ -54,7 +54,12 @@ public enum DocumentType {
     /**
      * Selfie video.
      */
-    SELFIE_VIDEO;
+    SELFIE_VIDEO,
+
+    /**
+     * Unknown document.
+     */
+    UNKNOWN;
 
     public boolean isTwoSided() {
         return false;

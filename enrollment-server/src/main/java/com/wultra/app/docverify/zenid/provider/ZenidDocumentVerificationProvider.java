@@ -371,7 +371,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
         DocumentType zenIdDocType = minedData.getDocumentRole() == null ?
                 null : toDocumentType(minedData.getDocumentRole());
-        if (zenIdDocType == null || documentType != zenIdDocType) {
+        if (documentType != zenIdDocType) {
+            logger.info("Received different document type {} ({}) than expected {} from ZenID, {}",
+                    zenIdDocType, minedData.getDocumentRole(), documentType, id);
             documentSubmitResult.setRejectReason(
                     String.format("Different document type %s than expected %s", zenIdDocType, documentType)
             );
@@ -544,7 +546,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
     }
 
-    @Nullable
     private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
         switch (documentRoleEnum) {
             case DRV:
@@ -554,11 +555,15 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             case PAS:
                 return DocumentType.PASSPORT;
             default:
-                return null;
+                return DocumentType.UNKNOWN;
         }
     }
 
-    private CardSide toCardSide(ZenidSharedMineAllResult.PageCodeEnum pageCodeEnum) {
+    @Nullable
+    private CardSide toCardSide(@Nullable ZenidSharedMineAllResult.PageCodeEnum pageCodeEnum) {
+        if (pageCodeEnum == null) {
+            return null;
+        }
         switch (pageCodeEnum) {
             case F:
                 return CardSide.FRONT;
