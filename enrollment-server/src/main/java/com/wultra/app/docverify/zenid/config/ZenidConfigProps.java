@@ -36,6 +36,12 @@ import org.springframework.context.annotation.Configuration;
 public class ZenidConfigProps {
 
     /**
+     * // TODO consider removing this config option
+     * Enabled/disabled additional doc submit validations
+     */
+    private boolean additionalDocSubmitValidationsEnabled;
+
+    /**
      * Enabled/disabled asynchronous processing
      */
     private boolean asyncProcessingEnabled;
