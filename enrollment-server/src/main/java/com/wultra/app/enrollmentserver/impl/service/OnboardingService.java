@@ -242,7 +242,7 @@ public class OnboardingService {
         String expectedProcessId = processOptional.get().getId();
 
         if (!expectedProcessId.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}", processId);
+            logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);
             throw new OnboardingProcessException();
         }
     }
