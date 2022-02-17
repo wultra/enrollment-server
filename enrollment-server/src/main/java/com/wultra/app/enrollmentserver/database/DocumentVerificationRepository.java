@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -40,6 +41,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.usedForVerification = false, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.activationId = :activationId " +
             "AND d.status IN (:statuses)")
@@ -48,30 +50,31 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.usedForVerification = false, " +
             "    d.errorDetail = :errorMessage, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
-            "AND d.status IN (com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS, com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_IN_PROGRESS)")
-    int failObsoleteVerifications(Date cleanupDate, Date timestamp, String errorMessage);
+            "AND d.status IN (:statuses)")
+    int failObsoleteVerifications(Date cleanupDate, Date timestamp, String errorMessage, List<DocumentStatus> statuses);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING, " +
             "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.activationId = :activationId")
-    int setVerificationPending(String activationId, Date timestamp);
+            "WHERE d.identityVerification = :identityVerification")
+    int setVerificationPending(IdentityVerificationEntity identityVerification, Date timestamp);
 
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
-            "WHERE d.activationId = :activationId " +
+            "WHERE d.identityVerification = :identityVerification " +
             "AND d.status IN (:statuses)")
-    List<DocumentVerificationEntity> findAllDocumentVerifications(String activationId, List<DocumentStatus> statuses);
+    List<DocumentVerificationEntity> findAllDocumentVerifications(IdentityVerificationEntity identityVerification, List<DocumentStatus> statuses);
 
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
-            "WHERE d.activationId = :activationId " +
+            "WHERE d.identityVerification = :identityVerification " +
             "AND d.usedForVerification = true")
-    List<DocumentVerificationEntity> findAllUsedForVerification(String activationId);
+    List<DocumentVerificationEntity> findAllUsedForVerification(IdentityVerificationEntity identityVerification);
 
     /**
      * Find all upload identifiers related to a verification.
@@ -83,6 +86,6 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "WHERE d.verificationId = :verificationId")
     List<String> findAllUploadIds(String verificationId);
 
-    Optional<DocumentVerificationEntity> findFirstByActivationIdAndPhotoIdNotNull(String activationId);
+    Optional<DocumentVerificationEntity> findFirstByIdentityVerificationAndPhotoIdNotNull(IdentityVerificationEntity identityVerification);
 
 }
