@@ -131,13 +131,6 @@ public class IdentityVerificationService {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
-        // Check that process ID matches onboarding process ID
-        final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
-        String processIdOnboarding = processEntity.getId();
-        if (!processIdOnboarding.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}", processId);
-            throw new IdentityVerificationException("Invalid process ID");
-        }
         identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
@@ -367,12 +360,6 @@ public class IdentityVerificationService {
 
         final IdentityVerificationEntity idVerification = idVerificationOptional.get();
 
-        String processId = idVerification.getProcessId();
-        if (!processId.equals(request.getProcessId())) {
-            logger.warn("Invalid process ID in request: {}", processId);
-            throw new IdentityVerificationException("Invalid process ID");
-        }
-
         final List<DocumentVerificationEntity> entities;
         if (request.getFilter() != null) {
             final List<String> documentIds = request.getFilter().stream()
@@ -411,15 +398,14 @@ public class IdentityVerificationService {
 
     /**
      * Cleanup documents related to identity verification.
-     * @param apiAuthentication PowerAuth authentication.
+     * @param ownerId Owner identification.
      * @throws DocumentVerificationException Thrown when document cleanup fails
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public void cleanup(PowerAuthApiAuthentication apiAuthentication)
+    public void cleanup(OwnerId ownerId)
             throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException {
-        OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
 
