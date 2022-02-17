@@ -66,6 +66,11 @@ public class IProovConfigProps {
      */
     private String serviceHostname;
 
+    /**
+     * Enabled/disabled ensuring of valid user id value before sending
+     */
+    private boolean ensureUserIdValueEnabled;
+
     public void setRiskProfile(String riskProfile) {
         // prevent blank value which is invalid and potentially hard to catch
         this.riskProfile = StringUtils.isNotBlank(riskProfile) ? riskProfile : null;

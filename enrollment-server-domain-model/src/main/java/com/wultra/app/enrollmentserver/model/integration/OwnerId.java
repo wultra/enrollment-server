@@ -24,7 +24,6 @@ import lombok.Data;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.annotation.Nullable;
 import java.util.Date;
 
 /**
@@ -69,10 +68,9 @@ public class OwnerId {
      * @return Securely hashed user identification.
      * This can be used to hide the original possibly sensitive identity value.
      */
-    @Nullable
     public String getUserIdSecured() {
         if (userId == null) {
-            return null;
+            throw new IllegalStateException("Missing userId value");
         }
         if (userIdSecured == null) {
             userIdSecured = BaseEncoding.base32()

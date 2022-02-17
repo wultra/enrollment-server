@@ -38,6 +38,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.regex.Pattern;
+
 /**
  * Implementation of the REST service to iProov (https://www.iproov.com/)
  *
@@ -56,6 +58,16 @@ import org.springframework.web.client.RestTemplate;
 public class IProovRestApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
+
+    /**
+     * Max length of the user id value defined by iProov
+     */
+    public static final int USER_ID_MAX_LENGTH = 256;
+
+    /**
+     * Regex used by iProov on user id values
+     */
+    public static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
 
     public static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
 
@@ -158,7 +170,9 @@ public class IProovRestApiService {
         request.setIp("192.168.1.1"); // TODO deprecated but still required
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
-        request.setUserId(id.getUserIdSecured());
+
+        String userId = getUserId(id);
+        request.setUserId(userId);
 
         HttpEntity<ClaimValidateRequest> requestEntity = createDefaultRequestEntity(request);
 
@@ -188,7 +202,10 @@ public class IProovRestApiService {
         request.setAssuranceType(configProps.getAssuranceType());
         request.setResource(I_PROOV_RESOURCE_CONTEXT + id.getActivationId());
         request.setRiskProfile(configProps.getRiskProfile());
-        request.setUserId(id.getUserIdSecured());
+
+        String userId = getUserId(id);
+        request.setUserId(userId);
+
         return request;
     }
 
@@ -197,6 +214,26 @@ public class IProovRestApiService {
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         return new HttpEntity<>(entity, headers);
+    }
+
+    public static String ensureValidUserIdValue(String value) {
+        if (value.length() > USER_ID_MAX_LENGTH) {
+            value = value.substring(0, USER_ID_MAX_LENGTH);
+            logger.error("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
+        }
+        if (!USER_ID_REGEX_PATTERN.matcher(value).matches()) {
+            logger.error("The userId value: '{}', does not match the iProov regex pattern", value);
+            throw new IllegalArgumentException("Invalid userId value for iProov call");
+        }
+        return value;
+    }
+
+    private String getUserId(OwnerId id) {
+        if (configProps.isEnsureUserIdValueEnabled()) {
+            return ensureValidUserIdValue(id.getUserIdSecured());
+        } else {
+            return id.getUserIdSecured();
+        }
     }
 
 }
