@@ -19,6 +19,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.request.*;
 import com.wultra.app.enrollmentserver.api.model.response.*;
+import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
@@ -27,7 +28,6 @@ import com.wultra.app.enrollmentserver.impl.service.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
@@ -54,7 +54,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -239,8 +238,8 @@ public class IdentityVerificationController {
                 identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
 
         final DocumentSubmitResponse response = new DocumentSubmitResponse();
-        final List<DocumentSubmitResponse.DocumentMetadata> respsMetadata =
-                createResponseDocMetadataList(docVerificationEntities);
+        final List<DocumentMetadataResponseDto> respsMetadata =
+                identityVerificationService.createDocsMetadata(docVerificationEntities);
         response.setDocuments(respsMetadata);
 
         return new ObjectResponse<>(response);
@@ -517,25 +516,6 @@ public class IdentityVerificationController {
         }
 
         return new Response();
-    }
-
-    private List<DocumentSubmitResponse.DocumentMetadata> createResponseDocMetadataList(List<DocumentVerificationEntity> docVerificationEntities) {
-        return docVerificationEntities.stream()
-                .map(docVerificationEntity -> {
-                    DocumentSubmitResponse.DocumentMetadata responseMetadata = new DocumentSubmitResponse.DocumentMetadata();
-
-                    responseMetadata.setId(docVerificationEntity.getId());
-                    responseMetadata.setFilename(docVerificationEntity.getFilename());
-                    responseMetadata.setSide(docVerificationEntity.getSide());
-                    responseMetadata.setType(docVerificationEntity.getType());
-                    responseMetadata.setStatus(docVerificationEntity.getStatus());
-                    if (DocumentStatus.FAILED.equals(docVerificationEntity.getStatus())) {
-                        responseMetadata.setErrors(List.of(docVerificationEntity.getErrorDetail()));
-                    }
-
-                    return responseMetadata;
-                })
-                .collect(Collectors.toList());
     }
 
     /**

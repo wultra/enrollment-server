@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentDataRepository;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
@@ -27,11 +28,9 @@ import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
-import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
@@ -40,7 +39,6 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -389,7 +387,7 @@ public class IdentityVerificationService {
             checkIdentityDocumentsForVerification(ownerId, idVerification);
         }
 
-        List<DocumentStatusResponse.DocumentMetadata> docsMetadata = createDocsMetadata(entities);
+        List<DocumentMetadataResponseDto> docsMetadata = createDocsMetadata(entities);
         response.setStatus(idVerification.getStatus());
         response.setDocuments(docsMetadata);
 
@@ -463,45 +461,67 @@ public class IdentityVerificationService {
         }
     }
 
-    private List<DocumentStatusResponse.DocumentMetadata> createDocsMetadata(List<DocumentVerificationEntity> entities) {
-        List<DocumentStatusResponse.DocumentMetadata> docsMetadata = new ArrayList<>();
+    public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {
+        List<DocumentMetadataResponseDto> docsMetadata = new ArrayList<>();
         entities.forEach(entity -> {
-            List<String> errors = new ArrayList<>();
-            if (entity.getErrorDetail() != null) {
-                errors.add(entity.getErrorDetail());
-            }
+            DocumentMetadataResponseDto docMetadata = toDocumentMetadata(entity);
+
             if (DocumentStatus.REJECTED.equals(entity.getStatus())) {
-                // Add all rejection reasons from the latest document result
-                Optional<DocumentResultEntity> docResultOptional = entity.getResults().stream().findFirst();
-                if (docResultOptional.isPresent()) {
-                    DocumentResultEntity docResult = docResultOptional.get();
-                    List<String> rejectionReasons;
-                    try {
-                        rejectionReasons = documentVerificationProvider.parseRejectionReasons(docResult);
-                    } catch (DocumentVerificationException e) {
-                        logger.debug("Parsing rejection reasons failure", e);
-                        logger.warn("Unable to parse rejection reasons from {} of a rejected {}", docResult, entity);
-                        return;
-                    }
-                    if (rejectionReasons.isEmpty()) {
-                        logger.warn("No rejection reasons found in {} of a rejected {}", docResult, entity);
-                    } else {
-                        errors.addAll(rejectionReasons);
-                    }
-                } else {
-                    logger.warn("Missing document result for {}, defaulting errors to reject reason", entity);
-                    errors.add(entity.getRejectReason());
+                List<String> errors = collectRejectionErrors(entity);
+                if (docMetadata.getErrors() == null) {
+                    docMetadata.setErrors(new ArrayList<>());
                 }
+                docMetadata.getErrors().addAll(errors);
             }
 
-            DocumentStatusResponse.DocumentMetadata docMetadata = new DocumentStatusResponse.DocumentMetadata();
-            docMetadata.setId(entity.getId());
-            docMetadata.setErrors(errors);
-            docMetadata.setFilename(entity.getFilename());
-            docMetadata.setStatus(entity.getStatus());
             docsMetadata.add(docMetadata);
         });
         return docsMetadata;
+    }
+
+    private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {
+        List<String> errors = new ArrayList<>();
+
+        // Collect all rejection reasons from the latest document result
+        Optional<DocumentResultEntity> docResultOptional = entity.getResults().stream().findFirst();
+        if (docResultOptional.isPresent()) {
+            DocumentResultEntity docResult = docResultOptional.get();
+            List<String> rejectionReasons;
+            try {
+                rejectionReasons = documentVerificationProvider.parseRejectionReasons(docResult);
+            } catch (DocumentVerificationException e) {
+                logger.debug("Parsing rejection reasons failure", e);
+                logger.warn("Unable to parse rejection reasons from {} of a rejected {}", docResult, entity);
+                return Collections.emptyList();
+            }
+            if (rejectionReasons.isEmpty()) {
+                logger.warn("No rejection reasons found in {} of a rejected {}", docResult, entity);
+            } else {
+                errors.addAll(rejectionReasons);
+            }
+        } else {
+            logger.warn("Missing document result for {}, defaulting errors to reject reason", entity);
+            errors.add(entity.getRejectReason());
+        }
+        return errors;
+    }
+
+    /**
+     * Create {@link DocumentMetadataResponseDto} from {@link DocumentVerificationEntity}
+     * @param entity Document verification entity.
+     * @return Document metadata for response
+     */
+    private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
+        DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
+        docMetadata.setId(entity.getId());
+        if (entity.getErrorDetail() != null) {
+            docMetadata.setErrors(List.of(entity.getErrorDetail()));
+        }
+        docMetadata.setFilename(entity.getFilename());
+        docMetadata.setSide(entity.getSide());
+        docMetadata.setStatus(entity.getStatus());
+        docMetadata.setType(entity.getType());
+        return docMetadata;
     }
 
 }
