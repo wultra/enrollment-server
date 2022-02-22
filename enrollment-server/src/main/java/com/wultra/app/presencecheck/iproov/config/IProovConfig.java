@@ -20,13 +20,14 @@ package com.wultra.app.presencecheck.iproov.config;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.wultra.core.rest.client.base.DefaultRestClient;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientConfiguration;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * iProov configuration.
@@ -50,17 +51,15 @@ public class IProovConfig {
     }
 
     /**
-     * Prepares REST template specific to iProov
+     * Prepares REST client specific to iProov
      * @param configProps Configuration properties
-     * @param builder REST template builder
-     * @return REST template for iProov service API calls
+     * @return REST client for iProov service API calls
      */
-    @Bean("restTemplateIProov")
-    public RestTemplate restTemplateIProov(IProovConfigProps configProps, RestTemplateBuilder builder) {
-        return builder
-                .defaultHeader(HttpHeaders.HOST, configProps.getServiceHostname())
-                .rootUri(configProps.getServiceBaseUrl())
-                .build();
+    @Bean("restClientIProov")
+    public RestClient restClientIProov(IProovConfigProps configProps) throws RestClientException {
+        RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
+        return new DefaultRestClient(restClientConfiguration);
     }
 
 }

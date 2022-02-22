@@ -23,20 +23,21 @@ import com.wultra.app.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.presencecheck.iproov.model.api.ClaimValidateRequest;
 import com.wultra.app.presencecheck.iproov.model.api.EnrolImageBody;
 import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.regex.Pattern;
 
@@ -59,6 +60,10 @@ public class IProovRestApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
 
+    public static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
+
+    public static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
+
     /**
      * Max length of the user id value defined by iProov
      */
@@ -77,22 +82,22 @@ public class IProovRestApiService {
     private final IProovConfigProps configProps;
 
     /**
-     * REST template for iProov calls.
+     * REST client for iProov calls.
      */
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     /**
      * Service constructor.
      *
      * @param configProps Configuration properties.
-     * @param restTemplate REST template for IProov calls.
+     * @param restClient REST template for IProov calls.
      */
     @Autowired
     public IProovRestApiService(
             IProovConfigProps configProps,
-            @Qualifier("restTemplateIProov") RestTemplate restTemplate) {
+            @Qualifier("restClientIProov") RestClient restClient) {
         this.configProps = configProps;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     /**
@@ -101,12 +106,12 @@ public class IProovRestApiService {
      * @param id Owner identification.
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> generateEnrolToken(OwnerId id) {
+    public ResponseEntity<String> generateEnrolToken(OwnerId id) throws RestClientException {
         ServerClaimRequest request = createServerClaimRequest(id);
 
-        HttpEntity<ServerClaimRequest> requestEntity = createDefaultRequestEntity(request);
+        HttpHeaders httpHeaders = createDefaultHttpHeaders();
 
-        return restTemplate.postForEntity("/claim/enrol/token", requestEntity, String.class);
+        return restClient.post("/claim/enrol/token", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -116,7 +121,7 @@ public class IProovRestApiService {
      * @param photo Trusted photo of a person
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> enrolUserImageForToken(String token, Image photo) {
+    public ResponseEntity<String> enrolUserImageForToken(String token, Image photo) throws RestClientException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("api_key", configProps.getApiKey());
         body.add("secret", configProps.getApiSecret());
@@ -132,13 +137,10 @@ public class IProovRestApiService {
         });
         body.add("token", token);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
+        HttpHeaders httpHeaders = createDefaultHttpHeaders();
+        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        return restTemplate.postForEntity("/claim/enrol/image", requestEntity, String.class);
+        return restClient.post("/claim/enrol/image", body, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -147,12 +149,12 @@ public class IProovRestApiService {
      * @param id Owner identification.
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> generateVerificationToken(OwnerId id) {
+    public ResponseEntity<String> generateVerificationToken(OwnerId id) throws RestClientException {
         ServerClaimRequest request = createServerClaimRequest(id);
 
-        HttpEntity<ServerClaimRequest> requestEntity = createDefaultRequestEntity(request);
+        HttpHeaders httpHeaders = createDefaultHttpHeaders();
 
-        return restTemplate.postForEntity("/claim/verify/token", requestEntity, String.class);
+        return restClient.post("/claim/verify/token", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -162,7 +164,7 @@ public class IProovRestApiService {
      * @param token Token value used for initializing the person verification process
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> validateVerification(OwnerId id, String token) {
+    public ResponseEntity<String> validateVerification(OwnerId id, String token) throws RestClientException {
         ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
@@ -174,9 +176,9 @@ public class IProovRestApiService {
         String userId = getUserId(id);
         request.setUserId(userId);
 
-        HttpEntity<ClaimValidateRequest> requestEntity = createDefaultRequestEntity(request);
+        HttpHeaders httpHeaders = createDefaultHttpHeaders();
 
-        return restTemplate.postForEntity("/claim/verify/validate", requestEntity, String.class);
+        return restClient.post("/claim/verify/validate", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -185,7 +187,7 @@ public class IProovRestApiService {
      * @param id Owner identification.
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> deleteUserPersona(OwnerId id) {
+    public ResponseEntity<String> deleteUserPersona(OwnerId id) throws RestClientException {
         // TODO implement this, oauth call on DELETE /users/activationId
         logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
         return ResponseEntity.ok("{\n" +
@@ -209,11 +211,11 @@ public class IProovRestApiService {
         return request;
     }
 
-    private <T> HttpEntity<T> createDefaultRequestEntity(T entity) {
+    private HttpHeaders createDefaultHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        return new HttpEntity<>(entity, headers);
+        headers.add(HttpHeaders.HOST, configProps.getServiceHostname());
+        headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgentId());
+        return headers;
     }
 
     public static String ensureValidUserIdValue(String value) {
