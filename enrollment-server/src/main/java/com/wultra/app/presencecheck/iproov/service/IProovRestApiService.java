@@ -35,6 +35,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -122,12 +123,12 @@ public class IProovRestApiService {
      * @return Response entity with the result json
      */
     public ResponseEntity<String> enrolUserImageForToken(String token, Image photo) throws RestClientException {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("api_key", configProps.getApiKey());
-        body.add("secret", configProps.getApiSecret());
-        body.add("rotation", 0);
-        body.add("source", EnrolImageBody.SourceEnum.SELFIE.toString());
-        body.add("image", new ByteArrayResource(photo.getData()) {
+        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("api_key", configProps.getApiKey());
+        bodyBuilder.part("secret", configProps.getApiSecret());
+        bodyBuilder.part("rotation", 0);
+        bodyBuilder.part("source", EnrolImageBody.SourceEnum.SELFIE.toString());
+        bodyBuilder.part("image", new ByteArrayResource(photo.getData()) {
 
             @Override
             public String getFilename() {
@@ -135,12 +136,12 @@ public class IProovRestApiService {
             }
 
         });
-        body.add("token", token);
+        bodyBuilder.part("token", token);
 
         HttpHeaders httpHeaders = createDefaultHttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        return restClient.post("/claim/enrol/image", body, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
+        return restClient.post("/claim/enrol/image", bodyBuilder.build(), EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
     /**
