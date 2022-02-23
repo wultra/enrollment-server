@@ -27,11 +27,9 @@ import com.wultra.app.enrollmentserver.database.IdentityVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.verification.VerificationProcessingService;
-import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
@@ -40,7 +38,6 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +68,6 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
-    private final OnboardingService onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
 
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
@@ -87,7 +83,6 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
-     * @param onboardingService Onboarding service.
      * @param identityVerificationOtpService Identity verification OTP service.
      */
     @Autowired
@@ -99,7 +94,9 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService, IdentityVerificationOtpService identityVerificationOtpService) {
+            DocumentVerificationProvider documentVerificationProvider,
+            IdentityVerificationResetService identityVerificationResetService,
+            IdentityVerificationOtpService identityVerificationOtpService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -109,7 +106,6 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
-        this.onboardingService = onboardingService;
         this.identityVerificationOtpService = identityVerificationOtpService;
     }
 
@@ -182,6 +178,8 @@ public class IdentityVerificationService {
 
         List<DocumentVerificationEntity> docsVerifications =
                 documentProcessingService.submitDocuments(idVerification, request, ownerId);
+        documentProcessingService.pairTwoSidedDocuments(docsVerifications);
+
         identityVerificationRepository.save(idVerification);
         return docsVerifications;
     }
@@ -218,11 +216,11 @@ public class IdentityVerificationService {
             docVerifications.removeAll(selfiePhotoVerifications);
         }
 
+        documentProcessingService.pairTwoSidedDocuments(docVerifications);
+
         List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
-
-        // TODO find and fill relations between both sides of an id document
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 

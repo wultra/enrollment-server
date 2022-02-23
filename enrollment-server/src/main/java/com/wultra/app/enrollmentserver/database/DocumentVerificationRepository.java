@@ -59,6 +59,12 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.otherSideId = :otherSideId " +
+            "WHERE d.id = :id")
+    int setOtherDocumentSide(String id, String otherSideId);
+
+    @Modifying
+    @Query("UPDATE DocumentVerificationEntity d " +
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.VERIFICATION_PENDING, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.identityVerification = :identityVerification")

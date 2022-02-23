@@ -236,6 +236,27 @@ public class DocumentProcessingService {
     }
 
     /**
+     * Pairs documents with two sides, front side will be linked to the back side and vice versa.
+     * @param documents Documents to be checked on two sides linkin
+     */
+    @Transactional
+    public void pairTwoSidedDocuments(List<DocumentVerificationEntity> documents) {
+        for (DocumentVerificationEntity document : documents) {
+            if (!document.getType().isTwoSided()) {
+                continue;
+            }
+            documents.stream()
+                    .filter(item -> item.getType().equals(document.getType()))
+                    .filter(item -> !item.getSide().equals(document.getSide()))
+                    .forEach(item -> {
+                        logger.debug("Found other side {} for {}", item, document);
+                        item.setOtherSideId(document.getId());
+                        documentVerificationRepository.setOtherDocumentSide(item.getId(), document.getId());
+                    });
+        }
+    }
+
+    /**
      * Persist a document into database.
      * @param ownerId Owner identification
      * @param document Document to be persisted.
