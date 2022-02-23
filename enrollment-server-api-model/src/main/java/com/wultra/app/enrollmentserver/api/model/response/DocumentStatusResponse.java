@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.response;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.Data;
 
@@ -32,16 +32,6 @@ import java.util.List;
 public class DocumentStatusResponse {
 
     private IdentityVerificationStatus status;
-    private List<DocumentMetadata> documents;
-
-    @Data
-    public static class DocumentMetadata {
-
-        private String filename;
-        private String id;
-        private DocumentStatus status;
-        private List<String> errors;
-
-    }
+    private List<DocumentMetadataResponseDto> documents;
 
 }

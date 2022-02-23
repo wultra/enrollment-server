@@ -17,9 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.response;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
 import lombok.Data;
 
 import java.util.List;
@@ -32,18 +30,6 @@ import java.util.List;
 @Data
 public class DocumentSubmitResponse {
 
-    private List<DocumentMetadata> documents;
-
-    @Data
-    public static class DocumentMetadata {
-
-        private String filename;
-        private String id;
-        private DocumentType type;
-        private CardSide side;
-        private DocumentStatus status;
-        private List<String> errors;
-
-    }
+    private List<DocumentMetadataResponseDto> documents;
 
 }
