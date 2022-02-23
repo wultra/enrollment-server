@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 
 /**
  * iProov configuration.
@@ -57,8 +58,13 @@ public class IProovConfig {
      */
     @Bean("restClientIProov")
     public RestClient restClientIProov(IProovConfigProps configProps) throws RestClientException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.HOST, configProps.getServiceHostname());
+        headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
+
         RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
         restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
+        restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration);
     }
 

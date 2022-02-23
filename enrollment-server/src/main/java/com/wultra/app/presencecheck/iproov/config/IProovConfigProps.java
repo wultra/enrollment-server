@@ -68,9 +68,9 @@ public class IProovConfigProps {
     private String serviceHostname;
 
     /**
-     * Identification of the application calling the REST services passed as User-Agent header
+     * Identification of the application calling the REST services passed as the User-Agent header
      */
-    private String serviceUserAgentId;
+    private String serviceUserAgent;
 
     /**
      * Enabled/disabled ensuring of valid user id value before sending

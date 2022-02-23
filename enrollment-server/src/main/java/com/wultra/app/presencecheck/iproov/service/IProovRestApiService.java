@@ -110,9 +110,7 @@ public class IProovRestApiService {
     public ResponseEntity<String> generateEnrolToken(OwnerId id) throws RestClientException {
         ServerClaimRequest request = createServerClaimRequest(id);
 
-        HttpHeaders httpHeaders = createDefaultHttpHeaders();
-
-        return restClient.post("/claim/enrol/token", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
+        return restClient.post("/claim/enrol/token", request, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -138,7 +136,7 @@ public class IProovRestApiService {
         });
         bodyBuilder.part("token", token);
 
-        HttpHeaders httpHeaders = createDefaultHttpHeaders();
+        HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         return restClient.post("/claim/enrol/image", bodyBuilder.build(), EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
@@ -153,9 +151,7 @@ public class IProovRestApiService {
     public ResponseEntity<String> generateVerificationToken(OwnerId id) throws RestClientException {
         ServerClaimRequest request = createServerClaimRequest(id);
 
-        HttpHeaders httpHeaders = createDefaultHttpHeaders();
-
-        return restClient.post("/claim/verify/token", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
+        return restClient.post("/claim/verify/token", request, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -177,9 +173,7 @@ public class IProovRestApiService {
         String userId = getUserId(id);
         request.setUserId(userId);
 
-        HttpHeaders httpHeaders = createDefaultHttpHeaders();
-
-        return restClient.post("/claim/verify/validate", request, EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
+        return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
     }
 
     /**
@@ -210,13 +204,6 @@ public class IProovRestApiService {
         request.setUserId(userId);
 
         return request;
-    }
-
-    private HttpHeaders createDefaultHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.HOST, configProps.getServiceHostname());
-        headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgentId());
-        return headers;
     }
 
     public static String ensureValidUserIdValue(String value) {
