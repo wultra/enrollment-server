@@ -52,8 +52,14 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     private final Cache<String, List<String>> verificationUploadIds;
 
+    private final Cache<String, DocumentSubmitResult> submittedDocs;
+
     public WultraMockDocumentVerificationProvider() {
         logger.warn("Using mocked version of {}", DocumentVerificationProvider.class.getName());
+
+        submittedDocs = CacheBuilder.newBuilder()
+                .expireAfterWrite(Duration.ofHours(1))
+                .build();
 
         verificationUploadIds = CacheBuilder.newBuilder()
                 .expireAfterWrite(Duration.ofHours(1))
@@ -67,7 +73,23 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
             // set extracted photo id only on a relevant documents submit
             result.setExtractedPhotoId("extracted-photo-id");
         }
-        result.setResults(List.of(toDocumentSubmitResult(document.getUploadId())));
+        List<DocumentSubmitResult> results;
+        DocumentSubmitResult docSubmitResult = submittedDocs.getIfPresent(document.getUploadId());
+        if (docSubmitResult == null) {
+            results = Collections.emptyList();
+        } else {
+            results = List.of(docSubmitResult);
+            if (document.getFilename().contains("random")) {
+                docSubmitResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
+            } else if (document.getSide() != null && !document.getFilename().contains(document.getSide().name().toLowerCase())) {
+                docSubmitResult.setRejectReason("Different document side than expected");
+            } else if (document.getType() != null && !document.getFilename().contains(document.getType().name().toLowerCase())) {
+                docSubmitResult.setRejectReason("Different document type than expected");
+            } else if (docSubmitResult.getExtractedData() == null) {
+                docSubmitResult.setExtractedData("{\"extracted\": { \"data\": \"" + document.getUploadId() + "\" } }");
+            }
+        }
+        result.setResults(results);
 
         logger.info("Mock - check document upload, {}", id);
         return result;
@@ -85,6 +107,9 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
             result.setExtractedPhotoId("extracted-photo-id");
         }
         result.setResults(submitResults);
+        submitResults.forEach(submitResult -> {
+            submittedDocs.put(submitResult.getUploadId(), submitResult);
+        });
 
         logger.info("Mock - submitted documents, {}", id);
         return result;
@@ -148,7 +173,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
-        if (docResult.getVerificationResult().contains("rejected")) {
+        if (docResult.getVerificationResult() != null && docResult.getVerificationResult().contains("rejected")) {
             return List.of("Rejection reason");
         } else {
             return Collections.emptyList();
@@ -162,7 +187,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         }
         DocumentSubmitResult submitResult = new DocumentSubmitResult();
         submitResult.setDocumentId(docId);
-        submitResult.setExtractedData("{\"extracted\": { \"data\": \"" + docId + "\" } }");
+        submitResult.setExtractedData(null);
         String uploadedDocId;
         if (docId.startsWith("upload")) {
             uploadedDocId = docId;
