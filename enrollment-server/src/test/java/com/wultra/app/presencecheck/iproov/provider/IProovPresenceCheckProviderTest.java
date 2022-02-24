@@ -120,7 +120,7 @@ public class IProovPresenceCheckProviderTest {
     private OwnerId createOwnerId() {
         OwnerId ownerId = new OwnerId();
         ownerId.setActivationId("integration-test-" + UUID.randomUUID());
-        ownerId.setUserId("integration-test-user-id");
+        ownerId.setUserId("integration-test-user-id" + UUID.randomUUID());
         return ownerId;
     }
 

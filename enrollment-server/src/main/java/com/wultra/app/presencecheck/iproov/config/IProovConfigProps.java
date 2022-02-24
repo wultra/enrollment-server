@@ -18,6 +18,7 @@
 package com.wultra.app.presencecheck.iproov.config;
 
 import com.wultra.app.presencecheck.iproov.model.api.ServerClaimRequest;
+import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -67,9 +68,19 @@ public class IProovConfigProps {
     private String serviceHostname;
 
     /**
+     * Identification of the application calling the REST services passed as the User-Agent header
+     */
+    private String serviceUserAgent;
+
+    /**
      * Enabled/disabled ensuring of valid user id value before sending
      */
     private boolean ensureUserIdValueEnabled;
+
+    /**
+     * REST client configuration
+     */
+    private RestClientConfiguration restClientConfig;
 
     public void setRiskProfile(String riskProfile) {
         // prevent blank value which is invalid and potentially hard to catch
