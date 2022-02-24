@@ -28,12 +28,12 @@ paths:
           required: true
           type: string
           enum:
-            - DocumentPicture
+            - Unknown
             - Selfie
+            - DocumentPicture
             - SelfieVideo
             - DocumentVideo
             - Archived
-            - Unknown
         - name: uploadSessionID
           in: query
           description: >-
@@ -83,6 +83,16 @@ paths:
             - Se
             - Si
             - Bg
+            - Be
+            - Ee
+            - Ie
+            - Cy
+            - Lt
+            - Lv
+            - Lu
+            - Mt
+            - Pt
+            - Gr
         - name: role
           in: query
           description: >-
@@ -100,6 +110,8 @@ paths:
             - Std
             - Car
             - Birth
+            - Add
+            - Ide
         - name: fileLastWriteTime
           in: query
           description: >-
@@ -146,15 +158,14 @@ paths:
           type: string
           enum:
             - IDC2
-            - IDC1
             - DRV
+            - IDC1
             - PAS
             - SK_IDC_2008plus
             - SK_DRV_2004_08_09
             - SK_DRV_2013
             - SK_DRV_2015
             - SK_PAS_2008_14
-            - SK_IDC_1993
             - SK_DRV_1993
             - PL_IDC_2015
             - DE_IDC_2010
@@ -211,6 +222,49 @@ paths:
             - BG_IDC_2010
             - BG_DRV_2010_13
             - HR_IDC_2021
+            - AT_IDC_2021
+            - DE_PAS_2007
+            - DE_DRV_2013_21
+            - DE_DRV_1999_01_04_11
+            - FR_IDC_2021
+            - FR_IDC_1988_94
+            - ES_PAS_2003_06
+            - ES_IDC_2015
+            - ES_IDC_2006
+            - IT_IDC_2004
+            - RO_IDC_2001_06_09_17_21
+            - NL_IDC_2014_17_21
+            - BE_PAS_2014_17_19
+            - BE_IDC_2013_15
+            - BE_IDC_2020_21
+            - GR_PAS_2020
+            - PT_PAS_2006_09
+            - PT_PAS_2017
+            - PT_IDC_2007_08_09_15
+            - SE_IDC_2012_21
+            - FI_IDC_2017_21
+            - IE_PAS_2006_13
+            - LT_PAS_2008_09_11_19
+            - LT_IDC_2009_12
+            - LV_PAS_2015
+            - LV_PAS_2007
+            - LV_IDC_2012
+            - LV_IDC_2019
+            - EE_PAS_2014
+            - EE_PAS_2021
+            - EE_IDC_2011
+            - EE_IDC_2018_21
+            - CY_PAS_2010_20
+            - CY_IDC_2000_08
+            - CY_IDC_2015_20
+            - LU_PAS_2015
+            - LU_IDC_2014_21
+            - LU_IDC_2008_13
+            - MT_PAS_2008
+            - MT_IDC_2014
+            - PL_PAS_2011
+            - PL_DRV_1999
+            - LT_IDC_2021
         - name: pageCode
           in: query
           description: Side of the document to seek if you know it
@@ -769,12 +823,12 @@ definitions:
       SampleType:
         description: Real SampleType
         enum:
-          - DocumentPicture
+          - Unknown
           - Selfie
+          - DocumentPicture
           - SelfieVideo
           - DocumentVideo
           - Archived
-          - Unknown
         type: string
       MinedData:
         $ref: '#/definitions/ZenidShared.MineAllResult'
@@ -885,15 +939,14 @@ definitions:
           most probable version is set)
         enum:
           - IDC2
-          - IDC1
           - DRV
+          - IDC1
           - PAS
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
-          - SK_IDC_1993
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -950,6 +1003,49 @@ definitions:
           - BG_IDC_2010
           - BG_DRV_2010_13
           - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_PAS_2017
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
         type: string
       DocumentCountry:
         description: Country associated with this document type
@@ -975,6 +1071,16 @@ definitions:
           - Se
           - Si
           - Bg
+          - Be
+          - Ee
+          - Ie
+          - Cy
+          - Lt
+          - Lv
+          - Lu
+          - Mt
+          - Pt
+          - Gr
         type: string
       DocumentRole:
         description: >-
@@ -990,6 +1096,8 @@ definitions:
           - Std
           - Car
           - Birth
+          - Add
+          - Ide
         type: string
       PageCode:
         description: identification of page of document
@@ -1335,6 +1443,21 @@ definitions:
         format: int32
         description: Inner value of MRZ ExpiryDate checksum.
         type: integer
+      IssueDate:
+        description: >-
+          Prefix of the MRZ (type of the MRZ + subtype (differs, some ID cards
+          have ID, other I_ or IO) + country issuer. Low-level data, can be
+          ignored.
+        type: string
+      IssueDateParsed:
+        format: date-time
+        type: string
+        readOnly: true
+      AdditionalData:
+        description: >-
+          Output of OptionalSubstructure dont fitting in IssueDate or
+          BirthNumber
+        type: string
       BirthDateParsed:
         format: date-time
         description: >-
@@ -1468,15 +1591,14 @@ definitions:
         description: Document code of sample, where issue is present
         enum:
           - IDC2
-          - IDC1
           - DRV
+          - IDC1
           - PAS
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
-          - SK_IDC_1993
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -1533,17 +1655,60 @@ definitions:
           - BG_IDC_2010
           - BG_DRV_2010_13
           - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_PAS_2017
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
         type: string
       FieldID:
         description: FieldID wher issue is present
         enum:
-          - LastName
-          - FirstName
-          - BirthDate
           - A1
           - A2
           - A3
+          - FirstName
+          - LastName
           - Photo
+          - BirthDate
           - BirthNumber
           - Authority
           - Mrz1
@@ -1608,6 +1773,21 @@ definitions:
           - IssuingCountry
           - ResidencyNumberPhoto
           - IssueDateAndAuthority
+          - TitlesAfter
+          - PlaceOfIssue
+          - BirthAddressAndDate
+          - IssueDateAndPlaceOfIssue
+          - MothersSurname
+          - MothersName
+          - FathersSurname
+          - FathersName
+          - LastName2
+          - A4
+          - FirstName2
+          - IssueAndExpiryDate
+          - FiscalNumber
+          - SocialNumber
+          - AlternativeName
         type: string
       SampleID:
         description: ID of the identification issue
@@ -1621,12 +1801,12 @@ definitions:
       SampleType:
         description: Type of sample
         enum:
-          - DocumentPicture
+          - Unknown
           - Selfie
+          - DocumentPicture
           - SelfieVideo
           - DocumentVideo
           - Archived
-          - Unknown
         type: string
   ZenidWeb.DeletePersonResponse:
     type: object
@@ -1847,15 +2027,14 @@ definitions:
         items:
           enum:
             - IDC2
-            - IDC1
             - DRV
+            - IDC1
             - PAS
             - SK_IDC_2008plus
             - SK_DRV_2004_08_09
             - SK_DRV_2013
             - SK_DRV_2015
             - SK_PAS_2008_14
-            - SK_IDC_1993
             - SK_DRV_1993
             - PL_IDC_2015
             - DE_IDC_2010
@@ -1912,6 +2091,49 @@ definitions:
             - BG_IDC_2010
             - BG_DRV_2010_13
             - HR_IDC_2021
+            - AT_IDC_2021
+            - DE_PAS_2007
+            - DE_DRV_2013_21
+            - DE_DRV_1999_01_04_11
+            - FR_IDC_2021
+            - FR_IDC_1988_94
+            - ES_PAS_2003_06
+            - ES_IDC_2015
+            - ES_IDC_2006
+            - IT_IDC_2004
+            - RO_IDC_2001_06_09_17_21
+            - NL_IDC_2014_17_21
+            - BE_PAS_2014_17_19
+            - BE_IDC_2013_15
+            - BE_IDC_2020_21
+            - GR_PAS_2020
+            - PT_PAS_2006_09
+            - PT_PAS_2017
+            - PT_IDC_2007_08_09_15
+            - SE_IDC_2012_21
+            - FI_IDC_2017_21
+            - IE_PAS_2006_13
+            - LT_PAS_2008_09_11_19
+            - LT_IDC_2009_12
+            - LV_PAS_2015
+            - LV_PAS_2007
+            - LV_IDC_2012
+            - LV_IDC_2019
+            - EE_PAS_2014
+            - EE_PAS_2021
+            - EE_IDC_2011
+            - EE_IDC_2018_21
+            - CY_PAS_2010_20
+            - CY_IDC_2000_08
+            - CY_IDC_2015_20
+            - LU_PAS_2015
+            - LU_IDC_2014_21
+            - LU_IDC_2008_13
+            - MT_PAS_2008
+            - MT_IDC_2014
+            - PL_PAS_2011
+            - PL_DRV_1999
+            - LT_IDC_2021
           type: string
       ErrorCode:
         description: If throght processing some error occurs, ErrorCode property is set.
@@ -2032,15 +2254,14 @@ definitions:
       DocumentCode:
         enum:
           - IDC2
-          - IDC1
           - DRV
+          - IDC1
           - PAS
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
-          - SK_IDC_1993
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -2097,6 +2318,49 @@ definitions:
           - BG_IDC_2010
           - BG_DRV_2010_13
           - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_PAS_2017
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
         type: string
       CardNumber:
         type: string
@@ -2135,15 +2399,14 @@ definitions:
       DocumentCode:
         enum:
           - IDC2
-          - IDC1
           - DRV
+          - IDC1
           - PAS
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
-          - SK_IDC_1993
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -2200,6 +2463,49 @@ definitions:
           - BG_IDC_2010
           - BG_DRV_2010_13
           - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_PAS_2017
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
         type: string
       CardNumber:
         type: string
