@@ -65,13 +65,18 @@ public class OperationTemplate implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        if (!(o instanceof OperationTemplate)) return false;
         OperationTemplate that = (OperationTemplate) o;
-        return id != null && Objects.equals(id, that.id);
+        return id.equals(that.id)
+                && Objects.equals(placeholder, that.placeholder)
+                && Objects.equals(language, that.language)
+                && Objects.equals(title, that.title)
+                && Objects.equals(message, that.message)
+                && Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, placeholder, language, title, message, attributes);
     }
 }
