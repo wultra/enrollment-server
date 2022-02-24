@@ -69,7 +69,6 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
-    private final OnboardingService onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
 
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
@@ -85,7 +84,6 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
-     * @param onboardingService Onboarding service.
      * @param identityVerificationOtpService Identity verification OTP service.
      */
     @Autowired
@@ -97,7 +95,9 @@ public class IdentityVerificationService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider, IdentityVerificationResetService identityVerificationResetService, OnboardingService onboardingService, IdentityVerificationOtpService identityVerificationOtpService) {
+            DocumentVerificationProvider documentVerificationProvider,
+            IdentityVerificationResetService identityVerificationResetService,
+            IdentityVerificationOtpService identityVerificationOtpService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -107,7 +107,6 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
-        this.onboardingService = onboardingService;
         this.identityVerificationOtpService = identityVerificationOtpService;
     }
 
@@ -180,6 +179,8 @@ public class IdentityVerificationService {
 
         List<DocumentVerificationEntity> docsVerifications =
                 documentProcessingService.submitDocuments(idVerification, request, ownerId);
+        documentProcessingService.pairTwoSidedDocuments(docsVerifications);
+
         identityVerificationRepository.save(idVerification);
         return docsVerifications;
     }
@@ -216,11 +217,11 @@ public class IdentityVerificationService {
             docVerifications.removeAll(selfiePhotoVerifications);
         }
 
+        documentProcessingService.pairTwoSidedDocuments(docVerifications);
+
         List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
-
-        // TODO find and fill relations between both sides of an id document
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 
