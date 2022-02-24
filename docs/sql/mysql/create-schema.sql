@@ -118,9 +118,11 @@ CREATE INDEX onboarding_verif_timestamp_2 ON es_document_verification (timestamp
 CREATE TABLE es_document_data (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     activation_id VARCHAR(36) NOT NULL,
+    identity_verification_id VARCHAR(36) NOT NULL,
     filename VARCHAR(256) NOT NULL,
     data BLOB NOT NULL,
-    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX document_data_activation ON es_document_data (activation_id);
