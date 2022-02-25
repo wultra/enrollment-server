@@ -19,7 +19,6 @@
 package com.wultra.app.enrollmentserver.database.entity;
 
 import lombok.*;
-import org.hibernate.Hibernate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,6 +35,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 @RequiredArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
