@@ -34,9 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
+import java.time.Duration;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 
 /**
@@ -91,13 +90,9 @@ public class OtpService {
     public String createOtpCodeForResend(OnboardingProcessEntity process, OtpType otpType) throws OnboardingOtpDeliveryException, OnboardingProcessException {
         final String processId = process.getId();
         // Do not allow spamming by OTP codes
-        Date lastDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId, otpType);
-        int resendPeriod = onboardingConfig.getOtpResendPeriod();
-        Calendar c = GregorianCalendar.getInstance();
-        c.setTime(lastDate);
-        c.add(Calendar.SECOND, resendPeriod);
-        Date allowedDate = c.getTime();
-        if (allowedDate.after(new Date())) {
+        Date otpLastCreatedDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId, otpType);
+        Duration resendPeriod = onboardingConfig.getOtpResendPeriod();
+        if (!isAfterNow(otpLastCreatedDate, resendPeriod)) {
             logger.warn("Resend OTP functionality is not available yet for process ID: {}", processId);
             throw new OnboardingOtpDeliveryException();
         }
@@ -107,9 +102,12 @@ public class OtpService {
             throw new OnboardingProcessException();
         }
         OnboardingOtpEntity existingOtp = otpOptional.get();
-        existingOtp.setStatus(OtpStatus.FAILED);
-        existingOtp.setTimestampLastUpdated(new Date());
-        onboardingOtpRepository.save(existingOtp);
+        if (!OtpStatus.FAILED.equals(existingOtp.getStatus())) {
+            existingOtp.setStatus(OtpStatus.FAILED);
+            existingOtp.setTimestampLastUpdated(new Date());
+            onboardingOtpRepository.save(existingOtp);
+            logger.info("Marked previous {} as {} to allow new send of the OTP code", existingOtp, OtpStatus.FAILED);
+        }
         // Generate an OTP code
         return generateOtpCode(process, otpType);
     }
@@ -136,12 +134,17 @@ public class OtpService {
         }
         OnboardingOtpEntity otp = otpOptional.get();
         // Verify OTP code
+        boolean expired = false;
         boolean verified = false;
         int remainingAttempts = 0;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
         int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
         if (otp.getStatus() == OtpStatus.ACTIVE && failedAttempts < maxFailedAttempts) {
-            if (otp.getOtpCode().equals(otpCode)) {
+            if (isAfterNow(otp.getTimestampCreated(), onboardingConfig.getOtpExpirationTime())) {
+                expired = true;
+                otp.setStatus(OtpStatus.FAILED);
+                otp.setErrorDetail("expired");
+            } else if (otp.getOtpCode().equals(otpCode)) {
                 verified = true;
                 otp.setStatus(OtpStatus.VERIFIED);
                 otp.setTimestampVerified(new Date());
@@ -165,6 +168,7 @@ public class OtpService {
         OtpVerifyResponse response = new OtpVerifyResponse();
         response.setProcessId(processId);
         response.setOnboardingStatus(process.getStatus());
+        response.setExpired(expired);
         response.setVerified(verified);
         response.setRemainingAttempts(remainingAttempts);
         return response;
@@ -216,6 +220,10 @@ public class OtpService {
         otp.setFailedAttempts(0);
         onboardingOtpRepository.save(otp);
         return otpCode;
+    }
+
+    private boolean isAfterNow(Date date, Duration duration) {
+        return (date.getTime() + (duration.getSeconds() * 1000)) > System.currentTimeMillis();
     }
 
 }

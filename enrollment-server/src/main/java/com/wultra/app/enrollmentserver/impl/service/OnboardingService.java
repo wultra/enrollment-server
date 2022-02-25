@@ -318,7 +318,7 @@ public class OnboardingService {
         onboardingProcessRepository.terminateOldProcesses(convertExpirationToCreatedDate(verificationExpirationSeconds), OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         // Terminate OTP codes for all processes
-        final int otpExpirationSeconds = onboardingConfig.getOtpExpirationTime();
+        final int otpExpirationSeconds = (int) onboardingConfig.getOtpExpirationTime().getSeconds();
         final Date createdDateOtp = convertExpirationToCreatedDate(otpExpirationSeconds);
         otpService.terminateOldOtps(createdDateOtp);
     }
