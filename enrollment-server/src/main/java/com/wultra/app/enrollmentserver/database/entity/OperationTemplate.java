@@ -18,17 +18,25 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import lombok.Data;
+import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity representing an operation template.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Data
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@RequiredArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
 public class OperationTemplate implements Serializable {
@@ -54,4 +62,21 @@ public class OperationTemplate implements Serializable {
     @Column(name = "attributes")
     private String attributes;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OperationTemplate)) return false;
+        OperationTemplate that = (OperationTemplate) o;
+        return id.equals(that.id)
+                && Objects.equals(placeholder, that.placeholder)
+                && Objects.equals(language, that.language)
+                && Objects.equals(title, that.title)
+                && Objects.equals(message, that.message)
+                && Objects.equals(attributes, that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, placeholder, language, title, message, attributes);
+    }
 }
