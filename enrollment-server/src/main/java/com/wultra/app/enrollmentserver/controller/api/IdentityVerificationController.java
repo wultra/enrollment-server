@@ -55,6 +55,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -96,7 +97,8 @@ public class IdentityVerificationController {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
-            IdentityVerificationOtpService identityVerificationOtpService, OnboardingService onboardingService,
+            IdentityVerificationOtpService identityVerificationOtpService,
+            OnboardingService onboardingService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentProcessingService = documentProcessingService;
@@ -412,7 +414,7 @@ public class IdentityVerificationController {
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext)
-            throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+            throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -427,10 +429,10 @@ public class IdentityVerificationController {
 
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
-
         onboardingService.verifyProcessId(ownerId, processId);
 
-        identityVerificationOtpService.sendOtpCode(processId, true);
+        IdentityVerificationEntity identityVerification = findIdentityVerification(ownerId);
+        identityVerificationOtpService.resendOtp(ownerId, identityVerification);
         return new Response();
     }
 
@@ -532,6 +534,16 @@ public class IdentityVerificationController {
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
         return ownerId;
+    }
+
+    private IdentityVerificationEntity findIdentityVerification(OwnerId ownerId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationService.findBy(ownerId);
+
+        if (!identityVerificationOptional.isPresent()) {
+            logger.error("No identity verification entity found, {}", ownerId);
+            throw new IdentityVerificationNotFoundException("Not existing identity verification");
+        }
+        return identityVerificationOptional.get();
     }
 
 }
