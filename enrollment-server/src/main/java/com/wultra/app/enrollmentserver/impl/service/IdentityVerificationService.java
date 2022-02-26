@@ -284,7 +284,7 @@ public class IdentityVerificationService {
             // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
             idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
             idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-            identityVerificationOtpService.sendOtpCode(idVerification.getProcessId(), false);
+            identityVerificationOtpService.sendOtp(ownerId, idVerification);
         } else {
             resolveIdentityVerificationResult(idVerification, allDocVerifications);
         }
