@@ -65,9 +65,12 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     @Test
     public void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
+        DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
+
         DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
+        docVerification.setFilename("filename");
         docVerification.setType(document.getType());
-        docVerification.setUploadId("uploadId");
+        docVerification.setUploadId(submitResult.getResults().get(0).getUploadId());
 
         DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
 
