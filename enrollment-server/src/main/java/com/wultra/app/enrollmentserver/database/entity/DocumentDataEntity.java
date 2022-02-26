@@ -18,7 +18,10 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -49,6 +52,13 @@ public class DocumentDataEntity implements Serializable {
 
     @Column(name = "activation_id", nullable = false)
     private String activationId;
+
+    /**
+     * Identifier of the related identity verification entity
+     */
+    @ManyToOne
+    @JoinColumn(name = "identity_verification_id", referencedColumnName = "id", updatable = false, nullable = false)
+    private IdentityVerificationEntity identityVerification;
 
     @Column(name = "filename", nullable = false)
     private String filename;
