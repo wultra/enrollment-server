@@ -38,13 +38,13 @@ public class OnboardingConfig {
     @Value("${enrollment-server.onboarding-process.activation.expiration.seconds:300}")
     private int activationExpirationTime;
 
-    @Value("${enrollment-server.onboarding-process.otp.expiration:30s}")
+    @Value("${enrollment-server.onboarding-process.otp.expiration:PT30S}")
     private Duration otpExpirationTime;
 
     @Value("${enrollment-server.onboarding-process.otp.max-failed-attempts:5}")
     private int otpMaxFailedAttempts;
 
-    @Value("${enrollment-server.onboarding-process.otp.resend-period:30s}")
+    @Value("${enrollment-server.onboarding-process.otp.resend-period:PT30S}")
     private Duration otpResendPeriod;
 
     @Value("${enrollment-server.onboarding-process.max-processes-per-day:5}")

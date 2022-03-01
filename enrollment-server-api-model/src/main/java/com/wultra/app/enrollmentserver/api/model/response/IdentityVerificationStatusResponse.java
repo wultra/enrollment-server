@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.response;
 
+import com.wultra.app.enrollmentserver.api.model.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.Data;
@@ -29,6 +30,7 @@ import lombok.Data;
 @Data
 public class IdentityVerificationStatusResponse {
 
+    private ConfigurationDataDto config;
     private String processId;
     private IdentityVerificationStatus identityVerificationStatus;
     private IdentityVerificationPhase identityVerificationPhase;

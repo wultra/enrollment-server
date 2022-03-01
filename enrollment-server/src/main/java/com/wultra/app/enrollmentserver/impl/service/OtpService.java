@@ -127,39 +127,46 @@ public class OtpService {
             throw new OnboardingProcessException();
         }
         OnboardingProcessEntity process = processOptional.get();
+
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
         if (!otpOptional.isPresent()) {
             logger.warn("Onboarding OTP not found for process ID: {}", processId);
             throw new OnboardingProcessException();
         }
         OnboardingOtpEntity otp = otpOptional.get();
+
         // Verify OTP code
         boolean expired = false;
         boolean verified = false;
-        int remainingAttempts = 0;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
         int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
-        if (otp.getStatus() == OtpStatus.ACTIVE && failedAttempts < maxFailedAttempts) {
-            if (isAfterNow(otp.getTimestampCreated(), onboardingConfig.getOtpExpirationTime())) {
-                expired = true;
+        if (OtpStatus.ACTIVE != otp.getStatus()) {
+            logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
+        } else if (failedAttempts >= maxFailedAttempts) {
+            logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
+            process = failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+        } else if (isAfterNow(otp.getTimestampCreated(), onboardingConfig.getOtpExpirationTime())) {
+            logger.info("Expired OTP code received, process ID: {}", processId);
+            expired = true;
+            otp.setStatus(OtpStatus.FAILED);
+            otp.setErrorDetail(OnboardingOtpEntity.ERROR_EXPIRED);
+            otp.setTimestampLastUpdated(new Date());
+            onboardingOtpRepository.save(otp);
+        } else if (otp.getOtpCode().equals(otpCode)) {
+            verified = true;
+            otp.setStatus(OtpStatus.VERIFIED);
+            otp.setTimestampVerified(new Date());
+            otp.setTimestampLastUpdated(new Date());
+            onboardingOtpRepository.save(otp);
+        } else {
+            otp.setFailedAttempts(otp.getFailedAttempts() + 1);
+            failedAttempts++;
+            if (failedAttempts >= maxFailedAttempts) {
                 otp.setStatus(OtpStatus.FAILED);
-                otp.setErrorDetail("expired");
-            } else if (otp.getOtpCode().equals(otpCode)) {
-                verified = true;
-                otp.setStatus(OtpStatus.VERIFIED);
-                otp.setTimestampVerified(new Date());
-            } else {
-                otp.setFailedAttempts(otp.getFailedAttempts() + 1);
-                failedAttempts++;
-                if (failedAttempts >= maxFailedAttempts) {
-                    otp.setStatus(OtpStatus.FAILED);
-                    otp.setErrorDetail("maxFailedAttempts");
-                    // Onboarding process is failed, update it
-                    process.setStatus(OnboardingStatus.FAILED);
-                    process.setTimestampLastUpdated(new Date());
-                    process.setErrorDetail("maxFailedAttempts");
-                    process = onboardingProcessRepository.save(process);
-                }
+                otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+
+                // Onboarding process is failed, update it
+                process = failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
             }
             otp.setTimestampLastUpdated(new Date());
             onboardingOtpRepository.save(otp);
@@ -170,7 +177,7 @@ public class OtpService {
         response.setOnboardingStatus(process.getStatus());
         response.setExpired(expired);
         response.setVerified(verified);
-        response.setRemainingAttempts(remainingAttempts);
+        response.setRemainingAttempts(expired ? 0 : maxFailedAttempts - failedAttempts);
         return response;
     }
 
@@ -187,7 +194,7 @@ public class OtpService {
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(new Date());
-                otp.setErrorDetail("canceled");
+                otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
                 onboardingOtpRepository.save(otp);
             }
         }
@@ -222,8 +229,19 @@ public class OtpService {
         return otpCode;
     }
 
+    private OnboardingProcessEntity failProcess(OnboardingProcessEntity entity, String errorDetail) {
+        if (OnboardingStatus.FAILED == entity.getStatus()) {
+            logger.debug("Not failing already failed onboarding entity");
+            return entity;
+        }
+        entity.setStatus(OnboardingStatus.FAILED);
+        entity.setTimestampLastUpdated(new Date());
+        entity.setErrorDetail(errorDetail);
+        return onboardingProcessRepository.save(entity);
+    }
+
     private boolean isAfterNow(Date date, Duration duration) {
-        return (date.getTime() + (duration.getSeconds() * 1000)) > System.currentTimeMillis();
+        return (date.getTime() + (duration.getSeconds() * 1_000)) > System.currentTimeMillis();
     }
 
 }
