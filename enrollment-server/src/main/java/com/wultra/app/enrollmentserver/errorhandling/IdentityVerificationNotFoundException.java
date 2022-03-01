@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,18 +18,15 @@
 package com.wultra.app.enrollmentserver.errorhandling;
 
 /**
- * Exception thrown in case onboarding process fails.
+ * Exception thrown in case an identity verification cannot be found.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class OnboardingProcessException extends Exception {
+public class IdentityVerificationNotFoundException extends IdentityVerificationException {
 
-    private static final long serialVersionUID = 7558022671624330227L;
+    private static final long serialVersionUID = -7599680135511121879L;
 
-    public OnboardingProcessException() {
-    }
-
-    public OnboardingProcessException(String message) {
+    public IdentityVerificationNotFoundException(String message) {
         super(message);
     }
 

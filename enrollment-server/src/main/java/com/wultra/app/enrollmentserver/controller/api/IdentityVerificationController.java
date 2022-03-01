@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataR
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.*;
@@ -56,6 +57,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -104,7 +106,8 @@ public class IdentityVerificationController {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
-            IdentityVerificationOtpService identityVerificationOtpService, OnboardingService onboardingService,
+            IdentityVerificationOtpService identityVerificationOtpService,
+            OnboardingService onboardingService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationConfig = identityVerificationConfig;
 
@@ -278,7 +281,7 @@ public class IdentityVerificationController {
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
+            throws IdentityVerificationNotFoundException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -301,7 +304,9 @@ public class IdentityVerificationController {
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
 
-        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(requestData, ownerId);
+        IdentityVerificationEntity idVerification = findIdentityVerification(ownerId);
+
+        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(idVerification, requestData, ownerId);
 
         final DocumentUploadResponse response = new DocumentUploadResponse();
         response.setFilename(uploadedDocument.getFilename());
@@ -424,7 +429,7 @@ public class IdentityVerificationController {
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext)
-            throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+            throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -439,10 +444,10 @@ public class IdentityVerificationController {
 
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
-
         onboardingService.verifyProcessId(ownerId, processId);
 
-        identityVerificationOtpService.sendOtpCode(processId, true);
+        IdentityVerificationEntity identityVerification = findIdentityVerification(ownerId);
+        identityVerificationOtpService.resendOtp(ownerId, identityVerification);
         return new Response();
     }
 
@@ -544,6 +549,16 @@ public class IdentityVerificationController {
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
         return ownerId;
+    }
+
+    private IdentityVerificationEntity findIdentityVerification(OwnerId ownerId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationService.findBy(ownerId);
+
+        if (!identityVerificationOptional.isPresent()) {
+            logger.error("No identity verification entity found, {}", ownerId);
+            throw new IdentityVerificationNotFoundException("Not existing identity verification");
+        }
+        return identityVerificationOptional.get();
     }
 
 }

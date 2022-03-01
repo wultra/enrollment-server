@@ -48,7 +48,6 @@ public class AbstractDocumentVerificationProviderTest {
             assertNull(submitResult.getErrorDetail());
             assertNull(submitResult.getRejectReason());
 
-            assertNotNull(submitResult.getExtractedData());
             assertNotNull(submitResult.getUploadId());
         });
     }
