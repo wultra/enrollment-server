@@ -17,6 +17,7 @@
  */
 package com.wultra.app.docverify.zenid.config;
 
+import com.wultra.app.docverify.zenid.model.api.ZenidSharedMineAllResult;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +46,11 @@ public class ZenidConfigProps {
      * Enabled/disabled asynchronous processing
      */
     private boolean asyncProcessingEnabled;
+
+    /**
+     * Identifies expected document country
+     */
+    private ZenidSharedMineAllResult.DocumentCountryEnum documentCountry;
 
     /**
      * NTLM domain to authenticate within

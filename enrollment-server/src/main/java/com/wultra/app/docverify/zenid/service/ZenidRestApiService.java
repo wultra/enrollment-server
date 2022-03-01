@@ -19,9 +19,11 @@ package com.wultra.app.docverify.zenid.service;
 
 import com.google.common.base.Preconditions;
 import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
+import com.wultra.app.docverify.zenid.model.api.ZenidSharedMineAllResult;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebDeleteSampleResponse;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebInvestigateResponse;
 import com.wultra.app.docverify.zenid.model.api.ZenidWebUploadSampleResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
@@ -35,6 +37,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,12 +84,8 @@ public class ZenidRestApiService {
      */
     public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document) {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
-        String apiPath = "/api/sample" +
-                "?" +
-                "async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase() +
-                "&expectedSampleType=" + toSampleType(document.getType()) +
-                "&customData=" + ownerId.getActivationId() +
-                "&uploadSessionID=" + sessionId;
+
+        String apiPath = buildApiUploadPath(ownerId, sessionId, document);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new ByteArrayResource(document.getPhoto().getData()) {
@@ -185,6 +184,33 @@ public class ZenidRestApiService {
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
     }
 
+    private String buildApiUploadPath(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+        StringBuilder apiPathBuilder = new StringBuilder("/api/sample")
+                .append("?")
+                .append("async=").append(String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase())
+                .append("&expectedSampleType=").append(toSampleType(document.getType()))
+                .append("&customData=").append(ownerId.getActivationId())
+                .append("&uploadSessionID=").append(sessionId);
+
+        apiPathBuilder.append("&country=").append(configProps.getDocumentCountry());
+
+        ZenidSharedMineAllResult.DocumentCodeEnum documentCode = toDocumentCode(document.getType());
+        if (documentCode != null) {
+            apiPathBuilder.append("&documentCode=").append(documentCode);
+        }
+
+        if (document.getSide() != null) {
+            apiPathBuilder.append("&pageCode=").append(toPageCodeEnum(document.getSide()));
+        }
+
+        ZenidSharedMineAllResult.DocumentRoleEnum documentRole = toDocumentRole(document.getType());
+        if (documentRole != null) {
+            apiPathBuilder.append("&role=").append(documentRole);
+        }
+
+        return apiPathBuilder.toString();
+    }
+
     private HttpEntity<Void> createDefaultRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -195,6 +221,48 @@ public class ZenidRestApiService {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         return new HttpEntity<>(headers);
+    }
+
+    private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {
+        switch (documentType) {
+            case DRIVING_LICENSE:
+                return ZenidSharedMineAllResult.DocumentCodeEnum.DRV;
+            case PASSPORT:
+                return ZenidSharedMineAllResult.DocumentCodeEnum.PAS;
+//            case ID_CARD:
+//                // Not supported more than one version of a document
+//                return List.of(ZenidSharedMineAllResult.DocumentCodeEnum.IDC1, ZenidSharedMineAllResult.DocumentCodeEnum.IDC2);
+            default:
+                return null;
+        }
+    }
+
+    private @Nullable ZenidSharedMineAllResult.DocumentRoleEnum toDocumentRole(DocumentType documentType) {
+        switch (documentType) {
+            case DRIVING_LICENSE:
+                return ZenidSharedMineAllResult.DocumentRoleEnum.DRV;
+            case ID_CARD:
+                return ZenidSharedMineAllResult.DocumentRoleEnum.IDC;
+            case PASSPORT:
+                return ZenidSharedMineAllResult.DocumentRoleEnum.PAS;
+            default:
+                return null;
+        }
+    }
+
+    @Nullable
+    private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(@Nullable CardSide cardSide) {
+        if (cardSide == null) {
+            return null;
+        }
+        switch (cardSide) {
+            case FRONT:
+                return ZenidSharedMineAllResult.PageCodeEnum.F;
+            case BACK:
+                return ZenidSharedMineAllResult.PageCodeEnum.B;
+            default:
+                throw new IllegalStateException("Unexpected card side value: " + cardSide);
+        }
     }
 
     private ZenidWebUploadSampleResponse.SampleTypeEnum toSampleType(DocumentType type) {
