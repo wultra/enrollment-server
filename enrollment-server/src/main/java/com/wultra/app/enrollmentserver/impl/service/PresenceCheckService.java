@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.google.common.base.Ascii;
+import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
@@ -26,17 +27,16 @@ import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationExcepti
 import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.provider.PresenceCheckProvider;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -100,17 +100,13 @@ public class PresenceCheckService {
         IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
 
         if (!idVerification.isPresenceCheckInitialized()) {
-            // TODO - use a better way to locate the photo to be used in presence check
-            Optional<DocumentVerificationEntity> docVerificationEntityWithPhoto =
-                    documentVerificationRepository.findFirstByIdentityVerificationAndPhotoIdNotNull(idVerification);
-
-            if (docVerificationEntityWithPhoto.isPresent()) {
-                String photoId = docVerificationEntityWithPhoto.get().getPhotoId();
-                Image photo = identityVerificationService.getPhotoById(photoId);
-                presenceCheckProvider.initPresenceCheck(ownerId, photo);
-            } else {
-                logger.error("Missing selfie photo to initialize presence check, {}", ownerId);
+            List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
+            if (docsWithPhoto.isEmpty()) {
+                logger.error("Missing person photo to initialize presence check, {}", ownerId);
                 throw new PresenceCheckException("Unable to initialize presence check");
+            } else {
+                Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
+                presenceCheckProvider.initPresenceCheck(ownerId, photo);
             }
         }
         return startPresenceCheck(ownerId, idVerification);
@@ -213,6 +209,37 @@ public class PresenceCheckService {
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         return sessionInfo;
+    }
+
+    /**
+     * Selects person photo for the presence check process
+     * @param ownerId Owner identification.
+     * @param docsWithPhoto Documents with a mined person photography.
+     * @return Image with a person photography
+     * @throws DocumentVerificationException When an error during obtaining a person photo occurred.
+     */
+    public Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException {
+        docsWithPhoto.forEach(docWithPhoto ->
+                Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
+        );
+
+        DocumentVerificationEntity preferredDocWithPhoto = null;
+        for (DocumentType documentType : DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO) {
+            Optional<DocumentVerificationEntity> docEntity = docsWithPhoto.stream()
+                    .filter(value -> documentType.equals(value.getType()))
+                    .findFirst();
+            if (docEntity.isPresent()) {
+                preferredDocWithPhoto = docEntity.get();
+                break;
+            }
+        }
+        if (preferredDocWithPhoto == null) {
+            logger.warn("Unable to select a source of person photo to initialize presence check, {}", ownerId);
+            preferredDocWithPhoto = docsWithPhoto.get(0);
+        }
+        logger.info("Selected {} as the source of person photo, {}", preferredDocWithPhoto, ownerId);
+        String photoId = preferredDocWithPhoto.getPhotoId();
+        return identityVerificationService.getPhotoById(photoId);
     }
 
     /**

@@ -28,7 +28,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Repository for document verification records.
@@ -92,6 +91,11 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "WHERE d.verificationId = :verificationId")
     List<String> findAllUploadIds(String verificationId);
 
-    Optional<DocumentVerificationEntity> findFirstByIdentityVerificationAndPhotoIdNotNull(IdentityVerificationEntity identityVerification);
+    @Query("SELECT d " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.identityVerification = :identityVerification " +
+            "AND d.photoId IS NOT NULL " +
+            "AND d.usedForVerification = true")
+    List<DocumentVerificationEntity> findAllWithPhoto(IdentityVerificationEntity identityVerification);
 
 }
