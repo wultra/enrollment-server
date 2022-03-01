@@ -382,7 +382,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             CardSide zenIdCardSide = minedData.getPageCode() == null ?
                     null : toCardSide(minedData.getPageCode());
             if (zenIdCardSide == null && cardSide != null) {
-                logger.warn("Not recognized document side {} in ZenID, {}", cardSide, id);
+                documentSubmitResult.setRejectReason(String.format("Not recognized document side %s", cardSide));
             } else if (zenIdCardSide != null && cardSide != null && cardSide != zenIdCardSide) {
                 documentSubmitResult.setRejectReason(
                         String.format("Different document side %s than expected %s", zenIdCardSide, cardSide)
