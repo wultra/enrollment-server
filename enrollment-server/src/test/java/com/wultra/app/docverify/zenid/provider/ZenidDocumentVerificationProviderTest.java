@@ -42,6 +42,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,9 +62,11 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
 
     private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProviderTest.class);
 
-    private final String DOC_ID_CARD_BACK = "idCardBack";
+    private static final String DOC_ID_CARD_BACK = "idCardBack";
 
-    private final String DOC_ID_CARD_FRONT = "idCardFront";
+    private static final String DOC_ID_CARD_FRONT = "idCardFront";
+
+    private List<String> uploadIds;
 
     private OwnerId ownerId;
 
@@ -76,6 +79,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     @BeforeEach
     public void init() {
         ownerId = createOwnerId();
+        uploadIds = new ArrayList<>();
     }
 
     @AfterEach
@@ -92,7 +96,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         SubmittedDocument document = createIdCardFrontDocument();
         List<SubmittedDocument> documents = List.of(document);
 
-        DocumentsSubmitResult docsSubmitResult = provider.submitDocuments(ownerId, documents);
+        DocumentsSubmitResult docsSubmitResult = submitDocuments(ownerId, documents);
         DocumentSubmitResult docSubmitResult = docsSubmitResult.getResults().get(0);
         DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
         docVerification.setType(document.getType());
@@ -107,7 +111,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     public void submitDocumentsTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
-        DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
+        DocumentsSubmitResult result = submitDocuments(ownerId, documents);
 
         assertSubmittedDocuments(ownerId, documents, result);
     }
@@ -164,7 +168,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     public void cleanupDocumentsTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
-        provider.submitDocuments(ownerId, documents);
+        submitDocuments(ownerId, documents);
 
         cleanupDocuments(ownerId);
     }
@@ -178,9 +182,20 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     private void cleanupDocuments(OwnerId ownerId) throws Exception {
-        List<String> uploadIds = ImmutableList.of(DOC_ID_CARD_FRONT, DOC_ID_CARD_BACK);
+        if (uploadIds.size() > 0) {
+            provider.cleanupDocuments(ownerId, uploadIds);
+        }
+    }
 
-        provider.cleanupDocuments(ownerId, uploadIds);
+    private DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> documents) throws Exception {
+        DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
+
+        List<String> uploadIdsFromSubmit = result.getResults().stream()
+                .map(DocumentSubmitResult::getUploadId)
+                .collect(Collectors.toList());
+        uploadIds.addAll(uploadIdsFromSubmit);
+
+        return result;
     }
 
     private List<SubmittedDocument> createSubmittedDocuments() throws Exception {
