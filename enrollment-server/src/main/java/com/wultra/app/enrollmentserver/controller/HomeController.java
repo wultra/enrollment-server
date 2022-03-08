@@ -40,6 +40,7 @@ public class HomeController {
         this.buildProperties = buildProperties;
     }
 
+    @SuppressWarnings("SameReturnValue")
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home(Model model) {
         if (buildProperties != null) {

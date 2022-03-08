@@ -58,18 +58,17 @@ The default configuration works best with Apache Tomcat server running on defaul
 
 To deploy Enrollment Server to Apache Tomcat, simply copy the WAR file in your `webapps` folder or deploy it using the "Tomcat Web Application Manager" application (usually deployed on default Tomcat address `http://localhost:8080/manager`).
 
-## Deploying Enrollment Server Outside the Container
-
-You can also execute WAR file directly using the following command:
-
-```bash
-java -jar enrollment-server.war
-```
-
-<!-- begin box warning -->
-You can overwrite the port using `-Dserver.port=8090` parameter to avoid port conflicts.
-<!-- end -->
+Running Enrollment Server from console using the `java -jar` command is not supported.
 
 ## Deploying Enrollment Server On JBoss / Wildfly
 
 Follow the extra instructions in chapter [Deploying Enrollment Server on JBoss / Wildfly](./Deploying-Wildfly.md).
+
+## Supported Java Runtime Versions
+
+The following Java runtime versions are supported:
+- Java 8 (LTS release)
+- Java 11 (LTS release)
+- Java 17 (LTS release)
+
+The Enrollment Server may run on other Java versions, however we do not perform extensive testing with non-LTS releases.

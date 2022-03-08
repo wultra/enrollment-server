@@ -18,10 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -36,6 +33,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @NoArgsConstructor
+@RequiredArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
 public class OperationTemplateEntity implements Serializable {
@@ -68,12 +66,16 @@ public class OperationTemplateEntity implements Serializable {
         if (this == o) return true;
         if (!(o instanceof OperationTemplateEntity)) return false;
         OperationTemplateEntity that = (OperationTemplateEntity) o;
-        return placeholder.equals(that.placeholder) && language.equals(that.language) && title.equals(that.title) && message.equals(that.message);
+        return id.equals(that.id)
+                && Objects.equals(placeholder, that.placeholder)
+                && Objects.equals(language, that.language)
+                && Objects.equals(title, that.title)
+                && Objects.equals(message, that.message)
+                && Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(placeholder, language, title, message);
+        return Objects.hash(id, placeholder, language, title, message, attributes);
     }
-
 }
