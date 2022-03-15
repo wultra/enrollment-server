@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 
@@ -92,8 +93,8 @@ public class OtpService {
         // Do not allow spamming by OTP codes
         Date otpLastCreatedDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId, otpType);
         Duration resendPeriod = onboardingConfig.getOtpResendPeriod();
-        if (!isAfterNow(otpLastCreatedDate, resendPeriod)) {
-            logger.warn("Resend OTP functionality is not available yet for process ID: {}", processId);
+        if (isFromNowCloserThan(otpLastCreatedDate, resendPeriod)) {
+            logger.warn("Resend OTP functionality is not available yet (due to resend period) for process ID: {}", processId);
             throw new OnboardingOtpDeliveryException();
         }
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
@@ -145,7 +146,7 @@ public class OtpService {
         } else if (failedAttempts >= maxFailedAttempts) {
             logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
             process = failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
-        } else if (isAfterNow(otp.getTimestampCreated(), onboardingConfig.getOtpExpirationTime())) {
+        } else if (otp.hasExpired()) {
             logger.info("Expired OTP code received, process ID: {}", processId);
             expired = true;
             otp.setStatus(OtpStatus.FAILED);
@@ -216,14 +217,22 @@ public class OtpService {
      * @throws OnboardingProcessException Thrown in case OTP code could not be generated.
      */
     private String generateOtpCode(OnboardingProcessEntity process, OtpType otpType) throws OnboardingProcessException {
-        OnboardingOtpEntity otp = new OnboardingOtpEntity();
         int otpLength = onboardingConfig.getOtpLength();
         String otpCode = otpGeneratorService.generateOtpCode(otpLength);
+
+        // prepare timestamp created and expiration
+        Calendar calendar = Calendar.getInstance();
+        Date timestampCreated = calendar.getTime();
+        calendar.add(Calendar.SECOND, (int) onboardingConfig.getOtpExpirationTime().getSeconds());
+        Date timestampExpiration = calendar.getTime();
+
+        OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setProcess(process);
         otp.setOtpCode(otpCode);
         otp.setType(otpType);
         otp.setStatus(OtpStatus.ACTIVE);
-        otp.setTimestampCreated(new Date());
+        otp.setTimestampCreated(timestampCreated);
+        otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
         onboardingOtpRepository.save(otp);
         return otpCode;
@@ -240,8 +249,14 @@ public class OtpService {
         return onboardingProcessRepository.save(entity);
     }
 
-    private boolean isAfterNow(Date date, Duration duration) {
-        return (date.getTime() + (duration.getSeconds() * 1_000)) > System.currentTimeMillis();
+    /**
+     * Checks whether a date is less than a specified duration closer to the current time
+     * @param date Date value
+     * @param duration Minimum duration before now
+     * @return true when the date is before or after the current time shorter duration than the specified one
+     */
+    private boolean isFromNowCloserThan(Date date, Duration duration) {
+        return Math.abs(System.currentTimeMillis() - date.getTime()) < (duration.getSeconds() * 1_000);
     }
 
 }

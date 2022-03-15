@@ -82,6 +82,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    @Column(name = "timestamp_expiration")
+    private Date timestampExpiration;
+
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
@@ -100,5 +103,13 @@ public class OnboardingOtpEntity implements Serializable {
     public int hashCode() {
         return Objects.hash(process, type, timestampCreated);
     }
-}
 
+    /**
+     * @return true when the OTP has expired, false otherwise
+     */
+    @Transient
+    public boolean hasExpired() {
+        return timestampCreated.after(timestampExpiration);
+    }
+
+}
