@@ -33,7 +33,6 @@ import java.util.Objects;
 @Setter
 @ToString
 @NoArgsConstructor
-@RequiredArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
 public class OperationTemplateEntity implements Serializable {
