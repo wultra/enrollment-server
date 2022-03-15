@@ -82,7 +82,7 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
-    @Column(name = "timestamp_expiration")
+    @Column(name = "timestamp_expiration", nullable = false)
     private Date timestampExpiration;
 
     @Column(name = "timestamp_last_updated")
