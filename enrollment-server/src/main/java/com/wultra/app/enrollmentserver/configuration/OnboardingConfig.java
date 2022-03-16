@@ -21,6 +21,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 /**
  * Identity verification configuration.
  *
@@ -36,14 +38,14 @@ public class OnboardingConfig {
     @Value("${enrollment-server.onboarding-process.activation.expiration.seconds:300}")
     private int activationExpirationTime;
 
-    @Value("${enrollment-server.onboarding-process.otp.expiration.seconds:300}")
-    private int otpExpirationTime;
+    @Value("${enrollment-server.onboarding-process.otp.expiration:PT30S}")
+    private Duration otpExpirationTime;
 
     @Value("${enrollment-server.onboarding-process.otp.max-failed-attempts:5}")
     private int otpMaxFailedAttempts;
 
-    @Value("${enrollment-server.onboarding-process.otp.resend-period.seconds:30}")
-    private int otpResendPeriod;
+    @Value("${enrollment-server.onboarding-process.otp.resend-period:PT30S}")
+    private Duration otpResendPeriod;
 
     @Value("${enrollment-server.onboarding-process.max-processes-per-day:5}")
     private int maxProcessCountPerDay;

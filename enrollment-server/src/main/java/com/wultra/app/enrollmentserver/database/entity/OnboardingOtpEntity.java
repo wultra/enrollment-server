@@ -46,6 +46,12 @@ public class OnboardingOtpEntity implements Serializable {
 
     private static final long serialVersionUID = -5626187612981527923L;
 
+    public static final String ERROR_CANCELED = "canceled";
+
+    public static final String ERROR_EXPIRED = "expired";
+
+    public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttempts";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
@@ -76,6 +82,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    @Column(name = "timestamp_expiration", nullable = false)
+    private Date timestampExpiration;
+
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
@@ -94,5 +103,13 @@ public class OnboardingOtpEntity implements Serializable {
     public int hashCode() {
         return Objects.hash(process, type, timestampCreated);
     }
-}
 
+    /**
+     * @return true when the OTP has expired, false otherwise
+     */
+    @Transient
+    public boolean hasExpired() {
+        return timestampCreated.after(timestampExpiration);
+    }
+
+}

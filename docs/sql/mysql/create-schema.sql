@@ -52,6 +52,7 @@ CREATE TABLE es_onboarding_otp (
     error_detail VARCHAR(256),
     failed_attempts INTEGER,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_expiration DATETIME NOT NULL,
     timestamp_last_updated DATETIME,
     timestamp_verified DATETIME,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)

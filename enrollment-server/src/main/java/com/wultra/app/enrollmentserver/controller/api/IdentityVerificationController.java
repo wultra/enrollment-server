@@ -19,8 +19,10 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.request.*;
 import com.wultra.app.enrollmentserver.api.model.response.*;
+import com.wultra.app.enrollmentserver.api.model.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
@@ -82,8 +84,14 @@ public class IdentityVerificationController {
     private final OnboardingService onboardingService;
 
     /**
+     * Configuration data for client integration
+     */
+    private final ConfigurationDataDto integrationConfigDto;
+
+    /**
      * Controller constructor.
      * @param identityVerificationConfig Configuration of identity verification.
+     * @param onboardingConfig Configuration of onboarding.
      * @param documentProcessingService Document processing service.
      * @param identityVerificationService Identity verification service.
      * @param identityVerificationStatusService Identity verification status service.
@@ -94,6 +102,7 @@ public class IdentityVerificationController {
     @Autowired
     public IdentityVerificationController(
             IdentityVerificationConfig identityVerificationConfig,
+            OnboardingConfig onboardingConfig,
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
@@ -101,12 +110,16 @@ public class IdentityVerificationController {
             OnboardingService onboardingService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationConfig = identityVerificationConfig;
+
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.identityVerificationStatusService = identityVerificationStatusService;
         this.identityVerificationOtpService = identityVerificationOtpService;
         this.onboardingService = onboardingService;
         this.presenceCheckService = presenceCheckService;
+
+        this.integrationConfigDto = new ConfigurationDataDto();
+        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
     }
 
     /**
@@ -192,6 +205,8 @@ public class IdentityVerificationController {
         // Check verification status
         final IdentityVerificationStatusResponse response =
                 identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
+        response.setConfig(integrationConfigDto);
+
         return new ObjectResponse<>(response);
     }
 
