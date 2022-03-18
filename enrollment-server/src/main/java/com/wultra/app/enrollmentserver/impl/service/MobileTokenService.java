@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
+import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
@@ -52,6 +53,9 @@ import java.util.List;
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
+    private static final String ATTR_ACTIVATION_ID = "activation_id";
+    private static final String ATTR_IP_ADDRESS = "ip_address";
+    private static final String ATTR_USER_AGENT = "user_agent";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
@@ -115,22 +119,26 @@ public class MobileTokenService {
     /**
      * Approve an operation.
      *
+     * @param activationId Activation ID.
      * @param userId User ID.
      * @param applicationId Application ID.
      * @param operationId Operation ID.
      * @param data Operation Data.
      * @param signatureFactors Used signature factors.
+     * @param requestContext Request context.
      * @param activationFlags Activation flags.
      * @return Simple response.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
     public Response operationApprove(
+            @NotNull String activationId,
             @NotNull String userId,
             @NotNull Long applicationId,
             @NotNull String operationId,
             @NotNull String data,
             @NotNull PowerAuthSignatureTypes signatureFactors,
+            @NotNull RequestContext requestContext,
             List<String> activationFlags) throws MobileTokenException, PowerAuthClientException {
 
         final OperationDetailResponse operationDetail = getOperationDetail(operationId);
@@ -146,6 +154,10 @@ public class MobileTokenService {
         approveRequest.setUserId(userId);
         approveRequest.setSignatureType(SignatureType.enumFromString(signatureFactors.name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(applicationId);
+        // Prepare additional data
+        approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest);
 
         final UserActionResult result = approveResponse.getResult();
@@ -162,12 +174,17 @@ public class MobileTokenService {
      * Fail operation approval (increase operation counter).
      *
      * @param operationId Operation ID.
+     * @param requestContext Request context.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
-    public void operationFailApprove(@NotNull String operationId) throws PowerAuthClientException, MobileTokenException {
+    public void operationFailApprove(@NotNull String operationId, @NotNull RequestContext requestContext) throws PowerAuthClientException, MobileTokenException {
         final OperationFailApprovalRequest request = new OperationFailApprovalRequest();
         request.setOperationId(operationId);
+        // Prepare additional data
+        request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
+
         final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
@@ -177,18 +194,22 @@ public class MobileTokenService {
     /**
      * Reject an operation.
      *
+     * @param activationId Activation ID.
      * @param userId User ID.
      * @param applicationId Application ID.
      * @param operationId Operation ID.
+     * @param requestContext Request context.
      * @param activationFlags Activation flags.
      * @return Simple response.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
     public Response operationReject(
+            @NotNull String activationId,
             @NotNull String userId,
             @NotNull Long applicationId,
             @NotNull String operationId,
+            @NotNull RequestContext requestContext,
             List<String> activationFlags) throws MobileTokenException, PowerAuthClientException {
         final OperationDetailResponse operationDetail = getOperationDetail(operationId);
 
@@ -201,6 +222,10 @@ public class MobileTokenService {
         rejectRequest.setOperationId(operationId);
         rejectRequest.setUserId(userId);
         rejectRequest.setApplicationId(applicationId);
+        // Prepare additional data
+        rejectRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
         final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest);
 

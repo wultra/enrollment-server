@@ -22,6 +22,8 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
+import com.wultra.app.enrollmentserver.impl.service.converter.RequestContextConverter;
+import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Locale;
 
@@ -63,14 +66,17 @@ public class MobileTokenController {
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);
 
     private final MobileTokenService mobileTokenService;
+    private final RequestContextConverter requestContextConverter;
 
     /**
      * Default constructor with autowired dependencies.
      *
      * @param mobileTokenService Mobile token service.
+     * @param requestContextConverter Converter for request context.
      */
     @Autowired
-    public MobileTokenController(MobileTokenService mobileTokenService) {
+    public MobileTokenController(MobileTokenService mobileTokenService, RequestContextConverter requestContextConverter) {
+        this.requestContextConverter = requestContextConverter;
         this.mobileTokenService = mobileTokenService;
     }
 
@@ -145,6 +151,7 @@ public class MobileTokenController {
      *
      * @param request Request for operation approval.
      * @param auth Authentication object.
+     * @param servletRequest HttpServletRequest instance.
      * @return Simple response object.
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
@@ -154,7 +161,10 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY
     })
-    public Response operationApprove(@RequestBody ObjectRequest<OperationApproveRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication auth) throws MobileTokenException {
+    public Response operationApprove(
+            @RequestBody ObjectRequest<OperationApproveRequest> request,
+            @Parameter(hidden = true) PowerAuthApiAuthentication auth,
+            HttpServletRequest servletRequest) throws MobileTokenException {
         try {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
@@ -170,15 +180,18 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
+            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+
             if (auth != null && auth.getUserId() != null) {
+                final String activationId = auth.getActivationContext().getActivationId();
                 final String userId = auth.getUserId();
                 final Long applicationId = auth.getApplicationId();
                 final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
-                return mobileTokenService.operationApprove(userId, applicationId, operationId, data, signatureFactors, activationFlags);
+                return mobileTokenService.operationApprove(activationId, userId, applicationId, operationId, data, signatureFactors, requestContext, activationFlags);
             } else {
                 // make sure to fail operation as well, to increase the failed number
-                mobileTokenService.operationFailApprove(operationId);
+                mobileTokenService.operationFailApprove(operationId, requestContext);
                 logger.debug("Operation approval failed due to failed user authentication, operation ID: {}.", operationId);
                 throw new MobileTokenAuthException();
             }
@@ -193,6 +206,7 @@ public class MobileTokenController {
      *
      * @param request Operation reject request.
      * @param auth Authentication object.
+     * @param servletRequest HttpServletRequest instance.
      * @return Simple response object.
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
@@ -200,7 +214,10 @@ public class MobileTokenController {
     @PowerAuth(resourceId = "/operation/cancel", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response operationReject(@RequestBody ObjectRequest<OperationRejectRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication auth) throws MobileTokenException {
+    public Response operationReject(
+            @RequestBody ObjectRequest<OperationRejectRequest> request,
+            @Parameter(hidden = true) PowerAuthApiAuthentication auth,
+            HttpServletRequest servletRequest) throws MobileTokenException {
         try {
 
             final OperationRejectRequest requestObject = request.getRequestObject();
@@ -208,12 +225,15 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
+            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+
             if (auth != null && auth.getUserId() != null) {
+                final String activationId = auth.getActivationContext().getActivationId();
                 final Long applicationId = auth.getApplicationId();
                 final String userId = auth.getUserId();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String operationId = requestObject.getId();
-                return mobileTokenService.operationReject(userId, applicationId, operationId, activationFlags);
+                return mobileTokenService.operationReject(activationId, userId, applicationId, operationId, requestContext, activationFlags);
             } else {
                 throw new MobileTokenAuthException();
             }
