@@ -53,6 +53,9 @@ import java.util.List;
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
+    private static final String ATTR_ACTIVATION_ID = "activation_id";
+    private static final String ATTR_IP_ADDRESS = "ip_address";
+    private static final String ATTR_USER_AGENT = "user_agent";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
@@ -152,9 +155,9 @@ public class MobileTokenService {
         approveRequest.setSignatureType(SignatureType.enumFromString(signatureFactors.name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(applicationId);
         // Prepare additional data
-        approveRequest.getAdditionalData().put("activation_id", activationId);
-        approveRequest.getAdditionalData().put("ip_address", requestContext.getIpAddress());
-        approveRequest.getAdditionalData().put("user_agent", requestContext.getUserAgent());
+        approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest);
 
         final UserActionResult result = approveResponse.getResult();
@@ -179,8 +182,8 @@ public class MobileTokenService {
         final OperationFailApprovalRequest request = new OperationFailApprovalRequest();
         request.setOperationId(operationId);
         // Prepare additional data
-        request.getAdditionalData().put("ip_address", requestContext.getIpAddress());
-        request.getAdditionalData().put("user_agent", requestContext.getUserAgent());
+        request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
         final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
 
@@ -220,9 +223,9 @@ public class MobileTokenService {
         rejectRequest.setUserId(userId);
         rejectRequest.setApplicationId(applicationId);
         // Prepare additional data
-        rejectRequest.getAdditionalData().put("activation_id", activationId);
-        rejectRequest.getAdditionalData().put("ip_address", requestContext.getIpAddress());
-        rejectRequest.getAdditionalData().put("user_agent", requestContext.getUserAgent());
+        rejectRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
+        rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
         final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest);
 

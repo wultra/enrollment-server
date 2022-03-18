@@ -75,7 +75,7 @@ public class RequestContextConverter {
         }
         for (String header: HTTP_HEADERS_IP_ADDRESS) {
             final String ip = request.getHeader(header);
-            if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
                 return ip;
             }
         }
