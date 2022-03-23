@@ -20,7 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
+import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
@@ -75,7 +75,7 @@ public class MobileTokenConverter {
         return allowedSignatureType;
     }
 
-    public Operation convert(OperationDetailResponse operationDetail, OperationTemplate operationTemplate) throws MobileTokenConfigurationException {
+    public Operation convert(OperationDetailResponse operationDetail, OperationTemplateEntity operationTemplate) throws MobileTokenConfigurationException {
         try {
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());

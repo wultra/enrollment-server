@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
-import com.wultra.app.enrollmentserver.model.response.ActivationCodeResponse;
+import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
 import com.wultra.security.powerauth.client.v3.InitActivationResponse;
 import org.springframework.stereotype.Component;
 

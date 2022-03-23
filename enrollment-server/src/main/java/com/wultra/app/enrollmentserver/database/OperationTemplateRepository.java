@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.database;
 
-import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
+import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -30,8 +30,8 @@ import java.util.Optional;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Repository
-public interface OperationTemplateRepository extends CrudRepository<OperationTemplate, Long> {
+public interface OperationTemplateRepository extends CrudRepository<OperationTemplateEntity, Long> {
 
-    Optional<OperationTemplate> findFirstByLanguageAndPlaceholder(String language, String placeholder);
+    Optional<OperationTemplateEntity> findFirstByLanguageAndPlaceholder(String language, String placeholder);
 
 }

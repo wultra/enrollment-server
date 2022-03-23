@@ -1,0 +1,53 @@
+/*
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2021 Wultra s.r.o.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.wultra.app.enrollmentserver.model.integration;
+
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Result of submission of multiple identity-related documents.
+ *
+ * @author Roman Strobl, roman.strobl@wultra.com
+ */
+@Data
+public class DocumentsSubmitResult {
+
+    /**
+     * List of document upload results
+     */
+    private List<DocumentSubmitResult> results = new ArrayList<>();
+
+    /**
+     * Overall reason why documents were not accepted
+     */
+    private String rejectReason;
+
+    /**
+     * Overall error in case of a common upload error
+     */
+    private String errorDetail;
+
+    /**
+     * Identifier of extracted photograph in case submitted documents contained an ID card
+     */
+    private String extractedPhotoId;
+
+}

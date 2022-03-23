@@ -20,8 +20,8 @@ package com.wultra.app.enrollmentserver.controller.api;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.impl.service.ActivationCodeService;
-import com.wultra.app.enrollmentserver.model.request.ActivationCodeRequest;
-import com.wultra.app.enrollmentserver.model.response.ActivationCodeResponse;
+import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
@@ -32,6 +32,7 @@ import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncrypt
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,7 @@ public class ActivationCodeController {
      * @param apiAuthentication Authentication object with user and app details.
      * @return New activation code, activation code signature and activation ID.
      * @throws PowerAuthAuthenticationException In case user authentication fails.
+     * @throws PowerAuthEncryptionException In case request decryption fails.
      * @throws InvalidRequestObjectException In case the object validation fails.
      * @throws ActivationCodeException In case fetching the activation code fails.
      */
@@ -87,7 +89,7 @@ public class ActivationCodeController {
     })
     public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request,
                                                                         @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException {
+                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
@@ -97,12 +99,12 @@ public class ActivationCodeController {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when fetching activation code");
-            throw new PowerAuthAuthenticationException("ECIES decryption failed when fetching activation code");
+            throw new PowerAuthEncryptionException("ECIES decryption failed when fetching activation code");
         }
 
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when fetching activation code");
-            throw new PowerAuthAuthenticationException("Invalid request received when fetching activation code");
+            throw new PowerAuthEncryptionException("Invalid request received when fetching activation code");
         }
 
         // Request the activation code details.

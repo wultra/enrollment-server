@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
+import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
@@ -105,7 +105,7 @@ public class MobileTokenService {
         for (OperationDetailResponse operationDetail: pendingList) {
             final String activationFlag = operationDetail.getActivationFlag();
             if (activationFlag == null || activationFlags.contains(activationFlag)) { // only return data if there is no flag, or if flag matches flags of activation
-                final OperationTemplate operationTemplate = operationTemplateService.prepareTemplate(operationDetail.getOperationType(), language);
+                final OperationTemplateEntity operationTemplate = operationTemplateService.prepareTemplate(operationDetail.getOperationType(), language);
                 final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate);
                 responseObject.add(operation);
                 if (responseObject.size() >= OPERATION_LIST_LIMIT) { // limit the list size in response

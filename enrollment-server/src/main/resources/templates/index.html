@@ -25,7 +25,8 @@
 <body>
 <h1>PowerAuth Enrollment Server</h1>
 <p>
-    Version <span th:text="${version}">version</span>, built on <span th:text="${#dates.format(built, 'yyyy/MM/dd, HH:mm:ss')}">built</span>.
+    Version <span th:text="${version}">version</span><span th:if="${built != 'UNKNOWN'}">, built on
+    <span th:text="${#dates.format(built, 'yyyy/MM/dd, HH:mm:ss')}">built</span>.</span>
 </p>
 <p>
     2020, &copy; <a href="https://wultra.com/">Wultra s.r.o.</a>
