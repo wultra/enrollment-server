@@ -25,13 +25,13 @@
     <description>Base implementation of the enrollment server.</description>
 
     <artifactId>enrollment-server</artifactId>
-    <version>1.2.5-SNAPSHOT</version>
+    <version>1.2.5</version>
     <packaging>war</packaging>
 
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.2.5-SNAPSHOT</version>
+        <version>1.2.5</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -41,17 +41,17 @@
         <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>mtoken-model</artifactId>
-            <version>1.2.5-SNAPSHOT</version>
+            <version>1.2.5</version>
         </dependency>
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-restful-security-spring</artifactId>
-            <version>1.2.5-SNAPSHOT</version>
+            <version>1.2.5</version>
         </dependency>
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-push-client</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.5</version>
         </dependency>
 
         <!-- Bouncy Castle -->
