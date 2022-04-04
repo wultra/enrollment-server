@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.wultra.app.docverify.mock.MockConst;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -178,6 +180,17 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         } else {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException {
+        String sdkInitResponse = UUID.randomUUID().toString();
+        VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
+        verificationSdkInfo.getAttributes().put(MockConst.SDK_INIT_RESPONSE, sdkInitResponse);
+
+        logger.info("Mock - initialized verification SDK, {}", id);
+
+        return verificationSdkInfo;
     }
 
     private DocumentSubmitResult toDocumentSubmitResult(String docId) {

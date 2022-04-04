@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationExcepti
 import com.wultra.app.enrollmentserver.model.integration.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provider which allows customization of the document verification process.
@@ -97,5 +98,15 @@ public interface DocumentVerificationProvider {
      * @throws DocumentVerificationException When an error during parsing rejection reasons occurred
      */
     List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException;
-    
+
+    /**
+     * Initializes the verification process for an integration of ZenID SDK.
+     *
+     * @param id Owner identification.
+     * @param initAttributes Initialization attributes
+     * @return Info with data related to the verification process in ZenID SDK.
+     * @throws DocumentVerificationException When an error during initializing the SDK verification process occurred
+     */
+    VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException;
+
 }

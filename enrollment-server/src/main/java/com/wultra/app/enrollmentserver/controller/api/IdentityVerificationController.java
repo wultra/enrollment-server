@@ -32,6 +32,7 @@ import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingS
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
@@ -57,6 +58,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -363,11 +365,62 @@ public class IdentityVerificationController {
     }
 
     /**
-     * Submit identity-related documents for verification.
+     * Initialize document verification SDK for an integration.
      * @param request Presence check initialization request.
      * @param eciesContext ECIES context.
      * @param apiAuthentication PowerAuth authentication.
-     * @return Document submit response.
+     * @return Verification SDK initialization response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
+     */
+    @RequestMapping(value = "document-verification/init-sdk", method = RequestMethod.POST)
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/document-verification/init-sdk", signatureType = {
+            PowerAuthSignatureTypes.POSSESSION
+    })
+    public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
+            @EncryptedRequestBody ObjectRequest<DocumentVerificationSdkInitRequest> request,
+            @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+            @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
+
+        // Check if the authentication object is present
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration when initializing document verification SDK");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing document verification SDK");
+        }
+
+        // Check if the request was correctly decrypted
+        if (eciesContext == null) {
+            logger.error("ECIES encryption failed when initializing document verification SDK");
+            throw new PowerAuthEncryptionException("ECIES encryption failed when initializing document verification SDK");
+        }
+
+        if (request == null || request.getRequestObject() == null) {
+            logger.error("Invalid request received when initializing document verification SDK");
+            throw new PowerAuthEncryptionException("Invalid request received when initializing document verification SDK");
+        }
+
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = request.getRequestObject().getProcessId();
+
+        onboardingService.verifyProcessId(ownerId, processId);
+
+        final Map<String, String> attributes = request.getRequestObject().getAttributes();
+        final VerificationSdkInfo sdkVerificationInfo = identityVerificationService.initVerificationSdk(ownerId, attributes);
+
+        final DocumentVerificationSdkInitResponse response = new DocumentVerificationSdkInitResponse();
+        response.setAttributes(sdkVerificationInfo.getAttributes());
+        return new ObjectResponse<>(response);
+    }
+
+    /**
+     * Initialize presence check process.
+     * @param request Presence check initialization request.
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Presence check initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
