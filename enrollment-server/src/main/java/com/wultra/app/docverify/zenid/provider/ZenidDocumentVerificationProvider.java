@@ -20,6 +20,8 @@ package com.wultra.app.docverify.zenid.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import com.wultra.app.docverify.zenid.ZenidConst;
 import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.docverify.zenid.service.ZenidRestApiService;
@@ -321,6 +323,40 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         });
 
         return errors;
+    }
+
+    @Override
+    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException {
+        Preconditions.checkArgument(initAttributes.containsKey(ZenidConst.SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
+        String token = initAttributes.get(ZenidConst.SDK_INIT_TOKEN);
+
+        ResponseEntity<ZenidWebInitSdkResponse> responseEntity;
+        try {
+            responseEntity = zenidApiService.initSdk(token);
+        } catch (RestClientException e) {
+            logger.warn("Failed REST call to init ZenID SDK, " + id, e);
+            throw new DocumentVerificationException("Unable to initialize the SDK due to a REST call failure");
+        } catch (Exception e) {
+            logger.error("Unexpected error when initializing ZenID SDK, " + id, e);
+            throw new DocumentVerificationException("Unexpected error when initializing ZenID SDK");
+        }
+
+        if (responseEntity.getBody() == null) {
+            logger.error("Missing response body when initializing ZenID SDK, " + id);
+            throw new DocumentVerificationException("Unexpected error when initializing ZenID SDK");
+        }
+
+        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
+            logger.error("Failed to initialize ZenID SDK, statusCode={}, responseBody='{}', {}",
+                    responseEntity.getStatusCode(), responseEntity.getBody(), id);
+            throw new DocumentVerificationException("Unable to initializing ZenID SDK due to a service error");
+        }
+
+        ZenidWebInitSdkResponse response = responseEntity.getBody();
+
+        VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
+        verificationSdkInfo.getAttributes().put(ZenidConst.SDK_INIT_RESPONSE, response.getResponse());
+        return verificationSdkInfo;
     }
 
     private DocumentSubmitResult createDocumentSubmitResult(OwnerId id,

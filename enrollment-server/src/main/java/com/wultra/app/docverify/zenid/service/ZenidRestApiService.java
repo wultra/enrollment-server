@@ -19,10 +19,7 @@ package com.wultra.app.docverify.zenid.service;
 
 import com.google.common.base.Preconditions;
 import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
-import com.wultra.app.docverify.zenid.model.api.ZenidSharedMineAllResult;
-import com.wultra.app.docverify.zenid.model.api.ZenidWebDeleteSampleResponse;
-import com.wultra.app.docverify.zenid.model.api.ZenidWebInvestigateResponse;
-import com.wultra.app.docverify.zenid.model.api.ZenidWebUploadSampleResponse;
+import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -182,6 +179,18 @@ public class ZenidRestApiService {
         String apiPath = String.format("/api/investigation/%s", investigationId);
         HttpEntity<Void> entity = createDefaultRequestEntity();
         return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
+    }
+
+    /**
+     * Initializes the SDK of ZenID
+     *
+     * @param token Initialization token
+     * @return Response entity with the SDK initialization result
+     */
+    public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) {
+        String apiPath = String.format("/api/initSdk?token=%s", token);
+        HttpEntity<Void> entity = createDefaultRequestEntity();
+        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInitSdkResponse.class);
     }
 
     private String buildApiUploadPath(OwnerId ownerId, String sessionId, SubmittedDocument document) {

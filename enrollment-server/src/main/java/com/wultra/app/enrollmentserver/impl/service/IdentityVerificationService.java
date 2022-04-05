@@ -38,6 +38,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.enrollmentserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -478,6 +479,20 @@ public class IdentityVerificationService {
             docsMetadata.add(docMetadata);
         });
         return docsMetadata;
+    }
+
+    /**
+     * Initializes verification SDK.
+     * @param ownerId Owner identification.
+     * @param initAttributes SDK initialization attributes.
+     * @return
+     * @throws DocumentVerificationException
+     */
+    public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes)
+            throws DocumentVerificationException {
+        VerificationSdkInfo verificationSdkInfo = documentVerificationProvider.initVerificationSdk(ownerId, initAttributes);
+        logger.info("Initialized verification SDK, {}", ownerId);
+        return verificationSdkInfo;
     }
 
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {

@@ -19,6 +19,7 @@ package com.wultra.app.docverify.mock.provider;
 
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
+import com.wultra.app.docverify.mock.MockConst;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
@@ -36,6 +37,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -146,6 +148,13 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
         DocumentResultEntity docResultNotRejected = new DocumentResultEntity();
         docResultNotRejected.setVerificationResult("{\"reason\":\"ok\"}");
         assertEquals(Collections.emptyList(), provider.parseRejectionReasons(docResultNotRejected));
+    }
+
+    @Test
+    public void initVerificationSdkTest() throws Exception {
+        Map<String, String> attributes = Map.of(MockConst.SDK_INIT_TOKEN, "mock-sdk-init-token");
+        VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
+        assertNotNull(verificationSdkInfo.getAttributes().get(MockConst.SDK_INIT_RESPONSE), "Missing SDK init response");
     }
 
     private OwnerId createOwnerId() {

@@ -19,6 +19,7 @@ package com.wultra.app.docverify.zenid.provider;
 
 import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
+import com.wultra.app.docverify.zenid.ZenidConst;
 import com.wultra.app.enrollmentserver.EnrollmentServerTestApplication;
 import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
@@ -44,6 +45,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -179,6 +181,13 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         docResult.setVerificationResult("[{\"Ok\": false, \"Issues\":[{\"IssueDescription\": \"Rejection reason\"}]}]");
         List<String> rejectionReasons = provider.parseRejectionReasons(docResult);
         assertEquals(List.of("Rejection reason"), rejectionReasons);
+    }
+
+    @Test
+    public void initVerificationSdkTest() throws Exception {
+        Map<String, String> attributes = Map.of(ZenidConst.SDK_INIT_TOKEN, "sdk-init-token");
+        VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
+        assertNotNull(verificationSdkInfo.getAttributes().get(ZenidConst.SDK_INIT_RESPONSE), "Missing SDK init response");
     }
 
     private void cleanupDocuments(OwnerId ownerId) throws Exception {
