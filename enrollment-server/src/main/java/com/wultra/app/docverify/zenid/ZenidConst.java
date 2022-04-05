@@ -32,6 +32,6 @@ public class ZenidConst {
     /**
      * Verification SDK initialization token
      */
-    public static final String SDK_INIT_TOKEN = "zenid-sdk-init-token";
+    public static final String SDK_INIT_TOKEN = "sdk-init-token";
 
 }
