@@ -100,12 +100,12 @@ public interface DocumentVerificationProvider {
     List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException;
 
     /**
-     * Initializes the verification process for an integration of ZenID SDK.
+     * Initializes document verification SDK.
      *
      * @param id Owner identification.
      * @param initAttributes Initialization attributes
-     * @return Info with data related to the verification process in ZenID SDK.
-     * @throws DocumentVerificationException When an error during initializing the SDK verification process occurred
+     * @return Info with data related to the verification process in SDK.
+     * @throws DocumentVerificationException When an error during initializing the verification SDK occurred
      */
     VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException;
 

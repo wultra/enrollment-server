@@ -30,6 +30,9 @@ import java.util.Map;
 @Data
 public class VerificationSdkInfo {
 
+    /**
+     * Attributes needed in the verification SDK
+     */
     private Map<String, String> attributes = new LinkedHashMap<>();
 
 }
