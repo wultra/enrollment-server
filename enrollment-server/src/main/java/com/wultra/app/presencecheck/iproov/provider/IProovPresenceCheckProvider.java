@@ -88,7 +88,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         }
 
         if (responseEntityToken.getBody() == null) {
-            logger.error("Missing response body when generating an enrol token in iProov, " + id);
+            logger.error("Missing response body when generating an enrol token in iProov, {}", id);
             throw new PresenceCheckException("Unexpected error when generating an enrol token in iProov, " + id);
         }
 
@@ -109,18 +109,18 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                     responseEntityToken.getStatusCode(), responseEntityToken.getBody(), id);
             throw new PresenceCheckException("Unable to init a presence check due to a service error");
         } catch (Exception e) {
-            logger.error("Unexpected error when enrolling a user image to iProov, " + id, e);
+            logger.error("Unexpected error when enrolling a user image to iProov, {}", id, e);
             throw new PresenceCheckException("Unexpected error when initializing a presence check");
         }
 
         if (responseEntityEnrol.getBody() == null) {
-            logger.error("Missing response body when enrolling a user image to iProov, " + id);
+            logger.error("Missing response body when enrolling a user image to iProov, {}", id);
             throw new PresenceCheckException("Unexpected error when initializing a presence check");
         }
 
         EnrolResponse enrolResponse = parseResponse(responseEntityEnrol.getBody(), EnrolResponse.class);
         if (!enrolResponse.isSuccess()) {
-            logger.error("Not successful enrol of a user image to iProov, " + id);
+            logger.error("Not successful enrol of a user image to iProov, {}", id);
             throw new PresenceCheckException("Unable to init a presence check");
         }
     }
@@ -135,12 +135,12 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                     e.getStatusCode(), e.getResponse(), id);
             throw new PresenceCheckException("Unable to start a presence check due to a service error");
         } catch (Exception e) {
-            logger.error("Unexpected error when generating a verification token in iProov, " + id, e);
+            logger.error("Unexpected error when generating a verification token in iProov, {}", id, e);
             throw new PresenceCheckException("Unexpected error when starting a presence check");
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when generating a verification token in iProov, " + id);
+            logger.error("Missing response body when generating a verification token in iProov, {}", id);
             throw new PresenceCheckException("Unexpected error when generating a verification token in iProov, " + id);
         }
 
@@ -164,13 +164,8 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         try {
             responseEntity = iProovRestApiService.validateVerification(id, token);
         } catch (RestClientException e) {
-            logger.warn(
-                    String.format("Failed REST call to validate a verification in iProov, statusCode=%s, responseBody='%s', %s",
-                            e.getStatusCode(),
-                            e.getResponse(),
-                            id),
-                    e
-            );
+            logger.warn("Failed REST call to validate a verification in iProov, statusCode={}, responseBody='{}', {}",
+                    e.getStatusCode(), e.getResponse(), id, e);
             PresenceCheckResult result = new PresenceCheckResult();
             if (HttpStatus.BAD_REQUEST.equals(e.getStatusCode())) {
                 ClientErrorResponse clientErrorResponse = parseResponse(e.getResponse(), ClientErrorResponse.class);
@@ -187,12 +182,12 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             }
             return result;
         } catch (Exception e) {
-            logger.error("Unexpected error when validating a verification in iProov, " + id, e);
+            logger.error("Unexpected error when validating a verification in iProov, {}", id, e);
             throw new PresenceCheckException("Unexpected error when getting a presence check result");
         }
 
         if (responseEntity == null || responseEntity.getBody() == null) {
-            logger.error("Missing response body when validating a verification in iProov, " + id);
+            logger.error("Missing response body when validating a verification in iProov, {}", id);
             throw new PresenceCheckException("Unexpected error when getting a presence check result");
         }
 
@@ -224,21 +219,17 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         try {
             responseEntity = iProovRestApiService.deleteUserPersona(id);
         } catch (RestClientException e) {
-            logger.warn(
-                    String.format("Failed REST call to delete a user persona from iProov, statusCode=%s, responseBody='%s', %s",
-                            e.getStatusCode(),
-                            e.getResponse(),
-                            id),
-                    e
+            logger.warn("Failed REST call to delete a user persona from iProov, statusCode={}, responseBody='{}', {}",
+                    e.getStatusCode(), e.getResponse(), id, e
             );
             throw new PresenceCheckException("Unable to cleanup identity data");
         } catch (Exception e) {
-            logger.error("Unexpected error when deleting a user persona in iProov, " + id, e);
+            logger.error("Unexpected error when deleting a user persona in iProov, {}", id, e);
             throw new PresenceCheckException("Unexpected error when cleaning up identity data");
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when validating a verification in iProov, " + id);
+            logger.error("Missing response body when validating a verification in iProov, {}", id);
             throw new PresenceCheckException("Unexpected error when cleaning up identity data");
         }
 
@@ -254,11 +245,11 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             if (e.getStatusCode().is4xxClientError()) {
                 responseEntityToken = new ResponseEntity<>(e.getResponse(), e.getStatusCode());
             } else {
-                logger.warn("Failed REST call to generate an enrol token in iProov, " + id, e);
+                logger.warn("Failed REST call to generate an enrol token in iProov, {}", id, e);
                 throw new PresenceCheckException("Unable to init a presence check due to a REST call failure");
             }
         } catch (Exception e) {
-            logger.error("Unexpected error when generating an enrol token in iProov, " + id, e);
+            logger.error("Unexpected error when generating an enrol token in iProov, {}", id, e);
             throw new PresenceCheckException("Unexpected error when initializing a presence check");
         }
         return responseEntityToken;

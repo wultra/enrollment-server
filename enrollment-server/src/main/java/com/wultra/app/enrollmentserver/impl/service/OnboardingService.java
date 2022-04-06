@@ -119,7 +119,7 @@ public class OnboardingService {
         Date timestampCheckStart = c.getTime();
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
         if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
-            logger.warn("Maximum number of processes per day reached for user: " + userId);
+            logger.warn("Maximum number of processes per day reached for user: {}", userId);
             throw new TooManyProcessesException();
         }
 

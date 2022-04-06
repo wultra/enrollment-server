@@ -155,7 +155,7 @@ public class IdentityVerificationStatusService {
             SessionInfo sessionInfo =
                     jsonSerializationService.deserialize(idVerification.getSessionInfo(), SessionInfo.class);
             if (sessionInfo == null) {
-                logger.error("Checking presence verification failed due to invalid session info, " + ownerId);
+                logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
                 idVerification.setErrorDetail("Unable to deserialize session info");
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
@@ -165,7 +165,7 @@ public class IdentityVerificationStatusService {
                     presenceCheckResult =
                             presenceCheckService.checkPresenceVerification(ownerId, idVerification, sessionInfo);
                 } catch (PresenceCheckException e) {
-                    logger.error("Checking presence verification failed, " + ownerId, e);
+                    logger.error("Checking presence verification failed, {}", ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());
                     idVerification.setStatus(IdentityVerificationStatus.FAILED);
                     idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
@@ -192,11 +192,11 @@ public class IdentityVerificationStatusService {
                     identityVerificationFinishService.finishIdentityVerification(ownerId);
                 }
             } catch (DocumentVerificationException e) {
-                logger.error("Checking identity verification result failed, " + ownerId, e);
+                logger.error("Checking identity verification result failed, {}", ownerId, e);
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
                 return response;
             } catch (OnboardingProcessException e) {
-                logger.error("Updating onboarding process failed, " + ownerId, e);
+                logger.error("Updating onboarding process failed, {}", ownerId, e);
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
                 return response;
             }
@@ -212,7 +212,7 @@ public class IdentityVerificationStatusService {
                     }
                 }
             } catch (OnboardingProcessException e) {
-                logger.error("Updating onboarding process failed, " + ownerId, e);
+                logger.error("Updating onboarding process failed, {}", ownerId, e);
                 response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
                 return response;
             }
@@ -267,7 +267,7 @@ public class IdentityVerificationStatusService {
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
             idVerification.setStatus(IdentityVerificationStatus.FAILED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.warn("Verification start failed, " + ownerId, e);
+            logger.warn("Verification start failed, {}", ownerId, e);
         }
     }
 

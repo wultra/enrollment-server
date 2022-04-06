@@ -169,7 +169,7 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handlePresenceCheckNotEnabledException(
             PresenceCheckNotEnabledException ex, HttpServletRequest request) {
-        logger.warn("Calling a service on a not enabled presence check service, requestUri: " + request.getRequestURI(), ex);
+        logger.warn("Calling a service on a not enabled presence check service, requestUri: {}", request.getRequestURI(), ex);
         return new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
     }
 

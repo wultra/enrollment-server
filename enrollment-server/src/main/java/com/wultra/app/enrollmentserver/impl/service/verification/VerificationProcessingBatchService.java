@@ -85,7 +85,7 @@ public class VerificationProcessingBatchService {
                 try {
                     docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, docVerification.getVerificationId());
                 } catch (DocumentVerificationException e) {
-                    logger.error("Checking document submit verification failed, " + ownerId, e);
+                    logger.error("Checking document submit verification failed, {}", ownerId, e);
                     return;
                 }
                 verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
