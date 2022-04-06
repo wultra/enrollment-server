@@ -24,15 +24,20 @@ import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -47,28 +52,45 @@ import java.util.stream.Collectors;
 @Service
 public class ZenidRestApiService {
 
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
+
+    private static final ParameterizedTypeReference<byte[]> RESPONSE_TYPE_BYTE_ARRAY =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebDeleteSampleResponse> RESPONSE_TYPE_REFERENCE_DELETE =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebInitSdkResponse> RESPONSE_TYPE_REFERENCE_INIT_SDK =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebInvestigateResponse> RESPONSE_TYPE_REFERENCE_INVESTIGATE =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebUploadSampleResponse> RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE =
+            new ParameterizedTypeReference<>() { };
+
     /**
      * Configuration properties.
      */
     private final ZenidConfigProps configProps;
 
     /**
-     * REST template for ZenID calls.
+     * REST client for ZenID calls.
      */
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     /**
      * Service constructor.
      *
      * @param configProps Configuration properties.
-     * @param restTemplate REST template for ZenID calls.
+     * @param restClient REST client for ZenID calls.
      */
     @Autowired
     public ZenidRestApiService(
             ZenidConfigProps configProps,
-            @Qualifier("restTemplateZenid") RestTemplate restTemplate) {
+            @Qualifier("restClientZenid") RestClient restClient) {
         this.configProps = configProps;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     /**
@@ -79,7 +101,8 @@ public class ZenidRestApiService {
      * @param document Submitted document.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document)
+            throws RestClientException {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
 
         String apiPath = buildApiUploadPath(ownerId, sessionId, document);
@@ -98,25 +121,19 @@ public class ZenidRestApiService {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        return restTemplate.postForEntity(apiPath, requestEntity, ZenidWebUploadSampleResponse.class);
+        return restClient.post(apiPath, requestEntity, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
     }
 
     /**
      * Synchronizes submitted document result of a previous upload.
      *
-     * @param ownerId Owner identification.
      * @param documentId Submitted document id.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(OwnerId ownerId, String documentId) {
+    public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(String documentId)
+            throws RestClientException {
         String apiPath = "/api/sample/" + documentId;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(headers);
-
-        return restTemplate.exchange(apiPath, HttpMethod.GET, requestEntity, ZenidWebUploadSampleResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
     }
 
     /**
@@ -125,7 +142,8 @@ public class ZenidRestApiService {
      * @param sampleIds Ids of previously uploaded samples.
      * @return Response entity with the investigation result
      */
-    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds) {
+    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds)
+            throws RestClientException {
         Preconditions.checkArgument(sampleIds.size() > 0, "Missing sample ids for investigation");
 
         String apiPath = "/api/investigateSamples";
@@ -137,8 +155,7 @@ public class ZenidRestApiService {
 
         apiPath += "&async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase();
 
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
     /**
@@ -147,10 +164,9 @@ public class ZenidRestApiService {
      * @param sampleId Id of previously uploaded sample.
      * @return Response entity with the deletion result
      */
-    public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) {
+    public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) throws RestClientException {
         String apiPath = String.format("/api/deleteSample?sampleId=%s", sampleId);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebDeleteSampleResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_DELETE);
     }
 
     /**
@@ -158,10 +174,11 @@ public class ZenidRestApiService {
      * @param imageHash Image hash
      * @return Response entity with the image data
      */
-    public ResponseEntity<byte[]> getImage(String imageHash) {
+    public ResponseEntity<byte[]> getImage(String imageHash) throws RestClientException {
         String apiPath = String.format("/History/Image/%s", imageHash);
-        HttpEntity<Void> entity = createAcceptOctetStreamRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, byte[].class);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
+        return restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
     }
 
     /**
@@ -175,10 +192,10 @@ public class ZenidRestApiService {
      * @param investigationId Id of a previously run investigation
      * @return Response entity with the investigation result
      */
-    public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId) {
+    public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId)
+            throws RestClientException {
         String apiPath = String.format("/api/investigation/%s", investigationId);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
     /**
@@ -187,10 +204,9 @@ public class ZenidRestApiService {
      * @param token Initialization token
      * @return Response entity with the SDK initialization result
      */
-    public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) {
+    public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) throws RestClientException {
         String apiPath = String.format("/api/initSdk?token=%s", token);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInitSdkResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INIT_SDK);
     }
 
     private String buildApiUploadPath(OwnerId ownerId, String sessionId, SubmittedDocument document) {
@@ -218,18 +234,6 @@ public class ZenidRestApiService {
         }
 
         return apiPathBuilder.toString();
-    }
-
-    private HttpEntity<Void> createDefaultRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        return new HttpEntity<>(headers);
-    }
-
-    private HttpEntity<Void> createAcceptOctetStreamRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        return new HttpEntity<>(headers);
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {

@@ -22,28 +22,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.docverify.zenid.model.deserializer.CustomOffsetDateTimeDeserializer;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.NTCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import com.wultra.core.rest.client.base.DefaultRestClient;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientConfiguration;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.function.Supplier;
 
 /**
  * ZenID configuration.
@@ -54,33 +46,6 @@ import java.util.function.Supplier;
 @ComponentScan(basePackages = {"com.wultra.app.docverify"})
 @Configuration
 public class ZenidConfig {
-
-    /**
-     * Definition of HTTP client with NTLM authentication support
-     *
-     * @param configProps Configuration properties
-     * @return Instance of an HTTP client with NTLM authentication support
-     */
-    public CloseableHttpClient httpClient(ZenidConfigProps configProps) {
-        String user = configProps.getNtlmUsername();
-        String password = configProps.getNtlmPassword();
-        String domain = configProps.getNtlmDomain();
-
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new NTCredentials(user, password, null, domain));
-
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setAuthenticationEnabled(true)
-                .setProxyPreferredAuthSchemes(Collections.singletonList(AuthSchemes.NTLM))
-                .setTargetPreferredAuthSchemes(Collections.singletonList(AuthSchemes.NTLM))
-                .build();
-
-        return HttpClientBuilder
-                .create()
-                .setDefaultCredentialsProvider(credentialsProvider)
-                .setDefaultRequestConfig(requestConfig)
-                .build();
-    }
 
     /**
      * @return Object mapper bean specific to ZenID json format
@@ -106,45 +71,21 @@ public class ZenidConfig {
     }
 
     /**
-     * Prepares REST template specific to ZenID
+     * Prepares REST client specific to ZenID
      * @param configProps Configuration properties
-     * @param builder REST template builder
-     * @return REST template for ZenID service API calls
+     * @return REST client for ZenID service API calls
      */
-    @Bean("restTemplateZenid")
-    public RestTemplate restTemplateZenid(
-            ZenidConfigProps configProps,
-            RestTemplateBuilder builder) {
-        ZenidRequestFactorySupplier supplier = new ZenidRequestFactorySupplier(configProps);
+    @Bean("restClientZenid")
+    public RestClient restClientZenid(ZenidConfigProps configProps) throws RestClientException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
+        headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        return builder
-                .requestFactory(supplier)
-                .rootUri(configProps.getServiceBaseUrl())
-                .build();
-    }
-
-    /**
-     * Supplier of the HTTP client request factory based on HTTP client with NTLM authentication
-     */
-    class ZenidRequestFactorySupplier implements Supplier<ClientHttpRequestFactory> {
-
-        private final ZenidConfigProps configProps;
-
-        public ZenidRequestFactorySupplier(ZenidConfigProps configProps) {
-            this.configProps = configProps;
-        }
-
-        @Override
-        public ClientHttpRequestFactory get() {
-            HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
-                    httpClient(configProps)
-            );
-            // Prevent usage of streamed request which is not repeatable and
-            // cannot be used in a standard not-preemptive NTLM auth
-            requestFactory.setBufferRequestBody(true);
-            return requestFactory;
-        }
-
+        RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
+        restClientConfiguration.setDefaultHttpHeaders(headers);
+        return new DefaultRestClient(restClientConfiguration);
     }
 
 }

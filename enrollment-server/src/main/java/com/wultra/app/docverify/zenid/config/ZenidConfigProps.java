@@ -18,9 +18,9 @@
 package com.wultra.app.docverify.zenid.config;
 
 import com.wultra.app.docverify.zenid.model.api.ZenidSharedMineAllResult;
+import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +43,11 @@ public class ZenidConfigProps {
     private boolean additionalDocSubmitValidationsEnabled;
 
     /**
+     * API key
+     */
+    private String apiKey;
+
+    /**
      * Enabled/disabled asynchronous processing
      */
     private boolean asyncProcessingEnabled;
@@ -53,28 +58,18 @@ public class ZenidConfigProps {
     private ZenidSharedMineAllResult.DocumentCountryEnum documentCountry;
 
     /**
-     * NTLM domain to authenticate within
-     */
-    private String ntlmDomain;
-
-    /**
-     * NTLM password
-     */
-    private String ntlmPassword;
-
-    /**
-     * NTLM username
-     */
-    private String ntlmUsername;
-
-    /**
      * Service base URL
      */
     private String serviceBaseUrl;
 
-    public void setNtlmDomain(String ntlmDomain) {
-        // prevent blank value which is invalid and potentially hard to catch
-        this.ntlmDomain = StringUtils.isNotBlank(ntlmDomain) ? ntlmDomain : null;
-    }
+    /**
+     * Identification of the application calling the REST services passed as the User-Agent header
+     */
+    private String serviceUserAgent;
+
+    /**
+     * REST client configuration
+     */
+    private RestClientConfiguration restClientConfig;
 
 }

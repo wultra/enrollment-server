@@ -118,16 +118,6 @@
             <version>${shedlock-spring.version}</version>
         </dependency>
 
-        <!-- Http Client for REST calls with NTLM authentication -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-        </dependency>
-
         <!-- In-Memory Database -->
         <dependency>
             <groupId>com.h2database</groupId>
