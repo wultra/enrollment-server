@@ -31,17 +31,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementation of the REST service to ZenID (https://zenid.trask.cz/)
@@ -51,6 +50,8 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(value = "enrollment-server.document-verification.provider", havingValue = "zenid")
 @Service
 public class ZenidRestApiService {
+
+    private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
 
     private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
@@ -105,23 +106,21 @@ public class ZenidRestApiService {
             throws RestClientException {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
 
-        String apiPath = buildApiUploadPath(ownerId, sessionId, document);
+        MultiValueMap<String, String> queryParams = buildQueryParams(ownerId, sessionId, document);
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(document.getPhoto().getData()) {
-            @Override
-            public String getFilename() {
-                return document.getPhoto().getFilename();
-            }
-        });
+        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("file", new ByteArrayResource(document.getPhoto().getData()) {
+                    @Override
+                    public String getFilename() {
+                        return document.getPhoto().getFilename();
+                    }
+                }
+        );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        return restClient.post(apiPath, requestEntity, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
+        return restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
     }
 
     /**
@@ -146,16 +145,11 @@ public class ZenidRestApiService {
             throws RestClientException {
         Preconditions.checkArgument(sampleIds.size() > 0, "Missing sample ids for investigation");
 
-        String apiPath = "/api/investigateSamples";
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        sampleIds.forEach(sampleId -> queryParams.add("sampleIDs", sampleId));
+        queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
 
-        String querySampleIds = sampleIds.stream()
-                .map(sampleId -> "sampleIDs=" + sampleId)
-                .collect(Collectors.joining("&"));
-        apiPath += "?" + querySampleIds;
-
-        apiPath += "&async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase();
-
-        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
+        return restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
     /**
@@ -165,8 +159,9 @@ public class ZenidRestApiService {
      * @return Response entity with the deletion result
      */
     public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) throws RestClientException {
-        String apiPath = String.format("/api/deleteSample?sampleId=%s", sampleId);
-        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_DELETE);
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        queryParams.add("sampleId", sampleId);
+        return restClient.get("/api/deleteSample", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_DELETE);
     }
 
     /**
@@ -205,35 +200,36 @@ public class ZenidRestApiService {
      * @return Response entity with the SDK initialization result
      */
     public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) throws RestClientException {
-        String apiPath = String.format("/api/initSdk?token=%s", token);
-        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INIT_SDK);
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        queryParams.add("token", token);
+
+        return restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
     }
 
-    private String buildApiUploadPath(OwnerId ownerId, String sessionId, SubmittedDocument document) {
-        StringBuilder apiPathBuilder = new StringBuilder("/api/sample")
-                .append("?")
-                .append("async=").append(String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase())
-                .append("&expectedSampleType=").append(toSampleType(document.getType()))
-                .append("&customData=").append(ownerId.getActivationId())
-                .append("&uploadSessionID=").append(sessionId);
+    private MultiValueMap<String, String> buildQueryParams(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
-        apiPathBuilder.append("&country=").append(configProps.getDocumentCountry());
+        queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
+        queryParams.add("expectedSampleType", toSampleType(document.getType()).toString());
+        queryParams.add("customData", ownerId.getActivationId());
+        queryParams.add("uploadSessionID", sessionId);
+        queryParams.add("country", configProps.getDocumentCountry().toString());
 
         ZenidSharedMineAllResult.DocumentCodeEnum documentCode = toDocumentCode(document.getType());
         if (documentCode != null) {
-            apiPathBuilder.append("&documentCode=").append(documentCode);
+            queryParams.add("documentCode", documentCode.toString());
         }
 
         if (document.getSide() != null) {
-            apiPathBuilder.append("&pageCode=").append(toPageCodeEnum(document.getSide()));
+            queryParams.add("pageCode", toPageCodeEnum(document.getSide()).toString());
         }
 
         ZenidSharedMineAllResult.DocumentRoleEnum documentRole = toDocumentRole(document.getType());
         if (documentRole != null) {
-            apiPathBuilder.append("&role=").append(documentRole);
+            queryParams.add("role", documentRole.toString());
         }
 
-        return apiPathBuilder.toString();
+        return queryParams;
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {
@@ -263,11 +259,7 @@ public class ZenidRestApiService {
         }
     }
 
-    @Nullable
-    private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(@Nullable CardSide cardSide) {
-        if (cardSide == null) {
-            return null;
-        }
+    private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(CardSide cardSide) {
         switch (cardSide) {
             case FRONT:
                 return ZenidSharedMineAllResult.PageCodeEnum.F;
