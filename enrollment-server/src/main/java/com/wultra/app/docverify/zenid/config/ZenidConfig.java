@@ -52,10 +52,11 @@ public class ZenidConfig {
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid() {
-        ObjectMapper mapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         // Add custom deserialization to support also the ISO DATE format data where ISO DATE TIME expected (ZenID bug?)
         javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
+
+        ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(javaTimeModule)
                 .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -85,6 +86,7 @@ public class ZenidConfig {
         RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
         restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
         restClientConfiguration.setDefaultHttpHeaders(headers);
+        restClientConfiguration.setObjectMapper(objectMapperZenid());
         return new DefaultRestClient(restClientConfiguration);
     }
 
