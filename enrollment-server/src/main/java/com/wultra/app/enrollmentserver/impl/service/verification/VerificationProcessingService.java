@@ -85,7 +85,7 @@ public class VerificationProcessingService {
                     try {
                         docResult = getDocumentResultEntity(ownerId, docVerification);
                     } catch (DocumentVerificationException e) {
-                        logger.warn("Unable to get document result for " + docVerification + ", " + ownerId, e);
+                        logger.warn("Unable to get document result for {}, {}", docVerification, ownerId, e);
                         docVerification.setStatus(DocumentStatus.FAILED);
                     }
                     if (docResult != null) {

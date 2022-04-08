@@ -78,7 +78,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
                 photo.setData(is.readAllBytes());
             }
         } catch (IOException e) {
-            logger.error("Unable to read image data from: " + selfiePhotoPath);
+            logger.error("Unable to read image data from: {}", selfiePhotoPath);
         }
         if (photo.getData() == null) {
             photo.setData(new byte[]{});

@@ -47,7 +47,7 @@ public class JsonSerializationService {
         try {
             return objectMapper.readValue(json, cls);
         } catch (JsonProcessingException e) {
-            logger.error("JSON serialization failed due to an error: " + e.getMessage(), e);
+            logger.error("JSON serialization failed due to an error", e);
             return null;
         }
     }
@@ -61,7 +61,7 @@ public class JsonSerializationService {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            logger.error("JSON serialization failed due to an error: " + e.getMessage(), e);
+            logger.error("JSON serialization failed due to an error", e);
             return null;
         }
     }

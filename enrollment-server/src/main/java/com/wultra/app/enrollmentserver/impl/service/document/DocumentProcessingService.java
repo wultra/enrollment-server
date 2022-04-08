@@ -399,7 +399,7 @@ public class DocumentProcessingService {
                     documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
             docVerification.setVerificationId(docsVerificationResult.getVerificationId());
         } catch (DocumentVerificationException e) {
-            logger.warn("Unable to verify document with uploadId: " + uploadId, e.getMessage(), ownerId);
+            logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(e.getMessage());
         }
