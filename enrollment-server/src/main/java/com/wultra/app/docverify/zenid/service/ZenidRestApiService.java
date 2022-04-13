@@ -24,19 +24,23 @@ import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementation of the REST service to ZenID (https://zenid.trask.cz/)
@@ -47,28 +51,47 @@ import java.util.stream.Collectors;
 @Service
 public class ZenidRestApiService {
 
+    private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
+
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
+
+    private static final ParameterizedTypeReference<byte[]> RESPONSE_TYPE_BYTE_ARRAY =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebDeleteSampleResponse> RESPONSE_TYPE_REFERENCE_DELETE =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebInitSdkResponse> RESPONSE_TYPE_REFERENCE_INIT_SDK =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebInvestigateResponse> RESPONSE_TYPE_REFERENCE_INVESTIGATE =
+            new ParameterizedTypeReference<>() { };
+
+    private static final ParameterizedTypeReference<ZenidWebUploadSampleResponse> RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE =
+            new ParameterizedTypeReference<>() { };
+
     /**
      * Configuration properties.
      */
     private final ZenidConfigProps configProps;
 
     /**
-     * REST template for ZenID calls.
+     * REST client for ZenID calls.
      */
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     /**
      * Service constructor.
      *
      * @param configProps Configuration properties.
-     * @param restTemplate REST template for ZenID calls.
+     * @param restClient REST client for ZenID calls.
      */
     @Autowired
     public ZenidRestApiService(
             ZenidConfigProps configProps,
-            @Qualifier("restTemplateZenid") RestTemplate restTemplate) {
+            @Qualifier("restClientZenid") RestClient restClient) {
         this.configProps = configProps;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     /**
@@ -79,44 +102,37 @@ public class ZenidRestApiService {
      * @param document Submitted document.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document)
+            throws RestClientException {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
 
-        String apiPath = buildApiUploadPath(ownerId, sessionId, document);
+        MultiValueMap<String, String> queryParams = buildQueryParams(ownerId, sessionId, document);
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(document.getPhoto().getData()) {
-            @Override
-            public String getFilename() {
-                return document.getPhoto().getFilename();
-            }
-        });
+        MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("file", new ByteArrayResource(document.getPhoto().getData()) {
+                    @Override
+                    public String getFilename() {
+                        return document.getPhoto().getFilename();
+                    }
+                }
+        );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        return restTemplate.postForEntity(apiPath, requestEntity, ZenidWebUploadSampleResponse.class);
+        return restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
     }
 
     /**
      * Synchronizes submitted document result of a previous upload.
      *
-     * @param ownerId Owner identification.
      * @param documentId Submitted document id.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(OwnerId ownerId, String documentId) {
+    public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(String documentId)
+            throws RestClientException {
         String apiPath = "/api/sample/" + documentId;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(headers);
-
-        return restTemplate.exchange(apiPath, HttpMethod.GET, requestEntity, ZenidWebUploadSampleResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
     }
 
     /**
@@ -125,20 +141,15 @@ public class ZenidRestApiService {
      * @param sampleIds Ids of previously uploaded samples.
      * @return Response entity with the investigation result
      */
-    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds) {
+    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds)
+            throws RestClientException {
         Preconditions.checkArgument(sampleIds.size() > 0, "Missing sample ids for investigation");
 
-        String apiPath = "/api/investigateSamples";
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        sampleIds.forEach(sampleId -> queryParams.add("sampleIDs", sampleId));
+        queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
 
-        String querySampleIds = sampleIds.stream()
-                .map(sampleId -> "sampleIDs=" + sampleId)
-                .collect(Collectors.joining("&"));
-        apiPath += "?" + querySampleIds;
-
-        apiPath += "&async=" + String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase();
-
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
+        return restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
     /**
@@ -147,10 +158,10 @@ public class ZenidRestApiService {
      * @param sampleId Id of previously uploaded sample.
      * @return Response entity with the deletion result
      */
-    public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) {
-        String apiPath = String.format("/api/deleteSample?sampleId=%s", sampleId);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebDeleteSampleResponse.class);
+    public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) throws RestClientException {
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        queryParams.add("sampleId", sampleId);
+        return restClient.get("/api/deleteSample", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_DELETE);
     }
 
     /**
@@ -158,10 +169,11 @@ public class ZenidRestApiService {
      * @param imageHash Image hash
      * @return Response entity with the image data
      */
-    public ResponseEntity<byte[]> getImage(String imageHash) {
+    public ResponseEntity<byte[]> getImage(String imageHash) throws RestClientException {
         String apiPath = String.format("/History/Image/%s", imageHash);
-        HttpEntity<Void> entity = createAcceptOctetStreamRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, byte[].class);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
+        return restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
     }
 
     /**
@@ -175,10 +187,10 @@ public class ZenidRestApiService {
      * @param investigationId Id of a previously run investigation
      * @return Response entity with the investigation result
      */
-    public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId) {
+    public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId)
+            throws RestClientException {
         String apiPath = String.format("/api/investigation/%s", investigationId);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInvestigateResponse.class);
+        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
     /**
@@ -187,49 +199,37 @@ public class ZenidRestApiService {
      * @param token Initialization token
      * @return Response entity with the SDK initialization result
      */
-    public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) {
-        String apiPath = String.format("/api/initSdk?token=%s", token);
-        HttpEntity<Void> entity = createDefaultRequestEntity();
-        return restTemplate.exchange(apiPath, HttpMethod.GET, entity, ZenidWebInitSdkResponse.class);
+    public ResponseEntity<ZenidWebInitSdkResponse> initSdk(String token) throws RestClientException {
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        queryParams.add("token", token);
+
+        return restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
     }
 
-    private String buildApiUploadPath(OwnerId ownerId, String sessionId, SubmittedDocument document) {
-        StringBuilder apiPathBuilder = new StringBuilder("/api/sample")
-                .append("?")
-                .append("async=").append(String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase())
-                .append("&expectedSampleType=").append(toSampleType(document.getType()))
-                .append("&customData=").append(ownerId.getActivationId())
-                .append("&uploadSessionID=").append(sessionId);
+    private MultiValueMap<String, String> buildQueryParams(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+        MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
-        apiPathBuilder.append("&country=").append(configProps.getDocumentCountry());
+        queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
+        queryParams.add("expectedSampleType", toSampleType(document.getType()).toString());
+        queryParams.add("customData", ownerId.getActivationId());
+        queryParams.add("uploadSessionID", sessionId);
+        queryParams.add("country", configProps.getDocumentCountry().toString());
 
         ZenidSharedMineAllResult.DocumentCodeEnum documentCode = toDocumentCode(document.getType());
         if (documentCode != null) {
-            apiPathBuilder.append("&documentCode=").append(documentCode);
+            queryParams.add("documentCode", documentCode.toString());
         }
 
         if (document.getSide() != null) {
-            apiPathBuilder.append("&pageCode=").append(toPageCodeEnum(document.getSide()));
+            queryParams.add("pageCode", toPageCodeEnum(document.getSide()).toString());
         }
 
         ZenidSharedMineAllResult.DocumentRoleEnum documentRole = toDocumentRole(document.getType());
         if (documentRole != null) {
-            apiPathBuilder.append("&role=").append(documentRole);
+            queryParams.add("role", documentRole.toString());
         }
 
-        return apiPathBuilder.toString();
-    }
-
-    private HttpEntity<Void> createDefaultRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        return new HttpEntity<>(headers);
-    }
-
-    private HttpEntity<Void> createAcceptOctetStreamRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        return new HttpEntity<>(headers);
+        return queryParams;
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {
@@ -259,11 +259,7 @@ public class ZenidRestApiService {
         }
     }
 
-    @Nullable
-    private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(@Nullable CardSide cardSide) {
-        if (cardSide == null) {
-            return null;
-        }
+    private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(CardSide cardSide) {
         switch (cardSide) {
             case FRONT:
                 return ZenidSharedMineAllResult.PageCodeEnum.F;
