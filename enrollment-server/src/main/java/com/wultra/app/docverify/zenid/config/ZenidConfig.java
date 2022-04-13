@@ -66,11 +66,6 @@ public class ZenidConfig {
         return mapper;
     }
 
-    @Bean
-    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter(@Qualifier("objectMapperZenid") ObjectMapper mapper) {
-        return new MappingJackson2HttpMessageConverter(mapper);
-    }
-
     /**
      * Prepares REST client specific to ZenID
      * @param configProps Configuration properties
