@@ -31,17 +31,13 @@ When calling `document-verification/init-sdk` following implementation fields ar
 - Init token - send a token value `sdk-init-token` in the request body `attributes` map field 
 - SDK response - receive the value under `zenid-sdk-init-response` from the response `attributes` map field
 
-pro ZenID:
-v request atributech poslat hodnotu v sdk-init-token
-přijde pak response pro SDK jako zenid-sdk-init-response
-
 ## Presence Check
 The document verification process is currently supported for following providers:
 - [iProov](https://www.iproov.com/)
 - Mock - useful for simple testing and local runs
 
 #### Configuration
-There are a few needed configuration changes to bring a successful integration. All the followin configuration tuning
+There are a few needed configuration changes to bring a successful integration. All the following configuration tuning
 has to be requested from the iProov's [support team](https://iproov.freshdesk.com/support/login) on a per-service basis:
 - presence check image
   - an accepted person image from finished and successful presence check process
