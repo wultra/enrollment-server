@@ -125,7 +125,7 @@ public class IProovRestApiService {
         bodyBuilder.part("api_key", configProps.getApiKey());
         bodyBuilder.part("secret", configProps.getApiSecret());
         bodyBuilder.part("rotation", 0);
-        bodyBuilder.part("source", EnrolImageBody.SourceEnum.SELFIE.toString());
+        bodyBuilder.part("source", EnrolImageBody.SourceEnum.OID.toString());
         bodyBuilder.part("image", new ByteArrayResource(photo.getData()) {
 
             @Override
