@@ -30,14 +30,14 @@ public enum IdentityVerificationPhase {
     DOCUMENT_UPLOAD,
 
     /**
-     * User presence is being verified.
-     */
-    PRESENCE_CHECK,
-
-    /**
      * Document verification is in progress.
      */
     DOCUMENT_VERIFICATION,
+
+    /**
+     * User presence is being verified.
+     */
+    PRESENCE_CHECK,
 
     /**
      * OTP code verification is in progress.
