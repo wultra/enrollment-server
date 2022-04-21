@@ -250,7 +250,7 @@ public class IdentityVerificationService {
      * @param idVerification Verification identity
      * @throws DocumentVerificationException Thrown when an error during verification check occurred.
      */
-    @Transactional
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void checkVerificationResult(IdentityVerificationPhase phase, OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws DocumentVerificationException {
         List<DocumentVerificationEntity> allDocVerifications =
