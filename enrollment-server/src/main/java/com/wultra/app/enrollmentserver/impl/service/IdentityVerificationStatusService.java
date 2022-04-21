@@ -184,17 +184,9 @@ public class IdentityVerificationStatusService {
                 && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             startVerification(ownerId, idVerification);
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            try {
-                identityVerificationService.checkVerificationResult(IdentityVerificationPhase.DOCUMENT_VERIFICATION, ownerId, idVerification);
-            } catch (DocumentVerificationException e) {
-                logger.error("Checking identity verification result failed, {}", ownerId, e);
-                response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
-                return response;
-            }
-            if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
-                continueWithPresenceCheck(ownerId, idVerification);
-            }
+                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+            logger.debug("Finished verification of documents for {}, {}", idVerification, ownerId);
+            continueWithPresenceCheck(ownerId, idVerification);
         } else if (IdentityVerificationPhase.OTP_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
