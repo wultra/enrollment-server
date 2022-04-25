@@ -33,8 +33,13 @@ import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.enrollmentserver.statemachine.EventHeaderName;
+import com.wultra.app.enrollmentserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.enrollmentserver.statemachine.interceptor.WultraStateMachineInterceptor;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
+import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
@@ -53,9 +58,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.StateMachineEventResult;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -78,6 +92,9 @@ public class IdentityVerificationController {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
+    private final StateMachineFactory<EnrollmentState, EnrollmentEvent> stateMachineFactory;
+    private final WultraStateMachineInterceptor stateMachineInterceptor;
+
     private final DocumentProcessingService documentProcessingService;
     private final IdentityVerificationService identityVerificationService;
     private final IdentityVerificationStatusService identityVerificationStatusService;
@@ -92,6 +109,8 @@ public class IdentityVerificationController {
 
     /**
      * Controller constructor.
+     * @param stateMachineFactory State machine factory.
+     * @param stateMachineInterceptor State machine interceptor.
      * @param identityVerificationConfig Configuration of identity verification.
      * @param onboardingConfig Configuration of onboarding.
      * @param documentProcessingService Document processing service.
@@ -103,6 +122,8 @@ public class IdentityVerificationController {
      */
     @Autowired
     public IdentityVerificationController(
+            StateMachineFactory<EnrollmentState, EnrollmentEvent> stateMachineFactory,
+            WultraStateMachineInterceptor stateMachineInterceptor,
             IdentityVerificationConfig identityVerificationConfig,
             OnboardingConfig onboardingConfig,
             DocumentProcessingService documentProcessingService,
@@ -111,6 +132,9 @@ public class IdentityVerificationController {
             IdentityVerificationOtpService identityVerificationOtpService,
             OnboardingService onboardingService,
             PresenceCheckService presenceCheckService) {
+        this.stateMachineFactory = stateMachineFactory;
+        this.stateMachineInterceptor = stateMachineInterceptor;
+
         this.identityVerificationConfig = identityVerificationConfig;
 
         this.documentProcessingService = documentProcessingService;
@@ -139,7 +163,7 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
+    public ResponseEntity<Response> initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
         // Check if the authentication object is present
@@ -157,10 +181,21 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        onboardingService.verifyProcessId(ownerId, processId);
+        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
+        Message<EnrollmentEvent> message = createMessage(ownerId, processId, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
+        sendEventMessage(stateMachine, message);
 
-        identityVerificationService.initializeIdentityVerification(ownerId, processId);
-        return new Response();
+        return createResponseEntity(stateMachine);
+    }
+
+    private ResponseEntity<Response> createResponseEntity(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine) {
+        Response response = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class);
+        HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
+        if (response == null || status == null) {
+            response = new ErrorResponse("UNEXPECTED_ERROR", "Unexpected error occurred.");
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return new ResponseEntity<>(response, status);
     }
 
     /**
@@ -430,11 +465,10 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
+    public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
-            PresenceCheckNotEnabledException, PowerAuthEncryptionException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {
@@ -453,20 +487,15 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("Invalid request received when initializing presence check");
         }
 
-        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
-            throw new PresenceCheckNotEnabledException();
-        }
-
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        onboardingService.verifyProcessId(ownerId, processId);
+        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
+                prepareStateMachine(processId, EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING);
+        Message<EnrollmentEvent> message = createMessage(ownerId, processId, EnrollmentEvent.PRESENCE_CHECK_INIT);
+        sendEventMessage(stateMachine, message);
 
-        final SessionInfo sessionInfo = presenceCheckService.init(ownerId, processId);
-
-        final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
-        response.setSessionAttributes(sessionInfo.getSessionAttributes());
-        return new ObjectResponse<>(response);
+        return createResponseEntity(stateMachine);
     }
 
     /**
@@ -612,6 +641,36 @@ public class IdentityVerificationController {
             throw new IdentityVerificationNotFoundException("Not existing identity verification");
         }
         return identityVerificationOptional.get();
+    }
+
+    private Message<EnrollmentEvent> createMessage(OwnerId ownerId, String processId, EnrollmentEvent event) {
+        return MessageBuilder.withPayload(event)
+                .setHeader(EventHeaderName.OWNER_ID, ownerId)
+                .setHeader(EventHeaderName.PROCESS_ID, processId)
+                .build();
+    }
+
+    private StateMachineEventResult<EnrollmentState, EnrollmentEvent> sendEventMessage(
+            StateMachine<EnrollmentState, EnrollmentEvent> stateMachine,
+            Message<EnrollmentEvent> message) {
+        return stateMachine.sendEvent(Mono.just(message)).blockLast();
+    }
+
+    private StateMachine<EnrollmentState, EnrollmentEvent> prepareStateMachine(
+            String processId,
+            EnrollmentState enrollmentState
+    ) {
+        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
+
+        stateMachine.stopReactively().block();
+        stateMachine.getStateMachineAccessor().doWithAllRegions(sma -> {
+            sma.addStateMachineInterceptor(stateMachineInterceptor);
+            sma.resetStateMachineReactively(
+                    new DefaultStateMachineContext<>(enrollmentState, null, null, null) // stateMachine.getExtendedState()
+            );
+        });
+        stateMachine.startReactively().block();
+        return stateMachine;
     }
 
 }
