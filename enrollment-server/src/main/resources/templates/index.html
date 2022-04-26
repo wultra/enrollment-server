@@ -29,7 +29,10 @@
     <span th:text="${#dates.format(built, 'yyyy/MM/dd, HH:mm:ss')}">built</span>.</span>
 </p>
 <p>
-    2020, &copy; <a href="https://wultra.com/">Wultra s.r.o.</a>
+    <span th:if="${built != 'UNKNOWN'}">
+        <span th:text="${#dates.format(built, 'yyyy')}"></span>,
+    </span>
+    &copy; <a href="https://wultra.com/">Wultra s.r.o.</a>
 </p>
 </body>
 </html>
