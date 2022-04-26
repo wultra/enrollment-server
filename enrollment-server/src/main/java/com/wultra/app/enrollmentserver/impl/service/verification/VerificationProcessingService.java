@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.service.verification;
 
 import com.wultra.app.enrollmentserver.database.DocumentResultRepository;
+import com.wultra.app.enrollmentserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.database.entity.DocumentResultEntity;
 import com.wultra.app.enrollmentserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
@@ -48,14 +49,20 @@ public class VerificationProcessingService {
 
     private final DocumentResultRepository documentResultRepository;
 
+    private final DocumentVerificationRepository documentVerificationRepository;
+
     /**
      * Service constructor.
      *
      * @param documentResultRepository Document result repository.
+     * @param documentVerificationRepository Document verification repository.
      */
     @Autowired
-    public VerificationProcessingService(DocumentResultRepository documentResultRepository) {
+    public VerificationProcessingService(
+            DocumentResultRepository documentResultRepository,
+            DocumentVerificationRepository documentVerificationRepository) {
         this.documentResultRepository = documentResultRepository;
+        this.documentVerificationRepository = documentVerificationRepository;
     }
 
     /**
@@ -98,6 +105,7 @@ public class VerificationProcessingService {
                     );
                 }
             }
+            documentVerificationRepository.save(docVerification);
         }
     }
 

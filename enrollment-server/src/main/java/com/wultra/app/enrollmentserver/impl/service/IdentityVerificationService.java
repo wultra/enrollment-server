@@ -70,7 +70,6 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
-    private final IdentityVerificationOtpService identityVerificationOtpService;
 
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
@@ -85,7 +84,6 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
-     * @param identityVerificationOtpService Identity verification OTP service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -97,8 +95,7 @@ public class IdentityVerificationService {
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationResetService identityVerificationResetService,
-            IdentityVerificationOtpService identityVerificationOtpService) {
+            IdentityVerificationResetService identityVerificationResetService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -108,7 +105,6 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
-        this.identityVerificationOtpService = identityVerificationOtpService;
     }
 
     /**
@@ -253,22 +249,21 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @param idVerification Verification identity
      * @throws DocumentVerificationException Thrown when an error during verification check occurred.
-     * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
-    @Transactional
-    public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws DocumentVerificationException, OnboardingProcessException, OnboardingOtpDeliveryException {
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void checkVerificationResult(IdentityVerificationPhase phase, OwnerId ownerId, IdentityVerificationEntity idVerification)
+            throws DocumentVerificationException {
         List<DocumentVerificationEntity> allDocVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(idVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_IN_PROGRESS));
         Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
 
         for (DocumentVerificationEntity docVerification : allDocVerifications) {
-            verificationsById.computeIfAbsent(docVerification.getVerificationId(), (verificationId) -> new ArrayList<>())
+            verificationsById.computeIfAbsent(docVerification.getVerificationId(), verificationId -> new ArrayList<>())
                     .add(docVerification);
         }
 
-        for (String verificationId: verificationsById.keySet()) {
+        for (String verificationId : verificationsById.keySet()) {
             DocumentsVerificationResult docVerificationResult =
                     documentVerificationProvider.getVerificationResult(ownerId, verificationId);
             List<DocumentVerificationEntity> docVerifications = verificationsById.get(verificationId);
@@ -280,15 +275,7 @@ public class IdentityVerificationService {
             return;
         }
 
-        // The code below is called only once, right after completed document verification
-        if (identityVerificationConfig.isVerificationOtpEnabled()) {
-            // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
-            idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-            idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-            identityVerificationOtpService.sendOtp(ownerId, idVerification);
-        } else {
-            resolveIdentityVerificationResult(idVerification, allDocVerifications);
-        }
+        resolveIdentityVerificationResult(phase, idVerification, allDocVerifications);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
     }
@@ -297,32 +284,39 @@ public class IdentityVerificationService {
      * Process identity verification result for document verifications which have already been previously processed.
      * @param ownerId Owner identification.
      * @param idVerification Identity verification entity.
+     * @param phase Identity verification phase.
      */
     @Transactional
-    public void processDocumentVerificationResult(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+    public void processDocumentVerificationResult(OwnerId ownerId,
+                                                  IdentityVerificationEntity idVerification,
+                                                  IdentityVerificationPhase phase) {
         List<DocumentVerificationEntity> processedDocVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(idVerification, DOCUMENT_STATUSES_PROCESSED);
-        resolveIdentityVerificationResult(idVerification, processedDocVerifications);
+        resolveIdentityVerificationResult(phase, idVerification, processedDocVerifications);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
     }
 
     /**
      * Resolve identity verification result for an identity verification entity using specified document verification results.
+     * @param phase Identity verification phase.
      * @param idVerification Identity verification entity.
      * @param docVerifications Document verification results.
      */
-    private void resolveIdentityVerificationResult(IdentityVerificationEntity idVerification, List<DocumentVerificationEntity> docVerifications) {
+    private void resolveIdentityVerificationResult(
+            IdentityVerificationPhase phase,
+            IdentityVerificationEntity idVerification,
+            List<DocumentVerificationEntity> docVerifications) {
         if (docVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+            idVerification.setPhase(phase);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
-            idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
-                        idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+                        idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
                     });
@@ -331,7 +325,7 @@ public class IdentityVerificationService {
                     .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
-                        idVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+                        idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
                     });

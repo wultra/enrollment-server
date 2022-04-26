@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Repository for identity verification records.
@@ -50,5 +51,14 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
     Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(
             String activationId
     );
+
+    /**
+     * @return All identity verification entities with in progress verification of uploaded documents
+     */
+    @Query("SELECT id FROM IdentityVerificationEntity id WHERE" +
+            " id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION" +
+            " AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS " +
+            " ORDER BY id.timestampLastUpdated ASC")
+    Stream<IdentityVerificationEntity> streamAllInProgressDocumentsVerifications();
 
 }

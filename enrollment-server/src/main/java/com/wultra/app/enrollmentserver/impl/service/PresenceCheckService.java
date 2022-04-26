@@ -155,10 +155,9 @@ public class PresenceCheckService {
         docVerificationEntity.setActivationId(ownerId.getActivationId());
         docVerificationEntity.setIdentityVerification(idVerification);
         docVerificationEntity.setFilename(result.getPhoto().getFilename());
-        docVerificationEntity.setStatus(DocumentStatus.VERIFICATION_PENDING);
         docVerificationEntity.setTimestampCreated(ownerId.getTimestamp());
         docVerificationEntity.setType(DocumentType.SELFIE_PHOTO);
-        docVerificationEntity.setUsedForVerification(true);
+        docVerificationEntity.setUsedForVerification(identityVerificationConfig.isVerifySelfieWithDocumentsEnabled());
 
         DocumentSubmitResult documentSubmitResult =
                 documentProcessingService.submitDocumentToProvider(ownerId, docVerificationEntity, submittedDoc);
@@ -166,8 +165,6 @@ public class PresenceCheckService {
         docVerificationEntity.setUploadId(documentSubmitResult.getUploadId());
 
         documentVerificationRepository.save(docVerificationEntity);
-
-        documentVerificationRepository.setVerificationPending(idVerification, ownerId.getTimestamp());
 
         return result;
     }
@@ -267,14 +264,14 @@ public class PresenceCheckService {
         } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase()) &&
                 IdentityVerificationStatus.REJECTED.equals(idVerification.getStatus())) {
             logger.info("The presence check is rejected, ready to be initialized again, {}", ownerId);
-        } else if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
+        } else if (!IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())) {
             logger.error("The verification phase is {} but expected {}, {}",
-                    idVerification.getPhase(), IdentityVerificationPhase.DOCUMENT_UPLOAD, ownerId
+                    idVerification.getPhase(), IdentityVerificationPhase.PRESENCE_CHECK, ownerId
             );
             throw new PresenceCheckException("Unable to initialize presence check");
-        } else if (!IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+        } else if (!IdentityVerificationStatus.NOT_INITIALIZED.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
-                    idVerification.getStatus(), IdentityVerificationStatus.VERIFICATION_PENDING, ownerId
+                    idVerification.getStatus(), IdentityVerificationStatus.NOT_INITIALIZED, ownerId
             );
             throw new PresenceCheckException("Unable to initialize presence check");
         }

@@ -380,11 +380,15 @@ public class DocumentProcessingService {
             }
             docVerification.setUploadId(docSubmitResult.getUploadId());
 
-            // only finished upload contains extracted data
-            if (docSubmitResult.getExtractedData() == null) {
+            if (DocumentType.SELFIE_PHOTO.equals(docVerification.getType())) {
+                docVerification.setStatus(
+                        identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ?
+                                DocumentStatus.VERIFICATION_PENDING :
+                                DocumentStatus.ACCEPTED
+                );
+            } else if (docSubmitResult.getExtractedData() == null) { // only finished upload contains extracted data
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-            } else if (!DocumentType.SELFIE_PHOTO.equals(docVerification.getType()) &&
-                    identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
+            } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
                 verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
             } else { // no document verification during upload, wait for the final all documents verification
