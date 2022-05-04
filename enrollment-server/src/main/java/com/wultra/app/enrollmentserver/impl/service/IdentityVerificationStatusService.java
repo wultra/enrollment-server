@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
+import com.wultra.app.enrollmentserver.interceptor.HttpCustomizationService;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -32,6 +33,7 @@ import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,7 @@ public class IdentityVerificationStatusService {
     private final IdentityVerificationFinishService identityVerificationFinishService;
     private final OnboardingService onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
+    private final HttpCustomizationService httpCustomizationService;
 
     private final PowerAuthClient powerAuthClient;
 
@@ -68,7 +71,6 @@ public class IdentityVerificationStatusService {
 
     /**
      * Service constructor.
-     *
      * @param identityVerificationConfig        Identity verification configuration.
      * @param identityVerificationRepository    Identity verification repository.
      * @param identityVerificationService       Identity verification service.
@@ -77,6 +79,7 @@ public class IdentityVerificationStatusService {
      * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService                 Onboarding service.
      * @param identityVerificationOtpService    Identity verification OTP service.
+     * @param httpCustomizationService          HTTP customization service.
      * @param powerAuthClient                   PowerAuth client.
      */
     @Autowired
@@ -88,7 +91,7 @@ public class IdentityVerificationStatusService {
             PresenceCheckService presenceCheckService,
             IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingService onboardingService,
-            IdentityVerificationOtpService identityVerificationOtpService, PowerAuthClient powerAuthClient) {
+            IdentityVerificationOtpService identityVerificationOtpService, HttpCustomizationService httpCustomizationService, PowerAuthClient powerAuthClient) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
@@ -97,6 +100,7 @@ public class IdentityVerificationStatusService {
         this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
         this.identityVerificationOtpService = identityVerificationOtpService;
+        this.httpCustomizationService = httpCustomizationService;
         this.powerAuthClient = powerAuthClient;
     }
 
@@ -131,7 +135,10 @@ public class IdentityVerificationStatusService {
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
         try {
-            ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(ownerId.getActivationId());
+            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
+            listRequest.setActivationId(ownerId.getActivationId());
+            final ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(listRequest,
+                    httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
             List<String> flags = flagResponse.getActivationFlags();
             if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 // Initialization is required because verification is not in progress for current identity verification

@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
+import com.wultra.app.enrollmentserver.interceptor.HttpCustomizationService;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
@@ -40,6 +41,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -60,6 +62,7 @@ public class MobileTokenService {
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
     private final OperationTemplateService operationTemplateService;
+    private final HttpCustomizationService httpCustomizationService;
 
     /**
      * Default constructor with autowired dependencies.
@@ -67,12 +70,14 @@ public class MobileTokenService {
      * @param powerAuthClient PowerAuth Client.
      * @param mobileTokenConverter Converter for mobile token objects.
      * @param operationTemplateService Operation template service.
+     * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public MobileTokenService(PowerAuthClient powerAuthClient, MobileTokenConverter mobileTokenConverter, OperationTemplateService operationTemplateService) {
+    public MobileTokenService(PowerAuthClient powerAuthClient, MobileTokenConverter mobileTokenConverter, OperationTemplateService operationTemplateService, HttpCustomizationService httpCustomizationService) {
         this.powerAuthClient = powerAuthClient;
         this.mobileTokenConverter = mobileTokenConverter;
         this.operationTemplateService = operationTemplateService;
+        this.httpCustomizationService = httpCustomizationService;
     }
 
     /**
@@ -98,8 +103,12 @@ public class MobileTokenService {
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
         request.setApplicationId(applicationId);
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList = pendingOnly ?
-                powerAuthClient.operationPendingList(request) : powerAuthClient.operationList(request);
+        final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
+        final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
+        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =
+                pendingOnly ?
+                powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
+                powerAuthClient.operationList(request, queryParams, httpHeaders);
 
         final OperationListResponse responseObject = new OperationListResponse();
         for (OperationDetailResponse operationDetail: pendingList) {
@@ -158,7 +167,8 @@ public class MobileTokenService {
         approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
         approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
-        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest);
+        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest,
+                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
 
         final UserActionResult result = approveResponse.getResult();
         if (result == UserActionResult.APPROVED) {
@@ -185,7 +195,8 @@ public class MobileTokenService {
         request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
-        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
+        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request,
+                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
         handleStatus(operation.getStatus());
@@ -227,7 +238,8 @@ public class MobileTokenService {
         rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
-        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest);
+        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest,
+                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
 
         final UserActionResult result = rejectResponse.getResult();
         if (result == UserActionResult.REJECTED) {
@@ -252,7 +264,8 @@ public class MobileTokenService {
     private OperationDetailResponse getOperationDetail(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
-        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(operationDetailRequest);
+        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(operationDetailRequest,
+                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
         handleStatus(operationDetail.getStatus());
         return operationDetail;
     }
