@@ -26,7 +26,10 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
+import com.wultra.security.powerauth.client.v3.UpdateActivationFlagsRequest;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,16 +62,19 @@ public class IdentityVerificationCreateService {
      * PowerAuth client.
      */
     private final PowerAuthClient powerAuthClient;
+    private final HttpCustomizationService httpCustomizationService;
 
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
      * @param powerAuthClient PowerAuth client.
+     * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public IdentityVerificationCreateService(IdentityVerificationRepository identityVerificationRepository, PowerAuthClient powerAuthClient) {
+    public IdentityVerificationCreateService(IdentityVerificationRepository identityVerificationRepository, PowerAuthClient powerAuthClient, HttpCustomizationService httpCustomizationService) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.powerAuthClient = powerAuthClient;
+        this.httpCustomizationService = httpCustomizationService;
     }
 
     /**
@@ -82,7 +88,13 @@ public class IdentityVerificationCreateService {
     @Transactional
     public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException {
         try {
-            ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
+            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
+            listRequest.setActivationId(ownerId.getActivationId());
+            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
 
             List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
@@ -91,14 +103,21 @@ public class IdentityVerificationCreateService {
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
             activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
 
-            powerAuthClient.updateActivationFlags(ownerId.getActivationId(), activationFlags);
+            final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
+            updateRequest.setActivationId(ownerId.getActivationId());
+            updateRequest.getActivationFlags().addAll(activationFlags);
+            powerAuthClient.updateActivationFlags(
+                    updateRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
             throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
 
-        IdentityVerificationEntity entity = new IdentityVerificationEntity();
+        final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
         entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
         entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);

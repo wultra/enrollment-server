@@ -24,14 +24,16 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
+import com.wultra.security.powerauth.client.v3.RemoveActivationFlagsRequest;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -50,16 +52,19 @@ public class IdentityVerificationFinishService {
 
     private final PowerAuthClient powerAuthClient;
     private final OnboardingService onboardingService;
+    private final HttpCustomizationService httpCustomizationService;
 
     /**
      * Service constructor.
      * @param powerAuthClient PowerAuth client.
      * @param onboardingService Onboarding service.
+     * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient, OnboardingService onboardingService) {
+    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient, OnboardingService onboardingService, HttpCustomizationService httpCustomizationService) {
         this.powerAuthClient = powerAuthClient;
         this.onboardingService = onboardingService;
+        this.httpCustomizationService = httpCustomizationService;
     }
 
     /**
@@ -72,13 +77,26 @@ public class IdentityVerificationFinishService {
     @Transactional
     public void finishIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         try {
-            ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(ownerId.getActivationId());
-            List<String> activationFlags = response.getActivationFlags();
+            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
+            listRequest.setActivationId(ownerId.getActivationId());
+            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
+            final List<String> activationFlags = response.getActivationFlags();
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 // Identity verification has already been finished in PowerAuth server
                 return;
             }
-            powerAuthClient.removeActivationFlags(ownerId.getActivationId(), Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
+            final RemoveActivationFlagsRequest removeRequest = new RemoveActivationFlagsRequest();
+            removeRequest.setActivationId(ownerId.getActivationId());
+            removeRequest.getActivationFlags().add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+            powerAuthClient.removeActivationFlags(
+                    removeRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
