@@ -28,6 +28,8 @@ import java.util.Collections;
 
 /**
  * Service for configuration of HTTP headers in requests.
+ *
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
 public class HttpCustomizationService {
