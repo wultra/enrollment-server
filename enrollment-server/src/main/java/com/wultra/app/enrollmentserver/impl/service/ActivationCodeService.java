@@ -22,12 +22,12 @@ import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.enrollmentserver.impl.service.converter.ActivationCodeConverter;
 import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
 import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
-import com.wultra.app.enrollmentserver.interceptor.HttpCustomizationService;
 import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestValidator;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.*;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

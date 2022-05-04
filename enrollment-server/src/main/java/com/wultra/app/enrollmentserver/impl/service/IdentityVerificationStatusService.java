@@ -25,7 +25,6 @@ import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.interceptor.HttpCustomizationService;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -35,6 +34,7 @@ import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

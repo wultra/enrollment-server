@@ -24,7 +24,6 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
-import com.wultra.app.enrollmentserver.interceptor.HttpCustomizationService;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
@@ -39,6 +38,7 @@ import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
