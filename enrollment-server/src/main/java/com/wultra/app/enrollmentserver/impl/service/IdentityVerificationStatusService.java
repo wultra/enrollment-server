@@ -137,8 +137,11 @@ public class IdentityVerificationStatusService {
         try {
             final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
             listRequest.setActivationId(ownerId.getActivationId());
-            final ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(listRequest,
-                    httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+            final ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
             List<String> flags = flagResponse.getActivationFlags();
             if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 // Initialization is required because verification is not in progress for current identity verification

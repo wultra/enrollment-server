@@ -79,8 +79,11 @@ public class IdentityVerificationFinishService {
         try {
             final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
             listRequest.setActivationId(ownerId.getActivationId());
-            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(listRequest,
-                    httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
             final List<String> activationFlags = response.getActivationFlags();
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 // Identity verification has already been finished in PowerAuth server
@@ -89,8 +92,11 @@ public class IdentityVerificationFinishService {
             final RemoveActivationFlagsRequest removeRequest = new RemoveActivationFlagsRequest();
             removeRequest.setActivationId(ownerId.getActivationId());
             removeRequest.getActivationFlags().add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-            powerAuthClient.removeActivationFlags(removeRequest, httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders());
+            powerAuthClient.removeActivationFlags(
+                    removeRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);

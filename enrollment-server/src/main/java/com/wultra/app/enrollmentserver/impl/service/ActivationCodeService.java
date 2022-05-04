@@ -127,7 +127,8 @@ public class ActivationCodeService {
             initRequest.setActivationOtpValidation(ActivationOtpValidation.ON_KEY_EXCHANGE);
             initRequest.setActivationOtp(otp);
 
-            final InitActivationResponse iar = powerAuthClient.initActivation(initRequest,
+            final InitActivationResponse iar = powerAuthClient.initActivation(
+                    initRequest,
                     httpCustomizationService.getQueryParams(),
                     httpCustomizationService.getHttpHeaders()
             );
@@ -149,8 +150,10 @@ public class ActivationCodeService {
                 final AddActivationFlagsRequest addRequest = new AddActivationFlagsRequest();
                 addRequest.setActivationId(iar.getActivationId());
                 addRequest.getActivationFlags().addAll(flags);
-                powerAuthClient.addActivationFlags(addRequest, httpCustomizationService.getQueryParams(),
-                        httpCustomizationService.getHttpHeaders());
+                powerAuthClient.addActivationFlags(addRequest,
+                        httpCustomizationService.getQueryParams(),
+                        httpCustomizationService.getHttpHeaders()
+                );
                 logger.info("Successfully added flags to activation ID: {}.", iar.getActivationId());
             } else {
                 logger.info("Activation with ID: {} has no additional flags.", iar.getActivationId());

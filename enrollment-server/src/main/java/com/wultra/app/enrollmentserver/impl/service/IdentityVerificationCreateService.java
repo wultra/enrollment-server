@@ -90,8 +90,11 @@ public class IdentityVerificationCreateService {
         try {
             final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
             listRequest.setActivationId(ownerId.getActivationId());
-            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(listRequest,
-                    httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+            final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
 
             List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
@@ -103,8 +106,11 @@ public class IdentityVerificationCreateService {
             final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
             updateRequest.setActivationId(ownerId.getActivationId());
             updateRequest.getActivationFlags().addAll(activationFlags);
-            powerAuthClient.updateActivationFlags(updateRequest, httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders());
+            powerAuthClient.updateActivationFlags(
+                    updateRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);

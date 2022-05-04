@@ -167,8 +167,11 @@ public class MobileTokenService {
         approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
         approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
-        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest,
-                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
+                approveRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final UserActionResult result = approveResponse.getResult();
         if (result == UserActionResult.APPROVED) {
@@ -195,8 +198,11 @@ public class MobileTokenService {
         request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
-        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request,
-                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(
+                request,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
         handleStatus(operation.getStatus());
@@ -238,8 +244,11 @@ public class MobileTokenService {
         rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
-        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest,
-                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(
+                rejectRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final UserActionResult result = rejectResponse.getResult();
         if (result == UserActionResult.REJECTED) {
@@ -264,8 +273,11 @@ public class MobileTokenService {
     private OperationDetailResponse getOperationDetail(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
-        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(operationDetailRequest,
-                httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
+                operationDetailRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
         handleStatus(operationDetail.getStatus());
         return operationDetail;
     }

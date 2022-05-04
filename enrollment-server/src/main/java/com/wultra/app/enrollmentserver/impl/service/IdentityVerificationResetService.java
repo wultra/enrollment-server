@@ -73,8 +73,11 @@ public class IdentityVerificationResetService {
         try {
             final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
             listRequest.setActivationId(ownerId.getActivationId());
-            ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(listRequest,
-                    httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
+            ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+                    listRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
 
             final List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
             // Remove flag VERIFICATION_IN_PROGRESS
@@ -88,8 +91,11 @@ public class IdentityVerificationResetService {
             final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
             updateRequest.setActivationId(ownerId.getActivationId());
             updateRequest.getActivationFlags().addAll(activationFlags);
-            powerAuthClient.updateActivationFlags(updateRequest, httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders());
+            powerAuthClient.updateActivationFlags(
+                    updateRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
+            );
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
