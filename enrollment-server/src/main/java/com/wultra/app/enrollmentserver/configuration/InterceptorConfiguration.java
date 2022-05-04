@@ -49,11 +49,4 @@ public class InterceptorConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(httpHeaderInterceptor);
     }
 
-    /**
-     * Get correlation header name.
-     * @return Correlation header name.
-     */
-    public String getCorrelationHeaderName() {
-        return correlationHeaderName;
-    }
 }
