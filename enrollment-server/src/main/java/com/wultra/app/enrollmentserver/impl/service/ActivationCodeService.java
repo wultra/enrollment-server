@@ -89,7 +89,7 @@ public class ActivationCodeService {
         // Fetch information from the authentication object
         final String sourceActivationId = apiAuthentication.getActivationContext().getActivationId();
         final String sourceUserId = apiAuthentication.getUserId();
-        final Long sourceAppId = apiAuthentication.getApplicationId();
+        final String sourceAppId = apiAuthentication.getApplicationId();
         final List<String> sourceActivationFlags = apiAuthentication.getActivationContext().getActivationFlags();
         final List<String> sourceApplicationRoles = apiAuthentication.getApplicationRoles();
 
@@ -112,7 +112,7 @@ public class ActivationCodeService {
         final String otp = request.getOtp();
         final String applicationId = request.getApplicationId();
 
-        final Long destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
+        final String destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
         if (destinationAppId == null) {
             logger.error("Invalid application ID. The provided source app ID: {} cannot activate the destination app ID: {}.", sourceAppId, applicationId);
             throw new ActivationCodeException();

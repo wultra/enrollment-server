@@ -24,7 +24,6 @@ import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequ
 import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.enrollmentserver.configuration.OnboardingConfig;
 import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.errorhandling.*;
 import com.wultra.app.enrollmentserver.impl.service.internal.JsonSerializationService;

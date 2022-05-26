@@ -36,6 +36,9 @@ public class DocumentSubmitRequest {
     private boolean resubmit;
     private List<DocumentMetadata> documents;
 
+    /**
+     * Document metadata.
+     */
     @Data
     public static class DocumentMetadata {
 

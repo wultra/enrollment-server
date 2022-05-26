@@ -101,7 +101,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
         List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(doc -> toDocumentSubmitResult(doc.getDocumentId()))
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
 
         DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {

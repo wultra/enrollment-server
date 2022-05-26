@@ -55,7 +55,7 @@ public class PushRegistrationService {
             @NotNull ObjectRequest<PushRegisterRequest> request,
             String userId,
             String activationId,
-            Long applicationId) throws InvalidRequestObjectException, PushRegistrationFailedException {
+            String applicationId) throws InvalidRequestObjectException, PushRegistrationFailedException {
 
         logger.info("Push registration started, user ID: {}", userId);
 

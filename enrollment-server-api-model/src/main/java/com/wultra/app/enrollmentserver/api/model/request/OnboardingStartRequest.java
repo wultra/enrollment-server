@@ -19,7 +19,6 @@ package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
-import java.util.List;
 import java.util.Map;
 
 /**

@@ -39,7 +39,7 @@ import java.time.format.DateTimeFormatter;
 public class CustomOffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
 
     @Override
-    public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
+    public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         if (parser.getText() != null && parser.getText().length() == 10) { // yyyy-MM-dd
             return LocalDate.parse(parser.getText(), DateTimeFormatter.ISO_DATE)
                     .atStartOfDay(ZoneId.of("UTC"))

@@ -32,6 +32,9 @@ public class DocumentStatusRequest {
     private String processId;
     private List<DocumentFilter> filter;
 
+    /**
+     * Class representing a document filter.
+     */
     @Data
     public static class DocumentFilter {
 

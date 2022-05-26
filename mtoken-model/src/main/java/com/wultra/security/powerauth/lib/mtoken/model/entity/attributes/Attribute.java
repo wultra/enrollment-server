@@ -31,15 +31,46 @@ public class Attribute {
      * Attribute type.
      */
     public enum Type {
+
+        /**
+         * Amount attribute type - represents amount and currency.
+         */
         AMOUNT,
+
+        /**
+         * Key-value attribute type - represents generic single-line key value.
+         */
         KEY_VALUE,
+
+        /**
+         * Note, a multi-line key-value attribute.
+         */
         NOTE,
+
+        /**
+         * Heading attribute type, represents a visual separator.
+         */
         HEADING,
+
+        /**
+         * Information about third-party subject.
+         */
         PARTY_INFO
     }
 
+    /**
+     * Type of the attribute.
+     */
     protected Type type;
+
+    /**
+     * ID of the attribute.
+     */
     protected String id;
+
+    /**
+     * Label of the attribute. Used as a base string in other attribute types (i.e., as key in KEY_VALUE attribute type).
+     */
     protected String label;
 
 }

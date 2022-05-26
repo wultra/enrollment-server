@@ -47,11 +47,11 @@ import java.util.regex.Pattern;
  *
  * <p>
  *     The userId is filled with a secured user identification
- *     <ul>
- *         <li>optimizes API costs which are based on unique users</li>
- *         <li>hides potentially sensitive data from leaking at the external provider side</li>
- *     </ul>
  * </p>
+ * <ul>
+ *     <li>optimizes API costs which are based on unique users</li>
+ *     <li>hides potentially sensitive data from leaking at the external provider side</li>
+ * </ul>
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
