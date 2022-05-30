@@ -37,15 +37,31 @@ public class AllowedSignatureType {
      * Signature types.
      */
     public enum Type {
+
+        /**
+         * Symmetric multi-factor signature with 1FA (possession)
+         */
         @JsonProperty("1FA")
         MULTIFACTOR_1FA("1FA"),     // 1FA signature
+
+        /**
+         * Symmetric multi-factor signature with 2FA (possession_knowledge, possession_biometry)
+         */
         @JsonProperty("2FA")
         MULTIFACTOR_2FA("2FA"),     // 2FA signature
+
+        /**
+         * Asymmetric signature private key (ECDSA)
+         */
         @JsonProperty("ECDSA")
         ASYMMETRIC_ECDSA("ECDSA");  // ECDSA private key signature
 
         private final String type;
 
+        /**
+         * Constructor with type.
+         * @param type Type of the signature.
+         */
         Type(String type) {
             this.type = type;
         }
@@ -58,6 +74,7 @@ public class AllowedSignatureType {
 
     @NotNull
     private Type type;
+
     @NotNull
     private List<String> variants = new ArrayList<>();
 

@@ -113,7 +113,7 @@ public class PushRegistrationController {
         // This assures that the activation is assigned with a correct device.
         final String userId = apiAuthentication.getUserId();
         final String activationId = apiAuthentication.getActivationContext().getActivationId();
-        final Long applicationId = apiAuthentication.getApplicationId();
+        final String applicationId = apiAuthentication.getApplicationId();
 
         return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);
     }

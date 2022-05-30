@@ -19,8 +19,6 @@ package com.wultra.app.enrollmentserver.api.model.request;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * Request class used when checking identity verification status.
  *

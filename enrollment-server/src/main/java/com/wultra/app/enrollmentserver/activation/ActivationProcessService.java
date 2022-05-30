@@ -50,6 +50,7 @@ public class ActivationProcessService {
     /**
      * Update an onboarding process during activation.
      * @param processId Process identifier.
+     * @param userId User identifier.
      * @param activationId Activation identifier.
      * @param status Onboarding process status to set.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.

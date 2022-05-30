@@ -20,8 +20,6 @@ package com.wultra.app.enrollmentserver.api.model.response;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
-import java.util.Map;
-
 /**
  * Response class used when starting the onboarding process.
  *

@@ -36,8 +36,6 @@ import java.util.Optional;
 @Repository
 public interface OnboardingProcessRepository extends CrudRepository<OnboardingProcessEntity, String> {
 
-    Optional<OnboardingProcessEntity> findById(String processId);
-
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.userId = :userId " +
             "ORDER BY p.timestampCreated DESC")

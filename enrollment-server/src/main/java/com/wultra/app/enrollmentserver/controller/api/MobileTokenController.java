@@ -100,7 +100,7 @@ public class MobileTokenController {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
-                final Long applicationId = auth.getApplicationId();
+                final String applicationId = auth.getApplicationId();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String language = locale.getLanguage();
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, true);
@@ -132,7 +132,7 @@ public class MobileTokenController {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
-                final Long applicationId = auth.getApplicationId();
+                final String applicationId = auth.getApplicationId();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String language = locale.getLanguage();
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, false);
@@ -185,7 +185,7 @@ public class MobileTokenController {
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();
                 final String userId = auth.getUserId();
-                final Long applicationId = auth.getApplicationId();
+                final String applicationId = auth.getApplicationId();
                 final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 return mobileTokenService.operationApprove(activationId, userId, applicationId, operationId, data, signatureFactors, requestContext, activationFlags);
@@ -229,11 +229,12 @@ public class MobileTokenController {
 
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();
-                final Long applicationId = auth.getApplicationId();
+                final String applicationId = auth.getApplicationId();
                 final String userId = auth.getUserId();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String operationId = requestObject.getId();
-                return mobileTokenService.operationReject(activationId, userId, applicationId, operationId, requestContext, activationFlags);
+                final String rejectReason = requestObject.getReason();
+                return mobileTokenService.operationReject(activationId, userId, applicationId, operationId, requestContext, activationFlags, rejectReason);
             } else {
                 throw new MobileTokenAuthException();
             }

@@ -32,6 +32,11 @@ public enum DocumentType {
      */
     ID_CARD {
 
+        /**
+         * Identifies if the document is supposed to be two-sided. For ID_CARD document, the document is two-sided.
+         *
+         * @return True.
+         */
         @Override
         public boolean isTwoSided() {
             return true;
@@ -73,6 +78,11 @@ public enum DocumentType {
             DocumentType.DRIVING_LICENSE
     );
 
+    /**
+     * Identifies if the document is supposed to be two-sided. Override the value for a specific document type.
+     *
+     * @return True if the document is two-sided, false otherwise.
+     */
     public boolean isTwoSided() {
         return false;
     }
