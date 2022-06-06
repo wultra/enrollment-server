@@ -32,8 +32,8 @@ import com.wultra.app.enrollmentserver.impl.service.document.DocumentProcessingS
 import com.wultra.app.enrollmentserver.impl.util.PowerAuthUtil;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -53,8 +53,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -134,7 +134,7 @@ public class IdentityVerificationController {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    @RequestMapping(value = "init", method = RequestMethod.POST)
+    @PostMapping("init")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -176,7 +176,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
-    @RequestMapping(value = "status", method = RequestMethod.POST)
+    @PostMapping("status")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -222,7 +222,7 @@ public class IdentityVerificationController {
      * @throws DocumentSubmitException Thrown when document submission fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    @RequestMapping(value = "document/submit", method = RequestMethod.POST)
+    @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -275,7 +275,7 @@ public class IdentityVerificationController {
      * @throws DocumentVerificationException Thrown when document is invalid.
      * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
-    @RequestMapping(value = "document/upload", method = RequestMethod.POST)
+    @PostMapping("document/upload")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -328,7 +328,7 @@ public class IdentityVerificationController {
      * @throws IdentityVerificationException Thrown when identity verification fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    @RequestMapping(value = "document/status", method = RequestMethod.POST)
+    @PostMapping("document/status")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -374,7 +374,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    @RequestMapping(value = "document-verification/init-sdk", method = RequestMethod.POST)
+    @PostMapping("document-verification/init-sdk")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/document-verification/init-sdk", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -425,7 +425,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    @RequestMapping(value = "presence-check/init", method = RequestMethod.POST)
+    @PostMapping("presence-check/init")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
@@ -478,7 +478,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
-    @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
+    @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext)
@@ -512,7 +512,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    @RequestMapping(value = "otp/verify", method = RequestMethod.POST)
+    @PostMapping("otp/verify")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
                                                                            @Parameter(hidden = true) EciesEncryptionContext eciesContext)
@@ -549,7 +549,7 @@ public class IdentityVerificationController {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    @RequestMapping(value = "cleanup", method = RequestMethod.POST)
+    @PostMapping("cleanup")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/cleanup", signatureType = {
             PowerAuthSignatureTypes.POSSESSION

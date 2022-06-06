@@ -17,31 +17,31 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.enrollmentserver.impl.service.OnboardingService;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -81,7 +81,7 @@ public class OnboardingController {
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
      * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
      */
-    @RequestMapping(value = "start", method = RequestMethod.POST)
+    @PostMapping("start")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException {
@@ -110,7 +110,7 @@ public class OnboardingController {
      * @throws OnboardingProcessException Thrown when onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown when onboarding OTP delivery fails.
      */
-    @RequestMapping(value = "otp/resend", method = RequestMethod.POST)
+    @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<OnboardingOtpResendRequest> request,
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
@@ -137,7 +137,7 @@ public class OnboardingController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    @RequestMapping(value = "status", method = RequestMethod.POST)
+    @PostMapping("status")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStatusResponse> getStatus(@EncryptedRequestBody ObjectRequest<OnboardingStatusRequest> request,
                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
@@ -165,7 +165,7 @@ public class OnboardingController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    @RequestMapping(value = "cleanup", method = RequestMethod.POST)
+    @PostMapping("cleanup")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public Response performCleanup(@EncryptedRequestBody ObjectRequest<OnboardingCleanupRequest> request,
                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
