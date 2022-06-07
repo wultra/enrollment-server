@@ -17,11 +17,11 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.impl.service.ActivationCodeService;
-import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
-import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
@@ -38,8 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -81,7 +81,7 @@ public class ActivationCodeController {
      * @throws InvalidRequestObjectException In case the object validation fails.
      * @throws ActivationCodeException In case fetching the activation code fails.
      */
-    @RequestMapping(value = "code", method = RequestMethod.POST)
+    @PostMapping("code")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/activation/code", signatureType = {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
