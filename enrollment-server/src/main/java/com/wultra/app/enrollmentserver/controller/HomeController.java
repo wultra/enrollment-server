@@ -22,8 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * Home controller to display nice welcome page.
@@ -41,7 +40,7 @@ public class HomeController {
     }
 
     @SuppressWarnings("SameReturnValue")
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @GetMapping("/")
     public String home(Model model) {
         if (buildProperties != null) {
             model.addAttribute("version", buildProperties.getVersion());

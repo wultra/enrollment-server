@@ -68,7 +68,7 @@ public class PushRegistrationController {
      * @throws InvalidRequestObjectException In case object validation fails.
      * @throws PushRegistrationFailedException In case push registration fails.
      */
-    @RequestMapping(value = "device/register", method = RequestMethod.POST)
+    @PostMapping("device/register")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
@@ -88,7 +88,7 @@ public class PushRegistrationController {
      * @throws InvalidRequestObjectException In case object validation fails.
      * @throws PushRegistrationFailedException In case push registration fails.
      */
-    @RequestMapping(value = "device/register/token", method = RequestMethod.POST)
+    @PostMapping("device/register/token")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,

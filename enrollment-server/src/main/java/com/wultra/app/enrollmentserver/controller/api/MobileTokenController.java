@@ -40,10 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -89,7 +86,7 @@ public class MobileTokenController {
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
-    @RequestMapping(value = "/operation/list", method = RequestMethod.POST)
+    @PostMapping("/operation/list")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
@@ -123,7 +120,7 @@ public class MobileTokenController {
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
-    @RequestMapping(value = "/operation/history", method = RequestMethod.POST)
+    @PostMapping("/operation/history")
     @PowerAuth(resourceId = "/operation/history", signatureType = {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
@@ -155,7 +152,7 @@ public class MobileTokenController {
      * @return Simple response object.
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
-    @RequestMapping(value = "/operation/authorize", method = RequestMethod.POST)
+    @PostMapping("/operation/authorize")
     @PowerAuth(resourceId = "/operation/authorize", signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
@@ -210,7 +207,7 @@ public class MobileTokenController {
      * @return Simple response object.
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
-    @RequestMapping(value = "/operation/cancel", method = RequestMethod.POST)
+    @PostMapping("/operation/cancel")
     @PowerAuth(resourceId = "/operation/cancel", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
