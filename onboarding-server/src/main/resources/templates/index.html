@@ -1,0 +1,38 @@
+<!--
+  ~ PowerAuth Enrollment Server
+  ~ Copyright (C) 2020 Wultra s.r.o.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published
+  ~ by the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>PowerAuth Enrollment Server</title>
+</head>
+<body>
+<h1>PowerAuth Digital Onboarding Server</h1>
+<p>
+    Version <span th:text="${version}">version</span><span th:if="${built != 'UNKNOWN'}">, built on
+    <span th:text="${#dates.format(built, 'yyyy/MM/dd, HH:mm:ss')}">built</span>.</span>
+</p>
+<p>
+    <span th:if="${built != 'UNKNOWN'}">
+        <span th:text="${#dates.format(built, 'yyyy')}"></span>,
+    </span>
+    &copy; <a href="https://wultra.com/">Wultra s.r.o.</a>
+</p>
+</body>
+</html>

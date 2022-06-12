@@ -24,7 +24,7 @@
     <name>enrollment-server</name>
     <description>Base implementation of the enrollment server.</description>
 
-    <artifactId>enrollment-server</artifactId>
+    <artifactId>onboarding-server</artifactId>
     <version>1.3.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
@@ -106,6 +106,18 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Spring Scheduler Lock https://github.com/lukas-krecan/ShedLock -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>${shedlock-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>${shedlock-spring.version}</version>
+        </dependency>
+
         <!-- In-Memory Database -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -176,6 +188,64 @@
                 <configuration>
                     <excludedGroups>external-service</excludedGroups>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.swagger.codegen.v3</groupId>
+                <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>${maven-swagger-codegen-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.jknack</groupId>
+                        <artifactId>handlebars</artifactId>
+                        <version>${maven-swagger-codegen-handlebars.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>swagger-definitions-iproov</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>false</verbose>
+                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.yaml</inputSpec>
+                            <language>spring</language>
+                            <library>spring-boot</library>
+                            <generateApis>false</generateApis>
+                            <generateModels>true</generateModels>
+                            <generateModelTests>false</generateModelTests>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <dateLibrary>java8</dateLibrary>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <modelPackage>com.wultra.app.presencecheck.iproov.model.api</modelPackage>
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>swagger-definitions-zenid</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>false</verbose>
+                            <inputSpec>${basedir}/src/main/resources/api/api-zenid.yaml</inputSpec>
+                            <language>spring</language>
+                            <library>spring-boot</library>
+                            <generateApis>false</generateApis>
+                            <generateModels>true</generateModels>
+                            <generateModelTests>false</generateModelTests>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <dateLibrary>java8</dateLibrary>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <modelPackage>com.wultra.app.docverify.zenid.model.api</modelPackage>
+                                <useBeanValidation>false</useBeanValidation>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
