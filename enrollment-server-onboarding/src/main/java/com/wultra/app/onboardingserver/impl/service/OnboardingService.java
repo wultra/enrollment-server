@@ -62,7 +62,7 @@ public class OnboardingService {
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OtpService otpService;
 
-    private OnboardingProvider onboardingProvider;
+    private final OnboardingProvider onboardingProvider;
 
     /**
      * Service constructor.
@@ -73,20 +73,19 @@ public class OnboardingService {
      * @param otpService OTP service.
      */
     @Autowired
-    public OnboardingService(OnboardingProcessRepository onboardingProcessRepository, JsonSerializationService serializer, OnboardingConfig config, IdentityVerificationConfig identityVerificationConfig, OtpService otpService) {
+    public OnboardingService(
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final JsonSerializationService serializer,
+            final OnboardingConfig config,
+            final IdentityVerificationConfig identityVerificationConfig,
+            final OtpService otpService,
+            final OnboardingProvider onboardingProvider) {
+
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.serializer = serializer;
         this.onboardingConfig = config;
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpService = otpService;
-    }
-
-    /**
-     * Set onboarding provider via setter injection.
-     * @param onboardingProvider Onboarding provider.
-     */
-    @Autowired(required = false)
-    public void setOnboardingProvider(OnboardingProvider onboardingProvider) {
         this.onboardingProvider = onboardingProvider;
     }
 
@@ -99,10 +98,6 @@ public class OnboardingService {
      */
     @Transactional
     public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException {
-        if (onboardingProvider == null) {
-            logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
-            throw new OnboardingProcessException();
-        }
         Map<String, Object> identification = request.getIdentification();
         String identificationData = serializer.serialize(identification);
 
@@ -165,10 +160,6 @@ public class OnboardingService {
      */
     @Transactional
     public Response resendOtp(OnboardingOtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        if (onboardingProvider == null) {
-            logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
-            throw new OnboardingProcessException();
-        }
         String processId = request.getProcessId();
         OnboardingProcessEntity process = findProcess(processId);
         String userId = process.getUserId();
