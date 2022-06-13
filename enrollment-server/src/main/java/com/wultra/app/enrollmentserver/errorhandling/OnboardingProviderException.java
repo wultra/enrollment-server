@@ -26,4 +26,21 @@ public class OnboardingProviderException extends Exception {
 
     private static final long serialVersionUID = 787256528155796393L;
 
+    /**
+     * No-arg constructor.
+     */
+    public OnboardingProviderException() {
+        super();
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message.
+     * The cause is not initialized, and may subsequently be initialized by a call to initCause.
+     *
+     * @param message – the detail message. The detail message is saved for later retrieval by the getMessage() method.
+     */
+    public OnboardingProviderException(final String message) {
+        super(message);
+    }
+
 }
