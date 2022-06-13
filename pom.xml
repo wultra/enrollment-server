@@ -77,7 +77,7 @@
         <module>enrollment-server-domain-model</module>
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
-        <module>onboarding-server</module>
+        <module>enrollment-server-onboarding</module>
     </modules>
 
     <properties>
