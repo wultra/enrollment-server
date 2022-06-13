@@ -1,0 +1,9 @@
+package-lock.json
+
+# Dependencies
+/node_modules
+
+# next.js
+/.next/
+/build
+/out/

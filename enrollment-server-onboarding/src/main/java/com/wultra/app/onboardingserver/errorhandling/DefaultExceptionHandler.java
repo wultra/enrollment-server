@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.errorhandling;
+package com.wultra.app.onboardingserver.errorhandling;
 
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Exception handler for RESTful API issues.
@@ -87,51 +89,52 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Handling of mtoken exceptions.
+     * Handling of presence check exceptions.
      * @param ex Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(MobileTokenException.class)
+    @ExceptionHandler(PresenceCheckException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleMobileTokenException(MobileTokenException ex) {
-        logger.warn("Mobile token operation failed: {}", ex.getMessage());
-        return new ErrorResponse(ex.getCode(), ex.getMessage());
+    public @ResponseBody ErrorResponse handlePresenceCheckException(PresenceCheckException ex) {
+        logger.warn("Presence check failed", ex);
+        return new ErrorResponse("PRESENCE_CHECK_FAILED", "Presence check failed.");
     }
 
     /**
-     * Handling of mtoken auth exceptions.
+     * Handling of identity verification exceptions.
      * @param ex Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(MobileTokenAuthException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public @ResponseBody ErrorResponse handleMobileTokenAuthException(MobileTokenAuthException ex) {
-        logger.warn("Mobile token operation failed due to authorization error: {}", ex.getMessage());
-        return new ErrorResponse(ex.getCode(), ex.getMessage());
-    }
-
-    /**
-     * Handling of mtoken configuration exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(MobileTokenConfigurationException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public @ResponseBody ErrorResponse handleMobileTokenConfigurationException(MobileTokenConfigurationException ex) {
-        logger.warn("Mobile token back-end is incorrectly configured: {}", ex.getMessage());
-        return new ErrorResponse(ex.getCode(), ex.getMessage());
-    }
-
-    /**
-     * Handling of activation code exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(ActivationCodeException.class)
+    @ExceptionHandler(IdentityVerificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleActivationCodeException(ActivationCodeException ex) {
-        logger.warn("Unable to fetch activation code", ex);
-        return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
+    public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
+        logger.warn("Identity verification failed", ex);
+        return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
+    }
+
+    /**
+     * Handling of not enabled presence check exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(PresenceCheckNotEnabledException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handlePresenceCheckNotEnabledException(
+            PresenceCheckNotEnabledException ex, HttpServletRequest request) {
+        logger.warn("Calling a service on a not enabled presence check service, requestUri: {}", request.getRequestURI(), ex);
+        return new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
+    }
+
+    /**
+     * Handling of document verification exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(DocumentVerificationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleDocumentVerificationException(DocumentVerificationException ex) {
+        logger.warn("Document verification failed", ex);
+        return new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
     }
 
     /**
@@ -146,4 +149,39 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
     }
 
+    /**
+     * Handling of onboarding process exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(OnboardingProcessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleOnboardingProcessException(OnboardingProcessException ex) {
+        logger.warn("Onboarding process failed", ex);
+        return new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
+    }
+
+    /**
+     * Handling of onboarding OTP delivery exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(OnboardingOtpDeliveryException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleOnboardingOtpDeliveryException(OnboardingOtpDeliveryException ex) {
+        logger.warn("Onboarding OTP delivery failed", ex);
+        return new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
+    }
+
+    /**
+     * Handling of too many onboarding processes exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(TooManyProcessesException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleTooManyProcessesException(TooManyProcessesException ex) {
+        logger.warn("Too many onboarding processes started by the user", ex);
+        return new ErrorResponse("TOO_MANY_REQUESTS", "Too many onboarding processes started by the user.");
+    }
 }
