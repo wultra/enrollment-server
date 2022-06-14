@@ -30,7 +30,7 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.3.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-java-crypto</artifactId>
-            <version>1.3.0-SNAPSHOT</version>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
