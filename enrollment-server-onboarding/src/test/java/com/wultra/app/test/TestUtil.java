@@ -17,6 +17,7 @@
  */
 package com.wultra.app.test;
 
+import com.google.common.io.ByteStreams;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 
 import java.io.File;
@@ -45,7 +46,7 @@ public class TestUtil {
             if (stream == null) {
                 throw new IllegalStateException("Unable to get a stream for: " + path);
             }
-            photo.setData(stream.readAllBytes());
+            photo.setData(ByteStreams.toByteArray(stream));
         }
         return photo;
     }

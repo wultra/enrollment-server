@@ -18,6 +18,7 @@
 package com.wultra.app.docverify.mock.provider;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.docverify.mock.MockConst;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
@@ -67,7 +68,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     @Test
     public void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
-        DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
+        DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, ImmutableList.of(document));
 
         DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
         docVerification.setFilename("filename");
@@ -143,7 +144,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     public void parseRejectionReasonsTest() throws Exception {
         DocumentResultEntity docResultRejected = new DocumentResultEntity();
         docResultRejected.setVerificationResult("{\"reason\":\"rejected\"}");
-        assertEquals(List.of("Rejection reason"), provider.parseRejectionReasons(docResultRejected));
+        assertEquals(ImmutableList.of("Rejection reason"), provider.parseRejectionReasons(docResultRejected));
 
         DocumentResultEntity docResultNotRejected = new DocumentResultEntity();
         docResultNotRejected.setVerificationResult("{\"reason\":\"ok\"}");
@@ -152,7 +153,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
 
     @Test
     public void initVerificationSdkTest() throws Exception {
-        Map<String, String> attributes = Map.of(MockConst.SDK_INIT_TOKEN, "mock-sdk-init-token");
+        Map<String, String> attributes = ImmutableMap.of(MockConst.SDK_INIT_TOKEN, "mock-sdk-init-token");
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
         assertNotNull(verificationSdkInfo.getAttributes().get(MockConst.SDK_INIT_RESPONSE), "Missing SDK init response");
     }

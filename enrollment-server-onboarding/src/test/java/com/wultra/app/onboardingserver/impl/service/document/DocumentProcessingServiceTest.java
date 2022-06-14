@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
@@ -60,7 +61,7 @@ class DocumentProcessingServiceTest {
         docIdCardBack.setType(DocumentType.ID_CARD);
         docIdCardBack.setSide(CardSide.BACK);
 
-        List<DocumentVerificationEntity> documents = List.of(docIdCardFront, docIdCardBack);
+        List<DocumentVerificationEntity> documents = ImmutableList.of(docIdCardFront, docIdCardBack);
 
         service.pairTwoSidedDocuments(documents);
         when(documentVerificationRepository.setOtherDocumentSide("1", "2")).thenReturn(1);

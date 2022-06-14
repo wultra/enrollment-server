@@ -17,12 +17,13 @@
  */
 package com.wultra.app.presencecheck.mock.provider;
 
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.google.common.io.ByteStreams;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import com.wultra.app.presencecheck.mock.MockConst;
 import org.slf4j.Logger;
@@ -75,7 +76,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
         Image photo = new Image();
         try (InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(selfiePhotoPath)) {
             if (is != null) {
-                photo.setData(is.readAllBytes());
+                photo.setData(ByteStreams.toByteArray(is));
             }
         } catch (IOException e) {
             logger.error("Unable to read image data from: {}", selfiePhotoPath);

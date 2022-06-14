@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.zenid.ZenidConst;
 import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.docverify.zenid.model.api.*;
@@ -127,7 +128,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             checkAdditionalValidations(id, document.getType(), document.getSide(), documentSubmitResult, response.getMinedData());
         }
 
-        result.setResults(List.of(documentSubmitResult));
+        result.setResults(ImmutableList.of(documentSubmitResult));
 
         return result;
     }
@@ -312,7 +313,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
         List<ZenidWebInvestigationValidatorResponse> validations;
         try {
-            validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
+            validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<List<ZenidWebInvestigationValidatorResponse>>() { });
         } catch (JsonProcessingException e) {
             logger.error("Unexpected error when parsing verification result data from {}", docResult, e);
             throw new DocumentVerificationException("Unexpected error when parsing verification result data");

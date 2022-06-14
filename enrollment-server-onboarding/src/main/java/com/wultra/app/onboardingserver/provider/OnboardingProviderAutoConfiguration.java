@@ -35,7 +35,7 @@ class OnboardingProviderAutoConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(OnboardingProviderAutoConfiguration.class);
 
     @Bean
-    OnboardingProvider onboardingProvider() {
+    public OnboardingProvider onboardingProvider() {
         logger.warn("No OnboardingProvider found, registering default EmptyOnboardingProvider");
         return new EmptyOnboardingProvider();
     }

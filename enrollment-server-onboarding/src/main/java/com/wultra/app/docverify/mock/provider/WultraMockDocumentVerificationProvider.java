@@ -20,6 +20,7 @@ package com.wultra.app.docverify.mock.provider;
 import com.google.common.base.Ascii;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.mock.MockConst;
 import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
@@ -50,7 +51,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     private static final Logger logger = LoggerFactory.getLogger(WultraMockDocumentVerificationProvider.class);
 
     private static final List<DocumentType> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO =
-            List.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
+            ImmutableList.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
 
     private final Cache<String, List<String>> verificationUploadIds;
 
@@ -80,7 +81,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         if (docSubmitResult == null) {
             results = Collections.emptyList();
         } else {
-            results = List.of(docSubmitResult);
+            results = ImmutableList.of(docSubmitResult);
             if (document.getFilename().contains("random")) {
                 docSubmitResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
             } else if (document.getSide() != null && !document.getFilename().contains(document.getSide().name().toLowerCase())) {
@@ -176,7 +177,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     @Override
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
         if (docResult.getVerificationResult() != null && docResult.getVerificationResult().contains("rejected")) {
-            return List.of("Rejection reason");
+            return ImmutableList.of("Rejection reason");
         } else {
             return Collections.emptyList();
         }

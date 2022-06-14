@@ -17,10 +17,19 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
+import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
@@ -31,14 +40,6 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
-import com.wultra.app.enrollmentserver.model.integration.Image;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -523,7 +524,7 @@ public class IdentityVerificationService {
         DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
         if (entity.getErrorDetail() != null) {
-            docMetadata.setErrors(List.of(entity.getErrorDetail()));
+            docMetadata.setErrors(ImmutableList.of(entity.getErrorDetail()));
         }
         docMetadata.setFilename(entity.getFilename());
         docMetadata.setSide(entity.getSide());

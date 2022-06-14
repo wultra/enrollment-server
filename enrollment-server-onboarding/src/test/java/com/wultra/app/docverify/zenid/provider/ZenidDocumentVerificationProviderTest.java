@@ -18,15 +18,16 @@
 package com.wultra.app.docverify.zenid.provider;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.wultra.app.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.docverify.zenid.ZenidConst;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +97,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     @Test
     public void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createIdCardFrontDocument();
-        List<SubmittedDocument> documents = List.of(document);
+        List<SubmittedDocument> documents = ImmutableList.of(document);
 
         DocumentsSubmitResult docsSubmitResult = submitDocuments(ownerId, documents);
         DocumentSubmitResult docSubmitResult = docsSubmitResult.getResults().get(0);
@@ -180,12 +181,12 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
         DocumentResultEntity docResult = new DocumentResultEntity();
         docResult.setVerificationResult("[{\"Ok\": false, \"Issues\":[{\"IssueDescription\": \"Rejection reason\"}]}]");
         List<String> rejectionReasons = provider.parseRejectionReasons(docResult);
-        assertEquals(List.of("Rejection reason"), rejectionReasons);
+        assertEquals(ImmutableList.of("Rejection reason"), rejectionReasons);
     }
 
     @Test
     public void initVerificationSdkTest() throws Exception {
-        Map<String, String> attributes = Map.of(ZenidConst.SDK_INIT_TOKEN, "sdk-init-token");
+        Map<String, String> attributes = ImmutableMap.of(ZenidConst.SDK_INIT_TOKEN, "sdk-init-token");
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
         assertNotNull(verificationSdkInfo.getAttributes().get(ZenidConst.SDK_INIT_RESPONSE), "Missing SDK init response");
     }

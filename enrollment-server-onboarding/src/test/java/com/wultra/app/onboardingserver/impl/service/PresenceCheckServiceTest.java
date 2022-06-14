@@ -16,6 +16,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.Image;
@@ -59,7 +60,7 @@ class PresenceCheckServiceTest {
         docPhotoIdCard.setPhotoId("idCardPhotoId");
         docPhotoIdCard.setType(DocumentType.ID_CARD);
 
-        List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
+        List<DocumentVerificationEntity> documentsReversedOrder = ImmutableList.of(docPhotoDrivingLicense, docPhotoIdCard);
 
         service.selectPhotoForPresenceCheck(ownerId, documentsReversedOrder);
         when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId())).thenReturn(new Image());
@@ -70,7 +71,7 @@ class PresenceCheckServiceTest {
         docPhotoUnknown.setPhotoId("unknownPhotoId");
         docPhotoUnknown.setType(DocumentType.UNKNOWN);
 
-        List<DocumentVerificationEntity> documentUnknown = List.of(docPhotoUnknown);
+        List<DocumentVerificationEntity> documentUnknown = ImmutableList.of(docPhotoUnknown);
 
         service.selectPhotoForPresenceCheck(ownerId, documentUnknown);
         when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId())).thenReturn(new Image());

@@ -63,7 +63,7 @@ public class IProovRestApiService {
 
     public static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
-    public static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
+    public static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<String>() { };
 
     /**
      * Max length of the user id value defined by iProov

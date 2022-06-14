@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
@@ -105,7 +106,7 @@ public class MobileTokenService {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
-        request.setApplicationId(List.of(applicationId));
+        request.setApplicationId(ImmutableList.of(applicationId));
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
         final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =

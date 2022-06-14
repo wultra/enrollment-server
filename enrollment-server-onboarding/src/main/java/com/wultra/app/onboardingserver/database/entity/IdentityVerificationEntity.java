@@ -18,6 +18,7 @@
 
 package com.wultra.app.onboardingserver.database.entity;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.Getter;
@@ -112,7 +113,7 @@ public class IdentityVerificationEntity implements Serializable {
     @Transient
     public boolean isPresenceCheckInitialized() {
         return IdentityVerificationPhase.PRESENCE_CHECK.equals(phase) &&
-                List.of(IdentityVerificationStatus.FAILED,
+                ImmutableList.of(IdentityVerificationStatus.FAILED,
                         IdentityVerificationStatus.IN_PROGRESS,
                         IdentityVerificationStatus.REJECTED).contains(status);
     }

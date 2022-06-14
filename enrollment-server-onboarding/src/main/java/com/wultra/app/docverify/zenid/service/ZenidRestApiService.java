@@ -18,6 +18,7 @@
 package com.wultra.app.docverify.zenid.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.docverify.zenid.model.api.*;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
@@ -56,19 +57,19 @@ public class ZenidRestApiService {
     private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
     private static final ParameterizedTypeReference<byte[]> RESPONSE_TYPE_BYTE_ARRAY =
-            new ParameterizedTypeReference<>() { };
+            new ParameterizedTypeReference<byte[]>() { };
 
     private static final ParameterizedTypeReference<ZenidWebDeleteSampleResponse> RESPONSE_TYPE_REFERENCE_DELETE =
-            new ParameterizedTypeReference<>() { };
+            new ParameterizedTypeReference<ZenidWebDeleteSampleResponse>() { };
 
     private static final ParameterizedTypeReference<ZenidWebInitSdkResponse> RESPONSE_TYPE_REFERENCE_INIT_SDK =
-            new ParameterizedTypeReference<>() { };
+            new ParameterizedTypeReference<ZenidWebInitSdkResponse>() { };
 
     private static final ParameterizedTypeReference<ZenidWebInvestigateResponse> RESPONSE_TYPE_REFERENCE_INVESTIGATE =
-            new ParameterizedTypeReference<>() { };
+            new ParameterizedTypeReference<ZenidWebInvestigateResponse>() { };
 
     private static final ParameterizedTypeReference<ZenidWebUploadSampleResponse> RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE =
-            new ParameterizedTypeReference<>() { };
+            new ParameterizedTypeReference<ZenidWebUploadSampleResponse>() { };
 
     /**
      * Configuration properties.
@@ -172,7 +173,7 @@ public class ZenidRestApiService {
     public ResponseEntity<byte[]> getImage(String imageHash) throws RestClientException {
         String apiPath = String.format("/History/Image/%s", imageHash);
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
+        httpHeaders.setAccept(ImmutableList.of(MediaType.APPLICATION_OCTET_STREAM));
         return restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
     }
 

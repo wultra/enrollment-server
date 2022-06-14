@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
+import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
@@ -209,7 +210,7 @@ public class DocumentProcessingService {
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
         try {
-            docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
+            docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, ImmutableList.of(submittedDoc));
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException e) {
             docsSubmitResults = new DocumentsSubmitResult();
@@ -400,7 +401,7 @@ public class DocumentProcessingService {
     private void verifyDocumentWithUpload(OwnerId ownerId, DocumentVerificationEntity docVerification, String uploadId) {
         try {
             DocumentsVerificationResult docsVerificationResult =
-                    documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
+                    documentVerificationProvider.verifyDocuments(ownerId, ImmutableList.of(uploadId));
             docVerification.setVerificationId(docsVerificationResult.getVerificationId());
         } catch (DocumentVerificationException e) {
             logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);

@@ -17,6 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
+import com.google.common.collect.ImmutableList;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
@@ -24,11 +30,6 @@ import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntit
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -103,7 +103,7 @@ public class VerificationProcessingBatchService {
                     logger.error("Checking document submit verification failed, {}", ownerId, e);
                     return;
                 }
-                verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
+                verificationProcessingService.processVerificationResult(ownerId, ImmutableList.of(docVerification), docVerificationResult);
 
                 if (!DocumentStatus.UPLOAD_IN_PROGRESS.equals(docVerification.getStatus())) {
                     logger.debug("Finished verification of {} during submit at the provider, {}", docVerification, ownerId);
