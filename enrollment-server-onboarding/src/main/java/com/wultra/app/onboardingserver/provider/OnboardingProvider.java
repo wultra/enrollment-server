@@ -45,4 +45,22 @@ public interface OnboardingProvider {
      */
     void sendOtpCode(SendOtpCodeRequest request) throws OnboardingProviderException;
 
+    /**
+     * Provide consent text.
+     *
+     * @param request consent text request
+     * @return consent text
+     * @throws OnboardingProviderException if there is a problem to fetch consent text
+     */
+    String fetchConsent(ConsentTextRequest request) throws OnboardingProviderException;
+
+    /**
+     * Record dis/approval of consent.
+     *
+     * @param request approval request
+     * @return approval response
+     * @throws OnboardingProviderException if there is a problem to approve consent
+     */
+    ApproveConsentResponse approveConsent(ApproveConsentRequest request) throws OnboardingProviderException;
+
 }

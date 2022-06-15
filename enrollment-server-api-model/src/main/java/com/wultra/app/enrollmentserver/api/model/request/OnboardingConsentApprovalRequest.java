@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,25 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.errorhandling;
+package com.wultra.app.enrollmentserver.api.model.request;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.util.UUID;
 
 /**
- * Exception thrown in case onboarding process fails.
+ * Request class used when asking for consent for onboarding.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-public class OnboardingProcessException extends Exception {
+@Data
+public class OnboardingConsentApprovalRequest {
 
-    private static final long serialVersionUID = 7558022671624330227L;
+    @Schema(required = true)
+    private UUID processId;
 
-    public OnboardingProcessException() {
-    }
+    @Schema(required = true, example = "abc123456")
+    private String userId;
 
-    public OnboardingProcessException(String message) {
-        super(message);
-    }
+    @Schema(required = true, example = "GDPR")
+    private String consentType;
 
-    public OnboardingProcessException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+    @Schema(required = true)
+    private Boolean approved;
 }

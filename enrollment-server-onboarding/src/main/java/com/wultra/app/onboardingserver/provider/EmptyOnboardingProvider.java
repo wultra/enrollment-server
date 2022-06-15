@@ -36,6 +36,16 @@ class EmptyOnboardingProvider implements OnboardingProvider {
         throw createException();
     }
 
+    @Override
+    public String fetchConsent(ConsentTextRequest request) throws OnboardingProviderException {
+        throw createException();
+    }
+
+    @Override
+    public ApproveConsentResponse approveConsent(ApproveConsentRequest request) throws OnboardingProviderException {
+        throw createException();
+    }
+
     private static OnboardingProviderException createException() {
         return new OnboardingProviderException("OnboardingProvider is not available. " +
                 "Implement an onboarding provider and make it accessible using autowiring.");
