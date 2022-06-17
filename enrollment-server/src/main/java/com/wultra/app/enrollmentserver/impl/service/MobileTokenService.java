@@ -55,12 +55,12 @@ import java.util.List;
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
-    private static final String ATTR_ACTIVATION_ID = "activation_id";
-    private static final String ATTR_APPLICATION_ID = "application_id";
-    private static final String ATTR_IP_ADDRESS = "ip_address";
-    private static final String ATTR_USER_AGENT = "user_agent";
-    private static final String ATTR_AUTH_FACTOR = "auth_factor";
-    private static final String ATTR_REJECT_REASON = "reject_reason";
+    private static final String ATTR_ACTIVATION_ID = "activationId";
+    private static final String ATTR_APPLICATION_ID = "applicationId";
+    private static final String ATTR_IP_ADDRESS = "ipAddress";
+    private static final String ATTR_USER_AGENT = "userAgent";
+    private static final String ATTR_AUTH_FACTOR = "authFactor";
+    private static final String ATTR_REJECT_REASON = "rejectReason";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
