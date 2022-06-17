@@ -74,6 +74,7 @@
 
     <modules>
         <module>mtoken-model</module>
+        <module>enrollment-server-common</module>
         <module>enrollment-server-domain-model</module>
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
@@ -95,6 +96,16 @@
         <shedlock-spring.version>4.36.0</shedlock-spring.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
