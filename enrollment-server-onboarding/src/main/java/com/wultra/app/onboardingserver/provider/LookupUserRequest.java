@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.Map;
 
@@ -32,5 +33,6 @@ import java.util.Map;
 // TODO (racansky, 2022-06-17) @PublicApi
 public final class LookupUserRequest {
 
+    @NonNull
     private Map<String, Object> identification;
 }

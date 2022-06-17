@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Request object for {@link OnboardingProvider#sendOtpCode(SendOtpCodeRequest)}.
@@ -30,8 +31,10 @@ import lombok.Getter;
 // TODO (racansky, 2022-06-17) @PublicApi
 public final class SendOtpCodeRequest {
 
+    @NonNull
     private String userId;
 
+    @NonNull
     private String otpCode;
 
     private boolean resend;
