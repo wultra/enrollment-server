@@ -28,8 +28,21 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 @PublicSpi
 public interface OnboardingProvider {
 
+    /**
+     * Lookup user.
+     *
+     * @param request lookup user request
+     * @return user identifier
+     * @throws OnboardingProviderException if there is a problem to lookup user
+     */
     String lookupUser(LookupUserRequest request) throws OnboardingProviderException;
 
+    /**
+     * Send otp code.
+     *
+     * @param request send otp code request
+     * @throws OnboardingProviderException if there is a problem to send otp code
+     */
     void sendOtpCode(SendOtpCodeRequest request) throws OnboardingProviderException;
 
 }
