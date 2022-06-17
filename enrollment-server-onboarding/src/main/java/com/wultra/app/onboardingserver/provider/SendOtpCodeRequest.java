@@ -34,5 +34,5 @@ public final class SendOtpCodeRequest {
 
     private String otpCode;
 
-    boolean resend;
+    private boolean resend;
 }
