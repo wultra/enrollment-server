@@ -32,6 +32,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,7 +159,12 @@ public class IdentityVerificationOtpService {
         }
         // Send the OTP code
         try {
-            onboardingProvider.sendOtpCode(process.getUserId(), otpCode, isResend);
+            final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
+                    .userId(process.getUserId())
+                    .otpCode(otpCode)
+                    .resend(isResend)
+                    .build();
+            onboardingProvider.sendOtpCode(request);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException();

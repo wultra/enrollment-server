@@ -20,8 +20,6 @@ package com.wultra.app.onboardingserver.provider;
 import com.wultra.app.enrollmentserver.common.annotation.PublicSpi;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 
-import java.util.Map;
-
 /**
  * Provider which allows customization of the onboarding process.
  *
@@ -30,8 +28,8 @@ import java.util.Map;
 @PublicSpi
 public interface OnboardingProvider {
 
-    String lookupUser(Map<String, Object> identification) throws OnboardingProviderException;
+    String lookupUser(LookupUserRequest request) throws OnboardingProviderException;
 
-    void sendOtpCode(String userId, String otpCode, boolean resend) throws OnboardingProviderException;
+    void sendOtpCode(SendOtpCodeRequest request) throws OnboardingProviderException;
 
 }

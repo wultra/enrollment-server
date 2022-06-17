@@ -17,27 +17,22 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import lombok.Builder;
+import lombok.Getter;
 
 /**
- * Implementation of {@link OnboardingProvider} throwing an exception for each method.
+ * Request object for {@link OnboardingProvider#sendOtpCode(SendOtpCodeRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-class EmptyOnboardingProvider implements OnboardingProvider {
+@Builder
+@Getter
+// TODO (racansky, 2022-06-17) @PublicApi
+public final class SendOtpCodeRequest {
 
-    @Override
-    public String lookupUser(LookupUserRequest request) throws OnboardingProviderException {
-        throw createException();
-    }
+    private String userId;
 
-    @Override
-    public void sendOtpCode(SendOtpCodeRequest request) throws OnboardingProviderException {
-        throw createException();
-    }
+    private String otpCode;
 
-    private static OnboardingProviderException createException() {
-        return new OnboardingProviderException("OnboardingProvider is not available. " +
-                "Implement an onboarding provider and make it accessible using autowiring.");
-    }
+    boolean resend;
 }

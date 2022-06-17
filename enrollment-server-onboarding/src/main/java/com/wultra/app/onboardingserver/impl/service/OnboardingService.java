@@ -32,10 +32,12 @@ import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartRespons
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.provider.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +106,10 @@ public class OnboardingService {
         // Lookup user using identification attributes
         String userId;
         try {
-            userId = onboardingProvider.lookupUser(identification);
+            final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
+                    .identification(identification)
+                    .build();
+            userId = onboardingProvider.lookupUser(lookupUserRequest);
         } catch (OnboardingProviderException e) {
             logger.warn("User look failed, error: {}", e.getMessage(), e);
             throw new OnboardingProcessException();
@@ -141,7 +146,12 @@ public class OnboardingService {
         String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         // Send the OTP code
         try {
-            onboardingProvider.sendOtpCode(userId, otpCode, false);
+            final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                    .userId(userId)
+                    .otpCode(otpCode)
+                    .resend(false)
+                    .build();
+            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException();
@@ -167,7 +177,12 @@ public class OnboardingService {
         String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);
         // Resend the OTP code
         try {
-            onboardingProvider.sendOtpCode(userId, otpCode, true);
+            final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                    .userId(userId)
+                    .otpCode(otpCode)
+                    .resend(true)
+                    .build();
+            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException();
