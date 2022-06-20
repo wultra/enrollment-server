@@ -23,10 +23,10 @@ import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
-import com.wultra.app.onboardingserver.impl.service.OnboardingService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -59,14 +59,14 @@ public class OnboardingController {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingController.class);
 
-    private final OnboardingService onboardingService;
+    private final OnboardingServiceImpl onboardingService;
 
     /**
      * Controller constructor.
      * @param onboardingService Onboarding service.
      */
     @Autowired
-    public OnboardingController(OnboardingService onboardingService) {
+    public OnboardingController(OnboardingServiceImpl onboardingService) {
         this.onboardingService = onboardingService;
     }
 

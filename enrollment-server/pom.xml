@@ -49,6 +49,19 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-common</artifactId>
+        </dependency>
+
+        <!-- TODO (racansky, 2022-06-21) not sufficient isolation, enrollment shares some logic from onboarding but including all classes -->
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding</artifactId>
+            <version>${project.version}</version>
+            <classifier>classes</classifier>
+        </dependency>
+
         <!-- PowerAuth Dependencies -->
         <dependency>
             <groupId>com.wultra.security</groupId>

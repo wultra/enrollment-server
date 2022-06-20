@@ -43,11 +43,7 @@
             <artifactId>enrollment-server-domain-model</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-api-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>enrollment-server-common</artifactId>
@@ -164,6 +160,13 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

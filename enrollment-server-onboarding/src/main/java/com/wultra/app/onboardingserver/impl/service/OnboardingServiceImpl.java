@@ -18,25 +18,25 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.provider.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
@@ -49,20 +49,19 @@ import javax.transaction.Transactional;
 import java.util.*;
 
 /**
- * Service implementing the onboarding process.
+ * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
-public class OnboardingService {
+public class OnboardingServiceImpl extends CommonOnboardingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OnboardingService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingServiceImpl.class);
 
-    private final OnboardingProcessRepository onboardingProcessRepository;
     private final JsonSerializationService serializer;
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
-    private final OtpService otpService;
+    private final OtpServiceImpl otpService;
 
     private final OnboardingProvider onboardingProvider;
 
@@ -75,15 +74,15 @@ public class OnboardingService {
      * @param otpService OTP service.
      */
     @Autowired
-    public OnboardingService(
+    public OnboardingServiceImpl(
             final OnboardingProcessRepository onboardingProcessRepository,
             final JsonSerializationService serializer,
             final OnboardingConfig config,
             final IdentityVerificationConfig identityVerificationConfig,
-            final OtpService otpService,
+            final OtpServiceImpl otpService,
             final OnboardingProvider onboardingProvider) {
 
-        this.onboardingProcessRepository = onboardingProcessRepository;
+        super(onboardingProcessRepository);
         this.serializer = serializer;
         this.onboardingConfig = config;
         this.identityVerificationConfig = identityVerificationConfig;
@@ -256,21 +255,6 @@ public class OnboardingService {
     }
 
     /**
-     * Find an onboarding process.
-     * @param processId Process identifier.
-     * @return Onboarding process.
-     * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     */
-    public OnboardingProcessEntity findProcess(String processId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
-            logger.warn("Onboarding process not found, process ID: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        return processOptional.get();
-    }
-
-    /**
      * Find an existing onboarding process with verification in progress by activation identifier.
      * @param activationId Activation identifier.
      * @return Onboarding process.
@@ -298,15 +282,6 @@ public class OnboardingService {
             throw new OnboardingProcessException();
         }
         return processOptional.get();
-    }
-
-    /**
-     * Update a process entity in database.
-     * @param process Onboarding process entity.
-     * @return Updated onboarding process entity.
-     */
-    public OnboardingProcessEntity updateProcess(OnboardingProcessEntity process) {
-        return onboardingProcessRepository.save(process);
     }
 
     /**
