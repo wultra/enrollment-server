@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Marker for interfaces intended to be called by downstream projects. Implementation may not be exposed by the core functionality.
  * <p>
  * New methods can be added.
- * Those clients that used to call the previously existing elements, don't need to care about the new ones.
+ * Those clients that used to call the previously existing methods, don't need to care about the new ones.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
