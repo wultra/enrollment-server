@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
+import com.wultra.app.enrollmentserver.common.annotation.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -30,7 +31,7 @@ import java.util.Map;
  */
 @Builder
 @Getter
-// TODO (racansky, 2022-06-17) @PublicApi
+@PublicApi
 public final class LookupUserRequest {
 
     @NonNull
