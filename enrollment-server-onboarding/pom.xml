@@ -48,6 +48,10 @@
             <artifactId>enrollment-server-api-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-common</artifactId>
+        </dependency>
 
         <!-- PowerAuth Dependencies -->
         <dependency>

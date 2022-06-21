@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,23 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.enrollmentserver.common.annotation;
 
-import com.wultra.app.enrollmentserver.common.annotation.PublicSpi;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-
-import java.util.Map;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
 /**
- * Provider which allows customization of the onboarding process.
+ * Marker for interfaces intended to be called by downstream projects. Implementation may not be exposed by the core functionality.
+ * <p>
+ * New methods can be added.
+ * Those clients that used to call the previously existing methods, don't need to care about the new ones.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@PublicSpi
-public interface OnboardingProvider {
-
-    String lookupUser(Map<String, Object> identification) throws OnboardingProviderException;
-
-    void sendOtpCode(String userId, String otpCode, boolean resend) throws OnboardingProviderException;
-
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
+@Documented
+public @interface PublicApi {
 }

@@ -15,23 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.enrollmentserver.common.annotation;
 
-import com.wultra.app.enrollmentserver.common.annotation.PublicSpi;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-
-import java.util.Map;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
 /**
- * Provider which allows customization of the onboarding process.
+ * Marker for interfaces intended to be implemented by downstream projects. These interfaces are called by core functionality.
+ * <p>
+ * Slight compatible modifications of the contract are allowed.
+ * Do not add new methods to interfaces or abstract classes implemented by some providers.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@PublicSpi
-public interface OnboardingProvider {
-
-    String lookupUser(Map<String, Object> identification) throws OnboardingProviderException;
-
-    void sendOtpCode(String userId, String otpCode, boolean resend) throws OnboardingProviderException;
-
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
+@Documented
+public @interface PublicSpi {
 }
