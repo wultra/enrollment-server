@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,25 +15,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.errorhandling;
+package com.wultra.app.onboardingserver.provider;
+
+import com.wultra.app.enrollmentserver.common.annotation.PublicApi;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+
+import java.util.UUID;
 
 /**
- * Exception thrown in case onboarding process fails.
+ * Request object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-public class OnboardingProcessException extends Exception {
+@Builder
+@Getter
+@PublicApi
+public final class ApproveConsentRequest {
 
-    private static final long serialVersionUID = 7558022671624330227L;
+    @NonNull
+    private UUID processId;
 
-    public OnboardingProcessException() {
-    }
+    @NonNull
+    private String userId;
 
-    public OnboardingProcessException(String message) {
-        super(message);
-    }
+    /**
+     * Consent type, e.g. GDPR.
+     */
+    @NonNull
+    private String consentType;
 
-    public OnboardingProcessException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+    @NonNull
+    private Boolean approved;
+
 }

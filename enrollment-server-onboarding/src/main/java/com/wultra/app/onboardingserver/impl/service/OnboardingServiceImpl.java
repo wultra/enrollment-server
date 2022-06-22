@@ -17,10 +17,8 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.request.*;
+import com.wultra.app.enrollmentserver.api.model.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
@@ -35,10 +33,9 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryExcept
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.onboardingserver.provider.LookupUserRequest;
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
+import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -304,6 +301,51 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final int otpExpirationSeconds = (int) onboardingConfig.getOtpExpirationTime().getSeconds();
         final Date createdDateOtp = convertExpirationToCreatedDate(otpExpirationSeconds);
         otpService.terminateOldOtps(createdDateOtp);
+    }
+
+    /**
+     * Provide consent text.
+     *
+     * @param request consent text request
+     * @return consent response
+     */
+    public OnboardingConsentTextResponse fetchConsentText(final OnboardingConsentTextRequest request) throws OnboardingProcessException {
+        final ConsentTextRequest providerRequest = ConsentTextRequest.builder()
+                .processId(request.getProcessId())
+                .userId(request.getUserId())
+                .consentType(request.getConsentType())
+                .locale(LocaleUtils.toLocale(request.getLanguage()))
+                .build();
+
+        try {
+            final String consentText = onboardingProvider.fetchConsent(providerRequest);
+            final OnboardingConsentTextResponse response = new OnboardingConsentTextResponse();
+            response.setConsentText(consentText);
+            return response;
+        } catch (OnboardingProviderException e) {
+            throw new OnboardingProcessException("An error when fetching consent text.", e);
+        }
+    }
+
+    /**
+     * Record dis/approval of consent
+     *
+     * @param request approval request
+     */
+    public void approveConsent(final OnboardingConsentApprovalRequest request) throws OnboardingProcessException {
+        final ApproveConsentRequest providerRequest = ApproveConsentRequest.builder()
+                .processId(request.getProcessId())
+                .userId(request.getUserId())
+                .consentType(request.getConsentType())
+                .approved(request.getApproved())
+                .build();
+
+        try {
+            final ApproveConsentResponse response = onboardingProvider.approveConsent(providerRequest);
+            logger.debug("Got {} for processId={}", response, request.getProcessId());
+        } catch (OnboardingProviderException e) {
+            throw new OnboardingProcessException("An error when approving consent.", e);
+        }
     }
 
     /**
