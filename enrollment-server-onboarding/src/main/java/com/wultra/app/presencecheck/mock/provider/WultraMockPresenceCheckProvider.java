@@ -39,7 +39,7 @@ import java.util.UUID;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "mock")
+@ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "mock", matchIfMissing = true)
 @Component
 public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
