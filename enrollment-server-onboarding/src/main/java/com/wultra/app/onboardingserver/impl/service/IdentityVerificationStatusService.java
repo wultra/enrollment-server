@@ -19,17 +19,18 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
@@ -61,7 +62,7 @@ public class IdentityVerificationStatusService {
     private final JsonSerializationService jsonSerializationService;
     private final PresenceCheckService presenceCheckService;
     private final IdentityVerificationFinishService identityVerificationFinishService;
-    private final OnboardingService onboardingService;
+    private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
     private final HttpCustomizationService httpCustomizationService;
 
@@ -90,7 +91,7 @@ public class IdentityVerificationStatusService {
             JsonSerializationService jsonSerializationService,
             PresenceCheckService presenceCheckService,
             IdentityVerificationFinishService identityVerificationFinishService,
-            OnboardingService onboardingService,
+            OnboardingServiceImpl onboardingService,
             IdentityVerificationOtpService identityVerificationOtpService, HttpCustomizationService httpCustomizationService, PowerAuthClient powerAuthClient) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;

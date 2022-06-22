@@ -31,4 +31,11 @@
     <name>enrollment-server-common</name>
     <description>Common functionality for the enrollment server.</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-api-model</artifactId>
+        </dependency>
+    </dependencies>
+
 </project>

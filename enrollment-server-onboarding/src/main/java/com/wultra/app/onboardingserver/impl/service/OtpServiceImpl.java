@@ -17,18 +17,16 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,19 +38,17 @@ import java.util.Date;
 import java.util.Optional;
 
 /**
- * Service implementing OTP delivery and verification during onboarding process.
+ * Service implementing OTP delivery and verification specific for the onboarding process.
+ * Shared behavior is inherited from {@link CommonOtpService}.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
-public class OtpService {
+public class OtpServiceImpl extends CommonOtpService {
 
-    private final static Logger logger = LoggerFactory.getLogger(OtpService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OtpServiceImpl.class);
 
     private final OtpGeneratorService otpGeneratorService;
-    private final OnboardingOtpRepository onboardingOtpRepository;
-    private final OnboardingProcessRepository onboardingProcessRepository;
-    private final OnboardingConfig onboardingConfig;
 
     /**
      * Service constructor.
@@ -62,11 +58,9 @@ public class OtpService {
      * @param onboardingConfig Onboarding configuration.
      */
     @Autowired
-    public OtpService(OtpGeneratorService otpGeneratorService, OnboardingOtpRepository onboardingOtpRepository, OnboardingProcessRepository onboardingProcessRepository, OnboardingConfig onboardingConfig) {
+    public OtpServiceImpl(OtpGeneratorService otpGeneratorService, OnboardingOtpRepository onboardingOtpRepository, OnboardingProcessRepository onboardingProcessRepository, OnboardingConfig onboardingConfig) {
+        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig);
         this.otpGeneratorService = otpGeneratorService;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.onboardingConfig = onboardingConfig;
     }
 
     /**
@@ -111,76 +105,6 @@ public class OtpService {
         }
         // Generate an OTP code
         return generateOtpCode(process, otpType);
-    }
-
-    /**
-     * Verify an OTP code.
-     * @param processId Process identifier.
-     * @param otpCode OTP code sent by the user.
-     * @param otpType OTP type.
-     * @return Verify OTP code response.
-     * @throws OnboardingProcessException Thrown when process or OTP code is not found.
-     */
-    public OtpVerifyResponse verifyOtpCode(String processId, String otpCode, OtpType otpType) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
-            logger.warn("Onboarding process not found: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        OnboardingProcessEntity process = processOptional.get();
-
-        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
-        if (!otpOptional.isPresent()) {
-            logger.warn("Onboarding OTP not found for process ID: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        OnboardingOtpEntity otp = otpOptional.get();
-
-        // Verify OTP code
-        Date now = new Date();
-        boolean expired = false;
-        boolean verified = false;
-        int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
-        int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
-        if (OtpStatus.ACTIVE != otp.getStatus()) {
-            logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
-        } else if (failedAttempts >= maxFailedAttempts) {
-            logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
-            process = failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
-        } else if (otp.hasExpired()) {
-            logger.info("Expired OTP code received, process ID: {}", processId);
-            expired = true;
-            otp.setStatus(OtpStatus.FAILED);
-            otp.setErrorDetail(OnboardingOtpEntity.ERROR_EXPIRED);
-            otp.setTimestampLastUpdated(now);
-            onboardingOtpRepository.save(otp);
-        } else if (otp.getOtpCode().equals(otpCode)) {
-            verified = true;
-            otp.setStatus(OtpStatus.VERIFIED);
-            otp.setTimestampVerified(now);
-            otp.setTimestampLastUpdated(now);
-            onboardingOtpRepository.save(otp);
-        } else {
-            otp.setFailedAttempts(otp.getFailedAttempts() + 1);
-            failedAttempts++;
-            if (failedAttempts >= maxFailedAttempts) {
-                otp.setStatus(OtpStatus.FAILED);
-                otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
-
-                // Onboarding process is failed, update it
-                process = failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
-            }
-            otp.setTimestampLastUpdated(now);
-            onboardingOtpRepository.save(otp);
-        }
-
-        OtpVerifyResponse response = new OtpVerifyResponse();
-        response.setProcessId(processId);
-        response.setOnboardingStatus(process.getStatus());
-        response.setExpired(expired);
-        response.setVerified(verified);
-        response.setRemainingAttempts(maxFailedAttempts - failedAttempts);
-        return response;
     }
 
     /**
@@ -237,17 +161,6 @@ public class OtpService {
         otp.setFailedAttempts(0);
         onboardingOtpRepository.save(otp);
         return otpCode;
-    }
-
-    private OnboardingProcessEntity failProcess(OnboardingProcessEntity entity, String errorDetail) {
-        if (OnboardingStatus.FAILED == entity.getStatus()) {
-            logger.debug("Not failing already failed onboarding entity");
-            return entity;
-        }
-        entity.setStatus(OnboardingStatus.FAILED);
-        entity.setTimestampLastUpdated(new Date());
-        entity.setErrorDetail(errorDetail);
-        return onboardingProcessRepository.save(entity);
     }
 
     /**

@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.activation;
+package com.wultra.app.enrollmentserver.onboarding.activation;
 
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.impl.service.OnboardingService;
+import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
+import com.wultra.app.enrollmentserver.common.onboarding.api.model.UpdateProcessRequest;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,12 +56,19 @@ public class ActivationProcessService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public void updateProcess(String processId, String userId, String activationId, OnboardingStatus status) throws OnboardingProcessException {
-        OnboardingProcessEntity process = onboardingService.findProcess(processId);
-        checkUserIdForProcess(process, userId);
-        process.setActivationId(activationId);
-        process.setStatus(status);
-        process.setTimestampLastUpdated(new Date());
-        onboardingService.updateProcess(process);
+        final String processUserId = getUserId(processId);
+        if (!processUserId.equals(userId)) {
+            logger.warn("User ID does not match to onboarding process: {}, {} ", processId, userId);
+            throw new OnboardingProcessException();
+        }
+
+        final UpdateProcessRequest request = UpdateProcessRequest.builder()
+                .processId(processId)
+                .activationId(activationId)
+                .status(status)
+                .timestampLastUpdated(new Date())
+                .build();
+        onboardingService.updateProcess(request);
     }
 
     /**
@@ -71,21 +78,7 @@ public class ActivationProcessService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public String getUserId(String processId) throws OnboardingProcessException {
-        OnboardingProcessEntity process = onboardingService.findProcess(processId);
-        return process.getUserId();
-    }
-
-    /**
-     * Check user identifier for an onboarding process.
-     * @param process Onboarding process.
-     * @param userId User identifier.
-     * @throws OnboardingProcessException Thrown when onboarding process is not found or the user ID does not match the process.
-     */
-    private void checkUserIdForProcess(OnboardingProcessEntity process, String userId) throws OnboardingProcessException {
-        if (!process.getUserId().equals(userId)) {
-            logger.warn("User ID does not match to onboarding process: {}, {} ", process.getId(), userId);
-            throw new OnboardingProcessException();
-        }
+        return onboardingService.findUserIdByProcessId(processId);
     }
 
 }

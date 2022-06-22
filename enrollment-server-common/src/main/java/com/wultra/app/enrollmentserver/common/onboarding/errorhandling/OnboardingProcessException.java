@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
+package com.wultra.app.enrollmentserver.common.onboarding.errorhandling;
 
 /**
  * Exception thrown in case onboarding process fails.

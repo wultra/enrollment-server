@@ -17,11 +17,11 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
@@ -51,7 +51,7 @@ public class IdentityVerificationFinishService {
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     private final PowerAuthClient powerAuthClient;
-    private final OnboardingService onboardingService;
+    private final OnboardingServiceImpl onboardingService;
     private final HttpCustomizationService httpCustomizationService;
 
     /**
@@ -61,7 +61,7 @@ public class IdentityVerificationFinishService {
      * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient, OnboardingService onboardingService, HttpCustomizationService httpCustomizationService) {
+    public IdentityVerificationFinishService(PowerAuthClient powerAuthClient, OnboardingServiceImpl onboardingService, HttpCustomizationService httpCustomizationService) {
         this.powerAuthClient = powerAuthClient;
         this.onboardingService = onboardingService;
         this.httpCustomizationService = httpCustomizationService;

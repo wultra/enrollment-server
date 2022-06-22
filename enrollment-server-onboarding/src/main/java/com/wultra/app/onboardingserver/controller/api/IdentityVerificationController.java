@@ -21,19 +21,20 @@ import com.wultra.app.enrollmentserver.api.model.request.*;
 import com.wultra.app.enrollmentserver.api.model.response.*;
 import com.wultra.app.enrollmentserver.api.model.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.enrollmentserver.model.DocumentMetadata;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
-import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
-import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.*;
-import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -83,7 +84,7 @@ public class IdentityVerificationController {
     private final IdentityVerificationStatusService identityVerificationStatusService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
     private final PresenceCheckService presenceCheckService;
-    private final OnboardingService onboardingService;
+    private final OnboardingServiceImpl onboardingService;
 
     /**
      * Configuration data for client integration
@@ -109,7 +110,7 @@ public class IdentityVerificationController {
             IdentityVerificationService identityVerificationService,
             IdentityVerificationStatusService identityVerificationStatusService,
             IdentityVerificationOtpService identityVerificationOtpService,
-            OnboardingService onboardingService,
+            OnboardingServiceImpl onboardingService,
             PresenceCheckService presenceCheckService) {
         this.identityVerificationConfig = identityVerificationConfig;
 

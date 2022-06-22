@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.activation;
+package com.wultra.app.enrollmentserver.onboarding.activation;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.impl.service.OtpService;
+import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
+import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import org.springframework.stereotype.Service;
 
