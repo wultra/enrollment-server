@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -598,10 +597,21 @@ public class IdentityVerificationController {
             summary = "Obtain consent text",
             description = "Obtain a text of user consent in specified language."
     )
-    public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(final @RequestBody OnboardingConsentTextRequest request) throws OnboardingProcessException{
-        logger.debug("Returning consent for {}", request);
-        OnboardingConsentTextRequestValidator.validate(request);
-        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(request);
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
+            final @EncryptedRequestBody ObjectRequest<OnboardingConsentTextRequest> request,
+            @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, PowerAuthEncryptionException {
+
+        if (eciesContext == null) {
+            throw new PowerAuthEncryptionException("ECIES encryption failed");
+        }
+        if (request == null || request.getRequestObject() == null) {
+            throw new PowerAuthEncryptionException("Invalid request received");
+        }
+        final OnboardingConsentTextRequest requestObject = request.getRequestObject();
+        logger.debug("Returning consent for {}", requestObject);
+        OnboardingConsentTextRequestValidator.validate(requestObject);
+        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject);
         return new ObjectResponse<>(onboardingConsentTextResponse);
     }
 
@@ -610,10 +620,23 @@ public class IdentityVerificationController {
             summary = "Store user consent",
             description = "Store user consent, whether approved or not."
     )
-    public Response approveConsent(final @RequestBody OnboardingConsentApprovalRequest request) throws OnboardingProcessException {
-        logger.debug("Approving consent for {}", request);
-        OnboardingConsentApprovalRequestValidator.validate(request);
-        onboardingService.approveConsent(request);
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/consent/approve", signatureType = PowerAuthSignatureTypes.POSSESSION)
+    public Response approveConsent(
+            final @EncryptedRequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+
+        if (apiAuthentication == null) {
+            throw new PowerAuthAuthenticationException("Unable to authenticate");
+        }
+        if (request == null || request.getRequestObject() == null) {
+            throw new PowerAuthEncryptionException("Invalid request received");
+        }
+
+        final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
+        logger.debug("Approving consent for {}", requestObject);
+        OnboardingConsentApprovalRequestValidator.validate(requestObject);
+        onboardingService.approveConsent(requestObject);
         return new Response();
     }
 
