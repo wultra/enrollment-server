@@ -147,15 +147,14 @@ public class IdentityVerificationController {
                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, PowerAuthEncryptionException {
 
-        if (eciesContext == null) {
-            throw new PowerAuthEncryptionException("ECIES encryption failed");
-        }
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing identity verification");
             throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing identity verification");
         }
-
+        if (eciesContext == null) {
+            throw new PowerAuthEncryptionException("ECIES encryption failed");
+        }
         if (request == null || request.getRequestObject() == null) {
             logger.error("Invalid request received when initializing identity verification");
             throw new PowerAuthAuthenticationException("Invalid request received when initializing identity verification");
@@ -633,11 +632,11 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        if (eciesContext == null) {
-            throw new PowerAuthEncryptionException("ECIES encryption failed");
-        }
         if (apiAuthentication == null) {
             throw new PowerAuthAuthenticationException("Unable to authenticate");
+        }
+        if (eciesContext == null) {
+            throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
         if (request == null || request.getRequestObject() == null) {
             throw new PowerAuthEncryptionException("Invalid request received");
