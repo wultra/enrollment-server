@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 /**
  * Mock implementation of the {@link DocumentVerificationProvider}
  */
-@ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "mock")
+@ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "mock", matchIfMissing = true)
 @Component
 public class WultraMockDocumentVerificationProvider implements DocumentVerificationProvider {
 
