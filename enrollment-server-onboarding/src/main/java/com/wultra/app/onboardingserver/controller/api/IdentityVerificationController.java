@@ -129,6 +129,7 @@ public class IdentityVerificationController {
     /**
      * Initialize identity verification.
      * @param request Initialize identity verification request.
+     * @param eciesContext ECIES context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -142,8 +143,13 @@ public class IdentityVerificationController {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
+                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, PowerAuthEncryptionException {
+
+        if (eciesContext == null) {
+            throw new PowerAuthEncryptionException("ECIES encryption failed");
+        }
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when initializing identity verification");
@@ -624,8 +630,12 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/consent/approve", signatureType = PowerAuthSignatureTypes.POSSESSION)
     public Response approveConsent(
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
+            final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
+        if (eciesContext == null) {
+            throw new PowerAuthEncryptionException("ECIES encryption failed");
+        }
         if (apiAuthentication == null) {
             throw new PowerAuthAuthenticationException("Unable to authenticate");
         }
