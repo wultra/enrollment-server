@@ -17,8 +17,10 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.request.*;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingConsentTextResponse;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
+import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
@@ -33,14 +35,12 @@ import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequest
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -181,29 +181,5 @@ public class OnboardingController {
         }
 
         return onboardingService.performCleanup(request.getRequestObject());
-    }
-
-    @PostMapping("consent/text")
-    @Operation(
-            summary = "Obtain consent text",
-            description = "Obtain a text of user consent in specified language."
-    )
-    public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(final @RequestBody OnboardingConsentTextRequest request) throws OnboardingProcessException{
-        logger.debug("Returning consent for {}", request);
-        OnboardingConsentTextRequestValidator.validate(request);
-        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(request);
-        return new ObjectResponse<>(onboardingConsentTextResponse);
-    }
-
-    @PostMapping("consent/approve")
-    @Operation(
-            summary = "Store user consent",
-            description = "Store user consent, whether approved or not."
-    )
-    public Response approveConsent(final @RequestBody OnboardingConsentApprovalRequest request) throws OnboardingProcessException {
-        logger.debug("Approving consent for {}", request);
-        OnboardingConsentApprovalRequestValidator.validate(request);
-        onboardingService.approveConsent(request);
-        return new Response();
     }
 }
