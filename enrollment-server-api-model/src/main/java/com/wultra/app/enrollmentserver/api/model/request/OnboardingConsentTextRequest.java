@@ -33,12 +33,6 @@ public class OnboardingConsentTextRequest {
     @Schema(required = true)
     private UUID processId;
 
-    @Schema(required = true, example = "abc123456")
-    private String userId;
-
     @Schema(required = true, example = "GDPR")
     private String consentType;
-
-    @Schema(required = true, description = "Specifies language in ISO 3166-1 alpha-2 format lower cased.", minLength = 2, maxLength = 2, example = "en")
-    private String language;
 }
