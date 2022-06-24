@@ -35,7 +35,6 @@ import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
-import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -307,14 +306,20 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Provide consent text.
      *
      * @param request consent text request
+     * @param ownerId owner identification
+     * @param locale locale
      * @return consent response
      */
-    public OnboardingConsentTextResponse fetchConsentText(final OnboardingConsentTextRequest request) throws OnboardingProcessException {
+    public OnboardingConsentTextResponse fetchConsentText(
+            final OnboardingConsentTextRequest request,
+            final OwnerId ownerId,
+            final Locale locale) throws OnboardingProcessException {
+
         final ConsentTextRequest providerRequest = ConsentTextRequest.builder()
                 .processId(request.getProcessId())
-                .userId(request.getUserId())
+                .userId(ownerId.getUserId())
                 .consentType(request.getConsentType())
-                .locale(LocaleUtils.toLocale(request.getLanguage()))
+                .locale(locale)
                 .build();
 
         try {
@@ -331,11 +336,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Record dis/approval of consent
      *
      * @param request approval request
+     * @param ownerId owner identification
      */
-    public void approveConsent(final OnboardingConsentApprovalRequest request) throws OnboardingProcessException {
+    public void approveConsent(final OnboardingConsentApprovalRequest request, final OwnerId ownerId) throws OnboardingProcessException {
         final ApproveConsentRequest providerRequest = ApproveConsentRequest.builder()
                 .processId(request.getProcessId())
-                .userId(request.getUserId())
+                .userId(ownerId.getUserId())
                 .consentType(request.getConsentType())
                 .approved(request.getApproved())
                 .build();

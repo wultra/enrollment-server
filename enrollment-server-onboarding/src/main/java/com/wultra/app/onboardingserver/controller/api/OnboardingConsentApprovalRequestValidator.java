@@ -36,8 +36,7 @@ class OnboardingConsentApprovalRequestValidator {
      * @throws ValidationException when invalid
      */
     public static void validate(final OnboardingConsentApprovalRequest request) {
-        if (StringUtils.isBlank(request.getUserId())
-                || request.getApproved() == null
+        if (request.getApproved() == null
                 || StringUtils.isBlank(request.getConsentType())
                 || request.getProcessId() == null) {
             throw new ValidationException("Missing mandatory attributes");

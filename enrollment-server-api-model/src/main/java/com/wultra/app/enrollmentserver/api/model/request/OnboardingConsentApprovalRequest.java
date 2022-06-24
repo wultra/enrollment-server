@@ -33,9 +33,6 @@ public class OnboardingConsentApprovalRequest {
     @Schema(required = true)
     private UUID processId;
 
-    @Schema(required = true, example = "abc123456")
-    private String userId;
-
     @Schema(required = true, example = "GDPR")
     private String consentType;
 

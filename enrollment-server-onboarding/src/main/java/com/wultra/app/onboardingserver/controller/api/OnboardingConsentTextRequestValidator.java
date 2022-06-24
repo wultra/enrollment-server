@@ -18,7 +18,6 @@
 package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingConsentTextRequest;
-import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.ValidationException;
@@ -37,16 +36,9 @@ class OnboardingConsentTextRequestValidator {
      * @throws ValidationException when invalid
      */
     public static void validate(final OnboardingConsentTextRequest request) {
-        if (StringUtils.isBlank(request.getUserId())
-                || StringUtils.isBlank(request.getLanguage())
-                || StringUtils.isBlank(request.getConsentType())
+        if (StringUtils.isBlank(request.getConsentType())
                 || request.getProcessId() == null) {
             throw new ValidationException("Missing mandatory attributes");
-        }
-        try {
-            LocaleUtils.toLocale(request.getLanguage());
-        } catch (IllegalArgumentException e) {
-            throw new ValidationException("Invalid language: " + request.getLanguage(), e);
         }
     }
 }

@@ -60,6 +60,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -605,8 +606,13 @@ public class IdentityVerificationController {
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentTextRequest> request,
-            @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, PowerAuthEncryptionException {
+            final @Parameter(hidden = true, required = true) Locale locale,
+            final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthAuthenticationException {
 
+        if (apiAuthentication == null) {
+            throw new PowerAuthAuthenticationException("Unable to authenticate");
+        }
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
@@ -616,7 +622,12 @@ public class IdentityVerificationController {
         final OnboardingConsentTextRequest requestObject = request.getRequestObject();
         logger.debug("Returning consent for {}", requestObject);
         OnboardingConsentTextRequestValidator.validate(requestObject);
-        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject);
+
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = requestObject.getProcessId().toString();
+        onboardingService.verifyProcessId(ownerId, processId);
+
+        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject, ownerId, locale);
         return new ObjectResponse<>(onboardingConsentTextResponse);
     }
 
@@ -645,7 +656,12 @@ public class IdentityVerificationController {
         final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
         logger.debug("Approving consent for {}", requestObject);
         OnboardingConsentApprovalRequestValidator.validate(requestObject);
-        onboardingService.approveConsent(requestObject);
+
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = requestObject.getProcessId().toString();
+        onboardingService.verifyProcessId(ownerId, processId);
+
+        onboardingService.approveConsent(requestObject, ownerId);
         return new Response();
     }
 
