@@ -213,7 +213,7 @@
                             <configOptions>
                                 <dateLibrary>java8</dateLibrary>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <modelPackage>com.wultra.app.presencecheck.iproov.model.api</modelPackage>
+                                <modelPackage>com.wultra.app.onboardingserver.presencecheck.iproov.model.api</modelPackage>
                                 <useBeanValidation>false</useBeanValidation>
                             </configOptions>
                         </configuration>
@@ -235,7 +235,7 @@
                             <configOptions>
                                 <dateLibrary>java8</dateLibrary>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <modelPackage>com.wultra.app.docverify.zenid.model.api</modelPackage>
+                                <modelPackage>com.wultra.app.onboardingserver.docverify.zenid.model.api</modelPackage>
                                 <useBeanValidation>false</useBeanValidation>
                             </configOptions>
                         </configuration>
