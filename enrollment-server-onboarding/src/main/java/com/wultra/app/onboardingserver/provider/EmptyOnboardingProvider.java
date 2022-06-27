@@ -27,7 +27,7 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 class EmptyOnboardingProvider implements OnboardingProvider {
 
     @Override
-    public String lookupUser(LookupUserRequest request) throws OnboardingProviderException {
+    public LookupUserResponse lookupUser(LookupUserRequest request) throws OnboardingProviderException {
         throw createException();
     }
 
