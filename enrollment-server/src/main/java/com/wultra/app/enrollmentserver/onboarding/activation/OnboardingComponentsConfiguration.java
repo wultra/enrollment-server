@@ -24,7 +24,8 @@ import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
@@ -46,14 +47,15 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         "com.wultra.app.enrollmentserver.database.entity", // not to override component scan for enrollment-server
         "com.wultra.app.onboardingserver.common.database.entity" // dependencies from enrollment-server-onboarding common
 })
-@Slf4j
 public class OnboardingComponentsConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingComponentsConfiguration.class);
 
     /**
      * No-arg constructor.
      */
     public OnboardingComponentsConfiguration() {
-        log.info("Onboarding feature turned on, configuring enrollment components specific for onboarding.");
+        logger.info("Onboarding feature turned on, configuring enrollment components specific for onboarding.");
     }
 
     /**
