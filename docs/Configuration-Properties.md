@@ -44,3 +44,10 @@ The Enrollment Server uses the following public configuration properties:
 | `powerauth.service.correlation-header.name` | `X-Correlation-ID` | Correlation header name |
 | `powerauth.service.correlation-header.value.validation-regexp` | `[a-zA-Z0-9\\-]{8,1024}` | Regular expression for correlation header value validation |
 | `logging.pattern.console` | [See application.properties](https://github.com/wultra/enrollment-server/blob/develop/enrollment-server/src/main/resources/application.properties#L160) | Logging pattern for console which includes the correlation header value |
+
+## Onboarding Configuration
+
+| Property                                                                  | Default | Note                                                                                                     |
+|---------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------------------|
+| `enrollment-server.onboarding.enabled`                                    | `false` | By default, Enrollment Server runs without Onboarding. Set to `true` to integrate the activation process |
+| `enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts` | `5`     | Max failed attempts for OTP, make sense only if Enrollment Server integrated with Onboarding             |
