@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.configuration;
+package com.wultra.app.enrollmentserver.common.onboarding.configuration;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
@@ -28,7 +27,6 @@ import java.time.Duration;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Configuration
 @Data
 public class OnboardingConfig {
 

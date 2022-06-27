@@ -15,17 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.impl.service;
+package com.wultra.app.enrollmentserver.common.onboarding.impl.service;
 
 import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
 import com.wultra.app.enrollmentserver.common.onboarding.api.model.UpdateProcessRequest;
+import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
+import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -34,7 +32,6 @@ import java.util.Optional;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Service
 public class CommonOnboardingService implements OnboardingService {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonOnboardingService.class);
@@ -46,7 +43,6 @@ public class CommonOnboardingService implements OnboardingService {
      *
      * @param onboardingProcessRepository Onboarding process repository.
      */
-    @Autowired
     public CommonOnboardingService(final OnboardingProcessRepository onboardingProcessRepository) {
         this.onboardingProcessRepository = onboardingProcessRepository;
     }

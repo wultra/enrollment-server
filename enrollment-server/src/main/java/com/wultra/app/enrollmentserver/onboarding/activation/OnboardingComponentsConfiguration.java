@@ -19,32 +19,29 @@ package com.wultra.app.enrollmentserver.onboarding.activation;
 
 import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
 import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.impl.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.impl.service.CommonOtpService;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import com.wultra.app.enrollmentserver.common.onboarding.configuration.OnboardingConfig;
+import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingOtpRepository;
+import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
+import com.wultra.app.enrollmentserver.common.onboarding.impl.service.CommonOnboardingService;
+import com.wultra.app.enrollmentserver.common.onboarding.impl.service.CommonOtpService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Configuration of components placed in {@code enrollment-server-onboarding} needed for {@code enrollment-server}.
+ * Configuration of common components.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@EnableJpaRepositories(basePackages = {
-        "com.wultra.app.enrollmentserver.database", // not to override component scan for enrollment-server
-        "com.wultra.app.onboardingserver.database" // dependencies from enrollment-server-onboarding
-})
-@EntityScan(basePackages = {
-        "com.wultra.app.enrollmentserver.database.entity", // not to override component scan for enrollment-server
-        "com.wultra.app.onboardingserver.database.entity" // dependencies from enrollment-server-onboarding
-})
 @Configuration
-// TODO (racansky, 2022-06-21) improve isolation, enrollment includes all classes from onboarding
+@ConditionalOnProperty(name = "enrollment-server.onboarding.enabled", havingValue = "true")
+@Slf4j
 public class OnboardingComponentsConfiguration {
+
+    public OnboardingComponentsConfiguration() {
+        log.info("Onboarding feature turned on, configuring enrollment components specific for onboarding.");
+    }
 
     /**
      * Register onboarding service bean.
@@ -62,7 +59,7 @@ public class OnboardingComponentsConfiguration {
      *
      * @param onboardingOtpRepository onboarding otp repository
      * @param onboardingProcessRepository onboarding process repository
-     * @param onboardingConfig  onboarding config
+     * @param onboardingConfig onboarding config
      * @return otp service bean
      */
     @Bean
@@ -82,5 +79,15 @@ public class OnboardingComponentsConfiguration {
     @Bean
     public OnboardingConfig onboardingConfig() {
         return new OnboardingConfig();
+    }
+
+    @Bean
+    public ActivationOtpService activationOtpService(final OtpService otpService) {
+        return new ActivationOtpService(otpService);
+    }
+
+    @Bean
+    public ActivationProcessService activationProcessService(final OnboardingService onboardingService) {
+        return new ActivationProcessService(onboardingService);
     }
 }

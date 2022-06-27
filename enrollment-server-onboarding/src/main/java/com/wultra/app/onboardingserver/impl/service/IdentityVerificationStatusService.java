@@ -28,7 +28,7 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.security.powerauth.client.PowerAuthClient;

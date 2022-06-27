@@ -24,11 +24,11 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
+import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingOtpRepository;
+import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingOtpEntity;
+import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;

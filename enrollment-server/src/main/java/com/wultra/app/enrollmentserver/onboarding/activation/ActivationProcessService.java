@@ -23,7 +23,6 @@ import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.Onboardin
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
@@ -32,7 +31,6 @@ import java.util.Date;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Service
 public class ActivationProcessService {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivationProcessService.class);
@@ -41,6 +39,7 @@ public class ActivationProcessService {
 
     /**
      * Service constructor.
+     *
      * @param onboardingService Onboarding service.
      */
     public ActivationProcessService(OnboardingService onboardingService) {

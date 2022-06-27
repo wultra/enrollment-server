@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.onboardingserver.database;
+package com.wultra.app.enrollmentserver.common.onboarding.database;
 
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
+import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
