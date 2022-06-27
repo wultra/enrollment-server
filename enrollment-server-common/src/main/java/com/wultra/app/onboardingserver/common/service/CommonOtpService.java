@@ -19,7 +19,7 @@ package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
 import com.wultra.app.onboardingserver.common.api.OtpService;
-import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -45,23 +45,23 @@ public class CommonOtpService implements OtpService {
 
     protected final OnboardingOtpRepository onboardingOtpRepository;
     protected final OnboardingProcessRepository onboardingProcessRepository;
-    protected final OnboardingConfig onboardingConfig;
+    private final CommonOnboardingConfig commonOnboardingConfig;
 
     /**
      * Service constructor.
      *
      * @param onboardingOtpRepository Onboarding OTP repository.
      * @param onboardingProcessRepository Onboarding process repository.
-     * @param onboardingConfig Onboarding configuration.
+     * @param commonOnboardingConfig Common onboarding configuration.
      */
     public CommonOtpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingConfig onboardingConfig) {
+            final CommonOnboardingConfig commonOnboardingConfig) {
 
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
-        this.onboardingConfig = onboardingConfig;
+        this.commonOnboardingConfig = commonOnboardingConfig;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class CommonOtpService implements OtpService {
         boolean expired = false;
         boolean verified = false;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
-        int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
+        int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         if (OtpStatus.ACTIVE != otp.getStatus()) {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
         } else if (failedAttempts >= maxFailedAttempts) {

@@ -15,27 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.configuration;
+package com.wultra.app.onboardingserver.common.configuration;
 
-import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
- * Configuration of common components.
+ * Common onboarding configuration.
  *
+ * @author Roman Strobl, roman.strobl@wultra.com
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
-public class OnboardingComponentsConfiguration {
+@Data
+public class CommonOnboardingConfig {
 
-    /**
-     * Register onboarding config bean.
-     *
-     * @return onboarding config bean
-     */
-    @Bean
-    public OnboardingConfig onboardingConfig() {
-        return new OnboardingConfig();
-    }
+    @Value("${enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts:5}")
+    private int otpMaxFailedAttempts;
+
 }

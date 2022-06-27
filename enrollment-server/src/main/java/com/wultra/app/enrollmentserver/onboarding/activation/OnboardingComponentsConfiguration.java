@@ -19,7 +19,7 @@ package com.wultra.app.enrollmentserver.onboarding.activation;
 
 import com.wultra.app.onboardingserver.common.api.OnboardingService;
 import com.wultra.app.onboardingserver.common.api.OtpService;
-import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
@@ -79,7 +79,7 @@ public class OnboardingComponentsConfiguration {
     public OtpService otpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingConfig onboardingConfig) {
+            final CommonOnboardingConfig onboardingConfig) {
 
         return new CommonOtpService(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig);
     }
@@ -90,8 +90,8 @@ public class OnboardingComponentsConfiguration {
      * @return onboarding config bean
      */
     @Bean
-    public OnboardingConfig onboardingConfig() {
-        return new OnboardingConfig();
+    public CommonOnboardingConfig onboardingConfig() {
+        return new CommonOnboardingConfig();
     }
 
     /**
