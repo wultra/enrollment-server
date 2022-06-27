@@ -39,6 +39,9 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class OnboardingComponentsConfiguration {
 
+    /**
+     * No-arg constructor.
+     */
     public OnboardingComponentsConfiguration() {
         log.info("Onboarding feature turned on, configuring enrollment components specific for onboarding.");
     }
@@ -81,11 +84,23 @@ public class OnboardingComponentsConfiguration {
         return new OnboardingConfig();
     }
 
+    /**
+     * Register activation otp service bean.
+     *
+     * @param otpService otp service
+     * @return activation otp service bean
+     */
     @Bean
     public ActivationOtpService activationOtpService(final OtpService otpService) {
         return new ActivationOtpService(otpService);
     }
 
+    /**
+     * Register activation process service bean.
+     *
+     * @param onboardingService onboading service
+     * @return activation process service bean
+     */
     @Bean
     public ActivationProcessService activationProcessService(final OnboardingService onboardingService) {
         return new ActivationProcessService(onboardingService);
