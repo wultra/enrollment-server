@@ -38,8 +38,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties("ext")
 @ComponentScan(basePackages = {
-        "com.wultra.app.docverify",
-        "com.wultra.app.presencecheck",
         "com.wultra.security.powerauth",
         "io.getlime.security.powerauth",
 })
