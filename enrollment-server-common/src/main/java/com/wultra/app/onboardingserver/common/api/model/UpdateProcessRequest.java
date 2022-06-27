@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.api.model;
+package com.wultra.app.onboardingserver.common.api.model;
 
-import com.wultra.app.enrollmentserver.common.annotation.PublicApi;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.common.api.OnboardingService;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;

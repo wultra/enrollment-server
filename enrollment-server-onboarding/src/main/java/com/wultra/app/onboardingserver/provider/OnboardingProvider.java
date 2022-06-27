@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.enrollmentserver.common.annotation.PublicSpi;
+import com.wultra.app.onboardingserver.common.annotation.PublicSpi;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 
 /**

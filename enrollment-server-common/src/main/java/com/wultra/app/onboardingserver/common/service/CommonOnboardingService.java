@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.impl.service;
+package com.wultra.app.onboardingserver.common.service;
 
-import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
-import com.wultra.app.enrollmentserver.common.onboarding.api.model.UpdateProcessRequest;
-import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.api.OnboardingService;
+import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

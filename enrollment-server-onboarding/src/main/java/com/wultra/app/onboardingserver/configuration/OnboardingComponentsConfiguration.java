@@ -17,25 +17,15 @@
  */
 package com.wultra.app.onboardingserver.configuration;
 
-import com.wultra.app.enrollmentserver.common.onboarding.configuration.OnboardingConfig;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Configuration of common components.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@EnableJpaRepositories(basePackages = {
-        "com.wultra.app.enrollmentserver.common.onboarding.database", // dependencies from common
-        "com.wultra.app.onboardingserver.database" // not to override component scan for enrollment-server-onboarding
-})
-@EntityScan(basePackages = {
-        "com.wultra.app.enrollmentserver.common.onboarding.database.entity", // dependencies from common
-        "com.wultra.app.onboardingserver.database.entity"  // not to override component scan for enrollment-server-onboarding
-})
 @Configuration
 public class OnboardingComponentsConfiguration {
 

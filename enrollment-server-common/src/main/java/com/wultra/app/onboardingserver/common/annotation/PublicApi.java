@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,25 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.errorhandling;
+package com.wultra.app.onboardingserver.common.annotation;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
 /**
- * Exception thrown in case onboarding process fails.
+ * Marker for interfaces intended to be called by downstream projects. Implementation may not be exposed by the core functionality.
+ * <p>
+ * New methods can be added.
+ * Those clients that used to call the previously existing methods, don't need to care about the new ones.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-public class OnboardingProcessException extends Exception {
-
-    private static final long serialVersionUID = 7558022671624330227L;
-
-    public OnboardingProcessException() {
-    }
-
-    public OnboardingProcessException(String message) {
-        super(message);
-    }
-
-    public OnboardingProcessException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
+@Documented
+public @interface PublicApi {
 }

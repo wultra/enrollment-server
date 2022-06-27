@@ -17,15 +17,15 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.common.onboarding.impl.service.CommonOtpService;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import com.wultra.app.enrollmentserver.common.onboarding.configuration.OnboardingConfig;
-import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingOtpRepository;
-import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingOtpEntity;
-import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.CommonOtpService;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
 import org.slf4j.Logger;

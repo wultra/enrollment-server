@@ -16,9 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.enrollmentserver.common.onboarding.database.entity;
+package com.wultra.app.onboardingserver.common.database.entity;
 
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,12 +29,10 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
- * Entity representing an onboarding process.
+ * Entity representing an onboarding OTP code.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -42,10 +41,16 @@ import java.util.Set;
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_onboarding_process")
-public class OnboardingProcessEntity implements Serializable {
+@Table(name = "es_onboarding_otp")
+public class OnboardingOtpEntity implements Serializable {
 
-    private static final long serialVersionUID = -438495244269415158L;
+    private static final long serialVersionUID = -5626187612981527923L;
+
+    public static final String ERROR_CANCELED = "canceled";
+
+    public static final String ERROR_EXPIRED = "expired";
+
+    public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttempts";
 
     @Id
     @GeneratedValue(generator = "uuid")
@@ -53,47 +58,58 @@ public class OnboardingProcessEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "identification_data", nullable = false)
-    private String identificationData;
+    @ManyToOne
+    @JoinColumn(name = "process_id", referencedColumnName = "id", nullable = false)
+    private OnboardingProcessEntity process;
 
-    @Column(name = "user_id")
-    private String userId;
-
-    @Column(name = "activation_id")
-    private String activationId;
+    @Column(name = "otp_code", nullable = false)
+    private String otpCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private OnboardingStatus status;
+    private OtpStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private OtpType type;
 
     @Column(name = "error_detail")
     private String errorDetail;
 
+    @Column(name = "failed_attempts")
+    private int failedAttempts;
+
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
+
+    @Column(name = "timestamp_expiration", nullable = false)
+    private Date timestampExpiration;
 
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
-    @Column(name = "timestamp_finished")
-    private Date timestampFinished;
-
-    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
-    @OrderBy("timestampCreated")
-    @ToString.Exclude
-    private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
+    @Column(name = "timestamp_verified")
+    private Date timestampVerified;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingProcessEntity)) return false;
-        OnboardingProcessEntity that = (OnboardingProcessEntity) o;
-        return identificationData.equals(that.identificationData) && timestampCreated.equals(that.timestampCreated);
+        if (!(o instanceof OnboardingOtpEntity)) return false;
+        OnboardingOtpEntity that = (OnboardingOtpEntity) o;
+        return process.equals(that.process) && type.equals(that.type) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identificationData, timestampCreated);
+        return Objects.hash(process, type, timestampCreated);
     }
-}
 
+    /**
+     * @return true when the OTP has expired, false otherwise
+     */
+    @Transient
+    public boolean hasExpired() {
+        return timestampCreated.after(timestampExpiration);
+    }
+
+}

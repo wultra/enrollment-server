@@ -17,17 +17,19 @@
  */
 package com.wultra.app.enrollmentserver.onboarding.activation;
 
-import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.enrollmentserver.common.onboarding.configuration.OnboardingConfig;
-import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingOtpRepository;
-import com.wultra.app.enrollmentserver.common.onboarding.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.common.onboarding.impl.service.CommonOnboardingService;
-import com.wultra.app.enrollmentserver.common.onboarding.impl.service.CommonOtpService;
+import com.wultra.app.onboardingserver.common.api.OnboardingService;
+import com.wultra.app.onboardingserver.common.api.OtpService;
+import com.wultra.app.onboardingserver.common.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
+import com.wultra.app.onboardingserver.common.service.CommonOtpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Configuration of common components.
@@ -36,6 +38,14 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnProperty(name = "enrollment-server.onboarding.enabled", havingValue = "true")
+@EnableJpaRepositories(basePackages = {
+        "com.wultra.app.enrollmentserver.database", // not to override component scan for enrollment-server
+        "com.wultra.app.onboardingserver.common.database" // dependencies from enrollment-server-onboarding common
+})
+@EntityScan(basePackages = {
+        "com.wultra.app.enrollmentserver.database.entity", // not to override component scan for enrollment-server
+        "com.wultra.app.onboardingserver.common.database.entity" // dependencies from enrollment-server-onboarding common
+})
 @Slf4j
 public class OnboardingComponentsConfiguration {
 

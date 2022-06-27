@@ -18,8 +18,8 @@
 package com.wultra.app.enrollmentserver.onboarding.activation;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.api.OtpService;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 
 /**

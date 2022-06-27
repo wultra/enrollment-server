@@ -17,9 +17,9 @@
  */
 package com.wultra.app.enrollmentserver.onboarding.activation;
 
-import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
-import com.wultra.app.enrollmentserver.common.onboarding.api.model.UpdateProcessRequest;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.api.OnboardingService;
+import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

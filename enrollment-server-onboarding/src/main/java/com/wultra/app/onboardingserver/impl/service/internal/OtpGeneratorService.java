@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.internal;
 
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

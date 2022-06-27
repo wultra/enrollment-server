@@ -16,7 +16,7 @@
  */
 package com.wultra.app.onboardingserver.database.entity;
 
-import com.wultra.app.enrollmentserver.common.onboarding.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
