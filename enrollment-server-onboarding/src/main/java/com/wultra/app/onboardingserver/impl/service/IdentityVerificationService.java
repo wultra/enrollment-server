@@ -17,10 +17,10 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.api.model.request.DocumentStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
-import com.wultra.app.enrollmentserver.api.model.response.DocumentStatusResponse;
-import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.DocumentStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;

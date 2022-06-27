@@ -17,10 +17,10 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.api.model.request.*;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingConsentTextResponse;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -196,7 +196,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
         String processId = request.getProcessId();
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
@@ -217,7 +217,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         String processId = request.getProcessId();
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
@@ -239,7 +239,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     public void verifyProcessId(OwnerId ownerId, String processId) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.error("Onboarding process not found, {}", ownerId);
             throw new OnboardingProcessException();
         }
@@ -259,7 +259,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     public OnboardingProcessEntity findExistingProcessWithVerificationInProgress(String activationId) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForActivation(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();
         }
@@ -274,7 +274,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();
         }
@@ -294,6 +294,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         // Terminate processes with verifications in progress
         final int verificationExpirationSeconds = identityVerificationConfig.getVerificationExpirationTime();
+        //TODO: Unused variable `createdDateExpirations` - evaluate.
         final Date createdDateExpirations = convertExpirationToCreatedDate(verificationExpirationSeconds);
         onboardingProcessRepository.terminateOldProcesses(convertExpirationToCreatedDate(verificationExpirationSeconds), OnboardingStatus.VERIFICATION_IN_PROGRESS);
 

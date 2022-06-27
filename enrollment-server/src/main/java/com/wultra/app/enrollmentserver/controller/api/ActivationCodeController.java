@@ -17,8 +17,8 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
-import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.response.ActivationCodeResponse;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.impl.service.ActivationCodeService;

@@ -44,9 +44,9 @@ public class OperationTemplateService {
 
     public OperationTemplateEntity prepareTemplate(@NotNull String operationType, @NotNull String language) throws MobileTokenConfigurationException {
         Optional<OperationTemplateEntity> operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType);
-        if (!operationTemplateOptional.isPresent()) { // try fallback to EN locale
+        if (operationTemplateOptional.isEmpty()) { // try fallback to EN locale
             operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
-            if (!operationTemplateOptional.isPresent()) {
+            if (operationTemplateOptional.isEmpty()) {
                 throw new MobileTokenConfigurationException("ERR_CONFIG", "Missing " + language + " template for operation " + operationType);
             }
         }
