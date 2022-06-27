@@ -17,14 +17,15 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.CommonOtpService;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
 import org.slf4j.Logger;
@@ -50,6 +51,8 @@ public class OtpServiceImpl extends CommonOtpService {
 
     private final OtpGeneratorService otpGeneratorService;
 
+    private final OnboardingConfig onboardingConfig;
+
     /**
      * Service constructor.
      * @param otpGeneratorService OTP generator service.
@@ -58,9 +61,15 @@ public class OtpServiceImpl extends CommonOtpService {
      * @param onboardingConfig Onboarding configuration.
      */
     @Autowired
-    public OtpServiceImpl(OtpGeneratorService otpGeneratorService, OnboardingOtpRepository onboardingOtpRepository, OnboardingProcessRepository onboardingProcessRepository, OnboardingConfig onboardingConfig) {
+    public OtpServiceImpl(
+            final OtpGeneratorService otpGeneratorService,
+            final OnboardingOtpRepository onboardingOtpRepository,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final OnboardingConfig onboardingConfig) {
+
         super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig);
         this.otpGeneratorService = otpGeneratorService;
+        this.onboardingConfig = onboardingConfig;
     }
 
     /**

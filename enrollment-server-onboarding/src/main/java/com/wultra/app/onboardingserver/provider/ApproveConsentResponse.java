@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.enrollmentserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 
 /**
  * Response object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.

@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,28 +15,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
-
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
+package com.wultra.app.onboardingserver.common.errorhandling;
 
 /**
- * Request object for {@link OnboardingProvider#sendOtpCode(SendOtpCodeRequest)}.
+ * Exception thrown in case onboarding process fails.
  *
- * @author Lubos Racansky, lubos.racansky@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Builder
-@Getter
-@PublicApi
-public final class SendOtpCodeRequest {
+public class OnboardingProcessException extends Exception {
 
-    @NonNull
-    private String userId;
+    private static final long serialVersionUID = 7558022671624330227L;
 
-    @NonNull
-    private String otpCode;
+    public OnboardingProcessException() {
+    }
 
-    private boolean resend;
+    public OnboardingProcessException(String message) {
+        super(message);
+    }
+
+    public OnboardingProcessException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

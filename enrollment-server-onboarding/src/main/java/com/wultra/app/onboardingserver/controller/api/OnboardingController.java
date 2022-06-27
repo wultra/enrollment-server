@@ -23,7 +23,7 @@ import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
 import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;

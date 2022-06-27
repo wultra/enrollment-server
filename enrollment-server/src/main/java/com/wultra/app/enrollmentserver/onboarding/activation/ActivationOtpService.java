@@ -18,17 +18,15 @@
 package com.wultra.app.enrollmentserver.onboarding.activation;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.api.OtpService;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import org.springframework.stereotype.Service;
 
 /**
  * Service used for verifying OTP codes during activation.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Service
 public class ActivationOtpService {
 
     private final OtpService otpService;

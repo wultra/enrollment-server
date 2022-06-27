@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.onboarding.api;
+package com.wultra.app.onboardingserver.common.api;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.common.annotation.PublicApi;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 
 /**
  * Service implementing OTP verification during onboarding process.

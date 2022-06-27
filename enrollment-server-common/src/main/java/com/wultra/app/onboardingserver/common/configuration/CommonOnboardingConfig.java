@@ -15,21 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.common.annotation;
+package com.wultra.app.onboardingserver.common.configuration;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
- * Marker for interfaces intended to be called by downstream projects. Implementation may not be exposed by the core functionality.
- * <p>
- * New methods can be added.
- * Those clients that used to call the previously existing methods, don't need to care about the new ones.
+ * Common onboarding configuration.
  *
+ * @author Roman Strobl, roman.strobl@wultra.com
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
-@Documented
-public @interface PublicApi {
+@Data
+public class CommonOnboardingConfig {
+
+    @Value("${enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts:5}")
+    private int otpMaxFailedAttempts;
+
 }

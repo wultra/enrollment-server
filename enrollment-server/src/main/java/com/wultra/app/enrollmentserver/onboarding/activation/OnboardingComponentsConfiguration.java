@@ -17,34 +17,46 @@
  */
 package com.wultra.app.enrollmentserver.onboarding.activation;
 
-import com.wultra.app.enrollmentserver.common.onboarding.api.OnboardingService;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.impl.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.impl.service.CommonOtpService;
+import com.wultra.app.onboardingserver.common.api.OnboardingService;
+import com.wultra.app.onboardingserver.common.api.OtpService;
+import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
+import com.wultra.app.onboardingserver.common.service.CommonOtpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
- * Configuration of components placed in {@code enrollment-server-onboarding} needed for {@code enrollment-server}.
+ * Configuration of common components.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@Configuration
+@ConditionalOnProperty(name = "enrollment-server.onboarding.enabled", havingValue = "true")
 @EnableJpaRepositories(basePackages = {
         "com.wultra.app.enrollmentserver.database", // not to override component scan for enrollment-server
-        "com.wultra.app.onboardingserver.database" // dependencies from enrollment-server-onboarding
+        "com.wultra.app.onboardingserver.common.database" // dependencies from enrollment-server-onboarding common
 })
 @EntityScan(basePackages = {
         "com.wultra.app.enrollmentserver.database.entity", // not to override component scan for enrollment-server
-        "com.wultra.app.onboardingserver.database.entity" // dependencies from enrollment-server-onboarding
+        "com.wultra.app.onboardingserver.common.database.entity" // dependencies from enrollment-server-onboarding common
 })
-@Configuration
-// TODO (racansky, 2022-06-21) improve isolation, enrollment includes all classes from onboarding
 public class OnboardingComponentsConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingComponentsConfiguration.class);
+
+    /**
+     * No-arg constructor.
+     */
+    public OnboardingComponentsConfiguration() {
+        logger.info("Onboarding feature turned on, configuring enrollment components specific for onboarding.");
+    }
 
     /**
      * Register onboarding service bean.
@@ -62,14 +74,14 @@ public class OnboardingComponentsConfiguration {
      *
      * @param onboardingOtpRepository onboarding otp repository
      * @param onboardingProcessRepository onboarding process repository
-     * @param onboardingConfig  onboarding config
+     * @param onboardingConfig onboarding config
      * @return otp service bean
      */
     @Bean
     public OtpService otpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingConfig onboardingConfig) {
+            final CommonOnboardingConfig onboardingConfig) {
 
         return new CommonOtpService(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig);
     }
@@ -80,7 +92,29 @@ public class OnboardingComponentsConfiguration {
      * @return onboarding config bean
      */
     @Bean
-    public OnboardingConfig onboardingConfig() {
-        return new OnboardingConfig();
+    public CommonOnboardingConfig onboardingConfig() {
+        return new CommonOnboardingConfig();
+    }
+
+    /**
+     * Register activation otp service bean.
+     *
+     * @param otpService otp service
+     * @return activation otp service bean
+     */
+    @Bean
+    public ActivationOtpService activationOtpService(final OtpService otpService) {
+        return new ActivationOtpService(otpService);
+    }
+
+    /**
+     * Register activation process service bean.
+     *
+     * @param onboardingService onboading service
+     * @return activation process service bean
+     */
+    @Bean
+    public ActivationProcessService activationProcessService(final OnboardingService onboardingService) {
+        return new ActivationProcessService(onboardingService);
     }
 }

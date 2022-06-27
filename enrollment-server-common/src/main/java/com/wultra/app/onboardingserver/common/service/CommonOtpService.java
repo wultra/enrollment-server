@@ -15,23 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.impl.service;
+package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.api.model.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.common.onboarding.api.OtpService;
-import com.wultra.app.enrollmentserver.common.onboarding.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.api.OtpService;
+import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.database.entity.OnboardingProcessEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.Optional;
@@ -41,31 +39,29 @@ import java.util.Optional;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Service
 public class CommonOtpService implements OtpService {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonOtpService.class);
 
     protected final OnboardingOtpRepository onboardingOtpRepository;
     protected final OnboardingProcessRepository onboardingProcessRepository;
-    protected final OnboardingConfig onboardingConfig;
+    private final CommonOnboardingConfig commonOnboardingConfig;
 
     /**
      * Service constructor.
      *
      * @param onboardingOtpRepository Onboarding OTP repository.
      * @param onboardingProcessRepository Onboarding process repository.
-     * @param onboardingConfig Onboarding configuration.
+     * @param commonOnboardingConfig Common onboarding configuration.
      */
-    @Autowired
     public CommonOtpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingConfig onboardingConfig) {
+            final CommonOnboardingConfig commonOnboardingConfig) {
 
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
-        this.onboardingConfig = onboardingConfig;
+        this.commonOnboardingConfig = commonOnboardingConfig;
     }
 
     @Override
@@ -89,7 +85,7 @@ public class CommonOtpService implements OtpService {
         boolean expired = false;
         boolean verified = false;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
-        int maxFailedAttempts = onboardingConfig.getOtpMaxFailedAttempts();
+        int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         if (OtpStatus.ACTIVE != otp.getStatus()) {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
         } else if (failedAttempts >= maxFailedAttempts) {
