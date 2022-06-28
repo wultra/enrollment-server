@@ -27,7 +27,6 @@ import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,7 +36,6 @@ import org.springframework.context.annotation.Configuration;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Configuration
-@ConditionalOnProperty(name = "enrollment-server.onboarding.enabled", havingValue = "true")
 public class OnboardingComponentsConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingComponentsConfiguration.class);
