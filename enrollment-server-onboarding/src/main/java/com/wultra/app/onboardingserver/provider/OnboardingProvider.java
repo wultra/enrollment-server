@@ -32,10 +32,10 @@ public interface OnboardingProvider {
      * Lookup user.
      *
      * @param request lookup user request
-     * @return user identifier
+     * @return lookup user response
      * @throws OnboardingProviderException if there is a problem to lookup user
      */
-    String lookupUser(LookupUserRequest request) throws OnboardingProviderException;
+    LookupUserResponse lookupUser(LookupUserRequest request) throws OnboardingProviderException;
 
     /**
      * Send otp code.
