@@ -18,9 +18,9 @@
 package com.wultra.app.onboardingserver.common.activation;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.api.OtpService;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 
 /**
  * Service used for verifying OTP codes during activation.
