@@ -35,5 +35,7 @@ public final class LookupUserResponse {
     @NonNull
     private String userId;
 
-    private boolean consentRequired;
+    // not propagated yet; consistent with the client which always considers it as true
+    @Builder.Default
+    private boolean consentRequired = true;
 }
