@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingConsentTextRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingConsentTextRequest;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.ValidationException;

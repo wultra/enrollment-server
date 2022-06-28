@@ -17,10 +17,10 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.request.*;
-import com.wultra.app.enrollmentserver.api.model.response.*;
-import com.wultra.app.enrollmentserver.api.model.response.data.ConfigurationDataDto;
-import com.wultra.app.enrollmentserver.api.model.response.data.DocumentMetadataResponseDto;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -522,7 +522,7 @@ public class IdentityVerificationController {
     @PostMapping("otp/verify")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
-                                                                           @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
         // Check if the request was correctly decrypted

@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.configuration;
 
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +32,7 @@ import java.time.Duration;
  */
 @Configuration
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class OnboardingConfig extends CommonOnboardingConfig {
 
     @Value("${enrollment-server-onboarding.identity-verification.otp.length:8}")

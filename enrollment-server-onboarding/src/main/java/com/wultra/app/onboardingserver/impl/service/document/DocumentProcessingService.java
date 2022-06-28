@@ -17,7 +17,13 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.api.model.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.model.Document;
+import com.wultra.app.enrollmentserver.model.DocumentMetadata;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.database.DocumentResultRepository;
@@ -29,12 +35,6 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
-import com.wultra.app.enrollmentserver.model.Document;
-import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -17,12 +17,12 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingCleanupRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingOtpResendRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStartRequest;
-import com.wultra.app.enrollmentserver.api.model.request.OnboardingStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStartResponse;
-import com.wultra.app.enrollmentserver.api.model.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingOtpResendRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingStartRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
