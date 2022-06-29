@@ -607,12 +607,8 @@ public class IdentityVerificationController {
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentTextRequest> request,
             final @Parameter(hidden = true, required = true) Locale locale,
-            final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthAuthenticationException {
+            final @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, PowerAuthEncryptionException {
 
-        if (apiAuthentication == null) {
-            throw new PowerAuthAuthenticationException("Unable to authenticate");
-        }
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
@@ -623,11 +619,11 @@ public class IdentityVerificationController {
         logger.debug("Returning consent for {}", requestObject);
         OnboardingConsentTextRequestValidator.validate(requestObject);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = requestObject.getProcessId().toString();
-        onboardingService.verifyProcessId(ownerId, processId);
+        final OnboardingProcessEntity process = onboardingService.findProcess(processId);
+        final String userId = process.getUserId();
 
-        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject, ownerId, locale);
+        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject, userId, locale);
         return new ObjectResponse<>(onboardingConsentTextResponse);
     }
 

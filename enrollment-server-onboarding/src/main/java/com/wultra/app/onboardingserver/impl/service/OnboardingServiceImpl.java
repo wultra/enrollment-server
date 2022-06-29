@@ -308,18 +308,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Provide consent text.
      *
      * @param request consent text request
-     * @param ownerId owner identification
+     * @param userId user identification
      * @param locale locale
      * @return consent response
      */
     public OnboardingConsentTextResponse fetchConsentText(
             final OnboardingConsentTextRequest request,
-            final OwnerId ownerId,
+            final String userId,
             final Locale locale) throws OnboardingProcessException {
 
         final ConsentTextRequest providerRequest = ConsentTextRequest.builder()
                 .processId(request.getProcessId())
-                .userId(ownerId.getUserId())
+                .userId(userId)
                 .consentType(request.getConsentType())
                 .locale(locale)
                 .build();
