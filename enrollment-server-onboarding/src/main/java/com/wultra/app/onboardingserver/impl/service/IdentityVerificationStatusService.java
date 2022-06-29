@@ -123,16 +123,25 @@ public class IdentityVerificationStatusService {
         Optional<IdentityVerificationEntity> idVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
         if (!idVerificationOptional.isPresent()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
-            final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
             response.setProcessId(onboardingProcess.getId());
             return response;
         }
 
         IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setProcessId(idVerification.getProcessId());
+
+        // Check for expiration of onboarding process
+        if (onboardingService.hasProcessExpired(onboardingProcess)) {
+            // Trigger immediate processing of expired processes
+            onboardingService.terminateInactiveProcesses();
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+            response.setIdentityVerificationPhase(null);
+            return response;
+        }
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
         try {
