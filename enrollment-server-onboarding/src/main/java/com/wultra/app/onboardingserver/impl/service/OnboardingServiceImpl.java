@@ -309,8 +309,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         // Terminate OTP codes for all processes
         final int otpExpirationSeconds = (int) onboardingConfig.getOtpExpirationTime().getSeconds();
-        final Date createdDateOtp = DateUtil.convertExpirationToCreatedDate(otpExpirationSeconds);
-        otpService.terminateOldOtps(createdDateOtp);
+        final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpirationSeconds);
+        otpService.terminateOldOtps(createdDateExpiredOtp);
     }
 
     /**
