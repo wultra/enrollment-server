@@ -19,6 +19,7 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -78,6 +79,7 @@ public class IdentityVerificationLimitService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     public void checkIdentityVerificationLimit(OwnerId ownerId) throws PowerAuthClientException, IdentityVerificationException, OnboardingProcessLimitException {
+        // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
         List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
         if (identityVerifications.size() >= identityVerificationConfig.getVerificationMaxFailedAttempts()) {
             Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
@@ -85,6 +87,13 @@ public class IdentityVerificationLimitService {
                 logger.warn("Onboarding process not found, {}.", ownerId);
                 throw new IdentityVerificationException("Onboarding process not found");
             }
+
+            // In case any of the identity verifications is not FAILED or REJECTED yet, fail it.
+            identityVerifications.stream()
+                    .filter(verification -> verification.getStatus() != IdentityVerificationStatus.FAILED
+                            && verification.getStatus() != IdentityVerificationStatus.REJECTED)
+                    .forEach(verification -> verification.setStatus(IdentityVerificationStatus.FAILED));
+            identityVerificationRepository.saveAll(identityVerifications);
 
             OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS);
