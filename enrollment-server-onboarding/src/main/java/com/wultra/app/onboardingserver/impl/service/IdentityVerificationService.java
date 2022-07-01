@@ -122,8 +122,9 @@ public class IdentityVerificationService {
      * @param processId Process identifier.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException {
+    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
         identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
@@ -395,10 +396,11 @@ public class IdentityVerificationService {
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification reset fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @Transactional
     public void cleanup(OwnerId ownerId)
-            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, IdentityVerificationException {
+            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
 

@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +73,10 @@ public class IdentityVerificationLimitService {
      * Check attempt limit of failed identity verifications. Fail onboarding process in the attempt count has exceeded the limit.
      * @param ownerId Owner identification.
      * @throws PowerAuthClientException Thrown when activation flag request fails.
+     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void checkIdentityVerificationLimit(OwnerId ownerId) throws PowerAuthClientException, IdentityVerificationException {
+    public void checkIdentityVerificationLimit(OwnerId ownerId) throws PowerAuthClientException, IdentityVerificationException, OnboardingProcessLimitException {
         List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
         if (identityVerifications.size() >= identityVerificationConfig.getVerificationMaxFailedAttempts()) {
             Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
@@ -90,7 +93,7 @@ public class IdentityVerificationLimitService {
             List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
             activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
             logger.warn("Max failed attempts reached for identity verification, {}.", ownerId);
-            throw new IdentityVerificationException("Max failed attempts reached for identity verification");
+            throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification");
         }
     }
 }

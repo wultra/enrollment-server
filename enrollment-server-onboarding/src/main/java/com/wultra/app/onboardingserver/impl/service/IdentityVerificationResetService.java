@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -64,8 +65,9 @@ public class IdentityVerificationResetService {
      * @param ownerId Owner identification.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification reset fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
+    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         try {
 
             // Check limits on identity verifications
