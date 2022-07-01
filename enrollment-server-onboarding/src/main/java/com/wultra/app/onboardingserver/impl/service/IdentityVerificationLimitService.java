@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,10 +86,9 @@ public class IdentityVerificationLimitService {
             onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS);
             onboardingProcessRepository.save(onboardingProcess);
 
-            List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
             // Remove flag VERIFICATION_IN_PROGRESS
-            activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-            activationFlagService.updateActivationFlags(ownerId, activationFlags);
+            List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+            activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
             logger.warn("Max failed attempts reached for identity verification, {}.", ownerId);
             throw new IdentityVerificationException("Max failed attempts reached for identity verification");
         }

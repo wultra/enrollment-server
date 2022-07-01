@@ -22,9 +22,7 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
-import com.wultra.security.powerauth.client.v3.UpdateActivationFlagsRequest;
+import com.wultra.security.powerauth.client.v3.*;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +55,7 @@ public class ActivationFlagService {
 
     /**
      * Obtain list of activation flags.
-     * @param ownerId Owner identifier.
+     * @param ownerId Owner identification.
      * @throws PowerAuthClientException Thrown when list of activation flags could not be obtained.
      */
     public List<String> listActivationFlags(OwnerId ownerId) throws PowerAuthClientException {
@@ -74,7 +72,7 @@ public class ActivationFlagService {
 
     /**
      * Update activation flags.
-     * @param ownerId Owner identitifier.
+     * @param ownerId Owner identification.
      * @param activationFlags Activation flags to set.
      * @throws PowerAuthClientException Thrown when activation flags could not be updated.
      */
@@ -84,6 +82,23 @@ public class ActivationFlagService {
         updateRequest.getActivationFlags().addAll(activationFlags);
         powerAuthClient.updateActivationFlags(
                 updateRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
+    }
+
+    /**
+     * Remove activation flags.
+     * @param ownerId Owner identification.
+     * @param activationFlagsToRemove Activation flags to remove.
+     * @throws PowerAuthClientException Thrown when activation flags could not be removed.
+     */
+    public void removeActivationFlags(OwnerId ownerId, List<String> activationFlagsToRemove) throws PowerAuthClientException {
+        final RemoveActivationFlagsRequest removeRequest = new RemoveActivationFlagsRequest();
+        removeRequest.setActivationId(ownerId.getActivationId());
+        removeRequest.getActivationFlags().addAll(activationFlagsToRemove);
+        powerAuthClient.removeActivationFlags(
+                removeRequest,
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()
         );
