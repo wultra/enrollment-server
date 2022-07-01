@@ -17,21 +17,20 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
-import com.wultra.security.powerauth.client.v3.UpdateActivationFlagsRequest;
-import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
+import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING;
 
 /**
  * Service implementing reset of identity verification.
@@ -43,24 +42,21 @@ public class IdentityVerificationResetService {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationResetService.class);
 
-    private static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
-    private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
-
     /**
      * PowerAuth client.
      */
-    private final PowerAuthClient powerAuthClient;
-    private final HttpCustomizationService httpCustomizationService;
+    private final ActivationFlagService activationFlagService;
+    private final IdentityVerificationLimitService identityVerificationLimitService;
 
     /**
      * Service constructor.
-     * @param powerAuthClient PowerAuth client.
-     * @param httpCustomizationService HTTP request customization service.
+     * @param activationFlagService Activation flag service.
+     * @param identityVerificationLimitService Identity verification limit service.
      */
     @Autowired
-    public IdentityVerificationResetService(PowerAuthClient powerAuthClient, HttpCustomizationService httpCustomizationService) {
-        this.powerAuthClient = powerAuthClient;
-        this.httpCustomizationService = httpCustomizationService;
+    public IdentityVerificationResetService(ActivationFlagService activationFlagService, IdentityVerificationLimitService identityVerificationLimitService) {
+        this.activationFlagService = activationFlagService;
+        this.identityVerificationLimitService = identityVerificationLimitService;
     }
 
     /**
@@ -68,18 +64,17 @@ public class IdentityVerificationResetService {
      *
      * @param ownerId Owner identification.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown when identity verification reset fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
+    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         try {
-            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
-            listRequest.setActivationId(ownerId.getActivationId());
-            ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
-                    listRequest,
-                    httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders()
-            );
 
-            final List<String> activationFlags = new ArrayList<>(response.getActivationFlags());
+            // Check limits on identity verifications
+            identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
+
+            List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
+
             // Remove flag VERIFICATION_IN_PROGRESS
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
 
@@ -88,14 +83,8 @@ public class IdentityVerificationResetService {
                 activationFlags.add(ACTIVATION_FLAG_VERIFICATION_PENDING);
             }
 
-            final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
-            updateRequest.setActivationId(ownerId.getActivationId());
-            updateRequest.getActivationFlags().addAll(activationFlags);
-            powerAuthClient.updateActivationFlags(
-                    updateRequest,
-                    httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders()
-            );
+            activationFlagService.updateActivationFlags(ownerId, activationFlags);
+
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);

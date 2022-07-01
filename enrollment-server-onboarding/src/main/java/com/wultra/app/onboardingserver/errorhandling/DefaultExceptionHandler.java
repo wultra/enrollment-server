@@ -185,8 +185,21 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public @ResponseBody ErrorResponse handleTooManyProcessesException(TooManyProcessesException ex) {
         logger.warn("Too many onboarding processes started by the user", ex);
-        return new ErrorResponse("TOO_MANY_REQUESTS", "Too many onboarding processes started by the user.");
+        return new ErrorResponse("TOO_MANY_ONBOARDING_PROCESSES", "Too many onboarding processes started by the user.");
     }
+
+    /**
+     * Handling of onboarding process limit exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(OnboardingProcessLimitException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleOnboardingProcessLimitException(OnboardingProcessLimitException ex) {
+        logger.warn("Onboarding process limit reached", ex);
+        return new ErrorResponse("ONBOARDING_PROCESS_LIMIT_REACHED", "Onboarding process limit reached.");
+    }
+
 
     /**
      * Exception handler for invalid request exception.

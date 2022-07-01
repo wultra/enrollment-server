@@ -60,4 +60,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.identity-verification.otp.enabled:true}")
     private boolean verificationOtpEnabled;
 
+    @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts:5}")
+    private int verificationMaxFailedAttempts;
+
 }
