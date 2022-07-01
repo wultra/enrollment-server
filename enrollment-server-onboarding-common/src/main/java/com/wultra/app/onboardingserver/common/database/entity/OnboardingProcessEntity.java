@@ -47,6 +47,8 @@ public class OnboardingProcessEntity implements Serializable {
 
     private static final long serialVersionUID = -438495244269415158L;
 
+    public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttempts";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")

@@ -193,7 +193,7 @@ public class IdentityVerificationService {
         Optional<IdentityVerificationEntity> identityVerificationOptional =
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
-        if (!identityVerificationOptional.isPresent()) {
+        if (identityVerificationOptional.isEmpty()) {
             logger.error("No identity verification entity found to start the verification, {}", ownerId);
             throw new IdentityVerificationException("Unable to start verification");
         }
@@ -394,10 +394,11 @@ public class IdentityVerificationService {
      * @throws DocumentVerificationException Thrown when document cleanup fails
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown when identity verification reset fails.
      */
     @Transactional
     public void cleanup(OwnerId ownerId)
-            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException {
+            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, IdentityVerificationException {
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
 

@@ -555,6 +555,7 @@ public class IdentityVerificationController {
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
+     * @throws IdentityVerificationException Thrown when identity verification reset fails.
      */
     @PostMapping("cleanup")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -564,7 +565,7 @@ public class IdentityVerificationController {
     public Response cleanup(@EncryptedRequestBody ObjectRequest<IdentityVerificationCleanupRequest> request,
                             @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when performing document cleanup");

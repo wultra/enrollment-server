@@ -25,6 +25,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -48,9 +49,9 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             ")")
     int failRunningVerifications(String activationId, Date timestamp);
 
-    Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(
-            String activationId
-    );
+    Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(String activationId);
+
+    List<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(String activationId);
 
     /**
      * @return All identity verification entities with in progress verification of uploaded documents
