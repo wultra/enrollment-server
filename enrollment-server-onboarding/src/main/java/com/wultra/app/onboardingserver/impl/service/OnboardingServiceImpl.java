@@ -46,6 +46,8 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.*;
 
+import static com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES;
+
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
  *
@@ -112,16 +114,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException();
         }
 
-        // Check for brute force attacks
-        Calendar c = GregorianCalendar.getInstance();
-        c.add(Calendar.HOUR, -24);
-        Date timestampCheckStart = c.getTime();
-        int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
-        if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
-            logger.warn("Maximum number of processes per day reached for user: {}", userId);
-            throw new TooManyProcessesException();
-        }
-
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForUser(userId, OnboardingStatus.ACTIVATION_IN_PROGRESS);
         OnboardingProcessEntity process;
         if (processOptional.isPresent()) {
@@ -139,6 +131,19 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setTimestampCreated(new Date());
         }
         process = onboardingProcessRepository.save(process);
+
+        // Check for brute force attacks
+        Calendar c = GregorianCalendar.getInstance();
+        c.add(Calendar.HOUR, -24);
+        Date timestampCheckStart = c.getTime();
+        int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
+        if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
+            process.setErrorDetail(ERROR_TOO_MANY_PROCESSES);
+            process.setStatus(OnboardingStatus.FAILED);
+            logger.warn("Maximum number of processes per day reached for user: {}", userId);
+            throw new TooManyProcessesException();
+        }
+
         // Create an OTP code
         String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         // Send the OTP code

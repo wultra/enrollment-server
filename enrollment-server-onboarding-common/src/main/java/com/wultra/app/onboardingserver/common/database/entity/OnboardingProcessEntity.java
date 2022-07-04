@@ -49,6 +49,8 @@ public class OnboardingProcessEntity implements Serializable {
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttempts";
 
+    public static final String ERROR_TOO_MANY_PROCESSES = "tooManyProcesses";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
