@@ -57,9 +57,18 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
+            "p.status = 'FAILED', " +
             "p.errorDetail = 'expired' " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateOldProcesses(Date dateCreatedBefore, OnboardingStatus status);
+    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, OnboardingStatus status);
+
+    @Modifying
+    @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
+            "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
+            "p.status = 'FAILED', " +
+            "p.errorDetail = 'expired' " +
+            "WHERE p.timestampCreated < :dateCreatedBefore")
+    void terminateExpiredProcesses(Date dateCreatedBefore);
 
 }

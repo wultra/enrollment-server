@@ -19,9 +19,8 @@
 
 package com.wultra.app.onboardingserver.impl.util;
 
-import java.util.Calendar;
+import java.time.Duration;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 /**
  * Utility class for date conversions.
@@ -31,13 +30,13 @@ import java.util.GregorianCalendar;
 public class DateUtil {
 
     /**
-     * Convert expiration time to minimal created date used for expiration.
-     * @param expirationSeconds Expiration time in seconds.
+     * Convert expiration time interval to minimal created date used for expiration.
+     * @param expiration Expiration time interval.
      * @return Created date used for expiration.
      */
-    public static Date convertExpirationToCreatedDate(int expirationSeconds) {
-        Calendar c = GregorianCalendar.getInstance();
-        c.add(Calendar.SECOND, -expirationSeconds);
-        return c.getTime();
+    public static Date convertExpirationToCreatedDate(Duration expiration) {
+        long currentTime = System.currentTimeMillis();
+        long expiredTime = currentTime - expiration.toMillis();
+        return new Date(expiredTime);
     }
 }

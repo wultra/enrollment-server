@@ -21,6 +21,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 /**
  * Identity verification configuration.
  *
@@ -51,11 +53,11 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.cleanupEnabled:false}")
     private boolean presenceCheckCleanupEnabled;
 
-    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:1}")
-    private int dataRetentionTime;
+    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:PT1H}")
+    private Duration dataRetentionTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration.seconds:300}")
-    private int verificationExpirationTime;
+    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:PT1H}")
+    private Duration verificationExpirationTime;
 
     @Value("${enrollment-server-onboarding.identity-verification.otp.enabled:true}")
     private boolean verificationOtpEnabled;
