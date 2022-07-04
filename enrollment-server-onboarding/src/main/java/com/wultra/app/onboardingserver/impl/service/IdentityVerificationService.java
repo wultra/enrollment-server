@@ -138,15 +138,18 @@ public class IdentityVerificationService {
      * @return Document verification entities.
      * @throws DocumentSubmitException Thrown in case document submission fails.
      * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             OwnerId ownerId)
-            throws DocumentSubmitException, IdentityVerificationLimitException {
+            throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
         // Find an already existing identity verification
         Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
 
-        if (!idVerificationOptional.isPresent()) {
+        if (idVerificationOptional.isEmpty()) {
             logger.error("Identity verification has not been initialized, {}", ownerId);
             throw new DocumentSubmitException("Identity verification has not been initialized");
         }
