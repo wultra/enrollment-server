@@ -96,7 +96,7 @@ public class IdentityVerificationLimitService {
             identityVerificationRepository.saveAll(identityVerifications);
 
             OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
-            onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 

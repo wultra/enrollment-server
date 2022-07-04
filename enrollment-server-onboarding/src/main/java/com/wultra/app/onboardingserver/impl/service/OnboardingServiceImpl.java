@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.*;
 
-import static com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES;
+import static com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -138,7 +138,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         Date timestampCheckStart = c.getTime();
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
         if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
-            process.setErrorDetail(ERROR_TOO_MANY_PROCESSES);
+            process.setErrorDetail(ERROR_TOO_MANY_PROCESSES_PER_USER);
             process.setStatus(OnboardingStatus.FAILED);
             logger.warn("Maximum number of processes per day reached for user: {}", userId);
             throw new TooManyProcessesException();
