@@ -41,9 +41,9 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
     Optional<OnboardingOtpEntity> findLastOtp(String processId, OtpType type);
 
     @Modifying
-    @Query("UPDATE OnboardingOtpEntity o SET o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
+    @Query("UPDATE OnboardingOtpEntity o SET " +
+            "o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
             "o.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "o.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "o.errorDetail = 'expired' " +
             "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
             "AND o.timestampCreated < :dateCreatedBefore")
