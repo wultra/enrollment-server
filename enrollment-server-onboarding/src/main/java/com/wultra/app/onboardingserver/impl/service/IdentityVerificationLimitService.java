@@ -38,6 +38,7 @@ import com.wultra.security.powerauth.client.model.error.PowerAuthClientException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -73,7 +74,7 @@ public class IdentityVerificationLimitService {
      * @param identityVerificationResetService Identity verification reset service.
      */
     @Autowired
-    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, IdentityVerificationConfig identityVerificationConfig, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, IdentityVerificationResetService identityVerificationResetService) {
+    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, IdentityVerificationConfig identityVerificationConfig, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, @Lazy IdentityVerificationResetService identityVerificationResetService) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationConfig = identityVerificationConfig;
