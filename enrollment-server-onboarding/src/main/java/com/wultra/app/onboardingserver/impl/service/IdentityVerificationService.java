@@ -70,6 +70,7 @@ public class IdentityVerificationService {
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
     private final IdentityVerificationResetService identityVerificationResetService;
+    private final IdentityVerificationLimitService identityVerificationLimitService;
 
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
@@ -84,6 +85,7 @@ public class IdentityVerificationService {
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationResetService Identity verification reset service.
+     * @param identityVerificationLimitService Identity verification limit service.
      */
     @Autowired
     public IdentityVerificationService(
@@ -95,7 +97,7 @@ public class IdentityVerificationService {
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationResetService identityVerificationResetService) {
+            IdentityVerificationResetService identityVerificationResetService, IdentityVerificationLimitService identityVerificationLimitService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -105,6 +107,7 @@ public class IdentityVerificationService {
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationResetService = identityVerificationResetService;
+        this.identityVerificationLimitService = identityVerificationLimitService;
     }
 
     /**
@@ -133,10 +136,12 @@ public class IdentityVerificationService {
      * @param request Document submit request.
      * @param ownerId Owner identification.
      * @return Document verification entities.
+     * @throws DocumentSubmitException Thrown in case document submission fails.
+     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
      */
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             OwnerId ownerId)
-            throws DocumentSubmitException {
+            throws DocumentSubmitException, IdentityVerificationLimitException {
 
         // Find an already existing identity verification
         Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
@@ -173,6 +178,8 @@ public class IdentityVerificationService {
             );
             throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
         }
+
+        identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
         List<DocumentVerificationEntity> docsVerifications =
                 documentProcessingService.submitDocuments(idVerification, request, ownerId);

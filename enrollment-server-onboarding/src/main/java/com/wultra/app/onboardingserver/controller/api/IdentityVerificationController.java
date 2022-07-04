@@ -230,6 +230,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentSubmitException Thrown when document submission fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
      */
     @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -239,7 +240,7 @@ public class IdentityVerificationController {
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");

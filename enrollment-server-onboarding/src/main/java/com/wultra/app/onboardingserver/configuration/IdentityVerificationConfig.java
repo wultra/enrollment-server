@@ -65,4 +65,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts:5}")
     private int verificationMaxFailedAttempts;
 
+    @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload:5}")
+    private int documentUploadMaxFailedAttempts;
+
 }

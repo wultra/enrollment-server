@@ -200,6 +200,17 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("ONBOARDING_PROCESS_LIMIT_REACHED", "Onboarding process limit reached.");
     }
 
+    /**
+     * Handling of identity verification limit exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(IdentityVerificationLimitException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleIdentityVerificationLimitException(IdentityVerificationLimitException ex) {
+        logger.warn("Identity verification limit reached", ex);
+        return new ErrorResponse("IDENTITY_VERIFICATION_LIMIT_REACHED", "Identity verification limit reached.");
+    }
 
     /**
      * Exception handler for invalid request exception.
