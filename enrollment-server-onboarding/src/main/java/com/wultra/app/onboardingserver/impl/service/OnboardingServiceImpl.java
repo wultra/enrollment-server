@@ -139,7 +139,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         c.add(Calendar.HOUR, -24);
         Date timestampCheckStart = c.getTime();
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
-        if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
+        if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
             process.setStatus(OnboardingStatus.FAILED);
             process.setErrorDetail(ERROR_TOO_MANY_PROCESSES_PER_USER);
             onboardingProcessRepository.save(process);
