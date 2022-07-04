@@ -21,6 +21,8 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.onboardingserver.impl.util.DateUtil;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 /**
  * Service implementing background tasks related to document status update.
@@ -42,7 +42,7 @@ public class DocumentStatusService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentStatusService.class);
 
-    public static final String MESSAGE_OBSOLETE_VERIFICATION_PROCESS = "Obsolete verification process";
+    public static final String ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED = "expired";
 
     private final DocumentVerificationRepository documentVerificationRepository;
     private final DocumentDataRepository documentDataRepository;
@@ -66,17 +66,19 @@ public class DocumentStatusService {
      */
     @Transactional
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
+    @SchedulerLock(name = "cleanupLargeDocuments", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void cleanupLargeDocuments() {
-        documentDataRepository.cleanupDocumentData(getDataRetentionTimestamp());
+        documentDataRepository.cleanupDocumentData(getDataRetentionTime());
     }
 
     @Transactional
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    public void cleanupObsoleteVerificationProcesses() {
-        int count = documentVerificationRepository.failObsoleteVerifications(
-                getVerificationExpirationTimestamp(),
+    @SchedulerLock(name = "cleanupExpiredVerificationProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void cleanupExpiredVerificationProcesses() {
+        int count = documentVerificationRepository.failExpiredVerifications(
+                getVerificationExpirationTime(),
                 new Date(),
-                MESSAGE_OBSOLETE_VERIFICATION_PROCESS,
+                ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED,
                 DocumentStatus.ALL_NOT_FINISHED
         );
         if (count > 0) {
@@ -84,18 +86,12 @@ public class DocumentStatusService {
         }
     }
 
-    private Date getDataRetentionTimestamp() {
-        int retentionTime = identityVerificationConfig.getDataRetentionTime();
-        Calendar dateRetention = GregorianCalendar.getInstance();
-        dateRetention.add(Calendar.HOUR, retentionTime);
-        return dateRetention.getTime();
+    private Date getDataRetentionTime() {
+        return DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetentionTime());
     }
 
-    private Date getVerificationExpirationTimestamp() {
-        int expirationTime = identityVerificationConfig.getVerificationExpirationTime();
-        Calendar dateExpiration = GregorianCalendar.getInstance();
-        dateExpiration.add(Calendar.SECOND, expirationTime);
-        return dateExpiration.getTime();
+    private Date getVerificationExpirationTime() {
+        return DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getVerificationExpirationTime());
     }
 
 }

@@ -57,7 +57,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.status = 'FAILED', " +
+            "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.errorDetail = 'expired' " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
@@ -66,7 +66,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.status = 'FAILED', " +
+            "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.errorDetail = 'expired' " +
             "WHERE p.timestampCreated < :dateCreatedBefore")
     void terminateExpiredProcesses(Date dateCreatedBefore);
