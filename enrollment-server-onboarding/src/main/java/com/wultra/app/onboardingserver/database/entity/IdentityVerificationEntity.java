@@ -45,7 +45,8 @@ public class IdentityVerificationEntity implements Serializable {
 
     private static final long serialVersionUID = 6307591849271145826L;
 
-    public static final String ERROR_MAX_FAILED_ATTEMPTS_UPLOAD = "maxFailedAttemptsDocumentUpload";
+    public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
+    public static final String ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK = "maxFailedAttemptsPresenceCheck";
 
     @Id
     @GeneratedValue(generator = "uuid")
