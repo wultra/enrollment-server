@@ -20,24 +20,30 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK;
+import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
 
 /**
  * Service for checking presence check limits.
@@ -52,21 +58,24 @@ public class PresenceCheckLimitService {
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OnboardingOtpRepository otpRepository;
     private final IdentityVerificationRepository identityVerificationRepository;
-    private final IdentityVerificationResetService identityVerificationResetService;
+    private final OnboardingProcessRepository onboardingProcessRepository;
+    private final ActivationFlagService activationFlagService;
 
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification configuration.
      * @param otpRepository Onboarding OTP repository.
      * @param identityVerificationRepository Identity verification repository.
-     * @param identityVerificationResetService Identity verification reset service.
+     * @param onboardingProcessRepository Onboarding process repository.
+     * @param activationFlagService Activation flag service.
      */
     @Autowired
-    public PresenceCheckLimitService(IdentityVerificationConfig identityVerificationConfig, OnboardingOtpRepository otpRepository, IdentityVerificationRepository identityVerificationRepository, IdentityVerificationResetService identityVerificationResetService) {
+    public PresenceCheckLimitService(IdentityVerificationConfig identityVerificationConfig, OnboardingOtpRepository otpRepository, IdentityVerificationRepository identityVerificationRepository, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpRepository = otpRepository;
         this.identityVerificationRepository = identityVerificationRepository;
-        this.identityVerificationResetService = identityVerificationResetService;
+        this.onboardingProcessRepository = onboardingProcessRepository;
+        this.activationFlagService = activationFlagService;
     }
 
     /**
@@ -76,9 +85,8 @@ public class PresenceCheckLimitService {
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
      * @throws PresenceCheckLimitException Thrown when presence check limit is exceeded.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException, OnboardingProcessLimitException {
+    public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException {
         int otpCount = otpRepository.getOtpCount(processId, OtpType.USER_VERIFICATION);
         if (otpCount > identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
             Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
@@ -91,9 +99,31 @@ public class PresenceCheckLimitService {
                 logger.warn("Process identifier mismatch for owner {}: {}.", ownerId, processId);
                 throw new IdentityVerificationException("Process identifier mismatch");
             }
+            Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findById(processId);
+            if (onboardingProcessOptional.isEmpty()) {
+                logger.warn("Onboarding process not found, {}.", ownerId);
+                throw new IdentityVerificationException("Onboarding process not found");
+            }
+
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
-            identityVerificationResetService.resetIdentityVerification(ownerId);
+            identityVerificationRepository.save(identityVerification);
+
+            OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
+            onboardingProcess.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
+            onboardingProcess.setStatus(OnboardingStatus.FAILED);
+            onboardingProcessRepository.save(onboardingProcess);
+
+            // Remove flag VERIFICATION_IN_PROGRESS
+            try {
+                List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+                activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
+            } catch (PowerAuthClientException ex) {
+                logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+                logger.debug(ex.getMessage(), ex);
+                throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+            }
+
             throw new PresenceCheckLimitException("Max failed attempts reached for presence check");
         }
     }
