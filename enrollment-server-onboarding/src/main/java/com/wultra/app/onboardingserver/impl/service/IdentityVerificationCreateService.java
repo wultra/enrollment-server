@@ -80,7 +80,7 @@ public class IdentityVerificationCreateService {
             // Check limits on identity verifications
             identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
 
-            List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
+            final List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
                 throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
             }

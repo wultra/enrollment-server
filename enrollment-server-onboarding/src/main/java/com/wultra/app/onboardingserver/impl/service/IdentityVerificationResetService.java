@@ -63,7 +63,7 @@ public class IdentityVerificationResetService {
      * @param processService Common onboarding process service.
      */
     @Autowired
-    public IdentityVerificationResetService(ActivationFlagService activationFlagService, IdentityVerificationLimitService identityVerificationLimitService, CommonProcessLimitService processLimitService, OnboardingProcessRepository onboardingProcessRepository, CommonOnboardingService processService) {
+    public IdentityVerificationResetService(ActivationFlagService activationFlagService, IdentityVerificationLimitService identityVerificationLimitService, CommonProcessLimitService processLimitService, CommonOnboardingService processService) {
         this.activationFlagService = activationFlagService;
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processLimitService = processLimitService;
@@ -111,7 +111,7 @@ public class IdentityVerificationResetService {
      * @throws PowerAuthClientException Thrown when communication with PowerAuth server fails.
      */
     private void updateActivationFlagsForReset(OwnerId ownerId) throws PowerAuthClientException {
-        List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
+        final List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
 
         // Remove flag VERIFICATION_IN_PROGRESS
         activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
