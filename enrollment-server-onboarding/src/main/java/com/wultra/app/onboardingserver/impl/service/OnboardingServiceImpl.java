@@ -143,7 +143,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setStatus(OnboardingStatus.FAILED);
             process.setErrorDetail(ERROR_TOO_MANY_PROCESSES_PER_USER);
             onboardingProcessRepository.save(process);
-            logger.warn("Maximum number of processes per day reached for user: {}", userId);
+            logger.warn("Maximum number of processes per day reached for user: {}, limit: {}", userId, onboardingConfig.getMaxProcessCountPerDay());
             throw new TooManyProcessesException();
         }
 
