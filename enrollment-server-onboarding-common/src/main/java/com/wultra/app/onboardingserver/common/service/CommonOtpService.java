@@ -133,10 +133,12 @@ public class CommonOtpService implements OtpService {
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
         otp.setTimestampLastUpdated(now);
+        otp = onboardingOtpRepository.save(otp);
         failedAttempts++;
         if (failedAttempts >= maxFailedAttempts) {
             otp.setStatus(OtpStatus.FAILED);
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            onboardingOtpRepository.save(otp);
 
             // Onboarding process is failed, update it
             process = processLimitService.failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
@@ -154,10 +156,10 @@ public class CommonOtpService implements OtpService {
             if (process.getStatus() == OnboardingStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setErrorDetail(process.getErrorDetail());
+                onboardingOtpRepository.save(otp);
             }
         }
 
-        onboardingOtpRepository.save(otp);
         onboardingProcessRepository.save(process);
     }
 
