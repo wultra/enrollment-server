@@ -38,16 +38,16 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.identity-verification.otp.length:8}")
     private int otpLength;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.expiration:PT3H}")
+    @Value("${enrollment-server-onboarding.onboarding-process.expiration:1h}")
     private Duration processExpirationTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.activation.expiration:PT300S}")
+    @Value("${enrollment-server-onboarding.onboarding-process.activation.expiration:300s}")
     private Duration activationExpirationTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.otp.expiration:PT30S}")
+    @Value("${enrollment-server-onboarding.onboarding-process.otp.expiration:30s}")
     private Duration otpExpirationTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.otp.resend-period:PT30S}")
+    @Value("${enrollment-server-onboarding.onboarding-process.otp.resend-period:30s}")
     private Duration otpResendPeriod;
 
     @Value("${enrollment-server-onboarding.onboarding-process.max-processes-per-day:5}")

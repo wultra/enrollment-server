@@ -53,10 +53,10 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.cleanupEnabled:false}")
     private boolean presenceCheckCleanupEnabled;
 
-    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:PT1H}")
+    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:1h}")
     private Duration dataRetentionTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:PT1H}")
+    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:1h}")
     private Duration verificationExpirationTime;
 
     @Value("${enrollment-server-onboarding.identity-verification.otp.enabled:true}")
