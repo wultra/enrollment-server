@@ -41,7 +41,7 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.expiration:1h}")
     private Duration processExpirationTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.activation.expiration:300s}")
+    @Value("${enrollment-server-onboarding.onboarding-process.activation.expiration:5m}")
     private Duration activationExpirationTime;
 
     @Value("${enrollment-server-onboarding.onboarding-process.otp.expiration:30s}")
