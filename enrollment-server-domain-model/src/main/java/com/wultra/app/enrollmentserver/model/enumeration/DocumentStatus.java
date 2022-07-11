@@ -76,7 +76,7 @@ public enum DocumentStatus {
     /**
      * All unsuccessful statuses.
      */
-    public static final List<DocumentStatus> ALL_UNSUCCESSFUL = ImmutableList.of(
+    public static final List<DocumentStatus> ALL_FAILED = ImmutableList.of(
             DISPOSED,
             REJECTED,
             FAILED
