@@ -23,8 +23,7 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
@@ -50,16 +49,12 @@ public class PresenceCheckService {
     private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
     private final DocumentVerificationRepository documentVerificationRepository;
-
     private final DocumentProcessingService documentProcessingService;
-
     private final IdentityVerificationService identityVerificationService;
-
     private final JsonSerializationService jsonSerializationService;
-
     private final PresenceCheckProvider presenceCheckProvider;
+    private final PresenceCheckLimitService presenceCheckLimitService;
 
     /**
      * Service constructor.
@@ -68,6 +63,7 @@ public class PresenceCheckService {
      * @param identityVerificationService Identity verification service.
      * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckProvider Presence check provider.
+     * @param presenceCheckLimitService Presence check limit service.
      */
     @Autowired
     public PresenceCheckService(
@@ -76,13 +72,14 @@ public class PresenceCheckService {
             DocumentProcessingService documentProcessingService,
             IdentityVerificationService identityVerificationService,
             JsonSerializationService jsonSerializationService,
-            PresenceCheckProvider presenceCheckProvider) {
+            PresenceCheckProvider presenceCheckProvider, PresenceCheckLimitService presenceCheckLimitService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckProvider = presenceCheckProvider;
+        this.presenceCheckLimitService = presenceCheckLimitService;
     }
 
     /**
@@ -91,12 +88,19 @@ public class PresenceCheckService {
      * @param ownerId Owner identification.
      * @param processId Process identifier.
      * @return Session info with data needed to perform the presence check process
-     * @throws DocumentVerificationException When an error during obtaining the user personal image occurred
-     * @throws PresenceCheckException When an error during initializing the presence check occurred
+     * @throws DocumentVerificationException Thrown when an error during obtaining the user personal image occurred
+     * @throws PresenceCheckException Thrown when an error during initializing the presence check occurred
+     * @throws IdentityVerificationException Thrown when identity verification is invalid.
+     * @throws PresenceCheckLimitException Thrown when presence check limit is exceeded.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @Transactional
     public SessionInfo init(OwnerId ownerId, String processId)
-            throws DocumentVerificationException, PresenceCheckException {
+            throws DocumentVerificationException, PresenceCheckException, IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException, OnboardingProcessLimitException {
+
+        presenceCheckLimitService.checkPresenceCheckMaxAttemptLimit(ownerId, processId);
+
         IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
 
         if (!idVerification.isPresenceCheckInitialized()) {

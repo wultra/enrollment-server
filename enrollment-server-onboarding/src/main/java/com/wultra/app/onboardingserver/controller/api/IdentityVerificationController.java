@@ -230,6 +230,10 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentSubmitException Thrown when document submission fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -239,7 +243,7 @@ public class IdentityVerificationController {
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -432,6 +436,10 @@ public class IdentityVerificationController {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
+     * @throws IdentityVerificationException Thrown when identity verification is invalid.
+     * @throws PresenceCheckLimitException Thrown when presence check limit is exceeded.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @PostMapping("presence-check/init")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -442,7 +450,7 @@ public class IdentityVerificationController {
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
-            PresenceCheckNotEnabledException, PowerAuthEncryptionException, OnboardingProcessException {
+            PresenceCheckNotEnabledException, PowerAuthEncryptionException, OnboardingProcessException, PresenceCheckLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {
