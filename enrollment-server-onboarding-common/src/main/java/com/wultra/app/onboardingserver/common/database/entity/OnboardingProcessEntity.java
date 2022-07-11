@@ -48,8 +48,8 @@ public class OnboardingProcessEntity implements Serializable {
     private static final long serialVersionUID = -438495244269415158L;
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION = "maxFailedAttemptsIdentityVerification";
-
     public static final String ERROR_TOO_MANY_PROCESSES_PER_USER = "tooManyProcessesPerUser";
+    public static final String ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED = "maxProcessErrorScoreExceeded";
 
     @Id
     @GeneratedValue(generator = "uuid")
@@ -72,6 +72,9 @@ public class OnboardingProcessEntity implements Serializable {
 
     @Column(name = "error_detail")
     private String errorDetail;
+
+    @Column(name = "error_score")
+    private int errorScore;
 
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;

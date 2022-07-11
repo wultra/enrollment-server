@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
@@ -123,12 +124,13 @@ public class IdentityVerificationLimitService {
     /**
      * Check the limit for maximum number of document uploads.
      * @param ownerId Owner identifier.
-     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
+     * @throws IdentityVerificationLimitException Thrown when document upload limit is reached.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
-     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws IdentityVerificationException Thrown when identity verification is invalid.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+    public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
         List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);

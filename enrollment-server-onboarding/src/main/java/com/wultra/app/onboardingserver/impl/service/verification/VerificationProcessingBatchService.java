@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
@@ -133,7 +134,7 @@ public class VerificationProcessingBatchService {
                     if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
                         countFinished.incrementAndGet();
                     }
-                } catch (DocumentVerificationException e) {
+                } catch (DocumentVerificationException | OnboardingProcessException e) {
                     logger.error("Checking identity verification result failed, {}", ownerId, e);
                 }
             });

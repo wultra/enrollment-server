@@ -42,7 +42,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK;
 import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
 
 /**
@@ -106,11 +105,11 @@ public class PresenceCheckLimitService {
             }
 
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             identityVerificationRepository.save(identityVerification);
 
             OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
-            onboardingProcess.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
+            onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 

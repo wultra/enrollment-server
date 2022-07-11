@@ -110,7 +110,7 @@ public class IdentityVerificationOtpService {
      */
     public OtpVerifyResponse verifyOtpCode(String processId, String otpCode) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found: {}", processId);
             throw new OnboardingProcessException();
         }
@@ -125,7 +125,7 @@ public class IdentityVerificationOtpService {
      */
     public boolean isUserVerifiedUsingOtp(String processId) {
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION);
-        if (!otpOptional.isPresent()) {
+        if (otpOptional.isEmpty()) {
             return false;
         }
         OnboardingOtpEntity otp = otpOptional.get();
@@ -145,7 +145,7 @@ public class IdentityVerificationOtpService {
             throw new OnboardingProcessException();
         }
         final Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found: {}", processId);
             throw new OnboardingProcessException();
         }

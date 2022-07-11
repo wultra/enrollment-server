@@ -251,7 +251,7 @@ public class PresenceCheckService {
      */
     private IdentityVerificationEntity fetchIdVerification(OwnerId ownerId) throws PresenceCheckException {
         Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findBy(ownerId);
-        if (!idVerificationOptional.isPresent()) {
+        if (idVerificationOptional.isEmpty()) {
             logger.error("No identity verification entity found to initialize the presence check, {}", ownerId);
             throw new PresenceCheckException("Unable to initialize presence check");
         }
