@@ -54,7 +54,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (:statuses)")
-    int failObsoleteVerifications(Date cleanupDate, Date timestamp, String errorMessage, List<DocumentStatus> statuses);
+    int failExpiredVerifications(Date cleanupDate, Date timestamp, String errorMessage, List<DocumentStatus> statuses);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +

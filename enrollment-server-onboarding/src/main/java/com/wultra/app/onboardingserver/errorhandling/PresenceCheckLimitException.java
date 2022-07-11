@@ -14,29 +14,23 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
-
-package com.wultra.app.onboardingserver.impl.util;
-
-import java.time.Duration;
-import java.util.Date;
+package com.wultra.app.onboardingserver.errorhandling;
 
 /**
- * Utility class for date conversions.
+ * Exception thrown in case of a limit reached for a presence check.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class DateUtil {
+public class PresenceCheckLimitException extends Exception {
 
-    /**
-     * Convert expiration time interval to minimal created date used for expiration.
-     * @param expiration Expiration time interval.
-     * @return Created date used for expiration.
-     */
-    public static Date convertExpirationToCreatedDate(Duration expiration) {
-        long currentTime = System.currentTimeMillis();
-        long expiredTime = currentTime - expiration.toMillis();
-        return new Date(expiredTime);
+    private static final long serialVersionUID = -814024875324296277L;
+
+    public PresenceCheckLimitException() {
     }
+
+    public PresenceCheckLimitException(String message) {
+        super(message);
+    }
+
 }

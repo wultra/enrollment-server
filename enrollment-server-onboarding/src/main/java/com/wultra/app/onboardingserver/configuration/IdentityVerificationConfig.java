@@ -21,6 +21,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 /**
  * Identity verification configuration.
  *
@@ -51,16 +53,22 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.cleanupEnabled:false}")
     private boolean presenceCheckCleanupEnabled;
 
-    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:1}")
-    private int dataRetentionTime;
+    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:1h}")
+    private Duration dataRetentionTime;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration.seconds:300}")
-    private int verificationExpirationTime;
+    @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:1h}")
+    private Duration verificationExpirationTime;
 
     @Value("${enrollment-server-onboarding.identity-verification.otp.enabled:true}")
     private boolean verificationOtpEnabled;
 
     @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts:5}")
     private int verificationMaxFailedAttempts;
+
+    @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload:5}")
+    private int documentUploadMaxFailedAttempts;
+
+    @Value("${enrollment-server-onboarding.presence-check.max-failed-attempts:5}")
+    private int presenceCheckMaxFailedAttempts;
 
 }

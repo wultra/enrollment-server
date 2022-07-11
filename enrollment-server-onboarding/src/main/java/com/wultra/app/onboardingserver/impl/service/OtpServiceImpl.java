@@ -139,8 +139,8 @@ public class OtpServiceImpl extends CommonOtpService {
      * Terminate OTPs created before specified date.
      * @param createdDateOtp OTP created date.
      */
-    public void terminateOldOtps(Date createdDateOtp) {
-        onboardingOtpRepository.terminateOldOtps(createdDateOtp);
+    public void terminateExpiredOtps(Date createdDateOtp) {
+        onboardingOtpRepository.terminateExpiredOtps(createdDateOtp);
     }
 
     /**

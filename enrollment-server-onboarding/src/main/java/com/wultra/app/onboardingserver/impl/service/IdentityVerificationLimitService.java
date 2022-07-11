@@ -19,20 +19,26 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationLimitException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -52,23 +58,29 @@ public class IdentityVerificationLimitService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationLimitService.class);
 
     private final IdentityVerificationRepository identityVerificationRepository;
+    private final DocumentVerificationRepository documentVerificationRepository;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
+    private final IdentityVerificationResetService identityVerificationResetService;
 
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
+     * @param documentVerificationRepository Document verification repository.
      * @param identityVerificationConfig Identity verification config.
      * @param onboardingProcessRepository Onboarding process service.
      * @param activationFlagService Activation flag service.
+     * @param identityVerificationResetService Identity verification reset service.
      */
     @Autowired
-    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, IdentityVerificationConfig identityVerificationConfig, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService) {
+    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, IdentityVerificationConfig identityVerificationConfig, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, @Lazy IdentityVerificationResetService identityVerificationResetService) {
         this.identityVerificationRepository = identityVerificationRepository;
+        this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationConfig = identityVerificationConfig;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
+        this.identityVerificationResetService = identityVerificationResetService;
     }
 
     /**
@@ -96,7 +108,7 @@ public class IdentityVerificationLimitService {
             identityVerificationRepository.saveAll(identityVerifications);
 
             OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
-            onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
@@ -107,4 +119,25 @@ public class IdentityVerificationLimitService {
             throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification");
         }
     }
+
+    /**
+     * Check the limit for maximum number of document uploads.
+     * @param ownerId Owner identifier.
+     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
+     */
+    public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+        List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
+        if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
+            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
+            identityVerificationRepository.save(identityVerification);
+            identityVerificationResetService.resetIdentityVerification(ownerId);
+            logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
+            throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");
+        }
+    }
+
 }

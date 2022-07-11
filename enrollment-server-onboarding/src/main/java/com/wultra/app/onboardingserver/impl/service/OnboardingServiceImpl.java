@@ -37,6 +37,7 @@ import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationSe
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.Duration;
 import java.util.*;
+
+import static com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -112,16 +116,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException();
         }
 
-        // Check for brute force attacks
-        Calendar c = GregorianCalendar.getInstance();
-        c.add(Calendar.HOUR, -24);
-        Date timestampCheckStart = c.getTime();
-        int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
-        if (existingProcessCount >= onboardingConfig.getMaxProcessCountPerDay()) {
-            logger.warn("Maximum number of processes per day reached for user: {}", userId);
-            throw new TooManyProcessesException();
-        }
-
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForUser(userId, OnboardingStatus.ACTIVATION_IN_PROGRESS);
         OnboardingProcessEntity process;
         if (processOptional.isPresent()) {
@@ -139,6 +133,20 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setTimestampCreated(new Date());
         }
         process = onboardingProcessRepository.save(process);
+
+        // Check for brute force attacks
+        Calendar c = GregorianCalendar.getInstance();
+        c.add(Calendar.HOUR, -24);
+        Date timestampCheckStart = c.getTime();
+        int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
+        if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
+            process.setStatus(OnboardingStatus.FAILED);
+            process.setErrorDetail(ERROR_TOO_MANY_PROCESSES_PER_USER);
+            onboardingProcessRepository.save(process);
+            logger.warn("Maximum number of processes per day reached for user: {}, limit: {}", userId, onboardingConfig.getMaxProcessCountPerDay());
+            throw new TooManyProcessesException();
+        }
+
         // Create an OTP code
         String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         // Send the OTP code
@@ -296,21 +304,27 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     @Transactional
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
+    @SchedulerLock(name = "terminateInactiveProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void terminateInactiveProcesses() {
         // Terminate processes with activations in progress
-        final int activationExpirationSeconds = onboardingConfig.getActivationExpirationTime();
-        final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpirationSeconds);
-        onboardingProcessRepository.terminateOldProcesses(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
+        final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
 
         // Terminate processes with verifications in progress
-        final int verificationExpirationSeconds = identityVerificationConfig.getVerificationExpirationTime();
-        final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpirationSeconds);
-        onboardingProcessRepository.terminateOldProcesses(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
+        final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         // Terminate OTP codes for all processes
-        final int otpExpirationSeconds = (int) onboardingConfig.getOtpExpirationTime().getSeconds();
-        final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpirationSeconds);
-        otpService.terminateOldOtps(createdDateExpiredOtp);
+        final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
+        final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
+        otpService.terminateExpiredOtps(createdDateExpiredOtp);
+
+        // Terminate expired processes
+        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
+        final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
+        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses);
     }
 
     /**
@@ -371,20 +385,30 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Whether onboarding process has expired.
      */
     public boolean hasProcessExpired(OnboardingProcessEntity onboardingProcess) {
+
+        // Check expiration for onboarding process with activation in progress
         if (onboardingProcess.getStatus() == OnboardingStatus.ACTIVATION_IN_PROGRESS) {
-            final int activationExpirationSeconds = onboardingConfig.getActivationExpirationTime();
-            final Date createdDateExpirationActivation = DateUtil.convertExpirationToCreatedDate(activationExpirationSeconds);
+            final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
+            final Date createdDateExpirationActivation = DateUtil.convertExpirationToCreatedDate(activationExpiration);
             if (onboardingProcess.getTimestampCreated().before(createdDateExpirationActivation)) {
                 return true;
             }
         }
 
+        // Check expiration for onboarding process with identity verification in progress
         if (onboardingProcess.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS) {
-            final int verificationExpirationSeconds = identityVerificationConfig.getVerificationExpirationTime();
-            final Date createdDateExpirationVerification = DateUtil.convertExpirationToCreatedDate(verificationExpirationSeconds);
+            final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
+            final Date createdDateExpirationVerification = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
             if (onboardingProcess.getTimestampCreated().before(createdDateExpirationVerification)) {
                 return true;
             }
+        }
+
+        // Check expiration for onboarding process due to process timeout
+        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
+        final Date createdDateExpirationProcess = DateUtil.convertExpirationToCreatedDate(processExpiration);
+        if (onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess)) {
+            return true;
         }
 
         return false;
