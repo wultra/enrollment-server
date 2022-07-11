@@ -132,7 +132,7 @@ public class IdentityVerificationLimitService {
         List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_UPLOAD);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerificationRepository.save(identityVerification);
             identityVerificationResetService.resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);

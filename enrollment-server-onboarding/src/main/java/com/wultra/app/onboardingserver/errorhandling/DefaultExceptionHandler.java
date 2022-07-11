@@ -212,6 +212,19 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("IDENTITY_VERIFICATION_LIMIT_REACHED", "Identity verification limit reached.");
     }
 
+
+    /**
+     * Handling of presence check limit exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(PresenceCheckLimitException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handlePresenceCheckLimitException(PresenceCheckLimitException ex) {
+        logger.warn("Presence check limit reached", ex);
+        return new ErrorResponse("PRESENCE_CHECK_LIMIT_REACHED", "Presence check limit reached.");
+    }
+
     /**
      * Exception handler for invalid request exception.
      *
