@@ -61,7 +61,7 @@ public class ActivationFlagService {
     public List<String> listActivationFlags(OwnerId ownerId) throws PowerAuthClientException {
         final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
         listRequest.setActivationId(ownerId.getActivationId());
-        ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
+        final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
                 listRequest,
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()

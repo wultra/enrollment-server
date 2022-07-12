@@ -93,9 +93,9 @@ public class IdentityVerificationLimitService {
      */
     public void checkIdentityVerificationLimit(OwnerId ownerId) throws PowerAuthClientException, IdentityVerificationException, OnboardingProcessLimitException {
         // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
-        List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+        final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
         if (identityVerifications.size() >= identityVerificationConfig.getVerificationMaxFailedAttempts()) {
-            Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
+            final Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
             if (onboardingProcessOptional.isEmpty()) {
                 logger.warn("Onboarding process not found, {}.", ownerId);
                 throw new IdentityVerificationException("Onboarding process not found");
@@ -108,13 +108,13 @@ public class IdentityVerificationLimitService {
                     .forEach(verification -> verification.setStatus(IdentityVerificationStatus.FAILED));
             identityVerificationRepository.saveAll(identityVerifications);
 
-            OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
+            final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
             // Remove flag VERIFICATION_IN_PROGRESS
-            List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+            final List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
             activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
             logger.warn("Max failed attempts reached for identity verification, {}.", ownerId);
             throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification");
@@ -131,7 +131,7 @@ public class IdentityVerificationLimitService {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
-        List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
+        final List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);

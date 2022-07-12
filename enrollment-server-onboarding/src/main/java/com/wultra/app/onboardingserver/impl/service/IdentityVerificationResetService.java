@@ -18,7 +18,6 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -132,7 +131,7 @@ public class IdentityVerificationResetService {
      */
     private void handleFailedProcess(OwnerId ownerId) throws OnboardingProcessLimitException, PowerAuthClientException {
         // Remove flag VERIFICATION_IN_PROGRESS
-        List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+        final List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
         activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
 
         logger.warn("Max error score reached for onboarding process, {}.", ownerId);
