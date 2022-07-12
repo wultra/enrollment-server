@@ -242,7 +242,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         OnboardingProcessEntity process = processOptional.get();
         process.setStatus(OnboardingStatus.FAILED);
         process.setTimestampLastUpdated(new Date());
-        process.setErrorDetail("canceled");
+        process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
         onboardingProcessRepository.save(process);
         return new Response();
     }
