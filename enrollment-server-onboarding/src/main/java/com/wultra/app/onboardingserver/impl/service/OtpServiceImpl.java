@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntit
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
+import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
@@ -59,15 +60,17 @@ public class OtpServiceImpl extends CommonOtpService {
      * @param onboardingOtpRepository Onboarding OTP repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingConfig Onboarding configuration.
+     * @param processLimitService Onboarding process limit service.
      */
     @Autowired
     public OtpServiceImpl(
             final OtpGeneratorService otpGeneratorService,
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingConfig onboardingConfig) {
+            final OnboardingConfig onboardingConfig,
+            final CommonProcessLimitService processLimitService) {
 
-        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig);
+        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService);
         this.otpGeneratorService = otpGeneratorService;
         this.onboardingConfig = onboardingConfig;
     }
@@ -101,7 +104,7 @@ public class OtpServiceImpl extends CommonOtpService {
             throw new OnboardingOtpDeliveryException();
         }
         final Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
-        if (!otpOptional.isPresent()) {
+        if (otpOptional.isEmpty()) {
             logger.warn("Onboarding OTP not found for process ID: {}", processId);
             throw new OnboardingProcessException();
         }

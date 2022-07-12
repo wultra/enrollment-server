@@ -162,7 +162,7 @@ public class DocumentProcessingService {
         } else if (request.isResubmit()) {
             Optional<DocumentVerificationEntity> originalDocOptional =
                     documentVerificationRepository.findById(docVerification.getOriginalDocumentId());
-            if (!originalDocOptional.isPresent()) {
+            if (originalDocOptional.isEmpty()) {
                 logger.warn("Missing previous DocumentVerificationEntity(originalDocumentId={}), {}",
                         docVerification.getOriginalDocumentId(), ownerId);
             } else {

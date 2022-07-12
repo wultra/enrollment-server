@@ -48,8 +48,6 @@ import javax.transaction.Transactional;
 import java.time.Duration;
 import java.util.*;
 
-import static com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER;
-
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
  *
@@ -141,9 +139,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
         if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
             process.setStatus(OnboardingStatus.FAILED);
-            process.setErrorDetail(ERROR_TOO_MANY_PROCESSES_PER_USER);
+            process.setErrorDetail(OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER);
             onboardingProcessRepository.save(process);
-            logger.warn("Maximum number of processes per day reached for user: {}, limit: {}", userId, onboardingConfig.getMaxProcessCountPerDay());
+            logger.warn("Maximum number of processes per day reached for user: {}", userId);
             throw new TooManyProcessesException();
         }
 
@@ -244,7 +242,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         OnboardingProcessEntity process = processOptional.get();
         process.setStatus(OnboardingStatus.FAILED);
         process.setTimestampLastUpdated(new Date());
-        process.setErrorDetail("canceled");
+        process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
         onboardingProcessRepository.save(process);
         return new Response();
     }

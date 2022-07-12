@@ -46,11 +46,9 @@ public class OnboardingOtpEntity implements Serializable {
 
     private static final long serialVersionUID = -5626187612981527923L;
 
-    public static final String ERROR_CANCELED = "canceled";
-
-    public static final String ERROR_EXPIRED = "expired";
-
-    public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttempts";
+    public static final String ERROR_CANCELED = "canceledOtp";
+    public static final String ERROR_EXPIRED = "expiredOtp";
+    public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttemptsOtp";
 
     @Id
     @GeneratedValue(generator = "uuid")

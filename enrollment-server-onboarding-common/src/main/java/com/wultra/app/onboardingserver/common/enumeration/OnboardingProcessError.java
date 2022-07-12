@@ -14,25 +14,36 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.common.configuration;
 
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
+package com.wultra.app.onboardingserver.common.enumeration;
 
 /**
- * Common onboarding configuration.
+ * Enumeration with onboarding process errors with error scores.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
- * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-public class CommonOnboardingConfig {
+public enum OnboardingProcessError {
 
-    @Value("${enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts:5}")
-    private int otpMaxFailedAttempts;
+    ERROR_ACTIVATION_OTP_FAILED(1),
 
-    @Value("${enrollment-server-onboarding.onboarding-process.max-error-score:15}")
-    private int maxProcessErrorScore;
+    ERROR_DOCUMENT_VERIFICATION_FAILED(1),
+
+    ERROR_DOCUMENT_VERIFICATION_REJECTED(2),
+
+    ERROR_USER_VERIFICATION_OTP_FAILED(2),
+
+    ERROR_IDENTITY_VERIFICATION_RESET(3);
+
+    private final int errorScore;
+
+    OnboardingProcessError(int errorScore) {
+        this.errorScore = errorScore;
+    }
+
+    public int getErrorScore() {
+        return errorScore;
+    }
 
 }

@@ -124,7 +124,7 @@ public class IdentityVerificationStatusService {
                 identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
 
         final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
-        if (!idVerificationOptional.isPresent()) {
+        if (idVerificationOptional.isEmpty()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
             response.setProcessId(onboardingProcess.getId());

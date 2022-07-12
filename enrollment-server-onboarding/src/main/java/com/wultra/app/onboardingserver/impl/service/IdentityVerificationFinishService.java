@@ -37,6 +37,8 @@ import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 
+import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
+
 /**
  * Service implementing finishing of identity verification.
  *
@@ -47,8 +49,6 @@ import java.util.List;
 public class IdentityVerificationFinishService {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationFinishService.class);
-
-    private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     private final PowerAuthClient powerAuthClient;
     private final OnboardingServiceImpl onboardingService;

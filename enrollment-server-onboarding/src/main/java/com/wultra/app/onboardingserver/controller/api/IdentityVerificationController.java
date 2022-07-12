@@ -688,7 +688,7 @@ public class IdentityVerificationController {
     private IdentityVerificationEntity findIdentityVerification(OwnerId ownerId) throws IdentityVerificationNotFoundException {
         Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationService.findBy(ownerId);
 
-        if (!identityVerificationOptional.isPresent()) {
+        if (identityVerificationOptional.isEmpty()) {
             logger.error("No identity verification entity found, {}", ownerId);
             throw new IdentityVerificationNotFoundException("Not existing identity verification");
         }

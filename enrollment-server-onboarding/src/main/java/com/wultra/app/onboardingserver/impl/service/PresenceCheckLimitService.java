@@ -42,7 +42,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK;
 import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
 
 /**
@@ -87,36 +86,36 @@ public class PresenceCheckLimitService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException {
-        int otpCount = otpRepository.getOtpCount(processId, OtpType.USER_VERIFICATION);
+        final int otpCount = otpRepository.getOtpCount(processId, OtpType.USER_VERIFICATION);
         if (otpCount > identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
-            Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+            final Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
             if (identityVerificationOptional.isEmpty()) {
                 logger.warn("Identity verification was not found, {}.", ownerId);
                 throw new IdentityVerificationException("Identity verification was not found");
             }
-            IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
+            final IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
             if (!identityVerification.getProcessId().equals(processId)) {
                 logger.warn("Process identifier mismatch for owner {}: {}.", ownerId, processId);
                 throw new IdentityVerificationException("Process identifier mismatch");
             }
-            Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findById(processId);
+            final Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findById(processId);
             if (onboardingProcessOptional.isEmpty()) {
                 logger.warn("Onboarding process not found, {}.", ownerId);
                 throw new IdentityVerificationException("Onboarding process not found");
             }
 
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             identityVerificationRepository.save(identityVerification);
 
-            OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
-            onboardingProcess.setErrorDetail(ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
+            final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
+            onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
             // Remove flag VERIFICATION_IN_PROGRESS
             try {
-                List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+                final List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
                 activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
             } catch (PowerAuthClientException ex) {
                 logger.warn("Activation flag request failed, error: {}", ex.getMessage());

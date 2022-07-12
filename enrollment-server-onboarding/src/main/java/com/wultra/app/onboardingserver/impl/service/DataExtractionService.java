@@ -52,7 +52,7 @@ public class DataExtractionService {
             logger.warn("Missing request data");
             throw new DocumentVerificationException("Invalid data received");
         }
-        List<Document> extractedDocuments = decompress(requestData);
+        final List<Document> extractedDocuments = decompress(requestData);
         if (extractedDocuments.size() != 1) {
             // Exactly 1 document is expected to be present in the archive
             logger.warn("Input data does not contain a single document");
@@ -73,7 +73,7 @@ public class DataExtractionService {
             logger.warn("Missing request data");
             throw new DocumentVerificationException("Invalid data received");
         }
-        List<Document> extractedDocuments = decompress(requestData);
+        final List<Document> extractedDocuments = decompress(requestData);
         logger.info("Extracted documents {} from request data", extractedDocuments);
         return extractedDocuments;
     }
@@ -85,22 +85,22 @@ public class DataExtractionService {
      * @throws DocumentVerificationException Thrown in case input data is invalid.
      */
     private List<Document> decompress(byte[] inputData) throws DocumentVerificationException {
-        List<Document> extractedDocuments = new ArrayList<>();
+        final List<Document> extractedDocuments = new ArrayList<>();
         try {
-            ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(inputData));
+            final ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(inputData));
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
                     // Directories are skipped, data is extracted from regular files
                     continue;
                 }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                final byte[] buffer = new byte[1024];
                 int read;
                 while ((read = zis.read(buffer)) != -1) {
                     baos.write(buffer, 0, read);
                 }
-                Document document = new Document();
+                final Document document = new Document();
                 document.setFilename(entry.getName());
                 document.setData(baos.toByteArray());
                 extractedDocuments.add(document);

@@ -55,8 +55,23 @@ public class CommonOnboardingService implements OnboardingService {
      */
     public OnboardingProcessEntity findProcess(String processId) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, process ID: {}", processId);
+            throw new OnboardingProcessException();
+        }
+        return processOptional.get();
+    }
+
+    /**
+     * Find an onboarding process.
+     * @param activationId Acitivation identitfier.
+     * @return Onboarding process.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
+        if (processOptional.isEmpty()) {
+            logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();
         }
         return processOptional.get();
