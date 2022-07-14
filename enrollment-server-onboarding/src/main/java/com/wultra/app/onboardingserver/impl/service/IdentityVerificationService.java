@@ -428,7 +428,6 @@ public class IdentityVerificationService {
      * Cleanup documents related to identity verification.
      * @param ownerId Owner identification.
      * @throws DocumentVerificationException Thrown when document cleanup fails
-     * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification reset fails.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
@@ -436,7 +435,7 @@ public class IdentityVerificationService {
      */
     @Transactional
     public void cleanup(OwnerId ownerId)
-            throws DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
+            throws DocumentVerificationException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
 
