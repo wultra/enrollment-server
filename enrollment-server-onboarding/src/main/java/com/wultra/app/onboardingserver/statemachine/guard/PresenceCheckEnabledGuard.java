@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine.guard;
+package com.wultra.app.onboardingserver.statemachine.guard;
 
-import com.wultra.app.enrollmentserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckNotEnabledException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.statemachine.EventHeaderName;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
+import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

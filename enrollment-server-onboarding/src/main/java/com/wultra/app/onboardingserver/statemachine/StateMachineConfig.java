@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine;
+package com.wultra.app.onboardingserver.statemachine;
 
-import com.wultra.app.enrollmentserver.statemachine.action.InitPresenceCheckAction;
-import com.wultra.app.enrollmentserver.statemachine.action.InitVerificationAction;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
-import com.wultra.app.enrollmentserver.statemachine.guard.PresenceCheckEnabledGuard;
-import com.wultra.app.enrollmentserver.statemachine.guard.ProcessIdentifierGuard;
+import com.wultra.app.onboardingserver.statemachine.action.InitPresenceCheckAction;
+import com.wultra.app.onboardingserver.statemachine.action.InitVerificationAction;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -44,7 +44,7 @@ import java.util.EnumSet;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(
-        value = "enrollment-server.identity-verification.enabled",
+        value = "enrollment-server-onboarding.identity-verification.enabled",
         havingValue = "true"
 )
 @Configuration

@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine.interceptor;
+package com.wultra.app.onboardingserver.statemachine.interceptor;
 
-import com.wultra.app.enrollmentserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckException;
-import com.wultra.app.enrollmentserver.errorhandling.PresenceCheckNotEnabledException;
-import com.wultra.app.enrollmentserver.statemachine.ExtendedStateVariable;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
+import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;

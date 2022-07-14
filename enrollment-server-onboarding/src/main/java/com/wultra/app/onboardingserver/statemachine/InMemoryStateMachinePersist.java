@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine;
+package com.wultra.app.onboardingserver.statemachine;
 
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.StateMachinePersist;
 

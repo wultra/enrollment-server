@@ -97,6 +97,11 @@
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.statemachine</groupId>
+            <artifactId>spring-statemachine-starter</artifactId>
+            <version>${spring-statemachine.version}</version>
+        </dependency>
 
         <!-- Spring Scheduler Lock https://github.com/lukas-krecan/ShedLock -->
         <dependency>

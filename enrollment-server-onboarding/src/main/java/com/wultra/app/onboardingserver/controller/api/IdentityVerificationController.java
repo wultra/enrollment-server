@@ -23,7 +23,6 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.Config
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -35,8 +34,12 @@ import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
+import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.interceptor.WultraStateMachineInterceptor;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
-import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -59,9 +62,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.StateMachineEventResult;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Locale;
@@ -158,9 +168,9 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
-                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
-                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+    public ResponseEntity<Response> initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, PowerAuthEncryptionException, OnboardingProcessLimitException {
 
         // Check if the authentication object is present
@@ -463,11 +473,10 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<PresenceCheckInitResponse> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
+    public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
-            PresenceCheckNotEnabledException, PowerAuthEncryptionException, OnboardingProcessException, PresenceCheckLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+            throws PowerAuthAuthenticationException, PresenceCheckNotEnabledException, PowerAuthEncryptionException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {

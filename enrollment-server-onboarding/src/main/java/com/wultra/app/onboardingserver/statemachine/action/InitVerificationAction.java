@@ -14,17 +14,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine.action;
+package com.wultra.app.onboardingserver.statemachine.action;
 
-import com.wultra.app.enrollmentserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
-import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
-import com.wultra.app.enrollmentserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.statemachine.EventHeaderName;
-import com.wultra.app.enrollmentserver.statemachine.ExtendedStateVariable;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import io.getlime.core.rest.model.base.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,11 +54,7 @@ public class InitVerificationAction implements Action<EnrollmentState, Enrollmen
 
         try {
             identityVerificationService.initializeIdentityVerification(ownerId, processId);
-        } catch (IdentityVerificationException e) {
-            context.getStateMachine().setStateMachineError(e);
-        } catch (RemoteCommunicationException e) {
-            context.getStateMachine().setStateMachineError(e);
-        } catch (OnboardingProcessException e) {
+        } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
         }
         if (!context.getStateMachine().hasStateMachineError()) {

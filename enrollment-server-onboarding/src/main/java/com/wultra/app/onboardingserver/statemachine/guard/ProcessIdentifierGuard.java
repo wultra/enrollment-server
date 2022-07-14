@@ -14,15 +14,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.statemachine.guard;
+package com.wultra.app.onboardingserver.statemachine.guard;
 
-import com.wultra.app.enrollmentserver.database.OnboardingProcessRepository;
-import com.wultra.app.enrollmentserver.database.entity.OnboardingProcessEntity;
-import com.wultra.app.enrollmentserver.errorhandling.OnboardingProcessException;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.statemachine.EventHeaderName;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.enrollmentserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.statemachine.StateContext;
