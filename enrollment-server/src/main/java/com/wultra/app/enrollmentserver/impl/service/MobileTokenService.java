@@ -38,8 +38,10 @@ import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -53,13 +55,17 @@ import java.util.List;
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
-    private static final String ATTR_ACTIVATION_ID = "activation_id";
-    private static final String ATTR_IP_ADDRESS = "ip_address";
-    private static final String ATTR_USER_AGENT = "user_agent";
+    private static final String ATTR_ACTIVATION_ID = "activationId";
+    private static final String ATTR_APPLICATION_ID = "applicationId";
+    private static final String ATTR_IP_ADDRESS = "ipAddress";
+    private static final String ATTR_USER_AGENT = "userAgent";
+    private static final String ATTR_AUTH_FACTOR = "authFactor";
+    private static final String ATTR_REJECT_REASON = "rejectReason";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
     private final OperationTemplateService operationTemplateService;
+    private final HttpCustomizationService httpCustomizationService;
 
     /**
      * Default constructor with autowired dependencies.
@@ -67,12 +73,14 @@ public class MobileTokenService {
      * @param powerAuthClient PowerAuth Client.
      * @param mobileTokenConverter Converter for mobile token objects.
      * @param operationTemplateService Operation template service.
+     * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public MobileTokenService(PowerAuthClient powerAuthClient, MobileTokenConverter mobileTokenConverter, OperationTemplateService operationTemplateService) {
+    public MobileTokenService(PowerAuthClient powerAuthClient, MobileTokenConverter mobileTokenConverter, OperationTemplateService operationTemplateService, HttpCustomizationService httpCustomizationService) {
         this.powerAuthClient = powerAuthClient;
         this.mobileTokenConverter = mobileTokenConverter;
         this.operationTemplateService = operationTemplateService;
+        this.httpCustomizationService = httpCustomizationService;
     }
 
     /**
@@ -90,16 +98,20 @@ public class MobileTokenService {
      */
     public OperationListResponse operationListForUser(
             @NotNull String userId,
-            @NotNull Long applicationId,
+            @NotNull String applicationId,
             @NotNull String language,
             List<String> activationFlags,
             boolean pendingOnly) throws PowerAuthClientException, MobileTokenConfigurationException {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
-        request.setApplicationId(applicationId);
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList = pendingOnly ?
-                powerAuthClient.operationPendingList(request) : powerAuthClient.operationList(request);
+        request.setApplicationId(List.of(applicationId));
+        final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
+        final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
+        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =
+                pendingOnly ?
+                powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
+                powerAuthClient.operationList(request, queryParams, httpHeaders);
 
         final OperationListResponse responseObject = new OperationListResponse();
         for (OperationDetailResponse operationDetail: pendingList) {
@@ -134,7 +146,7 @@ public class MobileTokenService {
     public Response operationApprove(
             @NotNull String activationId,
             @NotNull String userId,
-            @NotNull Long applicationId,
+            @NotNull String applicationId,
             @NotNull String operationId,
             @NotNull String data,
             @NotNull PowerAuthSignatureTypes signatureFactors,
@@ -156,9 +168,15 @@ public class MobileTokenService {
         approveRequest.setApplicationId(applicationId);
         // Prepare additional data
         approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        approveRequest.getAdditionalData().put(ATTR_APPLICATION_ID, applicationId);
         approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
-        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(approveRequest);
+        approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, signatureFactors.toString());
+        final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
+                approveRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final UserActionResult result = approveResponse.getResult();
         if (result == UserActionResult.APPROVED) {
@@ -185,7 +203,11 @@ public class MobileTokenService {
         request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
 
-        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(request);
+        final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(
+                request,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
         handleStatus(operation.getStatus());
@@ -200,6 +222,7 @@ public class MobileTokenService {
      * @param operationId Operation ID.
      * @param requestContext Request context.
      * @param activationFlags Activation flags.
+     * @param rejectReason Reason for operation rejection.
      * @return Simple response.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
@@ -207,10 +230,11 @@ public class MobileTokenService {
     public Response operationReject(
             @NotNull String activationId,
             @NotNull String userId,
-            @NotNull Long applicationId,
+            @NotNull String applicationId,
             @NotNull String operationId,
             @NotNull RequestContext requestContext,
-            List<String> activationFlags) throws MobileTokenException, PowerAuthClientException {
+            List<String> activationFlags,
+            String rejectReason) throws MobileTokenException, PowerAuthClientException {
         final OperationDetailResponse operationDetail = getOperationDetail(operationId);
 
         final String activationFlag = operationDetail.getActivationFlag();
@@ -224,10 +248,16 @@ public class MobileTokenService {
         rejectRequest.setApplicationId(applicationId);
         // Prepare additional data
         rejectRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
+        rejectRequest.getAdditionalData().put(ATTR_APPLICATION_ID, applicationId);
         rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
+        rejectRequest.getAdditionalData().put(ATTR_REJECT_REASON, rejectReason);
 
-        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(rejectRequest);
+        final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(
+                rejectRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
 
         final UserActionResult result = rejectResponse.getResult();
         if (result == UserActionResult.REJECTED) {
@@ -252,7 +282,11 @@ public class MobileTokenService {
     private OperationDetailResponse getOperationDetail(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
-        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(operationDetailRequest);
+        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
+                operationDetailRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
         handleStatus(operationDetail.getStatus());
         return operationDetail;
     }

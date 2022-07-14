@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.getlime.security.powerauth.rest.api.spring.annotation.support.PowerAuthAnnotationInterceptor;
 import io.getlime.security.powerauth.rest.api.spring.annotation.support.PowerAuthEncryptionArgumentResolver;
@@ -85,7 +86,9 @@ public class WebApplicationConfig implements WebMvcConfigurer {
     @Bean
     @Primary
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-        return builder.build();
+        return builder
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .build();
     }
 
     @Bean

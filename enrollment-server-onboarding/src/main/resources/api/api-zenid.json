@@ -1,0 +1,2961 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "ZenidWeb"
+  },
+  "host": "raiffeisen.frauds.zenid.cz",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/sample": {
+      "post": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "This method uploads a sample for processing. Sample can be a single image or video file. This call gets file, normalize it (e.t. rotate etc) and OCR its content.\r\nThe file content can be sent in two different formats:\r\nRAW: send the file content as body of the request in binary form without alternations\r\nFORM: use the multipart form encoding and send the file content in file variable\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nEmptyBody - no uploaded file.",
+        "operationId": "Api_UploadSample",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "expectedSampleType",
+            "in": "query",
+            "description": "Expected type of sample. Set this if you know the type of sample ahead to speed up processing. Required.",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "Unknown",
+              "Selfie",
+              "DocumentPicture",
+              "SelfieVideo",
+              "DocumentVideo",
+              "Archived"
+            ]
+          },
+          {
+            "name": "uploadSessionID",
+            "in": "query",
+            "description": "SessionID is GUID created by client to group multiple sample uploads together",
+            "required": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "customData",
+            "in": "query",
+            "description": "Custom data to be associated with this sample. Sample can later be located using customData. Any string.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fileName",
+            "in": "query",
+            "description": "Name of the original file (for example DSC01.jpg). If form upload is needed, then this is optional",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "description": "Expected country of the uploaded document (Cz, At, Sk...)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "Cz",
+              "Sk",
+              "At",
+              "Hu",
+              "Pl",
+              "De",
+              "Hr",
+              "Ro",
+              "Ru",
+              "Ua",
+              "It",
+              "Dk",
+              "Es",
+              "Fi",
+              "Fr",
+              "Gb",
+              "Is",
+              "Nl",
+              "Se",
+              "Si",
+              "Bg",
+              "Be",
+              "Ee",
+              "Ie",
+              "Cy",
+              "Lt",
+              "Lv",
+              "Lu",
+              "Mt",
+              "Pt",
+              "Gr"
+            ]
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "Expected role of the uploaded document (IDC, Passport, Drivers licence)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "Idc",
+              "Pas",
+              "Drv",
+              "Res",
+              "Gun",
+              "Hic",
+              "Std",
+              "Car",
+              "Birth",
+              "Add",
+              "Ide"
+            ]
+          },
+          {
+            "name": "fileLastWriteTime",
+            "in": "query",
+            "description": "Last write time of the file uploaded. This can be determined using javascript. Value is used for fraud detection (EXIF comparison)",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "async",
+            "in": "query",
+            "description": "Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "callbackUrl",
+            "in": "query",
+            "description": "Set URL for call back here, if you want to receive JSON object with response there.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "searchForSubsamples",
+            "in": "query",
+            "description": "For videos, this makes ZenID extract static picture of the card from the video of card. For document pictures, if single sample contains multiple card pictures (for example multi-page PDF or scan with multiple picture), set this to true to search for them and extract as separate \"subsamples\"",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "anonymizeImage",
+            "in": "query",
+            "description": "ZenID can optionally anonymize specific documents by blackening certain fields. Set this to true to perform anonymization",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "documentCode",
+            "in": "query",
+            "description": "Code of the specific document if you know it",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "IDC2",
+              "DRV",
+              "IDC1",
+              "PAS",
+              "SK_IDC_2008plus",
+              "SK_DRV_2004_08_09",
+              "SK_DRV_2013",
+              "SK_DRV_2015",
+              "SK_PAS_2008_14",
+              "SK_DRV_1993",
+              "PL_IDC_2015",
+              "DE_IDC_2010",
+              "DE_IDC_2001",
+              "HR_IDC_2013_15",
+              "AT_IDE_2000",
+              "HU_IDC_2000_01_12",
+              "HU_IDC_2016",
+              "AT_IDC_2002_05_10",
+              "HU_ADD_2012",
+              "AT_PAS_2006_14",
+              "AT_DRV_2006",
+              "AT_DRV_2013",
+              "CZ_RES_2011_14",
+              "CZ_RES_2006_T",
+              "CZ_RES_2006_07",
+              "CZ_GUN_2014",
+              "HU_PAS_2006_12",
+              "HU_DRV_2012_13",
+              "HU_DRV_2012_B",
+              "EU_EHIC_2004_A",
+              "Unknown",
+              "CZ_GUN_2017",
+              "CZ_RES_2020",
+              "PL_IDC_2019",
+              "IT_PAS_2006_10",
+              "INT_ISIC_2008",
+              "DE_PAS",
+              "DK_PAS",
+              "ES_PAS",
+              "FI_PAS",
+              "FR_PAS",
+              "GB_PAS",
+              "IS_PAS",
+              "NL_PAS",
+              "RO_PAS",
+              "SE_PAS",
+              "PL_PAS",
+              "PL_DRV_2013",
+              "CZ_BIRTH",
+              "CZ_VEHICLE_I",
+              "INT_ISIC_2019",
+              "SI_PAS",
+              "SI_IDC",
+              "SI_DRV",
+              "EU_EHIC_2004_B",
+              "PL_IDC_2001_02_13",
+              "IT_IDC_2016",
+              "HR_PAS_2009_15",
+              "HR_DRV_2013",
+              "HR_IDC_2003",
+              "SI_DRV_2009",
+              "BG_PAS_2010",
+              "BG_IDC_2010",
+              "BG_DRV_2010_13",
+              "HR_IDC_2021",
+              "AT_IDC_2021",
+              "DE_PAS_2007",
+              "DE_DRV_2013_21",
+              "DE_DRV_1999_01_04_11",
+              "FR_IDC_2021",
+              "FR_IDC_1988_94",
+              "ES_PAS_2003_06",
+              "ES_IDC_2015",
+              "ES_IDC_2006",
+              "IT_IDC_2004",
+              "RO_IDC_2001_06_09_17_21",
+              "NL_IDC_2014_17_21",
+              "BE_PAS_2014_17_19",
+              "BE_IDC_2013_15",
+              "BE_IDC_2020_21",
+              "GR_PAS_2020",
+              "PT_PAS_2006_09",
+              "PT_PAS_2017",
+              "PT_IDC_2007_08_09_15",
+              "SE_IDC_2012_21",
+              "FI_IDC_2017_21",
+              "IE_PAS_2006_13",
+              "LT_PAS_2008_09_11_19",
+              "LT_IDC_2009_12",
+              "LV_PAS_2015",
+              "LV_PAS_2007",
+              "LV_IDC_2012",
+              "LV_IDC_2019",
+              "EE_PAS_2014",
+              "EE_PAS_2021",
+              "EE_IDC_2011",
+              "EE_IDC_2018_21",
+              "CY_PAS_2010_20",
+              "CY_IDC_2000_08",
+              "CY_IDC_2015_20",
+              "LU_PAS_2015",
+              "LU_IDC_2014_21",
+              "LU_IDC_2008_13",
+              "MT_PAS_2008",
+              "MT_IDC_2014",
+              "PL_PAS_2011",
+              "PL_DRV_1999",
+              "LT_IDC_2021"
+            ]
+          },
+          {
+            "name": "pageCode",
+            "in": "query",
+            "description": "Side of the document to seek if you know it",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "F",
+              "B"
+            ]
+          },
+          {
+            "name": "priorityQueueName",
+            "in": "query",
+            "description": "Setting this puts the request into a separate queue for processing, ignoring standard queue.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "Optional name of profile. Use it to sort samples by different input channels for example.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "processingMode",
+            "in": "query",
+            "description": "Fast (default) or Slow. Slow process mode might fix some alignment problems but is slower.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "Fast",
+              "Slow"
+            ]
+          },
+          {
+            "name": "sdkSignature",
+            "in": "query",
+            "description": "Optional SDK signature for pictures. Generated by SDK",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "File",
+            "in": "formData",
+            "description": "Upload samples file",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.UploadSampleResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/investigateSamples": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Investigation node. Investigation gets list of samples, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - any of sampleIDs is not stored in DB.\r\nSampleInInvalidState - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\nInvalidSampleCombination - investigation must contain samples from single person/customer",
+        "operationId": "Api_InvestigateSamples",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "sampleIDs",
+            "in": "query",
+            "description": "List of strings - sample IDs. Required.",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "Optional name of profile. Each profile defines settings for validators.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "customData",
+            "in": "query",
+            "description": "Custom data to be associated with this sample. Sample can later be located using customData. Any string.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "async",
+            "in": "query",
+            "description": "Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "callbackUrl",
+            "in": "query",
+            "description": "Set URL for call back here, if you want to receive JSON object with response there.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language of the output (Czech/English).",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "English",
+              "Czech",
+              "Polish",
+              "German"
+            ]
+          },
+          {
+            "name": "priorityQueueName",
+            "in": "query",
+            "description": "Setting this puts the request into a separate queue for processing, ignoring standard queue.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.InvestigateResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/investigateUploadSession": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Investigation node. Investigation gets GUID, unique identifier, gets all samples tagged with this UploadSessionID, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownUploadSessionID - UploadSessionID is not known\r\nSampleInInvalidState - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\nInvalidSampleCombination - investigation must contain samples from single person/customer",
+        "operationId": "Api_InvestigateUploadSession",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "uploadSessionID",
+            "in": "query",
+            "description": "User identification of list of samples. Required.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "Optional name of profile. Each profile defines settings for validators.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "customData",
+            "in": "query",
+            "description": "Custom data to be associated with this sample. Sample can later be located using customData. Any string.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "async",
+            "in": "query",
+            "description": "Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "callbackUrl",
+            "in": "query",
+            "description": "Set URL for call back here, if you want to receive JSON object with response there.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Language of the output (Czech/English).",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "English",
+              "Czech",
+              "Polish",
+              "German"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.InvestigateResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/sample/{sampleID}": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Node for synchronizing samples - returns sample for given ID. This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - if that ID is not used in DB for any sample.",
+        "operationId": "Api_GetSample",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "sampleID",
+            "in": "path",
+            "description": "ID of the sample",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.UploadSampleResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/deletePerson": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Deletes all information related to a person",
+        "operationId": "Api_DeletePerson",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "sampleId",
+            "in": "query",
+            "description": "ID of the sample to start person search",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cardIdentifier",
+            "in": "query",
+            "description": "ID of the card for which we search the related documents",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "firstName",
+            "in": "query",
+            "description": "First name of the person whose documents are searched for",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "lastName",
+            "in": "query",
+            "description": "Surname of the person whose documents are searched for",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "birthNumber",
+            "in": "query",
+            "description": "Birth Number (RČ in czech) of the person whose documents are searched for",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "birthDate",
+            "in": "query",
+            "description": "Date of birth of the person whose documents are searched for",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "deleteType",
+            "in": "query",
+            "description": "Set if you want delete only samples and investigations or face from FaceDB or everything",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "Everything",
+              "FacesOnly",
+              "SamplesAndInvestigationsOnly"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.DeletePersonResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/deleteSample": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Deletes a sample. Also deletes an investigation in which this sample was used",
+        "operationId": "Api_DeleteSample",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "sampleId",
+            "in": "query",
+            "description": "ID of the sample to delete",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.DeleteSampleResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/investigation/{investigationID}": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Node for synchronizing investigations - returns investigations for given ID. This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - if Investigation ID is not stored in DB.",
+        "operationId": "Api_GetInvestigation",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "investigationID",
+            "in": "path",
+            "description": "ID of the investigation",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.InvestigateResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/samples": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Get list of samples (newer than timestamp). This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nInvalidTimeStamp - error while decoding timestamp.",
+        "operationId": "Api_GetSamples",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "timestamp",
+            "in": "query",
+            "description": "if defined, list is limited to samples newer than given timestamp",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.ListSamplesResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/investigations": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Get list of investigations (newer than timestamp). This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nInvalidTimeStamp - error while decoding timestamp.",
+        "operationId": "Api_GetInvestigations",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "timestamp",
+            "in": "query",
+            "description": "if defined, list is limited to investigations newer than given timestamp",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.ListInvestigationsResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Get list of names of profiles, defined in system. This call can be used for selecting profile in investigation.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,",
+        "operationId": "Api_GetProfiles",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.ListProfilesResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/validators": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Returns list of validators - their id and text description.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,",
+        "operationId": "Api_GetValidatorEnum",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "description": "Optional parameter for defining output language (Czech, German).",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "English",
+              "Czech",
+              "Polish",
+              "German"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/diagnostics": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Performs diagnostics test. Note depending on parameters, license might be consumed",
+        "operationId": "Api_Diagnostics",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "checkSelfie",
+            "in": "query",
+            "description": "Checks face API is working - THIS CAUSES LICENSE USAGE",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "checkCloud",
+            "in": "query",
+            "description": "Checks cloud services are working - THIS CAUSES LICENSE USAGE",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.DiagnosticsResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/initSdk": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Returns string required for a correct function of mobile and Web SDK.",
+        "operationId": "Api_InitSdk",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Challenge token generated by SDK function.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.InitSdkResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/face": {
+      "post": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Loads face image in the image repository (for comparing faces for validation).\r\nIn most cases, /api/sample with sampleType=Selfie should be used instead.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\nInternalServerError - problem while preprocessing or unknown problem while processing or disabled face database.",
+        "operationId": "Api_UploadFace",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "birthNumber",
+            "in": "query",
+            "description": "Birth namber, required for image/face coupling.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fileName",
+            "in": "query",
+            "description": "Name of the input file",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "async",
+            "in": "query",
+            "description": "Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "callbackUrl",
+            "in": "query",
+            "description": "Optional, used if api/face called asynchroniously",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "File",
+            "in": "formData",
+            "description": "Upload face",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.UploadFaceResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/verifyCardsRecalled": {
+      "post": {
+        "tags": [
+          "Api"
+        ],
+        "summary": "Verifies card validity using same means as existing CardRecalled validator\r\nIt takes a List of cards to verify - each with DocumentCode and card number and returns same list with Recalled status. Recalled status can be either True = recalled, False = not recalled, Null = could not determine/not supported document code.",
+        "operationId": "Api_VerifyCardsRecalled",
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json",
+          "text/json",
+          "application/xml",
+          "text/xml"
+        ],
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "description": "List of cards to verify - each with DocumentCode and card number",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.VerifyCardsRecalledRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ZenidWeb.VerifyCardsRecalledResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ZenidWeb.UploadSampleResponse": {
+      "description": "Response object for UploadSample",
+      "type": "object",
+      "properties": {
+        "SampleID": {
+          "description": "Unique ID of the sample in ZenID system.",
+          "type": "string"
+        },
+        "CustomData": {
+          "description": "Copy of the input parameter CustomData",
+          "type": "string"
+        },
+        "UploadSessionID": {
+          "format": "uuid",
+          "description": "Copy of the input parameter UploadSessionID",
+          "type": "string",
+          "example": "00000000-0000-0000-0000-000000000000"
+        },
+        "SampleType": {
+          "description": "Real SampleType",
+          "enum": [
+            "Unknown",
+            "Selfie",
+            "DocumentPicture",
+            "SelfieVideo",
+            "DocumentVideo",
+            "Archived"
+          ],
+          "type": "string"
+        },
+        "MinedData": {
+          "$ref": "#/definitions/ZenidShared.MineAllResult",
+          "description": "Structure of data, mined from sample - {ZenidShared.MineAllResult}."
+        },
+        "State": {
+          "description": "State of the request - NotDone/Done/Error",
+          "enum": [
+            "NotDone",
+            "Done",
+            "Error",
+            "Operator",
+            "Rejected"
+          ],
+          "type": "string"
+        },
+        "ProjectedImage": {
+          "$ref": "#/definitions/ZenidShared.Hash",
+          "description": "hash of the source projected image"
+        },
+        "ParentSampleID": {
+          "description": "hash of the parent sampleID if this is a subsample",
+          "type": "string"
+        },
+        "AnonymizedImage": {
+          "$ref": "#/definitions/ZenidShared.Hash",
+          "description": "Hash of the censored projected image"
+        },
+        "ImageUrlFormat": {
+          "description": "link to the source projected image",
+          "type": "string"
+        },
+        "ImagePageCount": {
+          "format": "int32",
+          "description": "Number of pages this document has (in case of PDF or TIFF). This can be used in history URL /history/image/{hash}?page=1",
+          "type": "integer"
+        },
+        "Subsamples": {
+          "description": "If subsample processing is enable, this list contains further images extracted from the primary image, each with extra document image",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.UploadSampleResponse"
+          }
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidShared.MineAllResult": {
+      "type": "object",
+      "properties": {
+        "FirstName": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "LastName": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "Address": {
+          "$ref": "#/definitions/ZenidShared.MinedAddress"
+        },
+        "BirthAddress": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "BirthLastName": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "BirthNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedRc"
+        },
+        "BirthDate": {
+          "$ref": "#/definitions/ZenidShared.MinedDate"
+        },
+        "ExpiryDate": {
+          "$ref": "#/definitions/ZenidShared.MinedDate"
+        },
+        "IssueDate": {
+          "$ref": "#/definitions/ZenidShared.MinedDate"
+        },
+        "IdcardNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText",
+          "description": "identification number for id card - set only on id cards"
+        },
+        "DrivinglicenseNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText",
+          "description": "identification number for driving licence - set only on driving licences"
+        },
+        "PassportNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText",
+          "description": "identification number for passport - set only on passports"
+        },
+        "Sex": {
+          "$ref": "#/definitions/ZenidShared.MinedSex"
+        },
+        "Nationality": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "Authority": {
+          "$ref": "#/definitions/ZenidShared.MinedText",
+          "description": "Authority (state agency) issued this document"
+        },
+        "MaritalStatus": {
+          "$ref": "#/definitions/ZenidShared.MinedMaritalStatus"
+        },
+        "Photo": {
+          "$ref": "#/definitions/ZenidShared.MinedPhoto"
+        },
+        "Mrz": {
+          "$ref": "#/definitions/ZenidShared.MinedMrz",
+          "description": "Machine readable zone"
+        },
+        "DocumentCode": {
+          "description": "Code identificating document (when combining from more samples the most probable version is set)",
+          "enum": [
+            "IDC2",
+            "DRV",
+            "IDC1",
+            "PAS",
+            "SK_IDC_2008plus",
+            "SK_DRV_2004_08_09",
+            "SK_DRV_2013",
+            "SK_DRV_2015",
+            "SK_PAS_2008_14",
+            "SK_DRV_1993",
+            "PL_IDC_2015",
+            "DE_IDC_2010",
+            "DE_IDC_2001",
+            "HR_IDC_2013_15",
+            "AT_IDE_2000",
+            "HU_IDC_2000_01_12",
+            "HU_IDC_2016",
+            "AT_IDC_2002_05_10",
+            "HU_ADD_2012",
+            "AT_PAS_2006_14",
+            "AT_DRV_2006",
+            "AT_DRV_2013",
+            "CZ_RES_2011_14",
+            "CZ_RES_2006_T",
+            "CZ_RES_2006_07",
+            "CZ_GUN_2014",
+            "HU_PAS_2006_12",
+            "HU_DRV_2012_13",
+            "HU_DRV_2012_B",
+            "EU_EHIC_2004_A",
+            "Unknown",
+            "CZ_GUN_2017",
+            "CZ_RES_2020",
+            "PL_IDC_2019",
+            "IT_PAS_2006_10",
+            "INT_ISIC_2008",
+            "DE_PAS",
+            "DK_PAS",
+            "ES_PAS",
+            "FI_PAS",
+            "FR_PAS",
+            "GB_PAS",
+            "IS_PAS",
+            "NL_PAS",
+            "RO_PAS",
+            "SE_PAS",
+            "PL_PAS",
+            "PL_DRV_2013",
+            "CZ_BIRTH",
+            "CZ_VEHICLE_I",
+            "INT_ISIC_2019",
+            "SI_PAS",
+            "SI_IDC",
+            "SI_DRV",
+            "EU_EHIC_2004_B",
+            "PL_IDC_2001_02_13",
+            "IT_IDC_2016",
+            "HR_PAS_2009_15",
+            "HR_DRV_2013",
+            "HR_IDC_2003",
+            "SI_DRV_2009",
+            "BG_PAS_2010",
+            "BG_IDC_2010",
+            "BG_DRV_2010_13",
+            "HR_IDC_2021",
+            "AT_IDC_2021",
+            "DE_PAS_2007",
+            "DE_DRV_2013_21",
+            "DE_DRV_1999_01_04_11",
+            "FR_IDC_2021",
+            "FR_IDC_1988_94",
+            "ES_PAS_2003_06",
+            "ES_IDC_2015",
+            "ES_IDC_2006",
+            "IT_IDC_2004",
+            "RO_IDC_2001_06_09_17_21",
+            "NL_IDC_2014_17_21",
+            "BE_PAS_2014_17_19",
+            "BE_IDC_2013_15",
+            "BE_IDC_2020_21",
+            "GR_PAS_2020",
+            "PT_PAS_2006_09",
+            "PT_PAS_2017",
+            "PT_IDC_2007_08_09_15",
+            "SE_IDC_2012_21",
+            "FI_IDC_2017_21",
+            "IE_PAS_2006_13",
+            "LT_PAS_2008_09_11_19",
+            "LT_IDC_2009_12",
+            "LV_PAS_2015",
+            "LV_PAS_2007",
+            "LV_IDC_2012",
+            "LV_IDC_2019",
+            "EE_PAS_2014",
+            "EE_PAS_2021",
+            "EE_IDC_2011",
+            "EE_IDC_2018_21",
+            "CY_PAS_2010_20",
+            "CY_IDC_2000_08",
+            "CY_IDC_2015_20",
+            "LU_PAS_2015",
+            "LU_IDC_2014_21",
+            "LU_IDC_2008_13",
+            "MT_PAS_2008",
+            "MT_IDC_2014",
+            "PL_PAS_2011",
+            "PL_DRV_1999",
+            "LT_IDC_2021"
+          ],
+          "type": "string"
+        },
+        "DocumentCountry": {
+          "description": "Country associated with this document type",
+          "enum": [
+            "Cz",
+            "Sk",
+            "At",
+            "Hu",
+            "Pl",
+            "De",
+            "Hr",
+            "Ro",
+            "Ru",
+            "Ua",
+            "It",
+            "Dk",
+            "Es",
+            "Fi",
+            "Fr",
+            "Gb",
+            "Is",
+            "Nl",
+            "Se",
+            "Si",
+            "Bg",
+            "Be",
+            "Ee",
+            "Ie",
+            "Cy",
+            "Lt",
+            "Lv",
+            "Lu",
+            "Mt",
+            "Pt",
+            "Gr"
+          ],
+          "type": "string"
+        },
+        "DocumentRole": {
+          "description": "General role of this document (ID card vs Passport vs Driver license etc)",
+          "enum": [
+            "Idc",
+            "Pas",
+            "Drv",
+            "Res",
+            "Gun",
+            "Hic",
+            "Std",
+            "Car",
+            "Birth",
+            "Add",
+            "Ide"
+          ],
+          "type": "string"
+        },
+        "PageCode": {
+          "description": "identification of page of document",
+          "enum": [
+            "F",
+            "B"
+          ],
+          "type": "string"
+        },
+        "Height": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "EyesColor": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "CarNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "FirstNameOfParents": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "ResidencyNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "ResidencyNumberPhoto": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "ResidencyPermitDescription": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "ResidencyPermitCode": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "GunlicenseNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "Titles": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "TitlesAfter": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "SpecialRemarks": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "MothersName": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "HealthInsuranceCardNumber": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "InsuranceCompanyCode": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        },
+        "IssuingCountry": {
+          "$ref": "#/definitions/ZenidShared.MinedText"
+        }
+      }
+    },
+    "ZenidShared.Hash": {
+      "description": "Simple MD5 hash wrapper with easy compare/text conversions",
+      "type": "object",
+      "properties": {
+        "AsText": {
+          "type": "string"
+        },
+        "IsNull": {
+          "type": "boolean",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidShared.MinedText": {
+      "description": "Identifies mined text - its value and confidence",
+      "type": "object",
+      "properties": {
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedAddress": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "A1": {
+          "description": "physical first row of address on card",
+          "type": "string"
+        },
+        "A2": {
+          "description": "physical second row of address on card",
+          "type": "string"
+        },
+        "A3": {
+          "description": "physical third row of address on card",
+          "type": "string"
+        },
+        "AdministrativeAreaLevel1": {
+          "description": "main admin. area - in CZ - kraj",
+          "type": "string"
+        },
+        "AdministrativeAreaLevel2": {
+          "description": "secondary admin. area - in CZ - okres or towns behaves also as okres - like Brno",
+          "type": "string"
+        },
+        "Locality": {
+          "description": "identification of town/city/village (if not already defined up - Brno, Praha) / OSM: boundary=administrative+ admin_level=8",
+          "type": "string"
+        },
+        "Sublocality": {
+          "description": "town-subdivision\r\nCZ - čtvrť/katastrální území (Neighborhood/Cadastral place) / OSM: boundary=administrative+ admin_level=10\r\nSK - čtvrť/katastrální území (Neighborhood/Cadastral place) / OSM: boundary=administrative+ admin_level=10\r\nDE - stadtteil without selfgovernment / OSM: boundary=administrative+ admin_level=10\r\nHU - admin-level 9\r\n            \r\ntodo slovak: Valaská - Piesok is in addess, but Piesok is just place=village, no admin_level=10",
+          "type": "string"
+        },
+        "Suburb": {
+          "description": "town-subdivision - selfgoverning - probably used only in CZ and maybe DE\r\nCZ - městská část/obvod / OSM: addr:suburb - it can be in multiple cadastral places (parts cadastral place Trnitá is in suburb Brno-střed and Brno-jih)\r\nDE - stadtteil without selfgovernment / OSM: boundary=administrative+ admin_level=9\r\n            \r\ntodo not used outside CZ right now, so it is not searched/mined from osm, just ruian",
+          "type": "string"
+        },
+        "Street": {
+          "description": "in CZ - ulice",
+          "type": "string"
+        },
+        "HouseNumber": {
+          "description": "descriptive house number in town - used in Czechia, Slovakia, Austria (číslo popisné, číslo súpisné, Konskriptionsnummer)",
+          "type": "string"
+        },
+        "StreetNumber": {
+          "description": "descriptive number of house on the street - in CZ - číslo orientační",
+          "type": "string"
+        },
+        "PostalCode": {
+          "description": "in CZ - poštovní směrovací číslo - PSČ",
+          "type": "string"
+        },
+        "GoogleSearchable": {
+          "type": "string",
+          "readOnly": true
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedRc": {
+      "description": "Object containing mined information about birth-number - checksum, date, sex...",
+      "type": "object",
+      "properties": {
+        "BirthDate": {
+          "format": "date-time",
+          "description": "Date of the birth - can be parsed from RC identifier",
+          "type": "string"
+        },
+        "Checksum": {
+          "format": "int32",
+          "type": "integer",
+          "readOnly": true
+        },
+        "Sex": {
+          "enum": [
+            "F",
+            "M"
+          ],
+          "type": "string"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedDate": {
+      "description": "object for storing Mined Date - Date, default Format, Test and Confidence.",
+      "type": "object",
+      "properties": {
+        "Date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedSex": {
+      "description": "MinedSex - test of field, its confidence and property Sex (parsed text)",
+      "type": "object",
+      "properties": {
+        "Sex": {
+          "enum": [
+            "F",
+            "M"
+          ],
+          "type": "string"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedMaritalStatus": {
+      "description": "MinedMaritalStatus - test of field, its confidence and property MaritalStatus (parsed text)",
+      "type": "object",
+      "properties": {
+        "MaritalStatus": {
+          "enum": [
+            "Single",
+            "Married",
+            "Divorced",
+            "Widowed",
+            "Partnership"
+          ],
+          "type": "string"
+        },
+        "ImpliedSex": {
+          "enum": [
+            "F",
+            "M"
+          ],
+          "type": "string"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedPhoto": {
+      "description": "MinedPhoto - shows image data, and also two face-related values - estimated age and sex.",
+      "type": "object",
+      "properties": {
+        "ImageData": {
+          "$ref": "#/definitions/ZenidShared.LazyMatImage"
+        },
+        "EstimatedAge": {
+          "format": "double",
+          "type": "number"
+        },
+        "EstimatedSex": {
+          "enum": [
+            "F",
+            "M"
+          ],
+          "type": "string"
+        },
+        "HasOccludedMouth": {
+          "type": "boolean"
+        },
+        "HasSunGlasses": {
+          "type": "boolean"
+        },
+        "HasHeadWear": {
+          "type": "boolean"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.MinedMrz": {
+      "description": "Declare mined Text, Confidence, and also structure Mrz.",
+      "type": "object",
+      "properties": {
+        "Mrz": {
+          "$ref": "#/definitions/ZenidShared.Mrz"
+        },
+        "Text": {
+          "type": "string"
+        },
+        "Confidence": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidShared.LazyMatImage": {
+      "type": "object",
+      "properties": {
+        "ImageHash": {
+          "$ref": "#/definitions/ZenidShared.Hash"
+        }
+      }
+    },
+    "ZenidShared.Mrz": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "enum": [
+            "ID_v2000",
+            "ID_v2012",
+            "PAS_v2006",
+            "Unknown",
+            "AUT_IDC2002",
+            "AUT_PAS2006",
+            "SVK_IDC2008",
+            "SVK_DL2013",
+            "SVK_PAS2008",
+            "POL_IDC2015",
+            "HRV_IDC2003",
+            "CZE_RES_2011_14",
+            "HUN_PAS_2006_12",
+            "HU_IDC_2000_01_12_16"
+          ],
+          "type": "string"
+        },
+        "Subtype": {
+          "enum": [
+            "OP",
+            "R",
+            "D",
+            "S",
+            "Default",
+            "Unknown"
+          ],
+          "type": "string"
+        },
+        "BirthDate": {
+          "description": "Inner Birth date string of MRZ. Low-level data, ignore it. Use BirthDate from MineAllResult object.",
+          "type": "string"
+        },
+        "BirthDateVerified": {
+          "description": "Inner flag, if MRZ BirthDate checksum is ok. Low-level check, ignore it. Use Validators.",
+          "type": "boolean"
+        },
+        "DocumentNumber": {
+          "description": "Inner Document number string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "DocumentNumberVerified": {
+          "description": "Inner flag, if MRZ DocumentNumber checksum is ok. Low-level check, ignore it. Use Validators.",
+          "type": "boolean"
+        },
+        "ExpiryDate": {
+          "description": "Inner Expiry date string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "ExpiryDateVerified": {
+          "description": "Inner flag, if MRZ ExpiryDate checksum is ok. Low-level check, ignore it. Use Validators.",
+          "type": "boolean"
+        },
+        "GivenName": {
+          "description": "Inner Given name string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "ChecksumVerified": {
+          "description": "Inner flag, if checksum of MRZ itself is ok. Low-level check, ignore it. Use Validators.",
+          "type": "boolean"
+        },
+        "ChecksumDigit": {
+          "format": "int32",
+          "description": "Inner value of global MRZ checksum.",
+          "type": "integer"
+        },
+        "LastName": {
+          "description": "Inner Last name string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "Nationality": {
+          "description": "Inner Nationality string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "Sex": {
+          "description": "Inner Sex string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "BirthNumber": {
+          "description": "Inner Birthnumber string of MRZ (used on Czech passports). Low-level data, ignore it. Use value from MineAllResult object.",
+          "type": "string"
+        },
+        "BirthNumberChecksum": {
+          "format": "int32",
+          "description": "Inner value of Birthnumber checksum in MRZ (on Czech passports). Low-level check, ignore it. Use Validators.",
+          "type": "integer"
+        },
+        "BirthNumberVerified": {
+          "description": "Inner flag, if MRZ BirthNumber checksum is ok (used on Czech passports). Low-level check, ignore it. Use Validators.",
+          "type": "boolean"
+        },
+        "BirthdateChecksum": {
+          "format": "int32",
+          "description": "Inner value of MRZ BirthDate checksum.",
+          "type": "integer"
+        },
+        "DocumentNumChecksum": {
+          "format": "int32",
+          "description": "Inner value of MRZ DocumentNumber checksum.",
+          "type": "integer"
+        },
+        "ExpiryChecksum": {
+          "format": "int32",
+          "description": "Inner value of MRZ ExpiryDate checksum.",
+          "type": "integer"
+        },
+        "IssueDate": {
+          "description": "Prefix of the MRZ (type of the MRZ + subtype (differs, some ID cards have ID, other I_ or IO) + country issuer. Low-level data, can be ignored.",
+          "type": "string"
+        },
+        "IssueDateParsed": {
+          "format": "date-time",
+          "type": "string",
+          "readOnly": true
+        },
+        "AdditionalData": {
+          "description": "Output of OptionalSubstructure dont fitting in IssueDate or BirthNumber",
+          "type": "string"
+        },
+        "BirthDateParsed": {
+          "format": "date-time",
+          "description": "Inner machine-readable value of BirthDate (in DateTime structure). Low-level data, use value from MineAllResult object.",
+          "type": "string",
+          "readOnly": true
+        },
+        "ExpiryDateParsed": {
+          "format": "date-time",
+          "description": "Inner machine-readable value of ExpiryDate (in DateTime structure). Low-level data, use value from MineAllResult object.",
+          "type": "string",
+          "readOnly": true
+        },
+        "MrzLength": {
+          "$ref": "#/definitions/System.ValueTuple[System.Int32,System.Int32]",
+          "readOnly": true
+        },
+        "MrzDefType": {
+          "enum": [
+            "TD1_IDC",
+            "TD2_IDC2000",
+            "TD3_PAS",
+            "SKDRV",
+            "None"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "System.ValueTuple[System.Int32,System.Int32]": {
+      "type": "object",
+      "properties": {
+        "Item1": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "Item2": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidWeb.InvestigateResponse": {
+      "description": "Response object for the investigation nodes.",
+      "type": "object",
+      "properties": {
+        "InvestigationID": {
+          "format": "int32",
+          "description": "Unique identification of the investigation (set of samples)",
+          "type": "integer"
+        },
+        "CustomData": {
+          "description": "Copy of the input parameter CustomData",
+          "type": "string"
+        },
+        "MinedData": {
+          "$ref": "#/definitions/ZenidShared.MineAllResult",
+          "description": "Structure of data, mined from sample - {ZenidShared.MineAllResult}."
+        },
+        "DocumentsData": {
+          "description": "If investigation covers multiple documents, each will have their own entry here",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidShared.MineAllResult"
+          }
+        },
+        "InvestigationUrl": {
+          "description": "URL of the investigation detail",
+          "type": "string"
+        },
+        "ValidatorResults": {
+          "description": "Result of the all validators - List of {ZenidWeb.InvestigationValidatorResponse}",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.InvestigationValidatorResponse"
+          }
+        },
+        "State": {
+          "description": "State of the request - NotDone/Done/Error",
+          "enum": [
+            "NotDone",
+            "Done",
+            "Error",
+            "Operator",
+            "Rejected"
+          ],
+          "type": "string"
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.InvestigationValidatorResponse": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Code": {
+          "format": "int32",
+          "description": "Code identification of validator in external system",
+          "type": "integer"
+        },
+        "Score": {
+          "format": "int32",
+          "description": "Score of the validator for given input",
+          "type": "integer"
+        },
+        "AcceptScore": {
+          "format": "int32",
+          "description": "Accept score - if score is higher than accept score, Validator response OK is set to true",
+          "type": "integer"
+        },
+        "Issues": {
+          "description": "Description of the issues of validation (why score is lower)",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.InvestigationIssueResponse"
+          }
+        },
+        "Ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ZenidWeb.InvestigationIssueResponse": {
+      "type": "object",
+      "properties": {
+        "IssueUrl": {
+          "description": "Url with detailed visualization of the issue.",
+          "type": "string"
+        },
+        "IssueDescription": {
+          "description": "Description of issue",
+          "type": "string"
+        },
+        "DocumentCode": {
+          "description": "Document code of sample, where issue is present",
+          "enum": [
+            "IDC2",
+            "DRV",
+            "IDC1",
+            "PAS",
+            "SK_IDC_2008plus",
+            "SK_DRV_2004_08_09",
+            "SK_DRV_2013",
+            "SK_DRV_2015",
+            "SK_PAS_2008_14",
+            "SK_DRV_1993",
+            "PL_IDC_2015",
+            "DE_IDC_2010",
+            "DE_IDC_2001",
+            "HR_IDC_2013_15",
+            "AT_IDE_2000",
+            "HU_IDC_2000_01_12",
+            "HU_IDC_2016",
+            "AT_IDC_2002_05_10",
+            "HU_ADD_2012",
+            "AT_PAS_2006_14",
+            "AT_DRV_2006",
+            "AT_DRV_2013",
+            "CZ_RES_2011_14",
+            "CZ_RES_2006_T",
+            "CZ_RES_2006_07",
+            "CZ_GUN_2014",
+            "HU_PAS_2006_12",
+            "HU_DRV_2012_13",
+            "HU_DRV_2012_B",
+            "EU_EHIC_2004_A",
+            "Unknown",
+            "CZ_GUN_2017",
+            "CZ_RES_2020",
+            "PL_IDC_2019",
+            "IT_PAS_2006_10",
+            "INT_ISIC_2008",
+            "DE_PAS",
+            "DK_PAS",
+            "ES_PAS",
+            "FI_PAS",
+            "FR_PAS",
+            "GB_PAS",
+            "IS_PAS",
+            "NL_PAS",
+            "RO_PAS",
+            "SE_PAS",
+            "PL_PAS",
+            "PL_DRV_2013",
+            "CZ_BIRTH",
+            "CZ_VEHICLE_I",
+            "INT_ISIC_2019",
+            "SI_PAS",
+            "SI_IDC",
+            "SI_DRV",
+            "EU_EHIC_2004_B",
+            "PL_IDC_2001_02_13",
+            "IT_IDC_2016",
+            "HR_PAS_2009_15",
+            "HR_DRV_2013",
+            "HR_IDC_2003",
+            "SI_DRV_2009",
+            "BG_PAS_2010",
+            "BG_IDC_2010",
+            "BG_DRV_2010_13",
+            "HR_IDC_2021",
+            "AT_IDC_2021",
+            "DE_PAS_2007",
+            "DE_DRV_2013_21",
+            "DE_DRV_1999_01_04_11",
+            "FR_IDC_2021",
+            "FR_IDC_1988_94",
+            "ES_PAS_2003_06",
+            "ES_IDC_2015",
+            "ES_IDC_2006",
+            "IT_IDC_2004",
+            "RO_IDC_2001_06_09_17_21",
+            "NL_IDC_2014_17_21",
+            "BE_PAS_2014_17_19",
+            "BE_IDC_2013_15",
+            "BE_IDC_2020_21",
+            "GR_PAS_2020",
+            "PT_PAS_2006_09",
+            "PT_PAS_2017",
+            "PT_IDC_2007_08_09_15",
+            "SE_IDC_2012_21",
+            "FI_IDC_2017_21",
+            "IE_PAS_2006_13",
+            "LT_PAS_2008_09_11_19",
+            "LT_IDC_2009_12",
+            "LV_PAS_2015",
+            "LV_PAS_2007",
+            "LV_IDC_2012",
+            "LV_IDC_2019",
+            "EE_PAS_2014",
+            "EE_PAS_2021",
+            "EE_IDC_2011",
+            "EE_IDC_2018_21",
+            "CY_PAS_2010_20",
+            "CY_IDC_2000_08",
+            "CY_IDC_2015_20",
+            "LU_PAS_2015",
+            "LU_IDC_2014_21",
+            "LU_IDC_2008_13",
+            "MT_PAS_2008",
+            "MT_IDC_2014",
+            "PL_PAS_2011",
+            "PL_DRV_1999",
+            "LT_IDC_2021"
+          ],
+          "type": "string"
+        },
+        "FieldID": {
+          "description": "FieldID wher issue is present",
+          "enum": [
+            "A1",
+            "A2",
+            "A3",
+            "FirstName",
+            "LastName",
+            "Photo",
+            "BirthDate",
+            "BirthNumber",
+            "Authority",
+            "Mrz1",
+            "Mrz2",
+            "Mrz3",
+            "IdcardNumber",
+            "Sex",
+            "MaritalStatus",
+            "BirthAddress",
+            "BA1",
+            "BA2",
+            "IssueDate",
+            "ExpiryDate",
+            "PassportNumber",
+            "DrivinglicenseNumber",
+            "Barcode",
+            "BirthLastName",
+            "SpecialRemarks",
+            "Height",
+            "EyesColor",
+            "Titles",
+            "Authority1",
+            "Authority2",
+            "LastName1",
+            "LastName2TitlesAfter",
+            "DrvCodes",
+            "Signature",
+            "OtherInfo",
+            "MiniHologram",
+            "MiniPhoto",
+            "CarNumber",
+            "LicenseTypes",
+            "FirstNameOfParents",
+            "BirthDateNumber",
+            "DrivinglicenseNumber2",
+            "RDIFChipAccess",
+            "Pseudonym",
+            "ResidencyPermitDescription",
+            "ResidencyPermitCode",
+            "ResidencyNumber",
+            "AuthorityAndIssueDate",
+            "Nationality",
+            "GunlicenseNumber",
+            "Stamp",
+            "Stamp2",
+            "SurnameAndName1",
+            "SurnameAndName2",
+            "SurnameAndName3",
+            "MothersSurnameAndName",
+            "TemporaryAddress1",
+            "TemporaryAddress2",
+            "AddressStartingDate",
+            "TemporaryAddressStartingDate",
+            "TemporaryAddressEndingDate",
+            "NameInNationalLanguage",
+            "BirthDateAndAddress",
+            "SpecialRemarks2",
+            "SpecialRemarks3",
+            "Unknown",
+            "HealthInsuranceCardNumber",
+            "InsuranceCompanyCode",
+            "IssuingCountry",
+            "ResidencyNumberPhoto",
+            "IssueDateAndAuthority",
+            "TitlesAfter",
+            "PlaceOfIssue",
+            "BirthAddressAndDate",
+            "IssueDateAndPlaceOfIssue",
+            "MothersSurname",
+            "MothersName",
+            "FathersSurname",
+            "FathersName",
+            "LastName2",
+            "A4",
+            "FirstName2",
+            "IssueAndExpiryDate",
+            "FiscalNumber",
+            "SocialNumber",
+            "AlternativeName"
+          ],
+          "type": "string"
+        },
+        "SampleID": {
+          "description": "ID of the identification issue",
+          "type": "string"
+        },
+        "PageCode": {
+          "description": "Identification of the page type for issue",
+          "enum": [
+            "F",
+            "B"
+          ],
+          "type": "string"
+        },
+        "SampleType": {
+          "description": "Type of sample",
+          "enum": [
+            "Unknown",
+            "Selfie",
+            "DocumentPicture",
+            "SelfieVideo",
+            "DocumentVideo",
+            "Archived"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ZenidWeb.DeletePersonResponse": {
+      "type": "object",
+      "properties": {
+        "DeletedSampleIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "DeletedFacesFromSampleIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.DeleteSampleResponse": {
+      "type": "object",
+      "properties": {
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.ListSamplesResponse": {
+      "description": "Return value of api/samples",
+      "type": "object",
+      "properties": {
+        "Results": {
+          "description": "List of declarations of samples - ID, CustomData, UploadSessionID, State",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.ListSamplesResponse.SampleItem"
+          }
+        },
+        "TimeStamp": {
+          "format": "int64",
+          "description": "Timestamp limit (if defined as input)",
+          "type": "integer"
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.ListSamplesResponse.SampleItem": {
+      "type": "object",
+      "properties": {
+        "SampleID": {
+          "description": "DB ID of given sample.",
+          "type": "string"
+        },
+        "ParentSampleID": {
+          "description": "If the sample is subsample image created from primary one, this is the ID of primary image",
+          "type": "string"
+        },
+        "CustomData": {
+          "description": "CustomData attribute (copied from Request)",
+          "type": "string"
+        },
+        "UploadSessionID": {
+          "format": "uuid",
+          "description": "GUID of upload session set.",
+          "type": "string",
+          "example": "00000000-0000-0000-0000-000000000000"
+        },
+        "State": {
+          "description": "State of the investigation",
+          "enum": [
+            "NotDone",
+            "Done",
+            "Error",
+            "Operator",
+            "Rejected"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ZenidWeb.ListInvestigationsResponse": {
+      "description": "Return value of api/investigation",
+      "type": "object",
+      "properties": {
+        "Results": {
+          "description": "List of declarations of samples - ID, CustpmData, State",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.ListInvestigationsResponse.InvestigateItem"
+          }
+        },
+        "TimeStamp": {
+          "format": "int64",
+          "description": "Timestamp limit (if defined as input)",
+          "type": "integer"
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.ListInvestigationsResponse.InvestigateItem": {
+      "description": "Short description of investigation (its ID, State and CUstomData)",
+      "type": "object",
+      "properties": {
+        "InvestigationID": {
+          "format": "int32",
+          "description": "DB ID of investigation",
+          "type": "integer"
+        },
+        "CustomData": {
+          "description": "CustomData attribute (copied from Request)",
+          "type": "string"
+        },
+        "State": {
+          "description": "State of the investigation",
+          "enum": [
+            "NotDone",
+            "Done",
+            "Error",
+            "Operator",
+            "Rejected"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ZenidWeb.ListProfilesResponse": {
+      "description": "Return value of api/profiles",
+      "type": "object",
+      "properties": {
+        "Results": {
+          "description": "List of names of profiles",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.DiagnosticsResponse": {
+      "description": "Response object for UploadSample",
+      "type": "object",
+      "properties": {
+        "IsAllOk": {
+          "type": "boolean"
+        },
+        "SelfCheckItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.Controllers.SelfCheck.SelfCheckItem"
+          }
+        },
+        "LicenseExpiration": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "LicenseRemaining": {
+          "$ref": "#/definitions/ZenidShared.LicenseCountables"
+        },
+        "SupportedDocuments": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "IDC2",
+              "DRV",
+              "IDC1",
+              "PAS",
+              "SK_IDC_2008plus",
+              "SK_DRV_2004_08_09",
+              "SK_DRV_2013",
+              "SK_DRV_2015",
+              "SK_PAS_2008_14",
+              "SK_DRV_1993",
+              "PL_IDC_2015",
+              "DE_IDC_2010",
+              "DE_IDC_2001",
+              "HR_IDC_2013_15",
+              "AT_IDE_2000",
+              "HU_IDC_2000_01_12",
+              "HU_IDC_2016",
+              "AT_IDC_2002_05_10",
+              "HU_ADD_2012",
+              "AT_PAS_2006_14",
+              "AT_DRV_2006",
+              "AT_DRV_2013",
+              "CZ_RES_2011_14",
+              "CZ_RES_2006_T",
+              "CZ_RES_2006_07",
+              "CZ_GUN_2014",
+              "HU_PAS_2006_12",
+              "HU_DRV_2012_13",
+              "HU_DRV_2012_B",
+              "EU_EHIC_2004_A",
+              "Unknown",
+              "CZ_GUN_2017",
+              "CZ_RES_2020",
+              "PL_IDC_2019",
+              "IT_PAS_2006_10",
+              "INT_ISIC_2008",
+              "DE_PAS",
+              "DK_PAS",
+              "ES_PAS",
+              "FI_PAS",
+              "FR_PAS",
+              "GB_PAS",
+              "IS_PAS",
+              "NL_PAS",
+              "RO_PAS",
+              "SE_PAS",
+              "PL_PAS",
+              "PL_DRV_2013",
+              "CZ_BIRTH",
+              "CZ_VEHICLE_I",
+              "INT_ISIC_2019",
+              "SI_PAS",
+              "SI_IDC",
+              "SI_DRV",
+              "EU_EHIC_2004_B",
+              "PL_IDC_2001_02_13",
+              "IT_IDC_2016",
+              "HR_PAS_2009_15",
+              "HR_DRV_2013",
+              "HR_IDC_2003",
+              "SI_DRV_2009",
+              "BG_PAS_2010",
+              "BG_IDC_2010",
+              "BG_DRV_2010_13",
+              "HR_IDC_2021",
+              "AT_IDC_2021",
+              "DE_PAS_2007",
+              "DE_DRV_2013_21",
+              "DE_DRV_1999_01_04_11",
+              "FR_IDC_2021",
+              "FR_IDC_1988_94",
+              "ES_PAS_2003_06",
+              "ES_IDC_2015",
+              "ES_IDC_2006",
+              "IT_IDC_2004",
+              "RO_IDC_2001_06_09_17_21",
+              "NL_IDC_2014_17_21",
+              "BE_PAS_2014_17_19",
+              "BE_IDC_2013_15",
+              "BE_IDC_2020_21",
+              "GR_PAS_2020",
+              "PT_PAS_2006_09",
+              "PT_PAS_2017",
+              "PT_IDC_2007_08_09_15",
+              "SE_IDC_2012_21",
+              "FI_IDC_2017_21",
+              "IE_PAS_2006_13",
+              "LT_PAS_2008_09_11_19",
+              "LT_IDC_2009_12",
+              "LV_PAS_2015",
+              "LV_PAS_2007",
+              "LV_IDC_2012",
+              "LV_IDC_2019",
+              "EE_PAS_2014",
+              "EE_PAS_2021",
+              "EE_IDC_2011",
+              "EE_IDC_2018_21",
+              "CY_PAS_2010_20",
+              "CY_IDC_2000_08",
+              "CY_IDC_2015_20",
+              "LU_PAS_2015",
+              "LU_IDC_2014_21",
+              "LU_IDC_2008_13",
+              "MT_PAS_2008",
+              "MT_IDC_2014",
+              "PL_PAS_2011",
+              "PL_DRV_1999",
+              "LT_IDC_2021"
+            ],
+            "type": "string"
+          }
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.Controllers.SelfCheck.SelfCheckItem": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "boolean"
+        },
+        "Comment": {
+          "type": "string"
+        }
+      }
+    },
+    "ZenidShared.LicenseCountables": {
+      "type": "object",
+      "properties": {
+        "PageCount": {
+          "format": "int32",
+          "description": "Note this is actually \"document count\"",
+          "type": "integer"
+        },
+        "SelfieCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "FraudCount": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ZenidWeb.InitSdkResponse": {
+      "type": "object",
+      "properties": {
+        "Response": {
+          "type": "string"
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.UploadFaceResponse": {
+      "description": "Return object for /api/face",
+      "type": "object",
+      "properties": {
+        "UploadFaceResult": {
+          "description": "Possibly result of the upload face photo",
+          "enum": [
+            "Ok",
+            "FaceNotDetected",
+            "ImageExistsWithDifferentCustomerData"
+          ],
+          "type": "string"
+        },
+        "OriginalImageHash": {
+          "description": "hash of the original image",
+          "type": "string"
+        },
+        "PersistedFace": {
+          "format": "uuid",
+          "description": "GUID - link of the face image in the Oxford API repository",
+          "type": "string",
+          "example": "00000000-0000-0000-0000-000000000000"
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.VerifyCardsRecalledRequest": {
+      "type": "object",
+      "properties": {
+        "CardsToVerify": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.VerifyCardsRecalledRequest.CardInfo"
+          }
+        }
+      }
+    },
+    "ZenidWeb.VerifyCardsRecalledRequest.CardInfo": {
+      "type": "object",
+      "properties": {
+        "DocumentCode": {
+          "enum": [
+            "IDC2",
+            "DRV",
+            "IDC1",
+            "PAS",
+            "SK_IDC_2008plus",
+            "SK_DRV_2004_08_09",
+            "SK_DRV_2013",
+            "SK_DRV_2015",
+            "SK_PAS_2008_14",
+            "SK_DRV_1993",
+            "PL_IDC_2015",
+            "DE_IDC_2010",
+            "DE_IDC_2001",
+            "HR_IDC_2013_15",
+            "AT_IDE_2000",
+            "HU_IDC_2000_01_12",
+            "HU_IDC_2016",
+            "AT_IDC_2002_05_10",
+            "HU_ADD_2012",
+            "AT_PAS_2006_14",
+            "AT_DRV_2006",
+            "AT_DRV_2013",
+            "CZ_RES_2011_14",
+            "CZ_RES_2006_T",
+            "CZ_RES_2006_07",
+            "CZ_GUN_2014",
+            "HU_PAS_2006_12",
+            "HU_DRV_2012_13",
+            "HU_DRV_2012_B",
+            "EU_EHIC_2004_A",
+            "Unknown",
+            "CZ_GUN_2017",
+            "CZ_RES_2020",
+            "PL_IDC_2019",
+            "IT_PAS_2006_10",
+            "INT_ISIC_2008",
+            "DE_PAS",
+            "DK_PAS",
+            "ES_PAS",
+            "FI_PAS",
+            "FR_PAS",
+            "GB_PAS",
+            "IS_PAS",
+            "NL_PAS",
+            "RO_PAS",
+            "SE_PAS",
+            "PL_PAS",
+            "PL_DRV_2013",
+            "CZ_BIRTH",
+            "CZ_VEHICLE_I",
+            "INT_ISIC_2019",
+            "SI_PAS",
+            "SI_IDC",
+            "SI_DRV",
+            "EU_EHIC_2004_B",
+            "PL_IDC_2001_02_13",
+            "IT_IDC_2016",
+            "HR_PAS_2009_15",
+            "HR_DRV_2013",
+            "HR_IDC_2003",
+            "SI_DRV_2009",
+            "BG_PAS_2010",
+            "BG_IDC_2010",
+            "BG_DRV_2010_13",
+            "HR_IDC_2021",
+            "AT_IDC_2021",
+            "DE_PAS_2007",
+            "DE_DRV_2013_21",
+            "DE_DRV_1999_01_04_11",
+            "FR_IDC_2021",
+            "FR_IDC_1988_94",
+            "ES_PAS_2003_06",
+            "ES_IDC_2015",
+            "ES_IDC_2006",
+            "IT_IDC_2004",
+            "RO_IDC_2001_06_09_17_21",
+            "NL_IDC_2014_17_21",
+            "BE_PAS_2014_17_19",
+            "BE_IDC_2013_15",
+            "BE_IDC_2020_21",
+            "GR_PAS_2020",
+            "PT_PAS_2006_09",
+            "PT_PAS_2017",
+            "PT_IDC_2007_08_09_15",
+            "SE_IDC_2012_21",
+            "FI_IDC_2017_21",
+            "IE_PAS_2006_13",
+            "LT_PAS_2008_09_11_19",
+            "LT_IDC_2009_12",
+            "LV_PAS_2015",
+            "LV_PAS_2007",
+            "LV_IDC_2012",
+            "LV_IDC_2019",
+            "EE_PAS_2014",
+            "EE_PAS_2021",
+            "EE_IDC_2011",
+            "EE_IDC_2018_21",
+            "CY_PAS_2010_20",
+            "CY_IDC_2000_08",
+            "CY_IDC_2015_20",
+            "LU_PAS_2015",
+            "LU_IDC_2014_21",
+            "LU_IDC_2008_13",
+            "MT_PAS_2008",
+            "MT_IDC_2014",
+            "PL_PAS_2011",
+            "PL_DRV_1999",
+            "LT_IDC_2021"
+          ],
+          "type": "string"
+        },
+        "CardNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "ZenidWeb.VerifyCardsRecalledResponse": {
+      "type": "object",
+      "properties": {
+        "VerifiedCards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ZenidWeb.VerifyCardsRecalledResponse.VerifiedCard"
+          }
+        },
+        "ErrorCode": {
+          "description": "If throght processing some error occurs, ErrorCode property is set.",
+          "enum": [
+            "UnknownSampleID",
+            "UnknownUploadSessionID",
+            "EmptyBody",
+            "InternalServerError",
+            "InvalidTimeStamp",
+            "SampleInInvalidState",
+            "InvalidSampleCombination",
+            "AccessDenied",
+            "UnknownPerson",
+            "InvalidInputData"
+          ],
+          "type": "string"
+        },
+        "ErrorText": {
+          "description": "Error text",
+          "type": "string"
+        },
+        "MessageType": {
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "ZenidWeb.VerifyCardsRecalledResponse.VerifiedCard": {
+      "type": "object",
+      "properties": {
+        "Recalled": {
+          "type": "boolean"
+        },
+        "DocumentCode": {
+          "enum": [
+            "IDC2",
+            "DRV",
+            "IDC1",
+            "PAS",
+            "SK_IDC_2008plus",
+            "SK_DRV_2004_08_09",
+            "SK_DRV_2013",
+            "SK_DRV_2015",
+            "SK_PAS_2008_14",
+            "SK_DRV_1993",
+            "PL_IDC_2015",
+            "DE_IDC_2010",
+            "DE_IDC_2001",
+            "HR_IDC_2013_15",
+            "AT_IDE_2000",
+            "HU_IDC_2000_01_12",
+            "HU_IDC_2016",
+            "AT_IDC_2002_05_10",
+            "HU_ADD_2012",
+            "AT_PAS_2006_14",
+            "AT_DRV_2006",
+            "AT_DRV_2013",
+            "CZ_RES_2011_14",
+            "CZ_RES_2006_T",
+            "CZ_RES_2006_07",
+            "CZ_GUN_2014",
+            "HU_PAS_2006_12",
+            "HU_DRV_2012_13",
+            "HU_DRV_2012_B",
+            "EU_EHIC_2004_A",
+            "Unknown",
+            "CZ_GUN_2017",
+            "CZ_RES_2020",
+            "PL_IDC_2019",
+            "IT_PAS_2006_10",
+            "INT_ISIC_2008",
+            "DE_PAS",
+            "DK_PAS",
+            "ES_PAS",
+            "FI_PAS",
+            "FR_PAS",
+            "GB_PAS",
+            "IS_PAS",
+            "NL_PAS",
+            "RO_PAS",
+            "SE_PAS",
+            "PL_PAS",
+            "PL_DRV_2013",
+            "CZ_BIRTH",
+            "CZ_VEHICLE_I",
+            "INT_ISIC_2019",
+            "SI_PAS",
+            "SI_IDC",
+            "SI_DRV",
+            "EU_EHIC_2004_B",
+            "PL_IDC_2001_02_13",
+            "IT_IDC_2016",
+            "HR_PAS_2009_15",
+            "HR_DRV_2013",
+            "HR_IDC_2003",
+            "SI_DRV_2009",
+            "BG_PAS_2010",
+            "BG_IDC_2010",
+            "BG_DRV_2010_13",
+            "HR_IDC_2021",
+            "AT_IDC_2021",
+            "DE_PAS_2007",
+            "DE_DRV_2013_21",
+            "DE_DRV_1999_01_04_11",
+            "FR_IDC_2021",
+            "FR_IDC_1988_94",
+            "ES_PAS_2003_06",
+            "ES_IDC_2015",
+            "ES_IDC_2006",
+            "IT_IDC_2004",
+            "RO_IDC_2001_06_09_17_21",
+            "NL_IDC_2014_17_21",
+            "BE_PAS_2014_17_19",
+            "BE_IDC_2013_15",
+            "BE_IDC_2020_21",
+            "GR_PAS_2020",
+            "PT_PAS_2006_09",
+            "PT_PAS_2017",
+            "PT_IDC_2007_08_09_15",
+            "SE_IDC_2012_21",
+            "FI_IDC_2017_21",
+            "IE_PAS_2006_13",
+            "LT_PAS_2008_09_11_19",
+            "LT_IDC_2009_12",
+            "LV_PAS_2015",
+            "LV_PAS_2007",
+            "LV_IDC_2012",
+            "LV_IDC_2019",
+            "EE_PAS_2014",
+            "EE_PAS_2021",
+            "EE_IDC_2011",
+            "EE_IDC_2018_21",
+            "CY_PAS_2010_20",
+            "CY_IDC_2000_08",
+            "CY_IDC_2015_20",
+            "LU_PAS_2015",
+            "LU_IDC_2014_21",
+            "LU_IDC_2008_13",
+            "MT_PAS_2008",
+            "MT_IDC_2014",
+            "PL_PAS_2011",
+            "PL_DRV_1999",
+            "LT_IDC_2021"
+          ],
+          "type": "string"
+        },
+        "CardNumber": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

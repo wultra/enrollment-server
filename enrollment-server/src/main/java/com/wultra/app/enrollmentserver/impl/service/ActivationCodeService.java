@@ -20,14 +20,14 @@ package com.wultra.app.enrollmentserver.impl.service;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.impl.service.converter.ActivationCodeConverter;
-import com.wultra.app.enrollmentserver.api.model.request.ActivationCodeRequest;
-import com.wultra.app.enrollmentserver.api.model.response.ActivationCodeResponse;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.response.ActivationCodeResponse;
 import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestValidator;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ActivationOtpValidation;
-import com.wultra.security.powerauth.client.v3.InitActivationResponse;
+import com.wultra.security.powerauth.client.v3.*;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +47,7 @@ public class ActivationCodeService {
 
     private final PowerAuthClient powerAuthClient;
     private final ActivationCodeConverter activationCodeConverter;
+    private final HttpCustomizationService httpCustomizationService;
 
     private DelegatingActivationCodeHandler delegatingActivationCodeHandler;
 
@@ -55,11 +56,13 @@ public class ActivationCodeService {
      *
      * @param powerAuthClient PowerAuth Client instance.
      * @param activationCodeConverter Activation code converter class.
+     * @param httpCustomizationService HTTP customization service.
      */
     @Autowired
-    public ActivationCodeService(PowerAuthClient powerAuthClient, ActivationCodeConverter activationCodeConverter) {
+    public ActivationCodeService(PowerAuthClient powerAuthClient, ActivationCodeConverter activationCodeConverter, HttpCustomizationService httpCustomizationService) {
         this.powerAuthClient = powerAuthClient;
         this.activationCodeConverter = activationCodeConverter;
+        this.httpCustomizationService = httpCustomizationService;
     }
 
     /**
@@ -86,7 +89,7 @@ public class ActivationCodeService {
         // Fetch information from the authentication object
         final String sourceActivationId = apiAuthentication.getActivationContext().getActivationId();
         final String sourceUserId = apiAuthentication.getUserId();
-        final Long sourceAppId = apiAuthentication.getApplicationId();
+        final String sourceAppId = apiAuthentication.getApplicationId();
         final List<String> sourceActivationFlags = apiAuthentication.getActivationContext().getActivationFlags();
         final List<String> sourceApplicationRoles = apiAuthentication.getApplicationRoles();
 
@@ -109,7 +112,7 @@ public class ActivationCodeService {
         final String otp = request.getOtp();
         final String applicationId = request.getApplicationId();
 
-        final Long destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
+        final String destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
         if (destinationAppId == null) {
             logger.error("Invalid application ID. The provided source app ID: {} cannot activate the destination app ID: {}.", sourceAppId, applicationId);
             throw new ActivationCodeException();
@@ -118,8 +121,16 @@ public class ActivationCodeService {
         try {
             // Create a new activation
             logger.info("Calling PowerAuth Server with new activation request, user ID: {}, app ID: {}", sourceUserId, destinationAppId);
+            final InitActivationRequest initRequest = new InitActivationRequest();
+            initRequest.setUserId(sourceUserId);
+            initRequest.setApplicationId(destinationAppId);
+            initRequest.setActivationOtpValidation(ActivationOtpValidation.ON_KEY_EXCHANGE);
+            initRequest.setActivationOtp(otp);
+
             final InitActivationResponse iar = powerAuthClient.initActivation(
-                    sourceUserId, destinationAppId, ActivationOtpValidation.ON_KEY_EXCHANGE, otp
+                    initRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders()
             );
             logger.info("Successfully obtained a new activation with ID: {}", iar.getActivationId());
 
@@ -136,7 +147,13 @@ public class ActivationCodeService {
             );
             if (flags != null && !flags.isEmpty()) {
                 logger.info("Calling PowerAuth Server to add activation flags to activation ID: {}, flags: {}.", iar.getActivationId(), flags.toArray());
-                powerAuthClient.addActivationFlags(iar.getActivationId(), flags);
+                final AddActivationFlagsRequest addRequest = new AddActivationFlagsRequest();
+                addRequest.setActivationId(iar.getActivationId());
+                addRequest.getActivationFlags().addAll(flags);
+                powerAuthClient.addActivationFlags(addRequest,
+                        httpCustomizationService.getQueryParams(),
+                        httpCustomizationService.getHttpHeaders()
+                );
                 logger.info("Successfully added flags to activation ID: {}.", iar.getActivationId());
             } else {
                 logger.info("Activation with ID: {} has no additional flags.", iar.getActivationId());

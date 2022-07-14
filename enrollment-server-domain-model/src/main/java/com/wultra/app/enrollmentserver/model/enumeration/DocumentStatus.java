@@ -65,12 +65,21 @@ public enum DocumentStatus {
     FAILED;
 
     /**
-     * All not finished statuses
+     * All not finished statuses.
      */
     public static final List<DocumentStatus> ALL_NOT_FINISHED = ImmutableList.of(
             UPLOAD_IN_PROGRESS,
             VERIFICATION_PENDING,
             VERIFICATION_IN_PROGRESS
+    );
+
+    /**
+     * All unsuccessful statuses.
+     */
+    public static final List<DocumentStatus> ALL_FAILED = ImmutableList.of(
+            DISPOSED,
+            REJECTED,
+            FAILED
     );
 
 }

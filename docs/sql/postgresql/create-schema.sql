@@ -21,7 +21,7 @@
 --- See: https://www.postgresql.org/docs/9.6/sql-createsequence.html
 --
 CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
-CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
+CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 1 START WITH 1 CACHE 20;
 
 CREATE TABLE es_operation_template (
     id BIGINT NOT NULL PRIMARY KEY,
@@ -41,6 +41,7 @@ CREATE TABLE es_onboarding_process (
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
+    error_score INTEGER NOT NULL DEFAULT 0,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP,
     timestamp_finished TIMESTAMP

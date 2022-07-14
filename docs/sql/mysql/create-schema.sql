@@ -34,6 +34,7 @@ CREATE TABLE es_onboarding_process (
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
+    error_score INTEGER NOT NULL DEFAULT 0,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated DATETIME,
     timestamp_finished DATETIME

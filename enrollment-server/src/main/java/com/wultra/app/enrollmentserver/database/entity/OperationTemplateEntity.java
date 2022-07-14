@@ -40,7 +40,7 @@ public class OperationTemplateEntity implements Serializable {
     private static final long serialVersionUID = 5914420785283118800L;
 
     @Id
-    @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq", allocationSize = 10)
+    @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_operation_template")
     @Column(name = "id", nullable = false)
     private Long id;

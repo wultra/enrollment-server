@@ -30,18 +30,8 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <version>1.4.0-SNAPSHOT</version>
     </parent>
-
-    <dependencies>
-        <!-- Enrollment Server Dependencies -->
-        <dependency>
-            <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-domain-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
 
     <profiles>
         <profile>

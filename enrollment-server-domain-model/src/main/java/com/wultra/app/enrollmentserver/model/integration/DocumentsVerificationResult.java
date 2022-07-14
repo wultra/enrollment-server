@@ -37,6 +37,11 @@ public class DocumentsVerificationResult {
     private String rejectReason;
     private String errorDetail;
 
+    /**
+     * Identify if the document status is accepted.
+     *
+     * @return True if the document is accepted, false otherwise.
+     */
     public boolean isAccepted() {
         return DocumentVerificationStatus.ACCEPTED.equals(status);
     }

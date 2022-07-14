@@ -30,6 +30,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class KeyValueAttribute extends Attribute {
 
+    /**
+     * Value in the key-value attribute.
+     */
     protected String value;
 
     /**

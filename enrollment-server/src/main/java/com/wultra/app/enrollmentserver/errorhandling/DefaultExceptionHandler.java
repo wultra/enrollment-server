@@ -28,8 +28,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * Exception handler for RESTful API issues.
  *
@@ -137,55 +135,6 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Handling of presence check exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(PresenceCheckException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handlePresenceCheckException(PresenceCheckException ex) {
-        logger.warn("Presence check failed", ex);
-        return new ErrorResponse("PRESENCE_CHECK_FAILED", "Presence check failed.");
-    }
-
-    /**
-     * Handling of identity verification exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(IdentityVerificationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleIdentityVerificationException(IdentityVerificationException ex) {
-        logger.warn("Identity verification failed", ex);
-        return new ErrorResponse("IDENTITY_VERIFICATION_FAILED", "Identity verification failed.");
-    }
-
-    /**
-     * Handling of not enabled presence check exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(PresenceCheckNotEnabledException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handlePresenceCheckNotEnabledException(
-            PresenceCheckNotEnabledException ex, HttpServletRequest request) {
-        logger.warn("Calling a service on a not enabled presence check service, requestUri: {}", request.getRequestURI(), ex);
-        return new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
-    }
-
-    /**
-     * Handling of document verification exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(DocumentVerificationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleDocumentVerificationException(DocumentVerificationException ex) {
-        logger.warn("Document verification failed", ex);
-        return new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
-    }
-
-    /**
      * Handling of document verification exceptions.
      * @param ex Exception.
      * @return Response with error details.
@@ -197,39 +146,4 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
     }
 
-    /**
-     * Handling of onboarding process exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(OnboardingProcessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleOnboardingProcessException(OnboardingProcessException ex) {
-        logger.warn("Onboarding process failed", ex);
-        return new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
-    }
-
-    /**
-     * Handling of onboarding OTP delivery exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(OnboardingOtpDeliveryException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleOnboardingOtpDeliveryException(OnboardingOtpDeliveryException ex) {
-        logger.warn("Onboarding OTP delivery failed", ex);
-        return new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
-    }
-
-    /**
-     * Handling of too many onboarding processes exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(TooManyProcessesException.class)
-    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public @ResponseBody ErrorResponse handleTooManyProcessesException(TooManyProcessesException ex) {
-        logger.warn("Too many onboarding processes started by the user", ex);
-        return new ErrorResponse("TOO_MANY_REQUESTS", "Too many onboarding processes started by the user.");
-    }
 }
