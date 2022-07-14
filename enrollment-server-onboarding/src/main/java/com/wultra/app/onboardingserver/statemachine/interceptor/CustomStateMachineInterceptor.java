@@ -38,9 +38,9 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class WultraStateMachineInterceptor extends StateMachineInterceptorAdapter<EnrollmentState, EnrollmentEvent> {
+public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<EnrollmentState, EnrollmentEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(WultraStateMachineInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
 
     @Override
     public Exception stateMachineError(StateMachine stateMachine, Exception e) {

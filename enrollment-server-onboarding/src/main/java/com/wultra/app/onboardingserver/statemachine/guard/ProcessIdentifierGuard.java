@@ -56,19 +56,23 @@ public class ProcessIdentifierGuard implements Guard<EnrollmentState, Enrollment
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
-        if (!processOptional.isPresent()) {
+        if (processOptional.isEmpty()) {
             logger.error("Onboarding process not found, {}", ownerId);
-            context.getStateMachine().setStateMachineError(new OnboardingProcessException());
+            fail(context);
             return false;
         }
         String expectedProcessId = processOptional.get().getId();
 
         if (!expectedProcessId.equals(processId)) {
             logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);
-            context.getStateMachine().setStateMachineError(new OnboardingProcessException());
+            fail(context);
             return false;
         }
         return true;
+    }
+
+    private void fail(StateContext<EnrollmentState, EnrollmentEvent> context) {
+        context.getStateMachine().setStateMachineError(new OnboardingProcessException());
     }
 
 }

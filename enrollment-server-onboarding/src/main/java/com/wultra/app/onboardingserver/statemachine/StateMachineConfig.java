@@ -20,6 +20,7 @@ import com.wultra.app.onboardingserver.statemachine.action.InitPresenceCheckActi
 import com.wultra.app.onboardingserver.statemachine.action.InitVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.guard.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -57,6 +59,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
     private final InitVerificationAction initVerificationAction;
 
+    private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
+
     private final PresenceCheckEnabledGuard presenceCheckEnabledGuard;
 
     private final ProcessIdentifierGuard processIdentifierGuard;
@@ -64,11 +68,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
     public StateMachineConfig(
             InitPresenceCheckAction initPresenceCheckAction,
             InitVerificationAction initVerificationAction,
+            OtpVerificationEnabledGuard otpVerificationEnabledGuard,
             PresenceCheckEnabledGuard presenceCheckEnabledGuard,
             ProcessIdentifierGuard processIdentifierGuard) {
         this.initPresenceCheckAction = initPresenceCheckAction;
         this.initVerificationAction = initVerificationAction;
 
+        this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
         this.presenceCheckEnabledGuard = presenceCheckEnabledGuard;
         this.processIdentifierGuard = processIdentifierGuard;
     }
@@ -107,8 +113,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .source(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .event(EnrollmentEvent.PRESENCE_CHECK_INIT)
                 .guard(context ->
-                        presenceCheckEnabledGuard.evaluate(context) &&
-                        processIdentifierGuard.evaluate(context)
+                        processIdentifierGuard.evaluate(context) &&
+                        presenceCheckEnabledGuard.evaluate(context)
                 )
                 .action(initPresenceCheckAction)
                 .target(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
@@ -117,7 +123,21 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .withExternal()
                 .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(EnrollmentEvent.PRESENCE_CHECK_ACCEPTED)
-                .target(EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS)
+                .guard(context ->
+                        presenceCheckEnabledGuard.evaluate(context) &&
+                        otpVerificationEnabledGuard.evaluate(context)
+                )
+                .target(EnrollmentState.OTP_VERIFICATION_PENDING)
+
+                .and()
+                .withExternal()
+                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+                .event(EnrollmentEvent.PRESENCE_CHECK_ACCEPTED)
+                .guard(context ->
+                        presenceCheckEnabledGuard.evaluate(context) &&
+                        !otpVerificationEnabledGuard.evaluate(context)
+                )
+                .target(EnrollmentState.COMPLETED_ACCEPTED)
 
                 .and()
                 .withExternal()
@@ -137,8 +157,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
         return new StateMachineListenerAdapter<>() {
 
             @Override
+            public void eventNotAccepted(Message<EnrollmentEvent> event) {
+                logger.warn("Not accepted event {}", event.getPayload());
+            }
+
+            @Override
             public void stateChanged(State<EnrollmentState, EnrollmentEvent> from, State<EnrollmentState, EnrollmentEvent> to) {
-                logger.info("State change to " + to.getId());
+                logger.info("State changed to {}", to.getId());
             }
 
         };

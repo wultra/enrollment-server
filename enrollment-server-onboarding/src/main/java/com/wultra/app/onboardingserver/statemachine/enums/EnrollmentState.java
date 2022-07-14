@@ -19,13 +19,14 @@ package com.wultra.app.onboardingserver.statemachine.enums;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * States defined for the state machine
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@Getter
+@Getter @ToString(of = {"phase", "status"})
 public enum EnrollmentState {
 
     INITIAL(null, IdentityVerificationStatus.NOT_INITIALIZED),

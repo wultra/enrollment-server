@@ -126,8 +126,24 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @return Optional entity of the verification identity
      */
-    public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
+    public Optional<IdentityVerificationEntity> findByOptional(OwnerId ownerId) {
         return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+    }
+
+    /**
+     * Finds the current verification identity
+     * @param ownerId Owner identification.
+     * @return Entity of the verification identity
+     * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
+     */
+    public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(ownerId);
+
+        if (identityVerificationOptional.isEmpty()) {
+            logger.error("No identity verification entity found, {}", ownerId);
+            throw new IdentityVerificationNotFoundException("Not existing identity verification");
+        }
+        return identityVerificationOptional.get();
     }
 
     /**
@@ -159,7 +175,7 @@ public class IdentityVerificationService {
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
 
         if (idVerificationOptional.isEmpty()) {
             logger.error("Identity verification has not been initialized, {}", ownerId);
