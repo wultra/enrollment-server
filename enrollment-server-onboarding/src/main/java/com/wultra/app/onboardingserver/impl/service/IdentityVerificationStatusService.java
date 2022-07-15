@@ -64,9 +64,7 @@ public class IdentityVerificationStatusService {
     private final IdentityVerificationFinishService identityVerificationFinishService;
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
-    private final HttpCustomizationService httpCustomizationService;
-
-    private final PowerAuthClient powerAuthClient;
+    private final ActivationFlagService activationFlagService;
 
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
@@ -80,8 +78,7 @@ public class IdentityVerificationStatusService {
      * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService                 Onboarding service.
      * @param identityVerificationOtpService    Identity verification OTP service.
-     * @param httpCustomizationService          HTTP customization service.
-     * @param powerAuthClient                   PowerAuth client.
+     * @param activationFlagService             Activation flags service.
      */
     @Autowired
     public IdentityVerificationStatusService(
@@ -92,7 +89,8 @@ public class IdentityVerificationStatusService {
             PresenceCheckService presenceCheckService,
             IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingServiceImpl onboardingService,
-            IdentityVerificationOtpService identityVerificationOtpService, HttpCustomizationService httpCustomizationService, PowerAuthClient powerAuthClient) {
+            IdentityVerificationOtpService identityVerificationOtpService,
+            ActivationFlagService activationFlagService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationService = identityVerificationService;
@@ -101,8 +99,7 @@ public class IdentityVerificationStatusService {
         this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
         this.identityVerificationOtpService = identityVerificationOtpService;
-        this.httpCustomizationService = httpCustomizationService;
-        this.powerAuthClient = powerAuthClient;
+        this.activationFlagService = activationFlagService;
     }
 
     /**
@@ -144,25 +141,12 @@ public class IdentityVerificationStatusService {
         }
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
-        try {
-            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
-            listRequest.setActivationId(ownerId.getActivationId());
-            final ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(
-                    listRequest,
-                    httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders()
-            );
-            List<String> flags = flagResponse.getActivationFlags();
-            if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
-                // Initialization is required because verification is not in progress for current identity verification
-                response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-                response.setIdentityVerificationPhase(null);
-                return response;
-            }
-        } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
+        if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+            // Initialization is required because verification is not in progress for current identity verification
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
+            return response;
         }
 
         response.setIdentityVerificationPhase(idVerification.getPhase());
@@ -230,7 +214,7 @@ public class IdentityVerificationStatusService {
 
     private void processVerificationResult(
             OwnerId ownerId,
-            IdentityVerificationEntity idVerification) throws RemoteCommunicationException, OnboardingProcessException {
+            IdentityVerificationEntity idVerification) throws RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException {
         identityVerificationService.processDocumentVerificationResult(ownerId, idVerification, IdentityVerificationPhase.COMPLETED);
         if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
             identityVerificationFinishService.finishIdentityVerification(ownerId);
@@ -267,7 +251,7 @@ public class IdentityVerificationStatusService {
     }
 
     private void continueWithPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException {
+            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
         if (identityVerificationConfig.isPresenceCheckEnabled()) {
             idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
             idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
@@ -279,7 +263,7 @@ public class IdentityVerificationStatusService {
     }
 
     private void continueAfterPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException {
+            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
         if (identityVerificationConfig.isVerificationOtpEnabled()) {
             // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
             idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);

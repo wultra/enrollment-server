@@ -25,17 +25,12 @@ import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationExceptio
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.List;
-
-import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
-import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING;
 
 /**
  * Service implementing creating of identity verification.
@@ -76,23 +71,11 @@ public class IdentityVerificationCreateService {
      */
     @Transactional
     public IdentityVerificationEntity createIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
-        try {
-            // Check limits on identity verifications
-            identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
+        // Check limits on identity verifications
+        identityVerificationLimitService.checkIdentityVerificationLimit(ownerId);
 
-            final List<String> activationFlags = activationFlagService.listActivationFlags(ownerId);
-            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
-                throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
-            }
-            activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
-            activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-
-            activationFlagService.updateActivationFlags(ownerId, activationFlags);
-        } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
-        }
+        // Initialize activation flags for identity verification
+        activationFlagService.initActivationFlagsForIdentityVerification(ownerId);
 
         final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
