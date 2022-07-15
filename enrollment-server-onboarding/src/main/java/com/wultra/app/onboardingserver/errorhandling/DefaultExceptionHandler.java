@@ -129,6 +129,18 @@ public class DefaultExceptionHandler {
     }
 
     /**
+     * Handling of document submit exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(DocumentSubmitException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleDocumentSubmitException(DocumentSubmitException ex) {
+        logger.warn("Document submit failed", ex);
+        return new ErrorResponse("DOCUMENT_SUBMIT_FAILED", "Document submit failed.");
+    }
+
+    /**
      * Handling of document verification exceptions.
      * @param ex Exception.
      * @return Response with error details.

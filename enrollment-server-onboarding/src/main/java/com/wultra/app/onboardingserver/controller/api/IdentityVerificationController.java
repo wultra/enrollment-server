@@ -134,6 +134,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when encryption fails.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
@@ -283,6 +284,7 @@ public class IdentityVerificationController {
      * @param requestData Binary request data.
      * @param eciesContext ECIES context.
      * @return Document upload response.
+     * @throws IdentityVerificationException Thrown when identity verification was not found.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentVerificationException Thrown when document is invalid.
@@ -296,7 +298,7 @@ public class IdentityVerificationController {
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationNotFoundException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
+            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when checking document verification status");
@@ -384,6 +386,7 @@ public class IdentityVerificationController {
      * @return Verification SDK initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws DocumentVerificationException Thrown when SKD initialization fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
     @PostMapping("document-verification/init-sdk")
@@ -490,6 +493,7 @@ public class IdentityVerificationController {
      * @param request Presence check initialization request.
      * @param eciesContext ECIES context.
      * @return Send OTP response.
+     * @throws IdentityVerificationException Thrown when identity verification is not found.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
