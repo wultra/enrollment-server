@@ -110,7 +110,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                     .build();
             userId = onboardingProvider.lookupUser(lookupUserRequest).getUserId();
         } catch (OnboardingProviderException e) {
-            logger.warn("User look failed, error: {}", e.getMessage(), e);
+            logger.warn("User lookup failed, error: {}", e.getMessage(), e);
             throw new OnboardingProcessException();
         }
 
