@@ -59,6 +59,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -149,12 +150,7 @@ public class IdentityVerificationController {
                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, PowerAuthEncryptionException, OnboardingProcessLimitException {
-
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when initializing identity verification");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing identity verification");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when initializing identity verification");
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
@@ -239,11 +235,8 @@ public class IdentityVerificationController {
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when checking document verification status");
-            throw new PowerAuthTokenInvalidException("Unable to verify device registration when checking document verification status");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when submitting documents for verification");
+
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when submitting documents for verification");
@@ -290,11 +283,8 @@ public class IdentityVerificationController {
                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when checking document verification status");
-            throw new PowerAuthTokenInvalidException("Unable to verify device registration when checking document verification status");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when uploading document for verification");
+
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed when uploading document for verification");
@@ -342,11 +332,7 @@ public class IdentityVerificationController {
                                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when checking document verification status");
-            throw new PowerAuthTokenInvalidException("Unable to verify device registration when checking document verification status");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when checking document verification status");
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -387,12 +373,7 @@ public class IdentityVerificationController {
             @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
-
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when initializing document verification SDK");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing document verification SDK");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when initializing document verification SDK");
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -439,12 +420,7 @@ public class IdentityVerificationController {
                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException,
             PresenceCheckNotEnabledException, PowerAuthEncryptionException, OnboardingProcessException, PresenceCheckLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
-
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when initializing presence check");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when initializing presence check");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when initializing presence check");
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -556,11 +532,7 @@ public class IdentityVerificationController {
                             @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
-        // Check if the authentication object is present
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration when performing document cleanup");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration when performing document cleanup");
-        }
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when performing document cleanup");
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -626,10 +598,8 @@ public class IdentityVerificationController {
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+        checkApiAuthentication(apiAuthentication, "Unable to verify device registration when approving user consent");
 
-        if (apiAuthentication == null) {
-            throw new PowerAuthAuthenticationException("Unable to authenticate");
-        }
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
@@ -648,7 +618,20 @@ public class IdentityVerificationController {
         return new Response();
     }
 
-    private void checkRequestObject(ObjectRequest<?> request, String errorMessage) throws PowerAuthEncryptionException {
+    /**
+     * Checks if the API authentication object is present
+     * @param apiAuthentication API authentication object value
+     * @param errorMessage Error message
+     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist
+     */
+    private void checkApiAuthentication(@Nullable PowerAuthApiAuthentication apiAuthentication, String errorMessage) throws PowerAuthTokenInvalidException {
+        if (apiAuthentication == null) {
+            logger.error(errorMessage);
+            throw new PowerAuthTokenInvalidException(errorMessage);
+        }
+    }
+
+    private void checkRequestObject(@Nullable ObjectRequest<?> request, String errorMessage) throws PowerAuthEncryptionException {
         if (request == null || request.getRequestObject() == null) {
             logger.error(errorMessage);
             throw new PowerAuthEncryptionException(errorMessage);
