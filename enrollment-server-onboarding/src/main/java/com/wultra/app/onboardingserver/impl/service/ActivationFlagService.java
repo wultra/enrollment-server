@@ -20,13 +20,18 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.*;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,6 +41,8 @@ import java.util.List;
  */
 @Service
 public class ActivationFlagService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ActivationFlagService.class);
 
     public static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
     public static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
@@ -54,11 +61,96 @@ public class ActivationFlagService {
     }
 
     /**
+     * Initialize activation flags for the first identity verification in an onboarding process.
+     * @param ownerId Owner identification.
+     * @throws IdentityVerificationException Thrown when VERIFICATION_PENDING activation flag is missing.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void initActivationFlagsForIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
+        try {
+            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
+                throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
+            }
+            activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
+            activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+
+            updateActivationFlags(ownerId, activationFlags);
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+    }
+
+    /**
+     * Update activation flags for failed identity verification.
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public void updateActivationFlagsForFailedIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
+        try {
+            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+
+            // Remove flag VERIFICATION_IN_PROGRESS
+            activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+
+            // Add flag VERIFICATION_PENDING to restart the identity verification process
+            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
+                activationFlags.add(ACTIVATION_FLAG_VERIFICATION_PENDING);
+            }
+
+            updateActivationFlags(ownerId, activationFlags);
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+    }
+
+    /**
+     * Update activation flags for successful completion of identity verification.
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown when
+     */
+    public void updateActivationFlagsForSucceededIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
+        try {
+            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+            if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+                throw new IdentityVerificationException("Activation flag VERIFICATION_IN_PROGRESS not found when completing identity verification");
+            }
+
+            // Remove flag VERIFICATION_IN_PROGRESS
+            removeActivationFlags(ownerId, Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+    }
+
+    /**
+     * Obtain list of activation flags.
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when list of activation flags could not be obtained.
+     */
+    public List<String> listActivationFlags(OwnerId ownerId) throws RemoteCommunicationException {
+        try {
+            return listActivationFlagsInternal(ownerId);
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+    }
+
+    /**
      * Obtain list of activation flags.
      * @param ownerId Owner identification.
      * @throws PowerAuthClientException Thrown when list of activation flags could not be obtained.
      */
-    public List<String> listActivationFlags(OwnerId ownerId) throws PowerAuthClientException {
+    private List<String> listActivationFlagsInternal(OwnerId ownerId) throws PowerAuthClientException {
         final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
         listRequest.setActivationId(ownerId.getActivationId());
         final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
@@ -76,7 +168,7 @@ public class ActivationFlagService {
      * @param activationFlags Activation flags to set.
      * @throws PowerAuthClientException Thrown when activation flags could not be updated.
      */
-    public void updateActivationFlags(OwnerId ownerId, List<String> activationFlags) throws PowerAuthClientException {
+    private void updateActivationFlags(OwnerId ownerId, List<String> activationFlags) throws PowerAuthClientException {
         final UpdateActivationFlagsRequest updateRequest = new UpdateActivationFlagsRequest();
         updateRequest.setActivationId(ownerId.getActivationId());
         updateRequest.getActivationFlags().addAll(activationFlags);
@@ -93,7 +185,7 @@ public class ActivationFlagService {
      * @param activationFlagsToRemove Activation flags to remove.
      * @throws PowerAuthClientException Thrown when activation flags could not be removed.
      */
-    public void removeActivationFlags(OwnerId ownerId, List<String> activationFlagsToRemove) throws PowerAuthClientException {
+    private void removeActivationFlags(OwnerId ownerId, List<String> activationFlagsToRemove) throws PowerAuthClientException {
         final RemoveActivationFlagsRequest removeRequest = new RemoveActivationFlagsRequest();
         removeRequest.setActivationId(ownerId.getActivationId());
         removeRequest.getActivationFlags().addAll(activationFlagsToRemove);

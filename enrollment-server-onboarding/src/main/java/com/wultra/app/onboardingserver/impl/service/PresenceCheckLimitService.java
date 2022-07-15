@@ -113,15 +113,8 @@ public class PresenceCheckLimitService {
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
-            // Remove flag VERIFICATION_IN_PROGRESS
-            try {
-                final List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-                activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
-            } catch (PowerAuthClientException ex) {
-                logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-                logger.debug(ex.getMessage(), ex);
-                throw new RemoteCommunicationException("Communication with PowerAuth server failed");
-            }
+            // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
+            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
 
             throw new PresenceCheckLimitException("Max failed attempts reached for presence check");
         }
