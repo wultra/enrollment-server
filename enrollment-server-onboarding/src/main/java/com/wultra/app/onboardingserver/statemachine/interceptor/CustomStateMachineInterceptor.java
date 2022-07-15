@@ -18,6 +18,7 @@ package com.wultra.app.onboardingserver.statemachine.interceptor;
 
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
 import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
@@ -50,6 +51,10 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
         if (e instanceof OnboardingProcessException) {
             logger.warn("Onboarding process failed", e);
             response = new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
+            status = HttpStatus.BAD_REQUEST;
+        } else if (e instanceof OnboardingOtpDeliveryException) {
+            logger.warn("Onboarding process failed", e);
+            response = new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckNotEnabledException) {
             logger.warn("Presence check transition with a not enabled presence check service", e);

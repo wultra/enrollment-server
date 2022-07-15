@@ -23,6 +23,8 @@ package com.wultra.app.onboardingserver.statemachine;
  */
 public class EventHeaderName {
 
+    public static final String IDENTITY_VERIFICATION = "identityVerification";
+
     public static final String OWNER_ID = "ownerId";
 
     public static final String PROCESS_ID = "processId";

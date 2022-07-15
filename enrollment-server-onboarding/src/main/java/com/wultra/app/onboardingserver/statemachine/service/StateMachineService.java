@@ -34,6 +34,9 @@ import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nullable;
+import java.util.Map;
+
 /**
  * State machine service
  *
@@ -74,7 +77,7 @@ public class StateMachineService {
             throws IdentityVerificationException {
         final StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
                 EnrollmentEvent.IDENTITY_VERIFICATION_INIT == event ?
-                prepareStateMachine(processId, EnrollmentState.INITIAL) :
+                prepareStateMachine(processId, EnrollmentState.INITIAL, null) :
                 fetchStateMachine(ownerId, processId);
         final Message<EnrollmentEvent> message = createMessage(ownerId, processId, event);
         sendEventMessage(stateMachine, message);
@@ -84,7 +87,8 @@ public class StateMachineService {
 
     private StateMachine<EnrollmentState, EnrollmentEvent> prepareStateMachine(
             String processId,
-            EnrollmentState enrollmentState
+            EnrollmentState enrollmentState,
+            @Nullable IdentityVerificationEntity identityVerification
     ) {
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
 
@@ -92,7 +96,12 @@ public class StateMachineService {
         stateMachine.getStateMachineAccessor().doWithAllRegions(sma -> {
             sma.addStateMachineInterceptor(stateMachineInterceptor);
             sma.resetStateMachineReactively(
-                    new DefaultStateMachineContext<>(enrollmentState, null, null, null) // stateMachine.getExtendedState()
+                    new DefaultStateMachineContext<>(
+                            enrollmentState,
+                            null,
+                            identityVerification != null ? Map.of(EventHeaderName.IDENTITY_VERIFICATION, identityVerification) : null,
+                            null
+                    )
             );
         });
         stateMachine.startReactively().block();
@@ -120,7 +129,7 @@ public class StateMachineService {
         IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
         EnrollmentState enrollmentState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
 
-        return prepareStateMachine(processId, enrollmentState);
+        return prepareStateMachine(processId, enrollmentState, identityVerification);
     }
 
 }

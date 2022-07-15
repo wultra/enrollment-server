@@ -18,11 +18,8 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -79,25 +76,21 @@ public class IdentityVerificationOtpService {
 
     /**
      * Resends an OTP code for a process during identity verification.
-     * @param ownerId Owner identification.
      * @param identityVerification Identity verification entity.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
-    public void resendOtp(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        checkPreconditions(ownerId, identityVerification);
+    public void resendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         sendOtpCode(identityVerification.getProcessId(), true);
     }
 
     /**
      * Sends an OTP code for a process during identity verification.
-     * @param ownerId Owner identification.
      * @param identityVerification Identity verification entity.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
-    public void sendOtp(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        checkPreconditions(ownerId, identityVerification);
+    public void sendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 
@@ -168,19 +161,6 @@ public class IdentityVerificationOtpService {
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException();
-        }
-    }
-
-    private void checkPreconditions(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws OnboardingProcessException {
-        if (!IdentityVerificationPhase.OTP_VERIFICATION.equals(identityVerification.getPhase())) {
-            logger.warn("Invalid identity verification phase {}, but expected {}, {}",
-                    identityVerification.getPhase(), IdentityVerificationPhase.OTP_VERIFICATION, ownerId);
-            throw new OnboardingProcessException("Unexpected state of identity verification");
-        }
-        if (!IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(identityVerification.getStatus())) {
-            logger.warn("Invalid identity verification status {}, but expected {}, {}",
-                    identityVerification.getStatus(), IdentityVerificationStatus.OTP_VERIFICATION_PENDING, ownerId);
-            throw new OnboardingProcessException("Unexpected state of identity verification");
         }
     }
 

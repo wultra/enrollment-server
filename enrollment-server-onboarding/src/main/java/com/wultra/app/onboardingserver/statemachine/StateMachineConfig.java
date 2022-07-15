@@ -18,11 +18,13 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.onboardingserver.statemachine.action.InitPresenceCheckAction;
 import com.wultra.app.onboardingserver.statemachine.action.InitVerificationAction;
+import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import com.wultra.app.onboardingserver.statemachine.guard.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationPreconditionsGuard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -59,22 +61,30 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
     private final InitVerificationAction initVerificationAction;
 
+    private final OtpVerificationSendAction otpVerificationSendAction;
+
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
+
+    private final OtpVerificationPreconditionsGuard otpVerificationPreconditionsGuard;
 
     private final PresenceCheckEnabledGuard presenceCheckEnabledGuard;
 
     private final ProcessIdentifierGuard processIdentifierGuard;
 
     public StateMachineConfig(
-            InitPresenceCheckAction initPresenceCheckAction,
-            InitVerificationAction initVerificationAction,
-            OtpVerificationEnabledGuard otpVerificationEnabledGuard,
-            PresenceCheckEnabledGuard presenceCheckEnabledGuard,
-            ProcessIdentifierGuard processIdentifierGuard) {
+            final InitPresenceCheckAction initPresenceCheckAction,
+            final InitVerificationAction initVerificationAction,
+            final OtpVerificationSendAction otpVerificationSendAction,
+            final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
+            final OtpVerificationPreconditionsGuard otpVerificationPreconditionsGuard,
+            final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
+            final ProcessIdentifierGuard processIdentifierGuard) {
         this.initPresenceCheckAction = initPresenceCheckAction;
         this.initVerificationAction = initVerificationAction;
+        this.otpVerificationSendAction = otpVerificationSendAction;
 
         this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
+        this.otpVerificationPreconditionsGuard = otpVerificationPreconditionsGuard;
         this.presenceCheckEnabledGuard = presenceCheckEnabledGuard;
         this.processIdentifierGuard = processIdentifierGuard;
     }
@@ -149,7 +159,31 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .withExternal()
                 .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(EnrollmentEvent.PRESENCE_CHECK_REJECTED)
-                .target(EnrollmentState.PRESENCE_CHECK_REJECTED);
+                .target(EnrollmentState.PRESENCE_CHECK_REJECTED)
+
+                .and()
+                .withExternal()
+                .source(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .event(EnrollmentEvent.OTP_VERIFICATION_SEND)
+                .guard(context ->
+                        processIdentifierGuard.evaluate(context) &&
+                        otpVerificationEnabledGuard.evaluate(context) &&
+                        otpVerificationPreconditionsGuard.evaluate(context)
+                )
+                .action(otpVerificationSendAction)
+                .target(EnrollmentState.OTP_VERIFICATION_PENDING)
+
+                .and()
+                .withExternal()
+                .source(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .event(EnrollmentEvent.OTP_VERIFICATION_RESEND)
+                .guard(context ->
+                        processIdentifierGuard.evaluate(context) &&
+                        otpVerificationEnabledGuard.evaluate(context) &&
+                        otpVerificationPreconditionsGuard.evaluate(context)
+                )
+                .action(otpVerificationSendAction)
+                .target(EnrollmentState.OTP_VERIFICATION_PENDING);
     }
 
     @Bean
@@ -159,6 +193,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
             @Override
             public void eventNotAccepted(Message<EnrollmentEvent> event) {
                 logger.warn("Not accepted event {}", event.getPayload());
+                // TODO
+                // throw new OnboardingProcessException("Unexpected state of identity verification");
             }
 
             @Override

@@ -22,12 +22,11 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
@@ -62,9 +61,7 @@ public class InitPresenceCheckAction implements Action<EnrollmentState, Enrollme
         if (sessionInfo != null && !context.getStateMachine().hasStateMachineError()) {
             final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
             response.setSessionAttributes(sessionInfo.getSessionAttributes());
-
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, new ObjectResponse<>(response));
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
+            StateContextUtil.setResponseOk(context, new ObjectResponse<>(response));
         }
     }
 

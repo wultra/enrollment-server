@@ -161,7 +161,7 @@ public class IdentityVerificationController {
     public ResponseEntity<Response> initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, PowerAuthEncryptionException, OnboardingProcessLimitException {
+            throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException {
 
         // Check if the authentication object is present
         if (apiAuthentication == null) {
@@ -171,10 +171,8 @@ public class IdentityVerificationController {
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed");
         }
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when initializing identity verification");
-            throw new PowerAuthAuthenticationException("Invalid request received when initializing identity verification");
-        }
+
+        checkRequestObject(request, "Invalid request received when initializing identity verification");
 
         // Initialize identity verification
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
@@ -223,10 +221,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES decryption failed when checking identity verification status");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when checking identity verification status");
-            throw new PowerAuthEncryptionException("Invalid request received when checking identity verification status");
-        }
+        checkRequestObject(request, "Invalid request received when checking identity verification status");
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
@@ -273,10 +268,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when submitting documents for verification");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when submitting documents for verification");
-            throw new PowerAuthEncryptionException("Invalid request received when submitting documents for verification");
-        }
+        checkRequestObject(request, "Invalid request received when submitting documents for verification");
 
         // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(eciesContext);
@@ -381,10 +373,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when checking document verification status");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when checking document verification status");
-            throw new PowerAuthEncryptionException("Invalid request received when checking document verification status");
-        }
+        checkRequestObject(request, "Invalid request received when checking document verification status");
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -430,10 +419,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when initializing document verification SDK");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when initializing document verification SDK");
-            throw new PowerAuthEncryptionException("Invalid request received when initializing document verification SDK");
-        }
+        checkRequestObject(request, "Invalid request received when initializing document verification SDK");
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -480,10 +466,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when initializing presence check");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when initializing presence check");
-            throw new PowerAuthEncryptionException("Invalid request received when initializing presence check");
-        }
+        checkRequestObject(request, "Invalid request received when initializing presence check");
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -504,9 +487,9 @@ public class IdentityVerificationController {
      */
     @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    public Response resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
-                              @Parameter(hidden = true) EciesEncryptionContext eciesContext)
-            throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+    public ResponseEntity<Response> resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
+                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+            throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
 
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
@@ -514,18 +497,13 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when sending OTP during identity verification");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when sending OTP during identity verification");
-            throw new PowerAuthEncryptionException("Invalid request received when sending OTP during identity verification");
-        }
+        checkRequestObject(request, "Invalid request received when sending OTP during identity verification");
 
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
-        onboardingService.verifyProcessId(ownerId, processId);
 
-        IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
-        identityVerificationOtpService.resendOtp(ownerId, identityVerification);
-        return new Response();
+        var stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, EnrollmentEvent.OTP_VERIFICATION_RESEND);
+        return createResponseEntity(stateMachine);
     }
 
     /**
@@ -549,10 +527,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when sending OTP during identity verification");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when verifying OTP during identity verification");
-            throw new PowerAuthEncryptionException("Invalid request received when sending OTP during identity verification");
-        }
+        checkRequestObject(request, "Invalid request received when verifying OTP during identity verification");
 
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
@@ -598,10 +573,7 @@ public class IdentityVerificationController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when performing document cleanup");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when performing document cleanup");
-            throw new PowerAuthEncryptionException("Invalid request received when performing document cleanup");
-        }
+        checkRequestObject(request, "Invalid request received when performing document cleanup");
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -680,6 +652,13 @@ public class IdentityVerificationController {
 
         onboardingService.approveConsent(requestObject, ownerId);
         return new Response();
+    }
+
+    private void checkRequestObject(ObjectRequest<?> request, String errorMessage) throws PowerAuthEncryptionException {
+        if (request == null || request.getRequestObject() == null) {
+            logger.error(errorMessage);
+            throw new PowerAuthEncryptionException(errorMessage);
+        }
     }
 
     /**
