@@ -21,6 +21,9 @@ import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
+
+import java.util.Locale;
 
 /**
  * Request object for {@link OnboardingProvider#sendOtpCode(SendOtpCodeRequest)}.
@@ -29,8 +32,12 @@ import lombok.NonNull;
  */
 @Builder
 @Getter
+@ToString(exclude = "otpCode")
 @PublicApi
 public final class SendOtpCodeRequest {
+
+    @NonNull
+    private String processId;
 
     @NonNull
     private String userId;
@@ -39,4 +46,15 @@ public final class SendOtpCodeRequest {
     private String otpCode;
 
     private boolean resend;
+
+    @NonNull
+    private Locale locale;
+
+    @NonNull
+    private OtpType otpType;
+
+    public enum OtpType {
+        ACTIVATION,
+        USER_VERIFICATION
+    }
 }

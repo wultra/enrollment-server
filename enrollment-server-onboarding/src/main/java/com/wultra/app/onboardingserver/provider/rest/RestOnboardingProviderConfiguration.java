@@ -15,29 +15,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.rest;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.time.Duration;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Configuration for {@link OnboardingProvider}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
+@ConfigurationProperties("enrollment-server-onboarding.onboarding-adapter")
 @Getter
-@PublicApi
-@ToString
-public final class LookupUserResponse {
+@Setter
+class RestOnboardingProviderConfiguration {
 
-    @NonNull
-    private String userId;
+    private Duration connectionTimeout = Duration.ofSeconds(2);
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    private Duration handshakeTimeout = Duration.ofSeconds(5);
+
+    private Duration responseTimeout = Duration.ofSeconds(5);
 }

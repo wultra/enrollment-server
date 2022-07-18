@@ -21,6 +21,7 @@ import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -32,6 +33,7 @@ import java.util.UUID;
  */
 @Builder
 @Getter
+@ToString
 @PublicApi
 public final class ConsentTextRequest {
 

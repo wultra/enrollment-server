@@ -20,24 +20,18 @@ package com.wultra.app.onboardingserver.provider;
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.ToString;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Response object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
 @Getter
-@PublicApi
 @ToString
-public final class LookupUserResponse {
+@PublicApi
+public final class EvaluateClientResponse {
 
-    @NonNull
-    private String userId;
-
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    private boolean successful;
 }

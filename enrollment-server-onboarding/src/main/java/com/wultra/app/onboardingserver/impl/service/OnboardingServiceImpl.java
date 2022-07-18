@@ -41,6 +41,7 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -150,14 +151,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Send the OTP code
         try {
             final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                    .processId(process.getId())
                     .userId(userId)
                     .otpCode(otpCode)
                     .resend(false)
+                    .locale(LocaleContextHolder.getLocale())
+                    .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
                     .build();
             onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException();
+            throw new OnboardingOtpDeliveryException(e);
         }
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(process.getId());
@@ -181,14 +185,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Resend the OTP code
         try {
             final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                    .processId(processId)
                     .userId(userId)
                     .otpCode(otpCode)
+                    .locale(LocaleContextHolder.getLocale())
                     .resend(true)
+                    .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
                     .build();
             onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException();
+            throw new OnboardingOtpDeliveryException(e);
         }
         return new Response();
     }
@@ -288,6 +295,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
+    @Override
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
         if (processOptional.isEmpty()) {
@@ -330,19 +338,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      *
      * @param request consent text request
      * @param userId user identification
-     * @param locale locale
      * @return consent response
      */
     public OnboardingConsentTextResponse fetchConsentText(
             final OnboardingConsentTextRequest request,
-            final String userId,
-            final Locale locale) throws OnboardingProcessException {
+            final String userId) throws OnboardingProcessException {
 
         final ConsentTextRequest providerRequest = ConsentTextRequest.builder()
                 .processId(request.getProcessId())
                 .userId(userId)
                 .consentType(request.getConsentType())
-                .locale(locale)
+                .locale(LocaleContextHolder.getLocale())
                 .build();
 
         try {
@@ -359,12 +365,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Record dis/approval of consent
      *
      * @param request approval request
-     * @param ownerId owner identification
+     * @param userId user identification
      */
-    public void approveConsent(final OnboardingConsentApprovalRequest request, final OwnerId ownerId) throws OnboardingProcessException {
+    public void approveConsent(final OnboardingConsentApprovalRequest request, final String userId) throws OnboardingProcessException {
         final ApproveConsentRequest providerRequest = ApproveConsentRequest.builder()
                 .processId(request.getProcessId())
-                .userId(ownerId.getUserId())
+                .userId(userId)
                 .consentType(request.getConsentType())
                 .approved(request.getApproved())
                 .build();

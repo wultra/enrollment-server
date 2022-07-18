@@ -17,27 +17,28 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Test for {@link SendOtpCodeRequest}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@PublicApi
-@ToString
-public final class LookupUserResponse {
+class SendOtpCodeRequestTest {
 
-    @NonNull
-    private String userId;
-
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    @Test
+    void testToString() {
+        final String result = SendOtpCodeRequest.builder()
+                .otpCode("top secret")
+                .processId("666")
+                .locale(Locale.ENGLISH)
+                .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
+                .userId("42")
+                .build().toString();
+        assertFalse(result.contains("top secret"), "otp must not be present at " + result);
+    }
 }

@@ -23,21 +23,28 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 
+import java.util.UUID;
+
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Request object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
 @Getter
-@PublicApi
 @ToString
-public final class LookupUserResponse {
+@PublicApi
+public final class EvaluateClientRequest {
+
+    @NonNull
+    private UUID processId;
 
     @NonNull
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    @NonNull
+    private String identityVerificationId;
+
+    @NonNull
+    private String verificationId;
 }
