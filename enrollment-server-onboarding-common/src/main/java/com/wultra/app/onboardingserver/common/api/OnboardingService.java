@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.api;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -37,6 +38,14 @@ public interface OnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     String findUserIdByProcessId(String processId) throws OnboardingProcessException;
+
+    /**
+     * Get process status for an onboarding process.
+     * @param processId Onboarding process identifier.
+     * @return Onboarding process status.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    OnboardingStatus getProcessStatus(String processId) throws OnboardingProcessException;
 
     /**
      * Update the process.

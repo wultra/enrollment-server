@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.api.OnboardingService;
 import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -80,6 +81,11 @@ public class CommonOnboardingService implements OnboardingService {
     @Override
     public String findUserIdByProcessId(final String processId) throws OnboardingProcessException {
         return findProcess(processId).getUserId();
+    }
+
+    @Override
+    public OnboardingStatus getProcessStatus(String processId) throws OnboardingProcessException {
+        return findProcess(processId).getStatus();
     }
 
     /**
