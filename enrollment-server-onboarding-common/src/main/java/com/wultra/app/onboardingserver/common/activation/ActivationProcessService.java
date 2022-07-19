@@ -86,8 +86,8 @@ public class ActivationProcessService {
      * @return Onboarding process status.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    public String getProcessStatus(String processId) throws OnboardingProcessException {
-        return onboardingService.findUserIdByProcessId(processId);
+    public OnboardingStatus getProcessStatus(String processId) throws OnboardingProcessException {
+        return onboardingService.getProcessStatus(processId);
     }
 
 }
