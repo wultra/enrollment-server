@@ -80,4 +80,14 @@ public class ActivationProcessService {
         return onboardingService.findUserIdByProcessId(processId);
     }
 
+    /**
+     * Get process status for an onboarding process.
+     * @param processId Onboarding process identifier.
+     * @return Onboarding process status.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    public String getProcessStatus(String processId) throws OnboardingProcessException {
+        return onboardingService.findUserIdByProcessId(processId);
+    }
+
 }
