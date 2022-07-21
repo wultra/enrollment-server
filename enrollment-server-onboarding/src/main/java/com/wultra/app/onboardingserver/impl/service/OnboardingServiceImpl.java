@@ -307,12 +307,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Terminate processes with activations in progress
         final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
         final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION);
 
         // Terminate processes with verifications in progress
         final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
         final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION);
 
         // Terminate OTP codes for all processes
         final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
@@ -322,7 +322,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Terminate expired processes
         final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
         final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses);
+        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING);
     }
 
     /**
