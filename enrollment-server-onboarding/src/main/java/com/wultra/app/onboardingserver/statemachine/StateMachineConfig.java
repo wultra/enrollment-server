@@ -341,7 +341,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
             @Override
             public void stateChanged(State<EnrollmentState, EnrollmentEvent> from, State<EnrollmentState, EnrollmentEvent> to) {
-                logger.info("State changed to {}", to.getId());
+                logger.debug("State changed from {} to {}", from.getId(), to.getId());
             }
 
         };
