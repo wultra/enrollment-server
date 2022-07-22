@@ -32,7 +32,10 @@ import org.springframework.statemachine.StateContext;
 public class StateContextUtil {
 
     public static void setResponseOk(StateContext<EnrollmentState, EnrollmentEvent> context, Response response) {
-        Preconditions.checkArgument(!context.getStateMachine().hasStateMachineError(), ""); // TODO
+        Preconditions.checkArgument(
+                !context.getStateMachine().hasStateMachineError(),
+                String.format("Found state machine error in %s, when expected ok", context)
+        );
         context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, response);
         context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
     }
