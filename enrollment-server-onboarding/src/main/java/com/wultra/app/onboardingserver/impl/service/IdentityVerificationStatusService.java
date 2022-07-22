@@ -27,6 +27,10 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
@@ -35,6 +39,7 @@ import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationSe
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -58,6 +63,8 @@ public class IdentityVerificationStatusService {
 
     private final HttpCustomizationService httpCustomizationService;
 
+    private final StateMachineService stateMachineService;
+
     private final PowerAuthClient powerAuthClient;
 
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
@@ -74,10 +81,12 @@ public class IdentityVerificationStatusService {
             IdentityVerificationService identityVerificationService,
             OnboardingServiceImpl onboardingService,
             HttpCustomizationService httpCustomizationService,
+            StateMachineService stateMachineService,
             PowerAuthClient powerAuthClient) {
         this.identityVerificationService = identityVerificationService;
         this.onboardingService = onboardingService;
         this.httpCustomizationService = httpCustomizationService;
+        this.stateMachineService = stateMachineService;
         this.powerAuthClient = powerAuthClient;
     }
 
@@ -140,7 +149,10 @@ public class IdentityVerificationStatusService {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
 
-        // TODO state machine, check for next state transition
+        StateMachine<EnrollmentState, EnrollmentEvent> state =
+                stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+
+        idVerification = state.getExtendedState().get(EventHeaderName.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
