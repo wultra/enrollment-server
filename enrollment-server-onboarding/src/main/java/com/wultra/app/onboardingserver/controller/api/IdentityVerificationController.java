@@ -169,8 +169,6 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // TODO check not yet started verification
-
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
                 stateMachineService.processStateMachineEvent(ownerId, processId, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
 
