@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,13 +57,16 @@ public class EnrollmentStateProvider {
     }
 
     private void initAllStates() {
-        for (EnrollmentState value : EnrollmentState.values()) {
-            Map<IdentityVerificationStatus, EnrollmentState> stateByStatus = stateByPhaseStatus.computeIfAbsent(value.getPhase(), k -> new HashMap<>());
-            if (stateByStatus.containsKey(value.getStatus())) {
-                throw new IllegalStateException("Already mapped phase and status: " + value);
-            }
-            stateByStatus.put(value.getStatus(), value);
-        }
+        Arrays.stream(EnrollmentState.values())
+                .filter(state -> !state.isChoiceState())
+                .forEach(value -> {
+                    Map<IdentityVerificationStatus, EnrollmentState> stateByStatus =
+                            stateByPhaseStatus.computeIfAbsent(value.getPhase(), k -> new HashMap<>());
+                    if (stateByStatus.containsKey(value.getStatus())) {
+                        throw new IllegalStateException("Already mapped phase and status: " + value);
+                    }
+                    stateByStatus.put(value.getStatus(), value);
+                });
     }
 
 }

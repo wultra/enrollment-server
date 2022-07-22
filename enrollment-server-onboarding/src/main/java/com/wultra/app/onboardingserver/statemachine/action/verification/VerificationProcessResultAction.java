@@ -14,52 +14,57 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.action;
+package com.wultra.app.onboardingserver.statemachine.action.verification;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import io.getlime.core.rest.model.base.response.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Action to initialize the verification
+ * Action to process verification result
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class InitVerificationAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class VerificationProcessResultAction implements Action<EnrollmentState, EnrollmentEvent> {
+
+    private static final Logger logger = LoggerFactory.getLogger(VerificationProcessResultAction.class);
+
+    private final IdentityVerificationFinishService identityVerificationFinishService;
 
     private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public InitVerificationAction(IdentityVerificationService identityVerificationService) {
+    public VerificationProcessResultAction(IdentityVerificationFinishService identityVerificationFinishService, IdentityVerificationService identityVerificationService) {
+        this.identityVerificationFinishService = identityVerificationFinishService;
         this.identityVerificationService = identityVerificationService;
     }
 
     @Override
     public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
-
-        try {
-            identityVerificationService.initializeIdentityVerification(ownerId, processId);
-        } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
-            context.getStateMachine().setStateMachineError(e);
-        }
-        if (!context.getStateMachine().hasStateMachineError()) {
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, new Response());
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
+        IdentityVerificationEntity identityVerification = (IdentityVerificationEntity) context.getMessageHeader(EventHeaderName.IDENTITY_VERIFICATION);
+        identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification, IdentityVerificationPhase.COMPLETED);
+        if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+            try {
+                identityVerificationFinishService.finishIdentityVerification(ownerId);
+            } catch (OnboardingProcessException | RemoteCommunicationException e) {
+                context.getStateMachine().setStateMachineError(e);
+            }
         }
     }
 

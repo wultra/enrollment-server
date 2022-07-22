@@ -19,6 +19,11 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
@@ -26,8 +31,6 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.model.enumeration.*;
-import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,6 +245,36 @@ public class PresenceCheckService {
         String photoId = preferredDocWithPhoto.getPhotoId();
         return identityVerificationService.getPhotoById(photoId);
     }
+
+    public void evaluatePresenceCheckResult(OwnerId ownerId,
+                                             IdentityVerificationEntity idVerification,
+                                             PresenceCheckResult result) {
+        switch (result.getStatus()) {
+            case ACCEPTED:
+                idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.info("Presence check accepted, {}", ownerId);
+                break;
+            case FAILED:
+                idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
+                break;
+            case IN_PROGRESS:
+                logger.debug("Presence check still in progress, {}", ownerId);
+                break;
+            case REJECTED:
+                idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setStatus(IdentityVerificationStatus.REJECTED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
+        }
+    }
+
 
     /**
      * Fetches a current identity verification for presence check initialization

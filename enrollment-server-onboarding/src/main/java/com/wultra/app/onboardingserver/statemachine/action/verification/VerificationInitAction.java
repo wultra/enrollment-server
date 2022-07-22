@@ -14,36 +14,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.action;
+package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.api.model.onboarding.response.PresenceCheckInitResponse;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.errorhandling.*;
-import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
-import io.getlime.core.rest.model.base.response.ObjectResponse;
+import io.getlime.core.rest.model.base.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Action to initialize the presence check process
+ * Action to initialize the verification
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class InitPresenceCheckAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class VerificationInitAction implements Action<EnrollmentState, EnrollmentEvent> {
 
-    private final PresenceCheckService presenceCheckService;
+    private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public InitPresenceCheckAction(PresenceCheckService presenceCheckService) {
-        this.presenceCheckService = presenceCheckService;
+    public VerificationInitAction(IdentityVerificationService identityVerificationService) {
+        this.identityVerificationService = identityVerificationService;
     }
 
     @Override
@@ -51,17 +52,14 @@ public class InitPresenceCheckAction implements Action<EnrollmentState, Enrollme
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
-        SessionInfo sessionInfo = null;
         try {
-            sessionInfo = presenceCheckService.init(ownerId, processId);
-        } catch (DocumentVerificationException | IdentityVerificationException | OnboardingProcessLimitException |
-                 PresenceCheckException | PresenceCheckLimitException | RemoteCommunicationException e) {
+            identityVerificationService.initializeIdentityVerification(ownerId, processId);
+        } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
         }
-        if (sessionInfo != null && !context.getStateMachine().hasStateMachineError()) {
-            final PresenceCheckInitResponse response = new PresenceCheckInitResponse();
-            response.setSessionAttributes(sessionInfo.getSessionAttributes());
-            StateContextUtil.setResponseOk(context, new ObjectResponse<>(response));
+        if (!context.getStateMachine().hasStateMachineError()) {
+            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, new Response());
+            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
         }
     }
 

@@ -414,7 +414,6 @@ public class IdentityVerificationController {
      * @throws IdentityVerificationException Thrown when identity verification is not found.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
-     * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
     @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)

@@ -44,7 +44,7 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
     private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
 
     @Override
-    public Exception stateMachineError(StateMachine stateMachine, Exception e) {
+    public Exception stateMachineError(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine, Exception e) {
         HttpStatus status;
         Response response;
 

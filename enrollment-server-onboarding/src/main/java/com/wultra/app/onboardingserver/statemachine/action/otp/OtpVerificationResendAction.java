@@ -16,8 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.otp;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
@@ -36,19 +34,19 @@ import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Action to send OTP verification
+ * Action to resend OTP verification
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class OtpVerificationSendAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class OtpVerificationResendAction implements Action<EnrollmentState, EnrollmentEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(OtpVerificationSendAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(OtpVerificationResendAction.class);
 
     private final IdentityVerificationOtpService identityVerificationOtpService;
 
     @Autowired
-    public OtpVerificationSendAction(IdentityVerificationOtpService identityVerificationOtpService) {
+    public OtpVerificationResendAction(IdentityVerificationOtpService identityVerificationOtpService) {
         this.identityVerificationOtpService = identityVerificationOtpService;
     }
 
@@ -57,12 +55,9 @@ public class OtpVerificationSendAction implements Action<EnrollmentState, Enroll
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = (IdentityVerificationEntity) context.getMessageHeader(EventHeaderName.IDENTITY_VERIFICATION);
         try {
-            // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
-            identityVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-            identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-            identityVerificationOtpService.sendOtp(identityVerification);
+            identityVerificationOtpService.resendOtp(identityVerification);
         } catch (OnboardingProcessException | OnboardingOtpDeliveryException e) {
-            logger.warn("Unable to send OTP, {}", ownerId, e);
+            logger.warn("Unable to resend OTP, {}", ownerId, e);
             context.getStateMachine().setStateMachineError(e);
         }
 

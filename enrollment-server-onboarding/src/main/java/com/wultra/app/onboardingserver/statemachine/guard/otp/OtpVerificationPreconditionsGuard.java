@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
+// TODO needed, state preconditions are ensured by the state machine
 @Component
 public class OtpVerificationPreconditionsGuard implements Guard<EnrollmentState, EnrollmentEvent> {
 

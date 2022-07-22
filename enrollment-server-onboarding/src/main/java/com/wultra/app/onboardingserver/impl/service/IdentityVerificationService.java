@@ -224,20 +224,11 @@ public class IdentityVerificationService {
      * Starts the verification process
      *
      * @param ownerId Owner identification.
-     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @param identityVerification Identity verification.
      * @throws DocumentVerificationException Thrown when document verification fails.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId) throws IdentityVerificationException, DocumentVerificationException {
-        Optional<IdentityVerificationEntity> identityVerificationOptional =
-                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-
-        if (identityVerificationOptional.isEmpty()) {
-            logger.error("No identity verification entity found to start the verification, {}", ownerId);
-            throw new IdentityVerificationException("Unable to start verification");
-        }
-        IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
-
+    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException {
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
