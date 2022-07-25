@@ -78,6 +78,7 @@
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
         <module>enrollment-server-onboarding</module>
+        <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-api-model</module>
         <module>enrollment-server-onboarding-common</module>
     </modules>

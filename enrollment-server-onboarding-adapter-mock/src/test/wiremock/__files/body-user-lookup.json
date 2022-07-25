@@ -1,0 +1,4 @@
+{
+  "userId": "mockuser_{{jsonPath request.body '$.identification.clientNumber'}}",
+  "consentRequired": true
+}
