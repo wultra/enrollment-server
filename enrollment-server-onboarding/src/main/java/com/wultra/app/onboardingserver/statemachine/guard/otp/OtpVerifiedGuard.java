@@ -18,7 +18,7 @@ package com.wultra.app.onboardingserver.statemachine.guard.otp;
 
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class OtpVerifiedGuard implements Guard<EnrollmentState, EnrollmentEvent>
 
     @Override
     public boolean evaluate(StateContext<EnrollmentState, EnrollmentEvent> context) {
-        IdentityVerificationEntity identityVerification = (IdentityVerificationEntity) context.getMessageHeader(EventHeaderName.IDENTITY_VERIFICATION);
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         return identityVerificationOtpService.isUserVerifiedUsingOtp(identityVerification.getProcessId());
     }
 

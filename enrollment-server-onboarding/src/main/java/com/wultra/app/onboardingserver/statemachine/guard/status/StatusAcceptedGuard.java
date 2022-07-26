@@ -14,30 +14,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.util;
+package com.wultra.app.onboardingserver.statemachine.guard.status;
 
-import com.google.common.base.Preconditions;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import io.getlime.core.rest.model.base.response.Response;
-import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
+import org.springframework.statemachine.guard.Guard;
+import org.springframework.stereotype.Component;
 
 /**
- * State context util
+ * Guard to check {@link IdentityVerificationStatus#ACCEPTED} status
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class StateContextUtil {
+@Component
+public class StatusAcceptedGuard implements Guard<EnrollmentState, EnrollmentEvent> {
 
-    public static void setResponseOk(StateContext<EnrollmentState, EnrollmentEvent> context, Response response) {
-        Preconditions.checkArgument(
-                !context.getStateMachine().hasStateMachineError(),
-                String.format("Found state machine error in %s, when expected ok", context)
-        );
-        context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, response);
-        context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
+    @Override
+    public boolean evaluate(StateContext<EnrollmentState, EnrollmentEvent> context) {
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        return IdentityVerificationStatus.ACCEPTED == identityVerification.getStatus();
     }
 
 }

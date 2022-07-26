@@ -34,10 +34,7 @@ import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploa
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationPreconditionsGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusVerificationPendingGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -102,6 +99,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
     private final ProcessIdentifierGuard processIdentifierGuard;
 
+    private final StatusAcceptedGuard statusAcceptedGuard;
+
     private final StatusFailedGuard statusFailedGuard;
 
     private final StatusInProgressGuard statusInProgressGuard;
@@ -127,6 +126,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
             final OtpVerifiedGuard otpVerifiedGuard,
             final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
             final ProcessIdentifierGuard processIdentifierGuard,
+            final StatusAcceptedGuard statusAcceptedGuard,
             final StatusFailedGuard statusFailedGuard,
             final StatusInProgressGuard statusInProgressGuard,
             final StatusRejectedGuard statusRejectedGuard,
@@ -154,6 +154,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
         this.processIdentifierGuard = processIdentifierGuard;
 
+        this.statusAcceptedGuard = statusAcceptedGuard;
         this.statusFailedGuard = statusFailedGuard;
         this.statusInProgressGuard = statusInProgressGuard;
         this.statusRejectedGuard = statusRejectedGuard;
@@ -303,6 +304,38 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .last(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction)
 
                 .and()
+                .withChoice()
+                .source(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
+                .first(EnrollmentState.COMPLETED_ACCEPTED, statusAcceptedGuard)
+                .then(EnrollmentState.COMPLETED_REJECTED, statusRejectedGuard)
+                .last(EnrollmentState.COMPLETED_FAILED);
+
+                configureOtpTransitions(transitions);
+    }
+
+    @Bean
+    public StateMachineListener<EnrollmentState, EnrollmentEvent> listener() {
+        return new StateMachineListenerAdapter<>() {
+
+            @Override
+            public void eventNotAccepted(Message<EnrollmentEvent> event) {
+                logger.warn("Not accepted event {}", event.getPayload());
+                // TODO
+                // throw new OnboardingProcessException("Unexpected state of identity verification");
+            }
+
+            @Override
+            public void stateChanged(State<EnrollmentState, EnrollmentEvent> from, State<EnrollmentState, EnrollmentEvent> to) {
+                if (from != null) {
+                    logger.debug("State changed from {} to {}", from.getId(), to.getId());
+                }
+            }
+
+        };
+    }
+
+    private void configureOtpTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+                transitions
                 .withExternal()
                 .source(EnrollmentState.OTP_VERIFICATION_PENDING)
                 .event(EnrollmentEvent.OTP_VERIFICATION_RESEND)
@@ -325,26 +358,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .source(EnrollmentState.CHOICE_OTP_VERIFICATION)
                 .first(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, otpVerifiedGuard, verificationProcessResultAction)
                 .last(EnrollmentState.OTP_VERIFICATION_PENDING);
-
-    }
-
-    @Bean
-    public StateMachineListener<EnrollmentState, EnrollmentEvent> listener() {
-        return new StateMachineListenerAdapter<>() {
-
-            @Override
-            public void eventNotAccepted(Message<EnrollmentEvent> event) {
-                logger.warn("Not accepted event {}", event.getPayload());
-                // TODO
-                // throw new OnboardingProcessException("Unexpected state of identity verification");
-            }
-
-            @Override
-            public void stateChanged(State<EnrollmentState, EnrollmentEvent> from, State<EnrollmentState, EnrollmentEvent> to) {
-                logger.debug("State changed from {} to {}", from.getId(), to.getId());
-            }
-
-        };
     }
 
 }

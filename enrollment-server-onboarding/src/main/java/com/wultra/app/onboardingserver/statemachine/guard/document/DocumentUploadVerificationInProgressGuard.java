@@ -19,7 +19,7 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.springframework.statemachine.StateContext;
@@ -36,7 +36,7 @@ public class DocumentUploadVerificationInProgressGuard implements Guard<Enrollme
 
     @Override
     public boolean evaluate(StateContext<EnrollmentState, EnrollmentEvent> context) {
-        IdentityVerificationEntity identityVerification = (IdentityVerificationEntity) context.getMessageHeader(EventHeaderName.IDENTITY_VERIFICATION);
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         return IdentityVerificationPhase.DOCUMENT_UPLOAD == identityVerification.getPhase() && IdentityVerificationStatus.IN_PROGRESS == identityVerification.getStatus();
     }
 

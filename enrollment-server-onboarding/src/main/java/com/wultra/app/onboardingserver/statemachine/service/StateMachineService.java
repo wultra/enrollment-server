@@ -21,21 +21,23 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineEventResult;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * State machine service
@@ -85,12 +87,17 @@ public class StateMachineService {
         return stateMachine;
     }
 
-    private StateMachine<EnrollmentState, EnrollmentEvent> prepareStateMachine(
+    public StateMachine<EnrollmentState, EnrollmentEvent> prepareStateMachine(
             String processId,
             EnrollmentState enrollmentState,
             @Nullable IdentityVerificationEntity identityVerification
     ) {
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
+
+        ExtendedState extendedState = new DefaultExtendedState();
+        if (identityVerification != null) {
+            extendedState.getVariables().put(ExtendedStateVariable.IDENTITY_VERIFICATION, identityVerification);
+        }
 
         stateMachine.stopReactively().block();
         stateMachine.getStateMachineAccessor().doWithAllRegions(sma -> {
@@ -99,17 +106,17 @@ public class StateMachineService {
                     new DefaultStateMachineContext<>(
                             enrollmentState,
                             null,
-                            identityVerification != null ? Map.of(EventHeaderName.IDENTITY_VERIFICATION, identityVerification) : null,
-                            null
+                            null,
+                            extendedState
                     )
-            );
+            ).block();
         });
         stateMachine.startReactively().block();
 
         return stateMachine;
     }
 
-    private Message<EnrollmentEvent> createMessage(OwnerId ownerId, String processId, EnrollmentEvent event) {
+    public Message<EnrollmentEvent> createMessage(OwnerId ownerId, String processId, EnrollmentEvent event) {
         return MessageBuilder.withPayload(event)
                 .setHeader(EventHeaderName.OWNER_ID, ownerId)
                 .setHeader(EventHeaderName.PROCESS_ID, processId)

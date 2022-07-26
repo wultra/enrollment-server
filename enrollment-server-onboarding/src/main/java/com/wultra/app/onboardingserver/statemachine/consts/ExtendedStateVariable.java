@@ -14,19 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine;
+package com.wultra.app.onboardingserver.statemachine.consts;
 
 /**
- * Header names in events
+ * Names of variables in the extended state
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class EventHeaderName {
+public class ExtendedStateVariable {
 
     public static final String IDENTITY_VERIFICATION = "identityVerification";
 
-    public static final String OWNER_ID = "ownerId";
+    public static final String RESPONSE_OBJECT = "responseObject";
 
-    public static final String PROCESS_ID = "processId";
+    public static final String RESPONSE_STATUS = "responseStatus";
 
 }

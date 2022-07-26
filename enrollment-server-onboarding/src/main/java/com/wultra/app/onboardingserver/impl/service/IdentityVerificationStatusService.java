@@ -27,7 +27,7 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
@@ -152,7 +152,7 @@ public class IdentityVerificationStatusService {
         StateMachine<EnrollmentState, EnrollmentEvent> state =
                 stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        idVerification = state.getExtendedState().get(EventHeaderName.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        idVerification = state.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());

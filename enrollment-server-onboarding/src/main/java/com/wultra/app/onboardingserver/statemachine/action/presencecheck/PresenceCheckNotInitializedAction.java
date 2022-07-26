@@ -20,7 +20,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class PresenceCheckNotInitializedAction implements Action<EnrollmentState
     @Override
     public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = (IdentityVerificationEntity) context.getMessageHeader(EventHeaderName.IDENTITY_VERIFICATION);
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         identityVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
         identityVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);

@@ -21,8 +21,8 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationExcepti
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.statemachine.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import io.getlime.core.rest.model.base.response.Response;

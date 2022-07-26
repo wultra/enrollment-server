@@ -21,7 +21,7 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationExcepti
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
-import com.wultra.app.onboardingserver.statemachine.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
