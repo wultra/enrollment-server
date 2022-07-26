@@ -246,12 +246,13 @@ public class PresenceCheckService {
         return identityVerificationService.getPhotoById(photoId);
     }
 
+    @Transactional
     public void evaluatePresenceCheckResult(OwnerId ownerId,
                                              IdentityVerificationEntity idVerification,
                                              PresenceCheckResult result) {
         switch (result.getStatus()) {
             case ACCEPTED:
-                idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.info("Presence check accepted, {}", ownerId);
                 break;
@@ -274,7 +275,6 @@ public class PresenceCheckService {
                 throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
         }
     }
-
 
     /**
      * Fetches a current identity verification for presence check initialization

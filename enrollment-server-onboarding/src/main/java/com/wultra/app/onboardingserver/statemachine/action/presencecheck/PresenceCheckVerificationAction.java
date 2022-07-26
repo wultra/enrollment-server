@@ -56,9 +56,11 @@ public class PresenceCheckVerificationAction implements Action<EnrollmentState, 
     }
 
     @Override
-    public void execute (StateContext < EnrollmentState, EnrollmentEvent > context) {
+    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+
+        // TODO use one transaction
 
         SessionInfo sessionInfo =
                 jsonSerializationService.deserialize(identityVerification.getSessionInfo(), SessionInfo.class);

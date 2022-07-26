@@ -53,7 +53,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = { EnrollmentServerTestApplication.class })
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class OtpVerificationTest {
+public class OtpTransitionsTest {
 
     @Autowired
     private EnrollmentStateProvider enrollmentStateProvider;
@@ -74,12 +74,7 @@ public class OtpVerificationTest {
     private StateMachineService stateMachineService;
 
     @Test
-    public void test() throws Exception {
-        // TODO verification pending when OTP not verified
-    }
-
-    @Test
-    public void testResendOtp() throws Exception {
+    public void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
@@ -109,7 +104,7 @@ public class OtpVerificationTest {
     }
 
     @Test
-    public void testVerification() throws Exception {
+    public void testOtpVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
@@ -134,6 +129,29 @@ public class OtpVerificationTest {
                         .and()
                         .build();
         expected.test();
+        verify(verificationProcessResultAction).execute(any(StateContext.class));
+    }
+
+    @Test
+    public void testOtpNotVerified() throws Exception {
+        IdentityVerificationEntity idVerification = createIdentityVerification();
+        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())).thenReturn(false);
+
+        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
+                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
+                        .stateMachine(stateMachine)
+                        .step()
+                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                        .and()
+                        .step()
+                        .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
+                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                        .and()
+                        .build();
+        expected.test();
+        verify(verificationProcessResultAction, never()).execute(any(StateContext.class));
     }
 
     private StateMachine<EnrollmentState, EnrollmentEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {

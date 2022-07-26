@@ -32,9 +32,11 @@ import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationInProgressGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationPreconditionsGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.*;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -91,8 +93,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
 
-    private final OtpVerificationPreconditionsGuard otpVerificationPreconditionsGuard;
-
     private final OtpVerifiedGuard otpVerifiedGuard;
 
     private final PresenceCheckEnabledGuard presenceCheckEnabledGuard;
@@ -107,8 +107,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
 
     private final StatusRejectedGuard statusRejectedGuard;
 
-    private final StatusVerificationPendingGuard statusVerificationPendingGuard;
-
     public StateMachineConfig(
             final OtpVerificationResendAction otpVerificationResendAction,
             final OtpVerificationSendAction otpVerificationSendAction,
@@ -122,15 +120,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
             final DocumentUploadVerificationInProgressGuard documentUploadVerificationInProgressGuard,
             final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard,
             final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
-            final OtpVerificationPreconditionsGuard otpVerificationPreconditionsGuard,
             final OtpVerifiedGuard otpVerifiedGuard,
             final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
             final ProcessIdentifierGuard processIdentifierGuard,
             final StatusAcceptedGuard statusAcceptedGuard,
             final StatusFailedGuard statusFailedGuard,
             final StatusInProgressGuard statusInProgressGuard,
-            final StatusRejectedGuard statusRejectedGuard,
-            final StatusVerificationPendingGuard statusVerificationPendingGuard) {
+            final StatusRejectedGuard statusRejectedGuard) {
         this.otpVerificationResendAction = otpVerificationResendAction;
         this.otpVerificationSendAction = otpVerificationSendAction;
 
@@ -147,7 +143,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
         this.documentUploadVerificationPendingGuard = documentUploadVerificationPendingGuard;
 
         this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
-        this.otpVerificationPreconditionsGuard = otpVerificationPreconditionsGuard;
         this.otpVerifiedGuard = otpVerifiedGuard;
 
         this.presenceCheckEnabledGuard = presenceCheckEnabledGuard;
@@ -158,7 +153,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
         this.statusFailedGuard = statusFailedGuard;
         this.statusInProgressGuard = statusInProgressGuard;
         this.statusRejectedGuard = statusRejectedGuard;
-        this.statusVerificationPendingGuard = statusVerificationPendingGuard;
     }
 
     @Override
@@ -180,7 +174,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .choice(EnrollmentState.CHOICE_OTP_VERIFICATION)
                 .choice(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .choice(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
-                .choice(EnrollmentState.PRESENCE_CHECK_VERIFICATION_PENDING)
                 .end(EnrollmentState.COMPLETED_ACCEPTED)
                 .end(EnrollmentState.COMPLETED_FAILED)
                 .end(EnrollmentState.COMPLETED_REJECTED)
@@ -197,21 +190,17 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .action(verificationInitAction)
                 .target(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
 
-
                 .and()
                 .withExternal()
                 .source(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .event(EnrollmentEvent.EVENT_NEXT_STATE)
-                .guard(context ->
-                        processIdentifierGuard.evaluate(context)
-                )
                 .action(verificationDocumentStartAction)
                 .target(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
                 .withChoice()
                 .source(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .first(EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS,  documentUploadVerificationInProgressGuard)
+                .first(EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS, documentUploadVerificationInProgressGuard)
                 .last(EnrollmentState.DOCUMENT_VERIFICATION_FAILED)
 
                 .and()
@@ -224,7 +213,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .withChoice()
                 .source(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
                 .first(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
-                .last(EnrollmentState.PRESENCE_CHECK_VERIFICATION_PENDING)
+                .then(EnrollmentState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+                .last(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction)
 
                 .and()
                 .withExternal()
@@ -240,77 +230,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .last(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
 
                 .and()
-                .withExternal()
-                .source(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
-                .event(EnrollmentEvent.PRESENCE_CHECK_INIT)
-                .guard(context ->
-                        processIdentifierGuard.evaluate(context) &&
-                        presenceCheckEnabledGuard.evaluate(context)
-                )
-                .action(presenceCheckInitAction)
-                .target(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-
-                .and()
-                .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
-                .action(presenceCheckVerificationAction)
-                .target(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
-
-                .and()
-                .withChoice()
-                .source(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .first(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS, statusInProgressGuard)
-                .then(EnrollmentState.PRESENCE_CHECK_VERIFICATION_PENDING, statusVerificationPendingGuard)
-                .then(EnrollmentState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
-                .last(EnrollmentState.PRESENCE_CHECK_FAILED)
-
-                .and()
-                .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.PRESENCE_CHECK_ACCEPTED)
-                .guard(context ->
-                        presenceCheckEnabledGuard.evaluate(context) &&
-                        otpVerificationEnabledGuard.evaluate(context)
-                )
-                .target(EnrollmentState.OTP_VERIFICATION_PENDING)
-
-                .and()
-                .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.PRESENCE_CHECK_ACCEPTED)
-                .guard(context ->
-                        presenceCheckEnabledGuard.evaluate(context) &&
-                        !otpVerificationEnabledGuard.evaluate(context)
-                )
-                .target(EnrollmentState.COMPLETED_ACCEPTED)
-
-                .and()
-                .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.PRESENCE_CHECK_FAILED)
-                .target(EnrollmentState.PRESENCE_CHECK_FAILED)
-
-                .and()
-                .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.PRESENCE_CHECK_REJECTED)
-                .target(EnrollmentState.PRESENCE_CHECK_REJECTED)
-
-                .and()
-                .withChoice()
-                .source(EnrollmentState.PRESENCE_CHECK_VERIFICATION_PENDING)
-                .first(EnrollmentState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction)
-
-                .and()
                 .withChoice()
                 .source(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
                 .first(EnrollmentState.COMPLETED_ACCEPTED, statusAcceptedGuard)
                 .then(EnrollmentState.COMPLETED_REJECTED, statusRejectedGuard)
                 .last(EnrollmentState.COMPLETED_FAILED);
 
-                configureOtpTransitions(transitions);
+        configurePresenceCheckTransitions(transitions);
+        configureOtpTransitions(transitions);
     }
 
     @Bean
@@ -334,15 +261,47 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
         };
     }
 
+    private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+        transitions
+                .withExternal()
+                .source(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED)
+                .event(EnrollmentEvent.PRESENCE_CHECK_INIT)
+                .guard(
+                        context -> processIdentifierGuard.evaluate(context) && presenceCheckEnabledGuard.evaluate(context)
+                )
+                .action(presenceCheckInitAction)
+                .target(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+
+                .and()
+                .withExternal()
+                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+                .event(EnrollmentEvent.EVENT_NEXT_STATE)
+                .action(presenceCheckVerificationAction)
+                .target(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
+
+                .and()
+                .withChoice()
+                .source(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
+                .first(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS, statusInProgressGuard)
+                .then(EnrollmentState.OTP_VERIFICATION_PENDING,
+                        context -> otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
+                        otpVerificationSendAction
+                )
+                .then(EnrollmentState.CHOICE_VERIFICATION_PROCESSING,
+                        context -> !otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
+                        verificationProcessResultAction
+                )
+                .then(EnrollmentState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
+                .last(EnrollmentState.PRESENCE_CHECK_FAILED);
+    }
+
     private void configureOtpTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
-                transitions
+        transitions
                 .withExternal()
                 .source(EnrollmentState.OTP_VERIFICATION_PENDING)
                 .event(EnrollmentEvent.OTP_VERIFICATION_RESEND)
-                .guard(context ->
-                        processIdentifierGuard.evaluate(context) &&
-                        otpVerificationEnabledGuard.evaluate(context) &&
-                        otpVerificationPreconditionsGuard.evaluate(context)
+                .guard(
+                        context -> processIdentifierGuard.evaluate(context) && otpVerificationEnabledGuard.evaluate(context)
                 )
                 .action(otpVerificationResendAction)
                 .target(EnrollmentState.OTP_VERIFICATION_PENDING)
