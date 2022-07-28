@@ -37,6 +37,7 @@ import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationSe
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
+import lombok.SneakyThrows;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,43 +101,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     @Transactional
     public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException {
-        Map<String, Object> identification = request.getIdentification();
-        String identificationData = serializer.serialize(identification);
+        final Map<String, Object> identification = request.getIdentification();
+        final String identificationData = serializer.serialize(identification);
 
-        // Lookup user using identification attributes
-        String userId;
-        try {
-            final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
-                    .identification(identification)
-                    .build();
-            userId = onboardingProvider.lookupUser(lookupUserRequest).getUserId();
-        } catch (OnboardingProviderException e) {
-            logger.warn("User lookup failed, error: {}", e.getMessage(), e);
-            throw new OnboardingProcessException();
-        }
-
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForUser(userId, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        OnboardingProcessEntity process;
-        if (processOptional.isPresent()) {
-            // Resume an existing process
-            process = processOptional.get();
-            // Use latest identification data
-            process.setIdentificationData(identificationData);
-            process.setTimestampLastUpdated(new Date());
-        } else {
-            // Create an onboarding process
-            process = new OnboardingProcessEntity();
-            process.setIdentificationData(identificationData);
-            process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
-            process.setUserId(userId);
-            process.setTimestampCreated(new Date());
-        }
-        process = onboardingProcessRepository.save(process);
+        final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessByIdentificationData(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
+                .map(it -> resumeExistingProcess(it, identification))
+                .orElseGet(() -> createNewProcess(identification, identificationData));
 
         // Check for brute force attacks
-        Calendar c = GregorianCalendar.getInstance();
+        Calendar c = Calendar.getInstance();
         c.add(Calendar.HOUR, -24);
         Date timestampCheckStart = c.getTime();
+        final String userId = process.getUserId();
         int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
         if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
             process.setStatus(OnboardingStatus.FAILED);
@@ -411,11 +387,49 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Check expiration for onboarding process due to process timeout
         final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
         final Date createdDateExpirationProcess = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        if (onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess)) {
-            return true;
-        }
-
-        return false;
+        return onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess);
     }
 
+    private String lookupUser(final String processId, final Map<String, Object> identification) throws OnboardingProcessException {
+        try {
+            final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
+                    .identification(identification)
+                    .processId(processId)
+                    .build();
+            return onboardingProvider.lookupUser(lookupUserRequest).getUserId();
+        } catch (OnboardingProviderException e) {
+            throw new OnboardingProcessException("User lookup failed, error: " + e.getMessage(), e);
+        }
+    }
+
+    @SneakyThrows(OnboardingProcessException.class)
+    private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData) {
+        final OnboardingProcessEntity process = createNewProcessWithTempUserId(identificationData);
+        logger.debug("Created process ID: {}", process.getId());
+        final String userId = lookupUser(process.getId(), identification);
+        process.setUserId(userId);
+        return process;
+    }
+
+    private OnboardingProcessEntity createNewProcessWithTempUserId(final String identificationData) {
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setIdentificationData(identificationData);
+        process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        process.setUserId("user-id-not-looked-up-yet");
+        process.setTimestampCreated(new Date());
+        return onboardingProcessRepository.save(process);
+    }
+
+    @SneakyThrows(OnboardingProcessException.class)
+    private OnboardingProcessEntity resumeExistingProcess(final OnboardingProcessEntity process, final Map<String, Object> identification) {
+        logger.debug("Resuming process ID: {}", process.getId());
+        process.setTimestampLastUpdated(new Date());
+        final String userId = lookupUser(process.getId(), identification);
+        if (!process.getUserId().equals(userId)) {
+            throw new OnboardingProcessException(
+                    String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",
+                            userId, process.getUserId(), process.getId()));
+        }
+        return process;
+    }
 }
