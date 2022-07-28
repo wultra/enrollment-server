@@ -142,7 +142,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         };
 
         final Consumer<Throwable> onError = t -> {
-            logger.debug("Problem to evaluated client for {}", request);
+            logger.debug("Problem to evaluate client for {}", request);
             sink.tryEmitError(new OnboardingProviderException("Unable to evaluate client for " + request, t));
         };
 
