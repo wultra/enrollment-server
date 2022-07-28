@@ -50,19 +50,22 @@ class RestOnboardingProvider implements OnboardingProvider {
         logger.debug("Looking up user for {}", request);
         final UserLookupRequestDto requestDto = convert(request);
 
+        final ParameterizedTypeReference<UserLookupResponseDto> responseType = ParameterizedTypeReference.forType(UserLookupResponseDto.class);
+        final UserLookupResponseDto response;
+
         try {
-            final ParameterizedTypeReference<UserLookupResponseDto> responseType = ParameterizedTypeReference.forType(UserLookupResponseDto.class);
-            final UserLookupResponseDto response = restClient.post("/user/lookup", requestDto, responseType).getBody();
-            if (response == null) {
-                throw new OnboardingProviderException("Unable to lookup user for " + request);
-            }
-            logger.debug("Looked up {} for {}", response, request);
-            return LookupUserResponse.builder()
-                    .userId(response.getUserId())
-                    .build();
+            response = restClient.post("/user/lookup", requestDto, responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to lookup user for " + request, e);
         }
+
+        if (response == null) {
+            throw new OnboardingProviderException("Unable to lookup user for " + request);
+        }
+        logger.debug("Looked up {} for {}", response, request);
+        return LookupUserResponse.builder()
+                .userId(response.getUserId())
+                .build();
     }
 
     @Override
@@ -70,18 +73,21 @@ class RestOnboardingProvider implements OnboardingProvider {
         logger.debug("Sending otp for {}", request);
         final OtpSendRequestDto requestDto = convert(request);
 
+        final ParameterizedTypeReference<OtpSendResponseDto> responseType = ParameterizedTypeReference.forType(OtpSendResponseDto.class);
+        final OtpSendResponseDto response;
+
         try {
-            final ParameterizedTypeReference<OtpSendResponseDto> responseType = ParameterizedTypeReference.forType(OtpSendResponseDto.class);
-            final OtpSendResponseDto response = restClient.post("/otp/send", requestDto, responseType).getBody();
-            if (response == null) {
-                throw new OnboardingProviderException("Unable to send otp for " + request);
-            }
-            logger.debug("Sent otp {} for {}", response, request);
-            if (!response.isOtpSent()) {
-                throw new OnboardingProviderException("Otp has not been sent for " + request);
-            }
+            response = restClient.post("/otp/send", requestDto, responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to send otp for " + request, e);
+        }
+
+        if (response == null) {
+            throw new OnboardingProviderException("Unable to send otp for " + request);
+        }
+        logger.debug("Sent otp {} for {}", response, request);
+        if (!response.isOtpSent()) {
+            throw new OnboardingProviderException("Otp has not been sent for " + request);
         }
     }
 
@@ -89,17 +95,21 @@ class RestOnboardingProvider implements OnboardingProvider {
     public String fetchConsent(final ConsentTextRequest request) throws OnboardingProviderException {
         logger.debug("Fetching consent for {}", request);
         final ConsentTextRequestDto requestDto = convert(request);
+
+        final ParameterizedTypeReference<ConsentTextResponseDto> responseType = ParameterizedTypeReference.forType(ConsentTextResponseDto.class);
+        final ConsentTextResponseDto response;
+
         try {
-            final ParameterizedTypeReference<ConsentTextResponseDto> responseType = ParameterizedTypeReference.forType(ConsentTextResponseDto.class);
-            final ConsentTextResponseDto response = restClient.post("/consent/text", requestDto, responseType).getBody();
-            if (response == null) {
-                throw new OnboardingProviderException("Unable to fetch consent for " + request);
-            }
-            logger.debug("Fetched consent {} for {}", StringUtils.truncate(response.getConsentText(), 100), request);
-            return response.getConsentText();
+            response = restClient.post("/consent/text", requestDto, responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to fetch consent for " + request, e);
         }
+
+        if (response == null) {
+            throw new OnboardingProviderException("Unable to fetch consent for " + request);
+        }
+        logger.debug("Fetched consent {} for {}", StringUtils.truncate(response.getConsentText(), 100), request);
+        return response.getConsentText();
     }
 
     @Override
