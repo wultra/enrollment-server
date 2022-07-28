@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen")
 enum LanguagePropertyDto {
   
   CS("cs"),
