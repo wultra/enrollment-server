@@ -136,7 +136,7 @@ public class ClientEvaluationService {
             logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
             logger.debug("Client evaluation failed for {}", identityVerification, t);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_FAILED_CLIENT_EVALUATION);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
             saveInTransaction(identityVerification);
         };
     }
