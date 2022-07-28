@@ -35,6 +35,8 @@ public enum EnrollmentState {
 
     DOCUMENT_VERIFICATION_ACCEPTED(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED),
 
+    DOCUMENT_VERIFICATION_REJECTED(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.REJECTED),
+
     DOCUMENT_VERIFICATION_FAILED(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.FAILED),
 
     DOCUMENT_VERIFICATION_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS),

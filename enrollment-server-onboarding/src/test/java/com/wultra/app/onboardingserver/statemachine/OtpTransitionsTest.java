@@ -29,9 +29,7 @@ import com.wultra.app.onboardingserver.statemachine.action.verification.Verifica
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
@@ -50,13 +48,10 @@ import static org.mockito.Mockito.*;
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = { EnrollmentServerTestApplication.class })
+@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class OtpTransitionsTest {
-
-    @Autowired
-    private EnrollmentStateProvider enrollmentStateProvider;
+public class OtpTransitionsTest extends AbstractTransitionTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -70,23 +65,18 @@ public class OtpTransitionsTest {
     @MockBean
     private VerificationProcessResultAction verificationProcessResultAction;
 
-    @Autowired
-    private StateMachineService stateMachineService;
-
     @Test
     public void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OnboardingProcessEntity onboardingProcessEntity = new OnboardingProcessEntity();
-        onboardingProcessEntity.setId(idVerification.getProcessId());
+        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity(idVerification);
 
         when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
                 .thenReturn(Optional.of(onboardingProcessEntity));
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
-        OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(idVerification.getActivationId());
+        OwnerId ownerId = createOwnerId(idVerification);
         Message<EnrollmentEvent> message =
                 stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.OTP_VERIFICATION_RESEND);
 
@@ -119,13 +109,13 @@ public class OtpTransitionsTest {
 
         StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
                 StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                            .stateMachine(stateMachine)
-                            .step()
-                            .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                        .stateMachine(stateMachine)
+                        .step()
+                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
                         .and()
-                            .step()
-                            .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
-                            .expectState(EnrollmentState.COMPLETED_ACCEPTED)
+                        .step()
+                        .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
+                        .expectState(EnrollmentState.COMPLETED_ACCEPTED)
                         .and()
                         .build();
         expected.test();
@@ -154,22 +144,10 @@ public class OtpTransitionsTest {
         verify(verificationProcessResultAction, never()).execute(any(StateContext.class));
     }
 
-    private StateMachine<EnrollmentState, EnrollmentEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {
-        EnrollmentState state = enrollmentStateProvider.findByPhaseAndStatus(entity.getPhase(), entity.getStatus());
-        return stateMachineService.prepareStateMachine(entity.getProcessId(), state, entity);
-    }
-
     private IdentityVerificationEntity createIdentityVerification() {
-        String activationId = "activationId";
-        String processId = "processId";
-
-        IdentityVerificationEntity entity = new IdentityVerificationEntity();
-        entity.setActivationId(activationId);
-        entity.setProcessId(processId);
-        entity.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-        entity.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-
-        return entity;
+        return super.createIdentityVerification(
+                IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.OTP_VERIFICATION_PENDING
+        );
     }
 
 }

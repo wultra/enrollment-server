@@ -32,7 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = { EnrollmentServerTestApplication.class })
+@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class InitialStateTest {
