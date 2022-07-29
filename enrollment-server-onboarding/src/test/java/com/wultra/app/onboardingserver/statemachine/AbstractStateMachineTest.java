@@ -26,15 +26,20 @@ import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 
 import javax.annotation.Nullable;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-abstract class AbstractTransitionTest {
+abstract class AbstractStateMachineTest {
 
     public static final String ACTIVATION_ID = "activationId";
+
+    public static final OnboardingProcessEntity ONBOARDING_PROCESS_ENTITY = createOnboardingProcessEntity();
+
+    public static final OwnerId OWNER_ID = createOwnerId();
 
     public static final String PROCESS_ID = "processId";
 
@@ -44,8 +49,14 @@ abstract class AbstractTransitionTest {
     @Autowired
     protected StateMachineService stateMachineService;
 
-    protected AbstractTransitionTest() {
+    protected AbstractStateMachineTest() {
 
+    }
+
+    protected StateMachineTestPlanBuilder<EnrollmentState, EnrollmentEvent>.StateMachineTestPlanStepBuilder prepareTest(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine) {
+        return StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
+                        .stateMachine(stateMachine)
+                        .step();
     }
 
     protected StateMachine<EnrollmentState, EnrollmentEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {
@@ -64,13 +75,13 @@ abstract class AbstractTransitionTest {
         return entity;
     }
 
-    protected OnboardingProcessEntity createOnboardingProcessEntity() {
+    protected static OnboardingProcessEntity createOnboardingProcessEntity() {
         OnboardingProcessEntity entity = new OnboardingProcessEntity();
         entity.setId(PROCESS_ID);
         return entity;
     }
 
-    protected OwnerId createOwnerId() {
+    protected static OwnerId createOwnerId() {
         OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(ACTIVATION_ID);
         return ownerId;

@@ -18,7 +18,6 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
@@ -29,8 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.test.StateMachineTestPlan;
-import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -44,7 +41,7 @@ import static org.mockito.Mockito.doNothing;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class DocumentUploadTransitionsTest extends AbstractTransitionTest {
+public class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationService identityVerificationService;
@@ -55,22 +52,17 @@ public class DocumentUploadTransitionsTest extends AbstractTransitionTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId();
-
-        doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(eq(ownerId), eq(idVerification));
+        doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
+                .and()
+                .build()
+                .test();
     }
 
     @Test
@@ -79,25 +71,20 @@ public class DocumentUploadTransitionsTest extends AbstractTransitionTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId();
-
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
-        }).when(identityVerificationService).checkIdentityDocumentsForVerification(eq(ownerId), eq(idVerification));
+        }).when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
+                .and()
+                .build()
+                .test();
     }
 
 }

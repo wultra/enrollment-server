@@ -24,8 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.test.StateMachineTestPlan;
-import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -35,7 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class InitialStateTest {
+public class InitialStateTest extends AbstractStateMachineTest {
 
     @Autowired
     private StateMachineService stateMachineService;
@@ -45,14 +43,11 @@ public class InitialStateTest {
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
                 stateMachineService.prepareStateMachine("processId", EnrollmentState.INITIAL, null);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .expectState(EnrollmentState.INITIAL)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .expectState(EnrollmentState.INITIAL)
+                .and()
+                .build()
+                .test();
     }
 
 }

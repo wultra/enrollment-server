@@ -18,10 +18,8 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
@@ -51,7 +49,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class OtpTransitionsTest extends AbstractTransitionTest {
+public class OtpTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -70,15 +68,12 @@ public class OtpTransitionsTest extends AbstractTransitionTest {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity();
-
         when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
-                .thenReturn(Optional.of(onboardingProcessEntity));
+                .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
-        OwnerId ownerId = createOwnerId();
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.OTP_VERIFICATION_RESEND);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.OTP_VERIFICATION_RESEND);
 
         StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
                 StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
@@ -107,18 +102,16 @@ public class OtpTransitionsTest extends AbstractTransitionTest {
             return null;
         }).when(verificationProcessResultAction).execute(any(StateContext.class));
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
-                        .and()
-                        .step()
-                        .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
-                        .expectState(EnrollmentState.COMPLETED_ACCEPTED)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .and()
+                .step()
+                .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
+                .expectState(EnrollmentState.COMPLETED_ACCEPTED)
+                .and()
+                .build()
+                .test();
+
         verify(verificationProcessResultAction).execute(any(StateContext.class));
     }
 
@@ -129,18 +122,16 @@ public class OtpTransitionsTest extends AbstractTransitionTest {
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())).thenReturn(false);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
-                        .and()
-                        .step()
-                        .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
-                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .and()
+                .step()
+                .sendEvent(EnrollmentEvent.EVENT_NEXT_STATE)
+                .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .and()
+                .build()
+                .test();
+
         verify(verificationProcessResultAction, never()).execute(any(StateContext.class));
     }
 

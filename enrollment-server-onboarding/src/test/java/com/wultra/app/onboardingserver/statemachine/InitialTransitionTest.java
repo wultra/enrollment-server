@@ -18,10 +18,8 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
@@ -32,8 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.test.StateMachineTestPlan;
-import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -48,7 +44,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class InitialTransitionTest extends AbstractTransitionTest {
+public class InitialTransitionTest extends AbstractStateMachineTest {
 
     @Autowired
     private StateMachineService stateMachineService;
@@ -64,28 +60,22 @@ public class InitialTransitionTest extends AbstractTransitionTest {
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
                 stateMachineService.prepareStateMachine(PROCESS_ID, EnrollmentState.INITIAL, null);
 
-        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity();
-        OwnerId ownerId = createOwnerId();
-
         when(onboardingProcessRepository.findProcessByActivationId(ACTIVATION_ID))
-                .thenReturn(Optional.of(onboardingProcessEntity));
+                .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
 
         doAnswer(args ->
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS)
-        ).when(identityVerificationCreateService).createIdentityVerification(ownerId, PROCESS_ID);
+        ).when(identityVerificationCreateService).createIdentityVerification(OWNER_ID, PROCESS_ID);
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, PROCESS_ID, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
+                stateMachineService.createMessage(OWNER_ID, PROCESS_ID, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
+                .and()
+                .build()
+                .test();
     }
 
 }

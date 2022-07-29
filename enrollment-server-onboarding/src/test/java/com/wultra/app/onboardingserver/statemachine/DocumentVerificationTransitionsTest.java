@@ -18,7 +18,6 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
@@ -34,8 +33,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.test.StateMachineTestPlan;
-import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -49,7 +46,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class DocumentVerificationTransitionsTest extends AbstractTransitionTest {
+public class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -89,22 +86,18 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId();
-
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED)
+                .and()
+                .build()
+                .test();
+
         assertEquals(IdentityVerificationPhase.PRESENCE_CHECK, idVerification.getPhase());
         assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, idVerification.getStatus());
     }
@@ -115,8 +108,6 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId();
-
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
         doAnswer(args -> {
@@ -126,17 +117,15 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
         }).when(identityVerificationOtpService).sendOtp(idVerification);
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .and()
+                .build()
+                .test();
+
         assertEquals(IdentityVerificationPhase.OTP_VERIFICATION, idVerification.getPhase());
         assertEquals(IdentityVerificationStatus.OTP_VERIFICATION_PENDING, idVerification.getStatus());
         verify(identityVerificationOtpService).sendOtp(idVerification);
@@ -147,8 +136,6 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
-
-        OwnerId ownerId = createOwnerId();
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
@@ -162,17 +149,15 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
         }).when(verificationProcessResultAction).execute(any(StateContext.class));
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(EnrollmentState.COMPLETED_ACCEPTED)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(EnrollmentState.COMPLETED_ACCEPTED)
+                .and()
+                .build()
+                .test();
+
         assertEquals(IdentityVerificationPhase.COMPLETED, idVerification.getPhase());
         assertEquals(IdentityVerificationStatus.ACCEPTED, idVerification.getStatus());
     }
@@ -182,25 +167,20 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId();
-
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);
             return null;
-        }).when(identityVerificationService).startVerification(eq(ownerId), eq(idVerification));
+        }).when(identityVerificationService).startVerification(eq(OWNER_ID), eq(idVerification));
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
 
-        StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
-                StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
-                        .stateMachine(stateMachine)
-                        .step()
-                        .sendEvent(message)
-                        .expectState(expectedState)
-                        .and()
-                        .build();
-        expected.test();
+        prepareTest(stateMachine)
+                .sendEvent(message)
+                .expectState(expectedState)
+                .and()
+                .build()
+                .test();
     }
 
 }
