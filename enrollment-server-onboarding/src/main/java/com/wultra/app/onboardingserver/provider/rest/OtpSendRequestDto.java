@@ -15,29 +15,48 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.rest;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.Data;
 import lombok.ToString;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Request object for send otp.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@PublicApi
-@ToString
-public final class LookupUserResponse {
+@Data
+@ToString(exclude = "otpCode")
+class OtpSendRequestDto {
 
-    @NonNull
+    private String processId;
+
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    /**
+     * Language in ISO 3166-1 alpha-2 format lower cased.
+     */
+    private String language;
+
+    private String otpCode;
+
+    private OtpTypeEnum otpType;
+
+    private Boolean resend;
+
+    enum OtpTypeEnum {
+
+        ACTIVATION("ACTIVATION"),
+        USER_VERIFICATION("USER_VERIFICATION");
+
+        private String value;
+
+        OtpTypeEnum(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return value;
+        }
+    }
 }

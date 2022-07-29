@@ -48,6 +48,8 @@ public class IdentityVerificationEntity implements Serializable {
     public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
     public static final String ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK = "maxFailedAttemptsPresenceCheck";
 
+    public static final String ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION = "maxFailedAttemptsClientEvaluation";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")

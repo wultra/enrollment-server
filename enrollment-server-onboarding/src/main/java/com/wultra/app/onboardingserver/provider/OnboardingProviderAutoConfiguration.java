@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnMissingBean(OnboardingProvider.class)
-class OnboardingProviderAutoConfiguration {
+public class OnboardingProviderAutoConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingProviderAutoConfiguration.class);
 

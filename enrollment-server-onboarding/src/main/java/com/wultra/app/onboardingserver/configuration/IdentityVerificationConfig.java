@@ -71,4 +71,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.max-failed-attempts:5}")
     private int presenceCheckMaxFailedAttempts;
 
+    @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:5}")
+    private int clientEvaluationMaxFailedAttempts;
+
 }

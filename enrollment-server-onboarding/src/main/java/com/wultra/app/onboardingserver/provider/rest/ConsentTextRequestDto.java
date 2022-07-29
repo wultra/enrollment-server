@@ -15,29 +15,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.rest;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.Data;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Response object for consent text.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@PublicApi
-@ToString
-public final class LookupUserResponse {
+@Data
+class ConsentTextRequestDto {
 
-    @NonNull
+    private String processId;
+
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    /**
+     * Language in ISO 3166-1 alpha-2 format lower cased.
+     */
+    private String language;
+
+    private String consentType;
+
 }

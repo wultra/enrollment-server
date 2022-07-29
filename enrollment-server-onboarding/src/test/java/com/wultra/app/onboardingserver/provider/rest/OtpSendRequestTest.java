@@ -15,29 +15,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.rest;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Test for {@link OtpSendRequestDto}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@PublicApi
-@ToString
-public final class LookupUserResponse {
+class OtpSendRequestTest {
 
-    @NonNull
-    private String userId;
+    @Test
+    void testToString() {
+        final OtpSendRequestDto tested = new OtpSendRequestDto();
+        tested.setProcessId("42");
+        tested.setOtpCode("top secret");
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+        final String result = tested.toString();
+
+        assertFalse(result.contains("top secret"), "otp must not be present at " + result);
+    }
 }

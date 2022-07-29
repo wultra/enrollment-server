@@ -31,11 +31,6 @@ import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.security.powerauth.client.PowerAuthClient;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
-import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,6 +185,10 @@ public class IdentityVerificationStatusService {
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
             logger.debug("Finished verification of documents for {}, {}", idVerification, ownerId);
+            continueWithClientEvaluation(ownerId, idVerification);
+        } else if (IdentityVerificationPhase.CLIENT_EVALUATION.equals(idVerification.getPhase())
+                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+            logger.debug("Finished evaluation of client for {}, {}", idVerification, ownerId);
             continueWithPresenceCheck(ownerId, idVerification);
         } else if (IdentityVerificationPhase.OTP_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
@@ -250,13 +249,20 @@ public class IdentityVerificationStatusService {
         }
     }
 
+    private void continueWithClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
+        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, processId={}", ownerId, idVerification.getProcessId());
+    }
+
     private void continueWithPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
         if (identityVerificationConfig.isPresenceCheckEnabled()) {
             idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
             idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.info("Switched to wait for the presence check, {}", ownerId);
+            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, processId={}", ownerId, idVerification.getProcessId());
         } else {
             continueAfterPresenceCheck(ownerId, idVerification);
         }

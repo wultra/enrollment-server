@@ -36,6 +36,7 @@ import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -160,14 +161,17 @@ public class IdentityVerificationOtpService {
         // Send the OTP code
         try {
             final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
+                    .processId(processId)
                     .userId(process.getUserId())
                     .otpCode(otpCode)
                     .resend(isResend)
+                    .locale(LocaleContextHolder.getLocale())
+                    .otpType(SendOtpCodeRequest.OtpType.USER_VERIFICATION)
                     .build();
             onboardingProvider.sendOtpCode(request);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException();
+            throw new OnboardingOtpDeliveryException(e);
         }
     }
 
