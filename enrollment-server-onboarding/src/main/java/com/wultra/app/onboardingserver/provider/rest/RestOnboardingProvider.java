@@ -59,7 +59,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to lookup user for " + request);
+            throw new OnboardingProviderException("Unable to lookup user for " + request + ", response was null");
         }
         logger.debug("Looked up {} for {}", response, request);
         return LookupUserResponse.builder()
@@ -82,7 +82,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to send otp for " + request);
+            throw new OnboardingProviderException("Unable to send otp for " + request + ", response was null");
         }
         logger.debug("Sent otp {} for {}", response, request);
         if (!response.isOtpSent()) {
@@ -105,7 +105,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to fetch consent for " + request);
+            throw new OnboardingProviderException("Unable to fetch consent for " + request + ", response was null");
         }
         logger.debug("Fetched consent {} for {}", StringUtils.truncate(response.getConsentText(), 100), request);
         return response.getConsentText();
