@@ -70,13 +70,13 @@ public class OtpTransitionsTest extends AbstractTransitionTest {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity(idVerification);
+        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity();
 
         when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
                 .thenReturn(Optional.of(onboardingProcessEntity));
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
         Message<EnrollmentEvent> message =
                 stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.OTP_VERIFICATION_RESEND);
 

@@ -34,6 +34,10 @@ import javax.annotation.Nullable;
  */
 abstract class AbstractTransitionTest {
 
+    public static final String ACTIVATION_ID = "activationId";
+
+    public static final String PROCESS_ID = "processId";
+
     @Autowired
     private EnrollmentStateProvider enrollmentStateProvider;
 
@@ -51,27 +55,24 @@ abstract class AbstractTransitionTest {
 
     protected IdentityVerificationEntity createIdentityVerification(
             @Nullable IdentityVerificationPhase phase, IdentityVerificationStatus status) {
-        String activationId = "activationId";
-        String processId = "processId";
-
         IdentityVerificationEntity entity = new IdentityVerificationEntity();
-        entity.setActivationId(activationId);
-        entity.setProcessId(processId);
+        entity.setActivationId(ACTIVATION_ID);
+        entity.setProcessId(PROCESS_ID);
         entity.setPhase(phase);
         entity.setStatus(status);
 
         return entity;
     }
 
-    protected OnboardingProcessEntity createOnboardingProcessEntity(IdentityVerificationEntity identityVerification) {
+    protected OnboardingProcessEntity createOnboardingProcessEntity() {
         OnboardingProcessEntity entity = new OnboardingProcessEntity();
-        entity.setId(identityVerification.getProcessId());
+        entity.setId(PROCESS_ID);
         return entity;
     }
 
-    protected OwnerId createOwnerId(IdentityVerificationEntity identityVerification) {
+    protected OwnerId createOwnerId() {
         OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(identityVerification.getActivationId());
+        ownerId.setActivationId(ACTIVATION_ID);
         return ownerId;
     }
 

@@ -17,6 +17,7 @@
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
@@ -52,10 +53,14 @@ public class VerificationInitAction implements Action<EnrollmentState, Enrollmen
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
+        IdentityVerificationEntity identityVerification = null;
         try {
-            identityVerificationService.initializeIdentityVerification(ownerId, processId);
+            identityVerification = identityVerificationService.initializeIdentityVerification(ownerId, processId);
         } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
+        }
+        if (identityVerification != null) {
+            context.getExtendedState().getVariables().put(ExtendedStateVariable.IDENTITY_VERIFICATION, identityVerification);
         }
         if (!context.getStateMachine().hasStateMachineError()) {
             context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, new Response());

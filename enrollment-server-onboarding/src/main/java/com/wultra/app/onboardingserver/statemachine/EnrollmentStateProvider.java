@@ -50,8 +50,9 @@ public class EnrollmentStateProvider {
             throws IdentityVerificationException {
         EnrollmentState state = stateByPhaseStatus.getOrDefault(phase, Collections.emptyMap()).get(status);
         if (state == null) {
-            logger.warn("Unknown state for phase={}, status={}", phase, status);
-            throw new IdentityVerificationException("Unexpected state");
+            throw new IdentityVerificationException(
+                    String.format("Unknown state for phase=%s, status=%s", phase, status)
+            );
         }
         return state;
     }

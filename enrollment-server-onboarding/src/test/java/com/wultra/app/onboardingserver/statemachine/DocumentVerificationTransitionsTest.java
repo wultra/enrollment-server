@@ -89,7 +89,7 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
 
@@ -115,7 +115,7 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
@@ -143,7 +143,7 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
@@ -177,7 +177,7 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);

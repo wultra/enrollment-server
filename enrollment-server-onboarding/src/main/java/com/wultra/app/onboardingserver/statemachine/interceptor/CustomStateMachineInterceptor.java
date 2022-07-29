@@ -17,10 +17,9 @@
 package com.wultra.app.onboardingserver.statemachine.interceptor;
 
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
+import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
@@ -28,7 +27,9 @@ import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.stereotype.Component;
@@ -42,6 +43,13 @@ import org.springframework.stereotype.Component;
 public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<EnrollmentState, EnrollmentEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
+
+    private final EnrollmentStateProvider enrollmentStateProvider;
+
+    @Autowired
+    public CustomStateMachineInterceptor(EnrollmentStateProvider enrollmentStateProvider) {
+        this.enrollmentStateProvider = enrollmentStateProvider;
+    }
 
     @Override
     public Exception stateMachineError(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine, Exception e) {
@@ -78,6 +86,33 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
         stateMachine.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, status);
 
         return e;
+    }
+
+    @Override
+    public StateContext<EnrollmentState, EnrollmentEvent> postTransition(StateContext<EnrollmentState, EnrollmentEvent> context) {
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+
+        EnrollmentState targetState = context.getTarget().getId();
+        if (targetState.isChoiceState()) {
+            logger.debug("Transition to a choice state {} for {}", targetState, identityVerification);
+            return context;
+        }
+
+        EnrollmentState expectedState;
+        try {
+            expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
+        } catch (IdentityVerificationException e) {
+            logger.error("Failed post transition check: {}, {}", e.getMessage(), identityVerification);
+            return context;
+        }
+
+        if (expectedState != targetState) {
+            logger.error("Unexpected targetState={} when expectedState={}, {}", targetState, expectedState, identityVerification);
+        } else {
+            logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
+        }
+
+        return context;
     }
 
 }

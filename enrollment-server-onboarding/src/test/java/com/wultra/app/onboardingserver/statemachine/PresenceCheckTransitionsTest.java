@@ -78,15 +78,16 @@ public class PresenceCheckTransitionsTest extends AbstractTransitionTest {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity(idVerification);
-        OwnerId ownerId = createOwnerId(idVerification);
-
-        SessionInfo sessionInfo = new SessionInfo();
+        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity();
+        OwnerId ownerId = createOwnerId();
 
         when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
                 .thenReturn(Optional.of(onboardingProcessEntity));
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
-        when(presenceCheckService.init(ownerId, idVerification.getProcessId())).thenReturn(sessionInfo);
+        doAnswer(args -> {
+            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+            return new SessionInfo();
+        }).when(presenceCheckService).init(ownerId, idVerification.getProcessId());
 
         Message<EnrollmentEvent> message =
                 stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.PRESENCE_CHECK_INIT);
@@ -110,7 +111,7 @@ public class PresenceCheckTransitionsTest extends AbstractTransitionTest {
         idVerification.setSessionInfo("{}");
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.IN_PROGRESS);
@@ -143,7 +144,7 @@ public class PresenceCheckTransitionsTest extends AbstractTransitionTest {
         idVerification.setSessionInfo("{}");
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
@@ -178,7 +179,7 @@ public class PresenceCheckTransitionsTest extends AbstractTransitionTest {
         idVerification.setSessionInfo("{}");
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);

@@ -55,7 +55,7 @@ public class DocumentUploadTransitionsTest extends AbstractTransitionTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(eq(ownerId), eq(idVerification));
 
@@ -79,7 +79,7 @@ public class DocumentUploadTransitionsTest extends AbstractTransitionTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
 
-        OwnerId ownerId = createOwnerId(idVerification);
+        OwnerId ownerId = createOwnerId();
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);

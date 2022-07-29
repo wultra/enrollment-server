@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
@@ -62,22 +61,21 @@ public class InitialTransitionTest extends AbstractTransitionTest {
 
     @Test
     public void testInitialTransition() throws Exception {
-        IdentityVerificationEntity idVerification =
-                createIdentityVerification(null, IdentityVerificationStatus.NOT_INITIALIZED);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
+                stateMachineService.prepareStateMachine(PROCESS_ID, EnrollmentState.INITIAL, null);
 
-        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity(idVerification);
-        OwnerId ownerId = createOwnerId(idVerification);
+        OnboardingProcessEntity onboardingProcessEntity = createOnboardingProcessEntity();
+        OwnerId ownerId = createOwnerId();
 
-        when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
+        when(onboardingProcessRepository.findProcessByActivationId(ACTIVATION_ID))
                 .thenReturn(Optional.of(onboardingProcessEntity));
 
         doAnswer(args ->
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS)
-        ).when(identityVerificationCreateService).createIdentityVerification(ownerId, idVerification.getProcessId());
+        ).when(identityVerificationCreateService).createIdentityVerification(ownerId, PROCESS_ID);
 
         Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
+                stateMachineService.createMessage(ownerId, PROCESS_ID, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
 
         StateMachineTestPlan<EnrollmentState, EnrollmentEvent> expected =
                 StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
