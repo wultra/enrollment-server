@@ -28,12 +28,14 @@ import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Action to process verification result
@@ -43,14 +45,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class VerificationProcessResultAction implements Action<EnrollmentState, EnrollmentEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(VerificationProcessResultAction.class);
+    private final TransactionTemplate transactionTemplate;
 
     private final IdentityVerificationFinishService identityVerificationFinishService;
 
     private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public VerificationProcessResultAction(IdentityVerificationFinishService identityVerificationFinishService, IdentityVerificationService identityVerificationService) {
+    public VerificationProcessResultAction(
+            TransactionTemplate transactionTemplate,
+            IdentityVerificationFinishService identityVerificationFinishService,
+            IdentityVerificationService identityVerificationService) {
+        this.transactionTemplate = transactionTemplate;
         this.identityVerificationFinishService = identityVerificationFinishService;
         this.identityVerificationService = identityVerificationService;
     }
@@ -59,14 +65,22 @@ public class VerificationProcessResultAction implements Action<EnrollmentState, 
     public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification, IdentityVerificationPhase.COMPLETED);
-        if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
-            try {
-                identityVerificationFinishService.finishIdentityVerification(ownerId);
-            } catch (OnboardingProcessException | RemoteCommunicationException e) {
-                context.getStateMachine().setStateMachineError(e);
+        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+
+            @Override
+            protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
+                // TODO Consider move to new DocumentVerificationService
+                identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification, IdentityVerificationPhase.COMPLETED);
+                if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+                    try {
+                        identityVerificationFinishService.finishIdentityVerification(ownerId);
+                    } catch (OnboardingProcessException | RemoteCommunicationException e) {
+                        context.getStateMachine().setStateMachineError(e);
+                    }
+                }
             }
-        }
+
+        });
     }
 
 }

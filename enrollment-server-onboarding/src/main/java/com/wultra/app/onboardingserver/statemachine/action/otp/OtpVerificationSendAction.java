@@ -16,8 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.otp;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
@@ -58,9 +56,6 @@ public class OtpVerificationSendAction implements Action<EnrollmentState, Enroll
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         try {
-            // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
-            identityVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-            identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
             identityVerificationOtpService.sendOtp(identityVerification);
         } catch (OnboardingProcessException | OnboardingOtpDeliveryException e) {
             logger.warn("Unable to send OTP, {}", ownerId, e);

@@ -119,6 +119,11 @@ public class DocumentVerificationTransitionsTest extends AbstractTransitionTest 
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
+        doAnswer(args -> {
+            idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
+            idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
+            return null;
+        }).when(identityVerificationOtpService).sendOtp(idVerification);
 
         Message<EnrollmentEvent> message =
                 stateMachineService.createMessage(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);

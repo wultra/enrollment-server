@@ -16,16 +16,14 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
@@ -38,17 +36,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class PresenceCheckNotInitializedAction implements Action<EnrollmentState, EnrollmentEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PresenceCheckNotInitializedAction.class);
+    private final PresenceCheckService presenceCheckService;
+
+    @Autowired
+    public PresenceCheckNotInitializedAction(final PresenceCheckService presenceCheckService) {
+        this.presenceCheckService = presenceCheckService;
+    }
 
     @Override
     public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-
-        identityVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
-        identityVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to wait for the presence check, {}", ownerId);
+        presenceCheckService.prepareNotInitialized(ownerId, identityVerification);
     }
 
 }
