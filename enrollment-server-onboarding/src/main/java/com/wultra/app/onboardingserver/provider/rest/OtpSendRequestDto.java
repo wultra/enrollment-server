@@ -33,7 +33,7 @@ class OtpSendRequestDto {
 
     private String processId;
     private String userId;
-    private LanguagePropertyDto language;
+    private String language;
     private String otpCode;
 
     public enum OtpTypeEnum {
@@ -127,19 +127,19 @@ class OtpSendRequestDto {
     /**
      *
      **/
-    public OtpSendRequestDto language(LanguagePropertyDto language) {
+    public OtpSendRequestDto language(String language) {
         this.language = language;
         return this;
     }
 
 
     @JsonProperty("language")
-    public LanguagePropertyDto getLanguage() {
+    public String getLanguage() {
         return language;
     }
 
     @JsonProperty("language")
-    public void setLanguage(LanguagePropertyDto language) {
+    public void setLanguage(String language) {
         this.language = language;
     }
 

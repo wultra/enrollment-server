@@ -28,7 +28,6 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
-import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -168,7 +167,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         target.setUserId(source.getUserId());
         target.setResend(source.isResend());
         target.setOtpCode(source.getOtpCode());
-        target.setLanguage(convert(source.getLocale()));
+        target.setLanguage(source.getLocale().getLanguage());
         target.setOtpType(convert(source.getOtpType()));
         return target;
     }
@@ -188,32 +187,16 @@ class RestOnboardingProvider implements OnboardingProvider {
         final ConsentTextRequestDto target = new ConsentTextRequestDto();
         target.setProcessId(source.getProcessId().toString());
         target.setUserId(source.getUserId());
-        target.setLanguage(convert(source.getLocale()));
-        target.setConsentType(convert(source.getConsentType()));
+        target.setLanguage(source.getLocale().getLanguage());
+        target.setConsentType(source.getConsentType());
         return target;
-    }
-
-    private static LanguagePropertyDto convert(final Locale source) throws OnboardingProviderException {
-        try {
-            return LanguagePropertyDto.fromString(source.getLanguage());
-        } catch (IllegalArgumentException e) {
-            throw new OnboardingProviderException("Not supported language " + source, e);
-        }
-    }
-
-    private static ConsentTypePropertyDto convert(String source) throws OnboardingProviderException {
-        try {
-            return ConsentTypePropertyDto.fromString(source);
-        } catch (IllegalArgumentException e) {
-            throw new OnboardingProviderException("Not supported consent type " + source, e);
-        }
     }
 
     private static ConsentStorageRequestDto convert(final ApproveConsentRequest source) throws OnboardingProviderException {
         final ConsentStorageRequestDto target = new ConsentStorageRequestDto();
         target.setProcessId(target.getProcessId());
         target.setUserId(target.getUserId());
-        target.consentType(convert(source.getConsentType()));
+        target.consentType(source.getConsentType());
         target.setApproved(source.getApproved());
         return target;
     }

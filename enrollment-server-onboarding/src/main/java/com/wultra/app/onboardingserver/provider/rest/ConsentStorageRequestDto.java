@@ -30,7 +30,7 @@ import java.util.Objects;
 class ConsentStorageRequestDto {
 
     private String userId;
-    private ConsentTypePropertyDto consentType;
+    private String consentType;
     private String processId;
     private Boolean approved;
 
@@ -56,19 +56,19 @@ class ConsentStorageRequestDto {
     /**
      *
      **/
-    public ConsentStorageRequestDto consentType(ConsentTypePropertyDto consentType) {
+    public ConsentStorageRequestDto consentType(String consentType) {
         this.consentType = consentType;
         return this;
     }
 
 
     @JsonProperty("consentType")
-    public ConsentTypePropertyDto getConsentType() {
+    public String getConsentType() {
         return consentType;
     }
 
     @JsonProperty("consentType")
-    public void setConsentType(ConsentTypePropertyDto consentType) {
+    public void setConsentType(String consentType) {
         this.consentType = consentType;
     }
 

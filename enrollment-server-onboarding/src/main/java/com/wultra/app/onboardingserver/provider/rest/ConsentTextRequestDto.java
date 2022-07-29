@@ -31,8 +31,12 @@ class ConsentTextRequestDto {
 
     private String processId;
     private String userId;
-    private LanguagePropertyDto language;
-    private ConsentTypePropertyDto consentType;
+
+    /**
+     * Language in ISO 3166-1 alpha-2 format lower cased.
+     */
+    private String language;
+    private String consentType;
 
     /**
      * Represents unique identifier of one specific mobile token reactivation flow
@@ -75,38 +79,38 @@ class ConsentTextRequestDto {
     /**
      *
      **/
-    public ConsentTextRequestDto language(LanguagePropertyDto language) {
+    public ConsentTextRequestDto language(String language) {
         this.language = language;
         return this;
     }
 
 
     @JsonProperty("language")
-    public LanguagePropertyDto getLanguage() {
+    public String getLanguage() {
         return language;
     }
 
     @JsonProperty("language")
-    public void setLanguage(LanguagePropertyDto language) {
+    public void setLanguage(String language) {
         this.language = language;
     }
 
     /**
      *
      **/
-    public ConsentTextRequestDto consentType(ConsentTypePropertyDto consentType) {
+    public ConsentTextRequestDto consentType(String consentType) {
         this.consentType = consentType;
         return this;
     }
 
 
     @JsonProperty("consentType")
-    public ConsentTypePropertyDto getConsentType() {
+    public String getConsentType() {
         return consentType;
     }
 
     @JsonProperty("consentType")
-    public void setConsentType(ConsentTypePropertyDto consentType) {
+    public void setConsentType(String consentType) {
         this.consentType = consentType;
     }
 
