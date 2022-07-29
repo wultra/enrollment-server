@@ -17,46 +17,25 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import lombok.Data;
-import lombok.ToString;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
- * Request object for send otp.
+ * Test for {@link OtpSendRequestDto}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-@ToString(exclude = "otpCode")
-class OtpSendRequestDto {
+class OtpSendRequestTest {
 
-    private String processId;
+    @Test
+    void testToString() {
+        final OtpSendRequestDto tested = new OtpSendRequestDto();
+        tested.setProcessId("42");
+        tested.setOtpCode("top secret");
 
-    private String userId;
+        final String result = tested.toString();
 
-    /**
-     * Language in ISO 3166-1 alpha-2 format lower cased.
-     */
-    private String language;
-
-    private String otpCode;
-
-    private OtpTypeEnum otpType;
-
-    private Boolean resend;
-
-    enum OtpTypeEnum {
-
-        ACTIVATION("ACTIVATION"),
-        USER_VERIFICATION("USER_VERIFICATION");
-
-        private String value;
-
-        OtpTypeEnum(String value) {
-            this.value = value;
-        }
-
-        public String value() {
-            return value;
-        }
+        assertFalse(result.contains("top secret"), "otp must not be present at " + result);
     }
 }
