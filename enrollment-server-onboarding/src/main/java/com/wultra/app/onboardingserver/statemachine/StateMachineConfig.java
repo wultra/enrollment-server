@@ -245,7 +245,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .first(EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS, statusInProgressGuard)
                 .then(EnrollmentState.DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
                 .then(EnrollmentState.DOCUMENT_VERIFICATION_REJECTED, statusRejectedGuard)
-                .last(EnrollmentState.DOCUMENT_VERIFICATION_FAILED)
+                .then(EnrollmentState.DOCUMENT_VERIFICATION_FAILED, statusFailedGuard)
+                .last(EnrollmentState.UNEXPECTED_STATE)
 
                 .and()
                 .withExternal()
@@ -291,7 +292,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                         verificationProcessResultAction
                 )
                 .then(EnrollmentState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
-                .last(EnrollmentState.PRESENCE_CHECK_FAILED);
+                .then(EnrollmentState.PRESENCE_CHECK_FAILED, statusFailedGuard)
+                .last(EnrollmentState.UNEXPECTED_STATE);
     }
 
     private void configureOtpTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
@@ -324,7 +326,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
                 .source(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
                 .first(EnrollmentState.COMPLETED_ACCEPTED, statusAcceptedGuard)
                 .then(EnrollmentState.COMPLETED_REJECTED, statusRejectedGuard)
-                .last(EnrollmentState.COMPLETED_FAILED);
+                .then(EnrollmentState.COMPLETED_FAILED, statusFailedGuard)
+                .last(EnrollmentState.UNEXPECTED_STATE);
     }
 
 }

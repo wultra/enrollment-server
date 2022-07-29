@@ -66,7 +66,9 @@ public enum EnrollmentState {
 
     CHOICE_PRESENCE_CHECK_PROCESSING,
 
-    CHOICE_VERIFICATION_PROCESSING;
+    CHOICE_VERIFICATION_PROCESSING,
+
+    UNEXPECTED_STATE;
 
     private boolean choiceState = false;
 

@@ -98,6 +98,11 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
             return context;
         }
 
+        if (EnrollmentState.UNEXPECTED_STATE == targetState) {
+            logger.debug("Transition to unexpected state for {}", identityVerification);
+            return context;
+        }
+
         EnrollmentState expectedState;
         try {
             expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
