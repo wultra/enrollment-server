@@ -17,148 +17,25 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import java.util.Objects;
+import lombok.Data;
 
 /**
+ * Response object for consent text.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@JsonTypeName("ConsentTextRequest")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen")
+@Data
 class ConsentTextRequestDto {
 
     private String processId;
+
     private String userId;
 
     /**
      * Language in ISO 3166-1 alpha-2 format lower cased.
      */
     private String language;
+
     private String consentType;
 
-    /**
-     * Represents unique identifier of one specific mobile token reactivation flow
-     **/
-    public ConsentTextRequestDto processId(String processId) {
-        this.processId = processId;
-        return this;
-    }
-
-
-    @JsonProperty("processId")
-    public String getProcessId() {
-        return processId;
-    }
-
-    @JsonProperty("processId")
-    public void setProcessId(String processId) {
-        this.processId = processId;
-    }
-
-    /**
-     * Represents user identifier
-     **/
-    public ConsentTextRequestDto userId(String userId) {
-        this.userId = userId;
-        return this;
-    }
-
-
-    @JsonProperty("userId")
-    public String getUserId() {
-        return userId;
-    }
-
-    @JsonProperty("userId")
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    /**
-     *
-     **/
-    public ConsentTextRequestDto language(String language) {
-        this.language = language;
-        return this;
-    }
-
-
-    @JsonProperty("language")
-    public String getLanguage() {
-        return language;
-    }
-
-    @JsonProperty("language")
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
-    /**
-     *
-     **/
-    public ConsentTextRequestDto consentType(String consentType) {
-        this.consentType = consentType;
-        return this;
-    }
-
-
-    @JsonProperty("consentType")
-    public String getConsentType() {
-        return consentType;
-    }
-
-    @JsonProperty("consentType")
-    public void setConsentType(String consentType) {
-        this.consentType = consentType;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ConsentTextRequestDto consentTextRequest = (ConsentTextRequestDto) o;
-        return Objects.equals(this.processId, consentTextRequest.processId) &&
-                Objects.equals(this.userId, consentTextRequest.userId) &&
-                Objects.equals(this.language, consentTextRequest.language) &&
-                Objects.equals(this.consentType, consentTextRequest.consentType);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(processId, userId, language, consentType);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("class ConsentTextRequestDto {\n");
-
-        sb.append("    processId: ").append(toIndentedString(processId)).append("\n");
-        sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
-        sb.append("    language: ").append(toIndentedString(language)).append("\n");
-        sb.append("    consentType: ").append(toIndentedString(consentType)).append("\n");
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Convert the given object to string with each line indented by 4 spaces
-     * (except the first line).
-     */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
-    }
-
-
 }
-

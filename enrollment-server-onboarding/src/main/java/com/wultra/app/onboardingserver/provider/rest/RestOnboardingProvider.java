@@ -196,7 +196,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         final ConsentStorageRequestDto target = new ConsentStorageRequestDto();
         target.setProcessId(target.getProcessId());
         target.setUserId(target.getUserId());
-        target.consentType(source.getConsentType());
+        target.setConsentType(source.getConsentType());
         target.setApproved(source.getApproved());
         return target;
     }

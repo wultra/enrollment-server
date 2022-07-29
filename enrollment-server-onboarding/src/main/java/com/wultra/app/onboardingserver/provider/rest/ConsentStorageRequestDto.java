@@ -17,144 +17,22 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import java.util.Objects;
+import lombok.Data;
 
 /**
+ * Request object for consent storage.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@JsonTypeName("ConsentStorageRequest")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen")
+@Data
 class ConsentStorageRequestDto {
 
     private String userId;
+
     private String consentType;
+
     private String processId;
+
     private Boolean approved;
 
-    /**
-     * Represents user identifier
-     **/
-    public ConsentStorageRequestDto userId(String userId) {
-        this.userId = userId;
-        return this;
-    }
-
-
-    @JsonProperty("userId")
-    public String getUserId() {
-        return userId;
-    }
-
-    @JsonProperty("userId")
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    /**
-     *
-     **/
-    public ConsentStorageRequestDto consentType(String consentType) {
-        this.consentType = consentType;
-        return this;
-    }
-
-
-    @JsonProperty("consentType")
-    public String getConsentType() {
-        return consentType;
-    }
-
-    @JsonProperty("consentType")
-    public void setConsentType(String consentType) {
-        this.consentType = consentType;
-    }
-
-    /**
-     * Represents unique identifier of one specific mobile token reactivation flow
-     **/
-    public ConsentStorageRequestDto processId(String processId) {
-        this.processId = processId;
-        return this;
-    }
-
-
-    @JsonProperty("processId")
-    public String getProcessId() {
-        return processId;
-    }
-
-    @JsonProperty("processId")
-    public void setProcessId(String processId) {
-        this.processId = processId;
-    }
-
-    /**
-     * If consent was approved or declined
-     **/
-    public ConsentStorageRequestDto approved(Boolean approved) {
-        this.approved = approved;
-        return this;
-    }
-
-
-    @JsonProperty("approved")
-    public Boolean getApproved() {
-        return approved;
-    }
-
-    @JsonProperty("approved")
-    public void setApproved(Boolean approved) {
-        this.approved = approved;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ConsentStorageRequestDto consentStorageRequest = (ConsentStorageRequestDto) o;
-        return Objects.equals(this.userId, consentStorageRequest.userId) &&
-                Objects.equals(this.consentType, consentStorageRequest.consentType) &&
-                Objects.equals(this.processId, consentStorageRequest.processId) &&
-                Objects.equals(this.approved, consentStorageRequest.approved);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId, consentType, processId, approved);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("class ConsentStorageRequestDto {\n");
-
-        sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
-        sb.append("    consentType: ").append(toIndentedString(consentType)).append("\n");
-        sb.append("    processId: ").append(toIndentedString(processId)).append("\n");
-        sb.append("    approved: ").append(toIndentedString(approved)).append("\n");
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Convert the given object to string with each line indented by 4 spaces
-     * (except the first line).
-     */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
-    }
-
-
 }
-

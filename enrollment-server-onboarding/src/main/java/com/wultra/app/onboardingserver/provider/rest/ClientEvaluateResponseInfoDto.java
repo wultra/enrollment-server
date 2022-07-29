@@ -17,122 +17,23 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import java.util.Objects;
+import lombok.Data;
 
 /**
+ * Detail info for {@link ClientEvaluateResponseDto}.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@JsonTypeName("ClientEvaluateResponse_info")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen")
+@Data
 class ClientEvaluateResponseInfoDto {
 
+    /**
+     * Flag whether aggregation function over identity verification system validators was successful or not.
+     **/
     private Boolean aggregationResult;
+
     private Boolean mdcCheck;
+
     private Boolean documentsAccepted;
 
-    /**
-     * Flag whether aggregation function over indentity verification system validators was successfull or not
-     **/
-    public ClientEvaluateResponseInfoDto aggregationResult(Boolean aggregationResult) {
-        this.aggregationResult = aggregationResult;
-        return this;
-    }
-
-
-    @JsonProperty("aggregationResult")
-    public Boolean getAggregationResult() {
-        return aggregationResult;
-    }
-
-    @JsonProperty("aggregationResult")
-    public void setAggregationResult(Boolean aggregationResult) {
-        this.aggregationResult = aggregationResult;
-    }
-
-    /**
-     * Whether data check in MDC against Siebel data was successfull or not
-     **/
-    public ClientEvaluateResponseInfoDto mdcCheck(Boolean mdcCheck) {
-        this.mdcCheck = mdcCheck;
-        return this;
-    }
-
-
-    @JsonProperty("mdcCheck")
-    public Boolean getMdcCheck() {
-        return mdcCheck;
-    }
-
-    @JsonProperty("mdcCheck")
-    public void setMdcCheck(Boolean mdcCheck) {
-        this.mdcCheck = mdcCheck;
-    }
-
-    /**
-     * Whether documents were accepted by IBL or not
-     **/
-    public ClientEvaluateResponseInfoDto documentsAccepted(Boolean documentsAccepted) {
-        this.documentsAccepted = documentsAccepted;
-        return this;
-    }
-
-
-    @JsonProperty("documentsAccepted")
-    public Boolean getDocumentsAccepted() {
-        return documentsAccepted;
-    }
-
-    @JsonProperty("documentsAccepted")
-    public void setDocumentsAccepted(Boolean documentsAccepted) {
-        this.documentsAccepted = documentsAccepted;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ClientEvaluateResponseInfoDto clientEvaluateResponseInfo = (ClientEvaluateResponseInfoDto) o;
-        return Objects.equals(this.aggregationResult, clientEvaluateResponseInfo.aggregationResult) &&
-                Objects.equals(this.mdcCheck, clientEvaluateResponseInfo.mdcCheck) &&
-                Objects.equals(this.documentsAccepted, clientEvaluateResponseInfo.documentsAccepted);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(aggregationResult, mdcCheck, documentsAccepted);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("class ClientEvaluateResponseInfoDto {\n");
-
-        sb.append("    aggregationResult: ").append(toIndentedString(aggregationResult)).append("\n");
-        sb.append("    mdcCheck: ").append(toIndentedString(mdcCheck)).append("\n");
-        sb.append("    documentsAccepted: ").append(toIndentedString(documentsAccepted)).append("\n");
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Convert the given object to string with each line indented by 4 spaces
-     * (except the first line).
-     */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
-    }
-
-
 }
-

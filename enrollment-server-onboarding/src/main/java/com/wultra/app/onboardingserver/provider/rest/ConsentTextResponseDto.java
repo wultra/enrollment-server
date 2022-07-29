@@ -17,78 +17,16 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import java.util.Objects;
+import lombok.Data;
 
 /**
+ * Response object for consent text.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@JsonTypeName("ConsentTextResponse")
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen")
+@Data
 class ConsentTextResponseDto {
 
     private String consentText;
 
-    /**
-     * Resulting consent text in specified language
-     **/
-    public ConsentTextResponseDto consentText(String consentText) {
-        this.consentText = consentText;
-        return this;
-    }
-
-
-    @JsonProperty("consentText")
-    public String getConsentText() {
-        return consentText;
-    }
-
-    @JsonProperty("consentText")
-    public void setConsentText(String consentText) {
-        this.consentText = consentText;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ConsentTextResponseDto consentTextResponse = (ConsentTextResponseDto) o;
-        return Objects.equals(this.consentText, consentTextResponse.consentText);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(consentText);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("class ConsentTextResponseDto {\n");
-
-        sb.append("    consentText: ").append(toIndentedString(consentText)).append("\n");
-        sb.append("}");
-        return sb.toString();
-    }
-
-    /**
-     * Convert the given object to string with each line indented by 4 spaces
-     * (except the first line).
-     */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
-    }
-
-
 }
-
