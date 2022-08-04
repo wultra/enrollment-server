@@ -146,6 +146,16 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Saves identity verification.
+     *
+     * @param identityVerification identity verification
+     */
+    @Transactional
+    public void save(final IdentityVerificationEntity identityVerification) {
+        identityVerificationRepository.save(identityVerification);
+    }
+
+    /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
      * @param processId Process identifier.

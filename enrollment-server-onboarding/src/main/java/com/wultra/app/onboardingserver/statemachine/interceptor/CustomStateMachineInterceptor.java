@@ -16,10 +16,17 @@
  */
 package com.wultra.app.onboardingserver.statemachine.interceptor;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
-import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -29,10 +36,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.state.State;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
+import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.util.Map;
 
@@ -46,11 +57,11 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
     private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
 
-    private final EnrollmentStateProvider enrollmentStateProvider;
+    private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public CustomStateMachineInterceptor(EnrollmentStateProvider enrollmentStateProvider) {
-        this.enrollmentStateProvider = enrollmentStateProvider;
+    public CustomStateMachineInterceptor(final IdentityVerificationService identityVerificationService) {
+        this.identityVerificationService = identityVerificationService;
     }
 
     @Override
@@ -106,21 +117,31 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
             return context;
         }
 
-        OnboardingState expectedState;
-        try {
-            expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
-        } catch (IdentityVerificationException e) {
-            logger.error("Failed post transition check: {}, {}", e.getMessage(), identityVerification);
-            return context;
-        }
-
-        if (expectedState != targetState) {
-            logger.error("Unexpected targetState={} when expectedState={}, {}", targetState, expectedState, identityVerification);
-        } else {
-            logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
-        }
+        logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
 
         return context;
     }
 
+    @Override
+    public void postStateChange(
+            final State<OnboardingState, OnboardingEvent> state,
+            final Message<OnboardingEvent> message,
+            final Transition<OnboardingState, OnboardingEvent> transition,
+            final StateMachine<OnboardingState, OnboardingEvent> stateMachine,
+            final StateMachine<OnboardingState, OnboardingEvent> rootStateMachine) {
+
+        final OwnerId ownerId = message.getHeaders().get(EventHeaderName.OWNER_ID, OwnerId.class);
+        Assert.notNull(ownerId, "ownerId must not be null");
+        final IdentityVerificationEntity identityVerification = stateMachine.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final OnboardingState enrollmentState = state.getId();
+
+        final IdentityVerificationPhase phase = enrollmentState.getPhase();
+        final IdentityVerificationStatus status = enrollmentState.getStatus();
+        logger.info("Changing IdentityVerification ID: {} to {} / {}", identityVerification.getId(), phase, status);
+
+        identityVerification.setPhase(phase);
+        identityVerification.setStatus(status);
+        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationService.save(identityVerification);
+    }
 }
