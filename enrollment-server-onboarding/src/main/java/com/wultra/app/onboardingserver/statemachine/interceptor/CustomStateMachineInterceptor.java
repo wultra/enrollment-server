@@ -132,7 +132,8 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
         final OwnerId ownerId = message.getHeaders().get(EventHeaderName.OWNER_ID, OwnerId.class);
         Assert.notNull(ownerId, "ownerId must not be null");
-        final IdentityVerificationEntity identityVerification = stateMachine.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
+                new IllegalStateException("IdentityVerification does not exist for " + ownerId));
         final OnboardingState enrollmentState = state.getId();
 
         final IdentityVerificationPhase phase = enrollmentState.getPhase();
