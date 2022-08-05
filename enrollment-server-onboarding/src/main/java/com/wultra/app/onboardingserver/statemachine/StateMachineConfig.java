@@ -243,6 +243,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationDocumentStartAction)
+                .target(OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS)
                 .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
@@ -271,11 +276,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
                 .and()
                 .withChoice()
-                .source(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
-                .first(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, statusInProgressGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_ACCEPTED, statusAcceptedGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, statusRejectedGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_FAILED, statusFailedGuard)
+                .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
+                .first(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING, statusInProgressGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_REJECTED, statusRejectedGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_FAILED, statusFailedGuard)
                 .last(OnboardingState.UNEXPECTED_STATE)
 
                 .and()
