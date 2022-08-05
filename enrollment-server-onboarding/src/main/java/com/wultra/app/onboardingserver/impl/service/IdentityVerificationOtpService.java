@@ -18,6 +18,8 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -119,8 +121,6 @@ public class IdentityVerificationOtpService {
      */
     @Transactional
     public void sendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-        identityVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 

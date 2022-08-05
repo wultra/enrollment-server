@@ -102,6 +102,7 @@ public class IdentityVerificationLimitService {
             identityVerifications.stream()
                     .filter(verification -> verification.getStatus() != IdentityVerificationStatus.FAILED
                             && verification.getStatus() != IdentityVerificationStatus.REJECTED)
+                    // TODO (racansky, 2022-08-05) status changed out of state machine
                     .forEach(verification -> verification.setStatus(IdentityVerificationStatus.FAILED));
             identityVerificationRepository.saveAll(identityVerifications);
 
@@ -130,6 +131,7 @@ public class IdentityVerificationLimitService {
     public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
         final List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
+            // TODO (racansky, 2022-08-05) status changed out of state machine
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);

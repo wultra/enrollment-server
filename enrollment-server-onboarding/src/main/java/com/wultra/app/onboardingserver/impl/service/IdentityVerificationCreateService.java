@@ -78,6 +78,7 @@ public class IdentityVerificationCreateService {
 
         final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
+        // Initial phase and status. They are not-null, so must be set before processed by state machine
         entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
         entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());

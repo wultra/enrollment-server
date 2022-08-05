@@ -209,6 +209,7 @@ public class IdentityVerificationService {
             logger.info("Switching {} from {} to {} due to new documents submit, {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
+            // TODO (racansky, 2022-08-05) so far, called completely out of state machine, fire an event
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
             idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
@@ -260,10 +261,6 @@ public class IdentityVerificationService {
                 .collect(Collectors.toList());
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
-
-        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-        identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         docVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
@@ -361,6 +358,7 @@ public class IdentityVerificationService {
             List<DocumentVerificationEntity> docVerifications) {
         if (docVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+            // TODO (racansky, 2022-08-05) let changing phase and status to CustomStateMachineInterceptor#postStateChange
             idVerification.setPhase(phase);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
         } else {
@@ -368,6 +366,7 @@ public class IdentityVerificationService {
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
+                        // TODO (racansky, 2022-08-05) let changing phase and status to CustomStateMachineInterceptor#postStateChange
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
@@ -378,6 +377,7 @@ public class IdentityVerificationService {
                     .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
+                        // TODO (racansky, 2022-08-05) let changing phase and status to CustomStateMachineInterceptor#postStateChange
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
@@ -433,6 +433,7 @@ public class IdentityVerificationService {
         // Check statuses of all documents used for the verification, update identity verification status accordingly
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
+            // TODO (racansky, 2022-08-05) change status via state machine
             checkIdentityDocumentsForVerification(ownerId, idVerification);
         }
 
@@ -495,21 +496,28 @@ public class IdentityVerificationService {
      */
     @Transactional
     public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllUsedForVerification(idVerification);
-
-        if (docVerifications.stream()
-                .allMatch(docVerification ->
-                        DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
-                )
-        ) {
+        if (isIdentityDocumentsForVerification(ownerId, idVerification)) {
             logger.info("All documents are pending verification, changing status of {} to {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
             );
+            // TODO (racansky, 2022-08-05) document/status should invoke state machine
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         }
+    }
+
+    /**
+     * Returns true if all documents of the given identity verification are {@link DocumentStatus#VERIFICATION_PENDING}.
+     *
+     * @param idVerification Identity verification entity.
+     * @param ownerId Owner identification
+     * @return true if all documents are in VERIFICATION_PENDING status
+     */
+    public boolean isIdentityDocumentsForVerification(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+        return documentVerificationRepository.findAllUsedForVerification(idVerification).stream()
+                .map(DocumentVerificationEntity::getStatus)
+                .allMatch(it -> DocumentStatus.VERIFICATION_PENDING == it);
     }
 
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {

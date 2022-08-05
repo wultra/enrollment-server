@@ -83,20 +83,6 @@ public class PresenceCheckService {
     }
 
     /**
-     * Prepares presence check to not initialized state.
-     *
-     * @param ownerId Owner identification.
-     * @param idVerification Identity verification entity.
-     */
-    @Transactional
-    public void prepareNotInitialized(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
-        idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.debug("Changed {} to not initialized presence check, {}", idVerification, ownerId);
-    }
-
-    /**
      * Initializes presence check process.
      *
      * @param ownerId Owner identification.
@@ -219,9 +205,6 @@ public class PresenceCheckService {
         }
 
         idVerification.setSessionInfo(sessionInfoJson);
-        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         return sessionInfo;
     }

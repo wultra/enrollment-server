@@ -65,6 +65,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
         if (sessionInfo == null) {
             logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
             identityVerification.setErrorDetail("Unable to deserialize session info");
+            // TODO (racansky, 2022-08-05) status changed out of state machine
             identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
@@ -74,6 +75,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
             } catch (PresenceCheckException e) {
                 logger.error("Checking presence verification failed, {}", ownerId, e);
                 identityVerification.setErrorDetail(e.getMessage());
+                // TODO (racansky, 2022-08-05) status changed out of state machine
                 identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 identityVerification.setStatus(IdentityVerificationStatus.FAILED);
                 identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());

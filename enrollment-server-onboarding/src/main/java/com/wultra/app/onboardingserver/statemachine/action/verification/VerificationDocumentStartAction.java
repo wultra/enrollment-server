@@ -59,6 +59,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
             identityVerificationService.startVerification(ownerId, identityVerification);
             logger.info("Started document verification process of {}", identityVerification);
         } catch (DocumentVerificationException e) {
+            // TODO (racansky, 2022-08-05) find out how to change state in error handler
             identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());

@@ -105,6 +105,7 @@ public class PresenceCheckLimitService {
                 throw new IdentityVerificationException("Onboarding process not found");
             }
 
+            // TODO (racansky, 2022-08-05) status changed out of state machine
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
