@@ -137,7 +137,7 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
         final IdentityVerificationPhase phase = enrollmentState.getPhase();
         final IdentityVerificationStatus status = enrollmentState.getStatus();
-        // TODO (racansky, 2022-08-05) e.g. CHOICE_DOCUMENT_UPLOAD has no phase and no status
+        // TODO (racansky, 2022-08-05) UNEXPECTED_STATE has no phase and no status
         if (phase == null || status == null) {
             logger.debug("{} does not have phase or status, IdentityVerification ID: {} is not going to change",
                     identityVerification.getId(), enrollmentState);
