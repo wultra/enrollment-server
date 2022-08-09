@@ -18,28 +18,32 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.SendOtpCodeRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Optional;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 
 /**
  * Service implementing OTP delivery and verification during identity verification.
@@ -47,9 +51,8 @@ import java.util.Optional;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class IdentityVerificationOtpService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationOtpService.class);
 
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final OnboardingOtpRepository onboardingOtpRepository;
@@ -57,16 +60,35 @@ public class IdentityVerificationOtpService {
 
     private OnboardingProvider onboardingProvider;
 
+    private final CommonProcessLimitService processLimitService;
+
+    private final IdentityVerificationRepository identityVerificationRepository;
+
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     /**
      * Service constructor.
+     *
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingOtpRepository Onboarding OTP repository.
      * @param otpService OTP service.
+     * @param processLimitService Process limit service.
+     * @param identityVerificationRepository Identity verification repository.
+     * @param identityVerificationConfig Identity verification config.
      */
-    public IdentityVerificationOtpService(OnboardingProcessRepository onboardingProcessRepository, OnboardingOtpRepository onboardingOtpRepository, OtpServiceImpl otpService) {
+    public IdentityVerificationOtpService(
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final OnboardingOtpRepository onboardingOtpRepository,
+            final OtpServiceImpl otpService,
+            final CommonProcessLimitService processLimitService,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final IdentityVerificationConfig identityVerificationConfig) {
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.otpService = otpService;
+        this.processLimitService = processLimitService;
+        this.identityVerificationRepository = identityVerificationRepository;
+        this.identityVerificationConfig = identityVerificationConfig;
     }
 
     /**
@@ -103,20 +125,29 @@ public class IdentityVerificationOtpService {
     }
 
     /**
-     * Verify an OTP code.
+     * Verify an OTP code as part of SCA.
+     * <p>
+     * If process is configured to do PRESENCE_CHECK, that step is verified here as well.
+     * Because of SCA compliance, users MUST NOT be able to distinguish what went wrong.
+     *
      * @param processId Onboarding process identification.
      * @param otpCode OTP code.
      * @return OTP verification response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OtpVerifyResponse verifyOtpCode(String processId, String otpCode) throws OnboardingProcessException {
-        final Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (processOptional.isEmpty()) {
-            logger.warn("Onboarding process not found: {}", processId);
-            throw new OnboardingProcessException();
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
+            new OnboardingProcessException(String.format("Onboarding Process ID: %s not found.", processId)));
+
+        final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), otpCode, OtpType.USER_VERIFICATION);
+        logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
+        if (!response.isVerified() && identityVerificationConfig.isPresenceCheckEnabled()) {
+            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
+            final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
+            return moveToPhasePresenceCheck(process, response, idVerification);
         }
-        final OnboardingProcessEntity process = processOptional.get();
-        return otpService.verifyOtpCode(process.getId(), otpCode, OtpType.USER_VERIFICATION);
+
+        return verifyPresenceCheck(process, response);
     }
 
     /**
@@ -133,6 +164,66 @@ public class IdentityVerificationOtpService {
         return otp.getStatus() == OtpStatus.VERIFIED;
     }
 
+    private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response) throws OnboardingProcessException {
+        final String processId = process.getId();
+        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
+            logger.debug("Presence check is not enabled, process ID: {}", processId);
+            return response;
+        }
+
+        logger.debug("Evaluating result of presence check, process ID: {}", processId);
+
+        final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
+        final String errorDetail = idVerification.getErrorDetail();
+        final String rejectReason = idVerification.getRejectReason();
+
+        if (StringUtils.isNotBlank(errorDetail) || StringUtils.isNotBlank(rejectReason)) {
+            logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
+                    idVerification.getId(), processId, errorDetail, rejectReason);
+            return moveToPhasePresenceCheck(process, response, idVerification);
+        } else {
+            logger.debug("PRESENCE_CHECK without error or reject reason, process ID: {}", idVerification.getProcessId());
+        }
+        return response;
+    }
+
+    private IdentityVerificationEntity getIdentityVerificationEntity(final OnboardingProcessEntity process) throws OnboardingProcessException {
+        return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId()).orElseThrow(() ->
+                new OnboardingProcessException("No IdentityVerification found, process ID: " + process.getId()));
+    }
+
+    private OtpVerifyResponse moveToPhasePresenceCheck(
+            final OnboardingProcessEntity process,
+            final OtpVerifyResponse response,
+            final IdentityVerificationEntity idVerification) throws OnboardingProcessException {
+
+        idVerification.setPhase(PRESENCE_CHECK);
+        idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+        idVerification.setTimestampLastUpdated(new Date());
+        idVerification.setErrorDetail(null);
+        idVerification.setRejectReason(null);
+        identityVerificationRepository.save(idVerification);
+
+        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, process ID: {}", idVerification.getProcessId());
+
+        markVerificationOtpAsFailed(process.getId());
+
+        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED);
+        final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
+        response.setOnboardingStatus(status);
+        response.setVerified(false);
+        return response;
+    }
+
+    private void markVerificationOtpAsFailed(String processId) throws OnboardingProcessException {
+        final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION).orElseThrow(() ->
+            new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
+        otp.setStatus(OtpStatus.FAILED);
+        otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
+        otp.setTimestampLastUpdated(new Date());
+        onboardingOtpRepository.save(otp);
+    }
+
     /**
      * Sends or resends an OTP code for a process during identity verification.
      * @param processId Process ID.
@@ -141,10 +232,6 @@ public class IdentityVerificationOtpService {
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
     private void sendOtpCode(String processId, boolean isResend) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        if (onboardingProvider == null) {
-            logger.error("Onboarding provider is not available. Implement an onboarding provider and make it accessible using autowiring.");
-            throw new OnboardingProcessException();
-        }
         final Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
         if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found: {}", processId);

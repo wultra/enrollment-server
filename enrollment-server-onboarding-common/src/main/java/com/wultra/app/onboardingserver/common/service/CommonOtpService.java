@@ -79,7 +79,7 @@ public class CommonOtpService implements OtpService {
 
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
         if (otpOptional.isEmpty()) {
-            logger.warn("Onboarding OTP not found for process ID: {}", processId);
+            logger.warn("Onboarding OTP not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
         OnboardingOtpEntity otp = otpOptional.get();

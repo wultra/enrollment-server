@@ -40,6 +40,10 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
+
 /**
  * Service implementing document identity verification status services.
  *
@@ -130,7 +134,7 @@ public class IdentityVerificationStatusService {
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
             // Trigger immediate processing of expired processes
             onboardingService.terminateInactiveProcesses();
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+            response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(null);
             return response;
         }
@@ -149,16 +153,16 @@ public class IdentityVerificationStatusService {
         if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             identityVerificationService.checkIdentityDocumentsForVerification(ownerId, idVerification);
-        } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
+        } else if (PRESENCE_CHECK.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            response.setIdentityVerificationPhase(IdentityVerificationPhase.PRESENCE_CHECK);
+            response.setIdentityVerificationPhase(PRESENCE_CHECK);
 
             SessionInfo sessionInfo =
                     jsonSerializationService.deserialize(idVerification.getSessionInfo(), SessionInfo.class);
             if (sessionInfo == null) {
                 logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
                 idVerification.setErrorDetail("Unable to deserialize session info");
-                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setStatus(FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             } else {
                 PresenceCheckResult presenceCheckResult = null;
@@ -168,7 +172,7 @@ public class IdentityVerificationStatusService {
                 } catch (PresenceCheckException e) {
                     logger.error("Checking presence verification failed, {}", ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());
-                    idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                    idVerification.setStatus(FAILED);
                     idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 }
 
@@ -176,11 +180,10 @@ public class IdentityVerificationStatusService {
                     evaluatePresenceCheckResult(ownerId, idVerification, presenceCheckResult);
                 }
             }
-        } else if (IdentityVerificationPhase.PRESENCE_CHECK.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+        } else if (isPresenceCheckFinished(idVerification.getPhase(), idVerification.getStatus())) {
             continueAfterPresenceCheck(ownerId, idVerification);
         } else if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
+                && VERIFICATION_PENDING.equals(idVerification.getStatus())) {
             startVerification(ownerId, idVerification);
         } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
                 && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
@@ -198,7 +201,7 @@ public class IdentityVerificationStatusService {
                     processVerificationResult(ownerId, idVerification);
                 } catch (OnboardingProcessException e) {
                     logger.error("Updating onboarding process failed, {}", ownerId, e);
-                    response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+                    response.setIdentityVerificationStatus(FAILED);
                     return response;
                 }
             } else {
@@ -209,6 +212,18 @@ public class IdentityVerificationStatusService {
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
+    }
+
+    /**
+     * Return whether presence check finished (even not successfully).
+     *
+     * @param phase phase
+     * @param status status
+     * @return true if presence check finished, false otherwise
+     */
+    private static boolean isPresenceCheckFinished(final IdentityVerificationPhase phase, final IdentityVerificationStatus status) {
+        return phase == PRESENCE_CHECK &&
+                (status == VERIFICATION_PENDING || status == FAILED || status == IdentityVerificationStatus.REJECTED);
     }
 
     private void processVerificationResult(
@@ -225,13 +240,13 @@ public class IdentityVerificationStatusService {
                                              PresenceCheckResult result) {
         switch (result.getStatus()) {
             case ACCEPTED:
-                idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+                idVerification.setStatus(VERIFICATION_PENDING);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.info("Presence check accepted, {}", ownerId);
                 break;
             case FAILED:
                 idVerification.setErrorDetail(result.getErrorDetail());
-                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setStatus(FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
                 break;
@@ -253,16 +268,16 @@ public class IdentityVerificationStatusService {
         idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
         idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, processId={}", ownerId, idVerification.getProcessId());
+        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
     }
 
     private void continueWithPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
         if (identityVerificationConfig.isPresenceCheckEnabled()) {
-            idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
+            idVerification.setPhase(PRESENCE_CHECK);
             idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, processId={}", ownerId, idVerification.getProcessId());
+            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, process ID: {}", ownerId, idVerification.getProcessId());
         } else {
             continueAfterPresenceCheck(ownerId, idVerification);
         }
@@ -287,7 +302,7 @@ public class IdentityVerificationStatusService {
             logger.info("Started document verification process of {}", idVerification);
         } catch (DocumentVerificationException e) {
             idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-            idVerification.setStatus(IdentityVerificationStatus.FAILED);
+            idVerification.setStatus(FAILED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             logger.warn("Verification start failed, {}", ownerId, e);
         }
