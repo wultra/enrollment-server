@@ -28,12 +28,14 @@ import com.wultra.security.powerauth.client.model.response.OperationDetailRespon
 import com.wultra.security.powerauth.lib.mtoken.model.entity.AllowedSignatureType;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.FormData;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.UiExtensions;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -75,6 +77,15 @@ public class MobileTokenConverter {
         return allowedSignatureType;
     }
 
+    /**
+     * Convert operation detail from PowerAuth Server and operation template from Enrollment Server into an
+     * operation in API response.
+     *
+     * @param operationDetail Operation detail response obtained from PowerAuth Server.
+     * @param operationTemplate Operation template obtained from Enrollment Server.
+     * @return Operation for API response.
+     * @throws MobileTokenConfigurationException In case there is an error in configuration data.
+     */
     public Operation convert(OperationDetailResponse operationDetail, OperationTemplateEntity operationTemplate) throws MobileTokenConfigurationException {
         try {
             final Operation operation = new Operation();
@@ -85,6 +96,13 @@ public class MobileTokenConverter {
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
+
+            // Set UI data
+            final String uiJsonString = operationTemplate.getUi();
+            if (StringUtils.hasText(uiJsonString)) {
+                final UiExtensions ui = objectMapper.readValue(uiJsonString, UiExtensions.class);
+                operation.setUi(ui);
+            }
 
             // Prepare title and message with substituted attributes
             final FormData formData = new FormData();

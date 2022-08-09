@@ -39,6 +39,7 @@ public class Operation {
     private String status;
     private Date operationCreated;
     private Date operationExpires;
+    private UiExtensions ui;
     @NotNull
     private AllowedSignatureType allowedSignatureType;
     @NotNull

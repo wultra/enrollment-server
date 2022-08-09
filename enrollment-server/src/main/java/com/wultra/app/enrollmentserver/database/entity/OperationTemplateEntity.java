@@ -57,6 +57,9 @@ public class OperationTemplateEntity implements Serializable {
     @Column(name = "message", nullable = false)
     private String message;
 
+    @Column(name = "ui")
+    private String ui;
+
     @Column(name = "attributes")
     private String attributes;
 
@@ -69,11 +72,12 @@ public class OperationTemplateEntity implements Serializable {
                 && Objects.equals(language, that.language)
                 && Objects.equals(title, that.title)
                 && Objects.equals(message, that.message)
+                && Objects.equals(ui, that.ui)
                 && Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(placeholder, language, title, message, attributes);
+        return Objects.hash(placeholder, language, title, message, ui, attributes);
     }
 }
