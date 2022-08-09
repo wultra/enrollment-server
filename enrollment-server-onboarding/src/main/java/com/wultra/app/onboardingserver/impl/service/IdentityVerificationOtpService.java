@@ -140,9 +140,9 @@ public class IdentityVerificationOtpService {
             new OnboardingProcessException(String.format("Onboarding Process ID: %s not found.", processId)));
 
         final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), otpCode, OtpType.USER_VERIFICATION);
-        logger.debug("OTP code verified: {} for Process ID: {}", response.isVerified(), processId);
+        logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
         if (!response.isVerified() && identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.info("SCA failed, wrong OTP code; Process ID: {}", processId);
+            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
             final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
             return moveToPhasePresenceCheck(process, response, idVerification);
         }
@@ -167,11 +167,11 @@ public class IdentityVerificationOtpService {
     private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response) throws OnboardingProcessException {
         final String processId = process.getId();
         if (!identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.debug("Presence check is not enabled, Process ID: {}", processId);
+            logger.debug("Presence check is not enabled, process ID: {}", processId);
             return response;
         }
 
-        logger.debug("Evaluating result of presence check, Process ID: {}", processId);
+        logger.debug("Evaluating result of presence check, process ID: {}", processId);
 
         final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
         final String errorDetail = idVerification.getErrorDetail();
@@ -182,14 +182,14 @@ public class IdentityVerificationOtpService {
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);
         } else {
-            logger.debug("PRESENCE_CHECK without error or reject reason, Process ID: {}", idVerification.getProcessId());
+            logger.debug("PRESENCE_CHECK without error or reject reason, process ID: {}", idVerification.getProcessId());
         }
         return response;
     }
 
     private IdentityVerificationEntity getIdentityVerificationEntity(final OnboardingProcessEntity process) throws OnboardingProcessException {
         return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId()).orElseThrow(() ->
-                new OnboardingProcessException("No IdentityVerification found for Process ID: " + process.getId()));
+                new OnboardingProcessException("No IdentityVerification found, process ID: " + process.getId()));
     }
 
     private OtpVerifyResponse moveToPhasePresenceCheck(
@@ -204,7 +204,7 @@ public class IdentityVerificationOtpService {
         idVerification.setRejectReason(null);
         identityVerificationRepository.save(idVerification);
 
-        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, Process ID: {}", idVerification.getProcessId());
+        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, process ID: {}", idVerification.getProcessId());
 
         markVerificationOtpAsFailed(process.getId());
 
@@ -217,7 +217,7 @@ public class IdentityVerificationOtpService {
 
     private void markVerificationOtpAsFailed(String processId) throws OnboardingProcessException {
         final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION).orElseThrow(() ->
-            new OnboardingProcessException("Onboarding OTP not found for process ID: " + processId));
+            new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
         otp.setTimestampLastUpdated(new Date());

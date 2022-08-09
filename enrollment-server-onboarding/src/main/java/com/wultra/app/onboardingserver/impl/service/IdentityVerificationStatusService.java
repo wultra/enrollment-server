@@ -268,7 +268,7 @@ public class IdentityVerificationStatusService {
         idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
         idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, Process ID: {}", ownerId, idVerification.getProcessId());
+        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
     }
 
     private void continueWithPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
@@ -277,7 +277,7 @@ public class IdentityVerificationStatusService {
             idVerification.setPhase(PRESENCE_CHECK);
             idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, Process ID: {}", ownerId, idVerification.getProcessId());
+            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, process ID: {}", ownerId, idVerification.getProcessId());
         } else {
             continueAfterPresenceCheck(ownerId, idVerification);
         }
