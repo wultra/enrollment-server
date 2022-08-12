@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingSt
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
@@ -80,11 +81,12 @@ public class OnboardingController {
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown in case onboarding OTP delivery fails.
      * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
+     * @throws InvalidRequestObjectException Thrown in case request is invalid.
      */
     @PostMapping("start")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException {
+                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             logger.error("ECIES encryption failed during onboarding");

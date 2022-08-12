@@ -17,6 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
@@ -30,10 +36,10 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
-import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
@@ -47,6 +53,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
 
@@ -60,17 +67,28 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private static final Logger logger = LoggerFactory.getLogger(OnboardingServiceImpl.class);
 
-    private final JsonSerializationService serializer;
+    private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
+
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OtpServiceImpl otpService;
+
+    // Special instance of ObjectMapper for normalized serialization of identification data
+    private final ObjectMapper normalizedMapper = JsonMapper
+            .builder()
+            .enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .build()
+            .setDateFormat(new SimpleDateFormat(IDENTIFICATION_DATA_DATE_FORMAT))
+            .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
     private final OnboardingProvider onboardingProvider;
 
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
-     * @param serializer JSON serialization service.
      * @param config Onboarding configuration.
      * @param identityVerificationConfig Identity verification config.
      * @param otpService OTP service.
@@ -78,14 +96,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Autowired
     public OnboardingServiceImpl(
             final OnboardingProcessRepository onboardingProcessRepository,
-            final JsonSerializationService serializer,
             final OnboardingConfig config,
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
             final OnboardingProvider onboardingProvider) {
 
         super(onboardingProcessRepository);
-        this.serializer = serializer;
         this.onboardingConfig = config;
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpService = otpService;
@@ -98,11 +114,19 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Onboarding start response.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
      * @throws TooManyProcessesException Thrown in case too many onboarding processes are started.
+     * @throws InvalidRequestObjectException Thrown in case request is invalid.
      */
     @Transactional
-    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException {
+    public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException {
         final Map<String, Object> identification = request.getIdentification();
-        final String identificationData = serializer.serialize(identification);
+
+        final String identificationData;
+        try {
+            identificationData = normalizedMapper.writeValueAsString(identification);
+        } catch (JsonProcessingException ex) {
+            logger.warn("Invalid identification data: {}", identification);
+            throw new InvalidRequestObjectException();
+        }
 
         final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessByIdentificationData(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification))
@@ -404,18 +428,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     @SneakyThrows(OnboardingProcessException.class)
     private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData) {
-        final OnboardingProcessEntity process = createNewProcessWithTempUserId(identificationData);
+        final OnboardingProcessEntity process = createNewProcess(identificationData);
         logger.debug("Created process ID: {}", process.getId());
         final String userId = lookupUser(process.getId(), identification);
         process.setUserId(userId);
         return process;
     }
 
-    private OnboardingProcessEntity createNewProcessWithTempUserId(final String identificationData) {
+    private OnboardingProcessEntity createNewProcess(final String identificationData) {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        process.setUserId("user-id-not-looked-up-yet");
         process.setTimestampCreated(new Date());
         return onboardingProcessRepository.save(process);
     }
