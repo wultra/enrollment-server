@@ -30,7 +30,7 @@ CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(p
 CREATE TABLE es_onboarding_process (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     identification_data TEXT NOT NULL,
-    user_id VARCHAR(256) NOT NULL,
+    user_id VARCHAR(256),
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
