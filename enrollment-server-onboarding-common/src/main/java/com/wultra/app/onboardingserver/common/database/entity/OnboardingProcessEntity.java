@@ -62,6 +62,7 @@ public class OnboardingProcessEntity implements Serializable {
     private String id;
 
     @Column(name = "identification_data", nullable = false)
+    @Lob
     private String identificationData;
 
     @Column(name = "user_id")

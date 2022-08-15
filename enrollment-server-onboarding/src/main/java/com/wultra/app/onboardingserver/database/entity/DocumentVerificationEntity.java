@@ -138,6 +138,7 @@ public class DocumentVerificationEntity implements Serializable {
      * Overall reason for the document rejection
      */
     @Column(name = "reject_reason")
+    @Lob
     private String rejectReason;
 
     /**
