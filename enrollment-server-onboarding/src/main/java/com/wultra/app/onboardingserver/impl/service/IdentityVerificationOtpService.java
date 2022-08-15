@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.Optional;
 
@@ -135,6 +136,7 @@ public class IdentityVerificationOtpService {
      * @return OTP verification response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
+    @Transactional
     public OtpVerifyResponse verifyOtpCode(String processId, String otpCode) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
             new OnboardingProcessException(String.format("Onboarding Process ID: %s not found.", processId)));
