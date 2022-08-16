@@ -19,18 +19,19 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
-import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,7 +138,7 @@ public class IdentityVerificationStatusService {
             // Trigger immediate processing of expired processes
             onboardingService.terminateInactiveProcesses();
             response.setIdentityVerificationStatus(FAILED);
-            response.setIdentityVerificationPhase(null);
+            response.setIdentityVerificationPhase(null); // TODO phase is COMPLETED?
             return response;
         }
 
@@ -150,19 +151,6 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-// TODO new code
-//        if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
-//                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
-//            logger.debug("Finished verification of documents for {}, {}", idVerification, ownerId);
-//            continueWithClientEvaluation(ownerId, idVerification);
-//        }
-//
-//        if (IdentityVerificationPhase.CLIENT_EVALUATION.equals(idVerification.getPhase())
-//                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
-//            logger.debug("Finished evaluation of client for {}, {}", idVerification, ownerId);
-//            continueWithPresenceCheck(ownerId, idVerification);
-//        }
-
         StateMachine<OnboardingState, OnboardingEvent> state =
                 stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
@@ -172,12 +160,5 @@ public class IdentityVerificationStatusService {
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
     }
-
-//    private void continueWithClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-//        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
-//        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-//        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-//        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
-//    }
 
 }

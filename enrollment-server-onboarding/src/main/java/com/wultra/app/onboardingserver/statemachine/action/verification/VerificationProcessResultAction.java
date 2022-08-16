@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
@@ -74,7 +75,7 @@ public class VerificationProcessResultAction implements Action<OnboardingState, 
                 if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
                     try {
                         identityVerificationFinishService.finishIdentityVerification(ownerId);
-                    } catch (OnboardingProcessException | RemoteCommunicationException e) {
+                    } catch (IdentityVerificationException | OnboardingProcessException | RemoteCommunicationException e) {
                         context.getStateMachine().setStateMachineError(e);
                     }
                 }

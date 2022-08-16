@@ -30,6 +30,10 @@ import lombok.ToString;
 public enum OnboardingState {
 
     INITIAL(null, IdentityVerificationStatus.NOT_INITIALIZED),
+
+    // TODO missing usage of this state
+    // FAILED(null, IdentityVerificationStatus.FAILED),
+
     DOCUMENT_UPLOAD_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS),
     DOCUMENT_UPLOAD_VERIFICATION_PENDING(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING),
 
@@ -40,6 +44,12 @@ public enum OnboardingState {
     DOCUMENT_VERIFICATION_FAILED(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.FAILED),
 
     DOCUMENT_VERIFICATION_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS),
+
+    CLIENT_EVALUATION_IN_PROGRESS(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.IN_PROGRESS),
+
+    CLIENT_EVALUATION_FAILED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.FAILED),
+
+    CLIENT_EVALUATION_REJECTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.REJECTED),
 
     PRESENCE_CHECK_IN_PROGRESS(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS),
     PRESENCE_CHECK_FAILED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.FAILED),
@@ -55,6 +65,8 @@ public enum OnboardingState {
     COMPLETED_ACCEPTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED),
     COMPLETED_FAILED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED),
     COMPLETED_REJECTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.REJECTED),
+
+    CHOICE_CLIENT_EVALUATION_PROCESSING,
 
     CHOICE_DOCUMENT_UPLOAD,
 
