@@ -170,13 +170,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .initial(OnboardingState.INITIAL)
                 .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
-                .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
+                .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .choice(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
+                .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
+                .end(OnboardingState.DOCUMENT_VERIFICATION_REJECTED)
                 .end(OnboardingState.COMPLETED_ACCEPTED)
                 .end(OnboardingState.COMPLETED_FAILED)
                 .end(OnboardingState.COMPLETED_REJECTED)
@@ -262,14 +264,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(clientEvaluationInitAction)
-                .target(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
-
-                .and()
-                .withChoice()
-                .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
-                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
+                .target(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS);
     }
 
     private void configureClientEvaluationTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
@@ -283,10 +278,23 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
                 .first(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, statusInProgressGuard)
-                .then(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
+                .then(OnboardingState.CLIENT_EVALUATION_ACCEPTED, statusAcceptedGuard)
                 .then(OnboardingState.CLIENT_EVALUATION_REJECTED, statusRejectedGuard)
                 .then(OnboardingState.CLIENT_EVALUATION_FAILED, statusFailedGuard)
-                .last(OnboardingState.UNEXPECTED_STATE);
+                .last(OnboardingState.UNEXPECTED_STATE)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+
+                .and()
+                .withChoice()
+                .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
     }
 
     private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

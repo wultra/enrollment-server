@@ -45,6 +45,8 @@ public enum OnboardingState {
 
     DOCUMENT_VERIFICATION_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS),
 
+    CLIENT_EVALUATION_ACCEPTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED),
+
     CLIENT_EVALUATION_IN_PROGRESS(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.IN_PROGRESS),
 
     CLIENT_EVALUATION_FAILED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.FAILED),
@@ -70,7 +72,7 @@ public enum OnboardingState {
 
     CHOICE_DOCUMENT_UPLOAD,
 
-    CHOICE_DOCUMENT_VERIFICATION_ACCEPTED,
+    CHOICE_CLIENT_EVALUATION_ACCEPTED,
 
     CHOICE_DOCUMENT_VERIFICATION_PROCESSING,
 
