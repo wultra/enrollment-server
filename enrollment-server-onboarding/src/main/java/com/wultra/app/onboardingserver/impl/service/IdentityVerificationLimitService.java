@@ -35,18 +35,14 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationExcepti
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationLimitException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static com.wultra.app.onboardingserver.impl.service.ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS;
 
 /**
  * Service for checking identity verification limits.
@@ -87,11 +83,11 @@ public class IdentityVerificationLimitService {
     /**
      * Check attempt limit of failed identity verifications. Fail onboarding process in the attempt count has exceeded the limit.
      * @param ownerId Owner identification.
-     * @throws PowerAuthClientException Thrown when activation flag request fails.
+     * @throws RemoteCommunicationException Thrown when activation flag request fails.
      * @throws IdentityVerificationException Thrown in case identity verification is invalid.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void checkIdentityVerificationLimit(OwnerId ownerId) throws PowerAuthClientException, IdentityVerificationException, OnboardingProcessLimitException {
+    public void checkIdentityVerificationLimit(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
         final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
         if (identityVerifications.size() >= identityVerificationConfig.getVerificationMaxFailedAttempts()) {
@@ -113,9 +109,8 @@ public class IdentityVerificationLimitService {
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
-            // Remove flag VERIFICATION_IN_PROGRESS
-            final List<String> activationFlagsToRemove = Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
-            activationFlagService.removeActivationFlags(ownerId, activationFlagsToRemove);
+            // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
+            activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for identity verification, {}.", ownerId);
             throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification");
         }

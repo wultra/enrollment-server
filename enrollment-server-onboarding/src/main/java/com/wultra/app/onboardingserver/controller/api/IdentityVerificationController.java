@@ -68,7 +68,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -506,7 +505,6 @@ public class IdentityVerificationController {
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentTextRequest> request,
-            final @Parameter(hidden = true, required = true) Locale locale,
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, PowerAuthEncryptionException {
 
         checkEciesContext(eciesContext, "obtaining user consent text");
@@ -520,8 +518,7 @@ public class IdentityVerificationController {
         final OnboardingProcessEntity process = onboardingService.findProcess(processId);
         final String userId = process.getUserId();
 
-        final OnboardingConsentTextResponse onboardingConsentTextResponse = onboardingService.fetchConsentText(requestObject, userId, locale);
-        return new ObjectResponse<>(onboardingConsentTextResponse);
+        return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject, userId));
     }
 
     @PostMapping("consent/approve")
@@ -548,7 +545,7 @@ public class IdentityVerificationController {
         final String processId = requestObject.getProcessId().toString();
         onboardingService.verifyProcessId(ownerId, processId);
 
-        onboardingService.approveConsent(requestObject, ownerId);
+        onboardingService.approveConsent(requestObject, ownerId.getUserId());
         return new Response();
     }
 

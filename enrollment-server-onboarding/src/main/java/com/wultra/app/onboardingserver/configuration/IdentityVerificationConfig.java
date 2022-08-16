@@ -53,7 +53,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.cleanupEnabled:false}")
     private boolean presenceCheckCleanupEnabled;
 
-    @Value("${enrollment-server-onboarding.identity-verification.data-retention.hours:1h}")
+    @Value("${enrollment-server-onboarding.identity-verification.data-retention:1h}")
     private Duration dataRetentionTime;
 
     @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:1h}")
@@ -70,5 +70,8 @@ public class IdentityVerificationConfig {
 
     @Value("${enrollment-server-onboarding.presence-check.max-failed-attempts:5}")
     private int presenceCheckMaxFailedAttempts;
+
+    @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:5}")
+    private int clientEvaluationMaxFailedAttempts;
 
 }

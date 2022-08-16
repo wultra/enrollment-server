@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import reactor.core.publisher.Mono;
 
 /**
  * Implementation of {@link OnboardingProvider} throwing an exception for each method.
@@ -44,6 +45,11 @@ class EmptyOnboardingProvider implements OnboardingProvider {
     @Override
     public ApproveConsentResponse approveConsent(ApproveConsentRequest request) throws OnboardingProviderException {
         throw createException();
+    }
+
+    @Override
+    public Mono<EvaluateClientResponse> evaluateClient(EvaluateClientRequest request) {
+        return Mono.error(createException());
     }
 
     private static OnboardingProviderException createException() {

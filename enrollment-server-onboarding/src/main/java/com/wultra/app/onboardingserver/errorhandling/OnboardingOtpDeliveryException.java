@@ -26,4 +26,19 @@ public class OnboardingOtpDeliveryException extends Exception {
 
     private static final long serialVersionUID = -2641221254167428346L;
 
+    /**
+     * No-arg constructor.
+     */
+    public OnboardingOtpDeliveryException() {
+        super();
+    }
+
+    /**
+     * Constructs a new exception with the specified cause.
+     *
+     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
+     */
+    public OnboardingOtpDeliveryException(Throwable cause) {
+        super(cause);
+    }
 }

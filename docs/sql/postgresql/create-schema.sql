@@ -36,8 +36,8 @@ CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(p
 
 CREATE TABLE es_onboarding_process (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
-    identification_data TEXT NOT NULL,
-    user_id VARCHAR(256) NOT NULL,
+    identification_data VARCHAR(1024) NOT NULL,
+    user_id VARCHAR(256),
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
@@ -48,6 +48,7 @@ CREATE TABLE es_onboarding_process (
 );
 
 CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
+CREATE INDEX onboarding_process_identif_data ON es_onboarding_process (identification_data);
 CREATE INDEX onboarding_process_timestamp_1 ON es_onboarding_process (timestamp_created);
 CREATE INDEX onboarding_process_timestamp_2 ON es_onboarding_process (timestamp_last_updated);
 
@@ -79,7 +80,7 @@ CREATE TABLE es_identity_verification (
     process_id VARCHAR(36) NOT NULL,
     status VARCHAR(32) NOT NULL,
     phase VARCHAR(32) NOT NULL,
-    reject_reason VARCHAR(256),
+    reject_reason TEXT,
     error_detail VARCHAR(256),
     session_info TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -107,7 +108,7 @@ CREATE TABLE es_document_verification (
     verification_id VARCHAR(36),
     photo_id VARCHAR(256),
     verification_score INTEGER,
-    reject_reason VARCHAR(256),
+    reject_reason TEXT,
     error_detail VARCHAR(256),
     original_document_id VARCHAR(36),
     used_for_verification BOOLEAN DEFAULT FALSE,

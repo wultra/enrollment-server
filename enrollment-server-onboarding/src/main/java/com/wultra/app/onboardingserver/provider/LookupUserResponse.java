@@ -21,6 +21,7 @@ import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 /**
  * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
@@ -30,6 +31,7 @@ import lombok.NonNull;
 @Builder
 @Getter
 @PublicApi
+@ToString
 public final class LookupUserResponse {
 
     @NonNull

@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider;
 
 import com.wultra.app.onboardingserver.common.annotation.PublicSpi;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import reactor.core.publisher.Mono;
 
 /**
  * Provider which allows customization of the onboarding process.
@@ -63,4 +64,11 @@ public interface OnboardingProvider {
      */
     ApproveConsentResponse approveConsent(ApproveConsentRequest request) throws OnboardingProviderException;
 
+    /**
+     * Detects whether customer verification matches known records and customer identity is verified.
+     *
+     * @param request evaluation request
+     * @return mono with evaluation response
+     */
+    Mono<EvaluateClientResponse> evaluateClient(EvaluateClientRequest request);
 }

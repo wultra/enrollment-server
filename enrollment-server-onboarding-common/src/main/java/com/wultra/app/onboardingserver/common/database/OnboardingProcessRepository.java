@@ -58,17 +58,19 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("UPDATE OnboardingProcessEntity p SET " +
             "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.errorDetail = '" + OnboardingProcessEntity.ERROR_PROCESS_EXPIRED + "'" +
+            "p.errorDetail = :errorDetail " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, OnboardingStatus status);
+    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, OnboardingStatus status, String errorDetail);
 
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET " +
             "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
             "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.errorDetail = '" + OnboardingProcessEntity.ERROR_PROCESS_EXPIRED + "'" +
-            "WHERE p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcesses(Date dateCreatedBefore);
+            "p.errorDetail = :errorDetail " +
+            "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED  " +
+            "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED  " +
+            "AND p.timestampCreated < :dateCreatedBefore")
+    void terminateExpiredProcesses(Date dateCreatedBefore, String errorDetail);
 
 }

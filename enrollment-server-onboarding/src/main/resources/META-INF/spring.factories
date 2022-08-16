@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.wultra.app.onboardingserver.provider.OnboardingProviderAutoConfiguration
+  com.wultra.app.onboardingserver.provider.OnboardingProviderAutoConfiguration,\
+  com.wultra.app.onboardingserver.provider.rest.RestOnboardingProviderAutoConfiguration

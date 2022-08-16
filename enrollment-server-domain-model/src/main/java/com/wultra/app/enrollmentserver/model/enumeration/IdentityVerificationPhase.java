@@ -35,6 +35,11 @@ public enum IdentityVerificationPhase {
     DOCUMENT_VERIFICATION,
 
     /**
+     * Client evaluation is in progress.
+     */
+    CLIENT_EVALUATION,
+
+    /**
      * User presence is being verified.
      */
     PRESENCE_CHECK,

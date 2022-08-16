@@ -48,6 +48,8 @@ public class IdentityVerificationEntity implements Serializable {
     public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
     public static final String ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK = "maxFailedAttemptsPresenceCheck";
 
+    public static final String ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION = "maxFailedAttemptsClientEvaluation";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
@@ -72,12 +74,14 @@ public class IdentityVerificationEntity implements Serializable {
     private IdentityVerificationPhase phase;
 
     @Column(name = "reject_reason")
+    @Lob
     private String rejectReason;
 
     @Column(name = "error_detail")
     private String errorDetail;
 
     @Column(name = "session_info")
+    @Lob
     private String sessionInfo;
 
     @Column(name = "timestamp_created", nullable = false)

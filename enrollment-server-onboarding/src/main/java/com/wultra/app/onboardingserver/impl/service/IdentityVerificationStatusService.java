@@ -19,23 +19,18 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
-import com.wultra.security.powerauth.client.PowerAuthClient;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsRequest;
-import com.wultra.security.powerauth.client.v3.ListActivationFlagsResponse;
-import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +40,8 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
  * Service implementing document identity verification status services.
@@ -59,35 +56,52 @@ public class IdentityVerificationStatusService {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final JsonSerializationService jsonSerializationService;
+
+    private final PresenceCheckService presenceCheckService;
+
+    private final IdentityVerificationFinishService identityVerificationFinishService;
+
     private final OnboardingServiceImpl onboardingService;
 
-    private final HttpCustomizationService httpCustomizationService;
+    private final IdentityVerificationOtpService identityVerificationOtpService;
+
+    private final ActivationFlagService activationFlagService;
 
     private final StateMachineService stateMachineService;
-
-    private final PowerAuthClient powerAuthClient;
 
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     /**
      * Service constructor.
+     *
      * @param identityVerificationService       Identity verification service.
+     * @param jsonSerializationService          JSON serialization service.
+     * @param presenceCheckService              Presence check service.
+     * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService                 Onboarding service.
-     * @param httpCustomizationService          HTTP customization service.
-     * @param powerAuthClient                   PowerAuth client.
+     * @param identityVerificationOtpService    Identity verification OTP service.
+     * @param activationFlagService             Activation flags service.
+     * @param stateMachineService               State machine service.
      */
     @Autowired
     public IdentityVerificationStatusService(
             IdentityVerificationService identityVerificationService,
+            JsonSerializationService jsonSerializationService,
+            PresenceCheckService presenceCheckService,
+            IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingServiceImpl onboardingService,
-            HttpCustomizationService httpCustomizationService,
-            StateMachineService stateMachineService,
-            PowerAuthClient powerAuthClient) {
+            IdentityVerificationOtpService identityVerificationOtpService,
+            ActivationFlagService activationFlagService,
+            StateMachineService stateMachineService) {
         this.identityVerificationService = identityVerificationService;
+        this.jsonSerializationService = jsonSerializationService;
+        this.presenceCheckService = presenceCheckService;
+        this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
-        this.httpCustomizationService = httpCustomizationService;
+        this.identityVerificationOtpService = identityVerificationOtpService;
+        this.activationFlagService = activationFlagService;
         this.stateMachineService = stateMachineService;
-        this.powerAuthClient = powerAuthClient;
     }
 
     /**
@@ -122,32 +136,32 @@ public class IdentityVerificationStatusService {
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
             // Trigger immediate processing of expired processes
             onboardingService.terminateInactiveProcesses();
-            response.setIdentityVerificationStatus(IdentityVerificationStatus.FAILED);
+            response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(null);
             return response;
         }
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
-        try {
-            final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
-            listRequest.setActivationId(ownerId.getActivationId());
-            final ListActivationFlagsResponse flagResponse = powerAuthClient.listActivationFlags(
-                    listRequest,
-                    httpCustomizationService.getQueryParams(),
-                    httpCustomizationService.getHttpHeaders()
-            );
-            List<String> flags = flagResponse.getActivationFlags();
-            if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
-                // Initialization is required because verification is not in progress for current identity verification
-                response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-                response.setIdentityVerificationPhase(null);
-                return response;
-            }
-        } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
+        if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+            // Initialization is required because verification is not in progress for current identity verification
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
+            return response;
         }
+
+// TODO new code
+//        if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
+//                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+//            logger.debug("Finished verification of documents for {}, {}", idVerification, ownerId);
+//            continueWithClientEvaluation(ownerId, idVerification);
+//        }
+//
+//        if (IdentityVerificationPhase.CLIENT_EVALUATION.equals(idVerification.getPhase())
+//                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
+//            logger.debug("Finished evaluation of client for {}, {}", idVerification, ownerId);
+//            continueWithPresenceCheck(ownerId, idVerification);
+//        }
 
         StateMachine<OnboardingState, OnboardingEvent> state =
                 stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -158,5 +172,12 @@ public class IdentityVerificationStatusService {
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
     }
+
+//    private void continueWithClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+//        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
+//        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+//        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+//        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
+//    }
 
 }
