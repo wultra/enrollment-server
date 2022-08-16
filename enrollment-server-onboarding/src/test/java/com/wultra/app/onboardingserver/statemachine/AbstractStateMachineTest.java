@@ -21,8 +21,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
@@ -53,14 +53,14 @@ abstract class AbstractStateMachineTest {
 
     }
 
-    protected StateMachineTestPlanBuilder<EnrollmentState, EnrollmentEvent>.StateMachineTestPlanStepBuilder prepareTest(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine) {
-        return StateMachineTestPlanBuilder.<EnrollmentState, EnrollmentEvent>builder()
+    protected StateMachineTestPlanBuilder<OnboardingState, OnboardingEvent>.StateMachineTestPlanStepBuilder prepareTest(StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
+        return StateMachineTestPlanBuilder.<OnboardingState, OnboardingEvent>builder()
                         .stateMachine(stateMachine)
                         .step();
     }
 
-    protected StateMachine<EnrollmentState, EnrollmentEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {
-        EnrollmentState state = enrollmentStateProvider.findByPhaseAndStatus(entity.getPhase(), entity.getStatus());
+    protected StateMachine<OnboardingState, OnboardingEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {
+        OnboardingState state = enrollmentStateProvider.findByPhaseAndStatus(entity.getPhase(), entity.getStatus());
         return stateMachineService.prepareStateMachine(entity.getProcessId(), state, entity);
     }
 

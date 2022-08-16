@@ -27,7 +27,7 @@ import lombok.ToString;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Getter @ToString(of = {"phase", "status"})
-public enum EnrollmentState {
+public enum OnboardingState {
 
     INITIAL(null, IdentityVerificationStatus.NOT_INITIALIZED),
     DOCUMENT_UPLOAD_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS),
@@ -76,11 +76,11 @@ public enum EnrollmentState {
 
     private IdentityVerificationStatus status;
 
-    EnrollmentState() {
+    OnboardingState() {
         this.choiceState = true;
     }
 
-    EnrollmentState(IdentityVerificationPhase phase, IdentityVerificationStatus status) {
+    OnboardingState(IdentityVerificationPhase phase, IdentityVerificationStatus status) {
         this.phase = phase;
         this.status = status;
     }

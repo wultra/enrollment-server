@@ -22,8 +22,8 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class PresenceCheckInitAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class PresenceCheckInitAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final PresenceCheckService presenceCheckService;
 
@@ -47,7 +47,7 @@ public class PresenceCheckInitAction implements Action<EnrollmentState, Enrollme
     }
 
     @Override
-    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 

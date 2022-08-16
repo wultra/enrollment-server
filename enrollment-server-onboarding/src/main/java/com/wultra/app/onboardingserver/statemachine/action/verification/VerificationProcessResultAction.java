@@ -26,8 +26,8 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishSe
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.statemachine.StateContext;
@@ -43,7 +43,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class VerificationProcessResultAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class VerificationProcessResultAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final TransactionTemplate transactionTemplate;
 
@@ -62,7 +62,7 @@ public class VerificationProcessResultAction implements Action<EnrollmentState, 
     }
 
     @Override
-    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {

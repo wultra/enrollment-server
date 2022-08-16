@@ -28,8 +28,8 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationExcepti
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -149,8 +149,8 @@ public class IdentityVerificationStatusService {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed");
         }
 
-        StateMachine<EnrollmentState, EnrollmentEvent> state =
-                stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        StateMachine<OnboardingState, OnboardingEvent> state =
+                stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         idVerification = state.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 

@@ -21,8 +21,8 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.statemachine.StateContext;
@@ -37,7 +37,7 @@ import java.util.Optional;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class ProcessIdentifierGuard implements Guard<EnrollmentState, EnrollmentEvent> {
+public class ProcessIdentifierGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessIdentifierGuard.class);
 
@@ -51,7 +51,7 @@ public class ProcessIdentifierGuard implements Guard<EnrollmentState, Enrollment
      * Verifies process identifier.
      */
     @Override
-    public boolean evaluate(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
@@ -71,7 +71,7 @@ public class ProcessIdentifierGuard implements Guard<EnrollmentState, Enrollment
         return true;
     }
 
-    private void fail(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    private void fail(StateContext<OnboardingState, OnboardingEvent> context) {
         context.getStateMachine().setStateMachineError(new OnboardingProcessException());
     }
 

@@ -24,8 +24,8 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationExcepti
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class VerificationDocumentStartAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class VerificationDocumentStartAction implements Action<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(VerificationDocumentStartAction.class);
 
@@ -51,7 +51,7 @@ public class VerificationDocumentStartAction implements Action<EnrollmentState, 
     }
 
     @Override
-    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 

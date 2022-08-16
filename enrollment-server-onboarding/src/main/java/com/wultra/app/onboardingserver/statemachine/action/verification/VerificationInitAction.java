@@ -24,8 +24,8 @@ import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationExceptio
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import io.getlime.core.rest.model.base.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class VerificationInitAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class VerificationInitAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationService identityVerificationService;
 
@@ -49,7 +49,7 @@ public class VerificationInitAction implements Action<EnrollmentState, Enrollmen
     }
 
     @Override
-    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 

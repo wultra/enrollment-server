@@ -21,22 +21,13 @@ package com.wultra.app.onboardingserver.statemachine.enums;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public enum EnrollmentEvent {
+public enum OnboardingEvent {
 
     IDENTITY_VERIFICATION_INIT,
 
-    OTP_VERIFICATION_ACCEPTED,
-
-    OTP_VERIFICATION_FAILED,
-
     OTP_VERIFICATION_RESEND,
 
-    OTP_VERIFICATION_SEND,
-
     PRESENCE_CHECK_INIT,
-    PRESENCE_CHECK_ACCEPTED,
-    PRESENCE_CHECK_FAILED,
-    PRESENCE_CHECK_REJECTED,
 
     EVENT_NEXT_STATE,
 

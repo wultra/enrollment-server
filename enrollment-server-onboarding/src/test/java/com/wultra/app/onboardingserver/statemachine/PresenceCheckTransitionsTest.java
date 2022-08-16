@@ -29,8 +29,8 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpServi
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -72,7 +72,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     @Test
     public void testPresenceCheckInit() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
@@ -82,12 +82,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return new SessionInfo();
         }).when(presenceCheckService).init(OWNER_ID, idVerification.getProcessId());
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.PRESENCE_CHECK_INIT);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_INIT);
 
         prepareTest(stateMachine)
             .sendEvent(message)
-            .expectState(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+            .expectState(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
             .and()
             .build()
             .test();
@@ -99,7 +99,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     public void testPresenceCheckInProgress() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.IN_PROGRESS);
@@ -112,12 +112,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
             .sendEvent(message)
-            .expectState(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+            .expectState(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
             .and()
             .build()
             .test();
@@ -127,7 +127,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     public void testPresenceCheckAcceptedOtpEnabled() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
@@ -141,12 +141,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
             .sendEvent(message)
-            .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+            .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
             .and()
             .build()
             .test();
@@ -157,7 +157,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     public void testPresenceCheckAcceptedOtpDisabled() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
@@ -172,19 +172,19 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
 
         doAnswer(args -> {
-            ((StateContext<EnrollmentState, EnrollmentEvent>) args.getArgument(0))
+            ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
                     .setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
         }).when(verificationProcessResultAction).execute(any(StateContext.class));
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
             .sendEvent(message)
-            .expectState(EnrollmentState.COMPLETED_ACCEPTED)
+            .expectState(OnboardingState.COMPLETED_ACCEPTED)
             .and()
             .build()
             .test();

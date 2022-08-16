@@ -25,8 +25,8 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpServi
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -62,38 +62,38 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
 
     @Test
     public void testDocumentVerificationAccepted() throws Exception {
-        testDocumentVerificationStatus(IdentityVerificationStatus.ACCEPTED, EnrollmentState.DOCUMENT_VERIFICATION_ACCEPTED);
+        testDocumentVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED);
     }
 
     @Test
     public void testDocumentVerificationInProgress() throws Exception {
-        testDocumentVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS);
+        testDocumentVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
     }
 
     @Test
     public void testDocumentVerificationRejected() throws Exception {
-        testDocumentVerificationStatus(IdentityVerificationStatus.REJECTED, EnrollmentState.DOCUMENT_VERIFICATION_REJECTED);
+        testDocumentVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.DOCUMENT_VERIFICATION_REJECTED);
     }
 
     @Test
     public void testDocumentVerificationFailed() throws Exception {
-        testDocumentVerificationStatus(IdentityVerificationStatus.FAILED, EnrollmentState.DOCUMENT_VERIFICATION_FAILED);
+        testDocumentVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.DOCUMENT_VERIFICATION_FAILED);
     }
 
     @Test
     public void testDocumentVerificationTransitionToPresenceCheck() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED)
+                .expectState(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
                 .and()
                 .build()
                 .test();
@@ -106,7 +106,7 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
     public void testDocumentVerificationTransitionToSendingOtp() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
@@ -116,12 +116,12 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
             return null;
         }).when(identityVerificationOtpService).sendOtp(idVerification);
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
                 .and()
                 .build()
                 .test();
@@ -135,12 +135,12 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
     public void testDocumentVerificationTransitionCompleted() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
         doAnswer(args -> {
-            IdentityVerificationEntity identityVerification = ((StateContext<EnrollmentState, EnrollmentEvent>) args.getArgument(0))
+            IdentityVerificationEntity identityVerification = ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
             identityVerification.setPhase(IdentityVerificationPhase.COMPLETED);
@@ -148,12 +148,12 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
             return null;
         }).when(verificationProcessResultAction).execute(any(StateContext.class));
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.COMPLETED_ACCEPTED)
+                .expectState(OnboardingState.COMPLETED_ACCEPTED)
                 .and()
                 .build()
                 .test();
@@ -162,18 +162,18 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
         assertEquals(IdentityVerificationStatus.ACCEPTED, idVerification.getStatus());
     }
 
-    private void testDocumentVerificationStatus(IdentityVerificationStatus identityStatus, EnrollmentState expectedState) throws Exception {
+    private void testDocumentVerificationStatus(IdentityVerificationStatus identityStatus, OnboardingState expectedState) throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);
             return null;
         }).when(identityVerificationService).startVerification(eq(OWNER_ID), eq(idVerification));
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)

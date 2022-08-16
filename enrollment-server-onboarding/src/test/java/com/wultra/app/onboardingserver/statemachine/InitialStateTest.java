@@ -17,8 +17,8 @@
 package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +40,11 @@ public class InitialStateTest extends AbstractStateMachineTest {
 
     @Test
     public void testInitialState() throws Exception {
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
-                stateMachineService.prepareStateMachine("processId", EnrollmentState.INITIAL, null);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine =
+                stateMachineService.prepareStateMachine("processId", OnboardingState.INITIAL, null);
 
         prepareTest(stateMachine)
-                .expectState(EnrollmentState.INITIAL)
+                .expectState(OnboardingState.INITIAL)
                 .and()
                 .build()
                 .test();

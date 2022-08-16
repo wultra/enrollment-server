@@ -17,8 +17,8 @@
 package com.wultra.app.onboardingserver.statemachine.guard.otp;
 
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class OtpVerificationEnabledGuard implements Guard<EnrollmentState, EnrollmentEvent> {
+public class OtpVerificationEnabledGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
@@ -40,7 +40,7 @@ public class OtpVerificationEnabledGuard implements Guard<EnrollmentState, Enrol
     }
 
     @Override
-    public boolean evaluate(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
         return identityVerificationConfig.isVerificationOtpEnabled();
     }
 

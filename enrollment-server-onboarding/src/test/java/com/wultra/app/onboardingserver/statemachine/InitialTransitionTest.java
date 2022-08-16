@@ -21,8 +21,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +57,8 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
 
     @Test
     public void testInitialTransition() throws Exception {
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
-                stateMachineService.prepareStateMachine(PROCESS_ID, EnrollmentState.INITIAL, null);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine =
+                stateMachineService.prepareStateMachine(PROCESS_ID, OnboardingState.INITIAL, null);
 
         when(onboardingProcessRepository.findProcessByActivationId(ACTIVATION_ID))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
@@ -67,12 +67,12 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS)
         ).when(identityVerificationCreateService).createIdentityVerification(OWNER_ID, PROCESS_ID);
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, PROCESS_ID, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
+                .expectState(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .and()
                 .build()
                 .test();

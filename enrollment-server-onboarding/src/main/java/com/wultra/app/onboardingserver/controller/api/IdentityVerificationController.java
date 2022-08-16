@@ -35,8 +35,8 @@ import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
@@ -169,8 +169,8 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
-                stateMachineService.processStateMachineEvent(ownerId, processId, EnrollmentEvent.IDENTITY_VERIFICATION_INIT);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine =
+                stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
 
         return createResponseEntity(stateMachine);
     }
@@ -400,7 +400,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        var stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, EnrollmentEvent.PRESENCE_CHECK_INIT);
+        var stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
         return createResponseEntity(stateMachine);
     }
 
@@ -425,7 +425,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
 
-        var stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, EnrollmentEvent.OTP_VERIFICATION_RESEND);
+        var stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_VERIFICATION_RESEND);
         return createResponseEntity(stateMachine);
     }
 
@@ -609,7 +609,7 @@ public class IdentityVerificationController {
         return ownerId;
     }
 
-    private ResponseEntity<Response> createResponseEntity(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine) {
+    private ResponseEntity<Response> createResponseEntity(StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
         Response response = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class);
         HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
         if (response == null || status == null) {

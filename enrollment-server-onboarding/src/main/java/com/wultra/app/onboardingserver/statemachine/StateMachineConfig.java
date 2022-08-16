@@ -25,8 +25,8 @@ import com.wultra.app.onboardingserver.statemachine.action.verification.Verifica
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationDocumentStartAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
@@ -64,7 +64,7 @@ import java.util.EnumSet;
 )
 @Configuration
 @EnableStateMachineFactory(name = "enrollmentStateMachine")
-public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<EnrollmentState, EnrollmentEvent> {
+public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(StateMachineConfig.class);
 
@@ -151,7 +151,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
     }
 
     @Override
-    public void configure(StateMachineConfigurationConfigurer<EnrollmentState, EnrollmentEvent> config) throws Exception {
+    public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
                 .withConfiguration()
                 .autoStartup(true)
@@ -159,24 +159,24 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
     }
 
     @Override
-    public void configure(StateMachineStateConfigurer<EnrollmentState, EnrollmentEvent> states) throws Exception {
+    public void configure(StateMachineStateConfigurer<OnboardingState, OnboardingEvent> states) throws Exception {
         states
                 .withStates()
-                .initial(EnrollmentState.INITIAL)
-                .choice(EnrollmentState.CHOICE_DOCUMENT_UPLOAD)
-                .choice(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
-                .choice(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .choice(EnrollmentState.CHOICE_OTP_VERIFICATION)
-                .choice(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .choice(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
-                .end(EnrollmentState.COMPLETED_ACCEPTED)
-                .end(EnrollmentState.COMPLETED_FAILED)
-                .end(EnrollmentState.COMPLETED_REJECTED)
-                .states(EnumSet.allOf(EnrollmentState.class));
+                .initial(OnboardingState.INITIAL)
+                .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
+                .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
+                .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
+                .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
+                .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
+                .choice(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
+                .end(OnboardingState.COMPLETED_ACCEPTED)
+                .end(OnboardingState.COMPLETED_FAILED)
+                .end(OnboardingState.COMPLETED_REJECTED)
+                .states(EnumSet.allOf(OnboardingState.class));
     }
 
     @Override
-    public void configure(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    public void configure(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         configureInitialTransition(transitions);
         configureDocumentUploadTransitions(transitions);
         configureDocumentVerificationTransitions(transitions);
@@ -186,18 +186,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
     }
 
     @Bean
-    public StateMachineListener<EnrollmentState, EnrollmentEvent> listener() {
+    public StateMachineListener<OnboardingState, OnboardingEvent> listener() {
         return new StateMachineListenerAdapter<>() {
 
             @Override
-            public void eventNotAccepted(Message<EnrollmentEvent> event) {
+            public void eventNotAccepted(Message<OnboardingEvent> event) {
                 logger.warn("Not accepted event {}", event.getPayload());
                 // TODO
                 // throw new OnboardingProcessException("Unexpected state of identity verification");
             }
 
             @Override
-            public void stateChanged(State<EnrollmentState, EnrollmentEvent> from, State<EnrollmentState, EnrollmentEvent> to) {
+            public void stateChanged(State<OnboardingState, OnboardingEvent> from, State<OnboardingState, OnboardingEvent> to) {
                 if (from != null) {
                     logger.debug("State changed from {} to {}", from.getId(), to.getId());
                 }
@@ -206,128 +206,128 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Enroll
         };
     }
 
-    private void configureInitialTransition(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configureInitialTransition(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(EnrollmentState.INITIAL)
-                .event(EnrollmentEvent.IDENTITY_VERIFICATION_INIT)
+                .source(OnboardingState.INITIAL)
+                .event(OnboardingEvent.IDENTITY_VERIFICATION_INIT)
                 .guard(processIdentifierGuard)
                 .action(verificationInitAction)
-                .target(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS);
+                .target(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }
 
-    private void configureDocumentUploadTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configureDocumentUploadTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
+                .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationCheckIdentityDocumentsAction)
-                .target(EnrollmentState.CHOICE_DOCUMENT_UPLOAD)
+                .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
 
                 .and()
                 .withChoice()
-                .source(EnrollmentState.CHOICE_DOCUMENT_UPLOAD)
-                .first(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, documentUploadVerificationPendingGuard)
-                .last(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS);
+                .source(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
+                .first(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, documentUploadVerificationPendingGuard)
+                .last(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }
 
-    private void configureDocumentVerificationTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configureDocumentVerificationTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
+                .source(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationDocumentStartAction)
-                .target(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
+                .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
                 .withChoice()
-                .source(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .first(EnrollmentState.DOCUMENT_VERIFICATION_IN_PROGRESS, statusInProgressGuard)
-                .then(EnrollmentState.DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
-                .then(EnrollmentState.DOCUMENT_VERIFICATION_REJECTED, statusRejectedGuard)
-                .then(EnrollmentState.DOCUMENT_VERIFICATION_FAILED, statusFailedGuard)
-                .last(EnrollmentState.UNEXPECTED_STATE)
+                .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
+                .first(OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS, statusInProgressGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_REJECTED, statusRejectedGuard)
+                .then(OnboardingState.DOCUMENT_VERIFICATION_FAILED, statusFailedGuard)
+                .last(OnboardingState.UNEXPECTED_STATE)
 
                 .and()
                 .withExternal()
-                .source(EnrollmentState.DOCUMENT_VERIFICATION_ACCEPTED)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
-                .target(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
+                .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
 
                 .and()
                 .withChoice()
-                .source(EnrollmentState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
-                .first(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
-                .then(EnrollmentState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
+                .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_ACCEPTED)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
     }
-    private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_NOT_INITIALIZED)
-                .event(EnrollmentEvent.PRESENCE_CHECK_INIT)
+                .source(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
+                .event(OnboardingEvent.PRESENCE_CHECK_INIT)
                 .guard(
                         context -> processIdentifierGuard.evaluate(context) && presenceCheckEnabledGuard.evaluate(context)
                 )
                 .action(presenceCheckInitAction)
-                .target(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
+                .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
                 .and()
                 .withExternal()
-                .source(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
+                .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(presenceCheckVerificationAction)
-                .target(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
+                .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
 
                 .and()
                 .withChoice()
-                .source(EnrollmentState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .first(EnrollmentState.PRESENCE_CHECK_IN_PROGRESS, statusInProgressGuard)
-                .then(EnrollmentState.OTP_VERIFICATION_PENDING,
+                .source(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
+                .first(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, statusInProgressGuard)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING,
                         context -> otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         otpVerificationSendAction
                 )
-                .then(EnrollmentState.CHOICE_VERIFICATION_PROCESSING,
+                .then(OnboardingState.CHOICE_VERIFICATION_PROCESSING,
                         context -> !otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         verificationProcessResultAction
                 )
-                .then(EnrollmentState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
-                .then(EnrollmentState.PRESENCE_CHECK_FAILED, statusFailedGuard)
-                .last(EnrollmentState.UNEXPECTED_STATE);
+                .then(OnboardingState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
+                .then(OnboardingState.PRESENCE_CHECK_FAILED, statusFailedGuard)
+                .last(OnboardingState.UNEXPECTED_STATE);
     }
 
-    private void configureOtpTransitions(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configureOtpTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withExternal()
-                .source(EnrollmentState.OTP_VERIFICATION_PENDING)
-                .event(EnrollmentEvent.OTP_VERIFICATION_RESEND)
+                .source(OnboardingState.OTP_VERIFICATION_PENDING)
+                .event(OnboardingEvent.OTP_VERIFICATION_RESEND)
                 .guard(
                         context -> processIdentifierGuard.evaluate(context) && otpVerificationEnabledGuard.evaluate(context)
                 )
                 .action(otpVerificationResendAction)
-                .target(EnrollmentState.OTP_VERIFICATION_PENDING)
+                .target(OnboardingState.OTP_VERIFICATION_PENDING)
 
                 .and()
                 .withExternal()
-                .source(EnrollmentState.OTP_VERIFICATION_PENDING)
-                .event(EnrollmentEvent.EVENT_NEXT_STATE)
-                .target(EnrollmentState.CHOICE_OTP_VERIFICATION)
+                .source(OnboardingState.OTP_VERIFICATION_PENDING)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .target(OnboardingState.CHOICE_OTP_VERIFICATION)
 
                 .and()
                 .withChoice()
-                .source(EnrollmentState.CHOICE_OTP_VERIFICATION)
-                .first(EnrollmentState.CHOICE_VERIFICATION_PROCESSING, otpVerifiedGuard, verificationProcessResultAction)
-                .last(EnrollmentState.OTP_VERIFICATION_PENDING);
+                .source(OnboardingState.CHOICE_OTP_VERIFICATION)
+                .first(OnboardingState.CHOICE_VERIFICATION_PROCESSING, otpVerifiedGuard, verificationProcessResultAction)
+                .last(OnboardingState.OTP_VERIFICATION_PENDING);
     }
 
-    private void configureCompletedTransition(StateMachineTransitionConfigurer<EnrollmentState, EnrollmentEvent> transitions) throws Exception {
+    private void configureCompletedTransition(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withChoice()
-                .source(EnrollmentState.CHOICE_VERIFICATION_PROCESSING)
-                .first(EnrollmentState.COMPLETED_ACCEPTED, statusAcceptedGuard)
-                .then(EnrollmentState.COMPLETED_REJECTED, statusRejectedGuard)
-                .then(EnrollmentState.COMPLETED_FAILED, statusFailedGuard)
-                .last(EnrollmentState.UNEXPECTED_STATE);
+                .source(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
+                .first(OnboardingState.COMPLETED_ACCEPTED, statusAcceptedGuard)
+                .then(OnboardingState.COMPLETED_REJECTED, statusRejectedGuard)
+                .then(OnboardingState.COMPLETED_FAILED, statusFailedGuard)
+                .last(OnboardingState.UNEXPECTED_STATE);
     }
 
 }

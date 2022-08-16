@@ -23,8 +23,8 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryExcept
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class OtpVerificationSendAction implements Action<EnrollmentState, EnrollmentEvent> {
+public class OtpVerificationSendAction implements Action<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(OtpVerificationSendAction.class);
 
@@ -52,7 +52,7 @@ public class OtpVerificationSendAction implements Action<EnrollmentState, Enroll
     }
 
     @Override
-    public void execute(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         try {

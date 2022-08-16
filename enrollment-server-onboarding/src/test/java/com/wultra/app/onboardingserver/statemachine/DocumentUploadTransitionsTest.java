@@ -21,8 +21,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -50,16 +50,16 @@ public class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
     public void testDocumentUploadInProgress() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.DOCUMENT_UPLOAD_IN_PROGRESS)
+                .expectState(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .and()
                 .build()
                 .test();
@@ -69,19 +69,19 @@ public class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
     public void testDocumentVerificationPending() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = createStateMachine(idVerification);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
         }).when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
 
-        Message<EnrollmentEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), EnrollmentEvent.EVENT_NEXT_STATE);
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(EnrollmentState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
+                .expectState(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .and()
                 .build()
                 .test();

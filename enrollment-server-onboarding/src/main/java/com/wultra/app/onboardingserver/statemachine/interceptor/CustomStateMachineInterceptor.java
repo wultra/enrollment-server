@@ -21,8 +21,8 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<EnrollmentState, EnrollmentEvent> {
+public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
 
@@ -52,7 +52,7 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
     }
 
     @Override
-    public Exception stateMachineError(StateMachine<EnrollmentState, EnrollmentEvent> stateMachine, Exception e) {
+    public Exception stateMachineError(StateMachine<OnboardingState, OnboardingEvent> stateMachine, Exception e) {
         HttpStatus status;
         Response response;
 
@@ -89,21 +89,21 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
     }
 
     @Override
-    public StateContext<EnrollmentState, EnrollmentEvent> postTransition(StateContext<EnrollmentState, EnrollmentEvent> context) {
+    public StateContext<OnboardingState, OnboardingEvent> postTransition(StateContext<OnboardingState, OnboardingEvent> context) {
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        EnrollmentState targetState = context.getTarget().getId();
+        OnboardingState targetState = context.getTarget().getId();
         if (targetState.isChoiceState()) {
             logger.debug("Transition to a choice state {} for {}", targetState, identityVerification);
             return context;
         }
 
-        if (EnrollmentState.UNEXPECTED_STATE == targetState) {
+        if (OnboardingState.UNEXPECTED_STATE == targetState) {
             logger.debug("Transition to unexpected state for {}", identityVerification);
             return context;
         }
 
-        EnrollmentState expectedState;
+        OnboardingState expectedState;
         try {
             expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
         } catch (IdentityVerificationException e) {

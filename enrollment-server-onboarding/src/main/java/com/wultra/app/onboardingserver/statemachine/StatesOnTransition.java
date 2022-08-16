@@ -16,7 +16,7 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.statemachine.annotation.OnTransition;
 
 import java.lang.annotation.ElementType;
@@ -34,8 +34,8 @@ import java.lang.annotation.Target;
 @OnTransition
 public @interface StatesOnTransition {
 
-    EnrollmentState[] source() default {};
+    OnboardingState[] source() default {};
 
-    EnrollmentState[] target() default {};
+    OnboardingState[] target() default {};
 
 }

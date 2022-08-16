@@ -23,8 +23,8 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -49,7 +49,7 @@ public class StateMachineService {
 
     private final EnrollmentStateProvider enrollmentStateProvider;
 
-    private final StateMachineFactory<EnrollmentState, EnrollmentEvent> stateMachineFactory;
+    private final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory;
 
     private final CustomStateMachineInterceptor stateMachineInterceptor;
 
@@ -65,7 +65,7 @@ public class StateMachineService {
      */
     public StateMachineService(
             final EnrollmentStateProvider enrollmentStateProvider,
-            final StateMachineFactory<EnrollmentState, EnrollmentEvent> stateMachineFactory,
+            final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory,
             final CustomStateMachineInterceptor stateMachineInterceptor,
             IdentityVerificationService identityVerificationService
     ) {
@@ -75,24 +75,24 @@ public class StateMachineService {
         this.identityVerificationService = identityVerificationService;
     }
 
-    public StateMachine<EnrollmentState, EnrollmentEvent> processStateMachineEvent(OwnerId ownerId, String processId, EnrollmentEvent event)
+    public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
             throws IdentityVerificationException {
-        final StateMachine<EnrollmentState, EnrollmentEvent> stateMachine =
-                EnrollmentEvent.IDENTITY_VERIFICATION_INIT == event ?
-                prepareStateMachine(processId, EnrollmentState.INITIAL, null) :
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine =
+                OnboardingEvent.IDENTITY_VERIFICATION_INIT == event ?
+                prepareStateMachine(processId, OnboardingState.INITIAL, null) :
                 fetchStateMachine(ownerId, processId);
-        final Message<EnrollmentEvent> message = createMessage(ownerId, processId, event);
+        final Message<OnboardingEvent> message = createMessage(ownerId, processId, event);
         sendEventMessage(stateMachine, message);
 
         return stateMachine;
     }
 
-    public StateMachine<EnrollmentState, EnrollmentEvent> prepareStateMachine(
+    public StateMachine<OnboardingState, OnboardingEvent> prepareStateMachine(
             String processId,
-            EnrollmentState enrollmentState,
+            OnboardingState onboardingState,
             @Nullable IdentityVerificationEntity identityVerification
     ) {
-        StateMachine<EnrollmentState, EnrollmentEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineFactory.getStateMachine(processId);
 
         ExtendedState extendedState = new DefaultExtendedState();
         if (identityVerification != null) {
@@ -104,7 +104,7 @@ public class StateMachineService {
             sma.addStateMachineInterceptor(stateMachineInterceptor);
             sma.resetStateMachineReactively(
                     new DefaultStateMachineContext<>(
-                            enrollmentState,
+                            onboardingState,
                             null,
                             null,
                             extendedState
@@ -116,27 +116,27 @@ public class StateMachineService {
         return stateMachine;
     }
 
-    public Message<EnrollmentEvent> createMessage(OwnerId ownerId, String processId, EnrollmentEvent event) {
+    public Message<OnboardingEvent> createMessage(OwnerId ownerId, String processId, OnboardingEvent event) {
         return MessageBuilder.withPayload(event)
                 .setHeader(EventHeaderName.OWNER_ID, ownerId)
                 .setHeader(EventHeaderName.PROCESS_ID, processId)
                 .build();
     }
 
-    private StateMachineEventResult<EnrollmentState, EnrollmentEvent> sendEventMessage(
-            StateMachine<EnrollmentState, EnrollmentEvent> stateMachine,
-            Message<EnrollmentEvent> message) {
+    private StateMachineEventResult<OnboardingState, OnboardingEvent> sendEventMessage(
+            StateMachine<OnboardingState, OnboardingEvent> stateMachine,
+            Message<OnboardingEvent> message) {
         return stateMachine.sendEvent(Mono.just(message)).blockLast();
     }
 
-    private StateMachine<EnrollmentState, EnrollmentEvent> fetchStateMachine(
+    private StateMachine<OnboardingState, OnboardingEvent> fetchStateMachine(
             OwnerId ownerId,
             String processId
     ) throws IdentityVerificationException {
         IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
-        EnrollmentState enrollmentState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
+        OnboardingState onboardingState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
 
-        return prepareStateMachine(processId, enrollmentState, identityVerification);
+        return prepareStateMachine(processId, onboardingState, identityVerification);
     }
 
 }

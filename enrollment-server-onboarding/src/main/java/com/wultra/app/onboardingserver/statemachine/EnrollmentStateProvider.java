@@ -19,7 +19,7 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.statemachine.enums.EnrollmentState;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -39,16 +39,16 @@ public class EnrollmentStateProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(EnrollmentStateProvider.class);
 
-    private final Map<IdentityVerificationPhase, Map<IdentityVerificationStatus, EnrollmentState>> stateByPhaseStatus;
+    private final Map<IdentityVerificationPhase, Map<IdentityVerificationStatus, OnboardingState>> stateByPhaseStatus;
 
     public EnrollmentStateProvider() {
         this.stateByPhaseStatus = new HashMap<>();
         initAllStates();
     }
 
-    public EnrollmentState findByPhaseAndStatus(IdentityVerificationPhase phase, IdentityVerificationStatus status)
+    public OnboardingState findByPhaseAndStatus(IdentityVerificationPhase phase, IdentityVerificationStatus status)
             throws IdentityVerificationException {
-        EnrollmentState state = stateByPhaseStatus.getOrDefault(phase, Collections.emptyMap()).get(status);
+        OnboardingState state = stateByPhaseStatus.getOrDefault(phase, Collections.emptyMap()).get(status);
         if (state == null) {
             throw new IdentityVerificationException(
                     String.format("Unknown state for phase=%s, status=%s", phase, status)
@@ -58,10 +58,10 @@ public class EnrollmentStateProvider {
     }
 
     private void initAllStates() {
-        Arrays.stream(EnrollmentState.values())
+        Arrays.stream(OnboardingState.values())
                 .filter(state -> !state.isChoiceState())
                 .forEach(value -> {
-                    Map<IdentityVerificationStatus, EnrollmentState> stateByStatus =
+                    Map<IdentityVerificationStatus, OnboardingState> stateByStatus =
                             stateByPhaseStatus.computeIfAbsent(value.getPhase(), k -> new HashMap<>());
                     if (stateByStatus.containsKey(value.getStatus())) {
                         throw new IllegalStateException("Already mapped phase and status: " + value);
