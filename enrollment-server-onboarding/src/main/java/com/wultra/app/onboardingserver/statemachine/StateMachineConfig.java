@@ -175,6 +175,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .choice(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
+                .choice(OnboardingState.PRESENCE_CHECK_FAILED)
+                .choice(OnboardingState.PRESENCE_CHECK_REJECTED)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
