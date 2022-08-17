@@ -17,15 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -169,10 +166,12 @@ public class VerificationProcessingService {
             case FAILED:
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(docVerificationResult.getErrorDetail());
+                docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 break;
             case REJECTED:
                 docVerification.setStatus(DocumentStatus.REJECTED);
                 docVerification.setRejectReason(docVerificationResult.getRejectReason());
+                docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 break;
             default:
                 throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
@@ -188,6 +187,7 @@ public class VerificationProcessingService {
     private void updateDocumentResult(DocumentResultEntity docResult,
                                       DocumentVerificationResult docVerificationResult) {
         docResult.setErrorDetail(docVerificationResult.getErrorDetail());
+        docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         docResult.setRejectReason(docVerificationResult.getRejectReason());
         docResult.setVerificationResult(docVerificationResult.getVerificationResult());
     }

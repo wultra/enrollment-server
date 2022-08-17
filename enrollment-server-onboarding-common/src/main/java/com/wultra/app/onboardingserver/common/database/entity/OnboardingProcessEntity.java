@@ -18,6 +18,7 @@
 
 package com.wultra.app.onboardingserver.common.database.entity;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -76,6 +77,10 @@ public class OnboardingProcessEntity implements Serializable {
 
     @Column(name = "error_detail")
     private String errorDetail;
+
+    @Column(name = "error_origin")
+    @Enumerated(EnumType.STRING)
+    private ErrorOrigin errorOrigin;
 
     @Column(name = "error_score")
     private int errorScore;

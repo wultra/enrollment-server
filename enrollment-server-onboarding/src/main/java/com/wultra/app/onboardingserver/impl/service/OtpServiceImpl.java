@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -133,6 +134,7 @@ public class OtpServiceImpl extends CommonOtpService {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(new Date());
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
+                otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
             }
         }

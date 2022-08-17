@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -137,6 +138,7 @@ public class ClientEvaluationService {
             logger.debug("Client evaluation failed for {}", identityVerification, t);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
+            identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
             saveInTransaction(identityVerification);
         };
     }

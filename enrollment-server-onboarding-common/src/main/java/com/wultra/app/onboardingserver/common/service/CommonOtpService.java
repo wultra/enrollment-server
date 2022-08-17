@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -94,12 +95,13 @@ public class CommonOtpService implements OtpService {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
         } else if (failedAttempts >= maxFailedAttempts) {
             logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
-            process = processLimitService.failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            process = processLimitService.failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS, ErrorOrigin.PROCESS_LIMIT_CHECK);
         } else if (otp.hasExpired()) {
             logger.info("Expired OTP code received, process ID: {}", processId);
             expired = true;
             otp.setStatus(OtpStatus.FAILED);
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_EXPIRED);
+            otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             otp.setTimestampLastUpdated(now);
             onboardingOtpRepository.save(otp);
         } else if (otp.getOtpCode().equals(otpCode)) {
@@ -138,10 +140,11 @@ public class CommonOtpService implements OtpService {
         if (failedAttempts >= maxFailedAttempts) {
             otp.setStatus(OtpStatus.FAILED);
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             onboardingOtpRepository.save(otp);
 
             // Onboarding process is failed, update it
-            process = processLimitService.failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
+            process = processLimitService.failProcess(process, OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS, ErrorOrigin.PROCESS_LIMIT_CHECK);
         } else {
             // Increase error score for process based on OTP type
             if (otpType == OtpType.ACTIVATION) {
@@ -156,6 +159,7 @@ public class CommonOtpService implements OtpService {
             if (process.getStatus() == OnboardingStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setErrorDetail(process.getErrorDetail());
+                otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
             }
         }

@@ -175,9 +175,10 @@ public class IdentityVerificationOtpService {
 
         final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
         final String errorDetail = idVerification.getErrorDetail();
+        final ErrorOrigin errorOrigin = idVerification.getErrorOrigin();
         final String rejectReason = idVerification.getRejectReason();
 
-        if (StringUtils.isNotBlank(errorDetail) || StringUtils.isNotBlank(rejectReason)) {
+        if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && (StringUtils.isNotBlank(errorDetail) || StringUtils.isNotBlank(rejectReason))) {
             logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);
@@ -201,6 +202,7 @@ public class IdentityVerificationOtpService {
         idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
         idVerification.setTimestampLastUpdated(new Date());
         idVerification.setErrorDetail(null);
+        idVerification.setErrorOrigin(null);
         idVerification.setRejectReason(null);
         identityVerificationRepository.save(idVerification);
 
@@ -220,6 +222,7 @@ public class IdentityVerificationOtpService {
             new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
+        otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
         otp.setTimestampLastUpdated(new Date());
         onboardingOtpRepository.save(otp);
     }

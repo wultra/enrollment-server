@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -162,6 +163,7 @@ public class IdentityVerificationStatusService {
             if (sessionInfo == null) {
                 logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
                 idVerification.setErrorDetail("Unable to deserialize session info");
+                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             } else {
@@ -172,6 +174,7 @@ public class IdentityVerificationStatusService {
                 } catch (PresenceCheckException e) {
                     logger.error("Checking presence verification failed, {}", ownerId, e);
                     idVerification.setErrorDetail(e.getMessage());
+                    idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                     idVerification.setStatus(FAILED);
                     idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 }
@@ -246,6 +249,7 @@ public class IdentityVerificationStatusService {
                 break;
             case FAILED:
                 idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
@@ -255,6 +259,7 @@ public class IdentityVerificationStatusService {
                 break;
             case REJECTED:
                 idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());

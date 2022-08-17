@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
@@ -126,6 +127,7 @@ public class DocumentProcessingService {
             } catch (DocumentSubmitException e) {
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(e.getMessage());
+                docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 return docVerifications;
             }
 
@@ -200,6 +202,7 @@ public class DocumentProcessingService {
         }
 
         documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
+        documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
         documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
         processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
@@ -287,6 +290,7 @@ public class DocumentProcessingService {
             DocumentSubmitResult docSubmitResult) {
         DocumentResultEntity entity = new DocumentResultEntity();
         entity.setErrorDetail(docVerificationEntity.getErrorDetail());
+        entity.setErrorOrigin(docVerificationEntity.getErrorOrigin());
         entity.setExtractedData(docSubmitResult.getExtractedData());
         entity.setPhase(DocumentProcessingPhase.UPLOAD);
         entity.setRejectReason(docVerificationEntity.getRejectReason());
@@ -369,6 +373,7 @@ public class DocumentProcessingService {
         if (docSubmitResult.getErrorDetail() != null) {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
+            docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         } else if (docSubmitResult.getRejectReason() != null) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(docSubmitResult.getRejectReason());
@@ -406,6 +411,7 @@ public class DocumentProcessingService {
             logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(e.getMessage());
+            docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         }
     }
 

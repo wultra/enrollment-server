@@ -21,10 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentStat
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -354,6 +351,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
 
             docVerifications.stream()
@@ -363,6 +361,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
         }
     }
