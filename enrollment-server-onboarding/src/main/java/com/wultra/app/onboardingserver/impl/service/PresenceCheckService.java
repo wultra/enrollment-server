@@ -142,18 +142,18 @@ public class PresenceCheckService {
      * @param ownerId Owner identifier.
      * @param idVerification Identity verification entity.
      * @param sessionInfo Session info with presence check data.
-     * @return Result of the presence check
      * @throws PresenceCheckException When an error during the presence check verification occurred
      */
     @Transactional
-    public PresenceCheckResult checkPresenceVerification(OwnerId ownerId,
-                                                         IdentityVerificationEntity idVerification,
-                                                         SessionInfo sessionInfo) throws PresenceCheckException {
+    public void checkPresenceVerification(OwnerId ownerId,
+                                          IdentityVerificationEntity idVerification,
+                                          SessionInfo sessionInfo) throws PresenceCheckException {
         PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
 
         if (!PresenceCheckStatus.ACCEPTED.equals(result.getStatus())) {
             logger.info("Not accepted presence check, {}", ownerId);
-            return result;
+            evaluatePresenceCheckResult(ownerId, idVerification, result);
+            return;
         }
         logger.debug("Processing a result of an accepted presence check, {}", ownerId);
 
@@ -187,7 +187,7 @@ public class PresenceCheckService {
 
         documentVerificationRepository.save(docVerificationEntity);
 
-        return result;
+        evaluatePresenceCheckResult(ownerId, idVerification, result);
     }
 
     /**
@@ -260,8 +260,7 @@ public class PresenceCheckService {
         return identityVerificationService.getPhotoById(photoId);
     }
 
-    @Transactional
-    public void evaluatePresenceCheckResult(OwnerId ownerId,
+    private void evaluatePresenceCheckResult(OwnerId ownerId,
                                              IdentityVerificationEntity idVerification,
                                              PresenceCheckResult result) {
         switch (result.getStatus()) {

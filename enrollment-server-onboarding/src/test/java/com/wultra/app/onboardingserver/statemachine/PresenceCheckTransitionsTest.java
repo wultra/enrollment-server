@@ -43,7 +43,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -104,13 +103,10 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.IN_PROGRESS);
 
-        when(presenceCheckService.checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class)))
-                .thenReturn(presenceCheckResult);
-
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
             return null;
-        }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
+        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -132,14 +128,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
 
-        when(presenceCheckService.checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class)))
-                .thenReturn(presenceCheckResult);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
+        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -162,14 +156,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
 
-        when(presenceCheckService.checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class)))
-                .thenReturn(presenceCheckResult);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).evaluatePresenceCheckResult(OWNER_ID, idVerification, presenceCheckResult);
+        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
         doAnswer(args -> {
             ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))

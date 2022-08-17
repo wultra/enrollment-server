@@ -18,7 +18,6 @@ package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
@@ -60,8 +59,6 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        // TODO use one transaction
-
         SessionInfo sessionInfo =
                 jsonSerializationService.deserialize(identityVerification.getSessionInfo(), SessionInfo.class);
         if (sessionInfo == null) {
@@ -70,19 +67,13 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         } else {
-            PresenceCheckResult presenceCheckResult = null;
             try {
-                presenceCheckResult =
-                        presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
+                presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
             } catch (PresenceCheckException e) {
                 logger.error("Checking presence verification failed, {}", ownerId, e);
                 identityVerification.setErrorDetail(e.getMessage());
                 identityVerification.setStatus(IdentityVerificationStatus.FAILED);
                 identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            }
-
-            if (presenceCheckResult != null) {
-                presenceCheckService.evaluatePresenceCheckResult(ownerId, identityVerification, presenceCheckResult);
             }
         }
     }
