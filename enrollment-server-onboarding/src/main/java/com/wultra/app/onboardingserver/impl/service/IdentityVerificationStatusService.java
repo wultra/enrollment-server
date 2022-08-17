@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -27,7 +28,6 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -57,15 +57,7 @@ public class IdentityVerificationStatusService {
 
     private final IdentityVerificationService identityVerificationService;
 
-    private final JsonSerializationService jsonSerializationService;
-
-    private final PresenceCheckService presenceCheckService;
-
-    private final IdentityVerificationFinishService identityVerificationFinishService;
-
     private final OnboardingServiceImpl onboardingService;
-
-    private final IdentityVerificationOtpService identityVerificationOtpService;
 
     private final ActivationFlagService activationFlagService;
 
@@ -77,30 +69,18 @@ public class IdentityVerificationStatusService {
      * Service constructor.
      *
      * @param identityVerificationService       Identity verification service.
-     * @param jsonSerializationService          JSON serialization service.
-     * @param presenceCheckService              Presence check service.
-     * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService                 Onboarding service.
-     * @param identityVerificationOtpService    Identity verification OTP service.
      * @param activationFlagService             Activation flags service.
      * @param stateMachineService               State machine service.
      */
     @Autowired
     public IdentityVerificationStatusService(
             IdentityVerificationService identityVerificationService,
-            JsonSerializationService jsonSerializationService,
-            PresenceCheckService presenceCheckService,
-            IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingServiceImpl onboardingService,
-            IdentityVerificationOtpService identityVerificationOtpService,
             ActivationFlagService activationFlagService,
             StateMachineService stateMachineService) {
         this.identityVerificationService = identityVerificationService;
-        this.jsonSerializationService = jsonSerializationService;
-        this.presenceCheckService = presenceCheckService;
-        this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
-        this.identityVerificationOtpService = identityVerificationOtpService;
         this.activationFlagService = activationFlagService;
         this.stateMachineService = stateMachineService;
     }
@@ -138,7 +118,7 @@ public class IdentityVerificationStatusService {
             // Trigger immediate processing of expired processes
             onboardingService.terminateInactiveProcesses();
             response.setIdentityVerificationStatus(FAILED);
-            response.setIdentityVerificationPhase(null); // TODO phase is COMPLETED?
+            response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
             return response;
         }
 

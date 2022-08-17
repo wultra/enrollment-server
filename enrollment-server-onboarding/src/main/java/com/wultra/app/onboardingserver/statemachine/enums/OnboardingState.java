@@ -31,9 +31,6 @@ public enum OnboardingState {
 
     INITIAL(null, IdentityVerificationStatus.NOT_INITIALIZED),
 
-    // TODO missing usage of this state
-    // FAILED(null, IdentityVerificationStatus.FAILED),
-
     DOCUMENT_UPLOAD_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS),
     DOCUMENT_UPLOAD_VERIFICATION_PENDING(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING),
 
