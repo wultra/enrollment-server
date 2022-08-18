@@ -34,6 +34,8 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * Custom interceptor to handle state machine errors
  *
@@ -82,8 +84,9 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        stateMachine.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, response);
-        stateMachine.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, status);
+        final Map<Object, Object> variables = stateMachine.getExtendedState().getVariables();
+        variables.put(ExtendedStateVariable.RESPONSE_OBJECT, response);
+        variables.put(ExtendedStateVariable.RESPONSE_STATUS, status);
 
         return e;
     }

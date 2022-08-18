@@ -24,6 +24,8 @@ import io.getlime.core.rest.model.base.response.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
 
+import java.util.Map;
+
 /**
  * State context util
  *
@@ -31,13 +33,14 @@ import org.springframework.statemachine.StateContext;
  */
 public class StateContextUtil {
 
-    public static void setResponseOk(StateContext<OnboardingState, OnboardingEvent> context, Response response) {
+    public static void setResponseOk(final StateContext<OnboardingState, OnboardingEvent> context, final Response response) {
         Preconditions.checkArgument(
                 !context.getStateMachine().hasStateMachineError(),
                 String.format("Found state machine error in %s, when expected ok", context)
         );
-        context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, response);
-        context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
+        variables.put(ExtendedStateVariable.RESPONSE_OBJECT, response);
+        variables.put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
     }
 
 }

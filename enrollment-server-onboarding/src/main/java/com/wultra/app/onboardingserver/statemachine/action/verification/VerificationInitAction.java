@@ -33,6 +33,8 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * Action to initialize the verification
  *
@@ -49,9 +51,9 @@ public class VerificationInitAction implements Action<OnboardingState, Onboardin
     }
 
     @Override
-    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
+    public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
+        final String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
         IdentityVerificationEntity identityVerification = null;
         try {
@@ -59,12 +61,14 @@ public class VerificationInitAction implements Action<OnboardingState, Onboardin
         } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
         }
+
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
         if (identityVerification != null) {
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.IDENTITY_VERIFICATION, identityVerification);
+            variables.put(ExtendedStateVariable.IDENTITY_VERIFICATION, identityVerification);
         }
         if (!context.getStateMachine().hasStateMachineError()) {
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_OBJECT, new Response());
-            context.getExtendedState().getVariables().put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
+            variables.put(ExtendedStateVariable.RESPONSE_OBJECT, new Response());
+            variables.put(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.OK);
         }
     }
 

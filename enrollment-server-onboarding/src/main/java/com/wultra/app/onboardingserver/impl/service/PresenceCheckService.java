@@ -282,7 +282,7 @@ public class PresenceCheckService {
                 idVerification.setRejectReason(result.getRejectReason());
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
+                logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:
                 throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());

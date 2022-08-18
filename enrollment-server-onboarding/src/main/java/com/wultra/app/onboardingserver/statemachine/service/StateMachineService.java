@@ -67,7 +67,7 @@ public class StateMachineService {
             final EnrollmentStateProvider enrollmentStateProvider,
             final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory,
             final CustomStateMachineInterceptor stateMachineInterceptor,
-            IdentityVerificationService identityVerificationService
+            final IdentityVerificationService identityVerificationService
     ) {
         this.enrollmentStateProvider = enrollmentStateProvider;
         this.stateMachineFactory = stateMachineFactory;

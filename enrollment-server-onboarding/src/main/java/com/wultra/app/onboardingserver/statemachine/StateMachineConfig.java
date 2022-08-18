@@ -204,9 +204,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
             @Override
             public void eventNotAccepted(Message<OnboardingEvent> event) {
-                logger.warn("Not accepted event {}", event.getPayload());
-                // TODO
-                // throw new OnboardingProcessException("Unexpected state of identity verification");
+                logger.error("Not accepted event {}", event.getPayload());
             }
 
             @Override
