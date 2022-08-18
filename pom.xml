@@ -96,6 +96,7 @@
 
         <db-h2.version>2.1.212</db-h2.version>
         <shedlock-spring.version>4.36.0</shedlock-spring.version>
+        <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
     </properties>
 

@@ -22,27 +22,27 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVer
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
-import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
 
 /**
  * Service implementing document identity verification status services.
@@ -55,50 +55,34 @@ public class IdentityVerificationStatusService {
 
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationStatusService.class);
 
-    private final IdentityVerificationConfig identityVerificationConfig;
-    private final IdentityVerificationRepository identityVerificationRepository;
     private final IdentityVerificationService identityVerificationService;
-    private final JsonSerializationService jsonSerializationService;
-    private final PresenceCheckService presenceCheckService;
-    private final IdentityVerificationFinishService identityVerificationFinishService;
+
     private final OnboardingServiceImpl onboardingService;
-    private final IdentityVerificationOtpService identityVerificationOtpService;
+
     private final ActivationFlagService activationFlagService;
+
+    private final StateMachineService stateMachineService;
 
     private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     /**
      * Service constructor.
-     * @param identityVerificationConfig        Identity verification configuration.
-     * @param identityVerificationRepository    Identity verification repository.
+     *
      * @param identityVerificationService       Identity verification service.
-     * @param jsonSerializationService          JSON serialization service.
-     * @param presenceCheckService              Presence check service.
-     * @param identityVerificationFinishService Identity verification finish service.
      * @param onboardingService                 Onboarding service.
-     * @param identityVerificationOtpService    Identity verification OTP service.
      * @param activationFlagService             Activation flags service.
+     * @param stateMachineService               State machine service.
      */
     @Autowired
     public IdentityVerificationStatusService(
-            IdentityVerificationConfig identityVerificationConfig,
-            IdentityVerificationRepository identityVerificationRepository,
             IdentityVerificationService identityVerificationService,
-            JsonSerializationService jsonSerializationService,
-            PresenceCheckService presenceCheckService,
-            IdentityVerificationFinishService identityVerificationFinishService,
             OnboardingServiceImpl onboardingService,
-            IdentityVerificationOtpService identityVerificationOtpService,
-            ActivationFlagService activationFlagService) {
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.identityVerificationRepository = identityVerificationRepository;
+            ActivationFlagService activationFlagService,
+            StateMachineService stateMachineService) {
         this.identityVerificationService = identityVerificationService;
-        this.jsonSerializationService = jsonSerializationService;
-        this.presenceCheckService = presenceCheckService;
-        this.identityVerificationFinishService = identityVerificationFinishService;
         this.onboardingService = onboardingService;
-        this.identityVerificationOtpService = identityVerificationOtpService;
         this.activationFlagService = activationFlagService;
+        this.stateMachineService = stateMachineService;
     }
 
     /**
@@ -116,8 +100,7 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, OnboardingOtpDeliveryException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        Optional<IdentityVerificationEntity> idVerificationOptional =
-                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
 
         final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
         if (idVerificationOptional.isEmpty()) {
@@ -135,7 +118,7 @@ public class IdentityVerificationStatusService {
             // Trigger immediate processing of expired processes
             onboardingService.terminateInactiveProcesses();
             response.setIdentityVerificationStatus(FAILED);
-            response.setIdentityVerificationPhase(null);
+            response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
             return response;
         }
 
@@ -148,164 +131,14 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        response.setIdentityVerificationPhase(idVerification.getPhase());
+        StateMachine<OnboardingState, OnboardingEvent> state =
+                stateMachineService.processStateMachineEvent(ownerId, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
-        if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            identityVerificationService.checkIdentityDocumentsForVerification(ownerId, idVerification);
-        } else if (PRESENCE_CHECK.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            response.setIdentityVerificationPhase(PRESENCE_CHECK);
-
-            SessionInfo sessionInfo =
-                    jsonSerializationService.deserialize(idVerification.getSessionInfo(), SessionInfo.class);
-            if (sessionInfo == null) {
-                logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
-                idVerification.setErrorDetail("Unable to deserialize session info");
-                idVerification.setStatus(FAILED);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            } else {
-                PresenceCheckResult presenceCheckResult = null;
-                try {
-                    presenceCheckResult =
-                            presenceCheckService.checkPresenceVerification(ownerId, idVerification, sessionInfo);
-                } catch (PresenceCheckException e) {
-                    logger.error("Checking presence verification failed, {}", ownerId, e);
-                    idVerification.setErrorDetail(e.getMessage());
-                    idVerification.setStatus(FAILED);
-                    idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                }
-
-                if (presenceCheckResult != null) {
-                    evaluatePresenceCheckResult(ownerId, idVerification, presenceCheckResult);
-                }
-            }
-        } else if (isPresenceCheckFinished(idVerification.getPhase(), idVerification.getStatus())) {
-            continueAfterPresenceCheck(ownerId, idVerification);
-        } else if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
-                && VERIFICATION_PENDING.equals(idVerification.getStatus())) {
-            startVerification(ownerId, idVerification);
-        } else if (IdentityVerificationPhase.DOCUMENT_VERIFICATION.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
-            logger.debug("Finished verification of documents for {}, {}", idVerification, ownerId);
-            continueWithClientEvaluation(ownerId, idVerification);
-        } else if (IdentityVerificationPhase.CLIENT_EVALUATION.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.ACCEPTED.equals(idVerification.getStatus())) {
-            logger.debug("Finished evaluation of client for {}, {}", idVerification, ownerId);
-            continueWithPresenceCheck(ownerId, idVerification);
-        } else if (IdentityVerificationPhase.OTP_VERIFICATION.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.OTP_VERIFICATION_PENDING.equals(idVerification.getStatus())) {
-            if (identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())) {
-                // OTP verification is complete, process document verification result
-                try {
-                    processVerificationResult(ownerId, idVerification);
-                } catch (OnboardingProcessException e) {
-                    logger.error("Updating onboarding process failed, {}", ownerId, e);
-                    response.setIdentityVerificationStatus(FAILED);
-                    return response;
-                }
-            } else {
-                logger.debug("Pending OTP verification, {}", ownerId);
-            }
-        }
+        idVerification = state.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
-    }
-
-    /**
-     * Return whether presence check finished (even not successfully).
-     *
-     * @param phase phase
-     * @param status status
-     * @return true if presence check finished, false otherwise
-     */
-    private static boolean isPresenceCheckFinished(final IdentityVerificationPhase phase, final IdentityVerificationStatus status) {
-        return phase == PRESENCE_CHECK &&
-                (status == VERIFICATION_PENDING || status == FAILED || status == IdentityVerificationStatus.REJECTED);
-    }
-
-    private void processVerificationResult(
-            OwnerId ownerId,
-            IdentityVerificationEntity idVerification) throws RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException {
-        identityVerificationService.processDocumentVerificationResult(ownerId, idVerification, IdentityVerificationPhase.COMPLETED);
-        if (idVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
-            identityVerificationFinishService.finishIdentityVerification(ownerId);
-        }
-    }
-
-    private void evaluatePresenceCheckResult(OwnerId ownerId,
-                                             IdentityVerificationEntity idVerification,
-                                             PresenceCheckResult result) {
-        switch (result.getStatus()) {
-            case ACCEPTED:
-                idVerification.setStatus(VERIFICATION_PENDING);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.info("Presence check accepted, {}", ownerId);
-                break;
-            case FAILED:
-                idVerification.setErrorDetail(result.getErrorDetail());
-                idVerification.setStatus(FAILED);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
-                break;
-            case IN_PROGRESS:
-                logger.debug("Presence check still in progress, {}", ownerId);
-                break;
-            case REJECTED:
-                idVerification.setRejectReason(result.getRejectReason());
-                idVerification.setStatus(IdentityVerificationStatus.REJECTED);
-                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
-                break;
-            default:
-                throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
-        }
-    }
-
-    private void continueWithClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
-    }
-
-    private void continueWithPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
-        if (identityVerificationConfig.isPresenceCheckEnabled()) {
-            idVerification.setPhase(PRESENCE_CHECK);
-            idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}, process ID: {}", ownerId, idVerification.getProcessId());
-        } else {
-            continueAfterPresenceCheck(ownerId, idVerification);
-        }
-    }
-
-    private void continueAfterPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws OnboardingOtpDeliveryException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationException {
-        if (identityVerificationConfig.isVerificationOtpEnabled()) {
-            // OTP verification is pending, switch to OTP verification state and send OTP code even in case identity verification fails
-            idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
-            idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-            identityVerificationOtpService.sendOtp(ownerId, idVerification);
-        } else {
-            processVerificationResult(ownerId, idVerification);
-        }
-    }
-
-    private void startVerification(OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws IdentityVerificationException {
-        try {
-            identityVerificationService.startVerification(ownerId);
-            logger.info("Started document verification process of {}", idVerification);
-        } catch (DocumentVerificationException e) {
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-            idVerification.setStatus(FAILED);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.warn("Verification start failed, {}", ownerId, e);
-        }
     }
 
 }

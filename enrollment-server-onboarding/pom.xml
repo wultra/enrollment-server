@@ -98,6 +98,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Spring State Machine https://docs.spring.io/spring-statemachine/docs/current/reference/ -->
+        <dependency>
+            <groupId>org.springframework.statemachine</groupId>
+            <artifactId>spring-statemachine-starter</artifactId>
+            <version>${spring-statemachine.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.statemachine</groupId>
+            <artifactId>spring-statemachine-test</artifactId>
+            <version>${spring-statemachine.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Spring Scheduler Lock https://github.com/lukas-krecan/ShedLock -->
         <dependency>
             <groupId>net.javacrumbs.shedlock</groupId>

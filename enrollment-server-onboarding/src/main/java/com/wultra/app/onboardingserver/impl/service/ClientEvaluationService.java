@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -85,6 +86,14 @@ public class ClientEvaluationService {
         try (Stream<IdentityVerificationEntity> stream = identityVerificationRepository.streamAllInProgressClientEvaluations()) {
             stream.forEach(this::processClientEvaluation);
         }
+    }
+
+    @Transactional
+    public void initClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
+        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
     }
 
     private void processClientEvaluation(final IdentityVerificationEntity identityVerification) {

@@ -126,20 +126,37 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @return Optional entity of the verification identity
      */
-    public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
+    public Optional<IdentityVerificationEntity> findByOptional(OwnerId ownerId) {
         return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+    }
+
+    /**
+     * Finds the current verification identity
+     * @param ownerId Owner identification.
+     * @return Entity of the verification identity
+     * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
+     */
+    public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(ownerId);
+
+        if (identityVerificationOptional.isEmpty()) {
+            logger.error("No identity verification entity found, {}", ownerId);
+            throw new IdentityVerificationNotFoundException("Not existing identity verification");
+        }
+        return identityVerificationOptional.get();
     }
 
     /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
      * @param processId Process identifier.
+     * @return Identity verification entity.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
-        identityVerificationCreateService.createIdentityVerification(ownerId, processId);
+    public IdentityVerificationEntity initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
+        return identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
     /**
@@ -159,7 +176,7 @@ public class IdentityVerificationService {
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
 
         if (idVerificationOptional.isEmpty()) {
             logger.error("Identity verification has not been initialized, {}", ownerId);
@@ -208,20 +225,11 @@ public class IdentityVerificationService {
      * Starts the verification process
      *
      * @param ownerId Owner identification.
-     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @param identityVerification Identity verification.
      * @throws DocumentVerificationException Thrown when document verification fails.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId) throws IdentityVerificationException, DocumentVerificationException {
-        Optional<IdentityVerificationEntity> identityVerificationOptional =
-                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-
-        if (identityVerificationOptional.isEmpty()) {
-            logger.error("No identity verification entity found to start the verification, {}", ownerId);
-            throw new IdentityVerificationException("Unable to start verification");
-        }
-        IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
-
+    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException {
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
