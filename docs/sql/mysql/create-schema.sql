@@ -29,11 +29,12 @@ CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(p
 
 CREATE TABLE es_onboarding_process (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
-    identification_data TEXT NOT NULL,
+    identification_data VARCHAR(1024) NOT NULL,
     user_id VARCHAR(256),
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
+    error_origin VARCHAR(256),
     error_score INTEGER NOT NULL DEFAULT 0,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated DATETIME,
@@ -41,6 +42,7 @@ CREATE TABLE es_onboarding_process (
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
+CREATE INDEX onboarding_process_identif_data ON es_onboarding_process (identification_data);
 CREATE INDEX onboarding_process_timestamp_1 ON es_onboarding_process (timestamp_created);
 CREATE INDEX onboarding_process_timestamp_2 ON es_onboarding_process (timestamp_last_updated);
 
@@ -51,6 +53,7 @@ CREATE TABLE es_onboarding_otp (
     status VARCHAR(32) NOT NULL,
     type VARCHAR(32) NOT NULL,
     error_detail VARCHAR(256),
+    error_origin VARCHAR(256),
     failed_attempts INTEGER,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_expiration DATETIME NOT NULL,
@@ -72,7 +75,9 @@ CREATE TABLE es_identity_verification (
     status VARCHAR(32) NOT NULL,
     phase VARCHAR(32) NOT NULL,
     reject_reason TEXT,
+    reject_origin VARCHAR(256),
     error_detail VARCHAR(256),
+    error_origin VARCHAR(256),
     session_info TEXT,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated DATETIME,
@@ -100,7 +105,9 @@ CREATE TABLE es_document_verification (
     photo_id VARCHAR(256),
     verification_score INTEGER,
     reject_reason TEXT,
+    reject_origin VARCHAR(256),
     error_detail VARCHAR(256),
+    error_origin VARCHAR(256),
     original_document_id VARCHAR(36),
     used_for_verification TINYINT DEFAULT 0,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -135,8 +142,10 @@ CREATE TABLE es_document_result (
     document_verification_id VARCHAR(36) NOT NULL,
     phase VARCHAR(32) NOT NULL,
     reject_reason TEXT,
+    reject_origin VARCHAR(256),
     verification_result TEXT,
     error_detail TEXT,
+    error_origin VARCHAR(256),
     extracted_data TEXT,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)

@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -71,7 +72,7 @@ public class CommonProcessLimitService {
         int maxProcessErrorScore = config.getMaxProcessErrorScore();
         if (process.getErrorScore() > maxProcessErrorScore) {
             // Onboarding process is failed, update it and persist the change
-            process = failProcess(process, OnboardingProcessEntity.ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED);
+            process = failProcess(process, OnboardingProcessEntity.ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
         return process;
     }
@@ -84,7 +85,7 @@ public class CommonProcessLimitService {
      * @param errorDetail Error detail.
      * @return Updated onboarding process entity.
      */
-    public OnboardingProcessEntity failProcess(OnboardingProcessEntity entity, String errorDetail) {
+    public OnboardingProcessEntity failProcess(OnboardingProcessEntity entity, String errorDetail, ErrorOrigin errorOrigin) {
         if (OnboardingStatus.FAILED == entity.getStatus()) {
             logger.debug("Not failing already failed onboarding entity ID: {}", entity.getId());
             return entity;
@@ -92,6 +93,7 @@ public class CommonProcessLimitService {
         entity.setStatus(OnboardingStatus.FAILED);
         entity.setTimestampLastUpdated(new Date());
         entity.setErrorDetail(errorDetail);
+        entity.setErrorOrigin(errorOrigin);
         return onboardingProcessRepository.save(entity);
     }
 

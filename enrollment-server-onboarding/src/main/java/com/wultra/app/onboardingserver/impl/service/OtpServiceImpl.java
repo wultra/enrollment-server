@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -100,12 +101,12 @@ public class OtpServiceImpl extends CommonOtpService {
         final Date otpLastCreatedDate = onboardingOtpRepository.getNewestOtpCreatedTimestamp(processId, otpType);
         final Duration resendPeriod = onboardingConfig.getOtpResendPeriod();
         if (isFromNowCloserThan(otpLastCreatedDate, resendPeriod)) {
-            logger.warn("Resend OTP functionality is not available yet (due to resend period) for process ID: {}", processId);
+            logger.warn("Resend OTP functionality is not available yet (due to resend period), process ID: {}", processId);
             throw new OnboardingOtpDeliveryException();
         }
         final Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
         if (otpOptional.isEmpty()) {
-            logger.warn("Onboarding OTP not found for process ID: {}", processId);
+            logger.warn("Onboarding OTP not found, process ID: {}", processId);
             throw new OnboardingProcessException();
         }
         final OnboardingOtpEntity existingOtp = otpOptional.get();
@@ -133,6 +134,7 @@ public class OtpServiceImpl extends CommonOtpService {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(new Date());
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
+                otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
             }
         }

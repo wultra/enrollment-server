@@ -35,6 +35,7 @@ import com.wultra.app.onboardingserver.docverify.zenid.service.ZenidRestApiServi
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import com.wultra.core.rest.client.base.RestClientException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -537,7 +538,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             // Check the results if there is no rejected validation
             Optional<DocumentVerificationResult> optionalFailedVerification = result.getResults()
                     .stream()
-                    .filter(value -> value.getRejectReason() != null)
+                    .filter(value -> StringUtils.isNotBlank(value.getRejectReason()))
                     .findAny();
             if (optionalFailedVerification.isPresent()) {
                 verificationStatus = DocumentVerificationStatus.REJECTED;

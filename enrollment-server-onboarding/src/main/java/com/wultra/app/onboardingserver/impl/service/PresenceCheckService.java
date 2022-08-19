@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
@@ -26,8 +28,6 @@ import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntit
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.enrollmentserver.model.enumeration.*;
-import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +83,20 @@ public class PresenceCheckService {
     }
 
     /**
+     * Prepares presence check to not initialized state.
+     *
+     * @param ownerId Owner identification.
+     * @param idVerification Identity verification entity.
+     */
+    @Transactional
+    public void prepareNotInitialized(OwnerId ownerId, IdentityVerificationEntity idVerification) {
+        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
+        idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        logger.debug("Changed {} to not initialized presence check, {}", idVerification, ownerId);
+    }
+
+    /**
      * Initializes presence check process.
      *
      * @param ownerId Owner identification.
@@ -125,18 +139,18 @@ public class PresenceCheckService {
      * @param ownerId Owner identifier.
      * @param idVerification Identity verification entity.
      * @param sessionInfo Session info with presence check data.
-     * @return Result of the presence check
      * @throws PresenceCheckException When an error during the presence check verification occurred
      */
     @Transactional
-    public PresenceCheckResult checkPresenceVerification(OwnerId ownerId,
-                                                         IdentityVerificationEntity idVerification,
-                                                         SessionInfo sessionInfo) throws PresenceCheckException {
+    public void checkPresenceVerification(OwnerId ownerId,
+                                          IdentityVerificationEntity idVerification,
+                                          SessionInfo sessionInfo) throws PresenceCheckException {
         PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
 
         if (!PresenceCheckStatus.ACCEPTED.equals(result.getStatus())) {
             logger.info("Not accepted presence check, {}", ownerId);
-            return result;
+            evaluatePresenceCheckResult(ownerId, idVerification, result);
+            return;
         }
         logger.debug("Processing a result of an accepted presence check, {}", ownerId);
 
@@ -170,7 +184,7 @@ public class PresenceCheckService {
 
         documentVerificationRepository.save(docVerificationEntity);
 
-        return result;
+        evaluatePresenceCheckResult(ownerId, idVerification, result);
     }
 
     /**
@@ -243,6 +257,37 @@ public class PresenceCheckService {
         return identityVerificationService.getPhotoById(photoId);
     }
 
+    private void evaluatePresenceCheckResult(OwnerId ownerId,
+                                             IdentityVerificationEntity idVerification,
+                                             PresenceCheckResult result) {
+        switch (result.getStatus()) {
+            case ACCEPTED:
+                idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.info("Presence check accepted, {}", ownerId);
+                break;
+            case FAILED:
+                idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
+                idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
+                break;
+            case IN_PROGRESS:
+                logger.debug("Presence check still in progress, {}", ownerId);
+                break;
+            case REJECTED:
+                idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
+                idVerification.setStatus(IdentityVerificationStatus.REJECTED);
+                idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
+        }
+    }
+
     /**
      * Fetches a current identity verification for presence check initialization
      * @param ownerId Owner identification.
@@ -250,7 +295,7 @@ public class PresenceCheckService {
      * @throws PresenceCheckException When an error during validating the identity verification status occurred.
      */
     private IdentityVerificationEntity fetchIdVerification(OwnerId ownerId) throws PresenceCheckException {
-        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findBy(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
         if (idVerificationOptional.isEmpty()) {
             logger.error("No identity verification entity found to initialize the presence check, {}", ownerId);
             throw new PresenceCheckException("Unable to initialize presence check");

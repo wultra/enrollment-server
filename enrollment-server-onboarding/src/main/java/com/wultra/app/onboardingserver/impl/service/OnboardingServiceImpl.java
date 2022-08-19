@@ -27,6 +27,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -141,6 +142,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
             process.setStatus(OnboardingStatus.FAILED);
             process.setErrorDetail(OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER);
+            process.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
             onboardingProcessRepository.save(process);
             logger.warn("Maximum number of processes per day reached for user: {}", userId);
             throw new TooManyProcessesException();
@@ -250,6 +252,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setStatus(OnboardingStatus.FAILED);
         process.setTimestampLastUpdated(new Date());
         process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
+        process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
         onboardingProcessRepository.save(process);
         return new Response();
     }

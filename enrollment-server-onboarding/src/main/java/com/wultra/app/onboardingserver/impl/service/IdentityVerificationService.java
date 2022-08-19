@@ -21,10 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentStat
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -45,6 +42,7 @@ import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,20 +124,37 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @return Optional entity of the verification identity
      */
-    public Optional<IdentityVerificationEntity> findBy(OwnerId ownerId) {
+    public Optional<IdentityVerificationEntity> findByOptional(OwnerId ownerId) {
         return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+    }
+
+    /**
+     * Finds the current verification identity
+     * @param ownerId Owner identification.
+     * @return Entity of the verification identity
+     * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
+     */
+    public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(ownerId);
+
+        if (identityVerificationOptional.isEmpty()) {
+            logger.error("No identity verification entity found, {}", ownerId);
+            throw new IdentityVerificationNotFoundException("Not existing identity verification");
+        }
+        return identityVerificationOptional.get();
     }
 
     /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
      * @param processId Process identifier.
+     * @return Identity verification entity.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
-    public void initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
-        identityVerificationCreateService.createIdentityVerification(ownerId, processId);
+    public IdentityVerificationEntity initializeIdentityVerification(OwnerId ownerId, String processId) throws IdentityVerificationException, RemoteCommunicationException, OnboardingProcessLimitException {
+        return identityVerificationCreateService.createIdentityVerification(ownerId, processId);
     }
 
     /**
@@ -159,7 +174,7 @@ public class IdentityVerificationService {
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findBy(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
 
         if (idVerificationOptional.isEmpty()) {
             logger.error("Identity verification has not been initialized, {}", ownerId);
@@ -208,20 +223,11 @@ public class IdentityVerificationService {
      * Starts the verification process
      *
      * @param ownerId Owner identification.
-     * @throws IdentityVerificationException Thrown when identity verification could not be started.
+     * @param identityVerification Identity verification.
      * @throws DocumentVerificationException Thrown when document verification fails.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId) throws IdentityVerificationException, DocumentVerificationException {
-        Optional<IdentityVerificationEntity> identityVerificationOptional =
-                identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-
-        if (identityVerificationOptional.isEmpty()) {
-            logger.error("No identity verification entity found to start the verification, {}", ownerId);
-            throw new IdentityVerificationException("Unable to start verification");
-        }
-        IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
-
+    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException {
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
@@ -354,6 +360,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
 
             docVerifications.stream()
@@ -363,6 +370,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
         }
     }
@@ -560,7 +568,7 @@ public class IdentityVerificationService {
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
         DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
-        if (entity.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(entity.getErrorDetail())) {
             docMetadata.setErrors(List.of(entity.getErrorDetail()));
         }
         docMetadata.setFilename(entity.getFilename());

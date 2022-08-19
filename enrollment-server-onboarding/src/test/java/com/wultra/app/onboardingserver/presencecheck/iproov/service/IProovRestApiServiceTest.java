@@ -21,14 +21,16 @@ import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(classes = EnrollmentServerTestApplication.class)
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test-onboarding")
 class IProovRestApiServiceTest {
 
     @Test
