@@ -20,10 +20,7 @@ package com.wultra.app.onboardingserver.impl.service.document;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
@@ -201,10 +198,16 @@ public class DocumentProcessingService {
             docSubmitResult.setErrorDetail(e.getMessage());
         }
 
-        documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
-        documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+        if (docSubmitResult.getErrorDetail() != null) {
+            documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
+            documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+        }
+        if (docSubmitResult.getRejectReason() != null) {
+            documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
+            documentResultEntity.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+        }
+
         documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
-        documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
         processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
     }
 
@@ -294,6 +297,7 @@ public class DocumentProcessingService {
         entity.setExtractedData(docSubmitResult.getExtractedData());
         entity.setPhase(DocumentProcessingPhase.UPLOAD);
         entity.setRejectReason(docVerificationEntity.getRejectReason());
+        entity.setRejectOrigin(docVerificationEntity.getRejectOrigin());
         return entity;
     }
 
@@ -377,6 +381,7 @@ public class DocumentProcessingService {
         } else if (docSubmitResult.getRejectReason() != null) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(docSubmitResult.getRejectReason());
+            docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());

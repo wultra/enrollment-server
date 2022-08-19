@@ -171,7 +171,7 @@ public class VerificationProcessingService {
             case REJECTED:
                 docVerification.setStatus(DocumentStatus.REJECTED);
                 docVerification.setRejectReason(docVerificationResult.getRejectReason());
-                docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
                 break;
             default:
                 throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
@@ -186,9 +186,14 @@ public class VerificationProcessingService {
      */
     private void updateDocumentResult(DocumentResultEntity docResult,
                                       DocumentVerificationResult docVerificationResult) {
-        docResult.setErrorDetail(docVerificationResult.getErrorDetail());
-        docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        docResult.setRejectReason(docVerificationResult.getRejectReason());
+        if (docResult.getErrorDetail() != null) {
+            docResult.setErrorDetail(docVerificationResult.getErrorDetail());
+            docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+        }
+        if (docResult.getRejectReason() != null) {
+            docResult.setRejectReason(docVerificationResult.getRejectReason());
+            docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+        }
         docResult.setVerificationResult(docVerificationResult.getVerificationResult());
     }
 

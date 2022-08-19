@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVer
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -259,7 +260,7 @@ public class IdentityVerificationStatusService {
                 break;
             case REJECTED:
                 idVerification.setRejectReason(result.getRejectReason());
-                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
+                idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());

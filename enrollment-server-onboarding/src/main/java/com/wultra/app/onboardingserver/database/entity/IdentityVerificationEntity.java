@@ -21,6 +21,7 @@ package com.wultra.app.onboardingserver.database.entity;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -77,6 +78,10 @@ public class IdentityVerificationEntity implements Serializable {
     @Column(name = "reject_reason")
     @Lob
     private String rejectReason;
+
+    @Column(name = "reject_origin")
+    @Enumerated(EnumType.STRING)
+    private RejectOrigin rejectOrigin;
 
     @Column(name = "error_detail")
     private String errorDetail;

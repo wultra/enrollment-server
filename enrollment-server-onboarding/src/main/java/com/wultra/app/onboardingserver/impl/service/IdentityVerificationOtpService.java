@@ -204,6 +204,7 @@ public class IdentityVerificationOtpService {
         idVerification.setErrorDetail(null);
         idVerification.setErrorOrigin(null);
         idVerification.setRejectReason(null);
+        idVerification.setRejectOrigin(null);
         identityVerificationRepository.save(idVerification);
 
         logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, process ID: {}", idVerification.getProcessId());
