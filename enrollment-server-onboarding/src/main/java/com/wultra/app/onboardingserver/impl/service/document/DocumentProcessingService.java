@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,11 +199,11 @@ public class DocumentProcessingService {
             docSubmitResult.setErrorDetail(e.getMessage());
         }
 
-        if (docSubmitResult.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
             documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         }
-        if (docSubmitResult.getRejectReason() != null) {
+        if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
             documentResultEntity.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
@@ -374,11 +375,11 @@ public class DocumentProcessingService {
 
     private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
                                           DocumentsSubmitResult docsSubmitResults, DocumentSubmitResult docSubmitResult) {
-        if (docSubmitResult.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        } else if (docSubmitResult.getRejectReason() != null) {
+        } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(docSubmitResult.getRejectReason());
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);

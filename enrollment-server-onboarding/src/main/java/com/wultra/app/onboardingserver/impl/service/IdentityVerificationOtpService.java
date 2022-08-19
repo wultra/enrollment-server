@@ -177,8 +177,10 @@ public class IdentityVerificationOtpService {
         final String errorDetail = idVerification.getErrorDetail();
         final ErrorOrigin errorOrigin = idVerification.getErrorOrigin();
         final String rejectReason = idVerification.getRejectReason();
+        final RejectOrigin rejectOrigin = idVerification.getRejectOrigin();
 
-        if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && (StringUtils.isNotBlank(errorDetail) || StringUtils.isNotBlank(rejectReason))) {
+        if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(errorDetail)
+                || rejectOrigin == RejectOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(rejectReason)) {
             logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);

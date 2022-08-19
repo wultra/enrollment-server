@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationExcepti
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -186,11 +187,10 @@ public class VerificationProcessingService {
      */
     private void updateDocumentResult(DocumentResultEntity docResult,
                                       DocumentVerificationResult docVerificationResult) {
-        if (docResult.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(docResult.getErrorDetail())) {
             docResult.setErrorDetail(docVerificationResult.getErrorDetail());
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        }
-        if (docResult.getRejectReason() != null) {
+        } else if (StringUtils.isNotBlank(docResult.getRejectReason())) {
             docResult.setRejectReason(docVerificationResult.getRejectReason());
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
