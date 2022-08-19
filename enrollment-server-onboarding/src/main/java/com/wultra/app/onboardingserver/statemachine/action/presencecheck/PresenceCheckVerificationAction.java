@@ -16,6 +16,7 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -64,6 +65,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
         if (sessionInfo == null) {
             logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
             identityVerification.setErrorDetail("Unable to deserialize session info");
+            identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         } else {
@@ -72,6 +74,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
             } catch (PresenceCheckException e) {
                 logger.error("Checking presence verification failed, {}", ownerId, e);
                 identityVerification.setErrorDetail(e.getMessage());
+                identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 identityVerification.setStatus(IdentityVerificationStatus.FAILED);
                 identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             }

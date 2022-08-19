@@ -19,10 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
@@ -271,6 +268,7 @@ public class PresenceCheckService {
                 break;
             case FAILED:
                 idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
@@ -280,6 +278,7 @@ public class PresenceCheckService {
                 break;
             case REJECTED:
                 idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
