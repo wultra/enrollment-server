@@ -42,6 +42,7 @@ import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -567,7 +568,7 @@ public class IdentityVerificationService {
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
         DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
-        if (entity.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(entity.getErrorDetail())) {
             docMetadata.setErrors(List.of(entity.getErrorDetail()));
         }
         docMetadata.setFilename(entity.getFilename());
