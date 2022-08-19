@@ -36,10 +36,8 @@ import java.util.Optional;
 @Repository
 public interface OnboardingProcessRepository extends CrudRepository<OnboardingProcessEntity, String> {
 
-    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
-            "AND p.userId = :userId " +
-            "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findExistingProcessForUser(String userId, OnboardingStatus status);
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status AND p.identificationData = :identificationData")
+    Optional<OnboardingProcessEntity> findExistingProcessByIdentificationData(String identificationData, OnboardingStatus status);
 
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.activationId = :activationId " +

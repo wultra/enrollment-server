@@ -157,7 +157,7 @@ class RestOnboardingProvider implements OnboardingProvider {
     private static UserLookupRequestDto convert (final LookupUserRequest source) {
         final UserLookupRequestDto target = new UserLookupRequestDto();
         target.setIdentification(source.getIdentification());
-        target.setProcessId(null); // TODO (racansky, 2022-07-19, #299) process is not created yet, get process ID before user lookup
+        target.setProcessId(source.getProcessId());
         return target;
     }
 

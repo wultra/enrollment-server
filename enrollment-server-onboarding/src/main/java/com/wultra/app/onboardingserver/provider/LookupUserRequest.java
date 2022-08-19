@@ -38,4 +38,7 @@ public final class LookupUserRequest {
 
     @NonNull
     private Map<String, Object> identification;
+
+    @NonNull
+    private String processId;
 }
