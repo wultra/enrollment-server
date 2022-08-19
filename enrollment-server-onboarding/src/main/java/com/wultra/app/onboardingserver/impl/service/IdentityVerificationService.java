@@ -21,10 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentStat
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -45,6 +42,7 @@ import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -362,6 +360,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
 
             docVerifications.stream()
@@ -371,6 +370,7 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
+                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
         }
     }
@@ -568,7 +568,7 @@ public class IdentityVerificationService {
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
         DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
-        if (entity.getErrorDetail() != null) {
+        if (StringUtils.isNotBlank(entity.getErrorDetail())) {
             docMetadata.setErrors(List.of(entity.getErrorDetail()));
         }
         docMetadata.setFilename(entity.getFilename());

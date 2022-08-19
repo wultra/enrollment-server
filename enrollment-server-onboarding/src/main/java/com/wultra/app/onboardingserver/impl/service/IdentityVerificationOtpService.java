@@ -176,9 +176,12 @@ public class IdentityVerificationOtpService {
 
         final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
         final String errorDetail = idVerification.getErrorDetail();
+        final ErrorOrigin errorOrigin = idVerification.getErrorOrigin();
         final String rejectReason = idVerification.getRejectReason();
+        final RejectOrigin rejectOrigin = idVerification.getRejectOrigin();
 
-        if (StringUtils.isNotBlank(errorDetail) || StringUtils.isNotBlank(rejectReason)) {
+        if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(errorDetail)
+                || rejectOrigin == RejectOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(rejectReason)) {
             logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);
@@ -202,7 +205,9 @@ public class IdentityVerificationOtpService {
         idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
         idVerification.setTimestampLastUpdated(new Date());
         idVerification.setErrorDetail(null);
+        idVerification.setErrorOrigin(null);
         idVerification.setRejectReason(null);
+        idVerification.setRejectOrigin(null);
         identityVerificationRepository.save(idVerification);
 
         logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, process ID: {}", idVerification.getProcessId());
@@ -221,6 +226,7 @@ public class IdentityVerificationOtpService {
             new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
+        otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
         otp.setTimestampLastUpdated(new Date());
         onboardingOtpRepository.save(otp);
     }

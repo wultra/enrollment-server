@@ -19,6 +19,8 @@
 package com.wultra.app.onboardingserver.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -75,6 +77,13 @@ public class DocumentResultEntity implements Serializable {
     private String rejectReason;
 
     /**
+     * Origin of rejection
+     */
+    @Column(name = "reject_origin")
+    @Enumerated(EnumType.STRING)
+    private RejectOrigin rejectOrigin;
+
+    /**
      * JSON serialized document with the verification result
      */
     @Column(name = "verification_result")
@@ -87,6 +96,10 @@ public class DocumentResultEntity implements Serializable {
     @Column(name = "error_detail")
     @Lob
     private String errorDetail;
+
+    @Column(name = "error_origin")
+    @Enumerated(EnumType.STRING)
+    private ErrorOrigin errorOrigin;
 
     /**
      * JSON serialized data extracted from the uploaded document

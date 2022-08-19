@@ -18,9 +18,7 @@
 
 package com.wultra.app.onboardingserver.database.entity;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -142,10 +140,24 @@ public class DocumentVerificationEntity implements Serializable {
     private String rejectReason;
 
     /**
+     * Origin of rejection
+     */
+    @Column(name = "reject_origin")
+    @Enumerated(EnumType.STRING)
+    private RejectOrigin rejectOrigin;
+
+    /**
      * Overall error detail in case a generic error occurred
      */
     @Column(name = "error_detail")
     private String errorDetail;
+
+    /**
+     * Origin of an error
+     */
+    @Column(name = "error_origin")
+    @Enumerated(EnumType.STRING)
+    private ErrorOrigin errorOrigin;
 
     /**
      * Identifier of an entity which was replaced by this entity
