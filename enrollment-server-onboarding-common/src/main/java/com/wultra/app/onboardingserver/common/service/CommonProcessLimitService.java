@@ -94,6 +94,9 @@ public class CommonProcessLimitService {
         entity.setTimestampLastUpdated(new Date());
         entity.setErrorDetail(errorDetail);
         entity.setErrorOrigin(errorOrigin);
+        final Date now = new Date();
+        entity.setTimestampLastUpdated(now);
+        entity.setTimestampFailed(now);
         return onboardingProcessRepository.save(entity);
     }
 

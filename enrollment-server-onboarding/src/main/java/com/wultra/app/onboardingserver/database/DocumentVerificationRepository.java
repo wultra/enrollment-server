@@ -18,6 +18,7 @@
 
 package com.wultra.app.onboardingserver.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
@@ -51,10 +52,11 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
             "    d.usedForVerification = false, " +
             "    d.errorDetail = :errorMessage, " +
+            "    d.errorOrigin = :errorOrigin, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (:statuses)")
-    int failExpiredVerifications(Date cleanupDate, Date timestamp, String errorMessage, List<DocumentStatus> statuses);
+    int failExpiredVerifications(Date cleanupDate, Date timestamp, String errorMessage, ErrorOrigin errorOrigin, List<DocumentStatus> statuses);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +

@@ -38,7 +38,8 @@ CREATE TABLE es_onboarding_process (
     error_score INTEGER NOT NULL DEFAULT 0,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated DATETIME,
-    timestamp_finished DATETIME
+    timestamp_finished DATETIME,
+    timestamp_failed DATETIME
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
@@ -59,6 +60,7 @@ CREATE TABLE es_onboarding_otp (
     timestamp_expiration DATETIME NOT NULL,
     timestamp_last_updated DATETIME,
     timestamp_verified DATETIME,
+    timestamp_failed DATETIME,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -81,6 +83,8 @@ CREATE TABLE es_identity_verification (
     session_info TEXT,
     timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated DATETIME,
+    timestamp_finished DATETIME,
+    timestamp_failed DATETIME,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

@@ -86,7 +86,7 @@ public class CommonOtpService implements OtpService {
         OnboardingOtpEntity otp = otpOptional.get();
 
         // Verify OTP code
-        Date now = new Date();
+        final Date now = new Date();
         boolean expired = false;
         boolean verified = false;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
@@ -103,6 +103,7 @@ public class CommonOtpService implements OtpService {
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_EXPIRED);
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             otp.setTimestampLastUpdated(now);
+            otp.setTimestampFailed(now);
             onboardingOtpRepository.save(otp);
         } else if (otp.getOtpCode().equals(otpCode)) {
             verified = true;
@@ -141,6 +142,7 @@ public class CommonOtpService implements OtpService {
             otp.setStatus(OtpStatus.FAILED);
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
+            otp.setTimestampFailed(now);
             onboardingOtpRepository.save(otp);
 
             // Onboarding process is failed, update it
@@ -160,6 +162,8 @@ public class CommonOtpService implements OtpService {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setErrorDetail(process.getErrorDetail());
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
+                otp.setTimestampLastUpdated(now);
+                otp.setTimestampFailed(now);
                 onboardingOtpRepository.save(otp);
             }
         }

@@ -227,7 +227,9 @@ public class IdentityVerificationOtpService {
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
         otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
-        otp.setTimestampLastUpdated(new Date());
+        final Date now = new Date();
+        otp.setTimestampLastUpdated(now);
+        otp.setTimestampFailed(now);
         onboardingOtpRepository.save(otp);
     }
 

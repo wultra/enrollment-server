@@ -100,6 +100,12 @@ public class IdentityVerificationEntity implements Serializable {
     @Column(name = "timestamp_last_updated")
     private Date timestampLastUpdated;
 
+    @Column(name = "timestamp_finished")
+    private Date timestampFinished;
+
+    @Column(name = "timestamp_failed")
+    private Date timestampFailed;
+
     @OneToMany(mappedBy = "identityVerification", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated")
     private Set<DocumentVerificationEntity> documentVerifications = new LinkedHashSet<>();

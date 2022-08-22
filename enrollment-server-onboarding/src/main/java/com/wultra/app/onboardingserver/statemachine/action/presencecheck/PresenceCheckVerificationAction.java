@@ -68,6 +68,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
             identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
         } else {
             try {
                 presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
@@ -77,6 +78,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
                 identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 identityVerification.setStatus(IdentityVerificationStatus.FAILED);
                 identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                identityVerification.setTimestampFailed(ownerId.getTimestamp());
             }
         }
     }
