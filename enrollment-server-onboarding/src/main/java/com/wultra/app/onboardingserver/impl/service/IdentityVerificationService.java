@@ -48,8 +48,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -279,7 +280,7 @@ public class IdentityVerificationService {
      * @throws DocumentVerificationException Thrown when an error during verification check occurred.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkVerificationResult(IdentityVerificationPhase phase, OwnerId ownerId, IdentityVerificationEntity idVerification)
             throws DocumentVerificationException, OnboardingProcessException {
         List<DocumentVerificationEntity> allDocVerifications =

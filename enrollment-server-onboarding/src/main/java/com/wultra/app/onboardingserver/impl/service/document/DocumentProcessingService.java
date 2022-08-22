@@ -39,8 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,7 +101,7 @@ public class DocumentProcessingService {
      * @param ownerId Owner identification.
      * @return Document verification entities.
      */
-    @Transactional(value = Transactional.TxType.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<DocumentVerificationEntity> submitDocuments(
             IdentityVerificationEntity idVerification,
             DocumentSubmitRequest request,
@@ -185,7 +186,7 @@ public class DocumentProcessingService {
      * @param ownerId Owner identification.
      * @param documentResultEntity Document result entity to be checked at the provider.
      */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkDocumentSubmitWithProvider(OwnerId ownerId, DocumentResultEntity documentResultEntity) {
         DocumentVerificationEntity docVerification = documentResultEntity.getDocumentVerification();
         DocumentsSubmitResult docsSubmitResults;
