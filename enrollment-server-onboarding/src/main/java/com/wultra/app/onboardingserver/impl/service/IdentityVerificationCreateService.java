@@ -17,20 +17,19 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service implementing creating of identity verification.
