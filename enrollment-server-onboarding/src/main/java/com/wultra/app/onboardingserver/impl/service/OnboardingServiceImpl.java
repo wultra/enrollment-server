@@ -70,6 +70,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
 
+    private static final String FAKE_USER_ID_PREFIX = "fake-";
+
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OtpServiceImpl otpService;
@@ -120,14 +122,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public OnboardingStartResponse startOnboarding(OnboardingStartRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException {
         final Map<String, Object> identification = request.getIdentification();
-
-        final String identificationData;
-        try {
-            identificationData = normalizedMapper.writeValueAsString(identification);
-        } catch (JsonProcessingException ex) {
-            logger.warn("Invalid identification data: {}", identification);
-            throw new InvalidRequestObjectException();
-        }
+        final String identificationData = parseIdentificationData(identification);
 
         final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessByIdentificationData(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification))
@@ -148,23 +143,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new TooManyProcessesException();
         }
 
-        // Create an OTP code
-        String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
-        // Send the OTP code
-        try {
-            final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
-                    .processId(process.getId())
-                    .userId(userId)
-                    .otpCode(otpCode)
-                    .resend(false)
-                    .locale(LocaleContextHolder.getLocale())
-                    .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
-                    .build();
-            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
-        } catch (OnboardingProviderException e) {
-            logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException(e);
+        final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
+        if (isFakeUser(userId)) {
+            logger.debug("User ID: {} is fake, OTP is not sent", userId);
+        } else {
+            logger.debug("Sending OTP for user ID: {}", userId);
+            sendOtp(process, otpCode);
         }
+
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(process.getId());
         response.setOnboardingStatus(process.getStatus());
@@ -178,27 +164,19 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when OTP resend fails.
      */
     @Transactional
-    public Response resendOtp(OnboardingOtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        String processId = request.getProcessId();
-        OnboardingProcessEntity process = findProcess(processId);
-        String userId = process.getUserId();
-        // Create an OTP code
-        String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);
-        // Resend the OTP code
-        try {
-            final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
-                    .processId(processId)
-                    .userId(userId)
-                    .otpCode(otpCode)
-                    .locale(LocaleContextHolder.getLocale())
-                    .resend(true)
-                    .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
-                    .build();
-            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
-        } catch (OnboardingProviderException e) {
-            logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException(e);
+    public Response resendOtp(final OnboardingOtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+        final OnboardingProcessEntity process = findProcess(request.getProcessId());
+        final String userId = process.getUserId();
+
+        final String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);
+
+        if (isFakeUser(userId)) {
+            logger.debug("User ID: {} is fake, OTP is not resent", userId);
+        } else {
+            logger.debug("Resending OTP for user ID: {}", userId);
+            resendOtp(process, otpCode);
         }
+
         return new Response();
     }
 
@@ -417,7 +395,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess);
     }
 
-    private String lookupUser(final String processId, final Map<String, Object> identification) throws OnboardingProcessException {
+    private String lookupUser(final String processId, final Map<String, Object> identification) {
         try {
             final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
                     .identification(identification)
@@ -425,11 +403,13 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                     .build();
             return onboardingProvider.lookupUser(lookupUserRequest).getUserId();
         } catch (OnboardingProviderException e) {
-            throw new OnboardingProcessException("User lookup failed, error: " + e.getMessage(), e);
+            final String fakeUserId = FAKE_USER_ID_PREFIX + processId;
+            logger.info("User lookup failed, using fake user ID: {}, error: {}", fakeUserId, e.getMessage());
+            logger.debug("User lookup failed, using fake user ID: {}", fakeUserId, e);
+            return fakeUserId;
         }
     }
 
-    @SneakyThrows(OnboardingProcessException.class)
     private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData) {
         final OnboardingProcessEntity process = createNewProcess(identificationData);
         logger.debug("Created process ID: {}", process.getId());
@@ -457,5 +437,52 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                             userId, process.getUserId(), process.getId()));
         }
         return process;
+    }
+
+    private String parseIdentificationData(final Map<String, Object> identification) throws InvalidRequestObjectException {
+        try {
+            return normalizedMapper.writeValueAsString(identification);
+        } catch (JsonProcessingException ex) {
+            logger.warn("Invalid identification data: {}", identification);
+            throw new InvalidRequestObjectException();
+        }
+    }
+
+    private static boolean isFakeUser(final String userId) {
+        return userId.startsWith(FAKE_USER_ID_PREFIX);
+    }
+
+    private void sendOtp(final OnboardingProcessEntity process, final String otpCode) throws OnboardingOtpDeliveryException {
+        final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                .processId(process.getId())
+                .userId(process.getUserId())
+                .otpCode(otpCode)
+                .resend(false)
+                .locale(LocaleContextHolder.getLocale())
+                .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
+                .build();
+        try {
+            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
+        } catch (OnboardingProviderException e) {
+            logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
+            throw new OnboardingOtpDeliveryException(e);
+        }
+    }
+
+    private void resendOtp(final OnboardingProcessEntity process, final String otpCode) throws OnboardingOtpDeliveryException {
+        final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
+                .processId(process.getId())
+                .userId(process.getUserId())
+                .otpCode(otpCode)
+                .locale(LocaleContextHolder.getLocale())
+                .resend(true)
+                .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
+                .build();
+        try {
+            onboardingProvider.sendOtpCode(sendOtpCodeRequest);
+        } catch (OnboardingProviderException e) {
+            logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
+            throw new OnboardingOtpDeliveryException(e);
+        }
     }
 }
