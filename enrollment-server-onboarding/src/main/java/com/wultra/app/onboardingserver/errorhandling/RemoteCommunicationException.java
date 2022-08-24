@@ -33,4 +33,8 @@ public class RemoteCommunicationException extends Exception {
         super(message);
     }
 
+    public RemoteCommunicationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

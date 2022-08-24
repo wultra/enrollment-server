@@ -37,10 +37,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
+import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
@@ -74,6 +71,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OtpServiceImpl otpService;
 
+    private final ActivationService activationService;
+
     // Special instance of ObjectMapper for normalized serialization of identification data
     private final ObjectMapper normalizedMapper = JsonMapper
             .builder()
@@ -100,12 +99,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OnboardingConfig config,
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
+            final ActivationService activationService,
             final OnboardingProvider onboardingProvider) {
 
         super(onboardingProcessRepository);
         this.onboardingConfig = config;
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpService = otpService;
+        this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
     }
 
@@ -230,6 +231,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
         process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
         onboardingProcessRepository.save(process);
+
+        removeActivation(process.getActivationId());
+
         return new Response();
     }
 
@@ -434,6 +438,16 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                             userId, process.getUserId(), process.getId()));
         }
         return process;
+    }
+
+    private void removeActivation(final String activationId) throws OnboardingProcessException {
+        if (activationId != null) {
+            try {
+                activationService.removeActivation(activationId);
+            } catch (RemoteCommunicationException e) {
+                throw new OnboardingProcessException("Unable to remove activation ID: " + activationId, e);
+            }
+        }
     }
 
     private String parseIdentificationData(final Map<String, Object> identification) throws InvalidRequestObjectException {
