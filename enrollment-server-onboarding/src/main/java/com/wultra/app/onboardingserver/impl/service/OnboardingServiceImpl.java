@@ -70,8 +70,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
 
-    private static final String FAKE_USER_ID_PREFIX = "fake-";
-
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OtpServiceImpl otpService;
@@ -144,8 +142,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
-        if (isFakeUser(userId)) {
-            logger.debug("User ID: {} is fake, OTP is not sent", userId);
+        if (userId == null) {
+            logger.debug("User ID is null, OTP is not sent");
         } else {
             logger.debug("Sending OTP for user ID: {}", userId);
             sendOtp(process, otpCode);
@@ -170,8 +168,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);
 
-        if (isFakeUser(userId)) {
-            logger.debug("User ID: {} is fake, OTP is not resent", userId);
+        if (userId == null) {
+            logger.debug("User ID is not present, OTP is not resent");
         } else {
             logger.debug("Resending OTP for user ID: {}", userId);
             resendOtp(process, otpCode);
@@ -403,10 +401,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                     .build();
             return onboardingProvider.lookupUser(lookupUserRequest).getUserId();
         } catch (OnboardingProviderException e) {
-            final String fakeUserId = FAKE_USER_ID_PREFIX + processId;
-            logger.info("User lookup failed, using fake user ID: {}, error: {}", fakeUserId, e.getMessage());
-            logger.debug("User lookup failed, using fake user ID: {}", fakeUserId, e);
-            return fakeUserId;
+            logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
+            logger.debug("User lookup failed, using null user ID", e);
+            return null;
         }
     }
 
@@ -446,10 +443,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             logger.warn("Invalid identification data: {}", identification);
             throw new InvalidRequestObjectException();
         }
-    }
-
-    private static boolean isFakeUser(final String userId) {
-        return userId.startsWith(FAKE_USER_ID_PREFIX);
     }
 
     private void sendOtp(final OnboardingProcessEntity process, final String otpCode) throws OnboardingOtpDeliveryException {
