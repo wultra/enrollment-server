@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2020 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,17 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-CREATE TABLE es_operation_template (
-    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    placeholder VARCHAR(255) NOT NULL,
-    language VARCHAR(8) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    attributes TEXT
-) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
 
 CREATE TABLE es_onboarding_process (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
