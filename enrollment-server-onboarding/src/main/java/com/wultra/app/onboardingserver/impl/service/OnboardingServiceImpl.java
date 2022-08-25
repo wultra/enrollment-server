@@ -232,7 +232,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
         onboardingProcessRepository.save(process);
 
-        removeActivation(process.getActivationId());
+        removeActivation(process);
 
         return new Response();
     }
@@ -440,12 +440,15 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return process;
     }
 
-    private void removeActivation(final String activationId) throws OnboardingProcessException {
+    private void removeActivation(final OnboardingProcessEntity process) throws OnboardingProcessException {
+        final String activationId = process.getActivationId();
         if (activationId != null) {
             try {
+                logger.info("Removing activation ID: {} of process ID: {}", activationId, process.getId());
                 activationService.removeActivation(activationId);
             } catch (RemoteCommunicationException e) {
-                throw new OnboardingProcessException("Unable to remove activation ID: " + activationId, e);
+                throw new OnboardingProcessException(
+                        String.format("Unable to remove activation ID: %s of process ID: %s", activationId, process.getId()), e);
             }
         }
     }

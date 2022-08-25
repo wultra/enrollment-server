@@ -55,7 +55,6 @@ public class ActivationService {
     public void removeActivation(final String activationId) throws RemoteCommunicationException {
         final RemoveActivationRequest request = new RemoveActivationRequest();
         request.setActivationId(activationId);
-        logger.info("Removing activation ID: {}", activationId);
 
         try {
             powerAuthClient.removeActivation(request);
