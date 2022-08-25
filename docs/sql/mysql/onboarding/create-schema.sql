@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2020 Wultra s.r.o.
+ * Copyright (C) 2022 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -16,24 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
---
---  Create sequences. Maximum value for PostgreSQL is 9223372036854775807.
---- See: https://www.postgresql.org/docs/9.6/sql-createsequence.html
---
-CREATE SEQUENCE "es_document_result_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 10 START WITH 1 CACHE 20;
-CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 1 START WITH 1 CACHE 20;
-
-CREATE TABLE es_operation_template (
-    id BIGINT NOT NULL PRIMARY KEY,
-    placeholder VARCHAR(255) NOT NULL,
-    language VARCHAR(8) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    attributes TEXT
-);
-
-CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
-
 CREATE TABLE es_onboarding_process (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     identification_data VARCHAR(1024) NOT NULL,
@@ -43,10 +25,10 @@ CREATE TABLE es_onboarding_process (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     error_score INTEGER NOT NULL DEFAULT 0,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_last_updated TIMESTAMP,
-    timestamp_finished TIMESTAMP
-);
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated DATETIME,
+    timestamp_finished DATETIME
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
 CREATE INDEX onboarding_process_identif_data ON es_onboarding_process (identification_data);
@@ -62,15 +44,14 @@ CREATE TABLE es_onboarding_otp (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     failed_attempts INTEGER,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_expiration TIMESTAMP NOT NULL,
-    timestamp_last_updated TIMESTAMP,
-    timestamp_verified TIMESTAMP,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_expiration DATETIME NOT NULL,
+    timestamp_last_updated DATETIME,
+    timestamp_verified DATETIME,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
-);
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- PostgreSQL does not create indexes on foreign keys automatically
-CREATE INDEX onboarding_process ON es_onboarding_otp (process_id);
+-- MySQL creates indexes on foreign keys automatically
 CREATE INDEX onboarding_otp_status ON es_onboarding_otp (status);
 CREATE INDEX onboarding_otp_timestamp_1 ON es_onboarding_otp (timestamp_created);
 CREATE INDEX onboarding_otp_timestamp_2 ON es_onboarding_otp (timestamp_last_updated);
@@ -87,10 +68,10 @@ CREATE TABLE es_identity_verification (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     session_info TEXT,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_last_updated TIMESTAMP,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated DATETIME,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
-);
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
 CREATE INDEX identity_verif_user ON es_identity_verification (user_id);
@@ -117,37 +98,36 @@ CREATE TABLE es_document_verification (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     original_document_id VARCHAR(36),
-    used_for_verification BOOLEAN DEFAULT FALSE,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    timestamp_uploaded TIMESTAMP,
-    timestamp_verified TIMESTAMP,
-    timestamp_disposed TIMESTAMP,
-    timestamp_last_updated TIMESTAMP,
+    used_for_verification TINYINT DEFAULT 0,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_uploaded DATETIME,
+    timestamp_verified DATETIME,
+    timestamp_disposed DATETIME,
+    timestamp_last_updated DATETIME,
     FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
-);
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- PostgreSQL does not create indexes on foreign keys automatically
-CREATE INDEX document_ident_verif ON es_document_verification (identity_verification_id);
-CREATE INDEX document_verif_activation ON es_document_verification (activation_id);
-CREATE INDEX document_verif_status ON es_document_verification (status);
-CREATE INDEX document_verif_timestamp_1 ON es_document_verification (timestamp_created);
-CREATE INDEX document_verif_timestamp_2 ON es_document_verification (timestamp_last_updated);
+-- MySQL creates indexes on foreign keys automatically
+CREATE INDEX onboarding_verif_activation ON es_document_verification (activation_id);
+CREATE INDEX onboarding_verif_status ON es_document_verification (status);
+CREATE INDEX onboarding_verif_timestamp_1 ON es_document_verification (timestamp_created);
+CREATE INDEX onboarding_verif_timestamp_2 ON es_document_verification (timestamp_last_updated);
 
 CREATE TABLE es_document_data (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     activation_id VARCHAR(36) NOT NULL,
     identity_verification_id VARCHAR(36) NOT NULL,
     filename VARCHAR(256) NOT NULL,
-    data BYTEA NOT NULL,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data BLOB NOT NULL,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
-);
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE INDEX document_data_activation ON es_document_data (activation_id);
 CREATE INDEX document_data_timestamp ON es_document_data (timestamp_created);
 
 CREATE TABLE es_document_result (
-    id BIGINT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     document_verification_id VARCHAR(36) NOT NULL,
     phase VARCHAR(32) NOT NULL,
     reject_reason TEXT,
@@ -156,18 +136,17 @@ CREATE TABLE es_document_result (
     error_detail TEXT,
     error_origin VARCHAR(256),
     extracted_data TEXT,
-    timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_verification_id) REFERENCES es_document_verification (id)
-);
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- PostgreSQL does not create indexes on foreign keys automatically
-CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
+-- MySQL creates indexes on foreign keys automatically
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
 CREATE TABLE IF NOT EXISTS shedlock (
     name VARCHAR(64) NOT NULL,
-    lock_until TIMESTAMP NOT NULL,
-    locked_at TIMESTAMP NOT NULL,
+    lock_until TIMESTAMP(3) NOT NULL,
+    locked_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     locked_by VARCHAR(255) NOT NULL,
     PRIMARY KEY (name)
 );
