@@ -33,13 +33,13 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class InitialStateTest extends AbstractStateMachineTest {
+class InitialStateTest extends AbstractStateMachineTest {
 
     @Autowired
     private StateMachineService stateMachineService;
 
     @Test
-    public void testInitialState() throws Exception {
+    void testInitialState() throws Exception {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.prepareStateMachine("processId", OnboardingState.INITIAL, null);
 

@@ -44,7 +44,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class InitialTransitionTest extends AbstractStateMachineTest {
+class InitialTransitionTest extends AbstractStateMachineTest {
 
     @Autowired
     private StateMachineService stateMachineService;
@@ -56,7 +56,7 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
     private IdentityVerificationCreateService identityVerificationCreateService;
 
     @Test
-    public void testInitialTransition() throws Exception {
+    void testInitialTransition() throws Exception {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.prepareStateMachine(PROCESS_ID, OnboardingState.INITIAL, null);
 

@@ -40,13 +40,13 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
+class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationService identityVerificationService;
 
     @Test
-    public void testDocumentUploadInProgress() throws Exception {
+    void testDocumentUploadInProgress() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
