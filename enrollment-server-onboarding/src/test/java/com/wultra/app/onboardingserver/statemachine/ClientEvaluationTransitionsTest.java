@@ -95,9 +95,6 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
-
-        assertEquals(IdentityVerificationPhase.PRESENCE_CHECK, idVerification.getPhase());
-        assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, idVerification.getStatus());
     }
 
     @Test

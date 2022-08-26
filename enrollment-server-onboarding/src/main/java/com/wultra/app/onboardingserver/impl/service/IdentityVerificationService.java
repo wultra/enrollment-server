@@ -146,6 +146,16 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Save identity verification.
+     *
+     * @param identityVerification identity verification
+     */
+    @Transactional
+    public void save(final IdentityVerificationEntity identityVerification) {
+        identityVerificationRepository.save(identityVerification);
+    }
+
+    /**
      * Initialize identity verification.
      * @param ownerId Owner identification.
      * @param processId Process identifier.
@@ -250,10 +260,6 @@ public class IdentityVerificationService {
                 .collect(Collectors.toList());
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
-
-        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-        identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         docVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
@@ -466,27 +472,6 @@ public class IdentityVerificationService {
      */
     public Image getPhotoById(String photoId) throws DocumentVerificationException {
         return documentVerificationProvider.getPhoto(photoId);
-    }
-
-    /**
-     * Check documents used for verification on their status
-     * <p>
-     *     When all of the documents are {@link DocumentStatus#VERIFICATION_PENDING} the identity verification is set
-     *     also to {@link IdentityVerificationStatus#VERIFICATION_PENDING}
-     * </p>
-     * @param idVerification Identity verification entity.
-     * @param ownerId Owner identification
-     */
-    @Transactional
-    public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        if (isIdentityDocumentsForVerification(idVerification)) {
-            logger.info("All documents are pending verification, changing status of {} to {}",
-                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
-            );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        }
     }
 
     /**

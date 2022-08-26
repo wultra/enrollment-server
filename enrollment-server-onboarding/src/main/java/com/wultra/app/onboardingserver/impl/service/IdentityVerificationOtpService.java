@@ -119,8 +119,6 @@ public class IdentityVerificationOtpService {
      */
     @Transactional
     public void sendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-        identityVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 

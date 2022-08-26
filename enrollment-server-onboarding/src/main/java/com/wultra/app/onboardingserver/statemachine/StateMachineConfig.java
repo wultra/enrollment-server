@@ -20,7 +20,6 @@ import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.Clie
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
-import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationCheckIdentityDocumentsGuard;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationDocumentStartAction;
@@ -77,8 +76,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckInitAction presenceCheckInitAction;
 
-    private final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction;
-
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
 
     private final VerificationCheckIdentityDocumentsGuard verificationCheckIdentityDocumentsGuard;
@@ -112,7 +109,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final OtpVerificationResendAction otpVerificationResendAction,
             final OtpVerificationSendAction otpVerificationSendAction,
             final PresenceCheckInitAction presenceCheckInitAction,
-            final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction,
             final PresenceCheckVerificationAction presenceCheckVerificationAction,
             final VerificationCheckIdentityDocumentsGuard verificationCheckIdentityDocumentsGuard,
             final VerificationDocumentStartAction verificationDocumentStartAction,
@@ -132,7 +128,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.otpVerificationSendAction = otpVerificationSendAction;
 
         this.presenceCheckInitAction = presenceCheckInitAction;
-        this.presenceCheckNotInitializedAction = presenceCheckNotInitializedAction;
         this.presenceCheckVerificationAction = presenceCheckVerificationAction;
 
         this.verificationCheckIdentityDocumentsGuard = verificationCheckIdentityDocumentsGuard;
@@ -292,7 +287,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
                 .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
     }
