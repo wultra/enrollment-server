@@ -16,38 +16,44 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
- * Action to check identity documents for verification
+ * Guard to check identity documents for verification.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
-public class VerificationCheckIdentityDocumentsAction implements Action<OnboardingState, OnboardingEvent> {
+@Slf4j
+public class VerificationCheckIdentityDocumentsGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public VerificationCheckIdentityDocumentsAction(IdentityVerificationService identityVerificationService) {
+    public VerificationCheckIdentityDocumentsGuard(IdentityVerificationService identityVerificationService) {
         this.identityVerificationService = identityVerificationService;
     }
 
-    @Override
-    public void execute(StateContext <OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        identityVerificationService.checkIdentityDocumentsForVerification(ownerId, identityVerification);
-    }
+    public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        boolean result = identityVerificationService.isIdentityDocumentsForVerification(identityVerification);
 
+        if (result) {
+            logger.info("All documents of Identity Verification ID: {} are in status VERIFICATION_PENDING", identityVerification.getId());
+        } else {
+            logger.info("Not all documents of Identity Verification ID: {} are in status VERIFICATION_PENDING", identityVerification.getId());
+        }
+
+        return result;
+    }
 }

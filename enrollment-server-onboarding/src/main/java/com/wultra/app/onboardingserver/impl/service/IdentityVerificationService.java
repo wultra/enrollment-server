@@ -479,14 +479,7 @@ public class IdentityVerificationService {
      */
     @Transactional
     public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllUsedForVerification(idVerification);
-
-        if (docVerifications.stream()
-                .allMatch(docVerification ->
-                        DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
-                )
-        ) {
+        if (isIdentityDocumentsForVerification(idVerification)) {
             logger.info("All documents are pending verification, changing status of {} to {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
             );
@@ -494,6 +487,18 @@ public class IdentityVerificationService {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         }
+    }
+
+    /**
+     * Returns true if all documents of the given identity verification are {@link DocumentStatus#VERIFICATION_PENDING}.
+     *
+     * @param idVerification Identity verification entity.
+     * @return true if all documents are in VERIFICATION_PENDING status
+     */
+    public boolean isIdentityDocumentsForVerification(final IdentityVerificationEntity idVerification) {
+        return documentVerificationRepository.findAllUsedForVerification(idVerification).stream()
+                .map(DocumentVerificationEntity::getStatus)
+                .allMatch(it -> DocumentStatus.VERIFICATION_PENDING == it);
     }
 
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {

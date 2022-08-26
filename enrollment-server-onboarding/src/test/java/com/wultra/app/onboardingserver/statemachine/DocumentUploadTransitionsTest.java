@@ -32,8 +32,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -66,15 +65,12 @@ public class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testDocumentVerificationPending() throws Exception {
+    void testDocumentVerificationPending() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        doAnswer(args -> {
-            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-            return null;
-        }).when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
+        when(identityVerificationService.isIdentityDocumentsForVerification(idVerification)).thenReturn(true);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

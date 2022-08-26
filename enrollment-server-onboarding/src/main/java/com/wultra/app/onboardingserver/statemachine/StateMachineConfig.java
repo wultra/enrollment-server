@@ -22,7 +22,7 @@ import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSe
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationCheckIdentityDocumentsAction;
+import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationCheckIdentityDocumentsGuard;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationDocumentStartAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
@@ -81,7 +81,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
 
-    private final VerificationCheckIdentityDocumentsAction verificationCheckIdentityDocumentsAction;
+    private final VerificationCheckIdentityDocumentsGuard verificationCheckIdentityDocumentsGuard;
 
     private final VerificationDocumentStartAction verificationDocumentStartAction;
 
@@ -114,7 +114,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final PresenceCheckInitAction presenceCheckInitAction,
             final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction,
             final PresenceCheckVerificationAction presenceCheckVerificationAction,
-            final VerificationCheckIdentityDocumentsAction verificationCheckIdentityDocumentsAction,
+            final VerificationCheckIdentityDocumentsGuard verificationCheckIdentityDocumentsGuard,
             final VerificationDocumentStartAction verificationDocumentStartAction,
             final VerificationInitAction verificationInitAction,
             final VerificationProcessResultAction verificationProcessResultAction,
@@ -135,7 +135,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.presenceCheckNotInitializedAction = presenceCheckNotInitializedAction;
         this.presenceCheckVerificationAction = presenceCheckVerificationAction;
 
-        this.verificationCheckIdentityDocumentsAction = verificationCheckIdentityDocumentsAction;
+        this.verificationCheckIdentityDocumentsGuard = verificationCheckIdentityDocumentsGuard;
         this.verificationDocumentStartAction = verificationDocumentStartAction;
         this.verificationInitAction = verificationInitAction;
         this.verificationProcessResultAction = verificationProcessResultAction;
@@ -232,7 +232,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .action(verificationCheckIdentityDocumentsAction)
+                .guard(verificationCheckIdentityDocumentsGuard)
                 .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
 
                 .and()
