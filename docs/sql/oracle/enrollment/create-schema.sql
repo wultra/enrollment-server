@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,26 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
 
-/**
- * Exception thrown in case of an error during communication with remote system.
- *
- * @author Roman Strobl, roman.strobl@wultra.com
- */
-public class RemoteCommunicationException extends Exception {
+CREATE SEQUENCE ES_OPERATION_TEMPLATE_SEQ MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 1 CACHE 20;
 
-    private static final long serialVersionUID = -6809966084351557214L;
+CREATE TABLE ES_OPERATION_TEMPLATE (
+    ID NUMBER(19) NOT NULL PRIMARY KEY,
+    PLACEHOLDER VARCHAR2(255 CHAR) NOT NULL,
+    LANGUAGE VARCHAR2(8 CHAR) NOT NULL,
+    TITLE VARCHAR2(255 CHAR) NOT NULL,
+    MESSAGE BLOB NOT NULL,
+    ATTRIBUTES BLOB
+);
 
-    public RemoteCommunicationException() {
-    }
-
-    public RemoteCommunicationException(String message) {
-        super(message);
-    }
-
-    public RemoteCommunicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-}
+CREATE UNIQUE INDEX ES_OPERATION_TEMPLATE_PLACEHOLDER ON ES_OPERATION_TEMPLATE(PLACEHOLDER, LANGUAGE);

@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,26 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
 
-/**
- * Exception thrown in case of an error during communication with remote system.
- *
- * @author Roman Strobl, roman.strobl@wultra.com
- */
-public class RemoteCommunicationException extends Exception {
+--
+--  Create sequences. Maximum value for PostgreSQL is 9223372036854775807.
+--- See: https://www.postgresql.org/docs/9.6/sql-createsequence.html
+--
+CREATE SEQUENCE "es_operation_template_seq" MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT BY 1 START WITH 1 CACHE 20;
 
-    private static final long serialVersionUID = -6809966084351557214L;
-
-    public RemoteCommunicationException() {
-    }
-
-    public RemoteCommunicationException(String message) {
-        super(message);
-    }
-
-    public RemoteCommunicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-}
+CREATE TABLE es_operation_template (
+    id BIGINT NOT NULL PRIMARY KEY,
+    placeholder VARCHAR(255) NOT NULL,
+    language VARCHAR(8) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    attributes TEXT
+);

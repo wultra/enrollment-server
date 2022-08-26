@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/user/lookup",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$.identification[?(@.shouldFail == true)]"
+      }
+    ]
+  },
+  "response": {
+    "status": 404
+  }
+}

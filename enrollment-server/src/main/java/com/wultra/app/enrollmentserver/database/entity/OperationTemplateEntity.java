@@ -65,8 +65,7 @@ public class OperationTemplateEntity implements Serializable {
         if (this == o) return true;
         if (!(o instanceof OperationTemplateEntity)) return false;
         OperationTemplateEntity that = (OperationTemplateEntity) o;
-        return id.equals(that.id)
-                && Objects.equals(placeholder, that.placeholder)
+        return Objects.equals(placeholder, that.placeholder)
                 && Objects.equals(language, that.language)
                 && Objects.equals(title, that.title)
                 && Objects.equals(message, that.message)
@@ -75,6 +74,6 @@ public class OperationTemplateEntity implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, placeholder, language, title, message, attributes);
+        return Objects.hash(placeholder, language, title, message, attributes);
     }
 }
