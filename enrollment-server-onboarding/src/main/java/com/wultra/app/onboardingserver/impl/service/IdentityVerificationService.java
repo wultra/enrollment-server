@@ -293,11 +293,9 @@ public class IdentityVerificationService {
                     .add(docVerification);
         }
 
-        for (String verificationId : verificationsById.keySet()) {
-            DocumentsVerificationResult docVerificationResult =
-                    documentVerificationProvider.getVerificationResult(ownerId, verificationId);
-            List<DocumentVerificationEntity> docVerifications = verificationsById.get(verificationId);
-            verificationProcessingService.processVerificationResult(ownerId, docVerifications, docVerificationResult);
+        for (Map.Entry<String, List<DocumentVerificationEntity>> entry : verificationsById.entrySet()) {
+            DocumentsVerificationResult docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, entry.getKey());
+            verificationProcessingService.processVerificationResult(ownerId, entry.getValue(), docVerificationResult);
         }
 
         if (allDocVerifications.stream()
