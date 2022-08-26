@@ -420,12 +420,6 @@ public class IdentityVerificationService {
             }
         }
 
-        // Check statuses of all documents used for the verification, update identity verification status accordingly
-        if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            checkIdentityDocumentsForVerification(ownerId, idVerification);
-        }
-
         List<DocumentMetadataResponseDto> docsMetadata = createDocsMetadata(entities);
         response.setStatus(idVerification.getStatus());
         response.setDocuments(docsMetadata);
