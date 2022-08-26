@@ -109,9 +109,8 @@ public class IdentityVerificationLimitService {
             final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
             onboardingProcess.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            final Date now = new Date();
-            onboardingProcess.setTimestampLastUpdated(now);
-            onboardingProcess.setTimestampFailed(now);
+            onboardingProcess.setTimestampLastUpdated(ownerId.getTimestamp());
+            onboardingProcess.setTimestampFailed(ownerId.getTimestamp());
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
@@ -137,9 +136,8 @@ public class IdentityVerificationLimitService {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            final Date now = new Date();
-            identityVerification.setTimestampLastUpdated(now);
-            identityVerification.setTimestampFailed(now);
+            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
             identityVerificationResetService.resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);

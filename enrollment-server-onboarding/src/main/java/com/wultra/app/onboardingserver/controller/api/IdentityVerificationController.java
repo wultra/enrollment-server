@@ -451,7 +451,7 @@ public class IdentityVerificationController {
         onboardingService.verifyProcessId(ownerId, processId);
 
         final String otpCode = request.getRequestObject().getOtpCode();
-        return new ObjectResponse<>(identityVerificationOtpService.verifyOtpCode(processId, otpCode));
+        return new ObjectResponse<>(identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode));
     }
 
     /**

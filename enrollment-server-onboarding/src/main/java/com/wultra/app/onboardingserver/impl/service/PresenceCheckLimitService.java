@@ -106,20 +106,18 @@ public class PresenceCheckLimitService {
                 throw new IdentityVerificationException("Onboarding process not found");
             }
 
-            final Date now = new Date();
-
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            identityVerification.setTimestampLastUpdated(now);
-            identityVerification.setTimestampFailed(now);
+            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
 
             final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             onboardingProcess.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            onboardingProcess.setTimestampLastUpdated(now);
-            onboardingProcess.setTimestampFailed(now);
+            onboardingProcess.setTimestampLastUpdated(ownerId.getTimestamp());
+            onboardingProcess.setTimestampFailed(ownerId.getTimestamp());
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 

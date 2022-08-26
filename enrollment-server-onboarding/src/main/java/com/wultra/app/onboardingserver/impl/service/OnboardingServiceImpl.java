@@ -319,15 +319,17 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
     @SchedulerLock(name = "terminateInactiveProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void terminateInactiveProcesses() {
+        final Date now = new Date();
+
         // Terminate processes with activations in progress
         final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
         final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, now, OnboardingStatus.ACTIVATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
 
         // Terminate processes with verifications in progress
         final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
         final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
+        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, now, OnboardingStatus.VERIFICATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
 
         // Terminate OTP codes for all processes
         final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
@@ -337,7 +339,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         // Terminate expired processes
         final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
         final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
+        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
     }
 
     /**

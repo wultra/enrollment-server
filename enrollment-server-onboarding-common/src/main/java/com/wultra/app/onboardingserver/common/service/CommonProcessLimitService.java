@@ -91,7 +91,6 @@ public class CommonProcessLimitService {
             return entity;
         }
         entity.setStatus(OnboardingStatus.FAILED);
-        entity.setTimestampLastUpdated(new Date());
         entity.setErrorDetail(errorDetail);
         entity.setErrorOrigin(errorOrigin);
         final Date now = new Date();

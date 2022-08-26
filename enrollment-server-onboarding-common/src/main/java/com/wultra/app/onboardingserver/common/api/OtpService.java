@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.common.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 
@@ -34,10 +35,11 @@ public interface OtpService {
      * Verify an OTP code.
      *
      * @param processId Process identifier.
+     * @param ownerId Owner identification.
      * @param otpCode OTP code sent by the user.
      * @param otpType OTP type.
      * @return Verify OTP code response.
      * @throws OnboardingProcessException Thrown when process or OTP code is not found.
      */
-    OtpVerifyResponse verifyOtpCode(String processId, String otpCode, OtpType otpType) throws OnboardingProcessException;
+    OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode, OtpType otpType) throws OnboardingProcessException;
 }
