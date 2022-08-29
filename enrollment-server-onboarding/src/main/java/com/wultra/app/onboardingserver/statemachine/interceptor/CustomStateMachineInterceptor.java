@@ -110,11 +110,6 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
             return context;
         }
 
-        if (OnboardingState.UNEXPECTED_STATE == targetState) {
-            logger.debug("Transition to unexpected state for {}", identityVerification);
-            return context;
-        }
-
         logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
 
         return context;
@@ -130,13 +125,13 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
         final OwnerId ownerId = message.getHeaders().get(EventHeaderName.OWNER_ID, OwnerId.class);
         Assert.notNull(ownerId, "ownerId must not be null");
-        final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
+        final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId.getActivationId()).orElseThrow(() ->
                 new IllegalStateException("IdentityVerification does not exist for " + ownerId));
         final OnboardingState onboardingState = state.getId();
 
         final IdentityVerificationPhase phase = onboardingState.getPhase();
         final IdentityVerificationStatus status = onboardingState.getStatus();
-        // TODO (racansky, 2022-08-26) e.g. UNEXPECTED_STATE has no phase and no status
+        // TODO (racansky, 2022-08-26) e.g. some states have no phase and no status
         if (phase == null || status == null) {
             logger.debug("{} does not have phase or status, IdentityVerification ID: {} is not going to change",
                     identityVerification.getId(), onboardingState);
