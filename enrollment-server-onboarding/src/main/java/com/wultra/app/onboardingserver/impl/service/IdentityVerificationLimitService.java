@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,6 +109,8 @@ public class IdentityVerificationLimitService {
             final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
             onboardingProcess.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+            onboardingProcess.setTimestampLastUpdated(ownerId.getTimestamp());
+            onboardingProcess.setTimestampFailed(ownerId.getTimestamp());
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
 
@@ -133,6 +136,8 @@ public class IdentityVerificationLimitService {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
             identityVerificationResetService.resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);

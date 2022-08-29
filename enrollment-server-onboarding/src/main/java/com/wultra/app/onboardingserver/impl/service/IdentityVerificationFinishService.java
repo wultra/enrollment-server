@@ -72,7 +72,9 @@ public class IdentityVerificationFinishService {
         // Terminate onboarding process
         final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         processEntity.setStatus(OnboardingStatus.FINISHED);
-        processEntity.setTimestampFinished(new Date());
+        final Date now = ownerId.getTimestamp();
+        processEntity.setTimestampLastUpdated(now);
+        processEntity.setTimestampFinished(now);
         onboardingService.updateProcess(processEntity);
     }
 

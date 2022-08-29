@@ -94,6 +94,9 @@ public class OnboardingProcessEntity implements Serializable {
     @Column(name = "timestamp_finished")
     private Date timestampFinished;
 
+    @Column(name = "timestamp_failed")
+    private Date timestampFailed;
+
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated")
     @ToString.Exclude

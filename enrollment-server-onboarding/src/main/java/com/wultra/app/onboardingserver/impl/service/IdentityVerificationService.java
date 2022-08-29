@@ -347,10 +347,13 @@ public class IdentityVerificationService {
             IdentityVerificationPhase phase,
             IdentityVerificationEntity idVerification,
             List<DocumentVerificationEntity> docVerifications) {
+        final Date now = new Date();
         if (docVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
             idVerification.setPhase(phase);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            idVerification.setTimestampLastUpdated(now);
+            idVerification.setTimestampFinished(now);
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
@@ -359,6 +362,8 @@ public class IdentityVerificationService {
                         idVerification.setPhase(phase);
                         idVerification.setStatus(IdentityVerificationStatus.FAILED);
                         idVerification.setErrorDetail(failed.getErrorDetail());
+                        idVerification.setTimestampLastUpdated(now);
+                        idVerification.setTimestampFailed(now);
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
 
@@ -370,6 +375,8 @@ public class IdentityVerificationService {
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                        idVerification.setTimestampLastUpdated(now);
+                        idVerification.setTimestampFinished(now);
                     });
         }
     }

@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
@@ -79,6 +80,7 @@ public class DocumentStatusService {
                 getVerificationExpirationTime(),
                 new Date(),
                 ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED,
+                ErrorOrigin.PROCESS_LIMIT_CHECK,
                 DocumentStatus.ALL_NOT_FINISHED
         );
         if (count > 0) {

@@ -33,7 +33,8 @@ CREATE TABLE es_onboarding_process (
     error_score INTEGER NOT NULL DEFAULT 0,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP,
-    timestamp_finished TIMESTAMP
+    timestamp_finished TIMESTAMP,
+    timestamp_failed TIMESTAMP
 );
 
 CREATE INDEX onboarding_process_status ON es_onboarding_process (status);
@@ -54,6 +55,7 @@ CREATE TABLE es_onboarding_otp (
     timestamp_expiration TIMESTAMP NOT NULL,
     timestamp_last_updated TIMESTAMP,
     timestamp_verified TIMESTAMP,
+    timestamp_failed TIMESTAMP,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 );
 
@@ -77,6 +79,8 @@ CREATE TABLE es_identity_verification (
     session_info TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP,
+    timestamp_finished TIMESTAMP,
+    timestamp_failed TIMESTAMP,
     FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 );
 

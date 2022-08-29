@@ -128,11 +128,13 @@ public class OtpServiceImpl extends CommonOtpService {
         String processId = process.getId();
         Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
         // Fail current OTP, if it is present
+        final Date now = new Date();
         if (otpOptional.isPresent()) {
             OnboardingOtpEntity otp = otpOptional.get();
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
-                otp.setTimestampLastUpdated(new Date());
+                otp.setTimestampLastUpdated(now);
+                otp.setTimestampFailed(now);
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
@@ -145,7 +147,7 @@ public class OtpServiceImpl extends CommonOtpService {
      * @param createdDateOtp OTP created date.
      */
     public void terminateExpiredOtps(Date createdDateOtp) {
-        onboardingOtpRepository.terminateExpiredOtps(createdDateOtp);
+        onboardingOtpRepository.terminateExpiredOtps(createdDateOtp, new Date());
     }
 
     /**

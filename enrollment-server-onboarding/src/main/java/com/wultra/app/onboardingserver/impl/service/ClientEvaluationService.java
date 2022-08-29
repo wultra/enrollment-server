@@ -38,6 +38,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -128,6 +129,9 @@ public class ClientEvaluationService {
 
     private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification) {
         return response -> {
+            final Date now = new Date();
+            identityVerification.setTimestampLastUpdated(now);
+            identityVerification.setTimestampFinished(now);
             if (response.isSuccessful()) {
                 logger.info("Client evaluation successful for {}", identityVerification);
                 identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
@@ -148,6 +152,9 @@ public class ClientEvaluationService {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+            final Date now = new Date();
+            identityVerification.setTimestampLastUpdated(now);
+            identityVerification.setTimestampFailed(now);
             saveInTransaction(identityVerification);
         };
     }

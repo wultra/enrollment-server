@@ -18,6 +18,7 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import org.springframework.data.jpa.repository.Modifying;
@@ -55,20 +56,24 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET " +
             "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
-            "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.errorDetail = :errorDetail " +
+            "p.timestampLastUpdated = :timestampExpired, " +
+            "p.timestampFailed = :timestampExpired, " +
+            "p.errorDetail = :errorDetail, " +
+            "p.errorOrigin = :errorOrigin " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, OnboardingStatus status, String errorDetail);
+    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, Date timestampExpired, OnboardingStatus status, String errorDetail, ErrorOrigin errorOrigin);
 
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET " +
             "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
-            "p.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "p.errorDetail = :errorDetail " +
+            "p.timestampLastUpdated = :timestampExpired, " +
+            "p.timestampFailed = :timestampExpired, " +
+            "p.errorDetail = :errorDetail, " +
+            "p.errorOrigin = :errorOrigin " +
             "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED  " +
             "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED  " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcesses(Date dateCreatedBefore, String errorDetail);
+    void terminateExpiredProcesses(Date dateCreatedBefore, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 
 }

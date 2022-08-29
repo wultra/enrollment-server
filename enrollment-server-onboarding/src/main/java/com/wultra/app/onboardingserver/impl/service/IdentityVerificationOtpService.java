@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -131,16 +132,17 @@ public class IdentityVerificationOtpService {
      * Because of SCA compliance, users MUST NOT be able to distinguish what went wrong.
      *
      * @param processId Onboarding process identification.
+     * @param ownerId Owner identification.
      * @param otpCode OTP code.
      * @return OTP verification response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @Transactional
-    public OtpVerifyResponse verifyOtpCode(String processId, String otpCode) throws OnboardingProcessException {
+    public OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
             new OnboardingProcessException(String.format("Onboarding Process ID: %s not found.", processId)));
 
-        final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), otpCode, OtpType.USER_VERIFICATION);
+        final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), ownerId, otpCode, OtpType.USER_VERIFICATION);
         logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
         if (!response.isVerified() && identityVerificationConfig.isPresenceCheckEnabled()) {
             logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
@@ -227,7 +229,9 @@ public class IdentityVerificationOtpService {
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
         otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
-        otp.setTimestampLastUpdated(new Date());
+        final Date now = new Date();
+        otp.setTimestampLastUpdated(now);
+        otp.setTimestampFailed(now);
         onboardingOtpRepository.save(otp);
     }
 

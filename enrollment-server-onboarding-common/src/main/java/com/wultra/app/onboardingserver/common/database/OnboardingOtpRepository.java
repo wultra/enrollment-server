@@ -44,10 +44,12 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
     @Query("UPDATE OnboardingOtpEntity o SET " +
             "o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
             "o.timestampLastUpdated = CURRENT_TIMESTAMP, " +
-            "o.errorDetail = '" + OnboardingOtpEntity.ERROR_EXPIRED + "' " +
+            "o.errorDetail = '" + OnboardingOtpEntity.ERROR_EXPIRED + "', " +
+            "o.errorOrigin = 'OTP_VERIFICATION', " +
+            "o.timestampFailed = :timestampExpired " +
             "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
             "AND o.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredOtps(Date dateCreatedBefore);
+    void terminateExpiredOtps(Date dateCreatedBefore, Date timestampExpired);
 
     @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     int getFailedAttemptsByProcess(String processId, OtpType type);

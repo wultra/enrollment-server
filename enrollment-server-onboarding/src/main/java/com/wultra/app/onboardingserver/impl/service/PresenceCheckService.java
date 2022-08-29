@@ -264,6 +264,7 @@ public class PresenceCheckService {
             case ACCEPTED:
                 idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check accepted, {}", ownerId);
                 break;
             case FAILED:
@@ -271,6 +272,7 @@ public class PresenceCheckService {
                 idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                idVerification.setTimestampFailed(ownerId.getTimestamp());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
                 break;
             case IN_PROGRESS:
@@ -281,6 +283,7 @@ public class PresenceCheckService {
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:

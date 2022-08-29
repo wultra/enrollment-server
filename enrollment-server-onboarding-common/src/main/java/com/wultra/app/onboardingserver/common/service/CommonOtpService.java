@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.api.OtpService;
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -70,7 +71,7 @@ public class CommonOtpService implements OtpService {
     }
 
     @Override
-    public OtpVerifyResponse verifyOtpCode(String processId, String otpCode, OtpType otpType) throws OnboardingProcessException {
+    public OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode, OtpType otpType) throws OnboardingProcessException {
         Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
         if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found: {}", processId);
@@ -86,7 +87,7 @@ public class CommonOtpService implements OtpService {
         OnboardingOtpEntity otp = otpOptional.get();
 
         // Verify OTP code
-        Date now = new Date();
+        final Date now = ownerId.getTimestamp();
         boolean expired = false;
         boolean verified = false;
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
@@ -103,6 +104,7 @@ public class CommonOtpService implements OtpService {
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_EXPIRED);
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             otp.setTimestampLastUpdated(now);
+            otp.setTimestampFailed(now);
             onboardingOtpRepository.save(otp);
         } else if (otp.getOtpCode().equals(otpCode)) {
             verified = true;
@@ -111,7 +113,7 @@ public class CommonOtpService implements OtpService {
             otp.setTimestampLastUpdated(now);
             onboardingOtpRepository.save(otp);
         } else {
-            handleFailedOtpVerification(process, otp, otpType);
+            handleFailedOtpVerification(process, ownerId, otp, otpType);
         }
 
         OtpVerifyResponse response = new OtpVerifyResponse();
@@ -126,21 +128,22 @@ public class CommonOtpService implements OtpService {
     /**
      * Handle failed OTP verification.
      * @param process Onboarding process entity.
+     * @param ownerId Owner identification.
      * @param otp OTP entity.
      * @param otpType OTP type.
      */
-    private void handleFailedOtpVerification(OnboardingProcessEntity process, OnboardingOtpEntity otp, OtpType otpType) {
-        final Date now = new Date();
+    private void handleFailedOtpVerification(OnboardingProcessEntity process, OwnerId ownerId, OnboardingOtpEntity otp, OtpType otpType) {
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(process.getId(), otpType);
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
-        otp.setTimestampLastUpdated(now);
+        otp.setTimestampLastUpdated(ownerId.getTimestamp());
         otp = onboardingOtpRepository.save(otp);
         failedAttempts++;
         if (failedAttempts >= maxFailedAttempts) {
             otp.setStatus(OtpStatus.FAILED);
             otp.setErrorDetail(OnboardingOtpEntity.ERROR_MAX_FAILED_ATTEMPTS);
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
+            otp.setTimestampFailed(ownerId.getTimestamp());
             onboardingOtpRepository.save(otp);
 
             // Onboarding process is failed, update it
@@ -160,6 +163,8 @@ public class CommonOtpService implements OtpService {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setErrorDetail(process.getErrorDetail());
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
+                otp.setTimestampLastUpdated(ownerId.getTimestamp());
+                otp.setTimestampFailed(ownerId.getTimestamp());
                 onboardingOtpRepository.save(otp);
             }
         }

@@ -94,6 +94,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "timestamp_verified")
     private Date timestampVerified;
 
+    @Column(name = "timestamp_failed")
+    private Date timestampFailed;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
