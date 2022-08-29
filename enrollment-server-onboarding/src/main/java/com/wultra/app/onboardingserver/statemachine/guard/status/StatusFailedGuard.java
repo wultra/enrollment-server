@@ -16,27 +16,28 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.status;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
- * Guard to check {@link IdentityVerificationStatus#FAILED} status
+ * Guard to check failed flag.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
 public class StatusFailedGuard implements Guard<OnboardingState, OnboardingEvent> {
 
+    public static final String KEY_FAILED = "failed";
+
     @Override
     public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        return IdentityVerificationStatus.FAILED == identityVerification.getStatus();
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
+        return Boolean.TRUE.equals(variables.get(KEY_FAILED));
     }
-
 }
