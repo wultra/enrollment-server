@@ -17,32 +17,27 @@
  *
  */
 
-package com.wultra.app.onboardingserver.impl.service;
+package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationLimitException;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProcessLimitException;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,28 +53,28 @@ public class IdentityVerificationLimitService {
 
     private final IdentityVerificationRepository identityVerificationRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
-    private final IdentityVerificationConfig identityVerificationConfig;
+    private final CommonOnboardingConfig config;
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
-    private final IdentityVerificationResetService identityVerificationResetService;
+    private final OnboardingProcessLimitService processLimitService;
 
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
      * @param documentVerificationRepository Document verification repository.
-     * @param identityVerificationConfig Identity verification config.
-     * @param onboardingProcessRepository Onboarding process service.
+     * @param config Configuration.
+     * @param onboardingProcessRepository Onboarding process repository.
      * @param activationFlagService Activation flag service.
-     * @param identityVerificationResetService Identity verification reset service.
+     * @param processLimitService Onboarding process limit service.
      */
     @Autowired
-    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, IdentityVerificationConfig identityVerificationConfig, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, @Lazy IdentityVerificationResetService identityVerificationResetService) {
+    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, OnboardingProcessLimitService processLimitService) {
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
-        this.identityVerificationConfig = identityVerificationConfig;
+        this.config = config;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
-        this.identityVerificationResetService = identityVerificationResetService;
+        this.processLimitService = processLimitService;
     }
 
     /**
@@ -92,7 +87,7 @@ public class IdentityVerificationLimitService {
     public void checkIdentityVerificationLimit(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
         final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-        if (identityVerifications.size() >= identityVerificationConfig.getVerificationMaxFailedAttempts()) {
+        if (identityVerifications.size() >= config.getVerificationMaxFailedAttempts()) {
             final Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
             if (onboardingProcessOptional.isEmpty()) {
                 logger.warn("Onboarding process not found, {}.", ownerId);
@@ -132,17 +127,64 @@ public class IdentityVerificationLimitService {
      */
     public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
         final List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
-        if (documentVerificationsFailed.size() > identityVerificationConfig.getDocumentUploadMaxFailedAttempts()) {
+        if (documentVerificationsFailed.size() > config.getDocumentUploadMaxFailedAttempts()) {
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
-            identityVerificationResetService.resetIdentityVerification(ownerId);
+            resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
             throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");
         }
+    }
+
+    /**
+     * Reset identity verification by setting activation flag to VERIFICATION_PENDING.
+     *
+     * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown when identity verification reset fails.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     */
+    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
+        if (processOptional.isEmpty()) {
+            logger.warn("Onboarding process not found, activation ID: {}", ownerId.getActivationId());
+            throw new OnboardingProcessException();
+        }
+        OnboardingProcessEntity process = processOptional.get();
+
+        // Increase process error score
+        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_IDENTITY_VERIFICATION_RESET);
+
+        // Check process error limits
+        process = processLimitService.checkOnboardingProcessErrorLimits(process);
+        if (process.getStatus() == OnboardingStatus.FAILED && OnboardingProcessEntity.ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED.equals(process.getErrorDetail())) {
+            handleFailedProcess(ownerId);
+        }
+
+        // Check limits on identity verifications (error handling is handled by service)
+        checkIdentityVerificationLimit(ownerId);
+
+        // Update activation flags for reset of identity verification
+        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+    }
+
+    /**
+     * Handle a process which just failed due to error score limit.
+     * @param ownerId Owner identification.
+     * @throws OnboardingProcessLimitException Exception thrown due to failed process.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    private void handleFailedProcess(OwnerId ownerId) throws OnboardingProcessLimitException, RemoteCommunicationException {
+        // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
+        activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
+
+        logger.warn("Max error score reached for onboarding process, {}.", ownerId);
+        throw new OnboardingProcessLimitException("Max error score reached for onboarding process");
     }
 
 }

@@ -26,7 +26,8 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntit
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
-import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
@@ -69,9 +70,10 @@ public class OtpServiceImpl extends CommonOtpService {
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingConfig onboardingConfig,
-            final CommonProcessLimitService processLimitService) {
+            final OnboardingProcessLimitService processLimitService,
+            final IdentityVerificationLimitService verificationLimitService) {
 
-        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService);
+        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService, verificationLimitService);
         this.otpGeneratorService = otpGeneratorService;
         this.onboardingConfig = onboardingConfig;
     }

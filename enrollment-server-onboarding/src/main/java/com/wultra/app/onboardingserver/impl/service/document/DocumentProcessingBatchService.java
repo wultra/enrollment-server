@@ -17,9 +17,9 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.onboardingserver.database.DocumentResultRepository;
-import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import org.slf4j.Logger;

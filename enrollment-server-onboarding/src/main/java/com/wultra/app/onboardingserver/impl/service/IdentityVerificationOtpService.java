@@ -26,10 +26,10 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntit
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -61,7 +61,7 @@ public class IdentityVerificationOtpService {
 
     private OnboardingProvider onboardingProvider;
 
-    private final CommonProcessLimitService processLimitService;
+    private final OnboardingProcessLimitService processLimitService;
 
     private final IdentityVerificationRepository identityVerificationRepository;
 
@@ -81,7 +81,7 @@ public class IdentityVerificationOtpService {
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingOtpRepository onboardingOtpRepository,
             final OtpServiceImpl otpService,
-            final CommonProcessLimitService processLimitService,
+            final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationRepository identityVerificationRepository,
             final IdentityVerificationConfig identityVerificationConfig) {
         this.onboardingProcessRepository = onboardingProcessRepository;

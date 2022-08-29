@@ -36,9 +36,9 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
-public class CommonProcessLimitService {
+public class OnboardingProcessLimitService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommonProcessLimitService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingProcessLimitService.class);
 
     private final CommonOnboardingConfig config;
     private final OnboardingProcessRepository onboardingProcessRepository;
@@ -49,7 +49,7 @@ public class CommonProcessLimitService {
      * @param onboardingProcessRepository Onboarding process repository.
      */
     @Autowired
-    public CommonProcessLimitService(CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository) {
+    public OnboardingProcessLimitService(CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository) {
         this.config = config;
         this.onboardingProcessRepository = onboardingProcessRepository;
     }
@@ -83,11 +83,12 @@ public class CommonProcessLimitService {
      *
      * @param entity Onboarding process entity to update.
      * @param errorDetail Error detail.
+     * @param errorOrigin Error origin.
      * @return Updated onboarding process entity.
      */
     public OnboardingProcessEntity failProcess(OnboardingProcessEntity entity, String errorDetail, ErrorOrigin errorOrigin) {
         if (OnboardingStatus.FAILED == entity.getStatus()) {
-            logger.debug("Not failing already failed onboarding entity ID: {}", entity.getId());
+            logger.debug("Not failing already failed onboarding process entity ID: {}", entity.getId());
             return entity;
         }
         entity.setStatus(OnboardingStatus.FAILED);
