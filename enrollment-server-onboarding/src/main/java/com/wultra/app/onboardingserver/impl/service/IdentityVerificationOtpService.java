@@ -144,12 +144,13 @@ public class IdentityVerificationOtpService {
 
         final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), ownerId, otpCode, OtpType.USER_VERIFICATION);
         logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
-        if (!response.isVerified() && identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
-            final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
-            return moveToPhasePresenceCheck(process, response, idVerification);
+        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
+            return response;
         }
-
+        if (!response.isVerified()) {
+            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
+            return response;
+        }
         return verifyPresenceCheck(process, response);
     }
 
@@ -184,7 +185,7 @@ public class IdentityVerificationOtpService {
 
         if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(errorDetail)
                 || rejectOrigin == RejectOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(rejectReason)) {
-            logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
+            logger.info("SCA failed, identity verification ID: {} of process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);
         } else {
@@ -220,6 +221,7 @@ public class IdentityVerificationOtpService {
         final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
         response.setOnboardingStatus(status);
         response.setVerified(false);
+        response.setRemainingAttempts(0);
         return response;
     }
 
