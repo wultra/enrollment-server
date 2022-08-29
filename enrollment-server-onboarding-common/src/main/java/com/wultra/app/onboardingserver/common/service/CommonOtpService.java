@@ -129,7 +129,11 @@ public class CommonOtpService implements OtpService {
         response.setOnboardingStatus(process.getStatus());
         response.setExpired(expired);
         response.setVerified(verified);
-        response.setRemainingAttempts(maxFailedAttempts - failedAttempts);
+        if (otp.getStatus() == OtpStatus.ACTIVE) {
+            response.setRemainingAttempts(maxFailedAttempts - otp.getFailedAttempts());
+        } else {
+            response.setRemainingAttempts(0);
+        }
         return response;
     }
 
