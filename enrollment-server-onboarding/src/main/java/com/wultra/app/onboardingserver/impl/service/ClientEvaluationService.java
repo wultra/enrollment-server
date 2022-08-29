@@ -19,28 +19,26 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.provider.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * Service for client evaluation features.
@@ -55,54 +53,27 @@ public class ClientEvaluationService {
 
     private final IdentityVerificationConfig config;
 
-    private final IdentityVerificationRepository identityVerificationRepository;
-
-    private final TransactionTemplate transactionTemplate;
+    private final IdentityVerificationService identityVerificationService;
 
     /**
      * All-arg constructor.
      *
      * @param onboardingProvider Onboarding provider.
      * @param config Identity verification config.
-     * @param identityVerificationRepository Identity verification repository.
-     * @param transactionTemplate Transaction template.
+     * @param identityVerificationService Identity verification service.
      */
     @Autowired
     public ClientEvaluationService(
             final OnboardingProvider onboardingProvider,
             final IdentityVerificationConfig config,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final TransactionTemplate transactionTemplate) {
+            final IdentityVerificationService identityVerificationService) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.transactionTemplate = transactionTemplate;
+        this.identityVerificationService = identityVerificationService;
     }
 
-    /**
-     * Process client evaluations.
-     */
-    @Transactional(readOnly = true)
-    public void processClientEvaluations() {
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationRepository.streamAllInProgressClientEvaluations()) {
-            stream.forEach(this::processClientEvaluation);
-        }
-    }
-
-    @Transactional
-    public void initClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
-    }
-
-    private void processClientEvaluation(final IdentityVerificationEntity identityVerification) {
+    public void processClientEvaluation(final IdentityVerificationEntity identityVerification, StateContext<OnboardingState, OnboardingEvent> context) {
         logger.debug("Evaluating client for {}", identityVerification);
-
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(identityVerification.getActivationId());
-        ownerId.setUserId("server-task-client-evaluations");
 
         final EvaluateClientRequest request = EvaluateClientRequest.builder()
                 .processId(UUID.fromString(identityVerification.getProcessId()))
@@ -111,12 +82,37 @@ public class ClientEvaluationService {
                 .verificationId(getVerificationId(identityVerification))
                 .build();
 
-        final Consumer<EvaluateClientResponse> successConsumer = createSuccessConsumer(identityVerification);
-        final Consumer<Throwable> errorConsumer = createErrorConsumer(identityVerification);
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
-        onboardingProvider.evaluateClient(request)
-                .retryWhen(Retry.backoff(maxFailedAttempts, Duration.ofSeconds(2)))
-                .subscribe(successConsumer, errorConsumer);
+        final EvaluateClientResponse response;
+
+        try {
+            // TODO (racansky, 2022-08-29) try to refactor it to reactive non-blocking way, action and even guards
+            response = onboardingProvider.evaluateClient(request)
+                    .retryWhen(Retry.backoff(maxFailedAttempts, Duration.ofSeconds(2))).block();
+            if (response == null) {
+                throw new IllegalStateException(String.format("EvaluateClientResponse for %s is null", request));
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Client evaluation failed for {} - {}", identityVerification, e.getMessage());
+            logger.debug("Client evaluation failed for {}", identityVerification, e);
+            variables.put(StatusFailedGuard.KEY_FAILED, true);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
+            identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+            identityVerificationService.save(identityVerification);
+            return;
+        }
+
+        if (response.isSuccessful()) {
+            logger.info("Client evaluation successful for {}", identityVerification);
+            variables.put(StatusAcceptedGuard.KEY_ACCEPTED, true);
+        } else {
+            logger.info("Client evaluation rejected for {}", identityVerification);
+            variables.put(StatusRejectedGuard.KEY_REJECTED, true);
+            identityVerification.getDocumentVerifications()
+                    .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
+            identityVerificationService.save(identityVerification);
+        }
     }
 
     private static String getVerificationId(final IdentityVerificationEntity identityVerification) {
@@ -124,36 +120,5 @@ public class ClientEvaluationService {
                 .findAny()
                 .map(DocumentVerificationEntity::getVerificationId)
                 .orElseThrow(() -> new IllegalStateException("No document verification for " + identityVerification));
-    }
-
-    private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification) {
-        return response -> {
-            if (response.isSuccessful()) {
-                logger.info("Client evaluation successful for {}", identityVerification);
-                identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
-            } else {
-                logger.info("Client evaluation rejected for {}", identityVerification);
-                identityVerification.setStatus(IdentityVerificationStatus.REJECTED);
-                identityVerification.getDocumentVerifications()
-                        .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
-            }
-            saveInTransaction(identityVerification);
-        };
-    }
-
-    private Consumer<Throwable> createErrorConsumer(final IdentityVerificationEntity identityVerification) {
-        return t -> {
-            logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
-            logger.debug("Client evaluation failed for {}", identityVerification, t);
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
-            identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            saveInTransaction(identityVerification);
-        };
-    }
-
-    private void saveInTransaction(final IdentityVerificationEntity identityVerification) {
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.executeWithoutResult(status -> identityVerificationRepository.save(identityVerification));
     }
 }
