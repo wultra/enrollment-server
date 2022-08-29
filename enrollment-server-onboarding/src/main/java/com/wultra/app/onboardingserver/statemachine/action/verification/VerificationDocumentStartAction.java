@@ -16,8 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
@@ -26,12 +24,15 @@ import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * Action to start the verification process
@@ -54,14 +55,14 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
 
         try {
             identityVerificationService.startVerification(ownerId, identityVerification);
             logger.info("Started document verification process of {}", identityVerification);
+            variables.put("T1", true); // TODO
         } catch (DocumentVerificationException e) {
-            identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            variables.put(StatusFailedGuard.KEY_FAILED, true);
             logger.warn("Verification start failed, {}", ownerId, e);
         }
     }

@@ -83,7 +83,7 @@ public class IdentityVerificationStatusService {
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
         IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId.getActivationId());
 
         final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
         if (idVerificationOptional.isEmpty()) {

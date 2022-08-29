@@ -205,9 +205,6 @@ public class PresenceCheckService {
         }
 
         idVerification.setSessionInfo(sessionInfoJson);
-        idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
         return sessionInfo;
     }
@@ -281,7 +278,7 @@ public class PresenceCheckService {
      * @throws PresenceCheckException When an error during validating the identity verification status occurred.
      */
     private IdentityVerificationEntity fetchIdVerification(OwnerId ownerId) throws PresenceCheckException {
-        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId.getActivationId());
         if (idVerificationOptional.isEmpty()) {
             logger.error("No identity verification entity found to initialize the presence check, {}", ownerId);
             throw new PresenceCheckException("Unable to initialize presence check");

@@ -32,8 +32,9 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -98,10 +99,13 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
+        when(identityVerificationService.findByOptional(idVerification.getActivationId()))
+                .thenReturn(Optional.of(idVerification));
+
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);
             return null;
-        }).when(identityVerificationService).startVerification(eq(OWNER_ID), eq(idVerification));
+        }).when(identityVerificationService).startVerification(OWNER_ID, idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

@@ -133,7 +133,7 @@ public class StateMachineService {
             OwnerId ownerId,
             String processId
     ) throws IdentityVerificationException {
-        IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
+        IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId.getActivationId());
         OnboardingState onboardingState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
 
         return prepareStateMachine(processId, onboardingState, identityVerification);

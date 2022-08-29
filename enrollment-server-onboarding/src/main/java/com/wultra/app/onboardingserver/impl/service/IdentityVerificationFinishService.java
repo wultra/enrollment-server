@@ -23,8 +23,6 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +37,6 @@ import java.util.Date;
  */
 @Service
 public class IdentityVerificationFinishService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationFinishService.class);
 
     private final OnboardingServiceImpl onboardingService;
     private final ActivationFlagService activationFlagService;

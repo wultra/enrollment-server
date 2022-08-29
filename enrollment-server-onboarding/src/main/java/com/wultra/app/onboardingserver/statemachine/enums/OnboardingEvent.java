@@ -31,4 +31,5 @@ public enum OnboardingEvent {
 
     EVENT_NEXT_STATE,
 
+    TO_PREVIOUS_STATE
 }

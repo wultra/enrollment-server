@@ -26,8 +26,6 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
@@ -42,13 +40,19 @@ import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
+import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.util.Streamable;
+import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -78,6 +82,8 @@ public class IdentityVerificationService {
     private final CommonOnboardingService processService;
     private final CommonProcessLimitService processLimitService;
 
+    private final StateMachineService stateMachineService;
+
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
@@ -105,7 +111,12 @@ public class IdentityVerificationService {
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationResetService identityVerificationResetService, IdentityVerificationLimitService identityVerificationLimitService, CommonOnboardingService processService, CommonProcessLimitService processLimitService) {
+            IdentityVerificationResetService identityVerificationResetService,
+            IdentityVerificationLimitService identityVerificationLimitService,
+            CommonOnboardingService processService,
+            CommonProcessLimitService processLimitService,
+            // TODO (racansky, 2022-08-29) redesign to break circular dependency
+            @Lazy StateMachineService stateMachineService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -118,28 +129,30 @@ public class IdentityVerificationService {
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
+        this.stateMachineService = stateMachineService;
     }
 
     /**
      * Finds the current verification identity
-     * @param ownerId Owner identification.
+     * @param activationId Activation identification.
      * @return Optional entity of the verification identity
      */
-    public Optional<IdentityVerificationEntity> findByOptional(OwnerId ownerId) {
-        return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
+    public Optional<IdentityVerificationEntity> findByOptional(final String activationId) {
+        return identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId);
     }
 
     /**
-     * Finds the current verification identity
-     * @param ownerId Owner identification.
+     * Finds the current verification identity.
+     *
+     * @param activationId Activation ID.
      * @return Entity of the verification identity
      * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
      */
-    public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
-        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(ownerId);
+    public IdentityVerificationEntity findBy(String activationId) throws IdentityVerificationNotFoundException {
+        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(activationId);
 
         if (identityVerificationOptional.isEmpty()) {
-            logger.error("No identity verification entity found, {}", ownerId);
+            logger.error("No identity verification entity found, {}", activationId);
             throw new IdentityVerificationNotFoundException("Not existing identity verification");
         }
         return identityVerificationOptional.get();
@@ -185,7 +198,7 @@ public class IdentityVerificationService {
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
+        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId.getActivationId());
 
         if (idVerificationOptional.isEmpty()) {
             logger.error("Identity verification has not been initialized, {}", ownerId);
@@ -209,10 +222,7 @@ public class IdentityVerificationService {
             logger.info("Switching {} from {} to {} due to new documents submit, {}",
                     idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
             );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            identityVerificationRepository.save(idVerification);
+            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.TO_PREVIOUS_STATE);
         } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
             logger.error("The verification status is {} but expected {}, {}",
                     idVerification.getStatus(), IdentityVerificationStatus.IN_PROGRESS, ownerId
@@ -278,94 +288,40 @@ public class IdentityVerificationService {
         }
     }
 
-    /**
-     * Checks verification result and evaluates the final state of the identity verification process
-     *
-     * @param ownerId Owner identification.
-     * @param idVerification Verification identity
-     * @throws DocumentVerificationException Thrown when an error during verification check occurred.
-     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void checkVerificationResult(IdentityVerificationPhase phase, OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws DocumentVerificationException, OnboardingProcessException {
-        List<DocumentVerificationEntity> allDocVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(idVerification,
-                        Collections.singletonList(DocumentStatus.VERIFICATION_IN_PROGRESS));
-        Map<String, List<DocumentVerificationEntity>> verificationsById = new HashMap<>();
-
-        for (DocumentVerificationEntity docVerification : allDocVerifications) {
-            verificationsById.computeIfAbsent(docVerification.getVerificationId(), verificationId -> new ArrayList<>())
-                    .add(docVerification);
-        }
-
-        for (String verificationId : verificationsById.keySet()) {
-            DocumentsVerificationResult docVerificationResult =
-                    documentVerificationProvider.getVerificationResult(ownerId, verificationId);
-            List<DocumentVerificationEntity> docVerifications = verificationsById.get(verificationId);
-            verificationProcessingService.processVerificationResult(ownerId, docVerifications, docVerificationResult);
-        }
-
-        if (allDocVerifications.stream()
-                .anyMatch(docVerification -> DocumentStatus.VERIFICATION_IN_PROGRESS.equals(docVerification.getStatus()))) {
-            return;
-        }
-
-        resolveIdentityVerificationResult(phase, idVerification, allDocVerifications);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        identityVerificationRepository.save(idVerification);
-
-        // Update process error score in case of a failed verification and check process error limits
-        if (idVerification.getStatus() == IdentityVerificationStatus.FAILED || idVerification.getStatus() == IdentityVerificationStatus.REJECTED) {
-            OnboardingProcessEntity process = processService.findProcess(idVerification.getProcessId());
-            if (idVerification.getStatus() == IdentityVerificationStatus.FAILED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED);
-            }
-            if (idVerification.getStatus() == IdentityVerificationStatus.REJECTED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED);
-            }
-            processLimitService.checkOnboardingProcessErrorLimits(process);
-        }
-    }
 
     /**
      * Process identity verification result for document verifications which have already been previously processed.
-     * @param ownerId Owner identification.
+     *
      * @param idVerification Identity verification entity.
      * @param phase Identity verification phase.
      */
     @Transactional
-    public void processDocumentVerificationResult(OwnerId ownerId,
-                                                  IdentityVerificationEntity idVerification,
-                                                  IdentityVerificationPhase phase) {
+    public void processDocumentVerificationResult(IdentityVerificationEntity idVerification, StateContext<OnboardingState, OnboardingEvent> context) {
         List<DocumentVerificationEntity> processedDocVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(idVerification, DOCUMENT_STATUSES_PROCESSED);
-        resolveIdentityVerificationResult(phase, idVerification, processedDocVerifications);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        identityVerificationRepository.save(idVerification);
+        resolveIdentityVerificationResult(idVerification, processedDocVerifications, context);
     }
 
     /**
      * Resolve identity verification result for an identity verification entity using specified document verification results.
-     * @param phase Identity verification phase.
      * @param idVerification Identity verification entity.
      * @param docVerifications Document verification results.
+     * @param context State context.
      */
     private void resolveIdentityVerificationResult(
-            IdentityVerificationPhase phase,
             IdentityVerificationEntity idVerification,
-            List<DocumentVerificationEntity> docVerifications) {
+            List<DocumentVerificationEntity> docVerifications,
+            StateContext<OnboardingState, OnboardingEvent> context) {
+        final Map<Object, Object> variables = context.getExtendedState().getVariables();
         if (docVerifications.stream()
                 .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
-            idVerification.setPhase(phase);
-            idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            variables.put(StatusAcceptedGuard.KEY_ACCEPTED, true);
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
-                        idVerification.setPhase(phase);
-                        idVerification.setStatus(IdentityVerificationStatus.FAILED);
+                        variables.put(StatusFailedGuard.KEY_FAILED, true);
                         idVerification.setErrorDetail(failed.getErrorDetail());
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     });
@@ -374,7 +330,7 @@ public class IdentityVerificationService {
                     .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
                     .findAny()
                     .ifPresent(failed -> {
-                        idVerification.setPhase(phase);
+                        variables.put(StatusFailedGuard.KEY_FAILED, true);
                         idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                         idVerification.setErrorDetail(failed.getRejectReason());
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);

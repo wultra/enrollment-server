@@ -18,19 +18,23 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlan;
@@ -63,6 +67,9 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     @MockBean
     private VerificationProcessResultAction verificationProcessResultAction;
 
+    @MockBean
+    private IdentityVerificationService identityVerificationService;
+
     @Test
     void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
@@ -93,20 +100,29 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
+        when(identityVerificationService.findByOptional(idVerification.getActivationId()))
+                .thenReturn(Optional.of(idVerification));
+
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())).thenReturn(true);
         doAnswer(args -> {
             ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
                     .getExtendedState()
-                    .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
-                    .setStatus(IdentityVerificationStatus.ACCEPTED);
+                    .getVariables()
+                    // TODO Lubos test
+                    .put(StatusAcceptedGuard.KEY_ACCEPTED, true);
             return null;
         }).when(verificationProcessResultAction).execute(any(StateContext.class));
+
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(idVerification.getActivationId());
 
         prepareTest(stateMachine)
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
                 .and()
                 .step()
-                .sendEvent(OnboardingEvent.EVENT_NEXT_STATE)
+                .sendEvent(MessageBuilder.withPayload(OnboardingEvent.EVENT_NEXT_STATE)
+                        .setHeader(EventHeaderName.OWNER_ID, ownerId)
+                        .build())
                 .expectState(OnboardingState.COMPLETED_ACCEPTED)
                 .and()
                 .build()

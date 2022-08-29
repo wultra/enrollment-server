@@ -288,7 +288,7 @@ public class IdentityVerificationController {
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
 
-        IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId);
+        IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId.getActivationId());
 
         final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(idVerification, requestData, ownerId);
 

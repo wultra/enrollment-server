@@ -17,19 +17,13 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.database.DocumentResultRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.database.DocumentResultRepository;
+import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,33 +47,23 @@ public class VerificationProcessingBatchService {
 
     private final DocumentResultRepository documentResultRepository;
 
-    private final IdentityVerificationRepository identityVerificationRepository;
-
     private final DocumentVerificationProvider documentVerificationProvider;
-
-    private final IdentityVerificationService identityVerificationService;
 
     private final VerificationProcessingService verificationProcessingService;
 
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
-     * @param identityVerificationRepository Identity verification repository.
      * @param documentVerificationProvider Document verification provider.
-     * @param identityVerificationService Identity verification service.
      * @param verificationProcessingService Verification processing service.
      */
     @Autowired
     public VerificationProcessingBatchService(
             DocumentResultRepository documentResultRepository,
             DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationRepository identityVerificationRepository,
-            IdentityVerificationService identityVerificationService,
             VerificationProcessingService verificationProcessingService) {
         this.documentResultRepository = documentResultRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationProvider = documentVerificationProvider;
-        this.identityVerificationService = identityVerificationService;
         this.verificationProcessingService = verificationProcessingService;
     }
 
@@ -114,33 +98,6 @@ public class VerificationProcessingBatchService {
         }
         if (countFinished.get() > 0) {
             logger.debug("Finished {} documents verifications during submit", countFinished.get());
-        }
-    }
-
-    /**
-     * Checks pending documents verifications
-     */
-    @Transactional
-    public void checkDocumentsVerifications() {
-        AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationRepository.streamAllInProgressDocumentsVerifications()) {
-            stream.forEach(idVerification -> {
-                final OwnerId ownerId = new OwnerId();
-                ownerId.setActivationId(idVerification.getActivationId());
-                ownerId.setUserId("server-task-docs-verifications");
-
-                try {
-                    identityVerificationService.checkVerificationResult(IdentityVerificationPhase.DOCUMENT_VERIFICATION, ownerId, idVerification);
-                    if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-                        countFinished.incrementAndGet();
-                    }
-                } catch (DocumentVerificationException | OnboardingProcessException e) {
-                    logger.error("Checking identity verification result failed, {}", ownerId, e);
-                }
-            });
-        }
-        if (countFinished.get() > 0) {
-            logger.debug("Finished {} documents verifications", countFinished.get());
         }
     }
 

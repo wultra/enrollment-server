@@ -199,6 +199,7 @@ public class IdentityVerificationOtpService {
             final OtpVerifyResponse response,
             final IdentityVerificationEntity idVerification) throws OnboardingProcessException {
 
+        // TODO (racansky, 2022-08-29) status changed out of state machine
         idVerification.setPhase(PRESENCE_CHECK);
         idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
         idVerification.setTimestampLastUpdated(new Date());

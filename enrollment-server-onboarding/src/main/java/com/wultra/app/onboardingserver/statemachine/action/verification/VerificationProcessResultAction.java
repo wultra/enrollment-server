@@ -16,13 +16,8 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
-import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -39,22 +34,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class VerificationProcessResultAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final VerificationResultService verificationResultService;
+    private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public VerificationProcessResultAction(VerificationResultService verificationResultService) {
-        this.verificationResultService = verificationResultService;
+    public VerificationProcessResultAction(final IdentityVerificationService identityVerificationService) {
+        this.identityVerificationService = identityVerificationService;
     }
 
     @Override
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        try {
-            verificationResultService.checkVerificationResult(ownerId, identityVerification);
-        } catch (IdentityVerificationException | OnboardingProcessException | RemoteCommunicationException e) {
-            context.getStateMachine().setStateMachineError(e);
-        }
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        identityVerificationService.processDocumentVerificationResult(identityVerification, context);
     }
 
 }
