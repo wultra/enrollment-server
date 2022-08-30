@@ -106,8 +106,7 @@ public class IdentityVerificationStatusService {
         }
 
         // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
-        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
-        if (!flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
+        if (idVerification.getPhase() != IdentityVerificationPhase.COMPLETED && !containsActivationFlagVerificationInProgress(ownerId)) {
             // Initialization is required because verification is not in progress for current identity verification
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
@@ -119,4 +118,8 @@ public class IdentityVerificationStatusService {
         return response;
     }
 
+    private boolean containsActivationFlagVerificationInProgress(OwnerId ownerId) throws RemoteCommunicationException {
+        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
+        return flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+    }
 }
