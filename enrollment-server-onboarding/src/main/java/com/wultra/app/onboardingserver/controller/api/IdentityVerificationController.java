@@ -451,7 +451,15 @@ public class IdentityVerificationController {
         onboardingService.verifyProcessId(ownerId, processId);
 
         final String otpCode = request.getRequestObject().getOtpCode();
-        return new ObjectResponse<>(identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode));
+        final OtpVerifyResponse otpVerifyResponse = identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode);
+
+        try {
+            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+        } catch (IdentityVerificationException e) {
+            throw new OnboardingProcessException("Unable to move state machine for process ID: " + processId, e);
+        }
+
+        return new ObjectResponse<>(otpVerifyResponse);
     }
 
     /**

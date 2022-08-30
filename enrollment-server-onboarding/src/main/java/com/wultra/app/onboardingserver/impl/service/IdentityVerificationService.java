@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service implementing document identity verification.
@@ -533,6 +534,15 @@ public class IdentityVerificationService {
         return verificationSdkInfo;
     }
 
+    /**
+     * Return all identity verifications eligible for change to next state.
+     *
+     * @return identity verifications
+     */
+    public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
+        return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
+    }
+
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {
         List<String> errors = new ArrayList<>();
 
@@ -577,5 +587,4 @@ public class IdentityVerificationService {
         docMetadata.setType(entity.getType());
         return docMetadata;
     }
-
 }

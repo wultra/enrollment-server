@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ExtendedState;
@@ -35,9 +36,13 @@ import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
+import java.util.stream.Stream;
 
 /**
  * State machine service
@@ -45,6 +50,7 @@ import javax.annotation.Nullable;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@Slf4j
 public class StateMachineService {
 
     private final EnrollmentStateProvider enrollmentStateProvider;
@@ -54,6 +60,8 @@ public class StateMachineService {
     private final CustomStateMachineInterceptor stateMachineInterceptor;
 
     private final IdentityVerificationService identityVerificationService;
+
+    private final TransactionTemplate transactionTemplate;
 
     /**
      * Constructor.
@@ -67,14 +75,17 @@ public class StateMachineService {
             final EnrollmentStateProvider enrollmentStateProvider,
             final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory,
             final CustomStateMachineInterceptor stateMachineInterceptor,
-            final IdentityVerificationService identityVerificationService
+            final IdentityVerificationService identityVerificationService,
+            final TransactionTemplate transactionTemplate
     ) {
         this.enrollmentStateProvider = enrollmentStateProvider;
         this.stateMachineFactory = stateMachineFactory;
         this.stateMachineInterceptor = stateMachineInterceptor;
         this.identityVerificationService = identityVerificationService;
+        this.transactionTemplate = transactionTemplate;
     }
 
+    @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
             throws IdentityVerificationException {
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine =
@@ -121,6 +132,33 @@ public class StateMachineService {
                 .setHeader(EventHeaderName.OWNER_ID, ownerId)
                 .setHeader(EventHeaderName.PROCESS_ID, processId)
                 .build();
+    }
+
+    /**
+     *
+     */
+    @Transactional(readOnly = true)
+    public void changeMachineStatesInBatch() {
+        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
+            stream.forEach(this::changeMachineState);
+        }
+    }
+
+    private void changeMachineState(final IdentityVerificationEntity identityVerification) {
+        final String processId = identityVerification.getProcessId();
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(identityVerification.getActivationId());
+        ownerId.setUserId("server-task-change-machine-state");
+        logger.debug("Changing state of machine for process ID: {}", processId);
+
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transactionTemplate.executeWithoutResult(status -> {
+            try {
+                processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            } catch (IdentityVerificationException e) {
+                logger.warn("Unable to change state for process ID: {}", processId, e);
+            }
+        });
     }
 
     private StateMachineEventResult<OnboardingState, OnboardingEvent> sendEventMessage(
