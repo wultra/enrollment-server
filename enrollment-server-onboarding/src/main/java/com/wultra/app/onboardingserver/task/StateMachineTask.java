@@ -26,6 +26,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Task to change machine state.
+ * <p>
+ * Implemented as polling. Ideally, signaling should be done in the state machine itself.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */

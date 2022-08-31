@@ -159,12 +159,10 @@ public class IdentityVerificationOtpService {
      * @return Whether user is verified using OTP code.
      */
     public boolean isUserVerifiedUsingOtp(String processId) {
-        final Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION);
-        if (otpOptional.isEmpty()) {
-            return false;
-        }
-        final OnboardingOtpEntity otp = otpOptional.get();
-        return otp.getStatus() == OtpStatus.VERIFIED;
+        return onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION)
+                .map(OnboardingOtpEntity::getStatus)
+                .filter(it -> it == OtpStatus.VERIFIED)
+                .isPresent();
     }
 
     private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response) throws OnboardingProcessException {
