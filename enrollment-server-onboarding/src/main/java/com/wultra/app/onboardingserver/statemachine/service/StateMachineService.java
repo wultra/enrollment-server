@@ -148,7 +148,7 @@ public class StateMachineService {
         final String processId = identityVerification.getProcessId();
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(identityVerification.getActivationId());
-        ownerId.setUserId("server-task-change-machine-state");
+        ownerId.setUserId(identityVerification.getUserId());
         logger.debug("Changing state of machine for process ID: {}", processId);
 
         transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
