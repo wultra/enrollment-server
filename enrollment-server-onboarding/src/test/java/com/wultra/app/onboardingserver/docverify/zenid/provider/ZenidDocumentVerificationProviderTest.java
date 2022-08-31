@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.docverify.zenid.provider;
 
-import com.google.common.collect.ImmutableList;
 import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
@@ -208,7 +207,7 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
     }
 
     private List<SubmittedDocument> createSubmittedDocuments() throws Exception {
-        return ImmutableList.of(
+        return List.of(
                 createIdCardFrontDocument(),
                 createIdCardBackDocument()
         );
