@@ -42,14 +42,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ActiveProfiles("mock")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck.mock"})
 @EnableConfigurationProperties
-public class WultraMockPresenceCheckProviderTest {
+class WultraMockPresenceCheckProviderTest {
 
     private WultraMockPresenceCheckProvider provider;
 
     private OwnerId ownerId;
 
     @BeforeEach
-    public void init() {
+    void init() {
         ownerId = createOwnerId();
     }
 
@@ -59,12 +59,12 @@ public class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    public void initPresenceCheckTest() throws Exception {
+    void initPresenceCheckTest() throws Exception {
         initPresenceCheck();
     }
 
     @Test
-    public void startPresenceCheckTest() throws Exception {
+    void startPresenceCheckTest() throws Exception {
         initPresenceCheck();
 
         SessionInfo sessionInfo = provider.startPresenceCheck(ownerId);
@@ -75,7 +75,7 @@ public class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    public void getResultTest() throws Exception {
+    void getResultTest() throws Exception {
         SessionInfo sessionInfo = new SessionInfo();
         sessionInfo.getSessionAttributes().put(MockConst.VERIFICATION_TOKEN, "token");
 
@@ -86,7 +86,7 @@ public class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    public void cleanupIdentityDataTest() throws Exception {
+    void cleanupIdentityDataTest() throws Exception {
         provider.cleanupIdentityData(ownerId);
     }
 
