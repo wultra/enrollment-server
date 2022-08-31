@@ -138,13 +138,13 @@ public class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
         doAnswer(args -> {
-            IdentityVerificationEntity identityVerification = ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
+            IdentityVerificationEntity identityVerification = args.getArgument(0, StateContext.class)
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
             identityVerification.setPhase(IdentityVerificationPhase.COMPLETED);
             identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(verificationProcessResultAction).execute(any(StateContext.class));
+        }).when(verificationProcessResultAction).execute(any());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
