@@ -42,6 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 /**
@@ -139,26 +140,29 @@ public class StateMachineService {
      */
     @Transactional(readOnly = true)
     public void changeMachineStatesInBatch() {
+        final AtomicInteger countFinished = new AtomicInteger(0);
         try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
-            stream.forEach(this::changeMachineState);
+            stream.forEach(identityVerification -> {
+                final String processId = identityVerification.getProcessId();
+                final OwnerId ownerId = new OwnerId();
+                ownerId.setActivationId(identityVerification.getActivationId());
+                ownerId.setUserId(identityVerification.getUserId());
+                logger.debug("Changing state of machine for process ID: {}", processId);
+
+                transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                transactionTemplate.executeWithoutResult(status -> {
+                    try {
+                        processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+                        countFinished.incrementAndGet();
+                    } catch (IdentityVerificationException e) {
+                        logger.warn("Unable to change state for process ID: {}", processId, e);
+                    }
+                });
+            });
         }
-    }
-
-    private void changeMachineState(final IdentityVerificationEntity identityVerification) {
-        final String processId = identityVerification.getProcessId();
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(identityVerification.getActivationId());
-        ownerId.setUserId(identityVerification.getUserId());
-        logger.debug("Changing state of machine for process ID: {}", processId);
-
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.executeWithoutResult(status -> {
-            try {
-                processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-            } catch (IdentityVerificationException e) {
-                logger.warn("Unable to change state for process ID: {}", processId, e);
-            }
-        });
+        if (countFinished.get() > 0) {
+            logger.debug("Changed state of {} identity verifications", countFinished.get());
+        }
     }
 
     private StateMachineEventResult<OnboardingState, OnboardingEvent> sendEventMessage(
