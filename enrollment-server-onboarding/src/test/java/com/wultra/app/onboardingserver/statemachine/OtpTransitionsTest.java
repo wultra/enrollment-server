@@ -95,12 +95,12 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())).thenReturn(true);
         doAnswer(args -> {
-            ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
+            args.getArgument(0, StateContext.class)
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
                     .setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(verificationProcessResultAction).execute(any(StateContext.class));
+        }).when(verificationProcessResultAction).execute(any());
 
         prepareTest(stateMachine)
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
@@ -112,7 +112,7 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
                 .build()
                 .test();
 
-        verify(verificationProcessResultAction).execute(any(StateContext.class));
+        verify(verificationProcessResultAction).execute(any());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
                 .build()
                 .test();
 
-        verify(verificationProcessResultAction, never()).execute(any(StateContext.class));
+        verify(verificationProcessResultAction, never()).execute(any());
     }
 
     private IdentityVerificationEntity createIdentityVerification() {

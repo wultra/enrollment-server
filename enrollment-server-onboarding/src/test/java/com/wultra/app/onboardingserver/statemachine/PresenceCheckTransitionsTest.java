@@ -164,12 +164,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
         doAnswer(args -> {
-            ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
+            args.getArgument(0, StateContext.class)
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
                     .setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(verificationProcessResultAction).execute(any(StateContext.class));
+        }).when(verificationProcessResultAction).execute(any());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
