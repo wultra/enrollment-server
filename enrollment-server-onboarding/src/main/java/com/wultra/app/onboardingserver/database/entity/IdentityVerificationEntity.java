@@ -78,6 +78,7 @@ public class IdentityVerificationEntity implements Serializable {
 
     @Column(name = "reject_reason")
     @Lob
+    @Type(type = "org.hibernate.type.TextType")
     private String rejectReason;
 
     @Column(name = "reject_origin")
