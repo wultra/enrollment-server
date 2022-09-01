@@ -94,7 +94,7 @@
         <maven-swagger-codegen-plugin.version>3.0.34</maven-swagger-codegen-plugin.version>
         <maven-swagger-codegen-handlebars.version>4.3.0</maven-swagger-codegen-handlebars.version>
 
-        <db-h2.version>2.1.212</db-h2.version>
+        <h2.version>2.1.212</h2.version>
         <shedlock-spring.version>4.36.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
