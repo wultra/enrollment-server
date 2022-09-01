@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.docverify.mock.provider;
 
-import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -83,7 +82,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     @Test
     void submitDocumentsTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
-        List<SubmittedDocument> documents = ImmutableList.of(document);
+        List<SubmittedDocument> documents = List.of(document);
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
@@ -92,7 +91,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
 
     @Test
     void verifyDocumentsTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
         assertEquals(DocumentVerificationStatus.IN_PROGRESS, result.getStatus());
@@ -101,7 +100,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
 
     @Test
     void getVerificationResultTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
 
@@ -134,7 +133,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
 
     @Test
     void cleanupDocumentsTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         provider.cleanupDocuments(ownerId, uploadIds);
     }
