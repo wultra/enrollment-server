@@ -135,7 +135,7 @@ public class StateMachineService {
     }
 
     /**
-     *
+     * Change machine states in batch.
      */
     @Transactional(readOnly = true)
     public void changeMachineStatesInBatch() {
