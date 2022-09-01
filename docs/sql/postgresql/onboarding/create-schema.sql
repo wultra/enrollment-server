@@ -87,6 +87,7 @@ CREATE TABLE es_identity_verification (
 CREATE INDEX identity_verif_activation ON es_identity_verification (activation_id);
 CREATE INDEX identity_verif_user ON es_identity_verification (user_id);
 CREATE INDEX identity_verif_status ON es_identity_verification (status);
+CREATE INDEX identity_verif_phase ON es_identity_verification (phase);
 CREATE INDEX identity_verif_timestamp_1 ON es_identity_verification (timestamp_created);
 CREATE INDEX identity_verif_timestamp_2 ON es_identity_verification (timestamp_last_updated);
 

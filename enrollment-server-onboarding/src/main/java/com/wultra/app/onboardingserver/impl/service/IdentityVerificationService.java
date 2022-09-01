@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service implementing document identity verification.
@@ -425,12 +426,6 @@ public class IdentityVerificationService {
             }
         }
 
-        // Check statuses of all documents used for the verification, update identity verification status accordingly
-        if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())
-                && IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            checkIdentityDocumentsForVerification(ownerId, idVerification);
-        }
-
         List<DocumentMetadataResponseDto> docsMetadata = createDocsMetadata(entities);
         response.setStatus(idVerification.getStatus());
         response.setDocuments(docsMetadata);
@@ -539,6 +534,15 @@ public class IdentityVerificationService {
         return verificationSdkInfo;
     }
 
+    /**
+     * Return all identity verifications eligible for change to next state.
+     *
+     * @return identity verifications
+     */
+    public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
+        return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
+    }
+
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {
         List<String> errors = new ArrayList<>();
 
@@ -583,5 +587,4 @@ public class IdentityVerificationService {
         docMetadata.setType(entity.getType());
         return docMetadata;
     }
-
 }
