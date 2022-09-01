@@ -249,12 +249,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown in case process identifier is invalid.
      */
     public void verifyProcessId(OwnerId ownerId, String processId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId());
-        if (processOptional.isEmpty()) {
-            logger.error("Onboarding process not found, {}", ownerId);
-            throw new OnboardingProcessException();
-        }
-        String expectedProcessId = processOptional.get().getId();
+        final OnboardingProcessEntity process = onboardingProcessRepository.findProcessByActivationId(ownerId.getActivationId())
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
+        String expectedProcessId = process.getId();
 
         if (!expectedProcessId.equals(processId)) {
             logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);

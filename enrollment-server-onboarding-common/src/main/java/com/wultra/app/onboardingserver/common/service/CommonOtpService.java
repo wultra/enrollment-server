@@ -103,8 +103,7 @@ public class CommonOtpService implements OtpService {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
         } else if (failedAttempts >= maxFailedAttempts) {
             logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
-            // Fail process or identity verification based on OTP type
-            handleOtpMaxFailedAttempts(process, otp, ownerId);
+            failProcessOrIdentityVerification(process, otp, ownerId);
         } else if (otp.hasExpired()) {
             logger.info("Expired OTP code received, process ID: {}", processId);
             expired = true;
@@ -143,8 +142,9 @@ public class CommonOtpService implements OtpService {
      * @param ownerId Owner identification.
      * @param otp OTP entity.
      * @param otpType OTP type.
+     * @throws OnboardingProcessException In case process is not found.
      */
-    private void handleFailedOtpVerification(OnboardingProcessEntity process, OwnerId ownerId, OnboardingOtpEntity otp, OtpType otpType) {
+    private void handleFailedOtpVerification(OnboardingProcessEntity process, OwnerId ownerId, OnboardingOtpEntity otp, OtpType otpType) throws OnboardingProcessException {
         int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(process.getId(), otpType);
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
@@ -158,8 +158,7 @@ public class CommonOtpService implements OtpService {
             otp.setTimestampFailed(ownerId.getTimestamp());
             onboardingOtpRepository.save(otp);
 
-            // Fail process or identity verification based on OTP type
-            handleOtpMaxFailedAttempts(process, otp, ownerId);
+            failProcessOrIdentityVerification(process, otp, ownerId);
         } else {
             // Increase error score for process based on OTP type
             if (otpType == OtpType.ACTIVATION) {
@@ -190,19 +189,22 @@ public class CommonOtpService implements OtpService {
      * @param otp Onboarding OTP.
      * @param ownerId Owner identification.
      * @return Updated onboarding process entity.
+     * @throws OnboardingProcessException In case process is not found.
      */
-    private OnboardingProcessEntity handleOtpMaxFailedAttempts(OnboardingProcessEntity process, OnboardingOtpEntity otp, OwnerId ownerId) {
+    private OnboardingProcessEntity failProcessOrIdentityVerification(OnboardingProcessEntity process, OnboardingOtpEntity otp, OwnerId ownerId) throws OnboardingProcessException {
         if (otp.getType() == OtpType.USER_VERIFICATION) {
-            // Reset current identity verification, if possible. The process may
+            // Reset current identity verification, if possible.
             try {
                 verificationLimitService.resetIdentityVerification(ownerId);
             } catch (RemoteCommunicationException | IdentityVerificationException | OnboardingProcessLimitException | OnboardingProcessException ex) {
-                logger.error("Identity verification reset failed, error: " + ex.getMessage(), ex);
+                logger.error("Identity verification reset failed, error: {}", ex.getMessage(), ex);
                 // Obtain most current process entity, the process may have failed due to reached limit of identity verification resets
                 Optional <OnboardingProcessEntity> updatedProcessOptional = onboardingProcessRepository.findById(process.getId());
-                if (updatedProcessOptional.isPresent()) {
-                    process = updatedProcessOptional.get();
+                if (updatedProcessOptional.isEmpty()) {
+                    logger.warn("Onboarding process not found, process ID: {}", process.getId());
+                    throw new OnboardingProcessException();
                 }
+                process = updatedProcessOptional.get();
             }
         } else {
             // Fail onboarding process completely
