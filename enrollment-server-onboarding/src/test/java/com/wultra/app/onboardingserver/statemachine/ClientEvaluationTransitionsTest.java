@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
+class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -59,27 +59,27 @@ public class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test
-    public void testClientEvaluationAccepted() throws Exception {
+    void testClientEvaluationAccepted() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.CLIENT_EVALUATION_ACCEPTED);
     }
 
     @Test
-    public void testClientEvaluationInProgress() throws Exception {
+    void testClientEvaluationInProgress() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, OnboardingState.CLIENT_EVALUATION_IN_PROGRESS);
     }
 
     @Test
-    public void testClientEvaluationFailed() throws Exception {
+    void testClientEvaluationFailed() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.CLIENT_EVALUATION_FAILED);
     }
 
     @Test
-    public void testClientEvaluationRejected() throws Exception {
+    void testClientEvaluationRejected() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.CLIENT_EVALUATION_REJECTED);
     }
 
     @Test
-    public void testClientEvaluationAcceptedToPresenceCheckInit() throws Exception {
+    void testClientEvaluationAcceptedToPresenceCheckInit() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -101,7 +101,7 @@ public class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testDocumentVerificationTransitionToSendingOtp() throws Exception {
+    void testDocumentVerificationTransitionToSendingOtp() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -130,7 +130,7 @@ public class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testDocumentVerificationTransitionCompleted() throws Exception {
+    void testDocumentVerificationTransitionCompleted() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);

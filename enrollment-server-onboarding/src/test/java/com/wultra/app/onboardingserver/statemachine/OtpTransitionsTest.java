@@ -49,7 +49,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class OtpTransitionsTest extends AbstractStateMachineTest {
+class OtpTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -64,7 +64,7 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test
-    public void testOtpResend() throws Exception {
+    void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
@@ -89,7 +89,7 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testOtpVerified() throws Exception {
+    void testOtpVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
@@ -116,7 +116,7 @@ public class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testOtpNotVerified() throws Exception {
+    void testOtpNotVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
