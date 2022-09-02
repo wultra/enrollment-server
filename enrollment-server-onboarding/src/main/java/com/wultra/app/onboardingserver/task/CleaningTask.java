@@ -57,6 +57,39 @@ public class CleaningTask {
     }
 
     /**
+     * Terminate processes with verifications in progress.
+     */
+    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
+    @SchedulerLock(name = "terminateProcessesWithVerificationsInProgress", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateProcessesWithVerificationsInProgress() {
+        LockAssert.assertLocked();
+        logger.debug("terminateProcessesWithVerificationsInProgress");
+        onboardingService.terminateProcessesWithVerificationsInProgress();
+    }
+
+    /**
+     * Terminate OTP codes for all processes.
+     */
+    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
+    @SchedulerLock(name = "terminateOtpCodesForAllProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateOtpCodesForAllProcesses() {
+        LockAssert.assertLocked();
+        logger.debug("terminateOtpCodesForAllProcesses");
+        onboardingService.terminateOtpCodesForAllProcesses();
+    }
+
+    /**
+     * Terminate expired processes.
+     */
+    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
+    @SchedulerLock(name = "terminateExpiredProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateExpiredProcesses() {
+        LockAssert.assertLocked();
+        logger.debug("terminateExpiredProcesses");
+        onboardingService.terminateExpiredProcesses();
+    }
+
+    /**
      * Cleanup of large documents older than retention time.
      */
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
