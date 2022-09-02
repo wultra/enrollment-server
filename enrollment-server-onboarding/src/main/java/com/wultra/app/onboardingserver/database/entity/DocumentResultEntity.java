@@ -25,7 +25,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -74,8 +73,6 @@ public class DocumentResultEntity implements Serializable {
      * Reason why the document was rejected
      */
     @Column(name = "reject_reason")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String rejectReason;
 
     /**
@@ -89,16 +86,12 @@ public class DocumentResultEntity implements Serializable {
      * JSON serialized document with the verification result
      */
     @Column(name = "verification_result")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String verificationResult;
 
     /**
      * JSON serialized errors which occurred during document processing
      */
     @Column(name = "error_detail")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String errorDetail;
 
     @Column(name = "error_origin")
@@ -109,8 +102,6 @@ public class DocumentResultEntity implements Serializable {
      * JSON serialized data extracted from the uploaded document
      */
     @Column(name = "extracted_data")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String extractedData;
 
     /**

@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -137,8 +136,6 @@ public class DocumentVerificationEntity implements Serializable {
      * Overall reason for the document rejection
      */
     @Column(name = "reject_reason")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String rejectReason;
 
     /**

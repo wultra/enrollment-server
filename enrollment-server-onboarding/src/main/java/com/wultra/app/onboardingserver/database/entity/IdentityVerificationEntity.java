@@ -27,7 +27,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -77,8 +76,6 @@ public class IdentityVerificationEntity implements Serializable {
     private IdentityVerificationPhase phase;
 
     @Column(name = "reject_reason")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String rejectReason;
 
     @Column(name = "reject_origin")
@@ -93,8 +90,6 @@ public class IdentityVerificationEntity implements Serializable {
     private ErrorOrigin errorOrigin;
 
     @Column(name = "session_info")
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
     private String sessionInfo;
 
     @Column(name = "timestamp_created", nullable = false)
