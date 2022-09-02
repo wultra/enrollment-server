@@ -43,18 +43,19 @@ import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -294,8 +295,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Check for inactive processes and terminate them.
      */
     @Transactional
-    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateInactiveProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void terminateInactiveProcesses() {
         final Date now = new Date();
 

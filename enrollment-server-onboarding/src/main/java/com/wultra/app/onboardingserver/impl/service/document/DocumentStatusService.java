@@ -23,11 +23,9 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,15 +64,11 @@ public class DocumentStatusService {
      * Cleanup of large documents older than retention time.
      */
     @Transactional
-    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "cleanupLargeDocuments", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void cleanupLargeDocuments() {
         documentDataRepository.cleanupDocumentData(getDataRetentionTime());
     }
 
     @Transactional
-    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "cleanupExpiredVerificationProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void cleanupExpiredVerificationProcesses() {
         int count = documentVerificationRepository.failExpiredVerifications(
                 getVerificationExpirationTime(),
