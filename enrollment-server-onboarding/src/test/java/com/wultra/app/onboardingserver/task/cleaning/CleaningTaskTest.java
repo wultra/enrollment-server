@@ -17,15 +17,18 @@
  */
 package com.wultra.app.onboardingserver.task.cleaning;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 
@@ -42,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("mock")
-@Sql
+@Transactional
 class CleaningTaskTest {
 
     @Autowired
@@ -52,6 +55,7 @@ class CleaningTaskTest {
     private EntityManager entityManager;
 
     @Test
+    @Sql
     void testTerminateExpiredIdentityVerifications() {
 
         final String id1 = "a6055e8b-4ac0-45dd-b68e-29f4cd991a5c";
@@ -63,23 +67,61 @@ class CleaningTaskTest {
         assertPhaseAndStatus(id3, COMPLETED, ACCEPTED);
 
         tested.terminateExpiredIdentityVerifications();
+        flushAndClear();
 
         assertPhaseAndStatus(id1, PRESENCE_CHECK, IN_PROGRESS);
         assertPhaseAndStatus(id2, COMPLETED, FAILED);
         assertPhaseAndStatus(id3, COMPLETED, ACCEPTED);
 
-        final IdentityVerificationEntity identityVerification = getIdentityVerification(id2);
+        final IdentityVerificationEntity identityVerification = fetchIdentityVerification(id2);
         assertEquals("expiredProcessOnboarding", identityVerification.getErrorDetail());
         assertEquals(PROCESS_LIMIT_CHECK, identityVerification.getErrorOrigin());
     }
 
-    void assertPhaseAndStatus(final String id, final IdentityVerificationPhase phase, IdentityVerificationStatus status) {
-        final IdentityVerificationEntity identityVerification = getIdentityVerification(id);
+    @Test
+    @Sql
+    void testTerminateExpiredDocumentVerifications() {
+        final String id1 = "16055e8b-4ac0-45dd-b68e-29f4cd991a5c";
+        final String id2 = "2d036a18-f51f-4a30-92cd-04876172ebca";
+        final String id3 = "3918e1c4-5ca7-47da-8765-afc92082f717";
+
+        assertStatus(id1, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(id2, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(id3, DocumentStatus.ACCEPTED);
+
+        tested.terminateExpiredDocumentVerifications();
+        flushAndClear();
+
+        assertStatus(id1, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(id2, DocumentStatus.FAILED);
+        assertStatus(id3, DocumentStatus.ACCEPTED);
+
+        final DocumentVerificationEntity documentVerification = fetchDocumentVerification(id2);
+        assertEquals("expired", documentVerification.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
+    }
+
+    private void flushAndClear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    private void assertStatus(final String id, final DocumentStatus status) {
+        final DocumentVerificationEntity documentVerification = fetchDocumentVerification(id);
+        assertEquals(status, documentVerification.getStatus(), "status of " + id);
+    }
+
+    private DocumentVerificationEntity fetchDocumentVerification(final String id) {
+        return entityManager.find(DocumentVerificationEntity.class, id);
+    }
+
+    private void assertPhaseAndStatus(final String id, final IdentityVerificationPhase phase, IdentityVerificationStatus status) {
+        final IdentityVerificationEntity identityVerification = fetchIdentityVerification(id);
         assertEquals(phase, identityVerification.getPhase(), "phase of id " + id);
         assertEquals(status, identityVerification.getStatus(), "status of id " + id);
     }
 
-    private IdentityVerificationEntity getIdentityVerification(String id) {
+    private IdentityVerificationEntity fetchIdentityVerification(String id) {
         return entityManager.find(IdentityVerificationEntity.class, id);
     }
 }
