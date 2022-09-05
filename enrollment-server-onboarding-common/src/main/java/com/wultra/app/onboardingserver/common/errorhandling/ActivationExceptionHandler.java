@@ -50,4 +50,16 @@ public class ActivationExceptionHandler {
         return new ActivationOtpErrorResponse(ex.getDefaultCode(), ex.getDefaultError(), ex.getRemainingAttempts());
     }
 
+    /**
+     * Handle PowerAuthActivationOtpFailedException exceptions.
+     * @param ex Exception instance.
+     * @return Error response.
+     */
+    @ExceptionHandler(value = PowerAuthActivationOtpFailedException.class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleActivationOtpFailedException(PowerAuthActivationOtpFailedException ex) {
+        logger.warn(ex.getMessage(), ex);
+        return new ActivationOtpErrorResponse(ex.getDefaultCode(), ex.getDefaultError(), 0);
+    }
+
 }

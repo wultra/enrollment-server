@@ -20,29 +20,12 @@ package com.wultra.app.onboardingserver.common.errorhandling;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthActivationException;
 
 /**
- * Exception thrown in case activation using OTP code fails (soft fail).
+ * Exception thrown in case activation using OTP code fails completely (hard fail).
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class PowerAuthActivationOtpException extends PowerAuthActivationException {
+public class PowerAuthActivationOtpFailedException extends PowerAuthActivationException {
 
-    private static final long serialVersionUID = -1587779018046975797L;
+    private static final long serialVersionUID = -7173917873802997723L;
 
-    private Integer remainingAttempts;
-
-    /**
-     * Get remaining attempts for OTP code verification during activation.
-     * @return Remaining attempts for OTP code verification during activation.
-     */
-    public Integer getRemainingAttempts() {
-        return remainingAttempts;
-    }
-
-    /**
-     * Set remaining attempts for OTP code verification during activation.
-     * @param remainingAttempts Remaining attempts for OTP code verification during activation.
-     */
-    public void setRemainingAttempts(Integer remainingAttempts) {
-        this.remainingAttempts = remainingAttempts;
-    }
 }
