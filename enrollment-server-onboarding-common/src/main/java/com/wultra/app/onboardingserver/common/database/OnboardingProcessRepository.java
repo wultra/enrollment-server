@@ -65,7 +65,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT p.id FROM OnboardingProcessEntity p " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    List<String> fetchExpiredProcessIdsByStatusAndCreatedDate(Date dateCreatedBefore, OnboardingStatus status);
+    List<String> findExpiredProcessIdsByStatusAndCreatedDate(Date dateCreatedBefore, OnboardingStatus status);
 
     /**
      * Mark the given onboarding processes as failed.
@@ -95,5 +95,5 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED " +
             "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    List<String> fetchExpiredProcessIdsByCreatedDate(Date dateCreatedBefore);
+    List<String> findExpiredProcessIdsByCreatedDate(Date dateCreatedBefore);
 }

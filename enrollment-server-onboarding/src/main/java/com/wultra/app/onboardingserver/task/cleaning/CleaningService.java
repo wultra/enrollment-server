@@ -95,7 +95,7 @@ class CleaningService {
     public void terminateExpiredProcessActivations() {
         final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
         final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
         terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION);
     }
 
@@ -106,7 +106,7 @@ class CleaningService {
     public void terminateExpiredProcessVerifications() {
         final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
         final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
         terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION);
     }
 
@@ -128,7 +128,7 @@ class CleaningService {
         final Date now = new Date();
         final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
         final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByCreatedDate(createdDateExpiredProcesses);
+        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByCreatedDate(createdDateExpiredProcesses);
         if (ids.isEmpty()) {
             return;
         }
@@ -151,15 +151,16 @@ class CleaningService {
      */
     @Transactional
     public void terminateExpiredDocumentVerifications() {
-        int count = documentVerificationRepository.failExpiredVerifications(
-                getVerificationExpirationTime(),
-                new Date(),
-                ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED,
-                ErrorOrigin.PROCESS_LIMIT_CHECK,
-                DocumentStatus.ALL_NOT_FINISHED
-        );
-        if (count > 0) {
-            logger.info("Marking {} obsolete document verifications as failed", count);
+        final List<String> ids = documentVerificationRepository
+                .findExpiredVerifications(getVerificationExpirationTime(), DocumentStatus.ALL_NOT_FINISHED);
+        if (ids.isEmpty()) {
+            return;
+        }
+
+        final Date now = new Date();
+        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
+            documentVerificationRepository.terminate(idsChunk, now, ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED, ErrorOrigin.PROCESS_LIMIT_CHECK);
+            logger.info("Terminating {} expired document verifications", idsChunk.size());
         }
     }
 
@@ -168,7 +169,7 @@ class CleaningService {
      */
     @Transactional
     public void terminateExpiredIdentityVerifications() {
-        final List<String> ids = identityVerificationRepository.fetchNotCompletedIdentityVerifications(getVerificationExpirationTime());
+        final List<String> ids = identityVerificationRepository.findNotCompletedIdentityVerifications(getVerificationExpirationTime());
         if (ids.isEmpty()) {
             return;
         }
@@ -201,11 +202,11 @@ class CleaningService {
             logger.info("Terminating {} processes", processIdChunk.size());
             onboardingProcessRepository.terminate(processIdChunk, now, errorDetail, errorOrigin);
 
-            final List<String> identityVerificationIds = identityVerificationRepository.fetchNotCompletedIdentityVerificationsByProcessIds(processIdChunk);
+            final List<String> identityVerificationIds = identityVerificationRepository.findNotCompletedIdentityVerificationsByProcessIds(processIdChunk);
             logger.info("Terminating {} identity verifications", identityVerificationIds.size());
             identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
 
-            final List<String> documentVerificationIds = documentVerificationRepository.fetchDocumentVerificationsByIdentityVerificationIdsAndStatuses(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
+            final List<String> documentVerificationIds = documentVerificationRepository.findDocumentVerificationsByIdentityVerificationIdsAndStatuses(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
             logger.info("Terminating {} document verifications", documentVerificationIds.size());
             documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
         }

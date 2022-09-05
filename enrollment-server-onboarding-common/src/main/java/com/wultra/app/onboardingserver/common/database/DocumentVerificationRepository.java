@@ -48,16 +48,10 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.status IN (:statuses)")
     int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
 
-    @Modifying
-    @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
-            "    d.usedForVerification = false, " +
-            "    d.errorDetail = :errorMessage, " +
-            "    d.errorOrigin = :errorOrigin, " +
-            "    d.timestampLastUpdated = :timestamp " +
+    @Query("SELECT d.id FROM DocumentVerificationEntity d " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
             "AND d.status IN (:statuses)")
-    int failExpiredVerifications(Date cleanupDate, Date timestamp, String errorMessage, ErrorOrigin errorOrigin, List<DocumentStatus> statuses);
+    List<String> findExpiredVerifications(Date cleanupDate, List<DocumentStatus> statuses);
 
     @Modifying
     @Query("UPDATE DocumentVerificationEntity d " +
@@ -104,7 +98,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Query("SELECT d FROM DocumentVerificationEntity d " +
             "WHERE d.identityVerification.id in :identityVerificationIds " +
             "AND d.status in :statuses")
-    List<String> fetchDocumentVerificationsByIdentityVerificationIdsAndStatuses(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
+    List<String> findDocumentVerificationsByIdentityVerificationIdsAndStatuses(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
 
     /**
      * Mark the given document verifications as failed.
