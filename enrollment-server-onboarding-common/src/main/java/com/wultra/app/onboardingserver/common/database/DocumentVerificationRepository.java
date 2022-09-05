@@ -18,15 +18,16 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -93,4 +94,32 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.usedForVerification = true")
     List<DocumentVerificationEntity> findAllWithPhoto(IdentityVerificationEntity identityVerification);
 
+    /**
+     * Return document verification IDs by the given identity verification ID and document statuses.
+     *
+     * @param identityVerificationIds identity verification IDs
+     * @param statuses document statuses
+     * @return identity verification IDs
+     */
+    @Query("SELECT d FROM DocumentVerificationEntity d " +
+            "WHERE d.identityVerification.id in :identityVerificationIds " +
+            "AND d.status in :statuses")
+    List<String> fetchDocumentVerificationsByIdentityVerificationIdsAndStatuses(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
+
+    /**
+     * Mark the given document verifications as failed.
+     *
+     * @param ids Document verification IDs
+     * @param timestamp last updated and failed timestamp
+     * @param errorDetail error detail
+     * @param errorOrigin error origin
+     */
+    @Modifying
+    @Query("UPDATE DocumentVerificationEntity d " +
+            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
+            "    d.errorDetail = :errorDetail, " +
+            "    d.errorOrigin = :errorOrigin, " +
+            "    d.timestampLastUpdated = :timestamp " +
+            "WHERE d.id in :ids")
+    void terminate(Collection<String> ids, Date timestamp, String errorDetail, ErrorOrigin errorOrigin);
 }

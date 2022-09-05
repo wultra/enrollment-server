@@ -18,12 +18,14 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -89,4 +91,35 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             "   AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS)"
     )
     Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState();
+
+
+    /**
+     * Return identity verification IDs by the given process ID. Include only not yet finished entities.
+     *
+     * @param processIds process IDs
+     * @return identity verification IDs
+     */
+    @Query("SELECT i.id FROM IdentityVerificationEntity i " +
+            "WHERE i.processId in :processIds " +
+            "AND i.phase <> com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED")
+    List<String> fetchNotCompletedIdentityVerificationsByProcessIds(Collection<String> processIds);
+
+    /**
+     * Mark the given identity verifications as failed.
+     *
+     * @param ids Identity verification IDs
+     * @param timestampExpired last updated and failed timestamp
+     * @param errorDetail error detail
+     * @param errorOrigin error origin
+     */
+    @Modifying
+    @Query("UPDATE IdentityVerificationEntity i SET " +
+            "i.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED, " +
+            "i.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
+            "i.timestampLastUpdated = :timestampExpired, " +
+            "i.timestampFailed = :timestampExpired, " +
+            "i.errorDetail = :errorDetail, " +
+            "i.errorOrigin = :errorOrigin " +
+            "WHERE i.id in :ids")
+    void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 }

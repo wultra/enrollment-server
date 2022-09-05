@@ -69,7 +69,7 @@ public class DocumentStatusService {
     }
 
     @Transactional
-    public void cleanupExpiredVerificationProcesses() {
+    public void terminateExpiredDocumentVerifications() {
         int count = documentVerificationRepository.failExpiredVerifications(
                 getVerificationExpirationTime(),
                 new Date(),
@@ -78,7 +78,7 @@ public class DocumentStatusService {
                 DocumentStatus.ALL_NOT_FINISHED
         );
         if (count > 0) {
-            logger.info("Failed {} obsolete verification processes", count);
+            logger.info("Marking {} obsolete document verifications as failed", count);
         }
     }
 

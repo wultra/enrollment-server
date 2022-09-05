@@ -46,14 +46,14 @@ public class CleaningTask {
     }
 
     /**
-     * Terminate inactive process.
+     * Terminate processes with activation in progress.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateInactiveProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void terminateInactiveProcesses() {
+    @SchedulerLock(name = "terminateProcessesWithActivationInProgress", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateProcessesWithActivationInProgress() {
         LockAssert.assertLocked();
-        logger.debug("terminateInactiveProcesses");
-        onboardingService.terminateInactiveProcesses();
+        logger.debug("terminateProcessesWithActivationInProgress");
+        onboardingService.terminateProcessesWithActivationInProgress();
     }
 
     /**
@@ -101,11 +101,18 @@ public class CleaningTask {
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "cleanupExpiredVerificationProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void cleanupExpiredVerificationProcesses() {
+    @SchedulerLock(name = "terminateExpiredDocumentVerifications", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateExpiredDocumentVerifications() {
         LockAssert.assertLocked();
-        logger.debug("cleanupExpiredVerificationProcesses");
-        documentStatusService.cleanupExpiredVerificationProcesses();
+        logger.debug("terminateExpiredDocumentVerifications");
+        documentStatusService.terminateExpiredDocumentVerifications();
     }
 
+    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
+    @SchedulerLock(name = "terminateExpiredIdentityVerifications", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateExpiredIdentityVerifications() {
+        LockAssert.assertLocked();
+        logger.debug("terminateExpiredIdentityVerifications");
+        // TODO Lubos
+    }
 }
