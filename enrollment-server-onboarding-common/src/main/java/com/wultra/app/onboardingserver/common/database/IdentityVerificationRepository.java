@@ -111,7 +111,7 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
      * @return identity verification IDs
      */
     @Query("SELECT i.id FROM IdentityVerificationEntity i " +
-            "WHERE i.timestampLastUpdated < :cleanupDate " +
+            "WHERE i.timestampLastUpdated < :timestamp " +
             "AND i.phase <> com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED")
     List<String> findNotCompletedIdentityVerifications(Date timestamp);
 
