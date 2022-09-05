@@ -15,10 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.task;
+package com.wultra.app.onboardingserver.task.cleaning;
 
-import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
-import com.wultra.app.onboardingserver.impl.service.document.DocumentStatusService;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -35,14 +33,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CleaningTask {
 
-    private final OnboardingServiceImpl onboardingService;
-
-    private final DocumentStatusService documentStatusService;
+    private final CleaningService cleaningService;
 
     @Autowired
-    public CleaningTask(final OnboardingServiceImpl onboardingService, final DocumentStatusService documentStatusService) {
-        this.onboardingService = onboardingService;
-        this.documentStatusService = documentStatusService;
+    public CleaningTask(final CleaningService cleaningService) {
+        this.cleaningService = cleaningService;
     }
 
     /**
@@ -53,7 +48,7 @@ public class CleaningTask {
     public void terminateProcessesWithActivationInProgress() {
         LockAssert.assertLocked();
         logger.debug("terminateProcessesWithActivationInProgress");
-        onboardingService.terminateProcessesWithActivationInProgress();
+        cleaningService.terminateProcessesWithActivationInProgress();
     }
 
     /**
@@ -64,7 +59,7 @@ public class CleaningTask {
     public void terminateProcessesWithVerificationsInProgress() {
         LockAssert.assertLocked();
         logger.debug("terminateProcessesWithVerificationsInProgress");
-        onboardingService.terminateProcessesWithVerificationsInProgress();
+        cleaningService.terminateProcessesWithVerificationsInProgress();
     }
 
     /**
@@ -75,7 +70,7 @@ public class CleaningTask {
     public void terminateOtpCodesForAllProcesses() {
         LockAssert.assertLocked();
         logger.debug("terminateOtpCodesForAllProcesses");
-        onboardingService.terminateOtpCodesForAllProcesses();
+        cleaningService.terminateOtpCodesForAllProcesses();
     }
 
     /**
@@ -86,7 +81,7 @@ public class CleaningTask {
     public void terminateExpiredProcesses() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredProcesses");
-        onboardingService.terminateExpiredProcesses();
+        cleaningService.terminateExpiredProcesses();
     }
 
     /**
@@ -97,7 +92,7 @@ public class CleaningTask {
     public void cleanupLargeDocuments() {
         LockAssert.assertLocked();
         logger.debug("cleanupLargeDocuments");
-        documentStatusService.cleanupLargeDocuments();
+        cleaningService.cleanupLargeDocuments();
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
@@ -105,7 +100,7 @@ public class CleaningTask {
     public void terminateExpiredDocumentVerifications() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredDocumentVerifications");
-        documentStatusService.terminateExpiredDocumentVerifications();
+        cleaningService.terminateExpiredDocumentVerifications();
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
@@ -113,6 +108,6 @@ public class CleaningTask {
     public void terminateExpiredIdentityVerifications() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredIdentityVerifications");
-        // TODO Lubos
+        cleaningService.terminateExpiredIdentityVerifications();
     }
 }

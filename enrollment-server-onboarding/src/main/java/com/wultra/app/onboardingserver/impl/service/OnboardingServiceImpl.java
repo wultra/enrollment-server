@@ -23,12 +23,10 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.google.common.collect.Lists;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -40,15 +38,12 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -56,7 +51,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -64,16 +62,10 @@ import java.util.*;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class OnboardingServiceImpl extends CommonOnboardingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OnboardingServiceImpl.class);
-
     private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
-
-    /**
-     * Maximum number of values in SQL IN operator list.
-     */
-    private static final int BATCH_SIZE = 1_000;
 
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -94,10 +86,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
-    private final IdentityVerificationRepository identityVerificationRepository;
-
-    private final DocumentVerificationRepository documentVerificationRepository;
-
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
@@ -112,9 +100,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
             final ActivationService activationService,
-            final OnboardingProvider onboardingProvider,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final DocumentVerificationRepository documentVerificationRepository) {
+            final OnboardingProvider onboardingProvider) {
 
         super(onboardingProcessRepository);
         this.onboardingConfig = config;
@@ -122,8 +108,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
     }
 
     /**
@@ -301,78 +285,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException();
         }
         return processOptional.get();
-    }
-
-    /**
-     * Terminate processes with activation in progress.
-     */
-    @Transactional
-    public void terminateProcessesWithActivationInProgress() {
-        final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
-        final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION);
-    }
-
-    private void terminateProcessesAndRelatedEntities(final List<String> processIds, final String errorDetail) {
-        if (processIds.isEmpty()) {
-            return;
-        }
-
-        final Date now = new Date();
-        final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
-
-        for (List<String> processIdChunk : Lists.partition(processIds, BATCH_SIZE)) {
-            logger.info("Terminating {} processes", processIdChunk.size());
-            onboardingProcessRepository.terminate(processIdChunk, now, errorDetail, errorOrigin);
-
-            final List<String> identityVerificationIds = identityVerificationRepository.fetchNotCompletedIdentityVerificationsByProcessIds(processIdChunk);
-            logger.info("Terminating {} identity verifications", identityVerificationIds.size());
-            identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
-
-            final List<String> documentVerificationIds = documentVerificationRepository.fetchDocumentVerificationsByIdentityVerificationIdsAndStatuses(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
-            logger.info("Terminating {} document verifications", documentVerificationIds.size());
-            documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
-        }
-    }
-
-    /**
-     * Terminate processes with verifications in progress.
-     */
-    @Transactional
-    public void terminateProcessesWithVerificationsInProgress() {
-        final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
-        final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION);
-    }
-
-    /**
-     * Terminate OTP codes for all processes.
-     */
-    @Transactional
-    public void terminateOtpCodesForAllProcesses() {
-        final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
-        final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
-        otpService.terminateExpiredOtps(createdDateExpiredOtp);
-    }
-
-    /**
-     * Terminate expired processes.
-     */
-    @Transactional
-    public void terminateExpiredProcesses() {
-        final Date now = new Date();
-        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
-        final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByCreatedDate(createdDateExpiredProcesses);
-        if (ids.isEmpty()) {
-            return;
-        }
-        logger.info("Terminating {} expired processes", ids.size());
-        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
-            onboardingProcessRepository.terminate(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
-        }
     }
 
     /**
