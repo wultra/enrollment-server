@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Task to clean expired processes, identity verifications and documents.
+ * Task to clean expired processes, identity verifications, documents and OTPs.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -44,33 +44,33 @@ public class CleaningTask {
      * Terminate processes with activation in progress.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateProcessesWithActivationInProgress", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void terminateProcessesWithActivationInProgress() {
+    @SchedulerLock(name = "terminateExpiredProcessActivations", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateExpiredProcessActivations() {
         LockAssert.assertLocked();
-        logger.debug("terminateProcessesWithActivationInProgress");
-        cleaningService.terminateProcessesWithActivationInProgress();
+        logger.debug("terminateExpiredProcessActivations");
+        cleaningService.terminateExpiredProcessActivations();
     }
 
     /**
      * Terminate processes with verifications in progress.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateProcessesWithVerificationsInProgress", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "terminateExpiredProcessVerifications", lockAtLeastFor = "1s", lockAtMostFor = "5m")
     public void terminateProcessesWithVerificationsInProgress() {
         LockAssert.assertLocked();
-        logger.debug("terminateProcessesWithVerificationsInProgress");
-        cleaningService.terminateProcessesWithVerificationsInProgress();
+        logger.debug("terminateExpiredProcessVerifications");
+        cleaningService.terminateExpiredProcessVerifications();
     }
 
     /**
-     * Terminate OTP codes for all processes.
+     * Terminate expired OTP codes.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateOtpCodesForAllProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void terminateOtpCodesForAllProcesses() {
+    @SchedulerLock(name = "terminateExpiredOtpCodes", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void terminateExpiredOtpCodes() {
         LockAssert.assertLocked();
-        logger.debug("terminateOtpCodesForAllProcesses");
-        cleaningService.terminateOtpCodesForAllProcesses();
+        logger.debug("terminateExpiredOtpCodes");
+        cleaningService.terminateExpiredOtpCodes();
     }
 
     /**

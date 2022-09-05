@@ -89,10 +89,10 @@ class CleaningService {
     }
 
     /**
-     * Terminate processes with activation in progress.
+     * Terminate processes with expired activation.
      */
     @Transactional
-    public void terminateProcessesWithActivationInProgress() {
+    public void terminateExpiredProcessActivations() {
         final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
         final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
         final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
@@ -100,10 +100,10 @@ class CleaningService {
     }
 
     /**
-     * Terminate processes with verifications in progress.
+     * Terminate expired processes with expired verification.
      */
     @Transactional
-    public void terminateProcessesWithVerificationsInProgress() {
+    public void terminateExpiredProcessVerifications() {
         final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
         final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
         final List<String> ids = onboardingProcessRepository.fetchExpiredProcessIdsByStatusAndCreatedDate(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
@@ -111,10 +111,10 @@ class CleaningService {
     }
 
     /**
-     * Terminate OTP codes for all processes.
+     * Terminate expired OTP codes.
      */
     @Transactional
-    public void terminateOtpCodesForAllProcesses() {
+    public void terminateExpiredOtpCodes() {
         final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
         final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
         otpService.terminateExpiredOtps(createdDateExpiredOtp);
@@ -168,7 +168,17 @@ class CleaningService {
      */
     @Transactional
     public void terminateExpiredIdentityVerifications() {
-        // TODO Lubos
+        final List<String> ids = identityVerificationRepository.fetchNotCompletedIdentityVerifications(getVerificationExpirationTime());
+        if (ids.isEmpty()) {
+            return;
+        }
+        final Date now = new Date();
+        final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
+
+        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
+            logger.info("Terminating {} expired identity verifications", idsChunk.size());
+            identityVerificationRepository.terminate(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, errorOrigin);
+        }
     }
 
     private Date getDataRetentionTime() {
