@@ -17,7 +17,7 @@
 package com.wultra.app.onboardingserver.statemachine.guard.status;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;

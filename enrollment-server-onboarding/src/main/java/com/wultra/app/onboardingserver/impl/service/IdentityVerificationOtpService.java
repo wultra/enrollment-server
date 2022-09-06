@@ -26,10 +26,10 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntit
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -61,7 +61,7 @@ public class IdentityVerificationOtpService {
 
     private OnboardingProvider onboardingProvider;
 
-    private final CommonProcessLimitService processLimitService;
+    private final OnboardingProcessLimitService processLimitService;
 
     private final IdentityVerificationRepository identityVerificationRepository;
 
@@ -81,7 +81,7 @@ public class IdentityVerificationOtpService {
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingOtpRepository onboardingOtpRepository,
             final OtpServiceImpl otpService,
-            final CommonProcessLimitService processLimitService,
+            final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationRepository identityVerificationRepository,
             final IdentityVerificationConfig identityVerificationConfig) {
         this.onboardingProcessRepository = onboardingProcessRepository;
@@ -144,12 +144,13 @@ public class IdentityVerificationOtpService {
 
         final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), ownerId, otpCode, OtpType.USER_VERIFICATION);
         logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
-        if (!response.isVerified() && identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
-            final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
-            return moveToPhasePresenceCheck(process, response, idVerification);
+        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
+            return response;
         }
-
+        if (!response.isVerified()) {
+            logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
+            return response;
+        }
         return verifyPresenceCheck(process, response);
     }
 
@@ -182,7 +183,7 @@ public class IdentityVerificationOtpService {
 
         if (errorOrigin == ErrorOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(errorDetail)
                 || rejectOrigin == RejectOrigin.PRESENCE_CHECK && StringUtils.isNotBlank(rejectReason)) {
-            logger.info("SCA failed, IdentityVerification ID: {} of Process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
+            logger.info("SCA failed, identity verification ID: {} of process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), processId, errorDetail, rejectReason);
             return moveToPhasePresenceCheck(process, response, idVerification);
         } else {
@@ -218,6 +219,7 @@ public class IdentityVerificationOtpService {
         final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
         response.setOnboardingStatus(status);
         response.setVerified(false);
+        response.setRemainingAttempts(0);
         return response;
     }
 

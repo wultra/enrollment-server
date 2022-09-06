@@ -18,7 +18,7 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

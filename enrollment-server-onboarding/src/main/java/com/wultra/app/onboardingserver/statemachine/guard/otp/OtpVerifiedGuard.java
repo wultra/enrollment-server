@@ -16,7 +16,7 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.otp;
 
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;

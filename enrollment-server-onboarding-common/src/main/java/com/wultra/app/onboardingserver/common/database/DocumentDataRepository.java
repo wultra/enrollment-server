@@ -15,26 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
+
+package com.wultra.app.onboardingserver.common.database;
+
+import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Date;
 
 /**
- * Exception thrown in case of an error during communication with remote system.
+ * Repository for document data records.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class RemoteCommunicationException extends Exception {
+@Repository
+public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
 
-    private static final long serialVersionUID = -6809966084351557214L;
+    @Modifying
+    int deleteAllByActivationId(String activationId);
 
-    public RemoteCommunicationException() {
-    }
-
-    public RemoteCommunicationException(String message) {
-        super(message);
-    }
-
-    public RemoteCommunicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    @Modifying
+    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
+    int cleanupDocumentData(Date dateCleanup);
 
 }

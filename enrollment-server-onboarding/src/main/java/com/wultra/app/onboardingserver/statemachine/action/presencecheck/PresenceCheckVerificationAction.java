@@ -20,7 +20,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;

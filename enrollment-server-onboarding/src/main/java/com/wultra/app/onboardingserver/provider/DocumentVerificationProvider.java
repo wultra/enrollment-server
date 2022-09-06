@@ -17,8 +17,8 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.*;
 

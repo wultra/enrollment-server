@@ -28,16 +28,17 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.common.service.CommonProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
@@ -74,10 +75,9 @@ public class IdentityVerificationService {
     private final IdentityVerificationCreateService identityVerificationCreateService;
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
-    private final IdentityVerificationResetService identityVerificationResetService;
     private final IdentityVerificationLimitService identityVerificationLimitService;
     private final CommonOnboardingService processService;
-    private final CommonProcessLimitService processLimitService;
+    private final OnboardingProcessLimitService processLimitService;
 
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
@@ -91,7 +91,6 @@ public class IdentityVerificationService {
      * @param identityVerificationCreateService Identity verification create service.
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
-     * @param identityVerificationResetService Identity verification reset service.
      * @param identityVerificationLimitService Identity verification limit service.
      * @param processService Common onboarding process service.
      * @param processLimitService Onboarding process limit service.
@@ -106,7 +105,9 @@ public class IdentityVerificationService {
             IdentityVerificationCreateService identityVerificationCreateService,
             VerificationProcessingService verificationProcessingService,
             DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationResetService identityVerificationResetService, IdentityVerificationLimitService identityVerificationLimitService, CommonOnboardingService processService, CommonProcessLimitService processLimitService) {
+            IdentityVerificationLimitService identityVerificationLimitService,
+            CommonOnboardingService processService,
+            OnboardingProcessLimitService processLimitService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -115,7 +116,6 @@ public class IdentityVerificationService {
         this.identityVerificationCreateService = identityVerificationCreateService;
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
-        this.identityVerificationResetService = identityVerificationResetService;
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
@@ -461,7 +461,7 @@ public class IdentityVerificationService {
         // Set status of all currently running identity verifications to failed
         identityVerificationRepository.failRunningVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
         // Reset activation flags, the client is expected to call /api/identity/init for the next round of verification
-        identityVerificationResetService.resetIdentityVerification(ownerId);
+        identityVerificationLimitService.resetIdentityVerification(ownerId);
     }
 
     /**

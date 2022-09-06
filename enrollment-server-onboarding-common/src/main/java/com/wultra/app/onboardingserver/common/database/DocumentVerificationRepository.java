@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.onboardingserver.database;
+package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

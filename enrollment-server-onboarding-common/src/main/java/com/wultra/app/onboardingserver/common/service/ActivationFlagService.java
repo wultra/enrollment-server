@@ -17,11 +17,11 @@
  *
  */
 
-package com.wultra.app.onboardingserver.impl.service;
+package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.*;

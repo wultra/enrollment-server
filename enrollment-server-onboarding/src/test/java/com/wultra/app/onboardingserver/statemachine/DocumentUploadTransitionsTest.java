@@ -19,7 +19,7 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;

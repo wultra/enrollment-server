@@ -18,11 +18,11 @@
 package com.wultra.app.onboardingserver.impl.service.verification;
 
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.database.DocumentResultRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;

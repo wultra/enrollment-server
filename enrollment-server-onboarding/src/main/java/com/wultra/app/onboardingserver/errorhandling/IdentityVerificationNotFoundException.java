@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+
 /**
  * Exception thrown in case an identity verification cannot be found.
  *

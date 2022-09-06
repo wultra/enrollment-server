@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,22 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
+package com.wultra.app.onboardingserver.common.errorhandling;
 
 /**
- * Exception thrown in case of a limit reached for an identity verification.
+ * Exception thrown in case of an error during communication with remote system.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class IdentityVerificationLimitException extends Exception {
+public class RemoteCommunicationException extends Exception {
 
-    private static final long serialVersionUID = -74028268220605950L;
+    private static final long serialVersionUID = -6809966084351557214L;
 
-    public IdentityVerificationLimitException() {
+    public RemoteCommunicationException() {
     }
 
-    public IdentityVerificationLimitException(String message) {
+    public RemoteCommunicationException(String message) {
         super(message);
+    }
+
+    public RemoteCommunicationException(String message, Throwable cause) {
+        super(message, cause);
     }
 
 }

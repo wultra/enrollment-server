@@ -18,7 +18,7 @@ package com.wultra.app.onboardingserver.statemachine.action.otp;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;

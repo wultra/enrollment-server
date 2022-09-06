@@ -22,10 +22,11 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVer
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

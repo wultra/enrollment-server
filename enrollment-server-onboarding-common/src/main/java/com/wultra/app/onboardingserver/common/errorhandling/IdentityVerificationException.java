@@ -15,30 +15,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package com.wultra.app.onboardingserver.database;
-
-import com.wultra.app.onboardingserver.database.entity.DocumentDataEntity;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Date;
+package com.wultra.app.onboardingserver.common.errorhandling;
 
 /**
- * Repository for document data records.
+ * Exception thrown in case of an error during identity verification.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Repository
-public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
+public class IdentityVerificationException extends Exception {
 
-    @Modifying
-    int deleteAllByActivationId(String activationId);
+    private static final long serialVersionUID = 678593206284581851L;
 
-    @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
+    public IdentityVerificationException() {
+    }
+
+    public IdentityVerificationException(String message) {
+        super(message);
+    }
 
 }
