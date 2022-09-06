@@ -39,4 +39,6 @@ class RestOnboardingProviderConfiguration {
     private Duration handshakeTimeout = Duration.ofSeconds(5);
 
     private Duration responseTimeout = Duration.ofSeconds(5);
+
+    private boolean acceptInvalidSslCertificate;
 }
