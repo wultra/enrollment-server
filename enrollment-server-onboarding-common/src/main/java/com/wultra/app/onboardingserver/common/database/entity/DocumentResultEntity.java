@@ -73,7 +73,6 @@ public class DocumentResultEntity implements Serializable {
      * Reason why the document was rejected
      */
     @Column(name = "reject_reason")
-    @Lob
     private String rejectReason;
 
     /**
@@ -87,14 +86,12 @@ public class DocumentResultEntity implements Serializable {
      * JSON serialized document with the verification result
      */
     @Column(name = "verification_result")
-    @Lob
     private String verificationResult;
 
     /**
      * JSON serialized errors which occurred during document processing
      */
     @Column(name = "error_detail")
-    @Lob
     private String errorDetail;
 
     @Column(name = "error_origin")
@@ -105,7 +102,6 @@ public class DocumentResultEntity implements Serializable {
      * JSON serialized data extracted from the uploaded document
      */
     @Column(name = "extracted_data")
-    @Lob
     private String extractedData;
 
     /**

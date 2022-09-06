@@ -175,17 +175,16 @@ public class IdentityVerificationController {
     }
 
     /**
-     * Submit identity-related documents for verification.
+     * Check status of identity verification.
+     *
      * @param request Document submit request.
      * @param eciesContext ECIES context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
-     * @throws IdentityVerificationException Thrown when identity verification status fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
-     * @throws OnboardingOtpDeliveryException Thrown when OTP could not be sent when changing status.
      */
     @PostMapping("status")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -195,11 +194,12 @@ public class IdentityVerificationController {
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@EncryptedRequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
                                                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                                               @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, IdentityVerificationException, RemoteCommunicationException, OnboardingProcessException, OnboardingOtpDeliveryException {
+            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException, OnboardingProcessException {
 
-        checkApiAuthentication(apiAuthentication, "checking identity verification status");
-        checkEciesContext(eciesContext, "checking identity verification status");
-        checkRequestObject(request, "checking identity verification status");
+        final String operationDescription = "checking identity verification status";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
@@ -451,7 +451,15 @@ public class IdentityVerificationController {
         onboardingService.verifyProcessId(ownerId, processId);
 
         final String otpCode = request.getRequestObject().getOtpCode();
-        return new ObjectResponse<>(identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode));
+        final OtpVerifyResponse otpVerifyResponse = identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode);
+
+        try {
+            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+        } catch (IdentityVerificationException e) {
+            throw new OnboardingProcessException("Unable to move state machine for process ID: " + processId, e);
+        }
+
+        return new ObjectResponse<>(otpVerifyResponse);
     }
 
     /**

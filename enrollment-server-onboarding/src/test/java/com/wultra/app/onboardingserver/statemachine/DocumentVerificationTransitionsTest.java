@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
+class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -60,27 +60,27 @@ public class DocumentVerificationTransitionsTest extends AbstractStateMachineTes
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test
-    public void testDocumentVerificationAccepted() throws Exception {
+    void testDocumentVerificationAccepted() throws Exception {
         testDocumentVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED);
     }
 
     @Test
-    public void testDocumentVerificationInProgress() throws Exception {
+    void testDocumentVerificationInProgress() throws Exception {
         testDocumentVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
     }
 
     @Test
-    public void testDocumentVerificationRejected() throws Exception {
+    void testDocumentVerificationRejected() throws Exception {
         testDocumentVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.DOCUMENT_VERIFICATION_REJECTED);
     }
 
     @Test
-    public void testDocumentVerificationFailed() throws Exception {
+    void testDocumentVerificationFailed() throws Exception {
         testDocumentVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.DOCUMENT_VERIFICATION_FAILED);
     }
 
     @Test
-    public void testDocumentVerificationTransitionToClientEvaluation() throws Exception {
+    void testDocumentVerificationTransitionToClientEvaluation() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);

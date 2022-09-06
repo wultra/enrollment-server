@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.docverify.mock.provider;
 
-import com.google.common.collect.ImmutableList;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -48,14 +47,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("mock")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.mock"})
 @EnableConfigurationProperties
-public class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
+class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
 
     private WultraMockDocumentVerificationProvider provider;
 
     private OwnerId ownerId;
 
     @BeforeEach
-    public void init() {
+    void init() {
         ownerId = createOwnerId();
     }
 
@@ -65,7 +64,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void checkDocumentUploadTest() throws Exception {
+    void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
 
@@ -81,9 +80,9 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void submitDocumentsTest() throws Exception {
+    void submitDocumentsTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
-        List<SubmittedDocument> documents = ImmutableList.of(document);
+        List<SubmittedDocument> documents = List.of(document);
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
@@ -91,8 +90,8 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void verifyDocumentsTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+    void verifyDocumentsTest() throws Exception {
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
         assertEquals(DocumentVerificationStatus.IN_PROGRESS, result.getStatus());
@@ -100,8 +99,8 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void getVerificationResultTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+    void getVerificationResultTest() throws Exception {
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
 
@@ -125,7 +124,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void getPhotoTest() throws Exception {
+    void getPhotoTest() throws Exception {
         Image photo = provider.getPhoto("photoId");
 
         assertNotNull(photo.getData());
@@ -133,14 +132,14 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void cleanupDocumentsTest() throws Exception {
-        List<String> uploadIds = ImmutableList.of("doc_1", "doc_2");
+    void cleanupDocumentsTest() throws Exception {
+        List<String> uploadIds = List.of("doc_1", "doc_2");
 
         provider.cleanupDocuments(ownerId, uploadIds);
     }
 
     @Test
-    public void parseRejectionReasonsTest() throws Exception {
+    void parseRejectionReasonsTest() throws Exception {
         DocumentResultEntity docResultRejected = new DocumentResultEntity();
         docResultRejected.setVerificationResult("{\"reason\":\"rejected\"}");
         assertEquals(List.of("Rejection reason"), provider.parseRejectionReasons(docResultRejected));
@@ -151,7 +150,7 @@ public class WultraMockDocumentVerificationProviderTest extends AbstractDocument
     }
 
     @Test
-    public void initVerificationSdkTest() throws Exception {
+    void initVerificationSdkTest() throws Exception {
         Map<String, String> attributes = Map.of(MockConst.SDK_INIT_TOKEN, "mock-sdk-init-token");
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
         assertNotNull(verificationSdkInfo.getAttributes().get(MockConst.SDK_INIT_RESPONSE), "Missing SDK init response");

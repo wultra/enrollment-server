@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.docverify.zenid.provider;
 
-import com.google.common.collect.ImmutableList;
 import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
@@ -60,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.zenid"})
 @EnableConfigurationProperties
 @Tag("external-service")
-public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
+class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProviderTest.class);
 
@@ -94,7 +93,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void checkDocumentUploadTest() throws Exception {
+    void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createIdCardFrontDocument();
         List<SubmittedDocument> documents = List.of(document);
 
@@ -110,7 +109,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void submitDocumentsTest() throws Exception {
+    void submitDocumentsTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
         DocumentsSubmitResult result = submitDocuments(ownerId, documents);
@@ -119,7 +118,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void verifyDocumentsTest() throws Exception {
+    void verifyDocumentsTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
@@ -135,7 +134,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void getVerificationResultTest() throws Exception {
+    void getVerificationResultTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
@@ -155,7 +154,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void getPhotoTest() throws Exception {
+    void getPhotoTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
@@ -167,7 +166,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void cleanupDocumentsTest() throws Exception {
+    void cleanupDocumentsTest() throws Exception {
         List<SubmittedDocument> documents = createSubmittedDocuments();
 
         submitDocuments(ownerId, documents);
@@ -176,7 +175,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void parseRejectionReasonsTest() throws Exception {
+    void parseRejectionReasonsTest() throws Exception {
         DocumentResultEntity docResult = new DocumentResultEntity();
         docResult.setVerificationResult("[{\"Ok\": false, \"Issues\":[{\"IssueDescription\": \"Rejection reason\"}]}]");
         List<String> rejectionReasons = provider.parseRejectionReasons(docResult);
@@ -184,7 +183,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     @Test
-    public void initVerificationSdkTest() throws Exception {
+    void initVerificationSdkTest() throws Exception {
         Map<String, String> attributes = Map.of(ZenidConst.SDK_INIT_TOKEN, "sdk-init-token");
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
         assertNotNull(verificationSdkInfo.getAttributes().get(ZenidConst.SDK_INIT_RESPONSE), "Missing SDK init response");
@@ -208,7 +207,7 @@ public class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerif
     }
 
     private List<SubmittedDocument> createSubmittedDocuments() throws Exception {
-        return ImmutableList.of(
+        return List.of(
                 createIdCardFrontDocument(),
                 createIdCardBackDocument()
         );

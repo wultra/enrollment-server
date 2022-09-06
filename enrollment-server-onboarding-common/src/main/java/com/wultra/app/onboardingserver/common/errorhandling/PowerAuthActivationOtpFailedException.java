@@ -15,30 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider.rest;
+package com.wultra.app.onboardingserver.common.errorhandling;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.time.Duration;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthActivationException;
 
 /**
- * Configuration for {@link OnboardingProvider}.
+ * Exception thrown in case activation using OTP code fails completely (hard fail).
  *
- * @author Lubos Racansky, lubos.racansky@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
-@ConfigurationProperties("enrollment-server-onboarding.onboarding-adapter")
-@Getter
-@Setter
-class RestOnboardingProviderConfiguration {
+public class PowerAuthActivationOtpFailedException extends PowerAuthActivationException {
 
-    private Duration connectionTimeout = Duration.ofSeconds(2);
+    private static final long serialVersionUID = -7173917873802997723L;
 
-    private Duration handshakeTimeout = Duration.ofSeconds(5);
-
-    private Duration responseTimeout = Duration.ofSeconds(5);
-
-    private boolean acceptInvalidSslCertificate;
 }

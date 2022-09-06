@@ -59,7 +59,7 @@
         <dependency>
             <groupId>io.getlime.core</groupId>
             <artifactId>rest-client-base</artifactId>
-            <version>1.5.1</version>
+            <version>${rest-client.version}</version>
         </dependency>
 
         <!-- Bouncy Castle -->

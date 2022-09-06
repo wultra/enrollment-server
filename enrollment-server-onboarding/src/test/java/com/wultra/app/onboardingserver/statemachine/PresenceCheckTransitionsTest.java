@@ -51,7 +51,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
+class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
@@ -69,7 +69,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     private PresenceCheckService presenceCheckService;
 
     @Test
-    public void testPresenceCheckInit() throws Exception {
+    void testPresenceCheckInit() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
@@ -95,7 +95,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testPresenceCheckInProgress() throws Exception {
+    void testPresenceCheckInProgress() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -120,7 +120,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testPresenceCheckAcceptedOtpEnabled() throws Exception {
+    void testPresenceCheckAcceptedOtpEnabled() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -148,7 +148,7 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    public void testPresenceCheckAcceptedOtpDisabled() throws Exception {
+    void testPresenceCheckAcceptedOtpDisabled() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -164,12 +164,12 @@ public class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
         doAnswer(args -> {
-            ((StateContext<OnboardingState, OnboardingEvent>) args.getArgument(0))
+            args.getArgument(0, StateContext.class)
                     .getExtendedState()
                     .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
                     .setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(verificationProcessResultAction).execute(any(StateContext.class));
+        }).when(verificationProcessResultAction).execute(any());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

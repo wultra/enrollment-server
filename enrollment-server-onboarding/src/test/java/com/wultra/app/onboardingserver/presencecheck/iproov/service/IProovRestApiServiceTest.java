@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class IProovRestApiServiceTest {
 
     @Test
-    public void ensureValidUserIdValueTest() throws Exception {
+    void ensureValidUserIdValueTest() throws Exception {
         assertThrows(IllegalArgumentException.class, () -> {
             IProovRestApiService.ensureValidUserIdValue("invalidChars,[=");
         });

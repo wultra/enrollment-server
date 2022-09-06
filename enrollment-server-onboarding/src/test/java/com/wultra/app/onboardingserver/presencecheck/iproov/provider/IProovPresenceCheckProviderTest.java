@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck.iproov"})
 @EnableConfigurationProperties
 @Tag("external-service")
-public class IProovPresenceCheckProviderTest {
+class IProovPresenceCheckProviderTest {
 
     private IProovPresenceCheckProvider provider;
 
@@ -63,19 +63,19 @@ public class IProovPresenceCheckProviderTest {
     }
 
     @Test
-    public void initPresenceCheckTest() throws Exception {
+    void initPresenceCheckTest() throws Exception {
         initPresenceCheck(ownerId);
     }
 
     // FIXME temporary testing of repeated initiatilization (not implemented deletion of previous iProov enrollment)
     @Test
-    public void repeatInitPresenceCheckTest() throws Exception {
+    void repeatInitPresenceCheckTest() throws Exception {
         initPresenceCheck(ownerId);
         initPresenceCheck(ownerId);
     }
 
     @Test
-    public void startPresenceCheckTest() throws Exception {
+    void startPresenceCheckTest() throws Exception {
         initPresenceCheck(ownerId);
 
         SessionInfo sessionInfo = provider.startPresenceCheck(ownerId);
@@ -86,7 +86,7 @@ public class IProovPresenceCheckProviderTest {
     }
 
     @Test
-    public void getResultTest() throws Exception {
+    void getResultTest() throws Exception {
         initPresenceCheck(ownerId);
 
         SessionInfo sessionInfo = provider.startPresenceCheck(ownerId);
@@ -97,7 +97,7 @@ public class IProovPresenceCheckProviderTest {
     }
 
     @Test
-    public void repeatPresenceCheckStartTest() throws Exception {
+    void repeatPresenceCheckStartTest() throws Exception {
         initPresenceCheck(ownerId);
 
         SessionInfo sessionInfo1 = provider.startPresenceCheck(ownerId);

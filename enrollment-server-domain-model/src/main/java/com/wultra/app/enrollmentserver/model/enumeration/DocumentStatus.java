@@ -17,8 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.model.enumeration;
 
-import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 /**
@@ -67,7 +65,7 @@ public enum DocumentStatus {
     /**
      * All not finished statuses.
      */
-    public static final List<DocumentStatus> ALL_NOT_FINISHED = ImmutableList.of(
+    public static final List<DocumentStatus> ALL_NOT_FINISHED = List.of(
             UPLOAD_IN_PROGRESS,
             VERIFICATION_PENDING,
             VERIFICATION_IN_PROGRESS
@@ -76,7 +74,7 @@ public enum DocumentStatus {
     /**
      * All unsuccessful statuses.
      */
-    public static final List<DocumentStatus> ALL_FAILED = ImmutableList.of(
+    public static final List<DocumentStatus> ALL_FAILED = List.of(
             DISPOSED,
             REJECTED,
             FAILED

@@ -76,7 +76,6 @@ public class IdentityVerificationEntity implements Serializable {
     private IdentityVerificationPhase phase;
 
     @Column(name = "reject_reason")
-    @Lob
     private String rejectReason;
 
     @Column(name = "reject_origin")
@@ -91,7 +90,6 @@ public class IdentityVerificationEntity implements Serializable {
     private ErrorOrigin errorOrigin;
 
     @Column(name = "session_info")
-    @Lob
     private String sessionInfo;
 
     @Column(name = "timestamp_created", nullable = false)
