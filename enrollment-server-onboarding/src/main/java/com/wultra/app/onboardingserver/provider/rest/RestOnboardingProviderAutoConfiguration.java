@@ -64,6 +64,11 @@ class RestOnboardingProviderAutoConfiguration {
         config.setHandshakeTimeout(configuration.getHandshakeTimeout());
         config.setDefaultHttpHeaders(headers);
 
+        if (configuration.isAcceptInvalidSslCertificate()) {
+            logger.warn("Allowed usage of invalid ssl certificate for RestOnboardingProvider");
+            config.setAcceptInvalidSslCertificate(configuration.isAcceptInvalidSslCertificate());
+        }
+
         return new DefaultRestClient(config);
     }
 
