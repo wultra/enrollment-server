@@ -17,10 +17,9 @@
  */
 package com.wultra.app.onboardingserver.task.cleaning;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
@@ -126,10 +125,26 @@ class CleaningTaskTest {
     }
 
     @Test
-    //@Sql
+    @Sql
     void testTerminateExpiredOtpCodes() {
+        final String id1 = "f50b8c04-649d-43a7-8079-4dbf9b0bbc72";
+        final String id2 = "6560a85d-7d97-44c0-bd29-04c57051aa57";
+        final String id3 = "e4974ef6-135a-4ae1-be91-a2c0f674c8fd";
+
+        assertStatus(id1, OtpStatus.ACTIVE);
+        assertStatus(id2, OtpStatus.ACTIVE);
+        assertStatus(id3, OtpStatus.VERIFIED);
+
         tested.terminateExpiredOtpCodes();
-        // TODO
+        flushAndClear();
+
+        assertStatus(id1, OtpStatus.ACTIVE);
+        assertStatus(id2, OtpStatus.FAILED);
+        assertStatus(id3, OtpStatus.VERIFIED);
+
+        final OnboardingOtpEntity onboardingOtp = fetchOnboardingOtp(id2);
+        assertEquals(OnboardingOtpEntity.ERROR_EXPIRED, onboardingOtp.getErrorDetail());
+        assertEquals(ErrorOrigin.OTP_VERIFICATION, onboardingOtp.getErrorOrigin());
     }
 
     @Test
@@ -156,8 +171,17 @@ class CleaningTaskTest {
         assertEquals(status, documentVerification.getStatus(), "status of " + id);
     }
 
+    private void assertStatus(final String id, final OtpStatus status) {
+        final OnboardingOtpEntity documentVerification = fetchOnboardingOtp(id);
+        assertEquals(status, documentVerification.getStatus(), "status of " + id);
+    }
+
     private DocumentVerificationEntity fetchDocumentVerification(final String id) {
         return entityManager.find(DocumentVerificationEntity.class, id);
+    }
+
+    private OnboardingOtpEntity fetchOnboardingOtp(final String id) {
+        return entityManager.find(OnboardingOtpEntity.class, id);
     }
 
     private void assertPhaseAndStatus(final String id, final IdentityVerificationPhase phase, IdentityVerificationStatus status) {
