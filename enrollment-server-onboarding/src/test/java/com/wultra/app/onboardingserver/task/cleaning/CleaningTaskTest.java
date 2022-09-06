@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.PROC
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for {@link CleaningTask}.
@@ -101,6 +102,50 @@ class CleaningTaskTest {
         assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
     }
 
+    @Test
+    @Sql
+    void testCleanupLargeDocuments() {
+        final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
+        final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
+
+        assertNotNull(fetchDocumentData(id1));
+        assertNotNull(fetchDocumentData(id2));
+
+        tested.cleanupLargeDocuments();
+        flushAndClear();
+
+        assertNotNull(fetchDocumentData(id1));
+        assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");
+    }
+
+    @Test
+    //@Sql
+    void testTerminateExpiredProcesses() {
+        tested.terminateExpiredProcesses();
+        // TODO
+    }
+
+    @Test
+    //@Sql
+    void testTerminateExpiredOtpCodes() {
+        tested.terminateExpiredOtpCodes();
+        // TODO
+    }
+
+    @Test
+    //@Sql
+    void testTerminateExpiredProcessVerifications() {
+        tested.terminateExpiredProcessVerifications();
+        // TODO
+    }
+
+    @Test
+    //@Sql
+    void testTerminateExpiredProcessActivations() {
+        tested.terminateExpiredProcessActivations();
+        // TODO
+    }
+
     private void flushAndClear() {
         entityManager.flush();
         entityManager.clear();
@@ -121,7 +166,11 @@ class CleaningTaskTest {
         assertEquals(status, identityVerification.getStatus(), "status of id " + id);
     }
 
-    private IdentityVerificationEntity fetchIdentityVerification(String id) {
+    private IdentityVerificationEntity fetchIdentityVerification(final String id) {
         return entityManager.find(IdentityVerificationEntity.class, id);
+    }
+
+    private DocumentDataEntity fetchDocumentData(final String id) {
+        return entityManager.find(DocumentDataEntity.class, id);
     }
 }
