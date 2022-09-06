@@ -22,7 +22,7 @@
         <dependency>
             <groupId>io.getlime.core</groupId>
             <artifactId>rest-model-base</artifactId>
-            <version>1.5.2</version>
+            <version>${rest-client.version}</version>
         </dependency>
     </dependencies>
 

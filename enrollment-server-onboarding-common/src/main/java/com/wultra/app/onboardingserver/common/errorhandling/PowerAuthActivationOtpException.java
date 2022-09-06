@@ -28,7 +28,36 @@ public class PowerAuthActivationOtpException extends PowerAuthActivationExceptio
 
     private static final long serialVersionUID = -1587779018046975797L;
 
-    private Integer remainingAttempts;
+    private final Integer remainingAttempts;
+
+    /**
+     * Basic constructor.
+     * @param remainingAttempts Remaining attempts for OTP verification during activation.
+     */
+    public PowerAuthActivationOtpException(Integer remainingAttempts) {
+        super("POWER_AUTH_ACTIVATION_INVALID");
+        this.remainingAttempts = remainingAttempts;
+    }
+
+    /**
+     * Constructor with exception message.
+     * @param message Exception message.
+     * @param remainingAttempts Remaining attempts for OTP verification during activation.
+     */
+    public PowerAuthActivationOtpException(String message, Integer remainingAttempts) {
+        super(message);
+        this.remainingAttempts = remainingAttempts;
+    }
+
+    /**
+     * Constructor with exception cause.
+     * @param cause Exception cause.
+     * @param remainingAttempts Remaining attempts for OTP verification during activation.
+     */
+    public PowerAuthActivationOtpException(Throwable cause, Integer remainingAttempts) {
+        super(cause);
+        this.remainingAttempts = remainingAttempts;
+    }
 
     /**
      * Get remaining attempts for OTP code verification during activation.
@@ -38,11 +67,4 @@ public class PowerAuthActivationOtpException extends PowerAuthActivationExceptio
         return remainingAttempts;
     }
 
-    /**
-     * Set remaining attempts for OTP code verification during activation.
-     * @param remainingAttempts Remaining attempts for OTP code verification during activation.
-     */
-    public void setRemainingAttempts(Integer remainingAttempts) {
-        this.remainingAttempts = remainingAttempts;
-    }
 }
