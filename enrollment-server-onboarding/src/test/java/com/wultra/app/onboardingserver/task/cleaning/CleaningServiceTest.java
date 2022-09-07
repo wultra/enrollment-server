@@ -118,10 +118,26 @@ class CleaningServiceTest {
     }
 
     @Test
-    //@Sql
+    @Sql
     void testTerminateExpiredProcesses() {
+        final String processId1 = "11111111-df91-4053-bb3d-3970979baf5d";
+        final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";
+        final String processId3 = "33333333-df91-4053-bb3d-3970979baf5d";
+
+        assertStatus(processId1, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId3, OnboardingStatus.FINISHED);
+
         tested.terminateExpiredProcesses();
-        // TODO
+        flushAndClear();
+
+        assertStatus(processId1, OnboardingStatus.FAILED);
+        assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId3, OnboardingStatus.FINISHED);
+
+        final OnboardingProcessEntity onboardingProcess = fetchOnboardingProcess(processId1);
+        assertEquals("expiredProcessOnboarding", onboardingProcess.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, onboardingProcess.getErrorOrigin());
     }
 
     @Test
