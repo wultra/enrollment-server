@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.task.cleaning;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
@@ -34,9 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.PROCESS_LIMIT_CHECK;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -64,16 +62,16 @@ class CleaningServiceTest {
         final String id2 = "8d036a18-f51f-4a30-92cd-04876172ebca";
         final String id3 = "c918e1c4-5ca7-47da-8765-afc92082f717";
 
-        assertPhaseAndStatus(id1, PRESENCE_CHECK, IN_PROGRESS);
-        assertPhaseAndStatus(id2, PRESENCE_CHECK, IN_PROGRESS);
-        assertPhaseAndStatus(id3, COMPLETED, ACCEPTED);
+        assertPhaseAndStatus(id1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(id2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(id3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
 
         tested.terminateExpiredIdentityVerifications();
         flushAndClear();
 
-        assertPhaseAndStatus(id1, PRESENCE_CHECK, IN_PROGRESS);
-        assertPhaseAndStatus(id2, COMPLETED, FAILED);
-        assertPhaseAndStatus(id3, COMPLETED, ACCEPTED);
+        assertPhaseAndStatus(id1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(id2, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
+        assertPhaseAndStatus(id3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
 
         final IdentityVerificationEntity identityVerification = fetchIdentityVerification(id2);
         assertEquals("expiredProcessOnboarding", identityVerification.getErrorDetail());
@@ -150,17 +148,73 @@ class CleaningServiceTest {
     }
 
     @Test
-    //@Sql
+    @Sql
     void testTerminateExpiredProcessVerifications() {
+        final String processId1 = "11111111-df91-4053-bb3d-3970979baf5d";
+        final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";
+        final String processId3 = "33333333-df91-4053-bb3d-3970979baf5d";
+        final String processId4 = "44444444-df91-4053-bb3d-3970979baf5d";
+
+        final String identityVerificationId1 = "11111111-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId2 = "22222222-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId3 = "33333333-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId4 = "44444444-4ac0-45dd-b68e-29f4cd991a5c";
+
+        final String documentId1 = "11111111-f51f-4a30-92cd-04876172ebca";
+        final String documentId2 = "22222222-f51f-4a30-92cd-04876172ebca";
+        final String documentId3 = "33333333-f51f-4a30-92cd-04876172ebca";
+        final String documentId4 = "44444444-f51f-4a30-92cd-04876172ebca";
+
+        assertStatus(processId1, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        assertStatus(processId2, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        assertStatus(processId3, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        assertStatus(processId4, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+
+        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
+        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+
+        assertStatus(documentId1, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId2, DocumentStatus.ACCEPTED);
+        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId4, DocumentStatus.ACCEPTED);
+
         tested.terminateExpiredProcessVerifications();
-        // TODO
+        flushAndClear();
+
+        assertStatus(processId1, OnboardingStatus.FAILED);
+        assertStatus(processId2, OnboardingStatus.FAILED);
+        assertStatus(processId3, OnboardingStatus.FAILED);
+        assertStatus(processId4, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+
+        final OnboardingProcessEntity onboardingProcess = fetchOnboardingProcess(processId1);
+        assertEquals("expiredProcessIdentityVerification", onboardingProcess.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, onboardingProcess.getErrorOrigin());
+
+        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
+        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
+        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
+        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+
+        final IdentityVerificationEntity identityVerification = fetchIdentityVerification(identityVerificationId1);
+        assertEquals("expiredProcessIdentityVerification", identityVerification.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, identityVerification.getErrorOrigin());
+
+        assertStatus(documentId1, DocumentStatus.FAILED);
+        assertStatus(documentId2, DocumentStatus.ACCEPTED);
+        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId4, DocumentStatus.ACCEPTED);
+
+        final DocumentVerificationEntity documentVerification = fetchDocumentVerification(documentId1);
+        assertEquals("expiredProcessIdentityVerification", documentVerification.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
     }
 
     @Test
     //@Sql
     void testTerminateExpiredProcessActivations() {
         tested.terminateExpiredProcessActivations();
-        // TODO
     }
 
     private void flushAndClear() {
@@ -171,6 +225,11 @@ class CleaningServiceTest {
     private void assertStatus(final String id, final DocumentStatus status) {
         final DocumentVerificationEntity documentVerification = fetchDocumentVerification(id);
         assertEquals(status, documentVerification.getStatus(), "status of " + id);
+    }
+
+    private void assertStatus(final String id, final OnboardingStatus status) {
+        final OnboardingProcessEntity onboardingProcess = fetchOnboardingProcess(id);
+        assertEquals(status, onboardingProcess.getStatus(), "status of " + id);
     }
 
     private void assertStatus(final String id, final OtpStatus status) {
@@ -184,6 +243,10 @@ class CleaningServiceTest {
 
     private OnboardingOtpEntity fetchOnboardingOtp(final String id) {
         return entityManager.find(OnboardingOtpEntity.class, id);
+    }
+
+    private OnboardingProcessEntity fetchOnboardingProcess(final String id) {
+        return entityManager.find(OnboardingProcessEntity.class, id);
     }
 
     private void assertPhaseAndStatus(final String id, final IdentityVerificationPhase phase, IdentityVerificationStatus status) {
