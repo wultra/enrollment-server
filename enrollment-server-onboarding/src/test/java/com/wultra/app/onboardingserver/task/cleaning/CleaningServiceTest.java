@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -45,8 +44,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("mock")
 @Transactional
-@SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
-@Sql
 class CleaningServiceTest {
 
     @Autowired
@@ -56,8 +53,8 @@ class CleaningServiceTest {
     private EntityManager entityManager;
 
     @Test
+    @Sql
     void testTerminateExpiredIdentityVerifications() {
-
         final String id1 = "a6055e8b-4ac0-45dd-b68e-29f4cd991a5c";
         final String id2 = "8d036a18-f51f-4a30-92cd-04876172ebca";
         final String id3 = "c918e1c4-5ca7-47da-8765-afc92082f717";
