@@ -62,12 +62,7 @@ class CleaningServiceTest {
         final String id2 = "8d036a18-f51f-4a30-92cd-04876172ebca";
         final String id3 = "c918e1c4-5ca7-47da-8765-afc92082f717";
 
-        assertPhaseAndStatus(id1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(id2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(id3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
-
         tested.terminateExpiredIdentityVerifications();
-        flushAndClear();
 
         assertPhaseAndStatus(id1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
         assertPhaseAndStatus(id2, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
@@ -85,12 +80,7 @@ class CleaningServiceTest {
         final String id2 = "2d036a18-f51f-4a30-92cd-04876172ebca";
         final String id3 = "3918e1c4-5ca7-47da-8765-afc92082f717";
 
-        assertStatus(id1, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(id2, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(id3, DocumentStatus.ACCEPTED);
-
         tested.terminateExpiredDocumentVerifications();
-        flushAndClear();
 
         assertStatus(id1, DocumentStatus.UPLOAD_IN_PROGRESS);
         assertStatus(id2, DocumentStatus.FAILED);
@@ -107,11 +97,7 @@ class CleaningServiceTest {
         final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
         final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
 
-        assertNotNull(fetchDocumentData(id1));
-        assertNotNull(fetchDocumentData(id2));
-
         tested.cleanupLargeDocuments();
-        flushAndClear();
 
         assertNotNull(fetchDocumentData(id1));
         assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");
@@ -124,12 +110,7 @@ class CleaningServiceTest {
         final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";
         final String processId3 = "33333333-df91-4053-bb3d-3970979baf5d";
 
-        assertStatus(processId1, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        assertStatus(processId3, OnboardingStatus.FINISHED);
-
         tested.terminateExpiredProcesses();
-        flushAndClear();
 
         assertStatus(processId1, OnboardingStatus.FAILED);
         assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
@@ -147,12 +128,7 @@ class CleaningServiceTest {
         final String id2 = "6560a85d-7d97-44c0-bd29-04c57051aa57";
         final String id3 = "e4974ef6-135a-4ae1-be91-a2c0f674c8fd";
 
-        assertStatus(id1, OtpStatus.ACTIVE);
-        assertStatus(id2, OtpStatus.ACTIVE);
-        assertStatus(id3, OtpStatus.VERIFIED);
-
         tested.terminateExpiredOtpCodes();
-        flushAndClear();
 
         assertStatus(id1, OtpStatus.ACTIVE);
         assertStatus(id2, OtpStatus.FAILED);
@@ -181,23 +157,7 @@ class CleaningServiceTest {
         final String documentId3 = "33333333-f51f-4a30-92cd-04876172ebca";
         final String documentId4 = "44444444-f51f-4a30-92cd-04876172ebca";
 
-        assertStatus(processId1, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        assertStatus(processId2, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        assertStatus(processId3, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        assertStatus(processId4, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-
-        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
-        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-
-        assertStatus(documentId1, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(documentId2, DocumentStatus.ACCEPTED);
-        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(documentId4, DocumentStatus.ACCEPTED);
-
         tested.terminateExpiredProcessVerifications();
-        flushAndClear();
 
         assertStatus(processId1, OnboardingStatus.FAILED);
         assertStatus(processId2, OnboardingStatus.FAILED);
@@ -245,23 +205,7 @@ class CleaningServiceTest {
         final String documentId3 = "33333333-f51f-4a30-92cd-04876172ebca";
         final String documentId4 = "44444444-f51f-4a30-92cd-04876172ebca";
 
-        assertStatus(processId1, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        assertStatus(processId3, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-        assertStatus(processId4, OnboardingStatus.ACTIVATION_IN_PROGRESS);
-
-        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
-        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-
-        assertStatus(documentId1, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(documentId2, DocumentStatus.ACCEPTED);
-        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
-        assertStatus(documentId4, DocumentStatus.ACCEPTED);
-
         tested.terminateExpiredProcessActivations();
-        flushAndClear();
 
         assertStatus(processId1, OnboardingStatus.FAILED);
         assertStatus(processId2, OnboardingStatus.FAILED);
@@ -289,11 +233,6 @@ class CleaningServiceTest {
         final DocumentVerificationEntity documentVerification = fetchDocumentVerification(documentId1);
         assertEquals("expiredProcessActivation", documentVerification.getErrorDetail());
         assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
-    }
-
-    private void flushAndClear() {
-        entityManager.flush();
-        entityManager.clear();
     }
 
     private void assertStatus(final String id, final DocumentStatus status) {
