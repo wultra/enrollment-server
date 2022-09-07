@@ -95,7 +95,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
      * @param statuses document statuses
      * @return identity verification IDs
      */
-    @Query("SELECT d FROM DocumentVerificationEntity d " +
+    @Query("SELECT d.id FROM DocumentVerificationEntity d " +
             "WHERE d.identityVerification.id in :identityVerificationIds " +
             "AND d.status in :statuses")
     List<String> findDocumentVerificationsByIdentityVerificationIdsAndStatuses(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
