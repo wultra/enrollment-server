@@ -39,14 +39,14 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test for {@link CleaningTask}.
+ * Test for {@link CleaningService}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("mock")
 @Transactional
-class CleaningTaskTest {
+class CleaningServiceTest {
 
     @Autowired
     private CleaningService tested;

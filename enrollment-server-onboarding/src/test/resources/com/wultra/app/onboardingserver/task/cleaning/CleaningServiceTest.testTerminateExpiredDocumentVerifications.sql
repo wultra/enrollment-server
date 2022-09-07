@@ -1,4 +1,4 @@
-RUNSCRIPT FROM 'classpath:/com/wultra/app/onboardingserver/task/cleaning/CleaningTaskTest.testTerminateExpiredIdentityVerifications.sql';
+RUNSCRIPT FROM 'classpath:/com/wultra/app/onboardingserver/task/cleaning/CleaningServiceTest.testTerminateExpiredIdentityVerifications.sql';
 
 INSERT INTO es_document_verification(id, activation_id, identity_verification_id, type, status, filename, used_for_verification, timestamp_created, timestamp_last_updated) VALUES
     ('16055e8b-4ac0-45dd-b68e-29f4cd991a5c', 'a1', 'a6055e8b-4ac0-45dd-b68e-29f4cd991a5c', 'ID_CARD', 'UPLOAD_IN_PROGRESS', 'f1', false, now(), now()),
