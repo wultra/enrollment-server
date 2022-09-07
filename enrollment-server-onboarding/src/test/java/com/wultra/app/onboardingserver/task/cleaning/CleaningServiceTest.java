@@ -212,9 +212,67 @@ class CleaningServiceTest {
     }
 
     @Test
-    //@Sql
+    @Sql
     void testTerminateExpiredProcessActivations() {
+        final String processId1 = "11111111-df91-4053-bb3d-3970979baf5d";
+        final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";
+        final String processId3 = "33333333-df91-4053-bb3d-3970979baf5d";
+        final String processId4 = "44444444-df91-4053-bb3d-3970979baf5d";
+
+        final String identityVerificationId1 = "11111111-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId2 = "22222222-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId3 = "33333333-4ac0-45dd-b68e-29f4cd991a5c";
+        final String identityVerificationId4 = "44444444-4ac0-45dd-b68e-29f4cd991a5c";
+
+        final String documentId1 = "11111111-f51f-4a30-92cd-04876172ebca";
+        final String documentId2 = "22222222-f51f-4a30-92cd-04876172ebca";
+        final String documentId3 = "33333333-f51f-4a30-92cd-04876172ebca";
+        final String documentId4 = "44444444-f51f-4a30-92cd-04876172ebca";
+
+        assertStatus(processId1, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId2, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId3, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        assertStatus(processId4, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+
+        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
+        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+
+        assertStatus(documentId1, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId2, DocumentStatus.ACCEPTED);
+        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId4, DocumentStatus.ACCEPTED);
+
         tested.terminateExpiredProcessActivations();
+        flushAndClear();
+
+        assertStatus(processId1, OnboardingStatus.FAILED);
+        assertStatus(processId2, OnboardingStatus.FAILED);
+        assertStatus(processId3, OnboardingStatus.FAILED);
+        assertStatus(processId4, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+
+        final OnboardingProcessEntity onboardingProcess = fetchOnboardingProcess(processId1);
+        assertEquals("expiredProcessActivation", onboardingProcess.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, onboardingProcess.getErrorOrigin());
+
+        assertPhaseAndStatus(identityVerificationId1, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
+        assertPhaseAndStatus(identityVerificationId2, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED);
+        assertPhaseAndStatus(identityVerificationId3, IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED);
+        assertPhaseAndStatus(identityVerificationId4, IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+
+        final IdentityVerificationEntity identityVerification = fetchIdentityVerification(identityVerificationId1);
+        assertEquals("expiredProcessActivation", identityVerification.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, identityVerification.getErrorOrigin());
+
+        assertStatus(documentId1, DocumentStatus.FAILED);
+        assertStatus(documentId2, DocumentStatus.ACCEPTED);
+        assertStatus(documentId3, DocumentStatus.UPLOAD_IN_PROGRESS);
+        assertStatus(documentId4, DocumentStatus.ACCEPTED);
+
+        final DocumentVerificationEntity documentVerification = fetchDocumentVerification(documentId1);
+        assertEquals("expiredProcessActivation", documentVerification.getErrorDetail());
+        assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
     }
 
     private void flushAndClear() {
