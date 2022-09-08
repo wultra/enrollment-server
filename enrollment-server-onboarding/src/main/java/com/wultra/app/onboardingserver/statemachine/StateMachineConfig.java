@@ -237,14 +237,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(requiredDocumentTypesGuard)
                 .action(verificationCheckIdentityDocumentsAction)
                 .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
 
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
-                .first(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, documentUploadVerificationPendingGuard)
+                .first(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
+                        it -> documentUploadVerificationPendingGuard.evaluate(it) && requiredDocumentTypesGuard.evaluate(it))
                 .last(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }
 

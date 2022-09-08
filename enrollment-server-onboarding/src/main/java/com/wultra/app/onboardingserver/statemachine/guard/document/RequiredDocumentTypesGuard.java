@@ -57,32 +57,32 @@ public class RequiredDocumentTypesGuard implements Guard<OnboardingState, Onboar
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         final List<DocumentVerificationEntity> documentVerifications =
                 documentVerificationRepository.findAllUsedForVerification(identityVerification);
-        final String id = identityVerification.getId();
+        final String identityVerificationId = identityVerification.getId();
         if (documentVerifications.isEmpty()) {
-            logger.debug("There is no document uploaded yet for identity verification ID: {}", id);
+            logger.debug("There is no document uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else if (!containsIdOrPassport(documentVerifications)) {
-            logger.debug("There is no ID card or travel passport uploaded yet for identity verification ID: {}", id);
+            logger.debug("There is no ID card or travel passport uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else if (!containsDrivingLicence(documentVerifications)) {
-            logger.debug("There is no driving licence uploaded yet for identity verification ID: {}", id);
+            logger.debug("There is no driving licence uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else {
-            logger.debug("All required documents uploaded for identity verification ID: {}", id);
+            logger.debug("All required documents uploaded for identity verification ID: {}", identityVerificationId);
             return true;
         }
     }
 
     private static boolean containsIdOrPassport(final List<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.VERIFICATION_PENDING)
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.ID_CARD || it == DocumentType.PASSPORT);
     }
 
     private static boolean containsDrivingLicence(final List<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.VERIFICATION_PENDING)
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);
     }

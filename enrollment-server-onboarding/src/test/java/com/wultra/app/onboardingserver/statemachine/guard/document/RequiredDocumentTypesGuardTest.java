@@ -112,7 +112,7 @@ class RequiredDocumentTypesGuardTest {
     @Test
     void testIdCardAndDrivingLicenceButInvalidStatus() {
         final DocumentVerificationEntity idCard = createDocumentVerification(DocumentType.ID_CARD);
-        idCard.setStatus(DocumentStatus.ACCEPTED);
+        idCard.setStatus(DocumentStatus.VERIFICATION_PENDING);
 
         when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
                 .thenReturn(List.of(
@@ -126,7 +126,7 @@ class RequiredDocumentTypesGuardTest {
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {
         final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
         documentVerification.setType(type);
-        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setStatus(DocumentStatus.ACCEPTED);
         return documentVerification;
     }
 }
