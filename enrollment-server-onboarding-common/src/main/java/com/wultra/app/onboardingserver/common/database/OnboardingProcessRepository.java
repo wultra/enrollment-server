@@ -19,14 +19,16 @@
 package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -53,17 +55,26 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT count(p) FROM OnboardingProcessEntity p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
     int countProcessesAfterTimestamp(String userId, Date dateAfter);
 
-    @Modifying
-    @Query("UPDATE OnboardingProcessEntity p SET " +
-            "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
-            "p.timestampLastUpdated = :timestampExpired, " +
-            "p.timestampFailed = :timestampExpired, " +
-            "p.errorDetail = :errorDetail, " +
-            "p.errorOrigin = :errorOrigin " +
+    /**
+     * Return onboarding process IDs by the given timestamp and status.
+     *
+     * @param dateCreatedBefore timestamp created must be before the given value
+     * @param status onboarding status
+     * @return onboarding process IDs
+     */
+    @Query("SELECT p.id FROM OnboardingProcessEntity p " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcessesByStatus(Date dateCreatedBefore, Date timestampExpired, OnboardingStatus status, String errorDetail, ErrorOrigin errorOrigin);
+    List<String> findExpiredProcessIdsByStatusAndCreatedDate(Date dateCreatedBefore, OnboardingStatus status);
 
+    /**
+     * Mark the given onboarding processes as failed.
+     *
+     * @param ids Onboarding process IDs
+     * @param timestampExpired last updated and failed timestamp
+     * @param errorDetail error detail
+     * @param errorOrigin error origin
+     */
     @Modifying
     @Query("UPDATE OnboardingProcessEntity p SET " +
             "p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
@@ -71,9 +82,18 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "p.timestampFailed = :timestampExpired, " +
             "p.errorDetail = :errorDetail, " +
             "p.errorOrigin = :errorOrigin " +
-            "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED  " +
-            "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED  " +
-            "AND p.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredProcesses(Date dateCreatedBefore, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
+            "WHERE p.id IN :ids")
+    void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 
+    /**
+     * Return onboarding process IDs by the given timestamp. Include only not yet finished entities.
+     *
+     * @param dateCreatedBefore timestamp created must be before the given value
+     * @return onboarding process IDs
+     */
+    @Query("SELECT p.id FROM OnboardingProcessEntity p " +
+            "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED " +
+            "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
+            "AND p.timestampCreated < :dateCreatedBefore")
+    List<String> findExpiredProcessIdsByCreatedDate(Date dateCreatedBefore);
 }

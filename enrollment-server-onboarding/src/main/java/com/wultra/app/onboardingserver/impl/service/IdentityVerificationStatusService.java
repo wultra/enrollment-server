@@ -99,8 +99,6 @@ public class IdentityVerificationStatusService {
 
         // Check for expiration of onboarding process
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
-            // Trigger immediate processing of expired processes
-            onboardingService.terminateInactiveProcesses();
             response.setIdentityVerificationStatus(FAILED);
             response.setIdentityVerificationPhase(IdentityVerificationPhase.COMPLETED);
             return response;

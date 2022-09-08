@@ -38,7 +38,7 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.identity-verification.otp.length:8}")
     private int otpLength;
 
-    @Value("${enrollment-server-onboarding.onboarding-process.expiration:1h}")
+    @Value("${enrollment-server-onboarding.onboarding-process.expiration:3h}")
     private Duration processExpirationTime;
 
     @Value("${enrollment-server-onboarding.onboarding-process.activation.expiration:5m}")

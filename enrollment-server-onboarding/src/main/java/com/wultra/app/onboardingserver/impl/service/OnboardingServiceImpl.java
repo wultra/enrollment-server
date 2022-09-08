@@ -43,18 +43,18 @@ import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -62,9 +62,8 @@ import java.util.*;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class OnboardingServiceImpl extends CommonOnboardingService {
-
-    private static final Logger logger = LoggerFactory.getLogger(OnboardingServiceImpl.class);
 
     private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
 
@@ -203,8 +202,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         // Check for expiration of onboarding process
         if (hasProcessExpired(process)) {
-            // Trigger immediate processing of expired processes
-            terminateInactiveProcesses();
             response.setOnboardingStatus(OnboardingStatus.FAILED);
             return response;
         }
@@ -288,36 +285,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException();
         }
         return processOptional.get();
-    }
-
-    /**
-     * Check for inactive processes and terminate them.
-     */
-    @Transactional
-    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "terminateInactiveProcesses", lockAtLeastFor = "1s", lockAtMostFor = "5m")
-    public void terminateInactiveProcesses() {
-        final Date now = new Date();
-
-        // Terminate processes with activations in progress
-        final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
-        final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredActivations, now, OnboardingStatus.ACTIVATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
-
-        // Terminate processes with verifications in progress
-        final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
-        final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        onboardingProcessRepository.terminateExpiredProcessesByStatus(createdDateExpiredVerifications, now, OnboardingStatus.VERIFICATION_IN_PROGRESS, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION, ErrorOrigin.PROCESS_LIMIT_CHECK);
-
-        // Terminate OTP codes for all processes
-        final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
-        final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
-        otpService.terminateExpiredOtps(createdDateExpiredOtp);
-
-        // Terminate expired processes
-        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
-        final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        onboardingProcessRepository.terminateExpiredProcesses(createdDateExpiredProcesses, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
     }
 
     /**
