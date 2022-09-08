@@ -31,6 +31,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentVerificationPresenceGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
@@ -91,6 +92,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
+    private final DocumentVerificationPresenceGuard documentVerificationPresenceGuard;
+
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
 
     private final OtpVerifiedGuard otpVerifiedGuard;
@@ -119,6 +122,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final VerificationInitAction verificationInitAction,
             final VerificationProcessResultAction verificationProcessResultAction,
             final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard,
+            final DocumentVerificationPresenceGuard documentVerificationPresenceGuard,
             final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
             final OtpVerifiedGuard otpVerifiedGuard,
             final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
@@ -141,6 +145,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.verificationProcessResultAction = verificationProcessResultAction;
 
         this.documentUploadVerificationPendingGuard = documentUploadVerificationPendingGuard;
+        this.documentVerificationPresenceGuard = documentVerificationPresenceGuard;
 
         this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
         this.otpVerifiedGuard = otpVerifiedGuard;
@@ -232,6 +237,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(documentVerificationPresenceGuard)
                 .action(verificationCheckIdentityDocumentsAction)
                 .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
 
