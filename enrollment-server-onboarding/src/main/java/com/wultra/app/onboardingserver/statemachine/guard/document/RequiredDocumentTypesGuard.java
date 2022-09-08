@@ -58,7 +58,10 @@ public class RequiredDocumentTypesGuard implements Guard<OnboardingState, Onboar
         final List<DocumentVerificationEntity> documentVerifications =
                 documentVerificationRepository.findAllUsedForVerification(identityVerification);
         final String id = identityVerification.getId();
-        if (!containsIdOrPassport(documentVerifications)) {
+        if (documentVerifications.isEmpty()) {
+            logger.debug("There is no document uploaded yet for identity verification ID: {}", id);
+            return false;
+        } else if (!containsIdOrPassport(documentVerifications)) {
             logger.debug("There is no ID card or travel passport uploaded yet for identity verification ID: {}", id);
             return false;
         } else if (!containsDrivingLicence(documentVerifications)) {
