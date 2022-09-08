@@ -63,6 +63,9 @@ class RestOnboardingProviderAutoConfiguration {
         config.setResponseTimeout(configuration.getResponseTimeout());
         config.setHandshakeTimeout(configuration.getHandshakeTimeout());
         config.setDefaultHttpHeaders(headers);
+        config.setHttpBasicAuthEnabled(configuration.isHttpBasicAuthEnabled());
+        config.setHttpBasicAuthUsername(configuration.getHttpBasicAuthUsername());
+        config.setHttpBasicAuthPassword(configuration.getHttpBasicAuthPassword());
 
         if (configuration.isAcceptInvalidSslCertificate()) {
             logger.warn("Allowed usage of invalid ssl certificate for RestOnboardingProvider");
