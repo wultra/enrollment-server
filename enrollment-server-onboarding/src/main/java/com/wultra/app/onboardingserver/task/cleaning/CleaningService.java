@@ -21,13 +21,13 @@ import com.google.common.collect.Lists;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -130,6 +130,7 @@ class CleaningService {
         final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
         final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByCreatedDate(createdDateExpiredProcesses);
         if (ids.isEmpty()) {
+            logger.debug("No expired process to terminate");
             return;
         }
         logger.info("Terminating {} expired processes", ids.size());
@@ -154,6 +155,7 @@ class CleaningService {
         final List<String> ids = documentVerificationRepository
                 .findExpiredVerifications(getVerificationExpirationTime(), DocumentStatus.ALL_NOT_FINISHED);
         if (ids.isEmpty()) {
+            logger.debug("No expired document verification to terminate");
             return;
         }
 
@@ -171,6 +173,7 @@ class CleaningService {
     public void terminateExpiredIdentityVerifications() {
         final List<String> ids = identityVerificationRepository.findNotCompletedIdentityVerifications(getVerificationExpirationTime());
         if (ids.isEmpty()) {
+            logger.debug("No expired identity verification to terminate");
             return;
         }
         final Date now = new Date();
@@ -192,6 +195,7 @@ class CleaningService {
 
     private void terminateProcessesAndRelatedEntities(final List<String> processIds, final String errorDetail) {
         if (processIds.isEmpty()) {
+            logger.debug("No process to terminate");
             return;
         }
 
@@ -202,11 +206,11 @@ class CleaningService {
             logger.info("Terminating {} processes", processIdChunk.size());
             onboardingProcessRepository.terminate(processIdChunk, now, errorDetail, errorOrigin);
 
-            final List<String> identityVerificationIds = identityVerificationRepository.findNotCompletedIdentityVerificationsByProcessIds(processIdChunk);
+            final List<String> identityVerificationIds = identityVerificationRepository.findNotCompletedIdentityVerifications(processIdChunk);
             logger.info("Terminating {} identity verifications", identityVerificationIds.size());
             identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
 
-            final List<String> documentVerificationIds = documentVerificationRepository.findDocumentVerificationsByIdentityVerificationIdsAndStatuses(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
+            final List<String> documentVerificationIds = documentVerificationRepository.findDocumentVerifications(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
             logger.info("Terminating {} document verifications", documentVerificationIds.size());
             documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
         }

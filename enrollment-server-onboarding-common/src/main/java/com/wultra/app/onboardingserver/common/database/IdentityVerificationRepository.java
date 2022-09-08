@@ -100,9 +100,9 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
      * @return identity verification IDs
      */
     @Query("SELECT i.id FROM IdentityVerificationEntity i " +
-            "WHERE i.processId in :processIds " +
+            "WHERE i.processId IN :processIds " +
             "AND i.phase <> com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED")
-    List<String> findNotCompletedIdentityVerificationsByProcessIds(Collection<String> processIds);
+    List<String> findNotCompletedIdentityVerifications(Collection<String> processIds);
 
     /**
      * Return identity verification IDs last updated before the given timestamp. Include only not yet finished entities.
@@ -131,6 +131,6 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
             "i.timestampFailed = :timestampExpired, " +
             "i.errorDetail = :errorDetail, " +
             "i.errorOrigin = :errorOrigin " +
-            "WHERE i.id in :ids")
+            "WHERE i.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 }

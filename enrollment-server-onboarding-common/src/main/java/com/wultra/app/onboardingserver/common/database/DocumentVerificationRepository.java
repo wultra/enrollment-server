@@ -45,12 +45,12 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "    d.usedForVerification = false, " +
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.activationId = :activationId " +
-            "AND d.status IN (:statuses)")
+            "AND d.status IN :statuses")
     int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
 
     @Query("SELECT d.id FROM DocumentVerificationEntity d " +
             "WHERE d.timestampLastUpdated < :cleanupDate " +
-            "AND d.status IN (:statuses)")
+            "AND d.status IN :statuses")
     List<String> findExpiredVerifications(Date cleanupDate, List<DocumentStatus> statuses);
 
     @Modifying
@@ -62,7 +62,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
             "WHERE d.identityVerification = :identityVerification " +
-            "AND d.status IN (:statuses)")
+            "AND d.status IN :statuses")
     List<DocumentVerificationEntity> findAllDocumentVerifications(IdentityVerificationEntity identityVerification, List<DocumentStatus> statuses);
 
     @Query("SELECT d " +
@@ -96,9 +96,9 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
      * @return identity verification IDs
      */
     @Query("SELECT d.id FROM DocumentVerificationEntity d " +
-            "WHERE d.identityVerification.id in :identityVerificationIds " +
-            "AND d.status in :statuses")
-    List<String> findDocumentVerificationsByIdentityVerificationIdsAndStatuses(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
+            "WHERE d.identityVerification.id IN :identityVerificationIds " +
+            "AND d.status IN :statuses")
+    List<String> findDocumentVerifications(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
 
     /**
      * Mark the given document verifications as failed.
@@ -114,6 +114,6 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "    d.errorDetail = :errorDetail, " +
             "    d.errorOrigin = :errorOrigin, " +
             "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.id in :ids")
+            "WHERE d.id IN :ids")
     void terminate(Collection<String> ids, Date timestamp, String errorDetail, ErrorOrigin errorOrigin);
 }

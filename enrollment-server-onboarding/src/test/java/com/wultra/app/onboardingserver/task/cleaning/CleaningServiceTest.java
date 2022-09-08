@@ -19,11 +19,7 @@ package com.wultra.app.onboardingserver.task.cleaning;
 
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentDataEntity;
-import com.wultra.app.onboardingserver.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

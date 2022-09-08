@@ -82,7 +82,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "p.timestampFailed = :timestampExpired, " +
             "p.errorDetail = :errorDetail, " +
             "p.errorOrigin = :errorOrigin " +
-            "WHERE p.id in :ids")
+            "WHERE p.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 
     /**
