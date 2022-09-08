@@ -41,4 +41,10 @@ class RestOnboardingProviderConfiguration {
     private Duration responseTimeout = Duration.ofSeconds(5);
 
     private boolean acceptInvalidSslCertificate;
+
+    private boolean httpBasicAuthEnabled;
+
+    private String httpBasicAuthUsername;
+
+    private String httpBasicAuthPassword;
 }
