@@ -40,12 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**
- * Test for {@link DocumentVerificationPresenceGuard}.
+ * Test for {@link RequiredDocumentTypesGuard}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ExtendWith(MockitoExtension.class)
-class DocumentVerificationPresenceGuardTest {
+class RequiredDocumentTypesGuardTest {
 
     @Mock
     private DocumentVerificationRepository documentVerificationRepository;
@@ -59,7 +59,7 @@ class DocumentVerificationPresenceGuardTest {
     private final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
     @InjectMocks
-    private DocumentVerificationPresenceGuard tested;
+    private RequiredDocumentTypesGuard tested;
 
     @BeforeEach
     void prepareMocks() {

@@ -42,12 +42,12 @@ import java.util.List;
  */
 @Component
 @Slf4j
-public class DocumentVerificationPresenceGuard implements Guard<OnboardingState, OnboardingEvent> {
+public class RequiredDocumentTypesGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final DocumentVerificationRepository documentVerificationRepository;
 
     @Autowired
-    public DocumentVerificationPresenceGuard(final DocumentVerificationRepository documentVerificationRepository) {
+    public RequiredDocumentTypesGuard(final DocumentVerificationRepository documentVerificationRepository) {
         this.documentVerificationRepository = documentVerificationRepository;
     }
 

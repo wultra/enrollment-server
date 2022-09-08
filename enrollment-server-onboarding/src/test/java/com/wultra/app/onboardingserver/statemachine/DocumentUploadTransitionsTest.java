@@ -23,7 +23,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentVerificationPresenceGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -46,7 +46,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationService identityVerificationService;
 
     @MockBean
-    private DocumentVerificationPresenceGuard documentVerificationPresenceGuard;
+    private RequiredDocumentTypesGuard requiredDocumentTypesGuard;
 
     @Test
     void testDocumentUploadInProgress() throws Exception {
@@ -54,7 +54,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        when(documentVerificationPresenceGuard.evaluate(any()))
+        when(requiredDocumentTypesGuard.evaluate(any()))
                 .thenReturn(false);
         doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(OWNER_ID, idVerification);
 
@@ -75,7 +75,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        when(documentVerificationPresenceGuard.evaluate(any()))
+        when(requiredDocumentTypesGuard.evaluate(any()))
                 .thenReturn(true);
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
