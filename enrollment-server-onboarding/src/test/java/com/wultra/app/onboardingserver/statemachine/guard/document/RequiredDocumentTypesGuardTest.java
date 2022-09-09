@@ -18,109 +18,60 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.statemachine.ExtendedState;
-import org.springframework.statemachine.StateContext;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link RequiredDocumentTypesGuard}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@ExtendWith(MockitoExtension.class)
 class RequiredDocumentTypesGuardTest {
-
-    @Mock
-    private DocumentVerificationRepository documentVerificationRepository;
-
-    @Mock
-    private StateContext<OnboardingState, OnboardingEvent> context;
-
-    @Mock
-    private ExtendedState state;
 
     private final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
-    @InjectMocks
-    private RequiredDocumentTypesGuard tested;
-
-    @BeforeEach
-    void prepareMocks() {
-        when(context.getExtendedState())
-                .thenReturn(state);
-        when(state.get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class))
-                .thenReturn(identityVerification);
-    }
+    private final RequiredDocumentTypesGuard tested = new RequiredDocumentTypesGuard();
 
     @Test
     void testOnlyDrivingLicence() {
-        when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
-                .thenReturn(List.of(createDocumentVerification(DocumentType.DRIVING_LICENSE)));
+        final var documentVerifications = List.of(createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
-        boolean result = tested.evaluate(context);
+        boolean result = tested.evaluate(documentVerifications, "1");
         assertFalse(result);
     }
 
     @Test
     void testOnlyIdCard() {
-        when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
-                .thenReturn(List.of(createDocumentVerification(DocumentType.ID_CARD)));
+        final var documentVerifications = List.of(createDocumentVerification(DocumentType.ID_CARD));
 
-        boolean result = tested.evaluate(context);
+        boolean result = tested.evaluate(documentVerifications, "1");
         assertFalse(result);
     }
 
     @Test
     void testIdCardAndDrivingLicence() {
-        when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
-                .thenReturn(List.of(
-                        createDocumentVerification(DocumentType.ID_CARD),
-                        createDocumentVerification(DocumentType.DRIVING_LICENSE)));
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
-        boolean result = tested.evaluate(context);
+        boolean result = tested.evaluate(documentVerifications, "1");
         assertTrue(result);
     }
 
     @Test
     void testTravelPassportAndDrivingLicence() {
-        when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
-                .thenReturn(List.of(
-                        createDocumentVerification(DocumentType.PASSPORT),
-                        createDocumentVerification(DocumentType.DRIVING_LICENSE)));
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.PASSPORT),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
-        boolean result = tested.evaluate(context);
+        boolean result = tested.evaluate(documentVerifications, "1");
         assertTrue(result);
-    }
-
-    @Test
-    void testIdCardAndDrivingLicenceButInvalidStatus() {
-        final DocumentVerificationEntity idCard = createDocumentVerification(DocumentType.ID_CARD);
-        idCard.setStatus(DocumentStatus.VERIFICATION_PENDING);
-
-        when(documentVerificationRepository.findAllUsedForVerification(identityVerification))
-                .thenReturn(List.of(
-                        idCard,
-                        createDocumentVerification(DocumentType.DRIVING_LICENSE)));
-
-        boolean result = tested.evaluate(context);
-        assertFalse(result);
     }
 
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {

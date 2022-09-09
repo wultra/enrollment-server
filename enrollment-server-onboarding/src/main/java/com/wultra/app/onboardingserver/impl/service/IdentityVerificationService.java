@@ -26,23 +26,26 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
-import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
-import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
+import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoundException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +82,8 @@ public class IdentityVerificationService {
     private final CommonOnboardingService processService;
     private final OnboardingProcessLimitService processLimitService;
 
+    private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
@@ -97,17 +102,18 @@ public class IdentityVerificationService {
      */
     @Autowired
     public IdentityVerificationService(
-            IdentityVerificationConfig identityVerificationConfig,
-            DocumentDataRepository documentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository,
-            IdentityVerificationRepository identityVerificationRepository,
-            DocumentProcessingService documentProcessingService,
-            IdentityVerificationCreateService identityVerificationCreateService,
-            VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationLimitService identityVerificationLimitService,
-            CommonOnboardingService processService,
-            OnboardingProcessLimitService processLimitService) {
+            final IdentityVerificationConfig identityVerificationConfig,
+            final DocumentDataRepository documentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final DocumentProcessingService documentProcessingService,
+            final IdentityVerificationCreateService identityVerificationCreateService,
+            final VerificationProcessingService verificationProcessingService,
+            final DocumentVerificationProvider documentVerificationProvider,
+            final IdentityVerificationLimitService identityVerificationLimitService,
+            final CommonOnboardingService processService,
+            final OnboardingProcessLimitService processLimitService,
+            final RequiredDocumentTypesGuard requiredDocumentTypesGuard) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -119,6 +125,7 @@ public class IdentityVerificationService {
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
+        this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
     }
 
     /**
@@ -301,6 +308,11 @@ public class IdentityVerificationService {
 
         if (allDocVerifications.stream()
                 .anyMatch(docVerification -> DocumentStatus.VERIFICATION_IN_PROGRESS.equals(docVerification.getStatus()))) {
+            return;
+        }
+
+        if (!requiredDocumentTypesGuard.evaluate(allDocVerifications, idVerification.getId())) {
+            logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
             return;
         }
 

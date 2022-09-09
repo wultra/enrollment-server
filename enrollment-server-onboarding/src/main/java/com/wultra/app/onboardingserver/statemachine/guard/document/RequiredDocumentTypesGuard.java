@@ -16,20 +16,10 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -40,24 +30,19 @@ import java.util.List;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+// TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
 @Slf4j
-public class RequiredDocumentTypesGuard implements Guard<OnboardingState, OnboardingEvent> {
+public class RequiredDocumentTypesGuard {
 
-    private final DocumentVerificationRepository documentVerificationRepository;
-
-    @Autowired
-    public RequiredDocumentTypesGuard(final DocumentVerificationRepository documentVerificationRepository) {
-        this.documentVerificationRepository = documentVerificationRepository;
-    }
-
-    @Override
-    @Transactional
-    public boolean evaluate(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        final List<DocumentVerificationEntity> documentVerifications =
-                documentVerificationRepository.findAllUsedForVerification(identityVerification);
-        final String identityVerificationId = identityVerification.getId();
+    /**
+     * Evaluate all required document types.
+     *
+     * @param documentVerifications document verifications to evaluate
+     * @param identityVerificationId identity verification ID to log
+     * @return true when all required document types present
+     */
+    public boolean evaluate(final List<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
         if (documentVerifications.isEmpty()) {
             logger.debug("There is no document uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
@@ -75,14 +60,12 @@ public class RequiredDocumentTypesGuard implements Guard<OnboardingState, Onboar
 
     private static boolean containsIdOrPassport(final List<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.ID_CARD || it == DocumentType.PASSPORT);
     }
 
     private static boolean containsDrivingLicence(final List<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);
     }
