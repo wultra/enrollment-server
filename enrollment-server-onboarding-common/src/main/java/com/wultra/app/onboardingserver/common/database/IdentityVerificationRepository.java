@@ -65,15 +65,6 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
     Stream<IdentityVerificationEntity> streamAllInProgressDocumentsVerifications();
 
     /**
-     * @return All identity verification entities with in progress client evaluations.
-     */
-    @Query("SELECT id FROM IdentityVerificationEntity id WHERE" +
-            " id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION" +
-            " AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS " +
-            " ORDER BY id.timestampLastUpdated ASC")
-    Stream<IdentityVerificationEntity> streamAllInProgressClientEvaluations();
-
-    /**
      * Return all identity verifications eligible for change to next state.
      *
      * @return identity verifications

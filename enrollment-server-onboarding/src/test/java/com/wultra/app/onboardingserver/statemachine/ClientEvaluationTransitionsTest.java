@@ -19,14 +19,14 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,8 +35,6 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -54,6 +52,9 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationOtpService identityVerificationOtpService;
+
+    @MockBean
+    private ClientEvaluationService clientEvaluationService;
 
     @MockBean
     private VerificationProcessResultAction verificationProcessResultAction;
@@ -165,9 +166,11 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        Assertions.assertTimeout(Duration.ofMillis(500), () ->
-            idVerification.setStatus(identityStatus)
-        );
+        doAnswer(args -> {
+            final IdentityVerificationEntity identityVerification = args.getArgument(0, IdentityVerificationEntity.class);
+            identityVerification.setStatus(identityStatus);
+            return null;
+        }).when(clientEvaluationService).processClientEvaluation(idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -179,5 +182,4 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 .build()
                 .test();
     }
-
 }
