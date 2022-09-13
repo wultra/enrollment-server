@@ -395,13 +395,14 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Check status of document verification related to identity.
+     * Fetch status of document verification related to identity.
+     *
      * @param request Document status request.
      * @param ownerId Owner identification.
      * @return Document status response.
      */
     @Transactional
-    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, OwnerId ownerId) {
+    public DocumentStatusResponse fetchDocumentStatusResponse(final DocumentStatusRequest request, final OwnerId ownerId) {
         DocumentStatusResponse response = new DocumentStatusResponse();
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
