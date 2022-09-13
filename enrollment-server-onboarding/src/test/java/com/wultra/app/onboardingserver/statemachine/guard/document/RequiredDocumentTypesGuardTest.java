@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 class RequiredDocumentTypesGuardTest {
-
-    private final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
     private final RequiredDocumentTypesGuard tested = new RequiredDocumentTypesGuard();
 

@@ -21,7 +21,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Guard for presence of all required documents.
@@ -42,7 +42,7 @@ public class RequiredDocumentTypesGuard {
      * @param identityVerificationId identity verification ID to log
      * @return true when all required document types present
      */
-    public boolean evaluate(final List<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
+    public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
         if (documentVerifications.isEmpty()) {
             logger.debug("There is no document uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
@@ -58,13 +58,13 @@ public class RequiredDocumentTypesGuard {
         }
     }
 
-    private static boolean containsIdOrPassport(final List<DocumentVerificationEntity> documentVerifications) {
+    private static boolean containsIdOrPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.ID_CARD || it == DocumentType.PASSPORT);
     }
 
-    private static boolean containsDrivingLicence(final List<DocumentVerificationEntity> documentVerifications) {
+    private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);

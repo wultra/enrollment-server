@@ -182,15 +182,8 @@ public class IdentityVerificationService {
                                                             OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
-        // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
-
-        if (idVerificationOptional.isEmpty()) {
-            logger.error("Identity verification has not been initialized, {}", ownerId);
-            throw new DocumentSubmitException("Identity verification has not been initialized");
-        }
-
-        IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        final IdentityVerificationEntity idVerification = findByOptional(ownerId).orElseThrow(() ->
+                new DocumentSubmitException("Identity verification has not been initialized, " + ownerId));
 
         String processId = idVerification.getProcessId();
         if (!processId.equals(request.getProcessId())) {
@@ -198,23 +191,17 @@ public class IdentityVerificationService {
             throw new DocumentSubmitException("Invalid process ID");
         }
 
-        if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
-            logger.error("The verification phase is {} but expected {}, {}",
-                    idVerification.getPhase(), IdentityVerificationPhase.DOCUMENT_UPLOAD, ownerId
-            );
+        final IdentityVerificationPhase phase = idVerification.getPhase();
+        final IdentityVerificationStatus status = idVerification.getStatus();
+        if (phase == IdentityVerificationPhase.DOCUMENT_VERIFICATION && status == IdentityVerificationStatus.IN_PROGRESS) {
+            logger.info("New documents submit, but keep {} in the same phase and state, {}", idVerification, ownerId);
+        } else if (phase != IdentityVerificationPhase.DOCUMENT_UPLOAD) {
+            logger.error("The verification phase is {} but expected DOCUMENT_UPLOAD, {}", phase, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not upload phase");
-        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
-            logger.info("Switching {} from {} to {} due to new documents submit, {}",
-                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
-            );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            identityVerificationRepository.save(idVerification);
-        } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            logger.error("The verification status is {} but expected {}, {}",
-                    idVerification.getStatus(), IdentityVerificationStatus.IN_PROGRESS, ownerId
-            );
+        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(status)) {
+            moveToDocumentUploadInProgress(ownerId, idVerification);
+        } else if (status != IdentityVerificationStatus.IN_PROGRESS) {
+            logger.error("The verification status is {} but expected IN_PROGRESS, {}", status, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
         }
 
@@ -311,7 +298,7 @@ public class IdentityVerificationService {
             return;
         }
 
-        if (!requiredDocumentTypesGuard.evaluate(allDocVerifications, idVerification.getId())) {
+        if (!requiredDocumentTypesGuard.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
             return;
         }
@@ -554,6 +541,14 @@ public class IdentityVerificationService {
      */
     public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
         return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
+    }
+
+    private void moveToDocumentUploadInProgress(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+        logger.info("Switching {} to DOCUMENT_UPLOAD/IN_PROGRESS due to new documents submit, {}", idVerification, ownerId);
+        idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(idVerification);
     }
 
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {
