@@ -23,6 +23,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Configuration for {@link OnboardingProvider}.
@@ -47,4 +49,6 @@ class RestOnboardingProviderConfiguration {
     private String httpBasicAuthUsername;
 
     private String httpBasicAuthPassword;
+
+    private Map<String, String> headers = Collections.emptyMap();
 }

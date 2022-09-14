@@ -34,6 +34,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MimeTypeUtils;
 
+import java.util.Map;
+
 /**
  * Autoconfiguration for {@link OnboardingProvider} registering REST implementation.
  *
@@ -56,6 +58,10 @@ class RestOnboardingProviderAutoConfiguration {
         final HttpHeaders headers = new HttpHeaders();
         headers.add("Accept", MimeTypeUtils.APPLICATION_JSON_VALUE);
         headers.add("Content-Type", MimeTypeUtils.APPLICATION_JSON_VALUE);
+
+        for (final Map.Entry<String, String> entry : configuration.getHeaders().entrySet()) {
+            headers.add(entry.getKey(), entry.getValue());
+        }
 
         final RestClientConfiguration config = new RestClientConfiguration();
         config.setBaseUrl(url);
