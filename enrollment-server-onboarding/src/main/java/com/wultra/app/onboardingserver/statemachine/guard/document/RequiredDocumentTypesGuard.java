@@ -16,6 +16,7 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -36,36 +37,38 @@ import java.util.Collection;
 public class RequiredDocumentTypesGuard {
 
     /**
-     * Evaluate all required document types.
+     * Evaluate all required document types to be present and accepted.
      *
      * @param documentVerifications document verifications to evaluate
      * @param identityVerificationId identity verification ID to log
-     * @return true when all required document types present
+     * @return true when all required document types present and accepted
      */
     public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
         if (documentVerifications.isEmpty()) {
             logger.debug("There is no document uploaded yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else if (!containsIdOrPassport(documentVerifications)) {
-            logger.debug("There is no ID card or travel passport uploaded yet for identity verification ID: {}", identityVerificationId);
+            logger.debug("There is no accepted ID card or travel passport yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else if (!containsDrivingLicence(documentVerifications)) {
-            logger.debug("There is no driving licence uploaded yet for identity verification ID: {}", identityVerificationId);
+            logger.debug("There is no accepted driving licence yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else {
-            logger.debug("All required documents uploaded for identity verification ID: {}", identityVerificationId);
+            logger.debug("All required documents accepted for identity verification ID: {}", identityVerificationId);
             return true;
         }
     }
 
     private static boolean containsIdOrPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.ID_CARD || it == DocumentType.PASSPORT);
     }
 
     private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);
     }

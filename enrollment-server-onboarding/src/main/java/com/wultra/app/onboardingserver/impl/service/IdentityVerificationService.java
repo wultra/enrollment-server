@@ -194,12 +194,12 @@ public class IdentityVerificationService {
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
         if (phase == IdentityVerificationPhase.DOCUMENT_VERIFICATION && status == IdentityVerificationStatus.IN_PROGRESS) {
-            logger.info("New documents submit, but keep {} in the same phase and state, {}", idVerification, ownerId);
+            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.VERIFICATION_PENDING);
         } else if (phase != IdentityVerificationPhase.DOCUMENT_UPLOAD) {
             logger.error("The verification phase is {} but expected DOCUMENT_UPLOAD, {}", phase, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not upload phase");
         } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(status)) {
-            moveToDocumentUploadInProgress(ownerId, idVerification);
+            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.IN_PROGRESS);
         } else if (status != IdentityVerificationStatus.IN_PROGRESS) {
             logger.error("The verification status is {} but expected IN_PROGRESS, {}", status, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
@@ -543,10 +543,10 @@ public class IdentityVerificationService {
         return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
     }
 
-    private void moveToDocumentUploadInProgress(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        logger.info("Switching {} to DOCUMENT_UPLOAD/IN_PROGRESS due to new documents submit, {}", idVerification, ownerId);
+    private void moveToDocumentUpload(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final IdentityVerificationStatus status) {
+        logger.info("Switching {} to DOCUMENT_UPLOAD/{} due to new documents submit, {}", idVerification, status, ownerId);
         idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
+        idVerification.setStatus(status);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
     }

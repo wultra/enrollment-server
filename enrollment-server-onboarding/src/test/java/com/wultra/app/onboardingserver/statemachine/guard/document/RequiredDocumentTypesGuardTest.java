@@ -71,6 +71,18 @@ class RequiredDocumentTypesGuardTest {
         assertTrue(result);
     }
 
+    @Test
+    void testTravelPassportAndDrivingLicenceButInvalidStatus() {
+        final DocumentVerificationEntity travelPassport = createDocumentVerification(DocumentType.PASSPORT);
+        travelPassport.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
+        final var documentVerifications = List.of(
+                travelPassport,
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
+    }
+
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {
         final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
         documentVerification.setType(type);
