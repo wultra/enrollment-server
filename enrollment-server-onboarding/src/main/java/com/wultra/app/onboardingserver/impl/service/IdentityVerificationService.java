@@ -474,34 +474,6 @@ public class IdentityVerificationService {
         return documentVerificationProvider.getPhoto(photoId);
     }
 
-    /**
-     * Check documents used for verification on their status
-     * <p>
-     *     When all of the documents are {@link DocumentStatus#VERIFICATION_PENDING} the identity verification is set
-     *     also to {@link IdentityVerificationStatus#VERIFICATION_PENDING}
-     * </p>
-     * @param idVerification Identity verification entity.
-     * @param ownerId Owner identification
-     */
-    @Transactional
-    public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllUsedForVerification(idVerification);
-
-        if (docVerifications.stream()
-                .allMatch(docVerification ->
-                        DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
-                )
-        ) {
-            logger.info("All documents are pending verification, changing status of {} to {}",
-                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
-            );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        }
-    }
-
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {
         List<DocumentMetadataResponseDto> docsMetadata = new ArrayList<>();
         entities.forEach(entity -> {
