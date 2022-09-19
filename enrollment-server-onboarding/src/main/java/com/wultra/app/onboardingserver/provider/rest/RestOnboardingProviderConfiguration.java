@@ -37,6 +37,9 @@ import java.util.Map;
 @Setter
 class RestOnboardingProviderConfiguration {
 
+    private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
+    private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";
+
     private Duration connectionTimeout = Duration.ofSeconds(2);
 
     private Duration handshakeTimeout = Duration.ofSeconds(5);
@@ -51,9 +54,9 @@ class RestOnboardingProviderConfiguration {
 
     private String httpBasicAuthPassword;
 
-    private Header correlationHeader = new Header("X-Correlation-Id");
+    private Header correlationHeader = new Header(CORRELATION_HEADER_DEFAULT_NAME);
 
-    private Header requestIdHeader = new Header("X-Request-Id");
+    private Header requestIdHeader = new Header(REQUEST_ID_HEADER_DEFAULT_NAME);
 
     private Map<String, String> headers = Collections.emptyMap();
 
