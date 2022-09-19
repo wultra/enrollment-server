@@ -41,14 +41,16 @@ import java.util.function.Consumer;
 @Slf4j
 class RestOnboardingProvider implements OnboardingProvider {
 
-    private static final String HEADER_CORRELATION_ID = "X-Correlation-Id";
+    private final String correlationHeaderName;
 
-    private static final String HEADER_REQUEST_ID = "X-Request-Id";
+    private final String requestIdHeaderName;
 
     private final RestClient restClient;
 
-    public RestOnboardingProvider(final RestClient restClient) {
+    public RestOnboardingProvider(final RestClient restClient, final RestOnboardingProviderConfiguration configuration) {
         this.restClient = restClient;
+        this.correlationHeaderName = configuration.getCorrelationHeader().getName();
+        this.requestIdHeaderName = configuration.getRequestIdHeader().getName();
     }
 
     @Override
@@ -161,10 +163,10 @@ class RestOnboardingProvider implements OnboardingProvider {
         return sink.asMono();
     }
 
-    private static MultiValueMap<String, String> createHeaders() {
+    private MultiValueMap<String, String> createHeaders() {
         final HttpHeaders headers = new HttpHeaders();
-        headers.add(HEADER_CORRELATION_ID, UUID.randomUUID().toString());
-        headers.add(HEADER_REQUEST_ID, UUID.randomUUID().toString());
+        headers.add(correlationHeaderName, UUID.randomUUID().toString());
+        headers.add(requestIdHeaderName, UUID.randomUUID().toString());
         return headers;
     }
 

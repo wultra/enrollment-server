@@ -82,8 +82,10 @@ class RestOnboardingProviderAutoConfiguration {
     }
 
     @Bean
-    OnboardingProvider onboardingProvider(@Qualifier("onboardingAdapterRestClient") RestClient restClient) {
+    OnboardingProvider onboardingProvider(
+            @Qualifier("onboardingAdapterRestClient") RestClient restClient,
+            final RestOnboardingProviderConfiguration configuration) {
         logger.warn("Initializing RestOnboardingProvider");
-        return new RestOnboardingProvider(restClient);
+        return new RestOnboardingProvider(restClient, configuration);
     }
 }

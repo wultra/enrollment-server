@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider.rest;
 
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -50,5 +51,16 @@ class RestOnboardingProviderConfiguration {
 
     private String httpBasicAuthPassword;
 
+    private Header correlationHeader = new Header("X-Correlation-Id");
+
+    private Header requestIdHeader = new Header("X-Request-Id");
+
     private Map<String, String> headers = Collections.emptyMap();
+
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class Header {
+        private String name;
+    }
 }
