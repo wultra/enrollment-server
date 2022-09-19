@@ -18,11 +18,14 @@
 package com.wultra.app.onboardingserver.provider.rest;
 
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Configuration for {@link OnboardingProvider}.
@@ -33,6 +36,9 @@ import java.time.Duration;
 @Getter
 @Setter
 class RestOnboardingProviderConfiguration {
+
+    private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
+    private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";
 
     private Duration connectionTimeout = Duration.ofSeconds(2);
 
@@ -47,4 +53,17 @@ class RestOnboardingProviderConfiguration {
     private String httpBasicAuthUsername;
 
     private String httpBasicAuthPassword;
+
+    private Header correlationHeader = new Header(CORRELATION_HEADER_DEFAULT_NAME);
+
+    private Header requestIdHeader = new Header(REQUEST_ID_HEADER_DEFAULT_NAME);
+
+    private Map<String, String> headers = Collections.emptyMap();
+
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class Header {
+        private String name;
+    }
 }

@@ -24,10 +24,13 @@ import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -38,10 +41,16 @@ import java.util.function.Consumer;
 @Slf4j
 class RestOnboardingProvider implements OnboardingProvider {
 
+    private final String correlationHeaderName;
+
+    private final String requestIdHeaderName;
+
     private final RestClient restClient;
 
-    public RestOnboardingProvider(final RestClient restClient) {
+    public RestOnboardingProvider(final RestClient restClient, final RestOnboardingProviderConfiguration configuration) {
         this.restClient = restClient;
+        this.correlationHeaderName = configuration.getCorrelationHeader().getName();
+        this.requestIdHeaderName = configuration.getRequestIdHeader().getName();
     }
 
     @Override
@@ -53,7 +62,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         final UserLookupResponseDto response;
 
         try {
-            response = restClient.post("/user/lookup", requestDto, responseType).getBody();
+            response = restClient.post("/user/lookup", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to lookup user for " + request, e);
         }
@@ -76,7 +85,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         final OtpSendResponseDto response;
 
         try {
-            response = restClient.post("/otp/send", requestDto, responseType).getBody();
+            response = restClient.post("/otp/send", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to send otp for " + request, e);
         }
@@ -99,7 +108,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         final ConsentTextResponseDto response;
 
         try {
-            response = restClient.post("/consent/text", requestDto, responseType).getBody();
+            response = restClient.post("/consent/text", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to fetch consent for " + request, e);
         }
@@ -117,7 +126,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         final ConsentStorageRequestDto requestDto = convert(request);
 
         try {
-            restClient.post("/consent/storage", requestDto, ParameterizedTypeReference.forType(Object.class));
+            restClient.post("/consent/storage", requestDto, null, createHeaders(), ParameterizedTypeReference.forType(Object.class));
             logger.debug("Approved consent for {}", request);
             return new ApproveConsentResponse();
         } catch (RestClientException e) {
@@ -147,11 +156,18 @@ class RestOnboardingProvider implements OnboardingProvider {
 
         try {
             final ParameterizedTypeReference<ClientEvaluateResponseDto> type = ParameterizedTypeReference.forType(ClientEvaluateResponseDto.class);
-            restClient.postNonBlocking("/client/evaluate", requestDto, type, onSuccess, onError);
+            restClient.postNonBlocking("/client/evaluate", requestDto, null, createHeaders(), type, onSuccess, onError);
         } catch (RestClientException e) {
             sink.tryEmitError(new OnboardingProviderException("Unable to evaluate client for " + request, e));
         }
         return sink.asMono();
+    }
+
+    private MultiValueMap<String, String> createHeaders() {
+        final HttpHeaders headers = new HttpHeaders();
+        headers.add(correlationHeaderName, UUID.randomUUID().toString());
+        headers.add(requestIdHeaderName, UUID.randomUUID().toString());
+        return headers;
     }
 
     private static UserLookupRequestDto convert (final LookupUserRequest source) {
@@ -183,7 +199,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         }
     }
 
-    private static ConsentTextRequestDto convert(final ConsentTextRequest source) throws OnboardingProviderException {
+    private static ConsentTextRequestDto convert(final ConsentTextRequest source) {
         final ConsentTextRequestDto target = new ConsentTextRequestDto();
         target.setProcessId(source.getProcessId().toString());
         target.setUserId(source.getUserId());
@@ -192,7 +208,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         return target;
     }
 
-    private static ConsentStorageRequestDto convert(final ApproveConsentRequest source) throws OnboardingProviderException {
+    private static ConsentStorageRequestDto convert(final ApproveConsentRequest source) {
         final ConsentStorageRequestDto target = new ConsentStorageRequestDto();
         target.setProcessId(target.getProcessId());
         target.setUserId(target.getUserId());
