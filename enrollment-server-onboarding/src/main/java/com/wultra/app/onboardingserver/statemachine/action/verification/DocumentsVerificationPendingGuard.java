@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Guard that all documents of the given identity verification are in status {@code VERIFICATION_PENDING}.
+ * Guard that all documents for verification of the given identity verification are in status {@code VERIFICATION_PENDING} or {@code ACCEPTED}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -61,12 +61,12 @@ public class DocumentsVerificationPendingGuard implements Guard<OnboardingState,
 
         final boolean allDocumentsPendingVerification = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
-                .allMatch(it -> it == DocumentStatus.VERIFICATION_PENDING);
+                .allMatch(it -> it == DocumentStatus.VERIFICATION_PENDING || it == DocumentStatus.ACCEPTED);
 
         if (allDocumentsPendingVerification) {
-            logger.info("All documents of {} are pending verification", identityVerification);
+            logger.info("All documents for verification of {} are pending verification or accepted", identityVerification);
         } else {
-            logger.debug("Not all documents of {} are pending verification", identityVerification);
+            logger.debug("Not all documents for verification of {} are pending verification or accepted", identityVerification);
         }
 
         return allDocumentsPendingVerification;
