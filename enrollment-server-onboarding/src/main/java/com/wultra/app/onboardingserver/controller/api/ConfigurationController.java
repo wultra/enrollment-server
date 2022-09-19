@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
+import io.getlime.core.rest.model.base.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,8 +38,9 @@ public class ConfigurationController {
     private boolean onboardingEnabled;
 
     @GetMapping
-    public Object fetchConfiguration() {
-        return Map.of("onboarding",
+    public ObjectResponse<Object> fetchConfiguration() {
+        final Object response = Map.of("onboarding",
                 Map.of("enabled", onboardingEnabled));
+        return new ObjectResponse<>(response);
     }
 }
