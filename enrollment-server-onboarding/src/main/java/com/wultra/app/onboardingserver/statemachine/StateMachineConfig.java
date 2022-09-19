@@ -16,6 +16,7 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
+import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
@@ -71,6 +72,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ClientEvaluationInitAction clientEvaluationInitAction;
 
+    private final ClientEvaluationAction clientEvaluationAction;
+
     private final OtpVerificationResendAction otpVerificationResendAction;
 
     private final OtpVerificationSendAction otpVerificationSendAction;
@@ -109,6 +112,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     public StateMachineConfig(
             final ClientEvaluationInitAction clientEvaluationInitAction,
+            final ClientEvaluationAction clientEvaluationAction,
             final OtpVerificationResendAction otpVerificationResendAction,
             final OtpVerificationSendAction otpVerificationSendAction,
             final PresenceCheckInitAction presenceCheckInitAction,
@@ -128,6 +132,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final StatusInProgressGuard statusInProgressGuard,
             final StatusRejectedGuard statusRejectedGuard) {
         this.clientEvaluationInitAction = clientEvaluationInitAction;
+        this.clientEvaluationAction = clientEvaluationAction;
         this.otpVerificationResendAction = otpVerificationResendAction;
         this.otpVerificationSendAction = otpVerificationSendAction;
 
@@ -272,6 +277,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .action(clientEvaluationAction)
                 .target(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
 
                 .and()

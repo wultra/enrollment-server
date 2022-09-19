@@ -22,10 +22,10 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.provider.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -41,7 +41,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * Service for client evaluation features.
@@ -81,15 +80,11 @@ public class ClientEvaluationService {
     }
 
     /**
-     * Process client evaluations.
+     * Set phase and status of the given identity verification to {@code CLIENT_EVALUATION / IN_PROGRESS}.
+     *
+     * @param ownerId owner ID to set timestampLastUpdated
+     * @param idVerification identity verification to change
      */
-    @Transactional(readOnly = true)
-    public void processClientEvaluations() {
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationRepository.streamAllInProgressClientEvaluations()) {
-            stream.forEach(this::processClientEvaluation);
-        }
-    }
-
     @Transactional
     public void initClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
         idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
@@ -98,12 +93,13 @@ public class ClientEvaluationService {
         logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
     }
 
-    private void processClientEvaluation(final IdentityVerificationEntity identityVerification) {
+    /**
+     * Process client evaluation of the given identity verification initialized in {@link #initClientEvaluation(OwnerId, IdentityVerificationEntity)}.
+     *
+     * @param identityVerification identity verification to process
+     */
+    public void processClientEvaluation(final IdentityVerificationEntity identityVerification) {
         logger.debug("Evaluating client for {}", identityVerification);
-
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(identityVerification.getActivationId());
-        ownerId.setUserId("server-task-client-evaluations");
 
         final EvaluateClientRequest request = EvaluateClientRequest.builder()
                 .processId(UUID.fromString(identityVerification.getProcessId()))

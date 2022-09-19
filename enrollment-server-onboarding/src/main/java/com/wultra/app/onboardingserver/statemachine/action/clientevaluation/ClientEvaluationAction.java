@@ -16,51 +16,35 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
-import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 /**
- * Action to initialize client evaluation.
+ * Action to process client evaluation.
  *
- * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
-public class ClientEvaluationInitAction implements Action<OnboardingState, OnboardingEvent> {
+public class ClientEvaluationAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final ClientEvaluationService clientEvaluationService;
 
     @Autowired
-    public ClientEvaluationInitAction(ClientEvaluationService clientEvaluationService) {
+    public ClientEvaluationAction(ClientEvaluationService clientEvaluationService) {
         this.clientEvaluationService = clientEvaluationService;
     }
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        clientEvaluationService.initClientEvaluation(ownerId, identityVerification);
-
-        sendNextStateEvent(context);
-    }
-
-    private static void sendNextStateEvent(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final Message<OnboardingEvent> message = MessageBuilder.withPayload(OnboardingEvent.EVENT_NEXT_STATE)
-                .setHeader(EventHeaderName.OWNER_ID, context.getMessageHeader(EventHeaderName.OWNER_ID))
-                .setHeader(EventHeaderName.PROCESS_ID, context.getMessageHeader(EventHeaderName.PROCESS_ID))
-                .build();
-        context.getStateMachine().sendEvent(Mono.just(message)).subscribe();
+        clientEvaluationService.processClientEvaluation(identityVerification);
     }
 }
