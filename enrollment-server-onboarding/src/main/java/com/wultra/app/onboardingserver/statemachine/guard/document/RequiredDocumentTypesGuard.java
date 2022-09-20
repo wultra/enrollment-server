@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Guard for presence of all required documents.
  * <p>
@@ -44,14 +46,18 @@ public class RequiredDocumentTypesGuard {
      * @return true when all required document types present and accepted
      */
     public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
-        if (documentVerifications.isEmpty()) {
-            logger.debug("There is no document uploaded yet for identity verification ID: {}", identityVerificationId);
+        final Collection<DocumentVerificationEntity> acceptedDocumentVerifications = documentVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+                .collect(toList());
+
+        if (!isTwoDistinctDocumentsPresent(acceptedDocumentVerifications)) {
+            logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);
             return false;
-        } else if (!containsIdOrPassport(documentVerifications)) {
-            logger.debug("There is no accepted ID card or travel passport yet for identity verification ID: {}", identityVerificationId);
+        } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
+            logger.debug("There is no accepted primary document yet for identity verification ID: {}", identityVerificationId);
             return false;
-        } else if (!containsDrivingLicence(documentVerifications)) {
-            logger.debug("There is no accepted driving licence yet for identity verification ID: {}", identityVerificationId);
+        } else if (!containsSecondaryDocument(acceptedDocumentVerifications)) {
+            logger.debug("There is no accepted secondary document yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else {
             logger.debug("All required documents accepted for identity verification ID: {}", identityVerificationId);
@@ -59,16 +65,39 @@ public class RequiredDocumentTypesGuard {
         }
     }
 
-    private static boolean containsIdOrPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+    private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return 2 == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == DocumentType.ID_CARD || it == DocumentType.PASSPORT);
+                .distinct()
+                .count();
+    }
+
+    private static boolean containsPrimaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return containsBothSidesOfId(documentVerifications) || containsPassport(documentVerifications);
+    }
+
+    private static boolean containsBothSidesOfId(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return 2 == documentVerifications.stream()
+                .filter(it -> it.getType() == DocumentType.ID_CARD)
+                .map(DocumentVerificationEntity::getSide)
+                .distinct()
+                .count();
+    }
+
+    private static boolean containsPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return documentVerifications.stream()
+                .map(DocumentVerificationEntity::getType)
+                .anyMatch(it -> it == DocumentType.PASSPORT);
+    }
+
+    private static boolean containsSecondaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return containsDrivingLicence(documentVerifications)
+                || containsPassport(documentVerifications)
+                || containsBothSidesOfId(documentVerifications);
     }
 
     private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .map(DocumentVerificationEntity::getType)
                 .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);
     }

@@ -16,11 +16,13 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,6 +38,12 @@ class RequiredDocumentTypesGuardTest {
     private final RequiredDocumentTypesGuard tested = new RequiredDocumentTypesGuard();
 
     @Test
+    void testEmptyCollection() {
+        boolean result = tested.evaluate(Collections.emptyList(), "1");
+        assertFalse(result);
+    }
+
+    @Test
     void testOnlyDrivingLicence() {
         final var documentVerifications = List.of(createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
@@ -45,7 +53,9 @@ class RequiredDocumentTypesGuardTest {
 
     @Test
     void testOnlyIdCard() {
-        final var documentVerifications = List.of(createDocumentVerification(DocumentType.ID_CARD));
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
 
         boolean result = tested.evaluate(documentVerifications, "1");
         assertFalse(result);
@@ -54,11 +64,33 @@ class RequiredDocumentTypesGuardTest {
     @Test
     void testIdCardAndDrivingLicence() {
         final var documentVerifications = List.of(
-                createDocumentVerification(DocumentType.ID_CARD),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
         boolean result = tested.evaluate(documentVerifications, "1");
         assertTrue(result);
+    }
+
+    @Test
+    void testIdCardOneSideOnlyAndDrivingLicence() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
+    }
+
+    @Test
+    void testIdCardSameSidesAndDrivingLicence() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
     }
 
     @Test
@@ -69,6 +101,39 @@ class RequiredDocumentTypesGuardTest {
 
         boolean result = tested.evaluate(documentVerifications, "1");
         assertTrue(result);
+    }
+
+    @Test
+    void testIdCardAndTravelPassport() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
+                createDocumentVerification(DocumentType.PASSPORT));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertTrue(result);
+    }
+
+    @Test
+    void testTwoIdCards() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
+    }
+
+    @Test
+    void testTwoTravelPassports() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.PASSPORT),
+                createDocumentVerification(DocumentType.PASSPORT));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
     }
 
     @Test
@@ -84,8 +149,13 @@ class RequiredDocumentTypesGuardTest {
     }
 
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {
+        return createDocumentVerification(type, null);
+    }
+
+    private static DocumentVerificationEntity createDocumentVerification(final DocumentType type, final CardSide side) {
         final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
         documentVerification.setType(type);
+        documentVerification.setSide(side);
         documentVerification.setStatus(DocumentStatus.ACCEPTED);
         return documentVerification;
     }
