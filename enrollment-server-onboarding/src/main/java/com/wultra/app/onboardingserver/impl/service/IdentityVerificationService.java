@@ -26,23 +26,26 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
-import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
-import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
+import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoundException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +82,8 @@ public class IdentityVerificationService {
     private final CommonOnboardingService processService;
     private final OnboardingProcessLimitService processLimitService;
 
+    private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
@@ -97,17 +102,18 @@ public class IdentityVerificationService {
      */
     @Autowired
     public IdentityVerificationService(
-            IdentityVerificationConfig identityVerificationConfig,
-            DocumentDataRepository documentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository,
-            IdentityVerificationRepository identityVerificationRepository,
-            DocumentProcessingService documentProcessingService,
-            IdentityVerificationCreateService identityVerificationCreateService,
-            VerificationProcessingService verificationProcessingService,
-            DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationLimitService identityVerificationLimitService,
-            CommonOnboardingService processService,
-            OnboardingProcessLimitService processLimitService) {
+            final IdentityVerificationConfig identityVerificationConfig,
+            final DocumentDataRepository documentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final DocumentProcessingService documentProcessingService,
+            final IdentityVerificationCreateService identityVerificationCreateService,
+            final VerificationProcessingService verificationProcessingService,
+            final DocumentVerificationProvider documentVerificationProvider,
+            final IdentityVerificationLimitService identityVerificationLimitService,
+            final CommonOnboardingService processService,
+            final OnboardingProcessLimitService processLimitService,
+            final RequiredDocumentTypesGuard requiredDocumentTypesGuard) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -119,6 +125,7 @@ public class IdentityVerificationService {
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
+        this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
     }
 
     /**
@@ -175,15 +182,8 @@ public class IdentityVerificationService {
                                                             OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
-        // Find an already existing identity verification
-        Optional<IdentityVerificationEntity> idVerificationOptional = findByOptional(ownerId);
-
-        if (idVerificationOptional.isEmpty()) {
-            logger.error("Identity verification has not been initialized, {}", ownerId);
-            throw new DocumentSubmitException("Identity verification has not been initialized");
-        }
-
-        IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        final IdentityVerificationEntity idVerification = findByOptional(ownerId).orElseThrow(() ->
+                new DocumentSubmitException("Identity verification has not been initialized, " + ownerId));
 
         String processId = idVerification.getProcessId();
         if (!processId.equals(request.getProcessId())) {
@@ -191,23 +191,17 @@ public class IdentityVerificationService {
             throw new DocumentSubmitException("Invalid process ID");
         }
 
-        if (!IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(idVerification.getPhase())) {
-            logger.error("The verification phase is {} but expected {}, {}",
-                    idVerification.getPhase(), IdentityVerificationPhase.DOCUMENT_UPLOAD, ownerId
-            );
+        final IdentityVerificationPhase phase = idVerification.getPhase();
+        final IdentityVerificationStatus status = idVerification.getStatus();
+        if (phase == IdentityVerificationPhase.DOCUMENT_VERIFICATION && status == IdentityVerificationStatus.IN_PROGRESS) {
+            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.VERIFICATION_PENDING);
+        } else if (phase != IdentityVerificationPhase.DOCUMENT_UPLOAD) {
+            logger.error("The verification phase is {} but expected DOCUMENT_UPLOAD, {}", phase, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not upload phase");
-        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(idVerification.getStatus())) {
-            logger.info("Switching {} from {} to {} due to new documents submit, {}",
-                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING, IdentityVerificationStatus.IN_PROGRESS, ownerId
-            );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            identityVerificationRepository.save(idVerification);
-        } else if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
-            logger.error("The verification status is {} but expected {}, {}",
-                    idVerification.getStatus(), IdentityVerificationStatus.IN_PROGRESS, ownerId
-            );
+        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(status)) {
+            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.IN_PROGRESS);
+        } else if (status != IdentityVerificationStatus.IN_PROGRESS) {
+            logger.error("The verification status is {} but expected IN_PROGRESS, {}", status, ownerId);
             throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
         }
 
@@ -304,6 +298,11 @@ public class IdentityVerificationService {
             return;
         }
 
+        if (!requiredDocumentTypesGuard.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
+            logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
+            return;
+        }
+
         resolveIdentityVerificationResult(phase, idVerification, allDocVerifications);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
@@ -383,13 +382,14 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Check status of document verification related to identity.
+     * Fetch status of document verification related to identity.
+     *
      * @param request Document status request.
      * @param ownerId Owner identification.
      * @return Document status response.
      */
     @Transactional
-    public DocumentStatusResponse checkIdentityVerificationStatus(DocumentStatusRequest request, OwnerId ownerId) {
+    public DocumentStatusResponse fetchDocumentStatusResponse(final DocumentStatusRequest request, final OwnerId ownerId) {
         DocumentStatusResponse response = new DocumentStatusResponse();
 
         Optional<IdentityVerificationEntity> idVerificationOptional =
@@ -474,34 +474,6 @@ public class IdentityVerificationService {
         return documentVerificationProvider.getPhoto(photoId);
     }
 
-    /**
-     * Check documents used for verification on their status
-     * <p>
-     *     When all of the documents are {@link DocumentStatus#VERIFICATION_PENDING} the identity verification is set
-     *     also to {@link IdentityVerificationStatus#VERIFICATION_PENDING}
-     * </p>
-     * @param idVerification Identity verification entity.
-     * @param ownerId Owner identification
-     */
-    @Transactional
-    public void checkIdentityDocumentsForVerification(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllUsedForVerification(idVerification);
-
-        if (docVerifications.stream()
-                .allMatch(docVerification ->
-                        DocumentStatus.VERIFICATION_PENDING.equals(docVerification.getStatus())
-                )
-        ) {
-            logger.info("All documents are pending verification, changing status of {} to {}",
-                    idVerification, IdentityVerificationStatus.VERIFICATION_PENDING
-            );
-            idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-            idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        }
-    }
-
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {
         List<DocumentMetadataResponseDto> docsMetadata = new ArrayList<>();
         entities.forEach(entity -> {
@@ -541,6 +513,14 @@ public class IdentityVerificationService {
      */
     public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
         return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
+    }
+
+    private void moveToDocumentUpload(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final IdentityVerificationStatus status) {
+        logger.info("Switching {} to DOCUMENT_UPLOAD/{} due to new documents submit, {}", idVerification, status, ownerId);
+        idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
+        idVerification.setStatus(status);
+        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(idVerification);
     }
 
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {

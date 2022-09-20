@@ -19,10 +19,11 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.statemachine.action.verification.DocumentsVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -35,7 +36,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +46,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@MockBean(IdentityVerificationOtpService.class)
+@MockBean(VerificationProcessResultAction.class)
 class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
@@ -54,10 +57,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationService identityVerificationService;
 
     @MockBean
-    private IdentityVerificationOtpService identityVerificationOtpService;
-
-    @MockBean
-    private VerificationProcessResultAction verificationProcessResultAction;
+    private DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
 
     @Test
     void testDocumentVerificationAccepted() throws Exception {
@@ -109,7 +109,9 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);
             return null;
-        }).when(identityVerificationService).startVerification(eq(OWNER_ID), eq(idVerification));
+        }).when(identityVerificationService).startVerification(OWNER_ID, idVerification);
+        when(documentsVerificationPendingGuard.evaluate(any()))
+                .thenReturn(true);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

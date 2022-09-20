@@ -16,11 +16,14 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
@@ -31,9 +34,10 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -41,10 +45,11 @@ import static org.mockito.Mockito.doNothing;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@MockBean(IdentityVerificationRepository.class)
 class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
-    private IdentityVerificationService identityVerificationService;
+    private DocumentVerificationRepository documentVerificationRepository;
 
     @Test
     void testDocumentUploadInProgress() throws Exception {
@@ -52,7 +57,8 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        doNothing().when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
+        when(documentVerificationRepository.findAllUsedForVerification(idVerification))
+                .thenReturn(Collections.emptyList());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -71,10 +77,11 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        doAnswer(args -> {
-            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-            return null;
-        }).when(identityVerificationService).checkIdentityDocumentsForVerification(eq(OWNER_ID), eq(idVerification));
+        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+
+        when(documentVerificationRepository.findAllUsedForVerification(idVerification))
+                .thenReturn(List.of(documentVerification));
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

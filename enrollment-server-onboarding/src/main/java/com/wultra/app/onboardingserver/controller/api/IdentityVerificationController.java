@@ -235,9 +235,10 @@ public class IdentityVerificationController {
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        checkApiAuthentication(apiAuthentication, "submitting documents for verification");
-        checkEciesContext(eciesContext, "submitting documents for verification");
-        checkRequestObject(request, "submitting documents for verification");
+        final String operationDescription = "submitting documents for verification";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(eciesContext);
@@ -319,17 +320,17 @@ public class IdentityVerificationController {
                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        checkApiAuthentication(apiAuthentication, "checking document verification status");
-        checkEciesContext(eciesContext, "checking document verification status");
-        checkRequestObject(request, "checking document verification status");
+        final String operationDescription = "checking document verification status";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         onboardingService.verifyProcessId(ownerId, processId);
 
-        // Process upload document request
-        final DocumentStatusResponse response = identityVerificationService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
+        final DocumentStatusResponse response = identityVerificationService.fetchDocumentStatusResponse(request.getRequestObject(), ownerId);
         return new ObjectResponse<>(response);
     }
 
