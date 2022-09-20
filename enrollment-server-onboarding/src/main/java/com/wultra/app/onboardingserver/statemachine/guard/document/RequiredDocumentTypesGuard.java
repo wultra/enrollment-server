@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * Guard for presence of all required documents.
  * <p>
- * It means ID card or travel passport, and driving licence.
+ * It means a primary document (ID card or travel passport), and another document (e.g. driving licence).
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -56,7 +56,7 @@ public class RequiredDocumentTypesGuard {
         } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
             logger.debug("There is no accepted primary document yet for identity verification ID: {}", identityVerificationId);
             return false;
-        } else if (!containsSecondaryDocument(acceptedDocumentVerifications)) {
+        } else if (!containsSecondDocument(acceptedDocumentVerifications)) {
             logger.debug("There is no accepted secondary document yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else {
@@ -90,7 +90,7 @@ public class RequiredDocumentTypesGuard {
                 .anyMatch(it -> it == DocumentType.PASSPORT);
     }
 
-    private static boolean containsSecondaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
+    private static boolean containsSecondDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
         return containsDrivingLicence(documentVerifications)
                 || containsPassport(documentVerifications)
                 || containsBothSidesOfId(documentVerifications);
