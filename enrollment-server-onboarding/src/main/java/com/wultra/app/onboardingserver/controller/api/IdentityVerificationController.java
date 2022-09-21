@@ -160,9 +160,10 @@ public class IdentityVerificationController {
                                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException {
 
-        checkApiAuthentication(apiAuthentication, "initializing identity verification");
-        checkEciesContext(eciesContext, "initializing identity verification");
-        checkRequestObject(request, "initializing identity verification");
+        final String operationDescription = "initializing identity verification";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         // Initialize identity verification
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
@@ -279,9 +280,10 @@ public class IdentityVerificationController {
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
 
-        checkApiAuthentication(apiAuthentication, "uploading document for verification");
-        checkEciesContext(eciesContext, "uploading document for verification");
-        checkRequest(requestData, "uploading document for verification");
+        final String operationDescription = "uploading document for verification";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequest(requestData, operationDescription);
 
         // Extract user ID from finished onboarding process for current activation
         final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(eciesContext.getActivationId());
@@ -356,9 +358,10 @@ public class IdentityVerificationController {
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        checkApiAuthentication(apiAuthentication, "initializing document verification SDK");
-        checkEciesContext(eciesContext, "initializing document verification SDK");
-        checkRequestObject(request, "initializing document verification SDK");
+        final String operationDescription = "initializing document verification SDK";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -393,9 +396,10 @@ public class IdentityVerificationController {
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        checkApiAuthentication(apiAuthentication, "initializing presence check");
-        checkEciesContext(eciesContext, "initializing presence check");
-        checkRequestObject(request, "initializing presence check");
+        final String operationDescription = "initializing presence check";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -486,9 +490,10 @@ public class IdentityVerificationController {
                             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        checkApiAuthentication(apiAuthentication, "performing document cleanup");
-        checkEciesContext(eciesContext, "performing document cleanup");
-        checkRequestObject(request, "performing document cleanup");
+        final String operationDescription = "performing document cleanup";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
@@ -542,9 +547,10 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        checkApiAuthentication(apiAuthentication, "approving user consent");
-        checkEciesContext(eciesContext, "approving user consent");
-        checkRequestObject(request, "approving user consent");
+        final String operationDescription = "approving user consent";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
 
         final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
         logger.debug("Approving consent for {}", requestObject);
