@@ -39,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service for checking identity verification limits.
@@ -95,7 +94,10 @@ public class IdentityVerificationLimitService {
             identityVerifications.stream()
                     .filter(verification -> verification.getStatus() != IdentityVerificationStatus.FAILED
                             && verification.getStatus() != IdentityVerificationStatus.REJECTED)
-                    .forEach(verification -> verification.setStatus(IdentityVerificationStatus.FAILED));
+                    .forEach(verification -> {
+                        verification.setStatus(IdentityVerificationStatus.FAILED);
+                        logger.info("Switched to {}/FAILED; process ID: {}", verification.getPhase(), verification.getProcessId());
+                    });
             identityVerificationRepository.saveAll(identityVerifications);
 
             process.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
@@ -130,6 +132,7 @@ public class IdentityVerificationLimitService {
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
+            logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
             resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
             throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");

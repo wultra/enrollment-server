@@ -23,7 +23,6 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.presencecheck.iproov.IProovConst;
 import com.wultra.app.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -48,6 +47,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("external-service")
 class IProovPresenceCheckProviderTest {
 
+    private static final String VERIFICATION_TOKEN = "iproov-verification-token";
+
     private IProovPresenceCheckProvider provider;
 
     private OwnerId ownerId;
@@ -67,7 +68,7 @@ class IProovPresenceCheckProviderTest {
         initPresenceCheck(ownerId);
     }
 
-    // FIXME temporary testing of repeated initiatilization (not implemented deletion of previous iProov enrollment)
+    // FIXME temporary testing of repeated initialization (not implemented deletion of previous iProov enrollment)
     @Test
     void repeatInitPresenceCheckTest() throws Exception {
         initPresenceCheck(ownerId);
@@ -82,7 +83,7 @@ class IProovPresenceCheckProviderTest {
 
         assertNotNull(sessionInfo);
         assertNotNull(sessionInfo.getSessionAttributes());
-        assertNotNull(sessionInfo.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN));
+        assertNotNull(sessionInfo.getSessionAttributes().get(VERIFICATION_TOKEN));
     }
 
     @Test
@@ -100,20 +101,22 @@ class IProovPresenceCheckProviderTest {
     void repeatPresenceCheckStartTest() throws Exception {
         initPresenceCheck(ownerId);
 
-        SessionInfo sessionInfo1 = provider.startPresenceCheck(ownerId);
+        final SessionInfo sessionInfo1 = provider.startPresenceCheck(ownerId);
         assertNotNull(
-                sessionInfo1.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                sessionInfo1.getSessionAttributes().get(VERIFICATION_TOKEN),
                 "Missing presence check verification token in session 1"
         );
 
-        SessionInfo sessionInfo2 = provider.startPresenceCheck(ownerId);
+        initPresenceCheck(ownerId);
+
+        final SessionInfo sessionInfo2 = provider.startPresenceCheck(ownerId);
         assertNotNull(
-                sessionInfo2.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                sessionInfo2.getSessionAttributes().get(VERIFICATION_TOKEN),
                 "Missing presence check verification token in session 2"
         );
         assertNotEquals(
-                sessionInfo1.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
-                sessionInfo2.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN),
+                sessionInfo1.getSessionAttributes().get(VERIFICATION_TOKEN),
+                sessionInfo2.getSessionAttributes().get(VERIFICATION_TOKEN),
                 "Same presence check verification tokens between session 1 and session 2");
     }
 

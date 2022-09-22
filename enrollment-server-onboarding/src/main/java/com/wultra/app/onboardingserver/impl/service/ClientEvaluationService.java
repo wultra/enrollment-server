@@ -90,7 +90,7 @@ public class ClientEvaluationService {
         idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
         idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}, process ID: {}", ownerId, idVerification.getProcessId());
+        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; process ID: {}, {}", idVerification.getProcessId(), ownerId);
     }
 
     /**
@@ -131,11 +131,13 @@ public class ClientEvaluationService {
             if (response.isAccepted()) {
                 logger.info("Client evaluation accepted for {}", identityVerification);
                 identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+                logger.info("Switched to {}/ACCEPTED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
             } else {
                 logger.info("Client evaluation rejected for {}", identityVerification);
                 identityVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 identityVerification.getDocumentVerifications()
                         .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
+                logger.info("Switched to {}/REJECTED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
                 identityVerification.setTimestampFailed(now);
             }
             if (response.isErrorOccurred()) {
@@ -157,6 +159,7 @@ public class ClientEvaluationService {
             final Date now = new Date();
             identityVerification.setTimestampLastUpdated(now);
             identityVerification.setTimestampFailed(now);
+            logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
             saveInTransaction(identityVerification);
         };
     }

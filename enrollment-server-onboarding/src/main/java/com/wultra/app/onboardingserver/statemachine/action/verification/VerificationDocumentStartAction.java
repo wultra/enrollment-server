@@ -62,6 +62,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
             identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            logger.info("Switched to DOCUMENT_VERIFICATION/FAILED; process ID: {}", identityVerification.getProcessId());
             logger.warn("Verification start failed, {}", ownerId, e);
         }
     }

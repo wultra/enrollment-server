@@ -96,7 +96,7 @@ public class PresenceCheckService {
         idVerification.setPhase(IdentityVerificationPhase.PRESENCE_CHECK);
         idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.debug("Changed {} to not initialized presence check, {}", idVerification, ownerId);
+        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; process ID: {}", idVerification.getProcessId());
     }
 
     /**
@@ -226,6 +226,8 @@ public class PresenceCheckService {
         idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
+        logger.info("Switched to PRESENCE_CHECK/IN_PROGRESS; process ID: {}", idVerification.getProcessId());
+
         return sessionInfo;
     }
 
@@ -268,7 +270,7 @@ public class PresenceCheckService {
                 idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 // The timestampFinished parameter is not set yet, there may be other steps ahead
-                logger.info("Presence check accepted, {}", ownerId);
+                logger.info("Switched to {}/ACCEPTED; process ID: {}", idVerification.getPhase(), idVerification.getProcessId());
                 break;
             case FAILED:
                 idVerification.setErrorDetail(result.getErrorDetail());
@@ -276,6 +278,7 @@ public class PresenceCheckService {
                 idVerification.setStatus(IdentityVerificationStatus.FAILED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 idVerification.setTimestampFailed(ownerId.getTimestamp());
+                logger.info("Switched to {}/FAILED; process ID: {}", idVerification.getPhase(), idVerification.getProcessId());
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
                 break;
             case IN_PROGRESS:
@@ -287,6 +290,7 @@ public class PresenceCheckService {
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
+                logger.info("Switched to {}/REJECTED; process ID: {}", idVerification.getPhase(), idVerification.getProcessId());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:
