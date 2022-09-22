@@ -37,5 +37,5 @@ public class OnboardingConsentApprovalRequest {
     private String consentType;
 
     @Schema(required = true)
-    private Boolean approved;
+    private boolean approved;
 }

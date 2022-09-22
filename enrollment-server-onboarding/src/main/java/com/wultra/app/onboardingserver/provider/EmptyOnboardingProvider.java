@@ -18,6 +18,10 @@
 package com.wultra.app.onboardingserver.provider;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.provider.model.request.*;
+import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
+import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import reactor.core.publisher.Mono;
 
 /**

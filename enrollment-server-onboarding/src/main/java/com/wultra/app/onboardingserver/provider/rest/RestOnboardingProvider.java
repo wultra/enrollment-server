@@ -19,6 +19,10 @@ package com.wultra.app.onboardingserver.provider.rest;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.*;
+import com.wultra.app.onboardingserver.provider.model.request.*;
+import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
+import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -143,9 +147,9 @@ class RestOnboardingProvider implements OnboardingProvider {
         final Sinks.One<EvaluateClientResponse> sink = Sinks.one();
         final Consumer<ResponseEntity<ClientEvaluateResponseDto>> onSuccess = response -> {
             logger.debug("Evaluated client {} for {}", response, request);
-            final boolean successful = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
+            final boolean accepted = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
             sink.tryEmitValue(EvaluateClientResponse.builder()
-                    .successful(successful)
+                    .accepted(accepted)
                     .build());
         };
 
@@ -170,7 +174,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         return headers;
     }
 
-    private static UserLookupRequestDto convert (final LookupUserRequest source) {
+    private static UserLookupRequestDto convert(final LookupUserRequest source) {
         final UserLookupRequestDto target = new UserLookupRequestDto();
         target.setIdentification(source.getIdentification());
         target.setProcessId(source.getProcessId());
@@ -213,7 +217,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         target.setProcessId(target.getProcessId());
         target.setUserId(target.getUserId());
         target.setConsentType(source.getConsentType());
-        target.setApproved(source.getApproved());
+        target.setApproved(source.isApproved());
         return target;
     }
 
