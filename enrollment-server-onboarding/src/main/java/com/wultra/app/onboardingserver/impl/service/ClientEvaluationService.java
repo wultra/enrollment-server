@@ -127,7 +127,7 @@ public class ClientEvaluationService {
         return response -> {
             final Date now = new Date();
             identityVerification.setTimestampLastUpdated(now);
-            // The timestampFinished parameter is not set yet, there are may be other steps ahead
+            // The timestampFinished parameter is not set yet, there may be other steps ahead
             if (response.isAccepted()) {
                 logger.info("Client evaluation accepted for {}", identityVerification);
                 identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);

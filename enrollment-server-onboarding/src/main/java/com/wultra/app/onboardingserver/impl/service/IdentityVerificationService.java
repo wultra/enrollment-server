@@ -362,7 +362,7 @@ public class IdentityVerificationService {
             idVerification.setPhase(phase);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             idVerification.setTimestampLastUpdated(now);
-            // The timestampFinished parameter is not set yet, there are may be other steps ahead
+            // The timestampFinished parameter is not set yet, there may be other steps ahead
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
