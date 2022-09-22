@@ -14,17 +14,49 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.ToString;
+
+import java.util.Locale;
 
 /**
- * Response object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.
+ * Request object for {@link OnboardingProvider#sendOtpCode(SendOtpCodeRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@Builder
+@Getter
+@ToString(exclude = "otpCode")
 @PublicApi
-public final class ApproveConsentResponse {
-    // empty so far, open to change in the future
+public final class SendOtpCodeRequest {
+
+    @NonNull
+    private String processId;
+
+    @NonNull
+    private String userId;
+
+    @NonNull
+    private String otpCode;
+
+    private boolean resend;
+
+    @NonNull
+    private Locale locale;
+
+    @NonNull
+    private OtpType otpType;
+
+    public enum OtpType {
+        ACTIVATION,
+        USER_VERIFICATION
+    }
 }

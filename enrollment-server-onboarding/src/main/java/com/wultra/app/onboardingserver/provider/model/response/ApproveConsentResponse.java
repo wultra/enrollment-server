@@ -14,37 +14,20 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.model.response;
 
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
-
-import java.util.UUID;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 
 /**
- * Request object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
+ * Response object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@ToString
 @PublicApi
-public final class EvaluateClientRequest {
-
-    @NonNull
-    private UUID processId;
-
-    @NonNull
-    private String userId;
-
-    @NonNull
-    private String identityVerificationId;
-
-    @NonNull
-    private String verificationId;
+public final class ApproveConsentResponse {
+    // empty so far, open to change in the future
 }

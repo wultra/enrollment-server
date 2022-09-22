@@ -28,6 +28,8 @@ public enum ErrorOrigin {
 
     PRESENCE_CHECK,
 
+    CLIENT_EVALUATION,
+
     OTP_VERIFICATION,
 
     PROCESS_LIMIT_CHECK,

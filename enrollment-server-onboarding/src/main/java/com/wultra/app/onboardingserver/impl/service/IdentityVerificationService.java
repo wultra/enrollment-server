@@ -167,6 +167,15 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Update an identity verification entity in database.
+     * @param identityVerification Identity verification identity.
+     * @return Updated identity verification entity.
+     */
+    public IdentityVerificationEntity updateIdentityVerification(IdentityVerificationEntity identityVerification) {
+        return identityVerificationRepository.save(identityVerification);
+    }
+
+    /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param ownerId Owner identification.
@@ -353,7 +362,7 @@ public class IdentityVerificationService {
             idVerification.setPhase(phase);
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             idVerification.setTimestampLastUpdated(now);
-            idVerification.setTimestampFinished(now);
+            // The timestampFinished parameter is not set yet, there may be other steps ahead
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))

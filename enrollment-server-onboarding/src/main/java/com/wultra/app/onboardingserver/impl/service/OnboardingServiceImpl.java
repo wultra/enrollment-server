@@ -41,6 +41,12 @@ import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.*;
+import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
+import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
+import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
+import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
+import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -326,7 +332,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .processId(request.getProcessId())
                 .userId(userId)
                 .consentType(request.getConsentType())
-                .approved(request.getApproved())
+                .approved(request.isApproved())
                 .build();
 
         try {
@@ -368,13 +374,21 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess);
     }
 
-    private String lookupUser(final String processId, final Map<String, Object> identification) {
+    private String lookupUser(final OnboardingProcessEntity process, final Map<String, Object> identification) {
         try {
             final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
                     .identification(identification)
-                    .processId(processId)
+                    .processId(process.getId())
                     .build();
-            return onboardingProvider.lookupUser(lookupUserRequest).getUserId();
+            final LookupUserResponse response = onboardingProvider.lookupUser(lookupUserRequest);
+            if (response.isErrorOccurred()) {
+                logger.warn("Business logic error occurred during user lookup, process ID: {}, error detail: {}", process.getId(), response.getErrorDetail());
+                process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
+                process.setErrorDetail(response.getErrorDetail());
+                process.setTimestampLastUpdated(new Date());
+                onboardingProcessRepository.save(process);
+            }
+            return response.getUserId();
         } catch (OnboardingProviderException e) {
             logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
             logger.debug("User lookup failed, using null user ID", e);
@@ -385,7 +399,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData) {
         final OnboardingProcessEntity process = createNewProcess(identificationData);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUser(process.getId(), identification);
+        final String userId = lookupUser(process, identification);
         process.setUserId(userId);
         return process;
     }
@@ -402,7 +416,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private OnboardingProcessEntity resumeExistingProcess(final OnboardingProcessEntity process, final Map<String, Object> identification) {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
-        final String userId = lookupUser(process.getId(), identification);
+        final String userId = lookupUser(process, identification);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
                     String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",

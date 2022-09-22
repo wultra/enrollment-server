@@ -14,30 +14,39 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 
+import java.util.UUID;
+
 /**
- * Response object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Request object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
 @Getter
-@PublicApi
 @ToString
-public final class LookupUserResponse {
+@PublicApi
+public final class EvaluateClientRequest {
+
+    @NonNull
+    private UUID processId;
 
     @NonNull
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    @NonNull
+    private String identityVerificationId;
+
+    @NonNull
+    private String verificationId;
 }

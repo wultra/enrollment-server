@@ -267,7 +267,7 @@ public class PresenceCheckService {
             case ACCEPTED:
                 idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                idVerification.setTimestampFinished(ownerId.getTimestamp());
+                // The timestampFinished parameter is not set yet, there may be other steps ahead
                 logger.info("Presence check accepted, {}", ownerId);
                 break;
             case FAILED:

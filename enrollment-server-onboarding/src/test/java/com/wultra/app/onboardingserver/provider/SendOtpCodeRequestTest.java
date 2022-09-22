@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
+import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;

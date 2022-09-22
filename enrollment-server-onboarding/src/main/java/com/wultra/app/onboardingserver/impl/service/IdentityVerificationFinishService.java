@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
@@ -44,16 +45,19 @@ public class IdentityVerificationFinishService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationFinishService.class);
 
     private final OnboardingServiceImpl onboardingService;
+    private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
 
     /**
      * Service constructor.
      * @param onboardingService Onboarding service.
+     * @param identityVerificationService Identity verification service.
      * @param activationFlagService Activation flags service.
      */
     @Autowired
-    public IdentityVerificationFinishService(OnboardingServiceImpl onboardingService, ActivationFlagService activationFlagService) {
+    public IdentityVerificationFinishService(OnboardingServiceImpl onboardingService, IdentityVerificationService identityVerificationService, ActivationFlagService activationFlagService) {
         this.onboardingService = onboardingService;
+        this.identityVerificationService = identityVerificationService;
         this.activationFlagService = activationFlagService;
     }
 
@@ -67,13 +71,20 @@ public class IdentityVerificationFinishService {
      */
     @Transactional
     public void finishIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException {
+        final Date now = ownerId.getTimestamp();
+
         // Remove flag ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS
         activationFlagService.updateActivationFlagsForSucceededIdentityVerification(ownerId);
+
+        // Find latest identity verification record and set the timestamp when it was finished
+        final IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
+        identityVerification.setTimestampLastUpdated(now);
+        identityVerification.setTimestampFinished(now);
+        identityVerificationService.updateIdentityVerification(identityVerification);
 
         // Terminate onboarding process
         final OnboardingProcessEntity processEntity = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         processEntity.setStatus(OnboardingStatus.FINISHED);
-        final Date now = ownerId.getTimestamp();
         processEntity.setTimestampLastUpdated(now);
         processEntity.setTimestampFinished(now);
         onboardingService.updateProcess(processEntity);
