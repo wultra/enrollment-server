@@ -528,7 +528,7 @@ public class IdentityVerificationController {
         logger.debug("Returning consent for {}", requestObject);
         OnboardingConsentTextRequestValidator.validate(requestObject);
 
-        final String processId = requestObject.getProcessId().toString();
+        final String processId = requestObject.getProcessId();
         final OnboardingProcessEntity process = onboardingService.findProcess(processId);
         final String userId = process.getUserId();
 
@@ -557,7 +557,7 @@ public class IdentityVerificationController {
         OnboardingConsentApprovalRequestValidator.validate(requestObject);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = requestObject.getProcessId().toString();
+        final String processId = requestObject.getProcessId();
         onboardingService.verifyProcessId(ownerId, processId);
 
         onboardingService.approveConsent(requestObject, ownerId.getUserId());

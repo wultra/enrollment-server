@@ -26,7 +26,6 @@ import lombok.NonNull;
 import lombok.ToString;
 
 import java.util.Locale;
-import java.util.UUID;
 
 /**
  * Request object for {@link OnboardingProvider#fetchConsent(ConsentTextRequest)}.
@@ -40,7 +39,7 @@ import java.util.UUID;
 public final class ConsentTextRequest {
 
     @NonNull
-    private UUID processId;
+    private String processId;
 
     @NonNull
     private String userId;

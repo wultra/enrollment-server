@@ -20,8 +20,6 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.UUID;
-
 /**
  * Request class used when asking for consent for onboarding.
  *
@@ -31,7 +29,7 @@ import java.util.UUID;
 public class OnboardingConsentTextRequest {
 
     @Schema(required = true)
-    private UUID processId;
+    private String processId;
 
     @Schema(required = true, example = "GDPR")
     private String consentType;
