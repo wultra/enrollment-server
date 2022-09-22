@@ -26,13 +26,11 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.presencecheck.iproov.IProovConst;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.*;
 import com.wultra.app.onboardingserver.presencecheck.iproov.service.IProovRestApiService;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import com.wultra.core.rest.client.base.RestClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -50,9 +48,13 @@ import java.util.Calendar;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Component
+@Slf4j
 public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(IProovPresenceCheckProvider.class);
+    /**
+     * Session parameter name of the verification token
+     */
+    private static final String VERIFICATION_TOKEN = "iproov-verification-token";
 
     private final ObjectMapper objectMapper;
 
@@ -148,14 +150,14 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         final String token = claimResponse.getToken();
 
         final SessionInfo sessionInfo = new SessionInfo();
-        sessionInfo.getSessionAttributes().put(IProovConst.VERIFICATION_TOKEN, token);
+        sessionInfo.getSessionAttributes().put(VERIFICATION_TOKEN, token);
 
         return sessionInfo;
     }
 
     @Override
     public PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException {
-        final String token = (String) sessionInfo.getSessionAttributes().get(IProovConst.VERIFICATION_TOKEN);
+        final String token = (String) sessionInfo.getSessionAttributes().get(VERIFICATION_TOKEN);
         if (Strings.isNullOrEmpty(token)) {
             throw new PresenceCheckException("Missing a token value for verification validation in iProov, " + id);
         }

@@ -320,6 +320,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
+                .event(OnboardingEvent.PRESENCE_CHECK_INIT)
+                .guard(context ->
+                        processIdentifierGuard.evaluate(context) && presenceCheckEnabledGuard.evaluate(context))
+                .action(presenceCheckInitAction)
+                .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(presenceCheckVerificationAction)
                 .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)

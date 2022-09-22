@@ -259,6 +259,8 @@ public class IdentityVerificationService {
         identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
 
+        logger.info("Switched to DOCUMENT_VERIFICATION/IN_PROGRESS; process ID: {}", identityVerification.getProcessId());
+
         docVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
             docVerification.setVerificationId(result.getVerificationId());
@@ -363,6 +365,8 @@ public class IdentityVerificationService {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             idVerification.setTimestampLastUpdated(now);
             // The timestampFinished parameter is not set yet, there may be other steps ahead
+            idVerification.setTimestampFinished(now);
+            logger.info("Switched to {}/ACCEPTED; process ID: {}", phase, idVerification.getProcessId());
         } else {
             docVerifications.stream()
                     .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
@@ -374,6 +378,7 @@ public class IdentityVerificationService {
                         idVerification.setTimestampLastUpdated(now);
                         idVerification.setTimestampFailed(now);
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                        logger.info("Switched to {}/FAILED; process ID: {}", phase, idVerification.getProcessId());
                     });
 
             docVerifications.stream()
@@ -386,6 +391,7 @@ public class IdentityVerificationService {
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                         idVerification.setTimestampLastUpdated(now);
                         idVerification.setTimestampFinished(now);
+                        logger.info("Switched to {}/REJECTED; process ID: {}", phase, idVerification.getProcessId());
                     });
         }
     }
@@ -525,11 +531,12 @@ public class IdentityVerificationService {
     }
 
     private void moveToDocumentUpload(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final IdentityVerificationStatus status) {
-        logger.info("Switching {} to DOCUMENT_UPLOAD/{} due to new documents submit, {}", idVerification, status, ownerId);
+        logger.debug("New documents submitted, moving to DOCUMENT_UPLOAD; process ID: {}", idVerification.getProcessId());
         idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
         idVerification.setStatus(status);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
+        logger.info("Switched DOCUMENT_UPLOAD/{}; process ID: {}", status, idVerification.getProcessId());
     }
 
     private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {

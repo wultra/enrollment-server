@@ -122,6 +122,7 @@ public class IdentityVerificationOtpService {
     public void sendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
         identityVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
+        logger.info("Switched to OTP_VERIFICATION/OTP_VERIFICATION_PENDING; process ID: {}", identityVerification.getProcessId());
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 
@@ -211,7 +212,7 @@ public class IdentityVerificationOtpService {
         idVerification.setRejectOrigin(null);
         identityVerificationRepository.save(idVerification);
 
-        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED, process ID: {}", idVerification.getProcessId());
+        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; process ID: {}", idVerification.getProcessId());
 
         markVerificationOtpAsFailed(process.getId());
 

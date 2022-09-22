@@ -57,10 +57,10 @@ public class MoveToDocumentUploadVerificationPendingAction implements Action<Onb
     }
 
     private void moveToDocumentUploadVerificationPending(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        logger.info("Changing status of {} to VERIFICATION_PENDING", idVerification);
         idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
         idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
+        logger.info("Switched to DOCUMENT_UPLOAD/VERIFICATION_PENDING; process ID: {}", idVerification.getProcessId());
     }
 }
