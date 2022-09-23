@@ -43,6 +43,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,6 +62,9 @@ import java.util.Locale;
 public class MobileTokenController {
 
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);
+
+    // Disallowed flags contain onboarding flags used before onboarding process is finished
+    private static final List<String> DISALLOWED_FLAGS = Arrays.asList("VERIFICATION_PENDING", "VERIFICATION_IN_PROGRESS");
 
     private final MobileTokenService mobileTokenService;
     private final RequestContextConverter requestContextConverter;
@@ -185,6 +189,10 @@ public class MobileTokenController {
                 final String applicationId = auth.getApplicationId();
                 final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
+                if (activationFlags.stream().anyMatch(DISALLOWED_FLAGS::contains)) {
+                    logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
+                    throw new MobileTokenAuthException();
+                }
                 return mobileTokenService.operationApprove(activationId, userId, applicationId, operationId, data, signatureFactors, requestContext, activationFlags);
             } else {
                 // make sure to fail operation as well, to increase the failed number
