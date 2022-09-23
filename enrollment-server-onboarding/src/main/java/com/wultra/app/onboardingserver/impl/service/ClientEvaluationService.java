@@ -102,7 +102,7 @@ public class ClientEvaluationService {
         logger.debug("Evaluating client for {}", identityVerification);
 
         final EvaluateClientRequest request = EvaluateClientRequest.builder()
-                .processId(UUID.fromString(identityVerification.getProcessId()))
+                .processId(identityVerification.getProcessId())
                 .userId(identityVerification.getUserId())
                 .identityVerificationId(identityVerification.getId())
                 .verificationId(getVerificationId(identityVerification))

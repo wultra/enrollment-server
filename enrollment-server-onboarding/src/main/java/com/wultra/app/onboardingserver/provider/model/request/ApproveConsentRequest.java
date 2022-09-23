@@ -25,8 +25,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 
-import java.util.UUID;
-
 /**
  * Request object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.
  *
@@ -39,7 +37,7 @@ import java.util.UUID;
 public final class ApproveConsentRequest {
 
     @NonNull
-    private UUID processId;
+    private String processId;
 
     @NonNull
     private String userId;
