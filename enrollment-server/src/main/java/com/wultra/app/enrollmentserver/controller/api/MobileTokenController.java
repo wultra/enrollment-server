@@ -64,7 +64,7 @@ public class MobileTokenController {
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);
 
     // Disallowed flags contain onboarding flags used before onboarding process is finished
-    private static final List<String> DISALLOWED_FLAGS = Arrays.asList("VERIFICATION_PENDING", "VERIFICATION_IN_PROGRESS");
+    private static final List<String> DISALLOWED_FLAGS = List.of("VERIFICATION_PENDING", "VERIFICATION_IN_PROGRESS");
 
     private final MobileTokenService mobileTokenService;
     private final RequestContextConverter requestContextConverter;
