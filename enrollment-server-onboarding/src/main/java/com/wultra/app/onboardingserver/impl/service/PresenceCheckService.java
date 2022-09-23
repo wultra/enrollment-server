@@ -148,10 +148,10 @@ public class PresenceCheckService {
     public void checkPresenceVerification(OwnerId ownerId,
                                           IdentityVerificationEntity idVerification,
                                           SessionInfo sessionInfo) throws PresenceCheckException {
-        PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
+        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
 
-        if (!PresenceCheckStatus.ACCEPTED.equals(result.getStatus())) {
-            logger.info("Not accepted presence check, {}", ownerId);
+        if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
+            logger.info("Not accepted presence check, status: {}, process ID: {}", result.getStatus(), idVerification.getProcessId());
             evaluatePresenceCheckResult(ownerId, idVerification, result);
             return;
         }
