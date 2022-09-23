@@ -37,7 +37,7 @@
         <!-- Enrollment Server Dependencies -->
         <dependency>
             <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-domain-model</artifactId>
+            <artifactId>enrollment-server-onboarding-domain-model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

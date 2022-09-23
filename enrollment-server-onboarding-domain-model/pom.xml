@@ -21,10 +21,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>enrollment-server-domain-model</name>
+    <name>enrollment-server-onboarding-domain-model</name>
     <description>Domain model of the enrollment server.</description>
 
-    <artifactId>enrollment-server-domain-model</artifactId>
+    <artifactId>enrollment-server-onboarding-domain-model</artifactId>
     <packaging>jar</packaging>
 
     <parent>
