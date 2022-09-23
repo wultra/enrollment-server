@@ -175,6 +175,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                 final ClientErrorResponse clientErrorResponse = parseResponse(e.getResponse(), ClientErrorResponse.class);
                 if (ClientErrorResponse.ErrorEnum.INVALID_TOKEN.equals(clientErrorResponse.getError())) {
                     // TODO same response when validating the verification using same token repeatedly
+                    logger.warn("Reusing iProov token, {}", id);
                     result.setStatus(PresenceCheckStatus.IN_PROGRESS);
                 } else {
                     result.setStatus(PresenceCheckStatus.FAILED);
