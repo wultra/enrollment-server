@@ -134,16 +134,4 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
     }
 
-    /**
-     * Handling of document verification exceptions.
-     * @param ex Exception.
-     * @return Response with error details.
-     */
-    @ExceptionHandler(RemoteCommunicationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleRemoteExceptionException(RemoteCommunicationException ex) {
-        logger.warn("Communication with remote system failed", ex);
-        return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
-    }
-
 }
