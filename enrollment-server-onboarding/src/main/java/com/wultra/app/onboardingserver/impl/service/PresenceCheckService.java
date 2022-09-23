@@ -290,8 +290,8 @@ public class PresenceCheckService {
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
+                logger.info("Presence check rejected, process ID: {}, rejectReason: '{}'", idVerification.getProcessId(), result.getRejectReason());
                 logger.info("Switched to {}/REJECTED; process ID: {}", idVerification.getPhase(), idVerification.getProcessId());
-                logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:
                 throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());
