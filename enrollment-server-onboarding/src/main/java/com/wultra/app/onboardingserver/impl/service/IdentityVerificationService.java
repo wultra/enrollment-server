@@ -176,6 +176,27 @@ public class IdentityVerificationService {
     }
 
     /**
+     * Move the given identity verification to the given phase and status.
+     *
+     * @param identityVerification Identity verification identity.
+     * @param phase Target phase.
+     * @param status Target status.
+     * @param ownerId Owner identification.
+     */
+    @Transactional
+    public void moveToPhaseAndStatus(final IdentityVerificationEntity identityVerification,
+                                     final IdentityVerificationPhase phase,
+                                     final IdentityVerificationStatus status,
+                                     final OwnerId ownerId) {
+
+        identityVerification.setPhase(phase);
+        identityVerification.setStatus(status);
+        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerificationRepository.save(identityVerification);
+        logger.info("Switched to {}/{}; process ID: {}", phase, status, identityVerification.getProcessId());
+    }
+
+    /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param ownerId Owner identification.
@@ -255,11 +276,7 @@ public class IdentityVerificationService {
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 
-        identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-        identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-
-        logger.info("Switched to DOCUMENT_VERIFICATION/IN_PROGRESS; process ID: {}", identityVerification.getProcessId());
+        moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
 
         docVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);

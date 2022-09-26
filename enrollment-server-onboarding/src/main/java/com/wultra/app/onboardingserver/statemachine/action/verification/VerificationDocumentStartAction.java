@@ -16,8 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
@@ -32,6 +30,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
  * Action to start the verification process
@@ -59,10 +60,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
             identityVerificationService.startVerification(ownerId, identityVerification);
             logger.info("Started document verification process of {}", identityVerification);
         } catch (DocumentVerificationException e) {
-            identityVerification.setPhase(IdentityVerificationPhase.DOCUMENT_VERIFICATION);
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            logger.info("Switched to DOCUMENT_VERIFICATION/FAILED; process ID: {}", identityVerification.getProcessId());
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION, FAILED, ownerId);
             logger.warn("Verification start failed, {}", ownerId, e);
         }
     }

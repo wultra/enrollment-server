@@ -16,11 +16,9 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -30,7 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
 
 /**
  * Action to move the given identity verification to {@code DOCUMENT_UPLOAD / VERIFICATION_PENDING}.
@@ -41,26 +41,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class MoveToDocumentUploadVerificationPendingAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final IdentityVerificationRepository identityVerificationRepository;
+    private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public MoveToDocumentUploadVerificationPendingAction(final IdentityVerificationRepository identityVerificationRepository) {
-        this.identityVerificationRepository = identityVerificationRepository;
+    public MoveToDocumentUploadVerificationPendingAction(final IdentityVerificationService identityVerificationService) {
+        this.identityVerificationService = identityVerificationService;
     }
 
     @Override
-    @Transactional
     public void execute(StateContext <OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        moveToDocumentUploadVerificationPending(ownerId, identityVerification);
-    }
-
-    private void moveToDocumentUploadVerificationPending(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        idVerification.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-        idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        identityVerificationRepository.save(idVerification);
-        logger.info("Switched to DOCUMENT_UPLOAD/VERIFICATION_PENDING; process ID: {}", idVerification.getProcessId());
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_UPLOAD, VERIFICATION_PENDING, ownerId);
     }
 }
