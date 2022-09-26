@@ -378,6 +378,7 @@ public class IdentityVerificationController {
 
     /**
      * Initialize presence check process.
+     *
      * @param request Presence check initialization request.
      * @param eciesContext ECIES context.
      * @param apiAuthentication PowerAuth authentication.
@@ -405,6 +406,37 @@ public class IdentityVerificationController {
         final String processId = request.getRequestObject().getProcessId();
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
+        return createResponseEntity(stateMachine);
+    }
+
+    /**
+     * Submit presence check process.
+     *
+     * @param request Presence check initialization request.
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Presence check initialization response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws IdentityVerificationException Thrown when identity verification is invalid.
+     */
+    @PostMapping("presence-check/submit")
+    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuth(resourceId = "/api/identity/presence-check/submit", signatureType = PowerAuthSignatureTypes.POSSESSION)
+    public ResponseEntity<Response> submitPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
+                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+
+        final String operationDescription = "submitting presence check";
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEciesContext(eciesContext, operationDescription);
+        checkRequestObject(request, operationDescription);
+
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final String processId = request.getRequestObject().getProcessId();
+
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
         return createResponseEntity(stateMachine);
     }
 

@@ -20,6 +20,7 @@ import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.Clie
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
+import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
@@ -81,6 +82,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
 
+    private final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
+
     private final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction;
 
     private final DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
@@ -117,6 +120,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final PresenceCheckInitAction presenceCheckInitAction,
             final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction,
             final PresenceCheckVerificationAction presenceCheckVerificationAction,
+            final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction,
             final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction,
             final DocumentsVerificationPendingGuard documentsVerificationPendingGuard,
             final VerificationDocumentStartAction verificationDocumentStartAction,
@@ -140,6 +144,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.presenceCheckNotInitializedAction = presenceCheckNotInitializedAction;
         this.presenceCheckVerificationAction = presenceCheckVerificationAction;
 
+        this.moveToPresenceCheckVerificationPendingAction = moveToPresenceCheckVerificationPendingAction;
         this.moveToDocumentUploadVerificationPendingAction = moveToDocumentUploadVerificationPendingAction;
         this.documentsVerificationPendingGuard = documentsVerificationPendingGuard;
         this.verificationDocumentStartAction = verificationDocumentStartAction;
@@ -329,14 +334,21 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .event(OnboardingEvent.PRESENCE_CHECK_SUBMITTED)
+                .action(moveToPresenceCheckVerificationPendingAction)
+                .target(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
                 .action(presenceCheckVerificationAction)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
 
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .first(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, statusInProgressGuard)
+                .first(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, statusInProgressGuard)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING,
                         context -> otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         otpVerificationSendAction

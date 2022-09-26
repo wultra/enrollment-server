@@ -29,6 +29,8 @@ public enum OnboardingEvent {
 
     PRESENCE_CHECK_INIT,
 
+    PRESENCE_CHECK_SUBMITTED,
+
     EVENT_NEXT_STATE,
 
 }
