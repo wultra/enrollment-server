@@ -23,10 +23,11 @@ import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
+import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -67,6 +68,9 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private PresenceCheckService presenceCheckService;
+
+    @MockBean
+    private MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
 
     @Test
     void testPresenceCheckInit() throws Exception {
@@ -131,15 +135,23 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
         doAnswer(args -> {
+            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+            return null;
+        }).when(moveToPresenceCheckVerificationPendingAction).execute(any());
+
+        doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
         }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
 
-        Message<OnboardingEvent> message =
+        final Message<OnboardingEvent> presenceCheckSubmittedMessage =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
+        final Message<OnboardingEvent> nextEventMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
-            .sendEvent(message)
+            .sendEvent(presenceCheckSubmittedMessage)
+            .sendEvent(nextEventMessage)
             .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
             .and()
             .build()
@@ -159,6 +171,11 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
 
         doAnswer(args -> {
+            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
+            return null;
+        }).when(moveToPresenceCheckVerificationPendingAction).execute(any());
+
+        doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
         }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
@@ -171,11 +188,14 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(verificationProcessResultAction).execute(any());
 
-        Message<OnboardingEvent> message =
+        final Message<OnboardingEvent> presenceCheckSubmittedMessage =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
+        final Message<OnboardingEvent> nextEventMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
 
         prepareTest(stateMachine)
-            .sendEvent(message)
+            .sendEvent(presenceCheckSubmittedMessage)
+            .sendEvent(nextEventMessage)
             .expectState(OnboardingState.COMPLETED_ACCEPTED)
             .and()
             .build()

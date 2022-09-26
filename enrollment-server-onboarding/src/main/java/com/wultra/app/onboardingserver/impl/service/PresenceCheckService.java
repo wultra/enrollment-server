@@ -148,10 +148,10 @@ public class PresenceCheckService {
     public void checkPresenceVerification(OwnerId ownerId,
                                           IdentityVerificationEntity idVerification,
                                           SessionInfo sessionInfo) throws PresenceCheckException {
-        PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
+        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
 
-        if (!PresenceCheckStatus.ACCEPTED.equals(result.getStatus())) {
-            logger.info("Not accepted presence check, {}", ownerId);
+        if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
+            logger.info("Not accepted presence check, status: {}, process ID: {}", result.getStatus(), idVerification.getProcessId());
             evaluatePresenceCheckResult(ownerId, idVerification, result);
             return;
         }
@@ -290,8 +290,8 @@ public class PresenceCheckService {
                 idVerification.setStatus(IdentityVerificationStatus.REJECTED);
                 idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
+                logger.info("Presence check rejected, process ID: {}, rejectReason: '{}'", idVerification.getProcessId(), result.getRejectReason());
                 logger.info("Switched to {}/REJECTED; process ID: {}", idVerification.getPhase(), idVerification.getProcessId());
-                logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 break;
             default:
                 throw new IllegalStateException("Unexpected presence check result status: " + result.getStatus());

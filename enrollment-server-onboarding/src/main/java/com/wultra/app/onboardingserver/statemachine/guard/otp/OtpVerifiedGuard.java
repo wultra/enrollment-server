@@ -21,6 +21,7 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpServi
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@Slf4j
 public class OtpVerifiedGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationOtpService identityVerificationOtpService;
@@ -44,7 +46,10 @@ public class OtpVerifiedGuard implements Guard<OnboardingState, OnboardingEvent>
     @Override
     public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        return identityVerificationOtpService.isUserVerifiedUsingOtp(identityVerification.getProcessId());
+        final String processId = identityVerification.getProcessId();
+        final boolean otpVerified = identityVerificationOtpService.isUserVerifiedUsingOtp(processId);
+        logger.debug("Otp verified: {}, process ID: {}", otpVerified, processId);
+        return otpVerified;
     }
 
 }

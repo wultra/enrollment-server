@@ -166,13 +166,16 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         try {
             responseEntity = iProovRestApiService.validateVerification(id, token);
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to validate a verification in iProov, statusCode={}, responseBody='{}', {}",
+            logger.warn("Failed REST call to validate a verification in iProov, statusCode={}, responseBody='{}', {}, {}",
+                    e.getStatusCode(), e.getResponse(), id, e.getMessage());
+            logger.debug("Failed REST call to validate a verification in iProov, statusCode={}, responseBody='{}', {}",
                     e.getStatusCode(), e.getResponse(), id, e);
             final PresenceCheckResult result = new PresenceCheckResult();
             if (HttpStatus.BAD_REQUEST.equals(e.getStatusCode())) {
                 final ClientErrorResponse clientErrorResponse = parseResponse(e.getResponse(), ClientErrorResponse.class);
                 if (ClientErrorResponse.ErrorEnum.INVALID_TOKEN.equals(clientErrorResponse.getError())) {
                     // TODO same response when validating the verification using same token repeatedly
+                    logger.warn("Reusing iProov token, {}", id);
                     result.setStatus(PresenceCheckStatus.IN_PROGRESS);
                 } else {
                     result.setStatus(PresenceCheckStatus.FAILED);
