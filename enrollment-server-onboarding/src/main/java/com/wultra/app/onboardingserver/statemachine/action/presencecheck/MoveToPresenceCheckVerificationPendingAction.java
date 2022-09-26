@@ -25,6 +25,8 @@ import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
+import io.getlime.core.rest.model.base.response.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
@@ -54,6 +56,10 @@ public class MoveToPresenceCheckVerificationPendingAction implements Action<Onbo
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         moveToDocumentUploadVerificationPending(ownerId, identityVerification);
+
+        if (!context.getStateMachine().hasStateMachineError()) {
+            StateContextUtil.setResponseOk(context, new Response());
+        }
     }
 
     private void moveToDocumentUploadVerificationPending(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
