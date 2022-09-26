@@ -59,7 +59,7 @@ public enum OnboardingState {
 
     PRESENCE_CHECK_VERIFICATION_PENDING(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.VERIFICATION_PENDING),
 
-    OTP_VERIFICATION_PENDING(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.OTP_VERIFICATION_PENDING),
+    OTP_VERIFICATION_PENDING(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING),
 
     COMPLETED_ACCEPTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED),
     COMPLETED_FAILED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED),

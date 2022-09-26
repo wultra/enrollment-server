@@ -40,11 +40,6 @@ public enum IdentityVerificationStatus {
     VERIFICATION_PENDING,
 
     /**
-     * OTP code verification is pending.
-     */
-    OTP_VERIFICATION_PENDING,
-
-    /**
      * All submitted documents have been verified and accepted as valid documents and OTP has been verified.
      */
     ACCEPTED,

@@ -111,7 +111,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
         doAnswer(args -> {
             idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
-            idVerification.setStatus(IdentityVerificationStatus.OTP_VERIFICATION_PENDING);
+            idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
         }).when(identityVerificationOtpService).sendOtp(idVerification);
 
@@ -126,7 +126,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 .test();
 
         assertEquals(IdentityVerificationPhase.OTP_VERIFICATION, idVerification.getPhase());
-        assertEquals(IdentityVerificationStatus.OTP_VERIFICATION_PENDING, idVerification.getStatus());
+        assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, idVerification.getStatus());
         verify(identityVerificationOtpService).sendOtp(idVerification);
     }
 

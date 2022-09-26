@@ -137,7 +137,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
 
     private IdentityVerificationEntity createIdentityVerification() {
         return super.createIdentityVerification(
-                IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.OTP_VERIFICATION_PENDING
+                IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING
         );
     }
 
