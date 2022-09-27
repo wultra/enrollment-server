@@ -56,7 +56,7 @@ public class OtpVerificationSendAction implements Action<OnboardingState, Onboar
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         try {
-            identityVerificationOtpService.sendOtp(identityVerification);
+            identityVerificationOtpService.sendOtp(identityVerification, ownerId);
         } catch (OnboardingProcessException | OnboardingOtpDeliveryException e) {
             logger.warn("Unable to send OTP, {}", ownerId, e);
             context.getStateMachine().setStateMachineError(e);

@@ -493,7 +493,7 @@ public class IdentityVerificationController {
         try {
             stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
         } catch (IdentityVerificationException e) {
-            throw new OnboardingProcessException("Unable to move state machine for process ID: " + processId, e);
+            throw new OnboardingProcessException("Unable to move state machine for " + ownerId, e);
         }
 
         return new ObjectResponse<>(otpVerifyResponse);

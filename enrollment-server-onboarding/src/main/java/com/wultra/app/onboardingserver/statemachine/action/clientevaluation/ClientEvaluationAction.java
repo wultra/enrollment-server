@@ -16,8 +16,10 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -43,8 +45,9 @@ public class ClientEvaluationAction implements Action<OnboardingState, Onboardin
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        clientEvaluationService.processClientEvaluation(identityVerification);
+        clientEvaluationService.processClientEvaluation(identityVerification, ownerId);
     }
 }

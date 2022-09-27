@@ -113,14 +113,15 @@ public class IdentityVerificationOtpService {
     /**
      * Sends an OTP code for a process during identity verification.
      * @param identityVerification Identity verification entity.
+     * @param ownerId Owner identification.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      * @throws OnboardingOtpDeliveryException Thrown when OTP code could not be sent.
      */
     @Transactional
-    public void sendOtp(IdentityVerificationEntity identityVerification) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+    public void sendOtp(IdentityVerificationEntity identityVerification, OwnerId ownerId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         identityVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
         identityVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
-        logger.info("Switched to OTP_VERIFICATION/VERIFICATION_PENDING; process ID: {}", identityVerification.getProcessId());
+        logger.info("Switched to OTP_VERIFICATION/VERIFICATION_PENDING; {}", ownerId);
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 
@@ -150,7 +151,7 @@ public class IdentityVerificationOtpService {
             logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
             return response;
         }
-        return verifyPresenceCheck(process, response);
+        return verifyPresenceCheck(process, response, ownerId);
     }
 
     /**
@@ -165,7 +166,7 @@ public class IdentityVerificationOtpService {
                 .isPresent();
     }
 
-    private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response) throws OnboardingProcessException {
+    private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response, final OwnerId ownerId) throws OnboardingProcessException {
         final String processId = process.getId();
         if (!identityVerificationConfig.isPresenceCheckEnabled()) {
             logger.debug("Presence check is not enabled, process ID: {}", processId);
@@ -181,11 +182,11 @@ public class IdentityVerificationOtpService {
         final RejectOrigin rejectOrigin = idVerification.getRejectOrigin();
 
         if (errorOrigin == ErrorOrigin.PRESENCE_CHECK || rejectOrigin == RejectOrigin.PRESENCE_CHECK) {
-            logger.info("SCA failed, identity verification ID: {} of process ID: {} contains errorDetail: {}, rejectReason: {} from previous step",
-                    idVerification.getId(), processId, errorDetail, rejectReason);
-            return moveToPhasePresenceCheck(process, response, idVerification);
+            logger.info("SCA failed, identity verification ID: {}, {} contains errorDetail: {}, rejectReason: {} from previous step",
+                    idVerification.getId(), ownerId, errorDetail, rejectReason);
+            return moveToPhasePresenceCheck(process, response, idVerification, ownerId);
         } else {
-            logger.debug("PRESENCE_CHECK without error or reject origin, process ID: {}", idVerification.getProcessId());
+            logger.debug("PRESENCE_CHECK without error or reject origin, {}", ownerId);
         }
         return response;
     }
@@ -198,7 +199,8 @@ public class IdentityVerificationOtpService {
     private OtpVerifyResponse moveToPhasePresenceCheck(
             final OnboardingProcessEntity process,
             final OtpVerifyResponse response,
-            final IdentityVerificationEntity idVerification) throws OnboardingProcessException {
+            final IdentityVerificationEntity idVerification,
+            final OwnerId ownerId) throws OnboardingProcessException {
 
         idVerification.setPhase(PRESENCE_CHECK);
         idVerification.setStatus(IdentityVerificationStatus.NOT_INITIALIZED);
@@ -209,7 +211,7 @@ public class IdentityVerificationOtpService {
         idVerification.setRejectOrigin(null);
         identityVerificationRepository.save(idVerification);
 
-        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; process ID: {}", idVerification.getProcessId());
+        logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}", ownerId);
 
         markVerificationOtpAsFailed(process.getId());
 

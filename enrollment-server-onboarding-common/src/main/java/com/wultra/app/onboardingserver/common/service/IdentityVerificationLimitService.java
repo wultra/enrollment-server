@@ -96,7 +96,7 @@ public class IdentityVerificationLimitService {
                             && verification.getStatus() != IdentityVerificationStatus.REJECTED)
                     .forEach(verification -> {
                         verification.setStatus(IdentityVerificationStatus.FAILED);
-                        logger.info("Switched to {}/FAILED; process ID: {}", verification.getPhase(), verification.getProcessId());
+                        logger.info("Switched to {}/FAILED; {}", verification.getPhase(), ownerId);
                     });
             identityVerificationRepository.saveAll(identityVerifications);
 
@@ -132,7 +132,7 @@ public class IdentityVerificationLimitService {
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
-            logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
+            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
             resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
             throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");

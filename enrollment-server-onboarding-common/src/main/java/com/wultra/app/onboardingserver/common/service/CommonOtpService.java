@@ -86,12 +86,8 @@ public class CommonOtpService implements OtpService {
         }
         OnboardingProcessEntity process = processOptional.get();
 
-        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
-        if (otpOptional.isEmpty()) {
-            logger.warn("Onboarding OTP not found, process ID: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        OnboardingOtpEntity otp = otpOptional.get();
+        final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, otpType).orElseThrow(() ->
+                new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
 
         // Verify OTP code
         final Date now = ownerId.getTimestamp();
@@ -199,12 +195,9 @@ public class CommonOtpService implements OtpService {
             } catch (RemoteCommunicationException | IdentityVerificationException | OnboardingProcessLimitException | OnboardingProcessException ex) {
                 logger.error("Identity verification reset failed, error: {}", ex.getMessage(), ex);
                 // Obtain most current process entity, the process may have failed due to reached limit of identity verification resets
-                Optional <OnboardingProcessEntity> updatedProcessOptional = onboardingProcessRepository.findById(process.getId());
-                if (updatedProcessOptional.isEmpty()) {
-                    logger.warn("Onboarding process not found, process ID: {}", process.getId());
-                    throw new OnboardingProcessException();
-                }
-                process = updatedProcessOptional.get();
+                final String processId = process.getId();
+                process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
+                    new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
             }
         } else {
             // Fail onboarding process completely

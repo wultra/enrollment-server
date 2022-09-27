@@ -69,7 +69,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
+            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
         } else {
             try {
                 presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
@@ -80,7 +80,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
                 identityVerification.setStatus(IdentityVerificationStatus.FAILED);
                 identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
                 identityVerification.setTimestampFailed(ownerId.getTimestamp());
-                logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
+                logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
             }
         }
     }
