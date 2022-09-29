@@ -108,7 +108,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      */
     @Query("SELECT p FROM OnboardingProcessEntity p " +
             "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
-            "AND p.activationId is not null " +
+            "AND p.activationId IS NOT NULL " +
             "AND p.activationRemoved = false")
     List<OnboardingProcessEntity> findProcessesToRemoveActivation(Pageable pageable);
 
