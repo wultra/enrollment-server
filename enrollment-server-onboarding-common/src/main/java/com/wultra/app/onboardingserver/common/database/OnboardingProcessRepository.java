@@ -21,6 +21,8 @@ package com.wultra.app.onboardingserver.common.database;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -96,4 +98,27 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
             "AND p.timestampCreated < :dateCreatedBefore")
     List<String> findExpiredProcessIdsByCreatedDate(Date dateCreatedBefore);
+
+    /**
+     * Return onboarding processes to remove activation.
+     *
+     * @param pageable pagination information
+     * @return onboarding processes
+     * @see #findProcessesToRemoveActivation(int)
+     */
+    @Query("SELECT p FROM OnboardingProcessEntity p " +
+            "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
+            "AND p.activationId is not null " +
+            "AND p.activationRemoved = false")
+    List<OnboardingProcessEntity> findProcessesToRemoveActivation(Pageable pageable);
+
+    /**
+     * Return onboarding processes to remove activation.
+     *
+     * @param maxCount max count of results
+     * @return onboarding processes
+     */
+    default List<OnboardingProcessEntity> findProcessesToRemoveActivation(int maxCount) {
+        return findProcessesToRemoveActivation(PageRequest.of(0, maxCount));
+    }
 }

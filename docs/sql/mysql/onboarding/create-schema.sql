@@ -22,6 +22,7 @@ CREATE TABLE es_onboarding_process (
     user_id VARCHAR(256),
     activation_id VARCHAR(36),
     status VARCHAR(32) NOT NULL,
+    activation_removed TINYINT DEFAULT 0,
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     error_score INTEGER NOT NULL DEFAULT 0,

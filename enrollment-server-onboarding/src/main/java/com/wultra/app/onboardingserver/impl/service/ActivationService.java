@@ -22,6 +22,8 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.ActivationStatus;
+import com.wultra.security.powerauth.client.v3.GetActivationStatusRequest;
 import com.wultra.security.powerauth.client.v3.RemoveActivationRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,24 @@ public class ActivationService {
 
         try {
             powerAuthClient.removeActivation(request);
+        } catch (PowerAuthClientException e) {
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Return activation status.
+     *
+     * @param activationId Activation ID.
+     * @return activation status
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public ActivationStatus fetchActivationStatus(final String activationId) throws RemoteCommunicationException {
+        final GetActivationStatusRequest request = new GetActivationStatusRequest();
+        request.setActivationId(activationId);
+
+        try {
+            return powerAuthClient.getActivationStatus(request).getActivationStatus();
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
