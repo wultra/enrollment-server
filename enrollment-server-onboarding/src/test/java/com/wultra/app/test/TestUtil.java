@@ -24,11 +24,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Test utilities
+ * Test utilities.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class TestUtil {
+public final class TestUtil {
+
+    private TestUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * Loads photo from a file

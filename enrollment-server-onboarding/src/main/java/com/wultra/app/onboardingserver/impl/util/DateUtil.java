@@ -27,7 +27,11 @@ import java.util.Date;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class DateUtil {
+public final class DateUtil {
+
+    private DateUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * Convert expiration time interval to minimal created date used for expiration.
