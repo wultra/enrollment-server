@@ -22,11 +22,15 @@ import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthAct
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 
 /**
- * PowerAuth utilities
+ * PowerAuth utilities.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class PowerAuthUtil {
+public final class PowerAuthUtil {
+
+    private PowerAuthUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * Provides context data

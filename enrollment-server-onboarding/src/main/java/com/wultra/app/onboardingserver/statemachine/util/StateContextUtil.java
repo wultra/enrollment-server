@@ -27,11 +27,15 @@ import org.springframework.statemachine.StateContext;
 import java.util.Map;
 
 /**
- * State context util
+ * State context util.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class StateContextUtil {
+public final class StateContextUtil {
+
+    private StateContextUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static void setResponseOk(final StateContext<OnboardingState, OnboardingEvent> context, final Response response) {
         Preconditions.checkArgument(
