@@ -26,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * Service to cleaning activations.
  *
@@ -36,8 +34,6 @@ import java.util.List;
 @Service
 @Slf4j
 class ActivationCleaningService {
-
-    private static final int BATCH_SIZE = 100;
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
@@ -56,13 +52,8 @@ class ActivationCleaningService {
      * Cleanup activations of failed onboarding processes.
      */
     public void cleanupActivations() {
-        final List<OnboardingProcessEntity> processes = onboardingProcessRepository.findProcessesToRemoveActivation(BATCH_SIZE);
-        if (processes.isEmpty()) {
-            logger.debug("No onboarding processes to remove activation");
-            return;
-        }
-
-        processes.forEach(this::cleanupActivation);
+        onboardingProcessRepository.findProcessesToRemoveActivation()
+                .forEach(this::cleanupActivation);
     }
 
     private void cleanupActivation(final OnboardingProcessEntity process) {
