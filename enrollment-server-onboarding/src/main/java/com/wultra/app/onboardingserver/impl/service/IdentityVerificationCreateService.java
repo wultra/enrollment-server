@@ -86,7 +86,7 @@ public class IdentityVerificationCreateService {
         entity.setUserId(ownerId.getUserId());
         entity.setProcessId(processId);
 
-        logger.info("Switched to DOCUMENT_UPLOAD/IN_PROGRESS; process ID: {}", processId);
+        logger.info("Switched to DOCUMENT_UPLOAD/IN_PROGRESS; {}", ownerId);
 
         return identityVerificationRepository.save(entity);
     }

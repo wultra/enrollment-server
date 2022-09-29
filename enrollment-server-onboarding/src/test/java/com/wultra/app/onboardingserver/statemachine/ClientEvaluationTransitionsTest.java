@@ -113,7 +113,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
             idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
-        }).when(identityVerificationOtpService).sendOtp(idVerification);
+        }).when(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -127,7 +127,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
         assertEquals(IdentityVerificationPhase.OTP_VERIFICATION, idVerification.getPhase());
         assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, idVerification.getStatus());
-        verify(identityVerificationOtpService).sendOtp(idVerification);
+        verify(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
     }
 
     @Test
@@ -170,7 +170,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
             final IdentityVerificationEntity identityVerification = args.getArgument(0, IdentityVerificationEntity.class);
             identityVerification.setStatus(identityStatus);
             return null;
-        }).when(clientEvaluationService).processClientEvaluation(idVerification);
+        }).when(clientEvaluationService).processClientEvaluation(idVerification, OWNER_ID);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

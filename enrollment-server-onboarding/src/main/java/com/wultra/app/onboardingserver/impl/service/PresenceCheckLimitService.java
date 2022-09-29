@@ -107,7 +107,7 @@ public class PresenceCheckLimitService {
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
-            logger.info("Switched to {}/FAILED; process ID: {}", identityVerification.getPhase(), identityVerification.getProcessId());
+            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
 
             final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);

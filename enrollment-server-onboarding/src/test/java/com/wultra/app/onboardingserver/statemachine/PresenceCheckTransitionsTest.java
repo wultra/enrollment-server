@@ -156,7 +156,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             .and()
             .build()
             .test();
-        verify(identityVerificationOtpService).sendOtp(idVerification);
+        verify(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
     }
 
     @Test
