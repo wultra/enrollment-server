@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Repository for onboarding processes.
@@ -96,4 +97,15 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
             "AND p.timestampCreated < :dateCreatedBefore")
     List<String> findExpiredProcessIdsByCreatedDate(Date dateCreatedBefore);
+
+    /**
+     * Return onboarding processes to remove activation.
+     *
+     * @return onboarding processes
+     */
+    @Query("SELECT p FROM OnboardingProcessEntity p " +
+            "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
+            "AND p.activationId IS NOT NULL " +
+            "AND p.activationRemoved = false")
+    Stream<OnboardingProcessEntity> findProcessesToRemoveActivation();
 }

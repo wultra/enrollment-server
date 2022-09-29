@@ -227,14 +227,15 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         otpService.cancelOtp(process, OtpType.ACTIVATION);
         otpService.cancelOtp(process, OtpType.USER_VERIFICATION);
 
+        removeActivation(process);
+
         process.setStatus(OnboardingStatus.FAILED);
         process.setErrorDetail(OnboardingProcessEntity.ERROR_PROCESS_CANCELED);
         process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
         process.setTimestampLastUpdated(new Date());
         process.setTimestampFailed(new Date());
+        process.setActivationRemoved(true);
         onboardingProcessRepository.save(process);
-
-        removeActivation(process);
 
         return new Response();
     }

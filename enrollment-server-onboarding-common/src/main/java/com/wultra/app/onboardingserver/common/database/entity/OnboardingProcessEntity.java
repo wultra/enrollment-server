@@ -75,6 +75,13 @@ public class OnboardingProcessEntity implements Serializable {
     @Column(name = "status", nullable = false)
     private OnboardingStatus status;
 
+    /**
+     * When the status is {@link OnboardingStatus#FAILED}, the activation specified be {@link #activationId} should be removed at PowerAuth server.
+     * This flag indicates that the task has been done.
+     */
+    @Column(name = "activation_removed")
+    private boolean activationRemoved;
+
     @Column(name = "error_detail")
     private String errorDetail;
 

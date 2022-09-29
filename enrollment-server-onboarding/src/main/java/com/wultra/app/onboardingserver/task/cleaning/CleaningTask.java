@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Task to clean expired processes, identity verifications, documents and OTPs.
+ * Task to clean expired processes, identity verifications, documents, activations and OTPs.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -35,9 +35,12 @@ public class CleaningTask {
 
     private final CleaningService cleaningService;
 
+    private final ActivationCleaningService activationCleaningService;
+
     @Autowired
-    public CleaningTask(final CleaningService cleaningService) {
+    public CleaningTask(final CleaningService cleaningService, final ActivationCleaningService activationCleaningService) {
         this.cleaningService = cleaningService;
+        this.activationCleaningService = activationCleaningService;
     }
 
     /**
@@ -109,5 +112,16 @@ public class CleaningTask {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredIdentityVerifications");
         cleaningService.terminateExpiredIdentityVerifications();
+    }
+
+    /**
+     * Cleanup activations of failed onboarding processes.
+     */
+    @Scheduled(fixedDelayString = "PT60S", initialDelayString = "PT60S")
+    @SchedulerLock(name = "cleanupActivations", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    public void cleanupActivations() {
+        LockAssert.assertLocked();
+        logger.debug("cleanupActivations");
+        activationCleaningService.cleanupActivations();
     }
 }
