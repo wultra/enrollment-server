@@ -34,9 +34,9 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class MobileApplicationConfigurationProperties {
 
-    private MobileOs iOs = new MobileOs();
+    private final MobileOs iOs = new MobileOs();
 
-    private MobileOs android = new MobileOs();
+    private final MobileOs android = new MobileOs();
 
     @Getter
     @Setter

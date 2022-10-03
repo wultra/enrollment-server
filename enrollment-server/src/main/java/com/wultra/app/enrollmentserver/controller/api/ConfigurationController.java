@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
+import com.wultra.app.enrollmentserver.api.model.enrollment.response.ConfigurationResponse;
 import com.wultra.app.enrollmentserver.configuration.MobileApplicationConfigurationProperties;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
@@ -31,8 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * Controller publishing configuration to inform the client app.
@@ -62,7 +61,7 @@ public class ConfigurationController {
     @PostMapping
     @Operation(summary = "Provide enrollment configuration")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public ObjectResponse<Object> fetchConfiguration(@EncryptedRequestBody Object request,
+    public ObjectResponse<ConfigurationResponse> fetchConfiguration(@EncryptedRequestBody Object request,
                                                      @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException{
 
         if (eciesContext == null) {
@@ -71,6 +70,23 @@ public class ConfigurationController {
 
         logger.debug("Server successfully decrypted signed data: {}", request);
 
-        return new ObjectResponse<>(Map.of("mobile_application", mobileApplicationConfigurationProperties));
+        return new ObjectResponse<>(createConfigurationResponse());
+    }
+
+    private ConfigurationResponse createConfigurationResponse() {
+        final var mobileApplication = new ConfigurationResponse.MobileApplication();
+        mobileApplication.setAndroid(convertMobileOs(mobileApplicationConfigurationProperties.getAndroid()));
+        mobileApplication.setIOs(convertMobileOs(mobileApplicationConfigurationProperties.getIOs()));
+
+        final ConfigurationResponse response = new ConfigurationResponse();
+        response.setMobileApplication(mobileApplication);
+        return response;
+    }
+
+    private static ConfigurationResponse.MobileOs convertMobileOs(final MobileApplicationConfigurationProperties.MobileOs source) {
+        final var target = new ConfigurationResponse.MobileOs();
+        target.setMinimalVersion(source.getMinimalVersion());
+        target.setCurrentVersion(source.getCurrentVersion());
+        return target;
     }
 }
