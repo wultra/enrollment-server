@@ -75,16 +75,16 @@ public class ConfigurationController {
 
     private ConfigurationResponse createConfigurationResponse() {
         final var mobileApplication = new ConfigurationResponse.MobileApplication();
-        mobileApplication.setAndroid(convertMobileOs(mobileApplicationConfigurationProperties.getAndroid()));
-        mobileApplication.setIOs(convertMobileOs(mobileApplicationConfigurationProperties.getIOs()));
+        mobileApplication.setAndroid(convert(mobileApplicationConfigurationProperties.getAndroid()));
+        mobileApplication.setIOs(convert(mobileApplicationConfigurationProperties.getIOs()));
 
         final ConfigurationResponse response = new ConfigurationResponse();
         response.setMobileApplication(mobileApplication);
         return response;
     }
 
-    private static ConfigurationResponse.MobileOs convertMobileOs(final MobileApplicationConfigurationProperties.MobileOs source) {
-        final var target = new ConfigurationResponse.MobileOs();
+    private static ConfigurationResponse.VersionSpecification convert(final MobileApplicationConfigurationProperties.VersionSpecification source) {
+        final var target = new ConfigurationResponse.VersionSpecification();
         target.setMinimalVersion(source.getMinimalVersion());
         target.setCurrentVersion(source.getCurrentVersion());
         return target;

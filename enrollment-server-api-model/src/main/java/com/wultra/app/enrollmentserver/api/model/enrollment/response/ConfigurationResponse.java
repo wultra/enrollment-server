@@ -32,13 +32,13 @@ public class ConfigurationResponse {
     @Data
     public static class MobileApplication {
 
-        private MobileOs iOs;
+        private VersionSpecification iOs;
 
-        private MobileOs android;
+        private VersionSpecification android;
     }
 
     @Data
-    public static class MobileOs {
+    public static class VersionSpecification {
 
         private String minimalVersion;
 

@@ -34,13 +34,13 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class MobileApplicationConfigurationProperties {
 
-    private final MobileOs iOs = new MobileOs();
+    private final VersionSpecification iOs = new VersionSpecification();
 
-    private final MobileOs android = new MobileOs();
+    private final VersionSpecification android = new VersionSpecification();
 
     @Getter
     @Setter
-    public static class MobileOs {
+    public static class VersionSpecification {
 
         private String minimalVersion;
 
