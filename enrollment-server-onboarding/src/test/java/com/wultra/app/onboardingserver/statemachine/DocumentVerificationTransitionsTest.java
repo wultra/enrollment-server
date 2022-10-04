@@ -35,7 +35,8 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -66,7 +67,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @Test
     void testDocumentVerificationInProgress() throws Exception {
-        testDocumentVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
+        testDocumentVerificationStatus(IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
     }
 
     @Test
@@ -86,6 +87,8 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
+        when(identityVerificationService.moveToPhaseAndStatus(idVerification, CLIENT_EVALUATION, IN_PROGRESS, OWNER_ID))
+                .thenReturn(idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -96,9 +99,6 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
-
-        assertEquals(IdentityVerificationPhase.CLIENT_EVALUATION, idVerification.getPhase());
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, idVerification.getStatus());
     }
 
     private void testDocumentVerificationStatus(IdentityVerificationStatus identityStatus, OnboardingState expectedState) throws Exception {

@@ -33,13 +33,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.function.Consumer;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 
 /**
  * Service for client evaluation features.
@@ -58,6 +61,8 @@ public class ClientEvaluationService {
 
     private final TransactionTemplate transactionTemplate;
 
+    private final IdentityVerificationService identityVerificationService;
+
     /**
      * All-arg constructor.
      *
@@ -65,17 +70,20 @@ public class ClientEvaluationService {
      * @param config Identity verification config.
      * @param identityVerificationRepository Identity verification repository.
      * @param transactionTemplate Transaction template.
+     * @param identityVerificationService Identity verification service.
      */
     @Autowired
     public ClientEvaluationService(
             final OnboardingProvider onboardingProvider,
             final IdentityVerificationConfig config,
             final IdentityVerificationRepository identityVerificationRepository,
-            final TransactionTemplate transactionTemplate) {
+            final TransactionTemplate transactionTemplate,
+            final IdentityVerificationService identityVerificationService) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.identityVerificationRepository = identityVerificationRepository;
         this.transactionTemplate = transactionTemplate;
+        this.identityVerificationService = identityVerificationService;
     }
 
     /**
@@ -84,12 +92,8 @@ public class ClientEvaluationService {
      * @param ownerId owner ID to set timestampLastUpdated
      * @param idVerification identity verification to change
      */
-    @Transactional
     public void initClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        idVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
-        idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        logger.info("Switched to CLIENT_EVALUATION/IN_PROGRESS; {}", ownerId);
+        identityVerificationService.moveToPhaseAndStatus(idVerification, CLIENT_EVALUATION, IN_PROGRESS, ownerId);
     }
 
     /**
@@ -125,27 +129,26 @@ public class ClientEvaluationService {
 
     private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         return response -> {
-            final Date now = new Date();
-            identityVerification.setTimestampLastUpdated(now);
             // The timestampFinished parameter is not set yet, there may be other steps ahead
-            if (response.isAccepted()) {
-                logger.info("Client evaluation accepted for {}", identityVerification);
-                identityVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
-                logger.info("Switched to {}/ACCEPTED; {}", identityVerification.getPhase(), ownerId);
-            } else {
-                logger.info("Client evaluation rejected for {}", identityVerification);
-                identityVerification.setStatus(IdentityVerificationStatus.REJECTED);
-                identityVerification.getDocumentVerifications()
-                        .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
-                logger.info("Switched to {}/REJECTED; {}", identityVerification.getPhase(), ownerId);
-                identityVerification.setTimestampFailed(now);
-            }
             if (response.isErrorOccurred()) {
                 logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
                 identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
                 identityVerification.setErrorDetail(response.getErrorDetail());
             }
-            saveInTransaction(identityVerification);
+
+            final IdentityVerificationPhase phase = identityVerification.getPhase();
+            if (response.isAccepted()) {
+                logger.info("Client evaluation accepted for {}", identityVerification);
+                saveInANewTransaction(status ->
+                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId));
+            } else {
+                logger.info("Client evaluation rejected for {}", identityVerification);
+                identityVerification.getDocumentVerifications()
+                        .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
+                identityVerification.setTimestampFailed(ownerId.getTimestamp());
+                saveInANewTransaction(status ->
+                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId));
+            }
         };
     }
 
@@ -153,19 +156,16 @@ public class ClientEvaluationService {
         return t -> {
             logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
             logger.debug("Client evaluation failed for {}", identityVerification, t);
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            final Date now = new Date();
-            identityVerification.setTimestampLastUpdated(now);
-            identityVerification.setTimestampFailed(now);
-            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
-            saveInTransaction(identityVerification);
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
+            final IdentityVerificationPhase phase = identityVerification.getPhase();
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
         };
     }
 
-    private void saveInTransaction(final IdentityVerificationEntity identityVerification) {
+    private void saveInANewTransaction(final Consumer<TransactionStatus> consumer) {
         transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.executeWithoutResult(status -> identityVerificationRepository.save(identityVerification));
+        transactionTemplate.executeWithoutResult(consumer);
     }
 }

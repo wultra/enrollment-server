@@ -19,10 +19,7 @@
 
 package com.wultra.app.onboardingserver.common.service;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
@@ -67,7 +64,14 @@ public class IdentityVerificationLimitService {
      * @param processLimitService Onboarding process limit service.
      */
     @Autowired
-    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, OnboardingProcessLimitService processLimitService) {
+    public IdentityVerificationLimitService(
+            final IdentityVerificationRepository identityVerificationRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final CommonOnboardingConfig config,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final ActivationFlagService activationFlagService,
+            final OnboardingProcessLimitService processLimitService) {
+
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.config = config;
@@ -97,6 +101,8 @@ public class IdentityVerificationLimitService {
                     .forEach(verification -> {
                         verification.setStatus(IdentityVerificationStatus.FAILED);
                         logger.info("Switched to {}/FAILED; {}", verification.getPhase(), ownerId);
+                        // TODO (racansky, 2022-10-04) audit
+                        //auditService.audit(verification, "Switched to {}/FAILED; user ID: {}", verification.getPhase(), ownerId.getUserId());
                     });
             identityVerificationRepository.saveAll(identityVerifications);
 
@@ -126,13 +132,17 @@ public class IdentityVerificationLimitService {
     public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
         final List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > config.getDocumentUploadMaxFailedAttempts()) {
+            final IdentityVerificationPhase phase = identityVerification.getPhase();
+
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
             identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationRepository.save(identityVerification);
-            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
+            logger.info("Switched to {}/FAILED; {}", phase, ownerId);
+            // TODO (racansky, 2022-10-04) audit
+            //auditService.audit(identityVerification, "Switched to {}/FAILED; user ID: {}", phase, ownerId.getUserId());
             resetIdentityVerification(ownerId);
             logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
             throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");
