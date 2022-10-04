@@ -38,9 +38,12 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
-import com.wultra.app.onboardingserver.provider.*;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
 import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
@@ -92,12 +95,15 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param config Onboarding configuration.
      * @param identityVerificationConfig Identity verification config.
      * @param otpService OTP service.
+     * @param auditService audit service.
      */
     @Autowired
     public OnboardingServiceImpl(
@@ -106,7 +112,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
             final ActivationService activationService,
-            final OnboardingProvider onboardingProvider) {
+            final OnboardingProvider onboardingProvider,
+            final AuditService auditService) {
 
         super(onboardingProcessRepository);
         this.onboardingConfig = config;
@@ -114,6 +121,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
+        this.auditService = auditService;
     }
 
     /**
@@ -147,8 +155,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setTimestampLastUpdated(now);
             process.setTimestampFailed(now);
             onboardingProcessRepository.save(process);
-            logger.warn("Maximum number of processes per day reached for user: {}", userId);
-            throw new TooManyProcessesException();
+            auditService.audit(process, "Maximum number of processes per day reached for user: {}", userId);
+            throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
@@ -237,6 +245,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setActivationRemoved(true);
         onboardingProcessRepository.save(process);
 
+        auditService.audit(process, "Process cleaned up for user: {}", process.getUserId());
         return new Response();
     }
 
@@ -404,7 +413,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
-        return onboardingProcessRepository.save(process);
+
+        final OnboardingProcessEntity createdProcess = onboardingProcessRepository.save(process);
+        auditService.audit(createdProcess, "Process ID: {} started", process.getId());
+        return createdProcess;
     }
 
     @SneakyThrows(OnboardingProcessException.class)
