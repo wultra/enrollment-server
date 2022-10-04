@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -36,6 +37,8 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.NOT_INITIALIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -49,6 +52,9 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationConfig identityVerificationConfig;
+
+    @MockBean
+    private IdentityVerificationService identityVerificationService;
 
     @MockBean
     private IdentityVerificationOtpService identityVerificationOtpService;
@@ -86,6 +92,8 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
+        when(identityVerificationService.moveToPhaseAndStatus(idVerification, PRESENCE_CHECK, NOT_INITIALIZED, OWNER_ID))
+                .thenReturn(idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -96,9 +104,6 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
-
-        assertEquals(IdentityVerificationPhase.PRESENCE_CHECK, idVerification.getPhase());
-        assertEquals(IdentityVerificationStatus.NOT_INITIALIZED, idVerification.getStatus());
     }
 
     @Test

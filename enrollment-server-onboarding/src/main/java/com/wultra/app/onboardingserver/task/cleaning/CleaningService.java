@@ -186,7 +186,7 @@ class CleaningService {
 
         for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
             logger.info("Terminating {} expired identity verifications", idsChunk.size());
-            identityVerificationRepository.terminate(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, errorOrigin);
+            terminateAndAuditIdentityVerifications(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, errorOrigin);
         }
     }
 
@@ -213,7 +213,7 @@ class CleaningService {
 
             final List<String> identityVerificationIds = identityVerificationRepository.findNotCompletedIdentityVerifications(processIdChunk);
             logger.info("Terminating {} identity verifications", identityVerificationIds.size());
-            identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
+            terminateAndAuditIdentityVerifications(identityVerificationIds, now, errorDetail, errorOrigin);
 
             final List<String> documentVerificationIds = documentVerificationRepository.findDocumentVerifications(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
             logger.info("Terminating {} document verifications", documentVerificationIds.size());
@@ -226,6 +226,13 @@ class CleaningService {
         processIds.forEach(processId ->
             onboardingProcessRepository.findById(processId).ifPresent(process ->
                     auditService.audit(process, "Expired process for user: {}, {}", process.getUserId(), errorDetail)));
+    }
+
+    private void terminateAndAuditIdentityVerifications(final List<String> identityVerificationIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
+        identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
+        identityVerificationIds.forEach(identityVerificationId ->
+                identityVerificationRepository.findById(identityVerificationId).ifPresent(identityVerification ->
+                        auditService.audit(identityVerification, "Expired identity verification for user: {}, {}", identityVerification.getUserId(), errorDetail)));
     }
 
     private void terminateAndAuditOtps(final List<String> otpIds, final Date now) {
