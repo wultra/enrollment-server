@@ -34,8 +34,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
-import com.wultra.core.audit.base.Audit;
-import com.wultra.core.audit.base.model.AuditDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +57,7 @@ public class PresenceCheckLimitService {
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
 
-    private Audit audit;
+    private AuditService auditService;
 
     /**
      * Service constructor.
@@ -68,7 +66,7 @@ public class PresenceCheckLimitService {
      * @param identityVerificationRepository Identity verification repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param activationFlagService Activation flag service.
-     * @param audit audit
+     * @param auditService audit service
      */
     @Autowired
     public PresenceCheckLimitService(
@@ -77,14 +75,14 @@ public class PresenceCheckLimitService {
             final IdentityVerificationRepository identityVerificationRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final ActivationFlagService activationFlagService,
-            final Audit audit) {
+            final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpRepository = otpRepository;
         this.identityVerificationRepository = identityVerificationRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
-        this.audit = audit;
+        this.auditService = auditService;
     }
 
     /**
@@ -108,11 +106,8 @@ public class PresenceCheckLimitService {
                 logger.warn("Process identifier mismatch for owner {}: {}.", ownerId, processId);
                 throw new IdentityVerificationException("Process identifier mismatch");
             }
-            final Optional<OnboardingProcessEntity> onboardingProcessOptional = onboardingProcessRepository.findById(processId);
-            if (onboardingProcessOptional.isEmpty()) {
-                logger.warn("Onboarding process not found, {}.", ownerId);
-                throw new IdentityVerificationException("Onboarding process not found");
-            }
+            final OnboardingProcessEntity onboardingProcess = onboardingProcessRepository.findById(processId).orElseThrow(() ->
+                new IdentityVerificationException("Onboarding process not found, " + ownerId));
 
             identityVerification.setStatus(IdentityVerificationStatus.FAILED);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
@@ -122,34 +117,19 @@ public class PresenceCheckLimitService {
             identityVerificationRepository.save(identityVerification);
             logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
 
-            final OnboardingProcessEntity onboardingProcess = onboardingProcessOptional.get();
             onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             onboardingProcess.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
             onboardingProcess.setTimestampLastUpdated(ownerId.getTimestamp());
             onboardingProcess.setTimestampFailed(ownerId.getTimestamp());
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
-            auditPresenceCheckMaxFailedAttempts(onboardingProcess, identityVerification, ownerId.getUserId());
+
+            auditService.audit(onboardingProcess, identityVerification, "Presence check max failed attempts reached for user: {}", onboardingProcess.getUserId());
 
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
             activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
 
             throw new PresenceCheckLimitException("Max failed attempts reached for presence check");
         }
-    }
-
-    private void auditPresenceCheckMaxFailedAttempts(
-            final OnboardingProcessEntity process,
-            final IdentityVerificationEntity identityVerification,
-            final String userId) {
-
-        final AuditDetail auditDetail = AuditDetail.builder()
-                .type("process")
-                .param("processId", process.getId())
-                .param("identityVerificationId", identityVerification.getId())
-                .param("activationId", process.getActivationId())
-                .param("userId", userId)
-                .build();
-        audit.info("Presence check max failed attempts reached for user: {}", auditDetail, userId);
     }
 }

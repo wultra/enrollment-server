@@ -25,8 +25,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerification
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
-import com.wultra.core.audit.base.Audit;
-import com.wultra.core.audit.base.model.AuditDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,26 +44,26 @@ public class IdentityVerificationFinishService {
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
 
-    private final Audit audit;
+    private final AuditService auditService;
 
     /**
      * Service constructor.
      * @param onboardingService Onboarding service.
      * @param identityVerificationService Identity verification service.
      * @param activationFlagService Activation flags service.
-     * @param audit audit.
+     * @param auditService audit service.
      */
     @Autowired
     public IdentityVerificationFinishService(
             final OnboardingServiceImpl onboardingService,
             final IdentityVerificationService identityVerificationService,
             final ActivationFlagService activationFlagService,
-            final Audit audit) {
+            final AuditService auditService) {
 
         this.onboardingService = onboardingService;
         this.identityVerificationService = identityVerificationService;
         this.activationFlagService = activationFlagService;
-        this.audit = audit;
+        this.auditService = auditService;
     }
 
     /**
@@ -95,21 +93,6 @@ public class IdentityVerificationFinishService {
         processEntity.setTimestampLastUpdated(now);
         processEntity.setTimestampFinished(now);
         onboardingService.updateProcess(processEntity);
-        auditFinish(processEntity, identityVerification, ownerId.getUserId());
-    }
-
-    private void auditFinish(
-            final OnboardingProcessEntity process,
-            final IdentityVerificationEntity identityVerification,
-            final String userId) {
-
-        final AuditDetail auditDetail = AuditDetail.builder()
-                .type("process")
-                .param("processId", process.getId())
-                .param("identityVerificationId", identityVerification.getId())
-                .param("activationId", process.getActivationId())
-                .param("userId", userId)
-                .build();
-        audit.info("Process finished for user: {}", auditDetail, userId);
+        auditService.audit(processEntity, identityVerification, "Process finished for user: {}", processEntity.getUserId());
     }
 }

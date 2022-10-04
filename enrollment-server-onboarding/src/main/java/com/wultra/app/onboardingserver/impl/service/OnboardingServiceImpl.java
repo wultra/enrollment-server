@@ -50,8 +50,6 @@ import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import com.wultra.core.audit.base.Audit;
-import com.wultra.core.audit.base.model.AuditDetail;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +95,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
-    private final Audit audit;
+    private final AuditService auditService;
 
     /**
      * Service constructor.
@@ -105,7 +103,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @param config Onboarding configuration.
      * @param identityVerificationConfig Identity verification config.
      * @param otpService OTP service.
-     * @param audit audit.
+     * @param auditService audit service.
      */
     @Autowired
     public OnboardingServiceImpl(
@@ -115,7 +113,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OtpServiceImpl otpService,
             final ActivationService activationService,
             final OnboardingProvider onboardingProvider,
-            final Audit audit) {
+            final AuditService auditService) {
 
         super(onboardingProcessRepository);
         this.onboardingConfig = config;
@@ -123,7 +121,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
-        this.audit = audit;
+        this.auditService = auditService;
     }
 
     /**
@@ -157,7 +155,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setTimestampLastUpdated(now);
             process.setTimestampFailed(now);
             onboardingProcessRepository.save(process);
-            auditTooManyProcessCountPerDay(process, userId);
+            auditService.audit(process, "Maximum number of processes per day reached for user: {}", userId);
             throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
@@ -247,7 +245,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setActivationRemoved(true);
         onboardingProcessRepository.save(process);
 
-        auditProcessCleanup(process);
+        auditService.audit(process, "Process cleaned up for user: {}", process.getUserId());
         return new Response();
     }
 
@@ -417,7 +415,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setTimestampCreated(new Date());
 
         final OnboardingProcessEntity createdProcess = onboardingProcessRepository.save(process);
-        auditProcessStarted(process);
+        auditService.audit(createdProcess, "Process ID: {} started", process.getId());
         return createdProcess;
     }
 
@@ -488,32 +486,5 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException(e);
         }
-    }
-
-    private void auditTooManyProcessCountPerDay(final OnboardingProcessEntity process, final String userId) {
-        final AuditDetail auditDetail = AuditDetail.builder()
-                .type("process")
-                .param("processId", process.getId())
-                .param("userId", userId)
-                .build();
-        audit.info("Maximum number of processes per day reached for user: {}", auditDetail, userId);
-    }
-
-    private void auditProcessStarted(final OnboardingProcessEntity process) {
-        final AuditDetail auditDetail = AuditDetail.builder()
-                .type("process")
-                .param("processId", process.getId())
-                .build();
-        audit.info("Process ID: {} started", auditDetail, process.getId());
-    }
-
-    private void auditProcessCleanup(final OnboardingProcessEntity process) {
-        final AuditDetail auditDetail = AuditDetail.builder()
-                .type("process")
-                .param("processId", process.getId())
-                .param("activationId", process.getActivationId())
-                .param("userId", process.getUserId())
-                .build();
-        audit.info("Process cleaned up for user: {}", auditDetail, process.getUserId());
     }
 }
