@@ -43,15 +43,24 @@ public class OnboardingProcessLimitService {
     private final CommonOnboardingConfig config;
     private final OnboardingProcessRepository onboardingProcessRepository;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
+     *
      * @param config Onboarding process configuration.
      * @param onboardingProcessRepository Onboarding process repository.
+     * @param auditService Audit service.
      */
     @Autowired
-    public OnboardingProcessLimitService(CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository) {
+    public OnboardingProcessLimitService(
+            final CommonOnboardingConfig config,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final AuditService auditService) {
+
         this.config = config;
         this.onboardingProcessRepository = onboardingProcessRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -97,6 +106,7 @@ public class OnboardingProcessLimitService {
         final Date now = new Date();
         entity.setTimestampLastUpdated(now);
         entity.setTimestampFailed(now);
+        auditService.audit(entity, "Process failed: {}, for user: {}", errorDetail, entity.getUserId());
         return onboardingProcessRepository.save(entity);
     }
 

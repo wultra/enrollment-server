@@ -23,8 +23,7 @@ import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
@@ -33,19 +32,22 @@ import java.util.Optional;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@Slf4j
 public class CommonOnboardingService implements OnboardingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommonOnboardingService.class);
-
     protected final OnboardingProcessRepository onboardingProcessRepository;
+
+    protected final AuditService auditService;
 
     /**
      * Service constructor.
      *
      * @param onboardingProcessRepository Onboarding process repository.
+     * @param auditService Audit service.
      */
-    public CommonOnboardingService(final OnboardingProcessRepository onboardingProcessRepository) {
+    public CommonOnboardingService(final OnboardingProcessRepository onboardingProcessRepository, final AuditService auditService) {
         this.onboardingProcessRepository = onboardingProcessRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -100,5 +102,6 @@ public class CommonOnboardingService implements OnboardingService {
         process.setActivationId(request.getActivationId());
         process.setTimestampLastUpdated(request.getTimestampLastUpdated());
         updateProcess(process);
+        auditService.audit(process, "Update process of status {} for user: {}", process.getStatus(), process.getUserId());
     }
 }
