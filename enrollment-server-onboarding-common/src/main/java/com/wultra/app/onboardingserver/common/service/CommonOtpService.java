@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.Optional;
 
 /**
  * Implementation of {@link OtpService} which is shared both for enrollment and onboarding.
@@ -79,12 +78,8 @@ public class CommonOtpService implements OtpService {
 
     @Override
     public OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode, OtpType otpType) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findById(processId);
-        if (processOptional.isEmpty()) {
-            logger.warn("Onboarding process not found: {}", processId);
-            throw new OnboardingProcessException();
-        }
-        OnboardingProcessEntity process = processOptional.get();
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
+            new OnboardingProcessException("Onboarding process not found: " + processId));
 
         final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, otpType).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));

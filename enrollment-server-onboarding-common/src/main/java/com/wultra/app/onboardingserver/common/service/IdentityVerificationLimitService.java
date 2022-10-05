@@ -54,6 +54,8 @@ public class IdentityVerificationLimitService {
     private final ActivationFlagService activationFlagService;
     private final OnboardingProcessLimitService processLimitService;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      * @param identityVerificationRepository Identity verification repository.
@@ -62,6 +64,7 @@ public class IdentityVerificationLimitService {
      * @param onboardingProcessRepository Onboarding process repository.
      * @param activationFlagService Activation flag service.
      * @param processLimitService Onboarding process limit service.
+     * @param auditService audit service.
      */
     @Autowired
     public IdentityVerificationLimitService(
@@ -70,7 +73,8 @@ public class IdentityVerificationLimitService {
             final CommonOnboardingConfig config,
             final OnboardingProcessRepository onboardingProcessRepository,
             final ActivationFlagService activationFlagService,
-            final OnboardingProcessLimitService processLimitService) {
+            final OnboardingProcessLimitService processLimitService,
+            final AuditService auditService) {
 
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -78,6 +82,7 @@ public class IdentityVerificationLimitService {
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
         this.processLimitService = processLimitService;
+        this.auditService = auditService;
     }
 
     /**
@@ -112,6 +117,7 @@ public class IdentityVerificationLimitService {
             process.setTimestampFailed(ownerId.getTimestamp());
             process.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(process);
+            auditService.audit(process, "Max failed attempts reached for identity verification for user: {}", process.getUserId());
 
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
             activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);

@@ -35,6 +35,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
@@ -95,8 +96,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
-    private final AuditService auditService;
-
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
@@ -115,13 +114,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OnboardingProvider onboardingProvider,
             final AuditService auditService) {
 
-        super(onboardingProcessRepository);
+        super(onboardingProcessRepository, auditService);
         this.onboardingConfig = config;
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
-        this.auditService = auditService;
     }
 
     /**
