@@ -54,6 +54,8 @@ public class CommonOtpService implements OtpService {
     protected final OnboardingProcessLimitService processLimitService;
     protected final IdentityVerificationLimitService verificationLimitService;
 
+    protected final AuditService auditService;
+
     /**
      * Service constructor.
      * @param onboardingOtpRepository Onboarding OTP repository.
@@ -61,19 +63,22 @@ public class CommonOtpService implements OtpService {
      * @param onboardingConfig Common onboarding configuration.
      * @param processLimitService Common onboarding process limit service.
      * @param verificationLimitService Common identity verification limit service.
+     * @param auditService Audit service.
      */
     public CommonOtpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final CommonOnboardingConfig onboardingConfig,
             final OnboardingProcessLimitService processLimitService,
-            final IdentityVerificationLimitService verificationLimitService) {
+            final IdentityVerificationLimitService verificationLimitService,
+            final AuditService auditService) {
 
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.commonOnboardingConfig = onboardingConfig;
         this.processLimitService = processLimitService;
         this.verificationLimitService = verificationLimitService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -104,17 +109,20 @@ public class CommonOtpService implements OtpService {
             otp.setTimestampLastUpdated(now);
             otp.setTimestampFailed(now);
             onboardingOtpRepository.save(otp);
+            auditService.audit(otp, "OTP expired for user: {}", process.getUserId());
         } else if (otp.getOtpCode().equals(otpCode)) {
             verified = true;
             otp.setStatus(OtpStatus.VERIFIED);
             otp.setTimestampVerified(now);
             otp.setTimestampLastUpdated(now);
             onboardingOtpRepository.save(otp);
+            logger.info("OTP verified, {}", ownerId);
+            auditService.audit(otp, "OTP verified for user: {}", process.getUserId());
         } else {
             handleFailedOtpVerification(process, ownerId, otp, otpType);
         }
 
-        OtpVerifyResponse response = new OtpVerifyResponse();
+        final OtpVerifyResponse response = new OtpVerifyResponse();
         response.setProcessId(processId);
         response.setOnboardingStatus(process.getStatus());
         response.setExpired(expired);
@@ -148,6 +156,7 @@ public class CommonOtpService implements OtpService {
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             otp.setTimestampFailed(ownerId.getTimestamp());
             onboardingOtpRepository.save(otp);
+            auditService.audit(otp, "OTP max attempts reached for user: {}", process.getUserId());
 
             failProcessOrIdentityVerification(process, otp, ownerId);
         } else {
@@ -168,6 +177,7 @@ public class CommonOtpService implements OtpService {
                 otp.setTimestampLastUpdated(ownerId.getTimestamp());
                 otp.setTimestampFailed(ownerId.getTimestamp());
                 onboardingOtpRepository.save(otp);
+                auditService.audit(otp, "OTP failed because of failed process for user: {}", process.getUserId());
             }
         }
 

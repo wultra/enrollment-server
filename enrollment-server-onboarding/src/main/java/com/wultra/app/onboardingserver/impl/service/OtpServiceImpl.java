@@ -25,9 +25,10 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
-import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
+import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
@@ -39,7 +40,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Optional;
 
 /**
  * Service implementing OTP delivery and verification specific for the onboarding process.
@@ -63,6 +63,7 @@ public class OtpServiceImpl extends CommonOtpService {
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingConfig Onboarding configuration.
      * @param processLimitService Onboarding process limit service.
+     * @param auditService auditService.
      */
     @Autowired
     public OtpServiceImpl(
@@ -71,9 +72,10 @@ public class OtpServiceImpl extends CommonOtpService {
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingConfig onboardingConfig,
             final OnboardingProcessLimitService processLimitService,
-            final IdentityVerificationLimitService verificationLimitService) {
+            final IdentityVerificationLimitService verificationLimitService,
+            final AuditService auditService) {
 
-        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService, verificationLimitService);
+        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService, verificationLimitService, auditService);
         this.otpGeneratorService = otpGeneratorService;
         this.onboardingConfig = onboardingConfig;
     }
@@ -109,13 +111,14 @@ public class OtpServiceImpl extends CommonOtpService {
         final OnboardingOtpEntity existingOtp = onboardingOtpRepository.findLastOtp(processId, otpType).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
 
-        if (!OtpStatus.FAILED.equals(existingOtp.getStatus())) {
+        if (existingOtp.getStatus() != OtpStatus.FAILED) {
             existingOtp.setStatus(OtpStatus.FAILED);
             existingOtp.setTimestampLastUpdated(new Date());
             onboardingOtpRepository.save(existingOtp);
             logger.info("Marked previous {} as {} to allow new send of the OTP code", existingOtp, OtpStatus.FAILED);
+            auditService.audit(existingOtp, "Resending OTP for user: {}", process.getUserId());
         }
-        // Generate an OTP code
+
         return generateOtpCode(process, otpType);
     }
 
@@ -124,12 +127,10 @@ public class OtpServiceImpl extends CommonOtpService {
      * @param process Onboarding process.
      */
     public void cancelOtp(OnboardingProcessEntity process, OtpType otpType) {
-        String processId = process.getId();
-        Optional<OnboardingOtpEntity> otpOptional = onboardingOtpRepository.findLastOtp(processId, otpType);
+        final String processId = process.getId();
         // Fail current OTP, if it is present
-        final Date now = new Date();
-        if (otpOptional.isPresent()) {
-            OnboardingOtpEntity otp = otpOptional.get();
+        onboardingOtpRepository.findLastOtp(processId, otpType).ifPresent(otp -> {
+            final Date now = new Date();
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(now);
@@ -137,16 +138,9 @@ public class OtpServiceImpl extends CommonOtpService {
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
+                auditService.audit(otp, "OTP canceled for user: {}", process.getUserId());
             }
-        }
-    }
-
-    /**
-     * Terminate OTPs created before specified date.
-     * @param createdDateOtp OTP created date.
-     */
-    public void terminateExpiredOtps(Date createdDateOtp) {
-        onboardingOtpRepository.terminateExpiredOtps(createdDateOtp, new Date());
+        });
     }
 
     /**
@@ -174,7 +168,8 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampCreated(timestampCreated);
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
-        onboardingOtpRepository.save(otp);
+        final OnboardingOtpEntity savedOtp = onboardingOtpRepository.save(otp);
+        auditService.audit(savedOtp, "Generated OTP for user: {}", process.getUserId());
         return otpCode;
     }
 
