@@ -70,8 +70,15 @@ public class IdentityVerificationLimitService {
      * @param auditService audit service.
      */
     @Autowired
-    public IdentityVerificationLimitService(IdentityVerificationRepository identityVerificationRepository, DocumentVerificationRepository documentVerificationRepository, CommonOnboardingConfig config, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService, OnboardingProcessLimitService processLimitService,
+    public IdentityVerificationLimitService(
+            final IdentityVerificationRepository identityVerificationRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final CommonOnboardingConfig config,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final ActivationFlagService activationFlagService,
+            final OnboardingProcessLimitService processLimitService,
             final AuditService auditService) {
+
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.config = config;
