@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
@@ -52,7 +53,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given process and identity verification.
+     * Audit the given process and the identity verification.
      *
      * @param process process to audit
      * @param identityVerification identity verification to audit
@@ -62,6 +63,75 @@ public class AuditService {
     public void audit(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
         final AuditDetail auditDetail = createAuditDetail(process, identityVerification.getId());
         audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given otp and the identity verification.
+     *
+     * @param otp otp to audit
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(otp, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given otp and the process.
+     *
+     * @param otp otp to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final OnboardingOtpEntity otp, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(otp);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given identity verification.
+     *
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
+        return AuditDetail.builder()
+                .type("otp")
+                .param("identityVerificationId", identityVerification)
+                .param("processId", identityVerification.getProcessId())
+                .param("activationId", identityVerification.getActivationId())
+                .param("userId", identityVerification.getUserId())
+                .param("otpId", otp.getId())
+                .build();
+    }
+
+    private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp) {
+        final OnboardingProcessEntity process = otp.getProcess();
+        return AuditDetail.builder()
+                .type("otp")
+                .param("activationId", process.getActivationId())
+                .param("processId", process.getId())
+                .param("userId", process.getUserId())
+                .param("otpId", otp.getId())
+                .build();
+    }
+
+    private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
+        return AuditDetail.builder()
+                .type("identityVerification")
+                .param("identityVerificationId", identityVerification)
+                .param("processId", identityVerification.getProcessId())
+                .param("activationId", identityVerification.getActivationId())
+                .param("userId", identityVerification.getUserId())
+                .build();
     }
 
     private static AuditDetail createAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {

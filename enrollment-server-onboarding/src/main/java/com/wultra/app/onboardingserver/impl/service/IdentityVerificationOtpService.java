@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntit
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
@@ -65,6 +66,10 @@ public class IdentityVerificationOtpService {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
+    private final IdentityVerificationService identityVerificationService;
+
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      *
@@ -74,6 +79,8 @@ public class IdentityVerificationOtpService {
      * @param processLimitService Process limit service.
      * @param identityVerificationRepository Identity verification repository.
      * @param identityVerificationConfig Identity verification config.
+     * @param identityVerificationService Identity verification service.
+     * @param auditService Audit service.
      */
     public IdentityVerificationOtpService(
             final OnboardingProcessRepository onboardingProcessRepository,
@@ -81,13 +88,18 @@ public class IdentityVerificationOtpService {
             final OtpServiceImpl otpService,
             final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationRepository identityVerificationRepository,
-            final IdentityVerificationConfig identityVerificationConfig) {
+            final IdentityVerificationConfig identityVerificationConfig,
+            final IdentityVerificationService identityVerificationService,
+            final AuditService auditService) {
+
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.otpService = otpService;
         this.processLimitService = processLimitService;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationConfig = identityVerificationConfig;
+        this.identityVerificationService = identityVerificationService;
+        this.auditService = auditService;
     }
 
     /**
@@ -213,7 +225,7 @@ public class IdentityVerificationOtpService {
 
         logger.info("Switched to PRESENCE_CHECK/NOT_INITIALIZED; {}", ownerId);
 
-        markVerificationOtpAsFailed(process.getId());
+        markVerificationOtpAsFailed(process.getId(), idVerification);
 
         processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED);
         final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
@@ -223,7 +235,7 @@ public class IdentityVerificationOtpService {
         return response;
     }
 
-    private void markVerificationOtpAsFailed(String processId) throws OnboardingProcessException {
+    private void markVerificationOtpAsFailed(String processId, IdentityVerificationEntity idVerification) throws OnboardingProcessException {
         final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION).orElseThrow(() ->
             new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
         otp.setStatus(OtpStatus.FAILED);
@@ -233,6 +245,7 @@ public class IdentityVerificationOtpService {
         otp.setTimestampLastUpdated(now);
         otp.setTimestampFailed(now);
         onboardingOtpRepository.save(otp);
+        auditService.audit(otp, idVerification, "OTP failed for user: {}", idVerification.getUserId());
     }
 
     /**

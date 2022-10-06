@@ -25,7 +25,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -40,16 +42,32 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
             "(SELECT MAX(o2.timestampCreated) FROM OnboardingOtpEntity o2 WHERE o2.process.id = :processId AND o2.type = :type)")
     Optional<OnboardingOtpEntity> findLastOtp(String processId, OtpType type);
 
+    /**
+     * Return OTP IDs by the given timestamp.
+     *
+     * @param dateCreatedBefore timestamp created must be before the given value
+     * @return OTP IDs
+     */
+    @Query("SELECT o.id FROM OnboardingOtpEntity o " +
+            "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
+            "AND o.timestampCreated < :dateCreatedBefore")
+    List<String> findExpiredOtps(Date dateCreatedBefore);
+
+    /**
+     * Mark the given OTPs as failed.
+     *
+     * @param ids OTP IDs
+     * @param timestampExpired last updated and failed timestamp
+     */
     @Modifying
     @Query("UPDATE OnboardingOtpEntity o SET " +
             "o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
-            "o.timestampLastUpdated = CURRENT_TIMESTAMP, " +
+            "o.timestampLastUpdated = :timestampExpired, " +
             "o.errorDetail = '" + OnboardingOtpEntity.ERROR_EXPIRED + "', " +
             "o.errorOrigin = 'OTP_VERIFICATION', " +
             "o.timestampFailed = :timestampExpired " +
-            "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
-            "AND o.timestampCreated < :dateCreatedBefore")
-    void terminateExpiredOtps(Date dateCreatedBefore, Date timestampExpired);
+            "WHERE o.id IN :ids")
+    void terminate(Collection<String> ids, Date timestampExpired);
 
     @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     int getFailedAttemptsByProcess(String processId, OtpType type);
