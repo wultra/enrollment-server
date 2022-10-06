@@ -60,10 +60,6 @@
             <groupId>io.getlime.core</groupId>
             <artifactId>rest-client-base</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.getlime.core</groupId>
-            <artifactId>audit-base</artifactId>
-        </dependency>
 
         <!-- Bouncy Castle -->
         <dependency>

@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,8 @@ class CleaningService {
 
     private final OtpServiceImpl otpService;
 
+    private final AuditService auditService;
+
     @Autowired
     public CleaningService(
             final OnboardingConfig onboardingConfig,
@@ -77,7 +80,8 @@ class CleaningService {
             final IdentityVerificationRepository identityVerificationRepository,
             final DocumentVerificationRepository documentVerificationRepository,
             final DocumentDataRepository documentDataRepository,
-            final OtpServiceImpl otpService) {
+            final OtpServiceImpl otpService,
+            final AuditService auditService) {
 
         this.onboardingConfig = onboardingConfig;
         this.identityVerificationConfig = identityVerificationConfig;
@@ -86,6 +90,7 @@ class CleaningService {
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentDataRepository = documentDataRepository;
         this.otpService = otpService;
+        this.auditService = auditService;
     }
 
     /**
@@ -135,7 +140,7 @@ class CleaningService {
         }
         logger.info("Terminating {} expired processes", ids.size());
         for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
-            onboardingProcessRepository.terminate(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
+            terminateAndAuditProcesses(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
     }
 
@@ -204,7 +209,7 @@ class CleaningService {
 
         for (List<String> processIdChunk : Lists.partition(processIds, BATCH_SIZE)) {
             logger.info("Terminating {} processes", processIdChunk.size());
-            onboardingProcessRepository.terminate(processIdChunk, now, errorDetail, errorOrigin);
+            terminateAndAuditProcesses(processIdChunk, now, errorDetail, errorOrigin);
 
             final List<String> identityVerificationIds = identityVerificationRepository.findNotCompletedIdentityVerifications(processIdChunk);
             logger.info("Terminating {} identity verifications", identityVerificationIds.size());
@@ -214,5 +219,12 @@ class CleaningService {
             logger.info("Terminating {} document verifications", documentVerificationIds.size());
             documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
         }
+    }
+
+    private void terminateAndAuditProcesses(final List<String> processIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
+        onboardingProcessRepository.terminate(processIds, now, errorDetail, errorOrigin);
+        processIds.forEach(processId ->
+            onboardingProcessRepository.findById(processId).ifPresent(process ->
+                    auditService.audit(process, "Expired process for user: {}, {}", process.getUserId(), errorDetail)));
     }
 }
