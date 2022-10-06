@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -38,6 +39,7 @@ public class AuditService {
     private static final String ACTIVATION_ID = "activationId";
     private static final String USER_ID = "userId";
     private static final String OTP_ID = "otpId";
+    private static final String DOCUMENT_VERIFICATION_ID = "documentVerificationId";
 
     private final Audit audit;
 
@@ -96,6 +98,30 @@ public class AuditService {
         audit.info(message, auditDetail, args);
     }
 
+    /**
+     * Audit the given document verification.
+     *
+     * @param documentVerification document verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final DocumentVerificationEntity documentVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(documentVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given identity verification.
+     *
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type("otp")
@@ -118,18 +144,6 @@ public class AuditService {
                 .build();
     }
 
-    /**
-     * Audit the given identity verification.
-     *
-     * @param identityVerification identity verification to audit
-     * @param message message, arguments may be put to via template {@code {}}
-     * @param args message arguments
-     */
-    public void audit(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(identityVerification);
-        audit.info(message, auditDetail, args);
-    }
-
     private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type("identityVerification")
@@ -137,6 +151,18 @@ public class AuditService {
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
                 .param(USER_ID, identityVerification.getUserId())
+                .build();
+    }
+
+    private static AuditDetail createAuditDetail(final DocumentVerificationEntity documentVerification) {
+        final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
+        return AuditDetail.builder()
+                .type("documentVerification")
+                .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
+                .param(PROCESS_ID, identityVerification.getProcessId())
+                .param(ACTIVATION_ID, identityVerification.getActivationId())
+                .param(USER_ID, identityVerification.getUserId())
+                .param(DOCUMENT_VERIFICATION_ID, documentVerification.getId())
                 .build();
     }
 
