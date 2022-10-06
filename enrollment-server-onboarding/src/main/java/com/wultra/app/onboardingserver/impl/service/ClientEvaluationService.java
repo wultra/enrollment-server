@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
@@ -63,6 +64,8 @@ public class ClientEvaluationService {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final AuditService auditService;
+
     /**
      * All-arg constructor.
      *
@@ -71,6 +74,7 @@ public class ClientEvaluationService {
      * @param identityVerificationRepository Identity verification repository.
      * @param transactionTemplate Transaction template.
      * @param identityVerificationService Identity verification service.
+     * @param auditService Audit service.
      */
     @Autowired
     public ClientEvaluationService(
@@ -78,12 +82,14 @@ public class ClientEvaluationService {
             final IdentityVerificationConfig config,
             final IdentityVerificationRepository identityVerificationRepository,
             final TransactionTemplate transactionTemplate,
-            final IdentityVerificationService identityVerificationService) {
+            final IdentityVerificationService identityVerificationService,
+            final AuditService auditService) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.identityVerificationRepository = identityVerificationRepository;
         this.transactionTemplate = transactionTemplate;
         this.identityVerificationService = identityVerificationService;
+        this.auditService = auditService;
     }
 
     /**
@@ -144,7 +150,10 @@ public class ClientEvaluationService {
             } else {
                 logger.info("Client evaluation rejected for {}", identityVerification);
                 identityVerification.getDocumentVerifications()
-                        .forEach(it -> it.setStatus(DocumentStatus.REJECTED));
+                        .forEach(document -> {
+                            document.setStatus(DocumentStatus.REJECTED);
+                            auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
+                        });
                 identityVerification.setTimestampFailed(ownerId.getTimestamp());
                 saveInANewTransaction(status ->
                         identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId));
