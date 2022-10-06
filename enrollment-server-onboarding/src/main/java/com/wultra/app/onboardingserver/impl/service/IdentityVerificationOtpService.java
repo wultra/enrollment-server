@@ -66,8 +66,6 @@ public class IdentityVerificationOtpService {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
-    private final IdentityVerificationService identityVerificationService;
-
     private final AuditService auditService;
 
     /**
@@ -79,7 +77,6 @@ public class IdentityVerificationOtpService {
      * @param processLimitService Process limit service.
      * @param identityVerificationRepository Identity verification repository.
      * @param identityVerificationConfig Identity verification config.
-     * @param identityVerificationService Identity verification service.
      * @param auditService Audit service.
      */
     public IdentityVerificationOtpService(
@@ -89,7 +86,6 @@ public class IdentityVerificationOtpService {
             final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationRepository identityVerificationRepository,
             final IdentityVerificationConfig identityVerificationConfig,
-            final IdentityVerificationService identityVerificationService,
             final AuditService auditService) {
 
         this.onboardingProcessRepository = onboardingProcessRepository;
@@ -98,7 +94,6 @@ public class IdentityVerificationOtpService {
         this.processLimitService = processLimitService;
         this.identityVerificationRepository = identityVerificationRepository;
         this.identityVerificationConfig = identityVerificationConfig;
-        this.identityVerificationService = identityVerificationService;
         this.auditService = auditService;
     }
 

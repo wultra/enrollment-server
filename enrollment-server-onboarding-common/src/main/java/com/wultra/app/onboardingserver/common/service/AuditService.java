@@ -33,6 +33,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuditService {
 
+    private static final String IDENTITY_VERIFICATION_ID = "identityVerificationId";
+    private static final String PROCESS_ID = "processId";
+    private static final String ACTIVATION_ID = "activationId";
+    private static final String USER_ID = "userId";
+    private static final String OTP_ID = "otpId";
+
     private final Audit audit;
 
     @Autowired
@@ -79,7 +85,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given otp and the process.
+     * Audit the given otp.
      *
      * @param otp otp to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -105,11 +111,11 @@ public class AuditService {
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type("otp")
-                .param("identityVerificationId", identityVerification)
-                .param("processId", identityVerification.getProcessId())
-                .param("activationId", identityVerification.getActivationId())
-                .param("userId", identityVerification.getUserId())
-                .param("otpId", otp.getId())
+                .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
+                .param(PROCESS_ID, identityVerification.getProcessId())
+                .param(ACTIVATION_ID, identityVerification.getActivationId())
+                .param(USER_ID, identityVerification.getUserId())
+                .param(OTP_ID, otp.getId())
                 .build();
     }
 
@@ -117,40 +123,40 @@ public class AuditService {
         final OnboardingProcessEntity process = otp.getProcess();
         return AuditDetail.builder()
                 .type("otp")
-                .param("activationId", process.getActivationId())
-                .param("processId", process.getId())
-                .param("userId", process.getUserId())
-                .param("otpId", otp.getId())
+                .param(ACTIVATION_ID, process.getActivationId())
+                .param(PROCESS_ID, process.getId())
+                .param(USER_ID, process.getUserId())
+                .param(OTP_ID, otp.getId())
                 .build();
     }
 
     private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type("identityVerification")
-                .param("identityVerificationId", identityVerification)
-                .param("processId", identityVerification.getProcessId())
-                .param("activationId", identityVerification.getActivationId())
-                .param("userId", identityVerification.getUserId())
+                .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
+                .param(PROCESS_ID, identityVerification.getProcessId())
+                .param(ACTIVATION_ID, identityVerification.getActivationId())
+                .param(USER_ID, identityVerification.getUserId())
                 .build();
     }
 
     private static AuditDetail createAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {
         final AuditDetail.Builder builder = AuditDetail.builder()
                 .type("process")
-                .param("processId", process.getId());
+                .param(PROCESS_ID, process.getId());
 
         if (identityVerificationId != null) {
-            builder.param("identityVerificationId", identityVerificationId);
+            builder.param(IDENTITY_VERIFICATION_ID, identityVerificationId);
         }
 
         final String activationId = process.getActivationId();
         if (activationId != null) {
-            builder.param("activationId", activationId);
+            builder.param(ACTIVATION_ID, activationId);
         }
 
         final String userId = process.getUserId();
         if (userId != null) {
-            builder.param("userId", userId);
+            builder.param(USER_ID, userId);
         }
 
         return builder.build();

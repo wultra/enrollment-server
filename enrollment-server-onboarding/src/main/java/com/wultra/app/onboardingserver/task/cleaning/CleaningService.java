@@ -228,13 +228,6 @@ class CleaningService {
                     auditService.audit(process, "Expired process for user: {}, {}", process.getUserId(), errorDetail)));
     }
 
-    private void terminateAndAuditIdentityVerifications(final List<String> identityVerificationIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
-        identityVerificationRepository.terminate(identityVerificationIds, now, errorDetail, errorOrigin);
-        identityVerificationIds.forEach(identityVerificationId ->
-                identityVerificationRepository.findById(identityVerificationId).ifPresent(identityVerification ->
-                        auditService.audit(identityVerification, "Expired identity verification for user: {}, {}", identityVerification.getUserId(), errorDetail)));
-    }
-
     private void terminateAndAuditOtps(final List<String> otpIds, final Date now) {
         onboardingOtpRepository.terminate(otpIds, now);
         otpIds.forEach(otpId ->
