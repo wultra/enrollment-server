@@ -28,7 +28,14 @@ import javax.validation.constraints.NotBlank;
  */
 public class ActivationOtpErrorResponse extends ErrorResponse {
 
-    private final Integer remainingAttempts;
+    private Integer remainingAttempts;
+
+    /**
+     * Default constructor.
+     */
+    public ActivationOtpErrorResponse() {
+        super();
+    }
 
     /**
      * Create a new error response with response object with provided code, error message and remaining attempts.
@@ -47,6 +54,14 @@ public class ActivationOtpErrorResponse extends ErrorResponse {
      */
     public Integer getRemainingAttempts() {
         return remainingAttempts;
+    }
+
+    /**
+     * Set remaining attempts for OTP verification during activation.
+     * @param remainingAttempts Remaining attempts for OTP verification during activation.
+     */
+    public void setRemainingAttempts(Integer remainingAttempts) {
+        this.remainingAttempts = remainingAttempts;
     }
 
 }
