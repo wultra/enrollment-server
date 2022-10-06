@@ -96,18 +96,6 @@ public class AuditService {
         audit.info(message, auditDetail, args);
     }
 
-    /**
-     * Audit the given identity verification.
-     *
-     * @param identityVerification identity verification to audit
-     * @param message message, arguments may be put to via template {@code {}}
-     * @param args message arguments
-     */
-    public void audit(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(identityVerification);
-        audit.info(message, auditDetail, args);
-    }
-
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type("otp")
@@ -127,16 +115,6 @@ public class AuditService {
                 .param(PROCESS_ID, process.getId())
                 .param(USER_ID, process.getUserId())
                 .param(OTP_ID, otp.getId())
-                .build();
-    }
-
-    private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
-        return AuditDetail.builder()
-                .type("identityVerification")
-                .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
-                .param(PROCESS_ID, identityVerification.getProcessId())
-                .param(ACTIVATION_ID, identityVerification.getActivationId())
-                .param(USER_ID, identityVerification.getUserId())
                 .build();
     }
 
