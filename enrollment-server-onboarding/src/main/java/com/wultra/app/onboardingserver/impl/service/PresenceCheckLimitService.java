@@ -24,16 +24,18 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.core.audit.base.Audit;
+import com.wultra.core.audit.base.model.AuditDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,8 @@ public class PresenceCheckLimitService {
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
 
+    private Audit audit;
+
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification configuration.
@@ -64,14 +68,23 @@ public class PresenceCheckLimitService {
      * @param identityVerificationRepository Identity verification repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param activationFlagService Activation flag service.
+     * @param audit audit
      */
     @Autowired
-    public PresenceCheckLimitService(IdentityVerificationConfig identityVerificationConfig, OnboardingOtpRepository otpRepository, IdentityVerificationRepository identityVerificationRepository, OnboardingProcessRepository onboardingProcessRepository, ActivationFlagService activationFlagService) {
+    public PresenceCheckLimitService(
+            final IdentityVerificationConfig identityVerificationConfig,
+            final OnboardingOtpRepository otpRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final ActivationFlagService activationFlagService,
+            final Audit audit) {
+
         this.identityVerificationConfig = identityVerificationConfig;
         this.otpRepository = otpRepository;
         this.identityVerificationRepository = identityVerificationRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
+        this.audit = audit;
     }
 
     /**
@@ -116,6 +129,7 @@ public class PresenceCheckLimitService {
             onboardingProcess.setTimestampFailed(ownerId.getTimestamp());
             onboardingProcess.setStatus(OnboardingStatus.FAILED);
             onboardingProcessRepository.save(onboardingProcess);
+            auditPresenceCheckMaxFailedAttempts(onboardingProcess, identityVerification, ownerId.getUserId());
 
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
             activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
@@ -124,4 +138,18 @@ public class PresenceCheckLimitService {
         }
     }
 
+    private void auditPresenceCheckMaxFailedAttempts(
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification,
+            final String userId) {
+
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("process")
+                .param("processId", process.getId())
+                .param("identityVerificationId", identityVerification.getId())
+                .param("activationId", process.getActivationId())
+                .param("userId", userId)
+                .build();
+        audit.info("Presence check max failed attempts reached for user: {}", auditDetail, userId);
+    }
 }

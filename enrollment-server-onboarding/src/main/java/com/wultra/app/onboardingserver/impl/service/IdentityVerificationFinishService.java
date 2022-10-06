@@ -21,12 +21,12 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
+import com.wultra.core.audit.base.Audit;
+import com.wultra.core.audit.base.model.AuditDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,23 +42,30 @@ import java.util.Date;
 @Service
 public class IdentityVerificationFinishService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationFinishService.class);
-
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
+
+    private final Audit audit;
 
     /**
      * Service constructor.
      * @param onboardingService Onboarding service.
      * @param identityVerificationService Identity verification service.
      * @param activationFlagService Activation flags service.
+     * @param audit audit.
      */
     @Autowired
-    public IdentityVerificationFinishService(OnboardingServiceImpl onboardingService, IdentityVerificationService identityVerificationService, ActivationFlagService activationFlagService) {
+    public IdentityVerificationFinishService(
+            final OnboardingServiceImpl onboardingService,
+            final IdentityVerificationService identityVerificationService,
+            final ActivationFlagService activationFlagService,
+            final Audit audit) {
+
         this.onboardingService = onboardingService;
         this.identityVerificationService = identityVerificationService;
         this.activationFlagService = activationFlagService;
+        this.audit = audit;
     }
 
     /**
@@ -88,6 +95,21 @@ public class IdentityVerificationFinishService {
         processEntity.setTimestampLastUpdated(now);
         processEntity.setTimestampFinished(now);
         onboardingService.updateProcess(processEntity);
+        auditFinish(processEntity, identityVerification, ownerId.getUserId());
     }
 
+    private void auditFinish(
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification,
+            final String userId) {
+
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("process")
+                .param("processId", process.getId())
+                .param("identityVerificationId", identityVerification.getId())
+                .param("activationId", process.getActivationId())
+                .param("userId", userId)
+                .build();
+        audit.info("Process finished for user: {}", auditDetail, userId);
+    }
 }

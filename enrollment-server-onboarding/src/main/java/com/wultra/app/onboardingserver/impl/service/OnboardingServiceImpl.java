@@ -38,15 +38,20 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
-import com.wultra.app.onboardingserver.provider.*;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
 import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
+import com.wultra.core.audit.base.Audit;
+import com.wultra.core.audit.base.model.AuditDetail;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -92,12 +97,15 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
+    private final Audit audit;
+
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param config Onboarding configuration.
      * @param identityVerificationConfig Identity verification config.
      * @param otpService OTP service.
+     * @param audit audit.
      */
     @Autowired
     public OnboardingServiceImpl(
@@ -106,7 +114,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
             final ActivationService activationService,
-            final OnboardingProvider onboardingProvider) {
+            final OnboardingProvider onboardingProvider,
+            final Audit audit) {
 
         super(onboardingProcessRepository);
         this.onboardingConfig = config;
@@ -114,6 +123,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
+        this.audit = audit;
     }
 
     /**
@@ -147,8 +157,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             process.setTimestampLastUpdated(now);
             process.setTimestampFailed(now);
             onboardingProcessRepository.save(process);
-            logger.warn("Maximum number of processes per day reached for user: {}", userId);
-            throw new TooManyProcessesException();
+            auditTooManyProcessCountPerDay(process, userId);
+            throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
@@ -237,6 +247,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setActivationRemoved(true);
         onboardingProcessRepository.save(process);
 
+        auditProcessCleanup(process);
         return new Response();
     }
 
@@ -404,7 +415,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
-        return onboardingProcessRepository.save(process);
+
+        final OnboardingProcessEntity createdProcess = onboardingProcessRepository.save(process);
+        auditProcessStarted(process);
+        return createdProcess;
     }
 
     @SneakyThrows(OnboardingProcessException.class)
@@ -474,5 +488,32 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException(e);
         }
+    }
+
+    private void auditTooManyProcessCountPerDay(final OnboardingProcessEntity process, final String userId) {
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("process")
+                .param("processId", process.getId())
+                .param("userId", userId)
+                .build();
+        audit.info("Maximum number of processes per day reached for user: {}", auditDetail, userId);
+    }
+
+    private void auditProcessStarted(final OnboardingProcessEntity process) {
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("process")
+                .param("processId", process.getId())
+                .build();
+        audit.info("Process ID: {} started", auditDetail, process.getId());
+    }
+
+    private void auditProcessCleanup(final OnboardingProcessEntity process) {
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("process")
+                .param("processId", process.getId())
+                .param("activationId", process.getActivationId())
+                .param("userId", process.getUserId())
+                .build();
+        audit.info("Process cleaned up for user: {}", auditDetail, process.getUserId());
     }
 }
