@@ -436,6 +436,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             try {
                 logger.info("Removing activation ID: {} of process ID: {}", activationId, process.getId());
                 activationService.removeActivation(activationId);
+                auditService.auditActivation(process, "Cleanup activation for user: {}", process.getUserId());
             } catch (RemoteCommunicationException e) {
                 throw new OnboardingProcessException(
                         String.format("Unable to remove activation ID: %s of process ID: %s", activationId, process.getId()), e);
