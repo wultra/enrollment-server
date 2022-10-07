@@ -166,8 +166,8 @@ class CleaningService {
 
         final Date now = new Date();
         for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
-            documentVerificationRepository.terminate(idsChunk, now, ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED, ErrorOrigin.PROCESS_LIMIT_CHECK);
             logger.info("Terminating {} expired document verifications", idsChunk.size());
+            terminateAndAuditDocuments(idsChunk, now, ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
     }
 
@@ -217,7 +217,7 @@ class CleaningService {
 
             final List<String> documentVerificationIds = documentVerificationRepository.findDocumentVerifications(identityVerificationIds, DocumentStatus.ALL_NOT_FINISHED);
             logger.info("Terminating {} document verifications", documentVerificationIds.size());
-            documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
+            terminateAndAuditDocuments(documentVerificationIds, now, errorDetail, errorOrigin);
         }
     }
 
@@ -240,5 +240,12 @@ class CleaningService {
         otpIds.forEach(otpId ->
                 onboardingOtpRepository.findById(otpId).ifPresent(otp ->
                         auditService.audit(otp, "Expired OTP for user: {}", otp.getProcess().getUserId())));
+    }
+
+    private void terminateAndAuditDocuments(final List<String> documentIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
+        documentVerificationRepository.terminate(documentIds, now, errorDetail, errorOrigin);
+        documentIds.forEach(documentId ->
+                documentVerificationRepository.findById(documentId).ifPresent(document ->
+                        auditService.audit(document, "Expired Document verification for user: {}, {}", document.getIdentityVerification().getUserId(), errorDetail)));
     }
 }

@@ -278,14 +278,16 @@ public class IdentityVerificationService {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
             docVerification.setVerificationId(result.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+            auditService.audit(docVerification, "Started document verification for user: {}", ownerId.getUserId());
         });
         documentVerificationRepository.saveAll(docVerifications);
 
-        // If selfie photos are not included in the verification process with documents change their status to ACCEPTED
         if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
             selfiePhotoVerifications.forEach(selfiePhotoVerification -> {
                 selfiePhotoVerification.setStatus(DocumentStatus.ACCEPTED);
                 selfiePhotoVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                auditService.audit(selfiePhotoVerification, "Selfie document accepted for user: {}", ownerId.getUserId());
             });
             documentVerificationRepository.saveAll(selfiePhotoVerifications);
         }

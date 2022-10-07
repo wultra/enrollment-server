@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
@@ -69,6 +70,8 @@ public class DocumentProcessingService {
 
     private final DocumentVerificationProvider documentVerificationProvider;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification configuration.
@@ -77,21 +80,25 @@ public class DocumentProcessingService {
      * @param documentResultRepository Document verification result repository.
      * @param dataExtractionService Data extraction service.
      * @param documentVerificationProvider Document verification provider.
+     * @param auditService Audit service.
      */
     @Autowired
     public DocumentProcessingService(
-            IdentityVerificationConfig identityVerificationConfig,
-            DocumentDataRepository documentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository,
-            DocumentResultRepository documentResultRepository,
-            DataExtractionService dataExtractionService,
-            DocumentVerificationProvider documentVerificationProvider) {
+            final IdentityVerificationConfig identityVerificationConfig,
+            final DocumentDataRepository documentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final DocumentResultRepository documentResultRepository,
+            final DataExtractionService dataExtractionService,
+            final DocumentVerificationProvider documentVerificationProvider,
+            final AuditService auditService) {
+
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentResultRepository = documentResultRepository;
         this.dataExtractionService = dataExtractionService;
         this.documentVerificationProvider = documentVerificationProvider;
+        this.auditService = auditService;
     }
 
     /**
@@ -127,6 +134,7 @@ public class DocumentProcessingService {
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(e.getMessage());
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
                 return docVerifications;
             }
 
@@ -173,6 +181,7 @@ public class DocumentProcessingService {
                 originalDoc.setTimestampDisposed(ownerId.getTimestamp());
                 originalDoc.setTimestampLastUpdated(ownerId.getTimestamp());
                 logger.info("Replaced previous {} with new {}, {}", originalDocOptional, docVerification, ownerId);
+                auditService.audit(docVerification, "Document replaced with new one for user: {}", ownerId.getUserId());
             }
         } else if (!request.isResubmit() && docVerification.getOriginalDocumentId() != null) {
             logger.error("Detected a submit request with specified originalDocumentId={} for {}, {}",
@@ -314,7 +323,9 @@ public class DocumentProcessingService {
         entity.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);
-        return documentVerificationRepository.save(entity);
+        final DocumentVerificationEntity saveEntity = documentVerificationRepository.save(entity);
+        auditService.audit(entity, "Document created for user: {}", ownerId.getUserId());
+        return saveEntity;
     }
 
     private SubmittedDocument createSubmittedDocument(
@@ -380,10 +391,12 @@ public class DocumentProcessingService {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+            auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
         } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(docSubmitResult.getRejectReason());
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+            auditService.audit(docVerification, "Document verification rejected for user: {}", ownerId.getUserId());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
@@ -392,19 +405,20 @@ public class DocumentProcessingService {
             }
             docVerification.setUploadId(docSubmitResult.getUploadId());
 
-            if (DocumentType.SELFIE_PHOTO.equals(docVerification.getType())) {
-                docVerification.setStatus(
-                        identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ?
-                                DocumentStatus.VERIFICATION_PENDING :
-                                DocumentStatus.ACCEPTED
-                );
+            if (docVerification.getType() == DocumentType.SELFIE_PHOTO) {
+                final DocumentStatus status = identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ? DocumentStatus.VERIFICATION_PENDING : DocumentStatus.ACCEPTED;
+                docVerification.setStatus(status);
+                auditService.audit(docVerification, "Document selfie changed status to {} for user: {}", status, ownerId.getUserId());
             } else if (docSubmitResult.getExtractedData() == null) { // only finished upload contains extracted data
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+                auditService.audit(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
                 verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+                auditService.audit(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else { // no document verification during upload, wait for the final all documents verification
                 docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+                auditService.audit(docVerification, "Document verification pending for user: {}", ownerId.getUserId());
             }
         }
     }

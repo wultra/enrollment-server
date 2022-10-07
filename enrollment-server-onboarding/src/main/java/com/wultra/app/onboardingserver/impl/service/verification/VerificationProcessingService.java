@@ -22,6 +22,7 @@ import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
@@ -49,18 +50,24 @@ public class VerificationProcessingService {
 
     private final DocumentVerificationRepository documentVerificationRepository;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      *
      * @param documentResultRepository Document result repository.
      * @param documentVerificationRepository Document verification repository.
+     * @param auditService Audit service.
      */
     @Autowired
     public VerificationProcessingService(
-            DocumentResultRepository documentResultRepository,
-            DocumentVerificationRepository documentVerificationRepository) {
+            final DocumentResultRepository documentResultRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final AuditService auditService) {
+
         this.documentResultRepository = documentResultRepository;
         this.documentVerificationRepository = documentVerificationRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -92,6 +99,7 @@ public class VerificationProcessingService {
                     } catch (DocumentVerificationException e) {
                         logger.warn("Unable to get document result for {}, {}", docVerification, ownerId, e);
                         docVerification.setStatus(DocumentStatus.FAILED);
+                        auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
                     }
                     if (docResult != null) {
                         updateDocumentResult(docResult, docVerificationResult.get());
@@ -157,8 +165,9 @@ public class VerificationProcessingService {
         docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
         switch (docVerificationResult.getStatus()) {
             case ACCEPTED:
-                // document during upload is only partially verified and cannot be accepted now, it waits for the standard verification process
                 if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(docVerification.getIdentityVerification().getPhase())) {
+                    logger.debug("Document ID: {} only partially verified and cannot be accepted now, it waits for the standard verification process, {}",
+                            docVerification.getId(), ownerId);
                     docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
                 } else {
                     docVerification.setStatus(DocumentStatus.ACCEPTED);
@@ -177,6 +186,7 @@ public class VerificationProcessingService {
             default:
                 throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
         }
+        auditService.audit(docVerification, "Document verification status changed to {} for user: {}", docVerification.getStatus(), ownerId.getUserId());
         logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerification.getStatus(), ownerId);
     }
 
