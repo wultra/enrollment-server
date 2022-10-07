@@ -21,7 +21,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -43,11 +43,11 @@ import java.util.Map;
 @Component
 public class VerificationInitAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final IdentityVerificationService identityVerificationService;
+    private final IdentityVerificationCreateService identityVerificationCreateService;
 
     @Autowired
-    public VerificationInitAction(IdentityVerificationService identityVerificationService) {
-        this.identityVerificationService = identityVerificationService;
+    public VerificationInitAction(IdentityVerificationCreateService identityVerificationCreateService) {
+        this.identityVerificationCreateService = identityVerificationCreateService;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class VerificationInitAction implements Action<OnboardingState, Onboardin
 
         IdentityVerificationEntity identityVerification = null;
         try {
-            identityVerification = identityVerificationService.initializeIdentityVerification(ownerId, processId);
+            identityVerification = identityVerificationCreateService.createIdentityVerification(ownerId, processId);
         } catch (IdentityVerificationException | OnboardingProcessLimitException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
         }

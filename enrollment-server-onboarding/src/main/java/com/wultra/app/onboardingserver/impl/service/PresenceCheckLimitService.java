@@ -19,10 +19,7 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -42,6 +39,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
+
 /**
  * Service for checking presence check limits.
  *
@@ -58,6 +57,8 @@ public class PresenceCheckLimitService {
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
 
+    private IdentityVerificationService identityVerificationService;
+
     private AuditService auditService;
 
     /**
@@ -67,7 +68,7 @@ public class PresenceCheckLimitService {
      * @param identityVerificationRepository Identity verification repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param activationFlagService Activation flag service.
-     * @param auditService audit service
+     * @param identityVerificationService Identity verification service.
      */
     @Autowired
     public PresenceCheckLimitService(
@@ -76,6 +77,7 @@ public class PresenceCheckLimitService {
             final IdentityVerificationRepository identityVerificationRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final ActivationFlagService activationFlagService,
+            final IdentityVerificationService identityVerificationService,
             final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
@@ -83,6 +85,7 @@ public class PresenceCheckLimitService {
         this.identityVerificationRepository = identityVerificationRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationFlagService = activationFlagService;
+        this.identityVerificationService = identityVerificationService;
         this.auditService = auditService;
     }
 
@@ -110,13 +113,12 @@ public class PresenceCheckLimitService {
             final OnboardingProcessEntity onboardingProcess = onboardingProcessRepository.findById(processId).orElseThrow(() ->
                 new IdentityVerificationException("Onboarding process not found, " + ownerId));
 
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
+            final IdentityVerificationPhase phase = identityVerification.getPhase();
+
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationRepository.save(identityVerification);
-            logger.info("Switched to {}/FAILED; {}", identityVerification.getPhase(), ownerId);
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
 
             onboardingProcess.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK);
             onboardingProcess.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);

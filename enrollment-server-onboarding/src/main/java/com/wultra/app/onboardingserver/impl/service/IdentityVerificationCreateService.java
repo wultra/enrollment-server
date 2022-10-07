@@ -17,21 +17,19 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
-import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
+import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 
 /**
  * Service implementing creating of identity verification.
@@ -42,21 +40,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class IdentityVerificationCreateService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationCreateService.class);
-
-    private final IdentityVerificationRepository identityVerificationRepository;
+    private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
     private final IdentityVerificationLimitService identityVerificationLimitService;
 
     /**
      * Service constructor.
-     * @param identityVerificationRepository Identity verification repository.
+     * @param identityVerificationService Identity verification service.
      * @param activationFlagService Activation flag service.
      * @param identityVerificationLimitService Identity verification limit service.
      */
     @Autowired
-    public IdentityVerificationCreateService(IdentityVerificationRepository identityVerificationRepository, ActivationFlagService activationFlagService, IdentityVerificationLimitService identityVerificationLimitService) {
-        this.identityVerificationRepository = identityVerificationRepository;
+    public IdentityVerificationCreateService(
+            final IdentityVerificationService identityVerificationService,
+            final ActivationFlagService activationFlagService,
+            final IdentityVerificationLimitService identityVerificationLimitService) {
+
+        this.identityVerificationService = identityVerificationService;
         this.activationFlagService = activationFlagService;
         this.identityVerificationLimitService = identityVerificationLimitService;
     }
@@ -80,15 +80,11 @@ public class IdentityVerificationCreateService {
 
         final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
-        entity.setPhase(IdentityVerificationPhase.DOCUMENT_UPLOAD);
-        entity.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUserId(ownerId.getUserId());
         entity.setProcessId(processId);
 
-        logger.info("Switched to DOCUMENT_UPLOAD/IN_PROGRESS; {}", ownerId);
-
-        return identityVerificationRepository.save(entity);
+        return identityVerificationService.moveToPhaseAndStatus(entity, DOCUMENT_UPLOAD, IN_PROGRESS, ownerId);
     }
 
 }
