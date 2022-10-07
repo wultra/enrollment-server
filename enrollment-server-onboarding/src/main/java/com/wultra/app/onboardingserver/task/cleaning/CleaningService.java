@@ -21,15 +21,11 @@ import com.google.common.collect.Lists;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +64,7 @@ class CleaningService {
 
     private final DocumentDataRepository documentDataRepository;
 
-    private final OtpServiceImpl otpService;
+    private final OnboardingOtpRepository onboardingOtpRepository;
 
     private final AuditService auditService;
 
@@ -80,7 +76,7 @@ class CleaningService {
             final IdentityVerificationRepository identityVerificationRepository,
             final DocumentVerificationRepository documentVerificationRepository,
             final DocumentDataRepository documentDataRepository,
-            final OtpServiceImpl otpService,
+            final OnboardingOtpRepository onboardingOtpRepository,
             final AuditService auditService) {
 
         this.onboardingConfig = onboardingConfig;
@@ -89,7 +85,7 @@ class CleaningService {
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentDataRepository = documentDataRepository;
-        this.otpService = otpService;
+        this.onboardingOtpRepository = onboardingOtpRepository;
         this.auditService = auditService;
     }
 
@@ -122,7 +118,11 @@ class CleaningService {
     public void terminateExpiredOtpCodes() {
         final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
         final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
-        otpService.terminateExpiredOtps(createdDateExpiredOtp);
+        final List<String> otpIds = onboardingOtpRepository.findExpiredOtps(createdDateExpiredOtp);
+        final Date now = new Date();
+        for (List<String> otpIdChunk : Lists.partition(otpIds, BATCH_SIZE)) {
+            terminateAndAuditOtps(otpIdChunk, now);
+        }
     }
 
     /**
@@ -226,5 +226,12 @@ class CleaningService {
         processIds.forEach(processId ->
             onboardingProcessRepository.findById(processId).ifPresent(process ->
                     auditService.audit(process, "Expired process for user: {}, {}", process.getUserId(), errorDetail)));
+    }
+
+    private void terminateAndAuditOtps(final List<String> otpIds, final Date now) {
+        onboardingOtpRepository.terminate(otpIds, now);
+        otpIds.forEach(otpId ->
+                onboardingOtpRepository.findById(otpId).ifPresent(otp ->
+                        auditService.audit(otp, "Expired OTP for user: {}", otp.getProcess().getUserId())));
     }
 }

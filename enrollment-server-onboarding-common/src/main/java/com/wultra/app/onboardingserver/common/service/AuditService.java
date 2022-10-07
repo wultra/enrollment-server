@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
@@ -31,6 +32,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AuditService {
+
+    private static final String IDENTITY_VERIFICATION_ID = "identityVerificationId";
+    private static final String PROCESS_ID = "processId";
+    private static final String ACTIVATION_ID = "activationId";
+    private static final String USER_ID = "userId";
+    private static final String OTP_ID = "otpId";
 
     private final Audit audit;
 
@@ -52,7 +59,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given process and identity verification.
+     * Audit the given process and the identity verification.
      *
      * @param process process to audit
      * @param identityVerification identity verification to audit
@@ -64,23 +71,70 @@ public class AuditService {
         audit.info(message, auditDetail, args);
     }
 
+    /**
+     * Audit the given otp and the identity verification.
+     *
+     * @param otp otp to audit
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(otp, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given otp.
+     *
+     * @param otp otp to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void audit(final OnboardingOtpEntity otp, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(otp);
+        audit.info(message, auditDetail, args);
+    }
+
+    private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
+        return AuditDetail.builder()
+                .type("otp")
+                .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
+                .param(PROCESS_ID, identityVerification.getProcessId())
+                .param(ACTIVATION_ID, identityVerification.getActivationId())
+                .param(USER_ID, identityVerification.getUserId())
+                .param(OTP_ID, otp.getId())
+                .build();
+    }
+
+    private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp) {
+        final OnboardingProcessEntity process = otp.getProcess();
+        return AuditDetail.builder()
+                .type("otp")
+                .param(ACTIVATION_ID, process.getActivationId())
+                .param(PROCESS_ID, process.getId())
+                .param(USER_ID, process.getUserId())
+                .param(OTP_ID, otp.getId())
+                .build();
+    }
+
     private static AuditDetail createAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {
         final AuditDetail.Builder builder = AuditDetail.builder()
                 .type("process")
-                .param("processId", process.getId());
+                .param(PROCESS_ID, process.getId());
 
         if (identityVerificationId != null) {
-            builder.param("identityVerificationId", identityVerificationId);
+            builder.param(IDENTITY_VERIFICATION_ID, identityVerificationId);
         }
 
         final String activationId = process.getActivationId();
         if (activationId != null) {
-            builder.param("activationId", activationId);
+            builder.param(ACTIVATION_ID, activationId);
         }
 
         final String userId = process.getUserId();
         if (userId != null) {
-            builder.param("userId", userId);
+            builder.param(USER_ID, userId);
         }
 
         return builder.build();
