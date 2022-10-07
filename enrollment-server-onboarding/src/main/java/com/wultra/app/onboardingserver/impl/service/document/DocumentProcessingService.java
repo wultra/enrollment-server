@@ -202,6 +202,8 @@ public class DocumentProcessingService {
         DocumentSubmitResult docSubmitResult;
         try {
             docsSubmitResults = documentVerificationProvider.checkDocumentUpload(ownerId, docVerification);
+            final IdentityVerificationEntity identityVerification = documentResultEntity.getDocumentVerification().getIdentityVerification();
+            auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException e) {
             docsSubmitResults = new DocumentsSubmitResult();
@@ -227,6 +229,8 @@ public class DocumentProcessingService {
         DocumentSubmitResult docSubmitResult;
         try {
             docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
+            final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
+            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException e) {
             docsSubmitResults = new DocumentsSubmitResult();
