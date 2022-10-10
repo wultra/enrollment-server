@@ -117,7 +117,7 @@ public class CommonOtpService implements OtpService {
             otp.setTimestampLastUpdated(now);
             onboardingOtpRepository.save(otp);
             logger.info("OTP verified, {}", ownerId);
-            auditService.audit(otp, "OTP verified for user: {}", process.getUserId());
+            auditService.audit(otp, "OTP {} verified for user: {}", otpType, process.getUserId());
         } else {
             handleFailedOtpVerification(process, ownerId, otp, otpType);
         }
