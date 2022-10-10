@@ -56,7 +56,7 @@ public class AuditService {
      * @param args message arguments
      */
     public void audit(final OnboardingProcessEntity process, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(process, null);
+        final AuditDetail auditDetail = createAuditDetail(AuditType.PROCESS, process, null);
         audit.info(message, auditDetail, args);
     }
 
@@ -69,7 +69,7 @@ public class AuditService {
      * @param args message arguments
      */
     public void audit(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(process, identityVerification.getId());
+        final AuditDetail auditDetail = createAuditDetail(AuditType.PROCESS, process, identityVerification.getId());
         audit.info(message, auditDetail, args);
     }
 
@@ -122,9 +122,21 @@ public class AuditService {
         audit.info(message, auditDetail, args);
     }
 
+    /**
+     * Audit the activation specified by the given process.
+     *
+     * @param process process to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditActivation(final OnboardingProcessEntity process, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.ACTIVATION, process, null);
+        audit.info(message, auditDetail, args);
+    }
+
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
-                .type("otp")
+                .type(AuditType.OTP.code)
                 .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
@@ -136,7 +148,7 @@ public class AuditService {
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp) {
         final OnboardingProcessEntity process = otp.getProcess();
         return AuditDetail.builder()
-                .type("otp")
+                .type(AuditType.OTP.code)
                 .param(ACTIVATION_ID, process.getActivationId())
                 .param(PROCESS_ID, process.getId())
                 .param(USER_ID, process.getUserId())
@@ -146,7 +158,7 @@ public class AuditService {
 
     private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
-                .type("identityVerification")
+                .type(AuditType.IDENTITY_VERIFICATION.code)
                 .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
@@ -157,7 +169,7 @@ public class AuditService {
     private static AuditDetail createAuditDetail(final DocumentVerificationEntity documentVerification) {
         final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
         return AuditDetail.builder()
-                .type("documentVerification")
+                .type(AuditType.DOCUMENT_VERIFICATION.code)
                 .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
@@ -166,9 +178,9 @@ public class AuditService {
                 .build();
     }
 
-    private static AuditDetail createAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {
+    private static AuditDetail createAuditDetail(final AuditType type, final OnboardingProcessEntity process, final String identityVerificationId) {
         final AuditDetail.Builder builder = AuditDetail.builder()
-                .type("process")
+                .type(type.code)
                 .param(PROCESS_ID, process.getId());
 
         if (identityVerificationId != null) {
@@ -186,5 +198,19 @@ public class AuditService {
         }
 
         return builder.build();
+    }
+
+    private enum AuditType {
+        PROCESS("process"),
+        OTP("otp"),
+        IDENTITY_VERIFICATION("identityVerification"),
+        ACTIVATION("activation"),
+        DOCUMENT_VERIFICATION("documentVerification");
+
+        private final String code;
+
+        AuditType(final String code) {
+            this.code = code;
+        }
     }
 }

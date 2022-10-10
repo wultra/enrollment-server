@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.task.cleaning;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.service.ActivationService;
 import com.wultra.security.powerauth.client.v3.ActivationStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -44,15 +45,19 @@ class ActivationCleaningService {
 
     private final TransactionTemplate transactionTemplate;
 
+    private final AuditService auditService;
+
     @Autowired
     public ActivationCleaningService(
             final OnboardingProcessRepository onboardingProcessRepository,
             final ActivationService activationService,
-            final TransactionTemplate transactionTemplate) {
+            final TransactionTemplate transactionTemplate,
+            final AuditService auditService) {
 
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationService = activationService;
         this.transactionTemplate = transactionTemplate;
+        this.auditService = auditService;
     }
 
     /**
@@ -72,6 +77,7 @@ class ActivationCleaningService {
             removeActivation(activationId);
             process.setActivationRemoved(true);
             saveInNewTransaction(process);
+            auditService.auditActivation(process, "Remove activation of failed process for user: {}", process.getUserId());
         } catch (RemoteCommunicationException e) {
             logger.error("Unable to remove activation ID: {}", activationId, e);
         }

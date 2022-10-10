@@ -17,19 +17,23 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.ActivationCodeRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.response.ActivationCodeResponse;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.impl.service.converter.ActivationCodeConverter;
-import com.wultra.app.enrollmentserver.api.model.enrollment.request.ActivationCodeRequest;
-import com.wultra.app.enrollmentserver.api.model.enrollment.response.ActivationCodeResponse;
 import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestValidator;
+import com.wultra.core.audit.base.Audit;
+import com.wultra.core.audit.base.model.AuditDetail;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.*;
+import com.wultra.security.powerauth.client.v3.ActivationOtpValidation;
+import com.wultra.security.powerauth.client.v3.AddActivationFlagsRequest;
+import com.wultra.security.powerauth.client.v3.InitActivationRequest;
+import com.wultra.security.powerauth.client.v3.InitActivationResponse;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,9 +45,8 @@ import java.util.List;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Service
+@Slf4j
 public class ActivationCodeService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ActivationCodeService.class);
 
     private final PowerAuthClient powerAuthClient;
     private final ActivationCodeConverter activationCodeConverter;
@@ -51,18 +54,27 @@ public class ActivationCodeService {
 
     private DelegatingActivationCodeHandler delegatingActivationCodeHandler;
 
+    private final Audit audit;
+
     /**
      * Autowiring constructor.
      *
      * @param powerAuthClient PowerAuth Client instance.
      * @param activationCodeConverter Activation code converter class.
      * @param httpCustomizationService HTTP customization service.
+     * @param audit Audit.
      */
     @Autowired
-    public ActivationCodeService(PowerAuthClient powerAuthClient, ActivationCodeConverter activationCodeConverter, HttpCustomizationService httpCustomizationService) {
+    public ActivationCodeService(
+            final PowerAuthClient powerAuthClient,
+            final ActivationCodeConverter activationCodeConverter,
+            final HttpCustomizationService httpCustomizationService,
+            final Audit audit) {
+
         this.powerAuthClient = powerAuthClient;
         this.activationCodeConverter = activationCodeConverter;
         this.httpCustomizationService = httpCustomizationService;
+        this.audit = audit;
     }
 
     /**
@@ -133,6 +145,7 @@ public class ActivationCodeService {
                     httpCustomizationService.getHttpHeaders()
             );
             logger.info("Successfully obtained a new activation with ID: {}", iar.getActivationId());
+            auditInitActivation(iar);
 
             // Notify systems about newly created activation
             delegatingActivationCodeHandler.didReturnActivationCode(
@@ -164,7 +177,15 @@ public class ActivationCodeService {
             logger.error("Unable to call upstream service.", e);
             throw new ActivationCodeException();
         }
-
     }
 
+    private void auditInitActivation(final InitActivationResponse response) {
+        final String userId = response.getUserId();
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type("activation")
+                .param("activationId", response.getActivationId())
+                .param("userId", userId)
+                .build();
+        audit.info("Init activation for user: {}", auditDetail);
+    }
 }
