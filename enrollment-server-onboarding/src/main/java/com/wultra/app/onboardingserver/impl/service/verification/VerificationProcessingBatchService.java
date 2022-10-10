@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
@@ -61,6 +62,8 @@ public class VerificationProcessingBatchService {
 
     private final VerificationProcessingService verificationProcessingService;
 
+    private final AuditService auditService;
+
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
@@ -68,19 +71,23 @@ public class VerificationProcessingBatchService {
      * @param documentVerificationProvider Document verification provider.
      * @param identityVerificationService Identity verification service.
      * @param verificationProcessingService Verification processing service.
+     * @param auditService Audit service.
      */
     @Autowired
     public VerificationProcessingBatchService(
-            DocumentResultRepository documentResultRepository,
-            DocumentVerificationProvider documentVerificationProvider,
-            IdentityVerificationRepository identityVerificationRepository,
-            IdentityVerificationService identityVerificationService,
-            VerificationProcessingService verificationProcessingService) {
+            final DocumentResultRepository documentResultRepository,
+            final DocumentVerificationProvider documentVerificationProvider,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final IdentityVerificationService identityVerificationService,
+            final VerificationProcessingService verificationProcessingService,
+            final AuditService auditService) {
+
         this.documentResultRepository = documentResultRepository;
         this.identityVerificationRepository = identityVerificationRepository;
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationService = identityVerificationService;
         this.verificationProcessingService = verificationProcessingService;
+        this.auditService = auditService;
     }
 
     /**
@@ -100,6 +107,8 @@ public class VerificationProcessingBatchService {
                 DocumentsVerificationResult docVerificationResult;
                 try {
                     docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, docVerification.getVerificationId());
+                    final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
+                    auditService.auditDocumentVerificationProvider(identityVerification, "Result verified: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
                 } catch (DocumentVerificationException e) {
                     logger.error("Checking document submit verification failed, {}", ownerId, e);
                     return;

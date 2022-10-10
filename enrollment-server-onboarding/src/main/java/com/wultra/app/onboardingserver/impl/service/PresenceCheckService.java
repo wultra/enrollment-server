@@ -270,7 +270,7 @@ public class PresenceCheckService {
         }
         logger.info("Selected {} as the source of person photo, {}", preferredDocWithPhoto, ownerId);
         String photoId = preferredDocWithPhoto.getPhotoId();
-        return identityVerificationService.getPhotoById(photoId);
+        return identityVerificationService.getPhotoById(photoId, ownerId);
     }
 
     private void evaluatePresenceCheckResult(OwnerId ownerId,

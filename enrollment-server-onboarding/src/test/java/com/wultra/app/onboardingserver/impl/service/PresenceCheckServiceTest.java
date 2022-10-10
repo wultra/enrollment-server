@@ -62,8 +62,8 @@ class PresenceCheckServiceTest {
         List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
 
         service.selectPhotoForPresenceCheck(ownerId, documentsReversedOrder);
-        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId())).thenReturn(new Image());
-        verify(identityVerificationService, times(1)).getPhotoById(docPhotoIdCard.getPhotoId());
+        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId)).thenReturn(new Image());
+        verify(identityVerificationService, times(1)).getPhotoById(docPhotoIdCard.getPhotoId(), ownerId);
 
         // Unknown document with a person photo
         DocumentVerificationEntity docPhotoUnknown = new DocumentVerificationEntity();
@@ -73,8 +73,8 @@ class PresenceCheckServiceTest {
         List<DocumentVerificationEntity> documentUnknown = List.of(docPhotoUnknown);
 
         service.selectPhotoForPresenceCheck(ownerId, documentUnknown);
-        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId())).thenReturn(new Image());
-        verify(identityVerificationService, times(1)).getPhotoById(docPhotoUnknown.getPhotoId());
+        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId)).thenReturn(new Image());
+        verify(identityVerificationService, times(1)).getPhotoById(docPhotoUnknown.getPhotoId(), ownerId);
     }
 
 }

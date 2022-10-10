@@ -123,6 +123,18 @@ public class AuditService {
     }
 
     /**
+     * Audit document verification provider the given identity verification.
+     *
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditDocumentVerificationProvider(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.DOCUMENT_VERIFICATION_PROVIDER, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
      * Audit presence check provider with the given identity verification.
      *
      * @param identityVerification identity verification to audit
@@ -243,6 +255,7 @@ public class AuditService {
         ACTIVATION("activation"),
         DOCUMENT_VERIFICATION("documentVerification"),
         PRESENCE_CHECK_PROVIDER("presenceCheckProvider"),
+        DOCUMENT_VERIFICATION_PROVIDER("documentVerificationProvider"),
         ONBOARDING_PROVIDER("onboardingProvider");
 
         private final String code;

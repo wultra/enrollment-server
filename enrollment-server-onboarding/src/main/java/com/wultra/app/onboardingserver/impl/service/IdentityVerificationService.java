@@ -271,6 +271,7 @@ public class IdentityVerificationService {
                 .collect(Collectors.toList());
 
         DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
         moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
 
@@ -316,6 +317,7 @@ public class IdentityVerificationService {
 
         for (Map.Entry<String, List<DocumentVerificationEntity>> entry : verificationsById.entrySet()) {
             DocumentsVerificationResult docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, entry.getKey());
+            auditService.auditDocumentVerificationProvider(idVerification, "Got verification result: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
             verificationProcessingService.processVerificationResult(ownerId, entry.getValue(), docVerificationResult);
         }
 
@@ -472,6 +474,8 @@ public class IdentityVerificationService {
 
         if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
             documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
+            final IdentityVerificationEntity identityVerification = findBy(ownerId);
+            auditService.auditDocumentVerificationProvider(identityVerification, "Cleaned up documents for user: {}", ownerId.getUserId());
         } else {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
@@ -489,11 +493,16 @@ public class IdentityVerificationService {
     /**
      * Provides photo data
      * @param photoId Identification of the photo
+     * @param ownerId Owner identification.
      * @return Photo image
      * @throws DocumentVerificationException When an error occurred during
      */
-    public Image getPhotoById(String photoId) throws DocumentVerificationException {
-        return documentVerificationProvider.getPhoto(photoId);
+    public Image getPhotoById(final String photoId, final OwnerId ownerId) throws DocumentVerificationException {
+        final Image result = documentVerificationProvider.getPhoto(photoId);
+        final IdentityVerificationEntity identityVerification = findByOptional(ownerId).orElseThrow(() ->
+                new DocumentVerificationException("Unable to find intentity verification for " + ownerId));
+        auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
+        return result;
     }
 
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {
@@ -524,6 +533,9 @@ public class IdentityVerificationService {
     public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes)
             throws DocumentVerificationException {
         VerificationSdkInfo verificationSdkInfo = documentVerificationProvider.initVerificationSdk(ownerId, initAttributes);
+        final IdentityVerificationEntity identityVerification = findByOptional(ownerId).orElseThrow(() ->
+                new DocumentVerificationException("Unble to find identity verification for " + ownerId));
+        auditService.auditDocumentVerificationProvider(identityVerification, "Sdk initialized for user: {}", ownerId.getUserId());
         logger.info("Initialized verification SDK, {}", ownerId);
         return verificationSdkInfo;
     }
@@ -552,6 +564,8 @@ public class IdentityVerificationService {
             List<String> rejectionReasons;
             try {
                 rejectionReasons = documentVerificationProvider.parseRejectionReasons(docResult);
+                final IdentityVerificationEntity identityVerification = docResult.getDocumentVerification().getIdentityVerification();
+                auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", identityVerification.getUserId());
             } catch (DocumentVerificationException e) {
                 logger.debug("Parsing rejection reasons failure", e);
                 logger.warn("Unable to parse rejection reasons from {} of a rejected {}", docResult, entity);
