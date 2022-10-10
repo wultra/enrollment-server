@@ -44,7 +44,7 @@ public class AuditService {
     private final Audit audit;
 
     @Autowired
-    AuditService(final Audit audit) {
+    public AuditService(final Audit audit) {
         this.audit = audit;
     }
 
