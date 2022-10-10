@@ -256,21 +256,24 @@ public class IdentityVerificationOtpService {
                 new OnboardingProcessException("Onboarding process not found: " + processId));
 
         final String otpCode = createOtpCode(isResend, process);
-        // Send the OTP code
+        final String userId = process.getUserId();
+        final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
+                .processId(processId)
+                .userId(userId)
+                .otpCode(otpCode)
+                .resend(isResend)
+                .locale(LocaleContextHolder.getLocale())
+                .otpType(SendOtpCodeRequest.OtpType.USER_VERIFICATION)
+                .build();
         try {
-            final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
-                    .processId(processId)
-                    .userId(process.getUserId())
-                    .otpCode(otpCode)
-                    .resend(isResend)
-                    .locale(LocaleContextHolder.getLocale())
-                    .otpType(SendOtpCodeRequest.OtpType.USER_VERIFICATION)
-                    .build();
             onboardingProvider.sendOtpCode(request);
         } catch (OnboardingProviderException e) {
             logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
             throw new OnboardingOtpDeliveryException(e);
         }
+
+        final String resentPrefix = isResend ? "Resent" : "Sent";
+        auditService.auditOnboardingProvider(process, "{} user verification OTP for user: {}", resentPrefix, userId);
     }
 
     private String createOtpCode(final boolean isResend, final OnboardingProcessEntity process) throws OnboardingOtpDeliveryException, OnboardingProcessException {

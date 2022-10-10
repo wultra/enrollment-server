@@ -129,11 +129,13 @@ public class ClientEvaluationService {
 
     private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         return response -> {
+            auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
             // The timestampFinished parameter is not set yet, there may be other steps ahead
             if (response.isErrorOccurred()) {
                 logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
                 identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
                 identityVerification.setErrorDetail(response.getErrorDetail());
+                auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getErrorDetail());
             }
 
             final IdentityVerificationPhase phase = identityVerification.getPhase();

@@ -560,11 +560,7 @@ public class IdentityVerificationController {
         logger.debug("Returning consent for {}", requestObject);
         OnboardingConsentTextRequestValidator.validate(requestObject);
 
-        final String processId = requestObject.getProcessId();
-        final OnboardingProcessEntity process = onboardingService.findProcess(processId);
-        final String userId = process.getUserId();
-
-        return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject, userId));
+        return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject));
     }
 
     @PostMapping("consent/approve")
@@ -592,7 +588,7 @@ public class IdentityVerificationController {
         final String processId = requestObject.getProcessId();
         onboardingService.verifyProcessId(ownerId, processId);
 
-        onboardingService.approveConsent(requestObject, ownerId.getUserId());
+        onboardingService.approveConsent(requestObject);
         return new Response();
     }
 

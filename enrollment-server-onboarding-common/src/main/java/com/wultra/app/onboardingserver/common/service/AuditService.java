@@ -146,6 +146,30 @@ public class AuditService {
         audit.info(message, auditDetail, args);
     }
 
+    /**
+     * Audit calling onboarding provider for the given process.
+     *
+     * @param process process to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditOnboardingProvider(final OnboardingProcessEntity process, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, process, null);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit calling onboarding provider for the given identity verification.
+     *
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditOnboardingProvider(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
     private static AuditDetail createAuditDetail(final OnboardingOtpEntity otp, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
                 .type(AuditType.OTP.code)
@@ -218,7 +242,8 @@ public class AuditService {
         IDENTITY_VERIFICATION("identityVerification"),
         ACTIVATION("activation"),
         DOCUMENT_VERIFICATION("documentVerification"),
-        PRESENCE_CHECK_PROVIDER("presenceCheckProvider");
+        PRESENCE_CHECK_PROVIDER("presenceCheckProvider"),
+        ONBOARDING_PROVIDER("onboardingProvider");
 
         private final String code;
 
