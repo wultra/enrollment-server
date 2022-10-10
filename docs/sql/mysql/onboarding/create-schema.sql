@@ -156,3 +156,29 @@ CREATE TABLE IF NOT EXISTS shedlock (
     locked_by VARCHAR(255) NOT NULL,
     PRIMARY KEY (name)
 );
+
+-- Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library
+CREATE TABLE IF NOT EXISTS audit_log (
+    audit_log_id       VARCHAR(36) PRIMARY KEY,
+    application_name   VARCHAR(256) NOT NULL,
+    audit_level        VARCHAR(32) NOT NULL,
+    audit_type         VARCHAR(256),
+    timestamp_created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    message            TEXT NOT NULL,
+    exception_message  TEXT,
+    stack_trace        TEXT,
+    param              TEXT,
+    calling_class      VARCHAR(256) NOT NULL,
+    thread_name        VARCHAR(256) NOT NULL,
+    version            VARCHAR(256),
+    build_time         TIMESTAMP NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX IF NOT EXISTS audit_log_timestamp ON audit_log (timestamp_created);
+CREATE INDEX IF NOT EXISTS audit_log_application ON audit_log (application_name);
+CREATE INDEX IF NOT EXISTS audit_log_level ON audit_log (audit_level);
+CREATE INDEX IF NOT EXISTS audit_log_type ON audit_log (audit_type);
+CREATE INDEX IF NOT EXISTS audit_param_log ON audit_param (audit_log_id);
+CREATE INDEX IF NOT EXISTS audit_param_timestamp ON audit_param (timestamp_created);
+CREATE INDEX IF NOT EXISTS audit_param_key ON audit_param (param_key);
+CREATE INDEX IF NOT EXISTS audit_param_value ON audit_param (param_value);
