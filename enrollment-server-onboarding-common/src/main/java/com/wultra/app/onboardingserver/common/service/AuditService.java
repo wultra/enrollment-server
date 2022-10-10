@@ -49,7 +49,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given process.
+     * Audit the given process at info level.
      *
      * @param process process to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -61,7 +61,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given process and the identity verification.
+     * Audit the given process and the identity verification at info level.
      *
      * @param process process to audit
      * @param identityVerification identity verification to audit
@@ -74,7 +74,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given otp and the identity verification.
+     * Audit the given otp and the identity verification at info level.
      *
      * @param otp otp to audit
      * @param identityVerification identity verification to audit
@@ -87,7 +87,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the given otp.
+     * Audit the given otp at info level.
      *
      * @param otp otp to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -99,7 +99,19 @@ public class AuditService {
     }
 
     /**
-     * Audit the given document verification.
+     * Audit the given otp at debug level.
+     *
+     * @param otp otp to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditDebug(final OnboardingOtpEntity otp, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(otp);
+        audit.debug(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given document verification at info level.
      *
      * @param documentVerification document verification to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -111,7 +123,19 @@ public class AuditService {
     }
 
     /**
-     * Audit the given identity verification.
+     * Audit the given document verification at debug level.
+     *
+     * @param documentVerification document verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditDebug(final DocumentVerificationEntity documentVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(documentVerification);
+        audit.debug(message, auditDetail, args);
+    }
+
+    /**
+     * Audit the given identity verification at info level.
      *
      * @param identityVerification identity verification to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -123,7 +147,7 @@ public class AuditService {
     }
 
     /**
-     * Audit document verification provider the given identity verification.
+     * Audit document verification provider the given identity verification at info level.
      *
      * @param identityVerification identity verification to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -135,7 +159,7 @@ public class AuditService {
     }
 
     /**
-     * Audit presence check provider with the given identity verification.
+     * Audit presence check provider with the given identity verification at info level.
      *
      * @param identityVerification identity verification to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -147,7 +171,7 @@ public class AuditService {
     }
 
     /**
-     * Audit the activation specified by the given process.
+     * Audit the activation specified by the given process at info level.
      *
      * @param process process to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -159,7 +183,7 @@ public class AuditService {
     }
 
     /**
-     * Audit calling onboarding provider for the given process.
+     * Audit calling onboarding provider for the given process at info level.
      *
      * @param process process to audit
      * @param message message, arguments may be put to via template {@code {}}
@@ -171,7 +195,19 @@ public class AuditService {
     }
 
     /**
-     * Audit calling onboarding provider for the given identity verification.
+     * Audit calling onboarding provider for the given process at debug level.
+     *
+     * @param process process to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditOnboardingProviderDebug(final OnboardingProcessEntity process, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, process, null);
+        audit.debug(message, auditDetail, args);
+    }
+
+    /**
+     * Audit calling onboarding provider for the given identity verification at info level.
      *
      * @param identityVerification identity verification to audit
      * @param message message, arguments may be put to via template {@code {}}

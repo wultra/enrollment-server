@@ -186,8 +186,19 @@ public class VerificationProcessingService {
             default:
                 throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
         }
-        auditService.audit(docVerification, "Document verification status changed to {} for user: {}", docVerification.getStatus(), ownerId.getUserId());
+        audit(docVerification, ownerId);
         logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerification.getStatus(), ownerId);
+    }
+
+    private void audit(final DocumentVerificationEntity docVerification, final OwnerId ownerId) {
+        final String auditMessage = "Document verification status changed to {} for user: {}";
+        final DocumentStatus status = docVerification.getStatus();
+
+        if (status == DocumentStatus.ACCEPTED) {
+            auditService.audit(docVerification, auditMessage, status, ownerId.getUserId());
+        } else {
+            auditService.auditDebug(docVerification, auditMessage, status, ownerId.getUserId());
+        }
     }
 
     /**
