@@ -21,14 +21,17 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
@@ -61,6 +64,7 @@ public class PresenceCheckService {
     private final JsonSerializationService jsonSerializationService;
     private final PresenceCheckProvider presenceCheckProvider;
     private final PresenceCheckLimitService presenceCheckLimitService;
+    private final AuditService auditService;
 
     /**
      * Service constructor.
@@ -70,6 +74,7 @@ public class PresenceCheckService {
      * @param jsonSerializationService JSON serialization service.
      * @param presenceCheckProvider Presence check provider.
      * @param presenceCheckLimitService Presence check limit service.
+     * @param auditService Audit service.
      */
     @Autowired
     public PresenceCheckService(
@@ -79,7 +84,9 @@ public class PresenceCheckService {
             final IdentityVerificationService identityVerificationService,
             final JsonSerializationService jsonSerializationService,
             final PresenceCheckProvider presenceCheckProvider,
-            final PresenceCheckLimitService presenceCheckLimitService) {
+            final PresenceCheckLimitService presenceCheckLimitService,
+            final AuditService auditService) {
+
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentVerificationRepository = documentVerificationRepository;
         this.documentProcessingService = documentProcessingService;
@@ -87,6 +94,7 @@ public class PresenceCheckService {
         this.jsonSerializationService = jsonSerializationService;
         this.presenceCheckProvider = presenceCheckProvider;
         this.presenceCheckLimitService = presenceCheckLimitService;
+        this.auditService = auditService;
     }
 
     /**
@@ -129,6 +137,7 @@ public class PresenceCheckService {
             } else {
                 Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
                 presenceCheckProvider.initPresenceCheck(ownerId, photo);
+                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
             }
         }
         return startPresenceCheck(ownerId, idVerification);
@@ -150,6 +159,7 @@ public class PresenceCheckService {
                                           IdentityVerificationEntity idVerification,
                                           SessionInfo sessionInfo) throws PresenceCheckException {
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
+        auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: ", result.getStatus(), ownerId.getUserId());
 
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
             logger.info("Not accepted presence check, status: {}, {}", result.getStatus(), ownerId);
@@ -200,6 +210,9 @@ public class PresenceCheckService {
     public void cleanup(OwnerId ownerId) throws PresenceCheckException {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
             presenceCheckProvider.cleanupIdentityData(ownerId);
+            final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
+                    new PresenceCheckException("Unable to find identity verification for " + ownerId));
+            auditService.auditPresenceCheckProvider(identityVerification, "Clean up presence check data for user: {}", ownerId.getUserId());
         } else {
             logger.debug("Skipped cleanup of presence check data at the provider (not enabled), {}", ownerId);
         }
@@ -215,6 +228,7 @@ public class PresenceCheckService {
      */
     private SessionInfo startPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification) throws PresenceCheckException {
         SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
+        auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
         String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
         if (sessionInfoJson == null) {

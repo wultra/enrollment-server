@@ -118,7 +118,19 @@ public class AuditService {
      * @param args message arguments
      */
     public void audit(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(identityVerification);
+        final AuditDetail auditDetail = createAuditDetail(AuditType.IDENTITY_VERIFICATION, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit presence check provider with the given identity verification.
+     *
+     * @param identityVerification identity verification to audit
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditPresenceCheckProvider(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
+        final AuditDetail auditDetail = createAuditDetail(AuditType.PRESENCE_CHECK_PROVIDER, identityVerification);
         audit.info(message, auditDetail, args);
     }
 
@@ -156,9 +168,9 @@ public class AuditService {
                 .build();
     }
 
-    private static AuditDetail createAuditDetail(final IdentityVerificationEntity identityVerification) {
+    private static AuditDetail createAuditDetail(final AuditType type, final IdentityVerificationEntity identityVerification) {
         return AuditDetail.builder()
-                .type(AuditType.IDENTITY_VERIFICATION.code)
+                .type(type.code)
                 .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
@@ -205,7 +217,8 @@ public class AuditService {
         OTP("otp"),
         IDENTITY_VERIFICATION("identityVerification"),
         ACTIVATION("activation"),
-        DOCUMENT_VERIFICATION("documentVerification");
+        DOCUMENT_VERIFICATION("documentVerification"),
+        PRESENCE_CHECK_PROVIDER("presenceCheckProvider");
 
         private final String code;
 
