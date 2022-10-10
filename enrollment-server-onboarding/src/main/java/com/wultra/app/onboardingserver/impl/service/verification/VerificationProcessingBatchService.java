@@ -102,7 +102,7 @@ public class VerificationProcessingBatchService {
 
                 final OwnerId ownerId = new OwnerId();
                 ownerId.setActivationId(docVerification.getActivationId());
-                ownerId.setUserId("server-task-doc-submit-verifications");
+                ownerId.setUserId(docVerification.getIdentityVerification().getUserId());
 
                 DocumentsVerificationResult docVerificationResult;
                 try {
@@ -136,7 +136,7 @@ public class VerificationProcessingBatchService {
             stream.forEach(idVerification -> {
                 final OwnerId ownerId = new OwnerId();
                 ownerId.setActivationId(idVerification.getActivationId());
-                ownerId.setUserId("server-task-docs-verifications");
+                ownerId.setUserId(idVerification.getUserId());
 
                 try {
                     identityVerificationService.checkVerificationResult(IdentityVerificationPhase.DOCUMENT_VERIFICATION, ownerId, idVerification);
