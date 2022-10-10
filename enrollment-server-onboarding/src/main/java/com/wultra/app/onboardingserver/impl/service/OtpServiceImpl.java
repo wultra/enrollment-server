@@ -169,7 +169,7 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
         final OnboardingOtpEntity savedOtp = onboardingOtpRepository.save(otp);
-        auditService.audit(savedOtp, "Generated OTP for user: {}", process.getUserId());
+        auditService.auditDebug(savedOtp, "Generated OTP for user: {}", process.getUserId());
         return otpCode;
     }
 

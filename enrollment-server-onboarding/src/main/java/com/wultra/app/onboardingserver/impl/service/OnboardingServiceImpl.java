@@ -313,7 +313,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         try {
             final String consentText = onboardingProvider.fetchConsent(providerRequest);
-            auditService.auditOnboardingProvider(process, "Fetched consent text for user: {}", userId);
+            auditService.auditOnboardingProviderDebug(process, "Fetched consent text for user: {}", userId);
             final OnboardingConsentTextResponse response = new OnboardingConsentTextResponse();
             response.setConsentText(consentText);
             return response;

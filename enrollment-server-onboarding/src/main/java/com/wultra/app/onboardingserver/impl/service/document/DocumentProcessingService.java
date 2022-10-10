@@ -328,7 +328,7 @@ public class DocumentProcessingService {
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);
         final DocumentVerificationEntity saveEntity = documentVerificationRepository.save(entity);
-        auditService.audit(entity, "Document created for user: {}", ownerId.getUserId());
+        auditService.auditDebug(entity, "Document created for user: {}", ownerId.getUserId());
         return saveEntity;
     }
 
@@ -415,11 +415,11 @@ public class DocumentProcessingService {
                 auditService.audit(docVerification, "Document selfie changed status to {} for user: {}", status, ownerId.getUserId());
             } else if (docSubmitResult.getExtractedData() == null) { // only finished upload contains extracted data
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-                auditService.audit(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
+                auditService.auditDebug(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
                 verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-                auditService.audit(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
+                auditService.auditDebug(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else { // no document verification during upload, wait for the final all documents verification
                 docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
                 auditService.audit(docVerification, "Document verification pending for user: {}", ownerId.getUserId());

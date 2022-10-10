@@ -279,7 +279,7 @@ public class IdentityVerificationService {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
             docVerification.setVerificationId(result.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            auditService.audit(docVerification, "Started document verification for user: {}", ownerId.getUserId());
+            auditService.auditDebug(docVerification, "Started document verification for user: {}", ownerId.getUserId());
         });
         documentVerificationRepository.saveAll(docVerifications);
 
