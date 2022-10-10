@@ -69,7 +69,7 @@ public class DocumentProcessingBatchService {
                 DocumentVerificationEntity docVerification = docResult.getDocumentVerification();
                 final OwnerId ownerId = new OwnerId();
                 ownerId.setActivationId(docVerification.getActivationId());
-                ownerId.setUserId("server-task-in-progress-submits");
+                ownerId.setUserId(docVerification.getIdentityVerification().getUserId());
 
                 try {
                     this.documentProcessingService.checkDocumentSubmitWithProvider(ownerId, docResult);
