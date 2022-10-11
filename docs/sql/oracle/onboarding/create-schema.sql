@@ -169,3 +169,37 @@ EXCEPTION
       END IF;
 END;
 /
+
+-- Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library
+BEGIN EXECUTE IMMEDIATE '
+CREATE TABLE audit_log (
+    audit_log_id       VARCHAR2(36 CHAR) PRIMARY KEY,
+    application_name   VARCHAR2(256 CHAR) NOT NULL,
+    audit_level        VARCHAR2(32 CHAR) NOT NULL,
+    audit_type         VARCHAR2(256 CHAR),
+    timestamp_created  TIMESTAMP,
+    message            CLOB NOT NULL,
+    exception_message  CLOB,
+    stack_trace        CLOB,
+    param              CLOB,
+    calling_class      VARCHAR2(256 CHAR) NOT NULL,
+    thread_name        VARCHAR2(256 CHAR) NOT NULL,
+    version            VARCHAR2(256 CHAR),
+    build_time         TIMESTAMP
+);
+
+CREATE INDEX audit_log_timestamp ON audit_log (timestamp_created);
+CREATE INDEX audit_log_application ON audit_log (application_name);
+CREATE INDEX audit_log_level ON audit_log (audit_level);
+CREATE INDEX audit_log_type ON audit_log (audit_type);
+CREATE INDEX audit_param_log ON audit_param (audit_log_id);
+CREATE INDEX audit_param_timestamp ON audit_param (timestamp_created);
+CREATE INDEX audit_param_key ON audit_param (param_key);
+CREATE INDEX audit_param_value ON audit_param (param_value);';
+EXCEPTION
+   WHEN OTHERS THEN
+      IF SQLCODE != -955 THEN
+         RAISE;
+END IF;
+END;
+/
