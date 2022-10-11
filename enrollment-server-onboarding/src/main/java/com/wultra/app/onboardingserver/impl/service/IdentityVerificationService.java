@@ -246,10 +246,11 @@ public class IdentityVerificationService {
      *
      * @param ownerId Owner identification.
      * @param identityVerification Identity verification.
-     * @throws DocumentVerificationException Thrown when document verification fails.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     * @throws DocumentVerificationException In case of business logic error.
      */
     @Transactional
-    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException {
+    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException, RemoteCommunicationException {
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
@@ -301,10 +302,11 @@ public class IdentityVerificationService {
      * @param idVerification Verification identity
      * @throws DocumentVerificationException Thrown when an error during verification check occurred.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void checkVerificationResult(IdentityVerificationPhase phase, OwnerId ownerId, IdentityVerificationEntity idVerification)
-            throws DocumentVerificationException, OnboardingProcessException {
+            throws DocumentVerificationException, OnboardingProcessException, RemoteCommunicationException {
         List<DocumentVerificationEntity> allDocVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(idVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_IN_PROGRESS));
@@ -495,12 +497,13 @@ public class IdentityVerificationService {
      * @param photoId Identification of the photo
      * @param ownerId Owner identification.
      * @return Photo image
-     * @throws DocumentVerificationException When an error occurred during
+     * @throws RemoteCommunicationException In case of remote communication error.
+     * @throws DocumentVerificationException In case of business logic error.
      */
-    public Image getPhotoById(final String photoId, final OwnerId ownerId) throws DocumentVerificationException {
+    public Image getPhotoById(final String photoId, final OwnerId ownerId) throws DocumentVerificationException, RemoteCommunicationException {
         final Image result = documentVerificationProvider.getPhoto(photoId);
         final IdentityVerificationEntity identityVerification = findByOptional(ownerId).orElseThrow(() ->
-                new DocumentVerificationException("Unable to find intentity verification for " + ownerId));
+                new DocumentVerificationException("Unable to find identity verification for " + ownerId));
         auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
         return result;
     }
@@ -528,13 +531,14 @@ public class IdentityVerificationService {
      * @param ownerId Owner identification.
      * @param initAttributes SDK initialization attributes.
      * @return Verification SDK info.
-     * @throws DocumentVerificationException In case document verification fails.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     * @throws DocumentVerificationException In case of business logic error.
      */
     public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes)
-            throws DocumentVerificationException {
+            throws DocumentVerificationException, RemoteCommunicationException {
         VerificationSdkInfo verificationSdkInfo = documentVerificationProvider.initVerificationSdk(ownerId, initAttributes);
         final IdentityVerificationEntity identityVerification = findByOptional(ownerId).orElseThrow(() ->
-                new DocumentVerificationException("Unble to find identity verification for " + ownerId));
+                new DocumentVerificationException("Unable to find identity verification for " + ownerId));
         auditService.auditDocumentVerificationProvider(identityVerification, "Sdk initialized for user: {}", ownerId.getUserId());
         logger.info("Initialized verification SDK, {}", ownerId);
         return verificationSdkInfo;

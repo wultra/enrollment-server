@@ -33,4 +33,7 @@ public class DocumentVerificationException extends Exception {
         super(message);
     }
 
+    public DocumentVerificationException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

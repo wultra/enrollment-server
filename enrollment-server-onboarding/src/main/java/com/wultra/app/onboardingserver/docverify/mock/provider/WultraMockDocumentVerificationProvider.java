@@ -28,8 +28,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -45,9 +44,8 @@ import java.util.stream.Collectors;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "mock", matchIfMissing = true)
 @Component
+@Slf4j
 public class WultraMockDocumentVerificationProvider implements DocumentVerificationProvider {
-
-    private static final Logger logger = LoggerFactory.getLogger(WultraMockDocumentVerificationProvider.class);
 
     private static final List<DocumentType> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO =
             List.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
@@ -69,7 +67,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws DocumentVerificationException {
+    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) {
         DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(document.getType())) {
             // set extracted photo id only on a relevant documents submit
@@ -98,7 +96,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
+    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
         List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(doc -> toDocumentSubmitResult(doc.getDocumentId()))
                 .collect(Collectors.toList());
@@ -109,16 +107,15 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
             result.setExtractedPhotoId("extracted-photo-id");
         }
         result.setResults(submitResults);
-        submitResults.forEach(submitResult -> {
-            submittedDocs.put(submitResult.getUploadId(), submitResult);
-        });
+        submitResults.forEach(submitResult ->
+            submittedDocs.put(submitResult.getUploadId(), submitResult));
 
         logger.info("Mock - submitted documents, {}", id);
         return result;
     }
 
     @Override
-    public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
+    public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) {
         String verificationId = UUID.randomUUID().toString();
 
         DocumentsVerificationResult result = new DocumentsVerificationResult();
@@ -132,7 +129,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws DocumentVerificationException {
+    public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) {
         DocumentsVerificationResult result = new DocumentsVerificationResult();
         List<String> uploadIds = verificationUploadIds.getIfPresent(verificationId);
         if (uploadIds == null) {
@@ -169,12 +166,12 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
+    public void cleanupDocuments(OwnerId id, List<String> uploadIds) {
         logger.info("Mock - cleaned up documents uploadIds={}, {}", uploadIds, id);
     }
 
     @Override
-    public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
+    public List<String> parseRejectionReasons(DocumentResultEntity docResult) {
         if (docResult.getVerificationResult() != null && docResult.getVerificationResult().contains("rejected")) {
             return List.of("Rejection reason");
         } else {
@@ -183,7 +180,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException {
+    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) {
         String sdkInitResponse = UUID.randomUUID().toString();
         VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
         verificationSdkInfo.getAttributes().put(MockConst.SDK_INIT_RESPONSE, sdkInitResponse);
