@@ -3,6 +3,7 @@
 This document describes configuration of providers for personal identity document verification and user presence check.
 
 ## Document Verification
+
 The document verification process is currently supported for following providers:
 - [ZenID](https://zenid.trask.cz/) - use value `zenid` in configuration
 - Mock - useful for simple testing and local runs - use value `mock` in configuration
