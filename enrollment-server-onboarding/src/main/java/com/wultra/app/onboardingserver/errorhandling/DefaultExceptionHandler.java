@@ -159,7 +159,7 @@ public class DefaultExceptionHandler {
      * @return Response with error details.
      */
     @ExceptionHandler(RemoteCommunicationException.class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public @ResponseBody ErrorResponse handleRemoteExceptionException(RemoteCommunicationException ex) {
         logger.warn("Communication with remote system failed", ex);
         return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
