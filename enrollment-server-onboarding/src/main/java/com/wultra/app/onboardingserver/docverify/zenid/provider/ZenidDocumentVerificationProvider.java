@@ -28,6 +28,7 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
 import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
@@ -35,14 +36,12 @@ import com.wultra.app.onboardingserver.docverify.zenid.service.ZenidRestApiServi
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import com.wultra.core.rest.client.base.RestClientException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -51,15 +50,14 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**
- * Implementation of the {@link DocumentVerificationProvider} with ZenID (https://zenid.trask.cz/)
+ * Implementation of the {@link DocumentVerificationProvider} with <a href="https://zenid.trask.cz/">ZenID</a>.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
 @Component
+@Slf4j
 public class ZenidDocumentVerificationProvider implements DocumentVerificationProvider {
-
-    private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProvider.class);
 
     private final ZenidConfigProps zenidConfigProps;
 
@@ -91,30 +89,30 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws DocumentVerificationException {
+    public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {
         DocumentsSubmitResult result = new DocumentsSubmitResult();
         ResponseEntity<ZenidWebUploadSampleResponse> responseEntity;
 
         try {
             responseEntity = zenidApiService.syncSample(document.getUploadId());
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to check {} upload in ZenID, statusCode={}, responseBody='{}', {}",
-                    document, e.getStatusCode(), e.getResponse(), id, e);
-            throw new DocumentVerificationException("Unable to check document upload due to a REST call failure");
+            throw new RemoteCommunicationException(
+                    String.format("Unable to check %s upload in ZenID due to a REST call failure, statusCode=%s, responseBody='%s', %s",
+                            document, e.getStatusCode(), e.getResponse(), id),
+                    e);
         } catch (Exception e) {
-            logger.error("Unexpected error when checking {} upload in ZenID, {}", document, id, e);
-            throw new DocumentVerificationException("Unexpected error when checking document upload");
+            throw new RemoteCommunicationException(
+                    String.format("Unexpected error when checking %s upload in ZenID, %s", document, id), e);
         }
 
-        if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when checking {} upload in ZenID, {}", document, id);
-            throw new DocumentVerificationException("Unexpected error when checking document upload");
+        if (responseEntity == null || responseEntity.getBody() == null) {
+            throw new RemoteCommunicationException(String.format("Missing response body when checking %s upload in ZenID, %s", document, id));
         }
 
-        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-            logger.error("Failed to check {} upload in ZenID, statusCode={}, responseBody='{}', {}",
-                    document, responseEntity.getStatusCode(), responseEntity.getBody(), id);
-            throw new DocumentVerificationException("Unable to check document upload due to a service error");
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new DocumentVerificationException(
+                    String.format("Failed to check %s upload in ZenID, statusCode=%s, responseBody='%s', %s",
+                            document, responseEntity.getStatusCode(), responseEntity.getBody(), id));
         }
 
         ZenidWebUploadSampleResponse response = responseEntity.getBody();
@@ -134,7 +132,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
+    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws RemoteCommunicationException, DocumentVerificationException {
         DocumentsSubmitResult result = new DocumentsSubmitResult();
 
         String sessionId = UUID.randomUUID().toString();
@@ -144,23 +142,22 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             try {
                 responseEntity = zenidApiService.uploadSample(id, sessionId, document);
             } catch (RestClientException e) {
-                logger.warn("Failed REST call to submit documents to ZenID, statusCode={}, responseBody='{}', {}",
-                        e.getStatusCode(), e.getResponse(), id, e);
-                throw new DocumentVerificationException("Unable to submit documents due to a REST call failure");
+                throw new RemoteCommunicationException(
+                        String.format("Failed REST call to submit documents to ZenID, statusCode=%s, responseBody='%s', %s",
+                                e.getStatusCode(), e.getResponse(), id),
+                        e);
             } catch (Exception e) {
-                logger.error("Unexpected error when submitting documents to ZenID, {}", id, e);
-                throw new DocumentVerificationException("Unexpected error when submitting documents");
+                throw new RemoteCommunicationException(String.format("Unexpected error when submitting documents to ZenID, %s", id), e);
             }
 
             if (responseEntity.getBody() == null) {
-                logger.error("Missing response body when submitting documents to ZenID, {}", id);
-                throw new DocumentVerificationException("Unexpected error when submitting documents");
+                throw new RemoteCommunicationException(String.format("Missing response body when submitting documents to ZenID, %s", id));
             }
 
-            if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-                logger.error("Failed to submit documents to ZenID, statusCode={}, responseBody='{}', {}",
-                        responseEntity.getStatusCode(), responseEntity.getBody(), id);
-                throw new DocumentVerificationException("Unable to submit documents due to a service error");
+            if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+                throw new DocumentVerificationException(
+                        String.format("Failed to submit documents to ZenID, statusCode=%s, responseBody='%s', %s",
+                                responseEntity.getStatusCode(), responseEntity.getBody(), id));
             }
 
             ZenidWebUploadSampleResponse response = responseEntity.getBody();
@@ -178,56 +175,52 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
+    public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         ResponseEntity<ZenidWebInvestigateResponse> responseEntity;
         try {
             responseEntity = zenidApiService.investigateSamples(uploadIds);
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to verify documents {} in ZenID, statusCode={}, responseBody='{}', {}",
-                    uploadIds, e.getStatusCode(), e.getResponse(), id, e);
-            throw new DocumentVerificationException("Unable to verify documents due to a REST call failure");
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to verify documents %s in ZenID, statusCode=%s, responseBody='%s', %s",
+                            uploadIds, e.getStatusCode(), e.getResponse(), id),
+                    e);
         } catch (Exception e) {
-            logger.error("Unexpected error when verifying documents {} in ZenID", uploadIds, e);
-            throw new DocumentVerificationException("Unexpected error when verifying documents");
+            throw new RemoteCommunicationException(String.format("Unexpected error when verifying documents %s in ZenID", uploadIds), e);
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when verifying documents {} in ZenID, {}", uploadIds, id);
-            throw new DocumentVerificationException("Unexpected error when verifying documents");
+            throw new RemoteCommunicationException(String.format("Missing response body when verifying documents %s in ZenID, %s", uploadIds, id));
         }
 
-        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-            logger.error("Failed to verify documents {} in ZenID, statusCode={}, responseBody='{}', {}",
-                    uploadIds, responseEntity.getStatusCode(), responseEntity.getBody(), id);
-            throw new DocumentVerificationException("Unable to verify documents due to a service error");
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new DocumentVerificationException(
+                    String.format("Failed to verify documents %s in ZenID, statusCode=%s, responseBody='%s', %s", uploadIds, responseEntity.getStatusCode(), responseEntity.getBody(), id));
         }
 
         return toResult(id, responseEntity.getBody(), uploadIds);
     }
 
     @Override
-    public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws DocumentVerificationException {
+    public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws RemoteCommunicationException, DocumentVerificationException {
         ResponseEntity<ZenidWebInvestigateResponse> responseEntity;
         try {
             responseEntity = zenidApiService.getInvestigation(verificationId);
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to get a verification result for verificationId={} from ZenID, statusCode={}, responseBody='{}', {}",
-                    verificationId, e.getStatusCode(), e.getResponse(), id, e);
-            throw new DocumentVerificationException("Unable to get a verification result due to a REST call failure");
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to get a verification result for verificationId=%s from ZenID, statusCode=%s, responseBody='%s', %s", verificationId, e.getStatusCode(), e.getResponse(), id), e);
         } catch (Exception e) {
-            logger.error("Unexpected error when getting a verification result for verificationId={} from ZenID", verificationId, e);
-            throw new DocumentVerificationException("Unexpected error when getting a verification result");
+            throw new RemoteCommunicationException("Unexpected error when getting a verification result for verificationId=" + verificationId, e);
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when getting a verification result for verificationId={} from ZenID, {}", verificationId, id);
-            throw new DocumentVerificationException("Unexpected error when getting a verification result for verificationId=" + verificationId + " from ZenID, " + id);
+            throw new RemoteCommunicationException(
+                    String.format("Unexpected error when getting a verification result for verificationId=%s from ZenID, %s", verificationId, id));
         }
 
-        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-            logger.error("Failed to get a verification result for verificationId={} from ZenID, statusCode={}, responseBody='{}', {}",
-                    verificationId, responseEntity.getStatusCode(), responseEntity.getBody(), id);
-            throw new DocumentVerificationException("Unable to get a verification result");
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new DocumentVerificationException(
+                    String.format("Failed to get a verification result for verificationId=%s from ZenID, statusCode=%s, responseBody='%s', %s",
+                            verificationId, responseEntity.getStatusCode(), responseEntity.getBody(), id));
         }
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(verificationId);
@@ -235,28 +228,25 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public Image getPhoto(String photoId) throws DocumentVerificationException {
+    public Image getPhoto(String photoId) throws RemoteCommunicationException, DocumentVerificationException {
         ResponseEntity<byte[]> responseEntity;
         try {
             responseEntity = zenidApiService.getImage(photoId);
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to get a photoId={} from ZenID, statusCode={}, responseBody='{}', {}",
-                    photoId, e.getStatusCode(), e.getResponse(), e);
-            throw new DocumentVerificationException("Unable to get a photo due to a REST call failure");
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to get a photoId=%s from ZenID, statusCode=%s, responseBody='%s'", photoId, e.getStatusCode(), e.getResponse()),
+                    e);
         } catch (Exception e) {
-            logger.error("Unexpected error when getting a photo={} from ZenID", photoId, e);
-            throw new DocumentVerificationException("Unexpected error when getting a photo");
+            throw new RemoteCommunicationException(String.format("Unexpected error when getting a photo=%s from ZenID", photoId), e);
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when getting a photoId={} from ZenID", photoId);
-            throw new DocumentVerificationException("Unexpected error when getting a photo");
+            throw new RemoteCommunicationException(String.format("Missing response body when getting a photoId=%s from ZenID", photoId));
         }
 
-        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-            logger.error("Failed to get a photo photoId={} from ZenID, statusCode={}, responseBody='{}'",
-                    photoId, responseEntity.getStatusCode(), responseEntity.getBody());
-            throw new DocumentVerificationException("Unable to get a photo due to a service error");
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new DocumentVerificationException(String.format("Failed to get a photo photoId=%s from ZenID, statusCode=%s, hasBody=%s",
+                    photoId, responseEntity.getStatusCode(), responseEntity.hasBody()));
         }
 
         String filename = getContentDispositionFilename(responseEntity.getHeaders());
@@ -268,38 +258,37 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException {
+    public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         for (String uploadId : uploadIds) {
             ResponseEntity<ZenidWebDeleteSampleResponse> responseEntity;
             try {
                 responseEntity = zenidApiService.deleteSample(uploadId);
             } catch (RestClientException e) {
-                logger.warn("Failed REST call to cleanup documents from ZenID, statusCode={}, responseBody='{}', {}",
-                        e.getStatusCode(), e.getResponse(), id, e);
-                throw new DocumentVerificationException("Unable to cleanup documents due to a REST call failure");
+                throw new RemoteCommunicationException(
+                        String.format("Failed REST call to cleanup documents from ZenID, statusCode=%s, responseBody='%s', %s",
+                            e.getStatusCode(), e.getResponse(), id),
+                        e);
             } catch (Exception e) {
-                logger.error("Unexpected error when cleaning up documents from ZenID, {}", id, e);
-                throw new DocumentVerificationException("Unexpected error when cleaning up documents");
+                throw new RemoteCommunicationException("Unexpected error when cleaning up documents from ZenID, " + id, e);
             }
 
             if (responseEntity.getBody() == null) {
-                logger.error("Missing response body when cleaning up documents from ZenID, {}", id);
-                throw new DocumentVerificationException("Unexpected error when cleaning up documents");
+                throw new RemoteCommunicationException("Missing response body when cleaning up documents from ZenID, " + id);
             }
 
-            if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-                logger.error("Failed to cleanup a document uploadId={} from ZenID, statusCode={}, responseBody='{}', {}",
-                        uploadId, responseEntity.getStatusCode(), responseEntity.getBody(), id);
-                throw new DocumentVerificationException("Unable to cleanup documents due to a service error");
+            if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+                throw new DocumentVerificationException(
+                        String.format("Failed to cleanup a document uploadId=%s from ZenID, statusCode=%s, responseBody='%s', %s",
+                                uploadId, responseEntity.getStatusCode(), responseEntity.getBody(), id));
             }
 
             ZenidWebDeleteSampleResponse response = responseEntity.getBody();
             if (ZenidWebDeleteSampleResponse.ErrorCodeEnum.UNKNOWNSAMPLEID.equals(response.getErrorCode())) {
                 logger.info("Cleanup of an unknown document with uploadId={}", uploadId);
             } else if (response.getErrorCode() != null) {
-                logger.error("Failed to cleanup uploadId={} from ZenID, errorCode={}, errorText={}",
-                        uploadId, response.getErrorCode(), response.getErrorText());
-                throw new DocumentVerificationException("Failed to cleanup a document with uploadId=" + uploadId);
+                throw new DocumentVerificationException(
+                        String.format("Failed to cleanup uploadId=%s from ZenID, errorCode=%s, errorText=%s",
+                                uploadId, response.getErrorCode(), response.getErrorText()));
             }
         }
         logger.info("{} Cleaned up uploaded documents {} from ZenID.", id, uploadIds);
@@ -315,8 +304,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         try {
             validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
         } catch (JsonProcessingException e) {
-            logger.error("Unexpected error when parsing verification result data from {}", docResult, e);
-            throw new DocumentVerificationException("Unexpected error when parsing verification result data");
+            throw new DocumentVerificationException("Unexpected error when parsing verification result data from " + docResult, e);
         }
 
         final List<String> errors = new ArrayList<>();
@@ -331,7 +319,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
-    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException {
+    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws RemoteCommunicationException, DocumentVerificationException {
         Preconditions.checkArgument(initAttributes.containsKey(ZenidConst.SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
         String token = initAttributes.get(ZenidConst.SDK_INIT_TOKEN);
 
@@ -339,23 +327,21 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         try {
             responseEntity = zenidApiService.initSdk(token);
         } catch (RestClientException e) {
-            logger.warn("Failed REST call to init ZenID SDK, statusCode={}, responseBody='{}', {}",
-                    e.getStatusCode(), e.getResponse(), id, e);
-            throw new DocumentVerificationException("Unable to initialize the SDK due to a REST call failure");
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to init ZenID SDK, statusCode=%s, responseBody='%s', %s", e.getStatusCode(), e.getResponse(), id),
+                    e);
         } catch (Exception e) {
-            logger.error("Unexpected error when initializing ZenID SDK, {}", id, e);
-            throw new DocumentVerificationException("Unexpected error when initializing ZenID SDK");
+            throw new RemoteCommunicationException("Unexpected error when initializing ZenID SDK, " + id, e);
         }
 
         if (responseEntity.getBody() == null) {
-            logger.error("Missing response body when initializing ZenID SDK, {}", id);
-            throw new DocumentVerificationException("Unexpected error when initializing ZenID SDK");
+            throw new RemoteCommunicationException("Missing response body when initializing ZenID SDK, " + id);
         }
 
-        if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
-            logger.error("Failed to initialize ZenID SDK, statusCode={}, responseBody='{}', {}",
-                    responseEntity.getStatusCode(), responseEntity.getBody(), id);
-            throw new DocumentVerificationException("Unable to initializing ZenID SDK due to a service error");
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new DocumentVerificationException(
+                    String.format("Failed to initialize ZenID SDK, statusCode=%s, responseBody='%s', %s",
+                        responseEntity.getStatusCode(), responseEntity.getBody(), id));
         }
 
         ZenidWebInitSdkResponse response = responseEntity.getBody();
@@ -379,20 +365,20 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             documentSubmitResult.setExtractedData(extractedData);
         }
 
-        if (ZenidWebUploadSampleResponse.StateEnum.DONE.equals(response.getState())) {
+        final ZenidWebUploadSampleResponse.StateEnum state = response.getState();
+        if (state == ZenidWebUploadSampleResponse.StateEnum.DONE) {
             logger.debug("Document upload of {} is done in ZenID, {}", uploadContext, id);
             if (documentSubmitResult.getExtractedData() == null) {
                 logger.info("No data extracted from {} in ZenID, defaulting to empty json data, {}", uploadContext, id);
                 documentSubmitResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
             }
-        } else if (ZenidWebUploadSampleResponse.StateEnum.NOTDONE.equals(response.getState())) {
+        } else if (state == ZenidWebUploadSampleResponse.StateEnum.NOTDONE) {
             logger.debug("Document upload of {} is still in progress in ZenID, {}", uploadContext, id);
-        } else if (ZenidWebUploadSampleResponse.StateEnum.REJECTED.equals(response.getState())) {
+        } else if (state == ZenidWebUploadSampleResponse.StateEnum.REJECTED) {
             logger.debug("Document upload of {} is rejected in ZenID, {}", uploadContext, id);
             documentSubmitResult.setRejectReason(response.getErrorText());
         } else {
-            logger.warn("Document upload of {} failed in ZenID: {}, {}", uploadContext, response.getState(), id);
-            throw new DocumentVerificationException("Unable to upload a document");
+            throw new DocumentVerificationException(String.format("Document upload of %s failed in ZenID: %s, %s", uploadContext, state, id));
         }
 
         if (response.getErrorCode() != null) {
@@ -487,7 +473,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                             // with sampleId - validation on a specific document
                             ZenidWebInvestigationValidatorResponse validationData = copyOf(validatorResult);
                             validationData.addIssuesItem(issueItem);
-                            sampleIdsValidations.computeIfAbsent(issueItem.getSampleID(), (sampleId) -> new ArrayList<>())
+                            sampleIdsValidations.computeIfAbsent(issueItem.getSampleID(), sampleId -> new ArrayList<>())
                                     .add(validationData);
                         }
                     }
@@ -497,13 +483,13 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             List<DocumentVerificationResult> verificationResults = new ArrayList<>();
 
             String extractedData = toExtractedData(id, response.getMinedData());
-            for (String sampleId : sampleIdsValidations.keySet()) {
+            for (var entry : sampleIdsValidations.entrySet()) {
                 // TODO Consider using an object instead of simple array (call for a standard json)
-                List<ZenidWebInvestigationValidatorResponse> validations = new ArrayList<>(sampleIdsValidations.get(sampleId));
+                List<ZenidWebInvestigationValidatorResponse> validations = new ArrayList<>(entry.getValue());
 
                 DocumentVerificationResult verificationResult = new DocumentVerificationResult();
                 verificationResult.setExtractedData(extractedData);
-                verificationResult.setUploadId(sampleId);
+                verificationResult.setUploadId(entry.getKey());
 
                 // Find a first failed validation, use its description as the rejected reason for the document
                 Optional<ZenidWebInvestigationValidatorResponse> failedValidation = validations.stream()
@@ -520,8 +506,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 try {
                     verificationResultData = objectMapper.writeValueAsString(validations);
                 } catch (JsonProcessingException e) {
-                    logger.error("Unexpected error when processing verification result data, {}", id, e);
-                    throw new DocumentVerificationException("Unexpected error when processing verification result data");
+                    throw new DocumentVerificationException("Unexpected error when processing verification result data, " + id, e);
                 }
 
                 verificationResult.setVerificationResult(verificationResultData);
@@ -560,14 +545,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     private String toExtractedData(OwnerId id, ZenidSharedMineAllResult minedData) throws DocumentVerificationException {
-        String extractedData;
         try {
-            extractedData = objectMapper.writeValueAsString(minedData);
+            return objectMapper.writeValueAsString(minedData);
         } catch (JsonProcessingException e) {
-            logger.error("Unexpected error when processing extracted data, {}", id, e);
-            throw new DocumentVerificationException("Unexpected error when processing extracted data");
+            throw new DocumentVerificationException("Unexpected error when processing extracted data, " + id, e);
         }
-        return extractedData;
     }
 
     private DocumentVerificationStatus toStatus(ZenidWebInvestigateResponse.StateEnum stateEnum) {

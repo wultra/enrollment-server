@@ -346,6 +346,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentVerificationException Thrown when SKD initialization fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
     @PostMapping("document/init-sdk")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -356,7 +357,7 @@ public class IdentityVerificationController {
             @EncryptedRequestBody ObjectRequest<DocumentVerificationSdkInitRequest> request,
             @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
         final String operationDescription = "initializing document verification SDK";
         checkApiAuthentication(apiAuthentication, operationDescription);

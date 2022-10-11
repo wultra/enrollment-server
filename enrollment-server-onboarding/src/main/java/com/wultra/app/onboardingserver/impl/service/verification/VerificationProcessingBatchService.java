@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
@@ -109,7 +110,7 @@ public class VerificationProcessingBatchService {
                     docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, docVerification.getVerificationId());
                     final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
                     auditService.auditDocumentVerificationProvider(identityVerification, "Result verified: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
-                } catch (DocumentVerificationException e) {
+                } catch (DocumentVerificationException | RemoteCommunicationException e) {
                     logger.error("Checking document submit verification failed, {}", ownerId, e);
                     return;
                 }
@@ -143,7 +144,7 @@ public class VerificationProcessingBatchService {
                     if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
                         countFinished.incrementAndGet();
                     }
-                } catch (DocumentVerificationException | OnboardingProcessException e) {
+                } catch (DocumentVerificationException | OnboardingProcessException | RemoteCommunicationException e) {
                     logger.error("Checking identity verification result failed, {}", ownerId, e);
                 }
             });

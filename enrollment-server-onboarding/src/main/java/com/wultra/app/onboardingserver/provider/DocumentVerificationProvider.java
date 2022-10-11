@@ -17,10 +17,11 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.model.integration.*;
 
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,10 @@ public interface DocumentVerificationProvider {
      * @param id Owner identification.
      * @param document Document entity.
      * @return Result of the document submit
-     * @throws DocumentVerificationException When an error during submitting of documents occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws DocumentVerificationException;
+    DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
      * Analyze documents and return data extracted from documents (including photo) and identifiers. With enabled
@@ -49,9 +51,10 @@ public interface DocumentVerificationProvider {
      * @param id Owner identification.
      * @param documents Documents to be submitted
      * @return Result of the documents submit
-     * @throws DocumentVerificationException When an error during submitting of documents occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException;
+    DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
      * Analyze previously submitted documents, detect frauds, return binary result
@@ -59,9 +62,10 @@ public interface DocumentVerificationProvider {
      * @param id Owner identification.
      * @param uploadIds Ids of previously uploaded documents
      * @return Result of the documents verification
-     * @throws DocumentVerificationException When an error during verification occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException;
+    DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
      * Gets the result of verification
@@ -69,26 +73,29 @@ public interface DocumentVerificationProvider {
      * @param id Owner identification.
      * @param verificationId Identification of a previously run verification
      * @return Result of a previously run documents verification
-     * @throws DocumentVerificationException When an error during verification result obtaining occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws DocumentVerificationException;
+    DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
      * Gets a photo
      * @param photoId Identification of the photo
      * @return Photo image
-     * @throws DocumentVerificationException When an error during getting of a photo occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    Image getPhoto(String photoId) throws DocumentVerificationException;
+    Image getPhoto(String photoId) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
      * Disposes documents which are no longer needed, throw away any sensitive data
      *
      * @param id Owner identification.
      * @param uploadIds Ids of previously uploaded documents
-     * @throws DocumentVerificationException When an error during documents cleanup occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    void cleanupDocuments(OwnerId id, List<String> uploadIds) throws DocumentVerificationException;
+    void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
 
     // TODO reconsider this method, mention it in the tldr doc
     /**
@@ -105,8 +112,9 @@ public interface DocumentVerificationProvider {
      * @param id Owner identification.
      * @param initAttributes Initialization attributes
      * @return Info with data related to the verification process in SDK.
-     * @throws DocumentVerificationException When an error during initializing the verification SDK occurred
+     * @throws RemoteCommunicationException In case of remote communication error
+     * @throws DocumentVerificationException In case of business logic error
      */
-    VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws DocumentVerificationException;
+    VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws RemoteCommunicationException, DocumentVerificationException;
 
 }

@@ -153,12 +153,13 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Handling of document verification exceptions.
+     * Handling of remote communication exception.
+     *
      * @param ex Exception.
      * @return Response with error details.
      */
     @ExceptionHandler(RemoteCommunicationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public @ResponseBody ErrorResponse handleRemoteExceptionException(RemoteCommunicationException ex) {
         logger.warn("Communication with remote system failed", ex);
         return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");

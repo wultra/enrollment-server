@@ -22,8 +22,6 @@ import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
@@ -31,6 +29,9 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
@@ -205,7 +206,7 @@ public class DocumentProcessingService {
             final IdentityVerificationEntity identityVerification = documentResultEntity.getDocumentVerification().getIdentityVerification();
             auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
-        } catch (DocumentVerificationException e) {
+        } catch (DocumentVerificationException | RemoteCommunicationException e) {
             docsSubmitResults = new DocumentsSubmitResult();
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
@@ -232,7 +233,7 @@ public class DocumentProcessingService {
             final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
-        } catch (DocumentVerificationException e) {
+        } catch (DocumentVerificationException | RemoteCommunicationException e) {
             docsSubmitResults = new DocumentsSubmitResult();
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
@@ -432,7 +433,8 @@ public class DocumentProcessingService {
             DocumentsVerificationResult docsVerificationResult =
                     documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
             docVerification.setVerificationId(docsVerificationResult.getVerificationId());
-        } catch (DocumentVerificationException e) {
+        } catch (DocumentVerificationException | RemoteCommunicationException e) {
+            logger.debug("Unable to verify document with uploadId: {}, {}", uploadId, ownerId, e);
             logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(e.getMessage());

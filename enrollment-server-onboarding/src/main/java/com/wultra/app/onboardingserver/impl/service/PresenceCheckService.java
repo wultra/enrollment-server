@@ -247,9 +247,10 @@ public class PresenceCheckService {
      * @param ownerId Owner identification.
      * @param docsWithPhoto Documents with a mined person photography.
      * @return Image with a person photography
-     * @throws DocumentVerificationException When an error during obtaining a person photo occurred.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     * @throws DocumentVerificationException In case of business logic error.
      */
-    public Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException {
+    public Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException, RemoteCommunicationException {
         docsWithPhoto.forEach(docWithPhoto ->
                 Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
         );
