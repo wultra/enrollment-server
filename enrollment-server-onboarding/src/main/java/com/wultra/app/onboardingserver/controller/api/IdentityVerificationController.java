@@ -347,9 +347,9 @@ public class IdentityVerificationController {
      * @throws DocumentVerificationException Thrown when SKD initialization fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    @PostMapping("document-verification/init-sdk")
+    @PostMapping("document/init-sdk")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document-verification/init-sdk", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/document/init-sdk", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
