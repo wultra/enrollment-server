@@ -349,7 +349,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("document/init-sdk")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document-verification/init-sdk", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/document/init-sdk", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
