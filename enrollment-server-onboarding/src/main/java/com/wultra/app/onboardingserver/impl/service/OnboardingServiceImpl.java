@@ -301,6 +301,21 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     /**
+     * Find an existing onboarding process by activation ID in any state.
+     * @param activationId Activation identifier.
+     * @return Onboarding process.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     */
+    public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
+        if (processOptional.isEmpty()) {
+            logger.warn("Onboarding process not found, activation ID: {}", activationId);
+            throw new OnboardingProcessException();
+        }
+        return processOptional.get();
+    }
+
+    /**
      * Provide consent text.
      *
      * @param request consent text request

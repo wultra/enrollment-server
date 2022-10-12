@@ -92,6 +92,17 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     Optional<OnboardingProcessEntity> findExistingProcessForActivationWithLock(String activationId, OnboardingStatus status);
 
     /**
+     * Find process by activation identifier. Do not lock the process.
+     *
+     * @param activationId Activation identifier.
+     * @return Optional onboarding process.
+     */
+    @Query("SELECT p FROM OnboardingProcessEntity p " +
+            "WHERE p.activationId = :activationId " +
+            "ORDER BY p.timestampCreated DESC")
+    Optional<OnboardingProcessEntity> findProcessByActivationId(String activationId);
+
+    /**
      * Count onboarding processes for user with timestamp created after given timestamp.
      *
      * @param userId User identifier.
