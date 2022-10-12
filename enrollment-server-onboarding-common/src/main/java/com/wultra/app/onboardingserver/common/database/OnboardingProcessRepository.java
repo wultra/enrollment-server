@@ -50,7 +50,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * @return Optional onboarding process.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM OnboardingOtpEntity p WHERE p.id = :processId")
+    @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.id = :processId")
     Optional<OnboardingProcessEntity> findProcessByIdWithLock(String processId);
 
     /**
