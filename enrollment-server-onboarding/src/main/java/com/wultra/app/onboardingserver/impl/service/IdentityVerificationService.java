@@ -29,6 +29,7 @@ import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -89,6 +90,8 @@ public class IdentityVerificationService {
 
     private final AuditService auditService;
 
+    private final OnboardingProcessRepository onboardingProcessRepository;
+
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
@@ -104,6 +107,7 @@ public class IdentityVerificationService {
      * @param processService Common onboarding process service.
      * @param processLimitService Onboarding process limit service.
      * @param auditService Audit service.
+     * @param onboardingProcessRepository Onboarding process repository.
      */
     @Autowired
     public IdentityVerificationService(
@@ -118,7 +122,7 @@ public class IdentityVerificationService {
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
             final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
-            final AuditService auditService) {
+            final AuditService auditService, OnboardingProcessRepository onboardingProcessRepository) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
@@ -132,6 +136,7 @@ public class IdentityVerificationService {
         this.processLimitService = processLimitService;
         this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
         this.auditService = auditService;
+        this.onboardingProcessRepository = onboardingProcessRepository;
     }
 
     /**
@@ -320,6 +325,10 @@ public class IdentityVerificationService {
         for (Map.Entry<String, List<DocumentVerificationEntity>> entry : verificationsById.entrySet()) {
             DocumentsVerificationResult docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, entry.getKey());
             auditService.auditDocumentVerificationProvider(idVerification, "Got verification result: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
+
+            // Lock the onboarding process until the end of the transaction
+            onboardingProcessRepository.findProcessByIdWithLock(idVerification.getProcessId());
+
             verificationProcessingService.processVerificationResult(ownerId, entry.getValue(), docVerificationResult);
         }
 

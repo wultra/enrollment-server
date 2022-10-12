@@ -62,28 +62,26 @@ public class CommonOnboardingService implements OnboardingService {
     }
 
     /**
-     * Find an onboarding process.
-     * @param activationId Activation identifier.
+     * Find an onboarding process. Lock the process until the end of the transaction.
+     * @param processId Process identifier.
      * @return Onboarding process.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
-        if (processOptional.isEmpty()) {
-            logger.warn("Onboarding process not found, activation ID: {}", activationId);
-            throw new OnboardingProcessException();
-        }
-        return processOptional.get();
+    public OnboardingProcessEntity findProcessWithLock(String processId) throws OnboardingProcessException {
+        return onboardingProcessRepository.findProcessByIdWithLock(processId).orElseThrow(() ->
+                new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
     }
 
     @Override
     public String findUserIdByProcessId(final String processId) throws OnboardingProcessException {
-        return findProcess(processId).getUserId();
+        // The onboarding process is locked until the end of the transaction
+        return findProcessWithLock(processId).getUserId();
     }
 
     @Override
     public OnboardingStatus getProcessStatus(String processId) throws OnboardingProcessException {
-        return findProcess(processId).getStatus();
+        // The onboarding process is locked until the end of the transaction
+        return findProcessWithLock(processId).getStatus();
     }
 
     /**
@@ -97,7 +95,8 @@ public class CommonOnboardingService implements OnboardingService {
 
     @Override
     public void updateProcess(final UpdateProcessRequest request) throws OnboardingProcessException {
-        final OnboardingProcessEntity process = findProcess(request.getProcessId());
+        // The onboarding process is locked until the end of the transaction
+        final OnboardingProcessEntity process = findProcessWithLock(request.getProcessId());
         process.setStatus(request.getStatus());
         process.setActivationId(request.getActivationId());
         process.setTimestampLastUpdated(request.getTimestampLastUpdated());

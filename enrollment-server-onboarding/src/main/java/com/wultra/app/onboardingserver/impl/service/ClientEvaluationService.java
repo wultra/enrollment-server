@@ -59,8 +59,6 @@ public class ClientEvaluationService {
 
     private final IdentityVerificationService identityVerificationService;
 
-    private final TransactionTemplate transactionTemplate;
-
     private final AuditService auditService;
 
     /**
@@ -69,7 +67,6 @@ public class ClientEvaluationService {
      * @param onboardingProvider Onboarding provider.
      * @param config Identity verification config.
      * @param identityVerificationService Identity verification repository.
-     * @param transactionTemplate Transaction template.
      * @param auditService Audit service.
      */
     @Autowired
@@ -77,12 +74,10 @@ public class ClientEvaluationService {
             final OnboardingProvider onboardingProvider,
             final IdentityVerificationConfig config,
             final IdentityVerificationService identityVerificationService,
-            final TransactionTemplate transactionTemplate,
             final AuditService auditService) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.identityVerificationService = identityVerificationService;
-        this.transactionTemplate = transactionTemplate;
         this.auditService = auditService;
     }
 
@@ -141,8 +136,7 @@ public class ClientEvaluationService {
             final IdentityVerificationPhase phase = identityVerification.getPhase();
             if (response.isAccepted()) {
                 logger.info("Client evaluation accepted for {}", identityVerification);
-                saveInANewTransaction(status ->
-                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId));
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
             } else {
                 logger.info("Client evaluation rejected for {}", identityVerification);
                 identityVerification.getDocumentVerifications()
@@ -151,8 +145,7 @@ public class ClientEvaluationService {
                             auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
                         });
                 identityVerification.setTimestampFailed(ownerId.getTimestamp());
-                saveInANewTransaction(status ->
-                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId));
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId);
             }
         };
     }
@@ -169,8 +162,4 @@ public class ClientEvaluationService {
         };
     }
 
-    private void saveInANewTransaction(final Consumer<TransactionStatus> consumer) {
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.executeWithoutResult(consumer);
-    }
 }

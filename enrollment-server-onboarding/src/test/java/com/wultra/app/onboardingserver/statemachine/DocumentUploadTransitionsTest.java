@@ -19,9 +19,11 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -33,9 +35,11 @@ import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 
@@ -50,6 +54,9 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private DocumentVerificationRepository documentVerificationRepository;
+
+    @MockBean
+    private OnboardingProcessRepository onboardingProcessRepository;
 
     @Test
     void testDocumentUploadInProgress() throws Exception {
@@ -72,6 +79,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationPending() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
@@ -82,6 +90,9 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
         when(documentVerificationRepository.findAllUsedForVerification(idVerification))
                 .thenReturn(List.of(documentVerification));
+
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

@@ -43,29 +43,25 @@ class ActivationCleaningService {
 
     private final ActivationService activationService;
 
-    private final TransactionTemplate transactionTemplate;
-
     private final AuditService auditService;
 
     @Autowired
     public ActivationCleaningService(
             final OnboardingProcessRepository onboardingProcessRepository,
             final ActivationService activationService,
-            final TransactionTemplate transactionTemplate,
             final AuditService auditService) {
 
         this.onboardingProcessRepository = onboardingProcessRepository;
         this.activationService = activationService;
-        this.transactionTemplate = transactionTemplate;
         this.auditService = auditService;
     }
 
     /**
      * Cleanup activations of failed onboarding processes.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public void cleanupActivations() {
-        onboardingProcessRepository.findProcessesToRemoveActivation()
+        onboardingProcessRepository.findProcessesToRemoveActivationWithLock()
                 .forEach(this::cleanupActivation);
     }
 
@@ -76,7 +72,7 @@ class ActivationCleaningService {
         try {
             removeActivation(activationId);
             process.setActivationRemoved(true);
-            saveInNewTransaction(process);
+            onboardingProcessRepository.save(process);
             auditService.auditActivation(process, "Remove activation of failed process for user: {}", process.getUserId());
         } catch (RemoteCommunicationException e) {
             logger.error("Unable to remove activation ID: {}", activationId, e);
@@ -93,8 +89,4 @@ class ActivationCleaningService {
         activationService.removeActivation(activationId);
     }
 
-    private void saveInNewTransaction(final OnboardingProcessEntity process) {
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.executeWithoutResult(status -> onboardingProcessRepository.save(process));
-    }
 }

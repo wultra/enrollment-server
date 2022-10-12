@@ -18,7 +18,9 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
@@ -34,6 +36,9 @@ import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
@@ -60,30 +65,44 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
     @MockBean
     private DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
 
+    @MockBean
+    private OnboardingProcessRepository onboardingProcessRepository;
+
     @Test
+    @Transactional
     void testDocumentVerificationAccepted() throws Exception {
+        createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED);
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationInProgress() throws Exception {
+        createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationRejected() throws Exception {
+        createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.DOCUMENT_VERIFICATION_REJECTED);
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationFailed() throws Exception {
+        createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.DOCUMENT_VERIFICATION_FAILED);
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationTransitionToClientEvaluation() throws Exception {
         IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
+                createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
@@ -103,7 +122,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     private void testDocumentVerificationStatus(IdentityVerificationStatus identityStatus, OnboardingState expectedState) throws Exception {
         IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
+                createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.VERIFICATION_PENDING);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         doAnswer(args -> {
@@ -122,6 +141,14 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
+    }
+
+    private IdentityVerificationEntity createIdentityVerificationLocal(IdentityVerificationPhase phase, IdentityVerificationStatus status) {
+        IdentityVerificationEntity idVerification =
+                super.createIdentityVerification(phase, status);
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
+        return idVerification;
     }
 
 }

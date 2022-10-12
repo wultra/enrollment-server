@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
@@ -73,6 +74,8 @@ public class DocumentProcessingService {
 
     private final AuditService auditService;
 
+    private final OnboardingProcessRepository onboardingProcessRepository;
+
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification configuration.
@@ -82,6 +85,7 @@ public class DocumentProcessingService {
      * @param dataExtractionService Data extraction service.
      * @param documentVerificationProvider Document verification provider.
      * @param auditService Audit service.
+     * @param onboardingProcessRepository Onboarding process repository.
      */
     @Autowired
     public DocumentProcessingService(
@@ -91,7 +95,8 @@ public class DocumentProcessingService {
             final DocumentResultRepository documentResultRepository,
             final DataExtractionService dataExtractionService,
             final DocumentVerificationProvider documentVerificationProvider,
-            final AuditService auditService) {
+            final AuditService auditService,
+            final OnboardingProcessRepository onboardingProcessRepository) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
@@ -100,6 +105,7 @@ public class DocumentProcessingService {
         this.dataExtractionService = dataExtractionService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.auditService = auditService;
+        this.onboardingProcessRepository = onboardingProcessRepository;
     }
 
     /**
@@ -211,6 +217,9 @@ public class DocumentProcessingService {
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
         }
+
+        // The results are available, lock the onboarding process until the end of the transaction
+        onboardingProcessRepository.findProcessByIdWithLock(documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId());
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());

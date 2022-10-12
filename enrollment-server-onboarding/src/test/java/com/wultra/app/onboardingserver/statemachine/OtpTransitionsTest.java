@@ -18,6 +18,7 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -37,6 +38,7 @@ import org.springframework.statemachine.test.StateMachineTestPlan;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -64,12 +66,10 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test
+    @Transactional
     void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
-
-        when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
-                .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
 
         Message<OnboardingEvent> message =
@@ -89,6 +89,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
+    @Transactional
     void testOtpVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -102,11 +103,14 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(verificationProcessResultAction).execute(any());
 
+        Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+
         prepareTest(stateMachine)
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
                 .and()
                 .step()
-                .sendEvent(OnboardingEvent.EVENT_NEXT_STATE)
+                .sendEvent(message)
                 .expectState(OnboardingState.COMPLETED_ACCEPTED)
                 .and()
                 .build()
@@ -116,6 +120,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
+    @Transactional
     void testOtpNotVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -136,9 +141,12 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     private IdentityVerificationEntity createIdentityVerification() {
-        return super.createIdentityVerification(
+        IdentityVerificationEntity idVerification = super.createIdentityVerification(
                 IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING
         );
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
+        return idVerification;
     }
 
 }

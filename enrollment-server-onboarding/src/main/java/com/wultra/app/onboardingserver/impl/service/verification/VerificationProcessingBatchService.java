@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
@@ -65,14 +66,17 @@ public class VerificationProcessingBatchService {
 
     private final AuditService auditService;
 
+    private final OnboardingProcessRepository onboardingProcessRepository;
+
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
-     * @param identityVerificationRepository Identity verification repository.
      * @param documentVerificationProvider Document verification provider.
+     * @param identityVerificationRepository Identity verification repository.
      * @param identityVerificationService Identity verification service.
      * @param verificationProcessingService Verification processing service.
      * @param auditService Audit service.
+     * @param onboardingProcessRepository Onboarding process repository.
      */
     @Autowired
     public VerificationProcessingBatchService(
@@ -81,7 +85,7 @@ public class VerificationProcessingBatchService {
             final IdentityVerificationRepository identityVerificationRepository,
             final IdentityVerificationService identityVerificationService,
             final VerificationProcessingService verificationProcessingService,
-            final AuditService auditService) {
+            final AuditService auditService, OnboardingProcessRepository onboardingProcessRepository) {
 
         this.documentResultRepository = documentResultRepository;
         this.identityVerificationRepository = identityVerificationRepository;
@@ -89,6 +93,7 @@ public class VerificationProcessingBatchService {
         this.identityVerificationService = identityVerificationService;
         this.verificationProcessingService = verificationProcessingService;
         this.auditService = auditService;
+        this.onboardingProcessRepository = onboardingProcessRepository;
     }
 
     /**
@@ -114,6 +119,10 @@ public class VerificationProcessingBatchService {
                     logger.error("Checking document submit verification failed, {}", ownerId, e);
                     return;
                 }
+
+                // The results are available, lock the onboarding process until the end of the transaction
+                onboardingProcessRepository.findProcessByIdWithLock(docVerification.getIdentityVerification().getProcessId());
+
                 verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
 
                 if (!DocumentStatus.UPLOAD_IN_PROGRESS.equals(docVerification.getStatus())) {

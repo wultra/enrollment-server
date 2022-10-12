@@ -18,6 +18,7 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -77,7 +78,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
         doAnswer(args -> {
@@ -203,7 +204,11 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     }
 
     private IdentityVerificationEntity createIdentityVerification(IdentityVerificationStatus status) {
-        return super.createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, status);
+        IdentityVerificationEntity idVerification =
+                createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, status);
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
+        return idVerification;
     }
 
 }

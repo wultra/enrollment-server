@@ -18,7 +18,9 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
@@ -36,6 +38,9 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.NOT_INITIALIZED;
@@ -65,30 +70,37 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     @MockBean
     private VerificationProcessResultAction verificationProcessResultAction;
 
+    @MockBean
+    private OnboardingProcessRepository onboardingProcessRepository;
+
     @Test
+    @Transactional
     void testClientEvaluationAccepted() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.CLIENT_EVALUATION_ACCEPTED);
     }
 
     @Test
+    @Transactional
     void testClientEvaluationInProgress() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.IN_PROGRESS, OnboardingState.CLIENT_EVALUATION_IN_PROGRESS);
     }
 
     @Test
+    @Transactional
     void testClientEvaluationFailed() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.CLIENT_EVALUATION_FAILED);
     }
 
     @Test
+    @Transactional
     void testClientEvaluationRejected() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.CLIENT_EVALUATION_REJECTED);
     }
 
     @Test
+    @Transactional
     void testClientEvaluationAcceptedToPresenceCheckInit() throws Exception {
-        IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
+        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
@@ -107,9 +119,9 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationTransitionToSendingOtp() throws Exception {
-        IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
+        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
@@ -136,9 +148,9 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
+    @Transactional
     void testDocumentVerificationTransitionCompleted() throws Exception {
-        IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED);
+        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
@@ -167,8 +179,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     }
 
     private void testClientVerificationStatus(IdentityVerificationStatus identityStatus, OnboardingState expectedState) throws Exception {
-        IdentityVerificationEntity idVerification =
-                createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.IN_PROGRESS);
+        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         doAnswer(args -> {
@@ -186,5 +197,13 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
+    }
+
+    private IdentityVerificationEntity createIdentityVerification(IdentityVerificationStatus status) {
+        IdentityVerificationEntity idVerification =
+                createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, status);
+        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
+        return idVerification;
     }
 }

@@ -86,7 +86,8 @@ public class IdentityVerificationStatusService {
 
         Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
 
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+        // Do not lock onboarding process, it is not required for status check
+        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(ownerId.getActivationId());
         if (idVerificationOptional.isEmpty()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
