@@ -24,8 +24,7 @@ import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.presencecheck.mock.MockConst;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -40,9 +39,8 @@ import java.util.UUID;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "mock", matchIfMissing = true)
 @Component
+@Slf4j
 public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
-
-    private static final Logger logger = LoggerFactory.getLogger(WultraMockPresenceCheckProvider.class);
 
     /**
      * Service constructor.

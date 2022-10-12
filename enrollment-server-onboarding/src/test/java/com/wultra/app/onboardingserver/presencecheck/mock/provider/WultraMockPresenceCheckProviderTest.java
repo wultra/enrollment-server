@@ -59,12 +59,12 @@ class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    void initPresenceCheckTest() throws Exception {
+    void initPresenceCheckTest() {
         initPresenceCheck();
     }
 
     @Test
-    void startPresenceCheckTest() throws Exception {
+    void startPresenceCheckTest() {
         initPresenceCheck();
 
         SessionInfo sessionInfo = provider.startPresenceCheck(ownerId);
@@ -75,7 +75,7 @@ class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    void getResultTest() throws Exception {
+    void getResultTest() {
         SessionInfo sessionInfo = new SessionInfo();
         sessionInfo.getSessionAttributes().put(MockConst.VERIFICATION_TOKEN, "token");
 
@@ -86,7 +86,7 @@ class WultraMockPresenceCheckProviderTest {
     }
 
     @Test
-    void cleanupIdentityDataTest() throws Exception {
+    void cleanupIdentityDataTest() {
         provider.cleanupIdentityData(ownerId);
     }
 
@@ -97,7 +97,7 @@ class WultraMockPresenceCheckProviderTest {
         return ownerId;
     }
 
-    private void initPresenceCheck() throws Exception {
+    private void initPresenceCheck() {
         Image photo = new Image();
         photo.setData(new byte[]{});
         photo.setFilename("id_photo.jpg");
