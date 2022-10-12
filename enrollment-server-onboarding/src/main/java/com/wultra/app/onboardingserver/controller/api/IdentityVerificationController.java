@@ -63,6 +63,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -157,6 +158,8 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ResponseEntity<Response> initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
@@ -238,6 +241,8 @@ public class IdentityVerificationController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
@@ -403,6 +408,8 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
@@ -438,6 +445,8 @@ public class IdentityVerificationController {
     @PostMapping("presence-check/submit")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/presence-check/submit", signatureType = PowerAuthSignatureTypes.POSSESSION)
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ResponseEntity<Response> submitPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckSubmitRequest> request,
                                                         @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
@@ -469,6 +478,8 @@ public class IdentityVerificationController {
      */
     @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ResponseEntity<Response> resendOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
@@ -497,6 +508,8 @@ public class IdentityVerificationController {
      */
     @PostMapping("otp/verify")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    // TODO - move to service before finishing pull request
+    @Transactional
     public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
@@ -541,6 +554,8 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/cleanup", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
+    // TODO - move to service before finishing pull request
+    @Transactional
     public Response cleanup(@EncryptedRequestBody ObjectRequest<IdentityVerificationCleanupRequest> request,
                             @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
