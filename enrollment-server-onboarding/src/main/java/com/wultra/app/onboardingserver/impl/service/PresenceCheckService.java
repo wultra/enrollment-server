@@ -152,12 +152,13 @@ public class PresenceCheckService {
      * @param ownerId Owner identifier.
      * @param idVerification Identity verification entity.
      * @param sessionInfo Session info with presence check data.
-     * @throws PresenceCheckException When an error during the presence check verification occurred
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
     @Transactional
     public void checkPresenceVerification(OwnerId ownerId,
                                           IdentityVerificationEntity idVerification,
-                                          SessionInfo sessionInfo) throws PresenceCheckException {
+                                          SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
         auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: ", result.getStatus(), ownerId.getUserId());
 
@@ -205,9 +206,10 @@ public class PresenceCheckService {
      * Cleans identity data used in the presence check process.
      *
      * @param ownerId Owner identification.
-     * @throws PresenceCheckException When an error during cleanup occurred.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    public void cleanup(OwnerId ownerId) throws PresenceCheckException {
+    public void cleanup(OwnerId ownerId) throws PresenceCheckException, RemoteCommunicationException {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
             presenceCheckProvider.cleanupIdentityData(ownerId);
             final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
@@ -224,16 +226,16 @@ public class PresenceCheckService {
      * @param ownerId Owner identification.
      * @param idVerification Verification identity.
      * @return Session info with data needed to perform the presence check process
-     * @throws PresenceCheckException When an error during starting the presence check process occurred.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    private SessionInfo startPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification) throws PresenceCheckException {
+    private SessionInfo startPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
         SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
         auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
         String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
         if (sessionInfoJson == null) {
-            logger.error("JSON serialization of session info failed, {}", ownerId);
-            throw new PresenceCheckException("Unable to initialize presence check");
+            throw new PresenceCheckException("JSON serialization of session info failed, " + ownerId);
         }
 
         idVerification.setSessionInfo(sessionInfoJson);

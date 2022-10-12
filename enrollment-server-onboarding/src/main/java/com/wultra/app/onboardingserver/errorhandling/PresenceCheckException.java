@@ -33,4 +33,8 @@ public class PresenceCheckException extends Exception {
         super(message);
     }
 
+    public PresenceCheckException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
 }

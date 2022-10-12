@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
@@ -81,7 +82,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
         } else {
             try {
                 presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
-            } catch (PresenceCheckException e) {
+            } catch (PresenceCheckException | RemoteCommunicationException e) {
                 logger.error("Checking presence verification failed, {}", ownerId, e);
                 identityVerification.setErrorDetail(e.getMessage());
                 identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);

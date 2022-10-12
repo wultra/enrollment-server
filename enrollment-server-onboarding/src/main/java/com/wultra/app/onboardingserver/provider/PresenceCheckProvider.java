@@ -17,11 +17,12 @@
  */
 package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 
 /**
  * Provider which allows customization of the presence check.
@@ -35,35 +36,38 @@ public interface PresenceCheckProvider {
      *
      * @param id Owner identification.
      * @param photo Trusted photo of the user.
-     * @throws PresenceCheckException When an error during initialization occurred.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException;
+    void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
      * Starts the presence check process. The process has to be initialized before this call.
      *
      * @param id Owner identification.
      * @return Session info with data related to the presence check.
-     * @throws PresenceCheckException When an error occurred during presence check start.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException;
+    SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
      * Gets the result of presence check process.
      *
      * @param id Owner identification.
      * @param sessionInfo Session info with presence check relevant data.
-     * @return Result of the presence check
-     * @throws PresenceCheckException When an error during getting of the result occurred.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException;
+    PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
      * Cleans up all presence check data related to the identity.
      *
      * @param id Owner identification.
-     * @throws PresenceCheckException When an error during cleanup occurred.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
      */
-    void cleanupIdentityData(OwnerId id) throws PresenceCheckException;
+    void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException;
 
 }
