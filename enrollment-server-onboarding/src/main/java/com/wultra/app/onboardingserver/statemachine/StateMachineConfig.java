@@ -47,10 +47,12 @@ import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 
 /**
@@ -316,9 +318,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(
-                        context -> processIdentifierGuard.evaluate(context) && presenceCheckEnabledGuard.evaluate(context)
-                )
+                .guard(createCompositeGuard(processIdentifierGuard, presenceCheckEnabledGuard))
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
@@ -326,8 +326,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(context ->
-                        processIdentifierGuard.evaluate(context) && presenceCheckEnabledGuard.evaluate(context))
+                .guard(createCompositeGuard(processIdentifierGuard, presenceCheckEnabledGuard))
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
@@ -350,7 +349,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .first(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, statusInProgressGuard)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING,
-                        context -> otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
+                        createCompositeGuard(otpVerificationEnabledGuard, statusAcceptedGuard),
                         otpVerificationSendAction
                 )
                 .then(OnboardingState.CHOICE_VERIFICATION_PROCESSING,
@@ -379,9 +378,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
                 .event(OnboardingEvent.OTP_VERIFICATION_RESEND)
-                .guard(
-                        context -> processIdentifierGuard.evaluate(context) && otpVerificationEnabledGuard.evaluate(context)
-                )
+                .guard(createCompositeGuard(processIdentifierGuard, otpVerificationEnabledGuard))
                 .action(otpVerificationResendAction)
                 .target(OnboardingState.OTP_VERIFICATION_PENDING)
 
@@ -396,6 +393,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .first(OnboardingState.CHOICE_VERIFICATION_PROCESSING, otpVerifiedGuard, verificationProcessResultAction)
                 .last(OnboardingState.OTP_VERIFICATION_PENDING);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> createCompositeGuard(Guard<OnboardingState, OnboardingEvent>... guards) {
+        return context -> Arrays.stream(guards).allMatch(it -> it.evaluate(context));
     }
 
     private void configureCompletedTransition(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
