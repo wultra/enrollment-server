@@ -34,6 +34,7 @@ public enum ErrorOrigin {
 
     PROCESS_LIMIT_CHECK,
 
-    USER_REQUEST
+    USER_REQUEST,
 
+    FINAL_VALIDATION
 }

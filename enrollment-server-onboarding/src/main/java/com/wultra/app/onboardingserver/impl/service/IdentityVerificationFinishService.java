@@ -82,7 +82,7 @@ public class IdentityVerificationFinishService {
         // Remove flag ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS
         activationFlagService.updateActivationFlagsForSucceededIdentityVerification(ownerId);
 
-        // Find latest identity verification record and set the timestamp when it was finished
+        // Find the latest identity verification record and set the timestamp when it was finished
         final IdentityVerificationEntity identityVerification = identityVerificationService.findBy(ownerId);
         identityVerification.setTimestampLastUpdated(now);
         identityVerification.setTimestampFinished(now);

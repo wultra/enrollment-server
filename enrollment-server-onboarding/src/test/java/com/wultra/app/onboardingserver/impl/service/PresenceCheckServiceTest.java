@@ -36,13 +36,13 @@ import static org.mockito.Mockito.*;
 class PresenceCheckServiceTest {
 
     @Mock
-    IdentityVerificationService identityVerificationService;
+    private IdentityVerificationService identityVerificationService;
 
     @InjectMocks
-    PresenceCheckService service;
+    private PresenceCheckService service;
 
     @BeforeEach
-    public void init() {
+    void init() {
         MockitoAnnotations.openMocks(this);
     }
 
