@@ -47,7 +47,7 @@ public class CleaningTask {
      * Terminate processes with activation in progress.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateExpiredProcessActivations() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredProcessActivations");
@@ -58,7 +58,7 @@ public class CleaningTask {
      * Terminate processes with verifications in progress.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateProcessesWithVerificationsInProgress() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredProcessVerifications");
@@ -69,7 +69,7 @@ public class CleaningTask {
      * Terminate expired OTP codes.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "otpLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "otpLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateExpiredOtpCodes() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredOtpCodes");
@@ -80,7 +80,7 @@ public class CleaningTask {
      * Terminate expired processes.
      */
     @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT15S")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateExpiredProcesses() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredProcesses");
@@ -91,7 +91,7 @@ public class CleaningTask {
      * Cleanup of large documents older than retention time.
      */
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "documentDataLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "documentDataLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void cleanupLargeDocuments() {
         LockAssert.assertLocked();
         logger.debug("cleanupLargeDocuments");
@@ -99,7 +99,7 @@ public class CleaningTask {
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "documentVerificationLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "documentVerificationLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateExpiredDocumentVerifications() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredDocumentVerifications");
@@ -107,7 +107,7 @@ public class CleaningTask {
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT10M")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void terminateExpiredIdentityVerifications() {
         LockAssert.assertLocked();
         logger.debug("terminateExpiredIdentityVerifications");
@@ -118,7 +118,7 @@ public class CleaningTask {
      * Cleanup activations of failed onboarding processes.
      */
     @Scheduled(fixedDelayString = "PT60S", initialDelayString = "PT60S")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void cleanupActivations() {
         LockAssert.assertLocked();
         logger.debug("cleanupActivations");
