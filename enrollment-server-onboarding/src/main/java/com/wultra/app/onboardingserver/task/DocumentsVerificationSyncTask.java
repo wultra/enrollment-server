@@ -43,7 +43,7 @@ public class DocumentsVerificationSyncTask {
      * Scheduled task to check documents verifications at the target provider
      */
     @Scheduled(cron = "${enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron:0/5 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = "documentVerificationLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
+    @SchedulerLock(name = "documentSubmitVerificationsLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void checkDocumentSubmitVerifications() {
         LockAssert.assertLocked();
         logger.debug("checkDocumentSubmitVerifications");
