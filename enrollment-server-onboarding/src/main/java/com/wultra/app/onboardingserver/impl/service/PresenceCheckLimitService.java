@@ -98,7 +98,7 @@ public class PresenceCheckLimitService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException {
-        final int otpCount = otpRepository.getOtpCount(processId, OtpType.USER_VERIFICATION);
+        final int otpCount = otpRepository.countByProcessIdAndType(processId, OtpType.USER_VERIFICATION);
         if (otpCount > identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
             final Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
             if (identityVerificationOptional.isEmpty()) {

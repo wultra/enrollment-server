@@ -54,6 +54,7 @@ import static org.mockito.Mockito.when;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @MockBean(IdentityVerificationOtpService.class)
 @MockBean(VerificationProcessResultAction.class)
+@Transactional
 class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
@@ -69,39 +70,34 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
     private OnboardingProcessRepository onboardingProcessRepository;
 
     @Test
-    @Transactional
     void testDocumentVerificationAccepted() throws Exception {
         createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED);
     }
 
     @Test
-    @Transactional
     void testDocumentVerificationInProgress() throws Exception {
         createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IN_PROGRESS, OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS);
     }
 
     @Test
-    @Transactional
     void testDocumentVerificationRejected() throws Exception {
         createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.REJECTED, OnboardingState.DOCUMENT_VERIFICATION_REJECTED);
     }
 
     @Test
-    @Transactional
     void testDocumentVerificationFailed() throws Exception {
         createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         testDocumentVerificationStatus(IdentityVerificationStatus.FAILED, OnboardingState.DOCUMENT_VERIFICATION_FAILED);
     }
 
     @Test
-    @Transactional
     void testDocumentVerificationTransitionToClientEvaluation() throws Exception {
         IdentityVerificationEntity idVerification =
                 createIdentityVerificationLocal(IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.ACCEPTED);
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
@@ -146,7 +142,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationEntity createIdentityVerificationLocal(IdentityVerificationPhase phase, IdentityVerificationStatus status) {
         IdentityVerificationEntity idVerification =
                 super.createIdentityVerification(phase, status);
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
         return idVerification;
     }

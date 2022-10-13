@@ -26,9 +26,7 @@ import com.wultra.security.powerauth.client.v3.ActivationStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Service to cleaning activations.
@@ -61,7 +59,7 @@ class ActivationCleaningService {
      */
     @Transactional
     public void cleanupActivations() {
-        onboardingProcessRepository.findProcessesToRemoveActivationWithLock()
+        onboardingProcessRepository.findAllToRemoveActivationWithLock()
                 .forEach(this::cleanupActivation);
     }
 

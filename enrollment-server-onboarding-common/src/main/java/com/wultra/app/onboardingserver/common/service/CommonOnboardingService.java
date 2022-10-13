@@ -25,8 +25,6 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 /**
  * Implementation of {@link OnboardingService} which is shared both for enrollment and onboarding.
  *
@@ -68,19 +66,17 @@ public class CommonOnboardingService implements OnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessWithLock(String processId) throws OnboardingProcessException {
-        return onboardingProcessRepository.findProcessByIdWithLock(processId).orElseThrow(() ->
+        return onboardingProcessRepository.findByIdWithLock(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
     }
 
     @Override
     public String findUserIdByProcessId(final String processId) throws OnboardingProcessException {
-        // The onboarding process is locked until the end of the transaction
         return findProcessWithLock(processId).getUserId();
     }
 
     @Override
     public OnboardingStatus getProcessStatus(String processId) throws OnboardingProcessException {
-        // The onboarding process is locked until the end of the transaction
         return findProcessWithLock(processId).getStatus();
     }
 

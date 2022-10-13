@@ -95,7 +95,7 @@ public class IdentityVerificationLimitService {
         // Make sure that the maximum attempt number of identity verifications is not exceeded based on count of database rows.
         final List<IdentityVerificationEntity> identityVerifications = identityVerificationRepository.findByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
         if (identityVerifications.size() >= config.getVerificationMaxFailedAttempts()) {
-            final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessForActivation(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
+            final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                     .orElseThrow(() -> new IdentityVerificationException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
 
             // In case any of the identity verifications is not FAILED or REJECTED yet, fail it.
@@ -162,7 +162,7 @@ public class IdentityVerificationLimitService {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
-        OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessForActivation(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
+        OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
 
         // Increase process error score

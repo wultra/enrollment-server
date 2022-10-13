@@ -91,7 +91,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
         when(documentVerificationRepository.findAllUsedForVerification(idVerification))
                 .thenReturn(List.of(documentVerification));
 
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
 
         Message<OnboardingEvent> message =

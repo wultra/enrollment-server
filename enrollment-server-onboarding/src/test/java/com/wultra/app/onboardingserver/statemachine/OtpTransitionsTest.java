@@ -51,6 +51,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 class OtpTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
@@ -66,7 +67,6 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test
-    @Transactional
     void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -89,7 +89,6 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    @Transactional
     void testOtpVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -120,7 +119,6 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     }
 
     @Test
-    @Transactional
     void testOtpNotVerified() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
@@ -144,7 +142,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = super.createIdentityVerification(
                 IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING
         );
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         return idVerification;
     }

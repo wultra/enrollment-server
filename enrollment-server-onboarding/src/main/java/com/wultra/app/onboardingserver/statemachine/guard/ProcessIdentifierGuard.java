@@ -56,25 +56,24 @@ public class ProcessIdentifierGuard implements Guard<OnboardingState, Onboarding
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
-        // Lock onboarding process
-        final Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForActivationWithLock(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
+        final Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findByActivationIdAndStatusWithLock(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS);
         if (processOptional.isEmpty()) {
-            logger.error("Onboarding process not found, {}", ownerId);
-            fail(context);
+            fail(context, processId, ownerId);
             return false;
         }
         final String expectedProcessId = processOptional.get().getId();
 
         if (!expectedProcessId.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);
-            fail(context);
+            fail(context, processId, ownerId);
             return false;
         }
         return true;
     }
 
-    private void fail(StateContext<OnboardingState, OnboardingEvent> context) {
-        context.getStateMachine().setStateMachineError(new OnboardingProcessException());
+    private void fail(StateContext<OnboardingState, OnboardingEvent> context, String processId, OwnerId ownerId) {
+        final Exception ex = new OnboardingProcessException(String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
+        context.getStateMachine().setStateMachineError(ex);
     }
 
 }

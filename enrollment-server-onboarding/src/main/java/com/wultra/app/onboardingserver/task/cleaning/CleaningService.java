@@ -96,7 +96,7 @@ class CleaningService {
     public void terminateExpiredProcessActivations() {
         final Duration activationExpiration = onboardingConfig.getActivationExpirationTime();
         final Date createdDateExpiredActivations = DateUtil.convertExpirationToCreatedDate(activationExpiration);
-        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByStatusWithLock(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
+        final List<String> ids = onboardingProcessRepository.findByTimestampAndStatusWithLock(createdDateExpiredActivations, OnboardingStatus.ACTIVATION_IN_PROGRESS);
         terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ACTIVATION);
     }
 
@@ -107,7 +107,7 @@ class CleaningService {
     public void terminateExpiredProcessVerifications() {
         final Duration verificationExpiration = identityVerificationConfig.getVerificationExpirationTime();
         final Date createdDateExpiredVerifications = DateUtil.convertExpirationToCreatedDate(verificationExpiration);
-        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsByStatusWithLock(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final List<String> ids = onboardingProcessRepository.findByTimestampAndStatusWithLock(createdDateExpiredVerifications, OnboardingStatus.VERIFICATION_IN_PROGRESS);
         terminateProcessesAndRelatedEntities(ids, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_IDENTITY_VERIFICATION);
     }
 
@@ -118,7 +118,7 @@ class CleaningService {
     public void terminateExpiredOtpCodes() {
         final Duration otpExpiration = onboardingConfig.getOtpExpirationTime();
         final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
-        final List<String> otpIds = onboardingOtpRepository.findExpiredOtps(createdDateExpiredOtp);
+        final List<String> otpIds = onboardingOtpRepository.findExpiredIds(createdDateExpiredOtp);
         final Date now = new Date();
         for (List<String> otpIdChunk : Lists.partition(otpIds, BATCH_SIZE)) {
             terminateAndAuditOtps(otpIdChunk, now);
@@ -133,7 +133,7 @@ class CleaningService {
         final Date now = new Date();
         final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
         final Date createdDateExpiredProcesses = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        final List<String> ids = onboardingProcessRepository.findExpiredProcessIdsWithLock(createdDateExpiredProcesses);
+        final List<String> ids = onboardingProcessRepository.findActiveByTimestampWithLock(createdDateExpiredProcesses);
         if (ids.isEmpty()) {
             logger.debug("No expired process to terminate");
             return;

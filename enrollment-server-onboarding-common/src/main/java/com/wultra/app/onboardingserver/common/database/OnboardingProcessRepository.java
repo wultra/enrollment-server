@@ -51,7 +51,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.id = :processId")
-    Optional<OnboardingProcessEntity> findProcessByIdWithLock(String processId);
+    Optional<OnboardingProcessEntity> findByIdWithLock(String processId);
 
     /**
      * Find an existing process using identification data and status. Lock this process using PESSIMISTIC_WRITE lock
@@ -63,7 +63,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status AND p.identificationData = :identificationData")
-    Optional<OnboardingProcessEntity> findExistingProcessWithLock(String identificationData, OnboardingStatus status);
+    Optional<OnboardingProcessEntity> findByIdentificationDataAndStatusWithLock(String identificationData, OnboardingStatus status);
 
     /**
      * Find an existing process by activation identifier and process status. The process is not locked.
@@ -75,11 +75,11 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.activationId = :activationId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findExistingProcessForActivation(String activationId, OnboardingStatus status);
+    Optional<OnboardingProcessEntity> findByActivationIdAndStatus(String activationId, OnboardingStatus status);
 
     /**
-     * Find an existing process by activation identifier and process status. Lock the onboarding process until the
-     * end of the transaction.
+     * Find an existing process by activation identifier and process status. Lock this process using PESSIMISTIC_WRITE
+     * lock until the end of the transaction.
      *
      * @param activationId Activation identifier.
      * @param status Onboarding process status.
@@ -89,7 +89,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
             "AND p.activationId = :activationId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findExistingProcessForActivationWithLock(String activationId, OnboardingStatus status);
+    Optional<OnboardingProcessEntity> findByActivationIdAndStatusWithLock(String activationId, OnboardingStatus status);
 
     /**
      * Find process by activation identifier. Do not lock the process.
@@ -100,7 +100,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT p FROM OnboardingProcessEntity p " +
             "WHERE p.activationId = :activationId " +
             "ORDER BY p.timestampCreated DESC")
-    Optional<OnboardingProcessEntity> findProcessByActivationId(String activationId);
+    Optional<OnboardingProcessEntity> findByActivationId(String activationId);
 
     /**
      * Count onboarding processes for user with timestamp created after given timestamp.
@@ -110,7 +110,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * @return Count of onboarding processes satisfying query criteria.
      */
     @Query("SELECT count(p) FROM OnboardingProcessEntity p WHERE p.userId = :userId AND p.timestampCreated > :dateAfter")
-    int countProcessesAfterTimestamp(String userId, Date dateAfter);
+    int countByUserIdAndTimestamp(String userId, Date dateAfter);
 
     /**
      * Return onboarding process IDs by the given timestamp and status. Lock these processes using PESSIMISTIC_WRITE
@@ -124,7 +124,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("SELECT p.id FROM OnboardingProcessEntity p " +
             "WHERE p.status = :status " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    List<String> findExpiredProcessIdsByStatusWithLock(Date dateCreatedBefore, OnboardingStatus status);
+    List<String> findByTimestampAndStatusWithLock(Date dateCreatedBefore, OnboardingStatus status);
 
     /**
      * Return onboarding process IDs by the given timestamp. Include only not yet finished entities. Lock these
@@ -138,7 +138,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED " +
             "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    List<String> findExpiredProcessIdsWithLock(Date dateCreatedBefore);
+    List<String> findActiveByTimestampWithLock(Date dateCreatedBefore);
 
     /**
      * Return onboarding processes to remove activation. Lock these processes using PESSIMISTIC_WRITE lock until
@@ -151,7 +151,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "WHERE p.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
             "AND p.activationId IS NOT NULL " +
             "AND p.activationRemoved = false")
-    Stream<OnboardingProcessEntity> findProcessesToRemoveActivationWithLock();
+    Stream<OnboardingProcessEntity> findAllToRemoveActivationWithLock();
 
     /**
      * Mark the given onboarding processes as failed.

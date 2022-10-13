@@ -156,7 +156,7 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received while getting status");
         }
 
-        // Onboarding process is not locked
+        logger.debug("Onboarding process will not be locked, {}", request.getRequestObject().getProcessId());
         OnboardingStatusResponse response = onboardingService.getStatus(request.getRequestObject());
         return new ObjectResponse<>(response);
     }

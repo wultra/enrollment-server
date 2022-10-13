@@ -41,6 +41,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -53,6 +54,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
@@ -78,7 +80,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
         doAnswer(args -> {
@@ -206,7 +208,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationEntity createIdentityVerification(IdentityVerificationStatus status) {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, status);
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
         return idVerification;
     }

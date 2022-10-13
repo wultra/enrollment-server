@@ -135,8 +135,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final Map<String, Object> identification = request.getIdentification();
         final String identificationData = parseIdentificationData(identification);
 
-        // Lock onboarding process
-        final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification))
                 .orElseGet(() -> createNewProcess(identification, identificationData));
 
@@ -145,7 +145,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         c.add(Calendar.HOUR, -24);
         final Date timestampCheckStart = c.getTime();
         final String userId = process.getUserId();
-        final int existingProcessCount = onboardingProcessRepository.countProcessesAfterTimestamp(userId, timestampCheckStart);
+        final int existingProcessCount = onboardingProcessRepository.countByUserIdAndTimestamp(userId, timestampCheckStart);
         if (existingProcessCount > onboardingConfig.getMaxProcessCountPerDay()) {
             process.setStatus(OnboardingStatus.FAILED);
             process.setErrorDetail(OnboardingProcessEntity.ERROR_TOO_MANY_PROCESSES_PER_USER);
@@ -230,7 +230,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
         // Find and lock process
-        final OnboardingProcessEntity process = onboardingProcessRepository.findProcessByIdWithLock(processId).orElseThrow(() ->
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
 
         otpService.cancelOtp(process, OtpType.ACTIVATION);
@@ -258,7 +258,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown in case process identifier is invalid.
      */
     public void verifyProcessIdAndLock(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
-        final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessForActivationWithLock(ownerId.getActivationId(), onboardingStatus)
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatusWithLock(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
         String expectedProcessId = process.getId();
 
@@ -275,7 +275,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown in case process identifier is invalid.
      */
     public void verifyProcessId(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
-        final OnboardingProcessEntity process = onboardingProcessRepository.findExistingProcessForActivation(ownerId.getActivationId(), onboardingStatus)
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
         String expectedProcessId = process.getId();
 
@@ -292,7 +292,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findExistingProcessWithVerificationInProgress(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findExistingProcessForActivation(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findByActivationIdAndStatus(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
         if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();
@@ -307,7 +307,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findProcessByActivationId(activationId);
+        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findByActivationId(activationId);
         if (processOptional.isEmpty()) {
             logger.warn("Onboarding process not found, activation ID: {}", activationId);
             throw new OnboardingProcessException();

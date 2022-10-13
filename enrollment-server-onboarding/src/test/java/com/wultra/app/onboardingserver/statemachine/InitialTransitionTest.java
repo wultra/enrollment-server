@@ -61,7 +61,7 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.prepareStateMachine(PROCESS_ID, OnboardingState.INITIAL, null);
 
-        when(onboardingProcessRepository.findExistingProcessForActivationWithLock(ACTIVATION_ID, OnboardingStatus.VERIFICATION_IN_PROGRESS))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(ACTIVATION_ID, OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
 
         doAnswer(args ->

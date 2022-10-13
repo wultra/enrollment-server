@@ -219,7 +219,7 @@ public class DocumentProcessingService {
         }
 
         // The results are available, lock the onboarding process until the end of the transaction
-        onboardingProcessRepository.findProcessByIdWithLock(documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId());
+        onboardingProcessRepository.findByIdWithLock(documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId());
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());

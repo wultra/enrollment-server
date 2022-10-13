@@ -174,7 +174,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
@@ -212,8 +212,7 @@ public class IdentityVerificationController {
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
-        // Onboarding process is not locked, status endpoint does not require process lock
-
+        logger.debug("Onboarding process will not be locked, {}", ownerId);
         // Check verification status
         final IdentityVerificationStatusResponse response =
                 identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
@@ -257,7 +256,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         // Submit documents for verification
@@ -301,8 +300,7 @@ public class IdentityVerificationController {
         // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(eciesContext);
 
-        // Onboarding process is not locked, upload updates the es_document_data table
-
+        logger.debug("Onboarding process will not be locked, {}", ownerId);
         IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId);
 
         final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(idVerification, requestData, ownerId);
@@ -342,7 +340,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Onboarding process is not locked
+        logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         final DocumentStatusResponse response = identityVerificationService.fetchDocumentStatusResponse(request.getRequestObject(), ownerId);
@@ -380,7 +378,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Onboarding process is not locked
+        logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         final Map<String, String> attributes = request.getRequestObject().getAttributes();
@@ -423,7 +421,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
@@ -460,7 +458,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
@@ -491,7 +489,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_VERIFICATION_RESEND);
@@ -521,7 +519,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         final String otpCode = request.getRequestObject().getOtpCode();
@@ -569,7 +567,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        // Lock onboarding process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         // Process cleanup request
@@ -603,7 +601,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = extractOwnerId(eciesContext);
         final String processId = requestObject.getProcessId();
 
-        // Onboarding process is not locked
+        logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject));
@@ -633,7 +631,7 @@ public class IdentityVerificationController {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = requestObject.getProcessId();
 
-        // Onboarding process is not locked
+        logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         onboardingService.approveConsent(requestObject);

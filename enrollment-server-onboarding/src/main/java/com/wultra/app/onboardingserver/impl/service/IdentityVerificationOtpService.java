@@ -173,7 +173,7 @@ public class IdentityVerificationOtpService {
      * @return Whether user is verified using OTP code.
      */
     public boolean isUserVerifiedUsingOtp(String processId) {
-        return onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION)
+        return onboardingOtpRepository.findNewestByProcessIdAndType(processId, OtpType.USER_VERIFICATION)
                 .map(OnboardingOtpEntity::getStatus)
                 .filter(it -> it == OtpStatus.VERIFIED)
                 .isPresent();
@@ -232,7 +232,7 @@ public class IdentityVerificationOtpService {
     }
 
     private void markVerificationOtpAsFailed(String processId, IdentityVerificationEntity idVerification) throws OnboardingProcessException {
-        final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, OtpType.USER_VERIFICATION).orElseThrow(() ->
+        final OnboardingOtpEntity otp = onboardingOtpRepository.findNewestByProcessIdAndType(processId, OtpType.USER_VERIFICATION).orElseThrow(() ->
             new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
         otp.setStatus(OtpStatus.FAILED);
         otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);

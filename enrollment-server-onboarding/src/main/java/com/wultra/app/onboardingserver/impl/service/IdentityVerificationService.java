@@ -327,7 +327,7 @@ public class IdentityVerificationService {
             auditService.auditDocumentVerificationProvider(idVerification, "Got verification result: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
 
             // Lock the onboarding process until the end of the transaction
-            onboardingProcessRepository.findProcessByIdWithLock(idVerification.getProcessId());
+            onboardingProcessRepository.findByIdWithLock(idVerification.getProcessId());
 
             verificationProcessingService.processVerificationResult(ownerId, entry.getValue(), docVerificationResult);
         }

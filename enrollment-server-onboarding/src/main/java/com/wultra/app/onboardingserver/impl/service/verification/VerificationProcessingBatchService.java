@@ -121,7 +121,7 @@ public class VerificationProcessingBatchService {
                 }
 
                 // The results are available, lock the onboarding process until the end of the transaction
-                onboardingProcessRepository.findProcessByIdWithLock(docVerification.getIdentityVerification().getProcessId());
+                onboardingProcessRepository.findByIdWithLock(docVerification.getIdentityVerification().getProcessId());
 
                 verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
 

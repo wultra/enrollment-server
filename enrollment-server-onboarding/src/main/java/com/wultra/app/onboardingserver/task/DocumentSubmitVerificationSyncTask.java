@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.task;
 
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingBatchService;
+import com.wultra.app.onboardingserver.task.consts.SchedulerLockNames;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -43,7 +44,7 @@ public class DocumentSubmitVerificationSyncTask {
      * Scheduled task to check document submit verifications at the target provider
      */
     @Scheduled(cron = "${enrollment-server-onboarding.document-verification.checkDocumentSubmitVerifications.cron:0/5 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = "documentSubmitVerificationsLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
+    @SchedulerLock(name = SchedulerLockNames.DOCUMENT_SUBMIT_VERIFICATION_LOCK, lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void checkDocumentSubmitVerifications() {
         LockAssert.assertLocked();
         logger.debug("checkDocumentSubmitVerifications");

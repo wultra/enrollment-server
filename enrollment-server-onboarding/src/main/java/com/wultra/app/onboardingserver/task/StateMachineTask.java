@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.task;
 
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
+import com.wultra.app.onboardingserver.task.consts.SchedulerLockNames;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -47,7 +48,7 @@ public class StateMachineTask {
      * Scheduled task to change machine state.
      */
     @Scheduled(cron = "${enrollment-server-onboarding.state-machine.changeMachineState.cron:0/3 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = "onboardingProcessLock", lockAtLeastFor = "100ms", lockAtMostFor = "5m")
+    @SchedulerLock(name = SchedulerLockNames.ONBOARDING_PROCESS_LOCK, lockAtLeastFor = "100ms", lockAtMostFor = "5m")
     public void changeMachineState() {
         LockAssert.assertLocked();
         logger.debug("Changing machine states in batch");

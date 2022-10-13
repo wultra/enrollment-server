@@ -108,7 +108,7 @@ public class OtpServiceImpl extends CommonOtpService {
             logger.warn("Resend OTP functionality is not available yet (due to resend period), process ID: {}", processId);
             throw new OnboardingOtpDeliveryException();
         }
-        final OnboardingOtpEntity existingOtp = onboardingOtpRepository.findLastOtp(processId, otpType).orElseThrow(() ->
+        final OnboardingOtpEntity existingOtp = onboardingOtpRepository.findNewestByProcessIdAndType(processId, otpType).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
 
         if (existingOtp.getStatus() != OtpStatus.FAILED) {
@@ -129,7 +129,7 @@ public class OtpServiceImpl extends CommonOtpService {
     public void cancelOtp(OnboardingProcessEntity process, OtpType otpType) {
         final String processId = process.getId();
         // Fail current OTP, if it is present
-        onboardingOtpRepository.findLastOtp(processId, otpType).ifPresent(otp -> {
+        onboardingOtpRepository.findNewestByProcessIdAndType(processId, otpType).ifPresent(otp -> {
             final Date now = new Date();
             if (otp.getStatus() != OtpStatus.FAILED) {
                 otp.setStatus(OtpStatus.FAILED);
