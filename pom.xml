@@ -98,11 +98,11 @@
         <shedlock-spring.version>4.36.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
-        <lime-rest-client.version>1.5.2</lime-rest-client.version>
-        <lime-audit.version>1.5.2</lime-audit.version>
-        <lime-crypto.version>1.3.0</lime-crypto.version>
-        <lime-restful-integration.version>1.3.0</lime-restful-integration.version>
-        <lime-push.version>1.3.0</lime-push.version>
+        <wultra-rest-client.version>1.5.2</wultra-rest-client.version>
+        <wultra-audit.version>1.5.2</wultra-audit.version>
+        <wultra-crypto.version>1.3.0</wultra-crypto.version>
+        <wultra-restful-integration.version>1.3.0</wultra-restful-integration.version>
+        <wultra-push.version>1.3.0</wultra-push.version>
     </properties>
 
     <dependencyManagement>
@@ -128,43 +128,43 @@
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>rest-client-base</artifactId>
-                <version>${lime-rest-client.version}</version>
+                <version>${wultra-rest-client.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>rest-model-base</artifactId>
-                <version>${lime-rest-client.version}</version>
+                <version>${wultra-rest-client.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>audit-base</artifactId>
-                <version>${lime-audit.version}</version>
+                <version>${wultra-audit.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-java-crypto</artifactId>
-                <version>${lime-crypto.version}</version>
+                <version>${wultra-crypto.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-restful-security-spring-annotation</artifactId>
-                <version>${lime-restful-integration.version}</version>
+                <version>${wultra-restful-integration.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-restful-security-spring</artifactId>
-                <version>${lime-restful-integration.version}</version>
+                <version>${wultra-restful-integration.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-push-client</artifactId>
-                <version>${lime-push.version}</version>
+                <version>${wultra-push.version}</version>
             </dependency>
 
             <dependency>
