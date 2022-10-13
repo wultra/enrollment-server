@@ -98,8 +98,11 @@
         <shedlock-spring.version>4.36.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
-        <rest-client.version>1.5.2</rest-client.version>
-        <audit-base.version>1.5.2</audit-base.version>
+        <wultra-rest-client.version>1.5.2</wultra-rest-client.version>
+        <wultra-audit.version>1.5.2</wultra-audit.version>
+        <powerauth-crypto.version>1.3.0</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.3.0</powerauth-restful-integration.version>
+        <powerauth-push.version>1.3.0</powerauth-push.version>
     </properties>
 
     <dependencyManagement>
@@ -125,13 +128,43 @@
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>rest-client-base</artifactId>
-                <version>${rest-client.version}</version>
+                <version>${wultra-rest-client.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.core</groupId>
+                <artifactId>rest-model-base</artifactId>
+                <version>${wultra-rest-client.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>audit-base</artifactId>
-                <version>${audit-base.version}</version>
+                <version>${wultra-audit.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-java-crypto</artifactId>
+                <version>${powerauth-crypto.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-restful-security-spring-annotation</artifactId>
+                <version>${powerauth-restful-integration.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-restful-security-spring</artifactId>
+                <version>${powerauth-restful-integration.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-push-client</artifactId>
+                <version>${powerauth-push.version}</version>
             </dependency>
 
             <dependency>
