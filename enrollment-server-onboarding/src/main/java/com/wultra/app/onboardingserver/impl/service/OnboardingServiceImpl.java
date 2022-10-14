@@ -180,8 +180,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     @Transactional
     public Response resendOtp(final OnboardingOtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        // Find onboarding process and lock it
-        final OnboardingProcessEntity process = findProcessWithLock(request.getProcessId());
+        final String processId = request.getProcessId();
+        final OnboardingProcessEntity process = findProcessWithLock(processId);
         final String userId = process.getUserId();
 
         final String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);
@@ -204,7 +204,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     @Transactional
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
-        String processId = request.getProcessId();
+        final String processId = request.getProcessId();
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
         OnboardingStatusResponse response = new OnboardingStatusResponse();
@@ -229,7 +229,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
-        // Find and lock process
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", request.getProcessId());
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
 
@@ -258,6 +258,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown in case process identifier is invalid.
      */
     public void verifyProcessIdAndLock(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, process ID: {}", processId);
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatusWithLock(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
         String expectedProcessId = process.getId();

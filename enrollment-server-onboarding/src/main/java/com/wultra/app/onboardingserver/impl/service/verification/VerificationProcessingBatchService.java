@@ -120,8 +120,9 @@ public class VerificationProcessingBatchService {
                     return;
                 }
 
-                // The results are available, lock the onboarding process until the end of the transaction
-                onboardingProcessRepository.findByIdWithLock(docVerification.getIdentityVerification().getProcessId());
+                final String processId = docVerification.getIdentityVerification().getProcessId();
+                logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
+                onboardingProcessRepository.findByIdWithLock(processId);
 
                 verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
 

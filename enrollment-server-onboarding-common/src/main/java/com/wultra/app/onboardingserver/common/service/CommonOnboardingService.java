@@ -66,6 +66,7 @@ public class CommonOnboardingService implements OnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessWithLock(String processId) throws OnboardingProcessException {
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         return onboardingProcessRepository.findByIdWithLock(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
     }
@@ -91,7 +92,6 @@ public class CommonOnboardingService implements OnboardingService {
 
     @Override
     public void updateProcess(final UpdateProcessRequest request) throws OnboardingProcessException {
-        // The onboarding process is locked until the end of the transaction
         final OnboardingProcessEntity process = findProcessWithLock(request.getProcessId());
         process.setStatus(request.getStatus());
         process.setActivationId(request.getActivationId());

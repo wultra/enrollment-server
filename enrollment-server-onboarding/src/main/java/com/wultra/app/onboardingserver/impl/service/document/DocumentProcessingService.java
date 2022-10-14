@@ -218,8 +218,9 @@ public class DocumentProcessingService {
             docSubmitResult.setErrorDetail(e.getMessage());
         }
 
-        // The results are available, lock the onboarding process until the end of the transaction
-        onboardingProcessRepository.findByIdWithLock(documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId());
+        final String processId = documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId();
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
+        onboardingProcessRepository.findByIdWithLock(processId);
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());

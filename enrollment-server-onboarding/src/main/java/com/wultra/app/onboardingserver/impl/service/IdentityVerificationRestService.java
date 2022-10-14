@@ -51,8 +51,7 @@ import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionC
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.getlime.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -75,9 +74,8 @@ import java.util.Map;
         havingValue = "true"
 )
 @Service
+@Slf4j
 public class IdentityVerificationRestService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationRestService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
 

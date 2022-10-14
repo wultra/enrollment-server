@@ -48,7 +48,7 @@ public class StateMachineTask {
      * Scheduled task to change machine state.
      */
     @Scheduled(cron = "${enrollment-server-onboarding.state-machine.changeMachineState.cron:0/3 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = SchedulerLockNames.ONBOARDING_PROCESS_LOCK, lockAtLeastFor = "100ms", lockAtMostFor = "5m")
+    @SchedulerLock(name = SchedulerLockNames.ONBOARDING_PROCESS_LOCK, lockAtMostFor = "5m")
     public void changeMachineState() {
         LockAssert.assertLocked();
         logger.debug("Changing machine states in batch");

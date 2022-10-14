@@ -24,7 +24,11 @@ package com.wultra.app.onboardingserver.task.consts;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class SchedulerLockNames {
+public final class SchedulerLockNames {
+
+    private SchedulerLockNames() {
+        throw new IllegalStateException("Class with constants");
+    }
 
     public static final String ONBOARDING_PROCESS_LOCK = "onboardingProcessLock";
 

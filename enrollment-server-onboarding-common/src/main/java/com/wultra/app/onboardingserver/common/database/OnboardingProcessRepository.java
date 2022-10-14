@@ -57,6 +57,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * Find an existing process using identification data and status. Lock this process using PESSIMISTIC_WRITE lock
      * until the end of the transaction.
      *
+     * @see #findByActivationIdAndStatus(String, OnboardingStatus) (String, OnboardingStatus) - alternative method without lock
      * @param identificationData Identification data.
      * @param status Process status.
      * @return Optional onboarding process.
@@ -68,6 +69,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     /**
      * Find an existing process by activation identifier and process status. The process is not locked.
      *
+     * @see #findByActivationIdAndStatusWithLock(String, OnboardingStatus) - alternative method with lock
      * @param activationId Activation identifier.
      * @param status Onboarding process status.
      * @return Optional onboarding process.

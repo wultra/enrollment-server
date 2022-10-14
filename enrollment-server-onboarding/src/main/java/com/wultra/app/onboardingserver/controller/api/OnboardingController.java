@@ -98,7 +98,6 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
-        // Onboarding process is locked inside the service
         OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject());
         return new ObjectResponse<>(response);
     }
@@ -128,7 +127,6 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received while resending OTP code");
         }
 
-        // Onboarding process is locked inside the service
         return onboardingService.resendOtp(request.getRequestObject());
     }
 
@@ -185,7 +183,6 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
-        // Onboarding process is locked inside the service
         return onboardingService.performCleanup(request.getRequestObject());
     }
 }
