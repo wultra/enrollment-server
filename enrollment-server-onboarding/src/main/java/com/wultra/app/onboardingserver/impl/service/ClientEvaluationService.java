@@ -35,9 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
-import reactor.util.retry.Retry;
 
-import java.time.Duration;
 import java.util.function.Consumer;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
@@ -103,7 +101,7 @@ public class ClientEvaluationService {
      * @param ownerId Owner identification.
      */
     public void processClientEvaluation(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        logger.debug("Evaluating client for {}", identityVerification);
+        logger.debug("Client evaluation started for {}", identityVerification);
 
         final EvaluateClientRequest request = EvaluateClientRequest.builder()
                 .processId(identityVerification.getProcessId())
@@ -112,12 +110,17 @@ public class ClientEvaluationService {
                 .verificationId(getVerificationId(identityVerification))
                 .build();
 
-        final Consumer<EvaluateClientResponse> successConsumer = createSuccessConsumer(identityVerification, ownerId);
-        final Consumer<Throwable> errorConsumer = createErrorConsumer(identityVerification, ownerId);
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
-        onboardingProvider.evaluateClient(request)
-                .retryWhen(Retry.backoff(maxFailedAttempts, Duration.ofSeconds(2)))
-                .subscribe(successConsumer, errorConsumer);
+        for (int i = 0; i < maxFailedAttempts; i++) {
+            try {
+                final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
+                processEvaluationSuccess(identityVerification, ownerId, response);
+                break;
+            } catch (Throwable t) {
+                processEvaluationError(identityVerification, ownerId, t);
+            }
+        }
+        logger.debug("Client evaluation finished for {}", identityVerification);
     }
 
     private static String getVerificationId(final IdentityVerificationEntity identityVerification) {
@@ -127,51 +130,48 @@ public class ClientEvaluationService {
                 .orElseThrow(() -> new IllegalStateException("No document verification for " + identityVerification));
     }
 
-    private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        return response -> {
-            auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
-            // The timestampFinished parameter is not set yet, there may be other steps ahead
-            if (response.isErrorOccurred()) {
-                logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
-                identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
-                identityVerification.setErrorDetail(response.getErrorDetail());
-                auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getErrorDetail());
-            }
+    private void processEvaluationSuccess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
+        auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
+        // The timestampFinished parameter is not set yet, there may be other steps ahead
+        if (response.isErrorOccurred()) {
+            logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
+            identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
+            identityVerification.setErrorDetail(response.getErrorDetail());
+            auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getErrorDetail());
+        }
 
-            final IdentityVerificationPhase phase = identityVerification.getPhase();
-            if (response.isAccepted()) {
-                logger.info("Client evaluation accepted for {}", identityVerification);
-                saveInANewTransaction(status ->
-                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId));
-            } else {
-                logger.info("Client evaluation rejected for {}", identityVerification);
-                identityVerification.getDocumentVerifications()
-                        .forEach(document -> {
-                            document.setStatus(DocumentStatus.REJECTED);
-                            auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
-                        });
-                identityVerification.setTimestampFailed(ownerId.getTimestamp());
-                saveInANewTransaction(status ->
-                        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId));
-            }
-        };
-    }
-
-    private Consumer<Throwable> createErrorConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        return t -> {
-            logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
-            logger.debug("Client evaluation failed for {}", identityVerification, t);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
-            identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+        if (response.isAccepted()) {
+            logger.info("Client evaluation accepted for {}", identityVerification);
+            saveInExistingTransaction(status ->
+                    identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId)
+            );
+        } else {
+            logger.info("Client evaluation rejected for {}", identityVerification);
+            identityVerification.getDocumentVerifications()
+                    .forEach(document -> {
+                        document.setStatus(DocumentStatus.REJECTED);
+                        auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
+                    });
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            final IdentityVerificationPhase phase = identityVerification.getPhase();
-            saveInANewTransaction(status ->
-                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId));
-        };
+            saveInExistingTransaction(status ->
+                    identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId));
+        }
     }
 
-    private void saveInANewTransaction(final Consumer<TransactionStatus> consumer) {
-        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    private void processEvaluationError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Throwable t) {
+        logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
+        logger.debug("Client evaluation failed for {}", identityVerification, t);
+        identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
+        identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+        identityVerification.setTimestampFailed(ownerId.getTimestamp());
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+        saveInExistingTransaction(status ->
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId));
+    }
+
+    private void saveInExistingTransaction(final Consumer<TransactionStatus> consumer) {
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_MANDATORY);
         transactionTemplate.executeWithoutResult(consumer);
     }
 }

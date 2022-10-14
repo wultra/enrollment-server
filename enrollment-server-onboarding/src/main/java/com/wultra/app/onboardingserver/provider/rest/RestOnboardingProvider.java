@@ -139,32 +139,22 @@ class RestOnboardingProvider implements OnboardingProvider {
     }
 
     @Override
-    public Mono<EvaluateClientResponse> evaluateClient(final EvaluateClientRequest request) {
+    public EvaluateClientResponse evaluateClient(final EvaluateClientRequest request) throws OnboardingProviderException {
         logger.debug("Evaluating client for {}", request);
         // TODO (racansky, 2022-07-20) suboptimal, not sending extracted data yet; adapter must retrieve data based on investigationId itself
         final ClientEvaluateRequestDto requestDto = convert(request);
 
-        final Sinks.One<EvaluateClientResponse> sink = Sinks.one();
-        final Consumer<ResponseEntity<ClientEvaluateResponseDto>> onSuccess = response -> {
-            logger.debug("Evaluated client {} for {}", response, request);
-            final boolean accepted = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
-            sink.tryEmitValue(EvaluateClientResponse.builder()
-                    .accepted(accepted)
-                    .build());
-        };
-
-        final Consumer<Throwable> onError = t -> {
-            logger.debug("Problem to evaluate client for {}", request);
-            sink.tryEmitError(new OnboardingProviderException("Unable to evaluate client for " + request, t));
-        };
-
         try {
             final ParameterizedTypeReference<ClientEvaluateResponseDto> type = ParameterizedTypeReference.forType(ClientEvaluateResponseDto.class);
-            restClient.postNonBlocking("/client/evaluate", requestDto, null, createHeaders(), type, onSuccess, onError);
+            ResponseEntity<ClientEvaluateResponseDto> response = restClient.post("/client/evaluate", requestDto, null, createHeaders(), type);
+            final boolean accepted = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
+            return EvaluateClientResponse.builder()
+                    .accepted(accepted)
+                    .build();
+
         } catch (RestClientException e) {
-            sink.tryEmitError(new OnboardingProviderException("Unable to evaluate client for " + request, e));
+            throw new OnboardingProviderException("Unable to evaluate client for " + request);
         }
-        return sink.asMono();
     }
 
     private MultiValueMap<String, String> createHeaders() {
