@@ -33,7 +33,7 @@ import javax.sql.DataSource;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtLeastFor = "15s", defaultLockAtMostFor = "1m")
+@EnableSchedulerLock(defaultLockAtLeastFor = "100ms", defaultLockAtMostFor = "1m")
 @Configuration
 public class SchedulerConfig {
 

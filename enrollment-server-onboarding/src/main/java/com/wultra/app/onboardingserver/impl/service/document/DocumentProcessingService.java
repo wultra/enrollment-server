@@ -29,8 +29,10 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
@@ -73,6 +75,8 @@ public class DocumentProcessingService {
 
     private final AuditService auditService;
 
+    private final CommonOnboardingService commonOnboardingService;
+
     /**
      * Service constructor.
      * @param identityVerificationConfig Identity verification configuration.
@@ -82,6 +86,7 @@ public class DocumentProcessingService {
      * @param dataExtractionService Data extraction service.
      * @param documentVerificationProvider Document verification provider.
      * @param auditService Audit service.
+     * @param commonOnboardingService Onboarding process service (common).
      */
     @Autowired
     public DocumentProcessingService(
@@ -91,7 +96,8 @@ public class DocumentProcessingService {
             final DocumentResultRepository documentResultRepository,
             final DataExtractionService dataExtractionService,
             final DocumentVerificationProvider documentVerificationProvider,
-            final AuditService auditService) {
+            final AuditService auditService,
+            final CommonOnboardingService commonOnboardingService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
@@ -100,6 +106,7 @@ public class DocumentProcessingService {
         this.dataExtractionService = dataExtractionService;
         this.documentVerificationProvider = documentVerificationProvider;
         this.auditService = auditService;
+        this.commonOnboardingService = commonOnboardingService;
     }
 
     /**
@@ -195,9 +202,10 @@ public class DocumentProcessingService {
      * Checks document submit status and data at the provider.
      * @param ownerId Owner identification.
      * @param documentResultEntity Document result entity to be checked at the provider.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void checkDocumentSubmitWithProvider(OwnerId ownerId, DocumentResultEntity documentResultEntity) {
+    public void checkDocumentSubmitWithProvider(OwnerId ownerId, DocumentResultEntity documentResultEntity) throws OnboardingProcessException {
         DocumentVerificationEntity docVerification = documentResultEntity.getDocumentVerification();
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
@@ -211,6 +219,9 @@ public class DocumentProcessingService {
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
         }
+
+        final String processId = documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId();
+        commonOnboardingService.findProcessWithLock(processId);
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());

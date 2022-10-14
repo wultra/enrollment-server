@@ -19,27 +19,12 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
-import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
-import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
-import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.errorhandling.*;
-import com.wultra.app.onboardingserver.impl.service.*;
-import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
-import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
-import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
@@ -52,23 +37,14 @@ import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApi
 import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
-import io.getlime.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -83,61 +59,15 @@ import java.util.Map;
 @RequestMapping(value = "api/identity")
 public class IdentityVerificationController {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationController.class);
-
-    private final IdentityVerificationConfig identityVerificationConfig;
-
-    private final DocumentProcessingService documentProcessingService;
-    private final IdentityVerificationService identityVerificationService;
-    private final IdentityVerificationStatusService identityVerificationStatusService;
-    private final IdentityVerificationOtpService identityVerificationOtpService;
-    private final PresenceCheckService presenceCheckService;
-
-    private final StateMachineService stateMachineService;
-
-    private final OnboardingServiceImpl onboardingService;
-
-    /**
-     * Configuration data for client integration
-     */
-    private final ConfigurationDataDto integrationConfigDto;
+    private final IdentityVerificationRestService identityVerificationRestService;
 
     /**
      * Controller constructor.
-     *
-     * @param identityVerificationConfig        Configuration of identity verification.
-     * @param onboardingConfig                  Configuration of onboarding.
-     * @param documentProcessingService         Document processing service.
-     * @param identityVerificationService       Identity verification service.
-     * @param identityVerificationStatusService Identity verification status service.
-     * @param identityVerificationOtpService    Identity OTP verification service.
-     * @param onboardingService                 Onboarding service.
-     * @param presenceCheckService              Presence check service.
-     * @param stateMachineService               State machine service.
+     * @param identityVerificationRestService  Identity verification entry service.
      */
     @Autowired
-    public IdentityVerificationController(
-            IdentityVerificationConfig identityVerificationConfig,
-            OnboardingConfig onboardingConfig,
-            DocumentProcessingService documentProcessingService,
-            IdentityVerificationService identityVerificationService,
-            IdentityVerificationStatusService identityVerificationStatusService,
-            IdentityVerificationOtpService identityVerificationOtpService,
-            OnboardingServiceImpl onboardingService,
-            PresenceCheckService presenceCheckService,
-            StateMachineService stateMachineService) {
-        this.identityVerificationConfig = identityVerificationConfig;
-
-        this.documentProcessingService = documentProcessingService;
-        this.identityVerificationService = identityVerificationService;
-        this.identityVerificationStatusService = identityVerificationStatusService;
-        this.identityVerificationOtpService = identityVerificationOtpService;
-        this.onboardingService = onboardingService;
-        this.presenceCheckService = presenceCheckService;
-        this.stateMachineService = stateMachineService;
-
-        this.integrationConfigDto = new ConfigurationDataDto();
-        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+    public IdentityVerificationController(IdentityVerificationRestService identityVerificationRestService) {
+        this.identityVerificationRestService = identityVerificationRestService;
     }
 
     /**
@@ -149,6 +79,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when encryption fails.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("init")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -158,21 +89,9 @@ public class IdentityVerificationController {
     public ResponseEntity<Response> initializeIdentityVerification(@EncryptedRequestBody ObjectRequest<IdentityVerificationInitRequest> request,
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                    @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException {
+            throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        final String operationDescription = "initializing identity verification";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        // Initialize identity verification
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine =
-                stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
-
-        return createResponseEntity(stateMachine);
+        return identityVerificationRestService.initializeIdentityVerification(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -197,19 +116,7 @@ public class IdentityVerificationController {
                                                                                               @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException, OnboardingProcessException {
 
-        final String operationDescription = "checking identity verification status";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-
-        // Check verification status
-        final IdentityVerificationStatusResponse response =
-                identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
-        response.setConfig(integrationConfigDto);
-
-        return new ObjectResponse<>(response);
+       return identityVerificationRestService.checkIdentityVerificationStatus(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -236,27 +143,7 @@ public class IdentityVerificationController {
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        final String operationDescription = "submitting documents for verification";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        // Extract user ID from onboarding process for current activation
-        final OwnerId ownerId = extractOwnerId(eciesContext);
-        final String processId = request.getRequestObject().getProcessId();
-
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        // Submit documents for verification
-        final List<DocumentVerificationEntity> docVerificationEntities =
-                identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
-
-        final DocumentSubmitResponse response = new DocumentSubmitResponse();
-        final List<DocumentMetadataResponseDto> respsMetadata =
-                identityVerificationService.createDocsMetadata(docVerificationEntities);
-        response.setDocuments(respsMetadata);
-
-        return new ObjectResponse<>(response);
+        return identityVerificationRestService.submitDocuments(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -280,26 +167,7 @@ public class IdentityVerificationController {
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
 
-        final String operationDescription = "uploading document for verification";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequest(requestData, operationDescription);
-
-        // Extract user ID from finished onboarding process for current activation
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(eciesContext.getActivationId());
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(onboardingProcess.getActivationId());
-        ownerId.setUserId(onboardingProcess.getUserId());
-
-        IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId);
-
-        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(idVerification, requestData, ownerId);
-
-        final DocumentUploadResponse response = new DocumentUploadResponse();
-        response.setFilename(uploadedDocument.getFilename());
-        response.setId(uploadedDocument.getId());
-
-        return new ObjectResponse<>(response);
+        return identityVerificationRestService.uploadDocument(requestData, eciesContext, apiAuthentication);
     }
 
     /**
@@ -322,18 +190,7 @@ public class IdentityVerificationController {
                                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        final String operationDescription = "checking document verification status";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        final DocumentStatusResponse response = identityVerificationService.fetchDocumentStatusResponse(request.getRequestObject(), ownerId);
-        return new ObjectResponse<>(response);
+        return identityVerificationRestService.checkDocumentStatus(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -359,22 +216,7 @@ public class IdentityVerificationController {
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
-        final String operationDescription = "initializing document verification SDK";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        final Map<String, String> attributes = request.getRequestObject().getAttributes();
-        final VerificationSdkInfo sdkVerificationInfo = identityVerificationService.initVerificationSdk(ownerId, attributes);
-
-        final DocumentVerificationSdkInitResponse response = new DocumentVerificationSdkInitResponse();
-        response.setAttributes(sdkVerificationInfo.getAttributes());
-        return new ObjectResponse<>(response);
+        return identityVerificationRestService.initVerificationSdk(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -387,6 +229,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("presence-check/init")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -396,18 +239,9 @@ public class IdentityVerificationController {
     public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        final String operationDescription = "initializing presence check";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
-        return createResponseEntity(stateMachine);
+        return identityVerificationRestService.initPresenceCheck(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -420,6 +254,7 @@ public class IdentityVerificationController {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("presence-check/submit")
     @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
@@ -427,18 +262,9 @@ public class IdentityVerificationController {
     public ResponseEntity<Response> submitPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckSubmitRequest> request,
                                                         @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        final String operationDescription = "submitting presence check";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
-        return createResponseEntity(stateMachine);
+        return identityVerificationRestService.submitPresenceCheck(request, eciesContext, apiAuthentication);
     }
 
     /**
@@ -456,14 +282,7 @@ public class IdentityVerificationController {
                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        checkEciesContext(eciesContext, "resending OTP during identity verification");
-        checkRequestObject(request, "resending OTP during identity verification");
-
-        final OwnerId ownerId = extractOwnerId(eciesContext);
-        final String processId = request.getRequestObject().getProcessId();
-
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_VERIFICATION_RESEND);
-        return createResponseEntity(stateMachine);
+        return identityVerificationRestService.resendOtp(request, eciesContext);
     }
 
     /**
@@ -480,24 +299,7 @@ public class IdentityVerificationController {
                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        checkEciesContext(eciesContext, "verifying OTP during identity verification");
-        checkRequestObject(request, "verifying OTP during identity verification");
-
-        final OwnerId ownerId = extractOwnerId(eciesContext);
-        final String processId = request.getRequestObject().getProcessId();
-
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        final String otpCode = request.getRequestObject().getOtpCode();
-        final OtpVerifyResponse otpVerifyResponse = identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode);
-
-        try {
-            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-        } catch (IdentityVerificationException e) {
-            throw new OnboardingProcessException("Unable to move state machine for " + ownerId, e);
-        }
-
-        return new ObjectResponse<>(otpVerifyResponse);
+        return identityVerificationRestService.verifyOtp(request, eciesContext);
     }
 
     /**
@@ -523,27 +325,17 @@ public class IdentityVerificationController {
                             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        final String operationDescription = "performing document cleanup";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
-
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        // Process cleanup request
-        identityVerificationService.cleanup(ownerId);
-        if (identityVerificationConfig.isPresenceCheckEnabled()) {
-            presenceCheckService.cleanup(ownerId);
-        } else {
-            logger.debug("Skipped presence check cleanup, not enabled");
-        }
-
-        return new Response();
+        return identityVerificationRestService.cleanup(request, eciesContext, apiAuthentication);
     }
 
+    /**
+     * Obtain consent text.
+     * @param request Obtain consent text request.
+     * @param eciesContext ECIES context.
+     * @return Consent text.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     */
     @PostMapping("consent/text")
     @Operation(
             summary = "Obtain consent text",
@@ -554,16 +346,19 @@ public class IdentityVerificationController {
             final @EncryptedRequestBody ObjectRequest<OnboardingConsentTextRequest> request,
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, PowerAuthEncryptionException {
 
-        checkEciesContext(eciesContext, "obtaining user consent text");
-        checkRequestObject(request, "obtaining user consent text");
-
-        final OnboardingConsentTextRequest requestObject = request.getRequestObject();
-        logger.debug("Returning consent for {}", requestObject);
-        OnboardingConsentTextRequestValidator.validate(requestObject);
-
-        return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject));
+        return identityVerificationRestService.fetchConsentText(request, eciesContext);
     }
 
+    /**
+     * Approve or reject consent.
+     * @param request Approve consent request
+     * @param eciesContext ECIES context.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Response.
+     * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     */
     @PostMapping("consent/approve")
     @Operation(
             summary = "Store user consent",
@@ -576,89 +371,7 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) EciesEncryptionContext eciesContext,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        final String operationDescription = "approving user consent";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
-        checkRequestObject(request, operationDescription);
-
-        final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
-        logger.debug("Approving consent for {}", requestObject);
-        OnboardingConsentApprovalRequestValidator.validate(requestObject);
-
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = requestObject.getProcessId();
-        onboardingService.verifyProcessId(ownerId, processId);
-
-        onboardingService.approveConsent(requestObject);
-        return new Response();
-    }
-
-    /**
-     * Checks if the API authentication object is present
-     * @param apiAuthentication API authentication object value
-     * @param description Additional description
-     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist
-     */
-    private void checkApiAuthentication(@Nullable PowerAuthApiAuthentication apiAuthentication, String description) throws PowerAuthTokenInvalidException {
-        if (apiAuthentication == null) {
-            String errorMessage = String.format("Unable to verify device registration when %s", description);
-            logger.error(errorMessage);
-            throw new PowerAuthTokenInvalidException(errorMessage);
-        }
-    }
-
-    /**
-     * Checks if the request was correctly decrypted
-     * @param eciesContext ECIES encryption context
-     * @param description Additional description
-     * @throws PowerAuthEncryptionException When the ECIES encryption context does not exist
-     */
-    private void checkEciesContext(@Nullable EciesEncryptionContext eciesContext, String description) throws PowerAuthEncryptionException {
-        if (eciesContext == null) {
-            String errorMessage = String.format("ECIES encryption failed when %s", description);
-            logger.error(errorMessage);
-            throw new PowerAuthEncryptionException(errorMessage);
-        }
-    }
-
-    private void checkRequest(@Nullable Object request, String description) throws PowerAuthEncryptionException {
-        if (request == null) {
-            String errorMessage = String.format("Invalid request received when %s", description);
-            logger.error(errorMessage);
-            throw new PowerAuthEncryptionException(errorMessage);
-        }
-    }
-
-    private void checkRequestObject(@Nullable ObjectRequest<?> request, String description) throws PowerAuthEncryptionException {
-        if (request == null || request.getRequestObject() == null) {
-            String errorMessage = String.format("Invalid request received when %s", description);
-            logger.error(errorMessage);
-            throw new PowerAuthEncryptionException(errorMessage);
-        }
-    }
-
-    /**
-     * Extract owner identification from an ECIES context.
-     * @param eciesContext ECIES context.
-     * @return Owner identification.
-     */
-    private OwnerId extractOwnerId(EciesEncryptionContext eciesContext) throws OnboardingProcessException {
-        final OnboardingProcessEntity onboardingProcess = onboardingService.findExistingProcessWithVerificationInProgress(eciesContext.getActivationId());
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId(onboardingProcess.getActivationId());
-        ownerId.setUserId(onboardingProcess.getUserId());
-        return ownerId;
-    }
-
-    private ResponseEntity<Response> createResponseEntity(StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
-        Response response = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class);
-        HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
-        if (response == null || status == null) {
-            logger.warn("Missing one of important values to generate response entity, response={}, status={}", response, status);
-            response = new ErrorResponse("UNEXPECTED_ERROR", "Unexpected error occurred.");
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        return new ResponseEntity<>(response, status);
+        return identityVerificationRestService.approveConsent(request, eciesContext, apiAuthentication);
     }
 
 }

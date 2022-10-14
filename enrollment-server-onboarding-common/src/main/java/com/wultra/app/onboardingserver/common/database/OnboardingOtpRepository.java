@@ -40,7 +40,7 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
 
     @Query("SELECT o FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type AND o.timestampCreated = " +
             "(SELECT MAX(o2.timestampCreated) FROM OnboardingOtpEntity o2 WHERE o2.process.id = :processId AND o2.type = :type)")
-    Optional<OnboardingOtpEntity> findLastOtp(String processId, OtpType type);
+    Optional<OnboardingOtpEntity> findNewestByProcessIdAndType(String processId, OtpType type);
 
     /**
      * Return OTP IDs by the given timestamp.
@@ -51,7 +51,7 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
     @Query("SELECT o.id FROM OnboardingOtpEntity o " +
             "WHERE o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.ACTIVE " +
             "AND o.timestampCreated < :dateCreatedBefore")
-    List<String> findExpiredOtps(Date dateCreatedBefore);
+    List<String> findExpiredIds(Date dateCreatedBefore);
 
     /**
      * Mark the given OTPs as failed.
@@ -70,12 +70,12 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
     void terminate(Collection<String> ids, Date timestampExpired);
 
     @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
-    int getFailedAttemptsByProcess(String processId, OtpType type);
+    int countFailedAttemptsByProcessIdAndType(String processId, OtpType type);
 
     @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     Date getNewestOtpCreatedTimestamp(String processId, OtpType type);
 
     @Query("SELECT COUNT(o.id) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
-    int getOtpCount(String processId, OtpType type);
+    int countByProcessIdAndType(String processId, OtpType type);
 
 }

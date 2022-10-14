@@ -18,6 +18,7 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
@@ -60,7 +61,7 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.prepareStateMachine(PROCESS_ID, OnboardingState.INITIAL, null);
 
-        when(onboardingProcessRepository.findProcessByActivationId(ACTIVATION_ID))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(ACTIVATION_ID, OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
 
         doAnswer(args ->

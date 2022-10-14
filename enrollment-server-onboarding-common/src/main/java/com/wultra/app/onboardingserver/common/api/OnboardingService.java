@@ -31,7 +31,8 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 public interface OnboardingService {
 
     /**
-     * Find a user identifier by the given onboarding process.
+     * Find a user identifier by the given onboarding process. The onboarding process is locked using PESSIMISTIC_WRITE
+     * lock until the end of the transaction.
      *
      * @param processId Process identifier.
      * @return user identifier
@@ -40,7 +41,9 @@ public interface OnboardingService {
     String findUserIdByProcessId(String processId) throws OnboardingProcessException;
 
     /**
-     * Get process status for an onboarding process.
+     * Get process status for an onboarding process. The onboarding process is locked using PESSIMISTIC_WRITE lock
+     * until the end of the transaction.
+     *
      * @param processId Onboarding process identifier.
      * @return Onboarding process status.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.

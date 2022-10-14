@@ -18,6 +18,9 @@
 package com.wultra.app.onboardingserver.task;
 
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingBatchService;
+import com.wultra.app.onboardingserver.task.consts.SchedulerLockNames;
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@Slf4j
 public class DocumentSubmitSyncTask {
 
     private final DocumentProcessingBatchService documentProcessingBatchService;
@@ -40,8 +44,10 @@ public class DocumentSubmitSyncTask {
      * Scheduled task to check in progress document submits at the target provider
      */
     @Scheduled(cron = "${enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits.cron:0/5 * * * * *}", zone = "UTC")
-    @SchedulerLock(name = "checkInProgressDocumentSubmits", lockAtLeastFor = "1s", lockAtMostFor = "5m")
+    @SchedulerLock(name = SchedulerLockNames.DOCUMENT_SUBMIT_SYNC_LOCK, lockAtMostFor = "5m")
     public void checkInProgressDocumentSubmits() {
+        LockAssert.assertLocked();
+        logger.debug("checkInProgressDocumentSubmits");
         documentProcessingBatchService.checkInProgressDocumentSubmits();
     }
 

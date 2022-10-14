@@ -74,5 +74,5 @@ public interface OnboardingProvider {
      * @param request evaluation request
      * @return mono with evaluation response
      */
-    Mono<EvaluateClientResponse> evaluateClient(EvaluateClientRequest request);
+    EvaluateClientResponse evaluateClient(EvaluateClientRequest request) throws OnboardingProviderException;
 }

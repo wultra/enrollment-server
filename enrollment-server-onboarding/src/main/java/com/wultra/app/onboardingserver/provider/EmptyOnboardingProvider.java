@@ -52,8 +52,8 @@ class EmptyOnboardingProvider implements OnboardingProvider {
     }
 
     @Override
-    public Mono<EvaluateClientResponse> evaluateClient(EvaluateClientRequest request) {
-        return Mono.error(createException());
+    public EvaluateClientResponse evaluateClient(EvaluateClientRequest request) throws OnboardingProviderException {
+        throw createException();
     }
 
     private static OnboardingProviderException createException() {

@@ -14,8 +14,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.controller.api;
+package com.wultra.app.onboardingserver.impl.service.validation;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingConsentApprovalRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +28,7 @@ import javax.validation.ValidationException;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-class OnboardingConsentApprovalRequestValidator {
+public class OnboardingConsentApprovalRequestValidator {
 
     /**
      * Validate the given request.

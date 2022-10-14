@@ -18,6 +18,7 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -40,6 +41,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -52,6 +54,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {EnrollmentServerTestApplication.class})
 @ActiveProfiles("test-onboarding")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
@@ -77,7 +80,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.NOT_INITIALIZED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        when(onboardingProcessRepository.findProcessByActivationId(idVerification.getActivationId()))
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
         doAnswer(args -> {
@@ -203,7 +206,11 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
     }
 
     private IdentityVerificationEntity createIdentityVerification(IdentityVerificationStatus status) {
-        return super.createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, status);
+        IdentityVerificationEntity idVerification =
+                createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, status);
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
+        return idVerification;
     }
 
 }

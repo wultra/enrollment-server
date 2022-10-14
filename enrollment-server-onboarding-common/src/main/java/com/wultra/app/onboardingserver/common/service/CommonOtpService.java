@@ -86,14 +86,14 @@ public class CommonOtpService implements OtpService {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
             new OnboardingProcessException("Onboarding process not found: " + processId));
 
-        final OnboardingOtpEntity otp = onboardingOtpRepository.findLastOtp(processId, otpType).orElseThrow(() ->
+        final OnboardingOtpEntity otp = onboardingOtpRepository.findNewestByProcessIdAndType(processId, otpType).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding OTP not found, process ID: " + processId));
 
         // Verify OTP code
         final Date now = ownerId.getTimestamp();
         boolean expired = false;
         boolean verified = false;
-        int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(processId, otpType);
+        int failedAttempts = onboardingOtpRepository.countFailedAttemptsByProcessIdAndType(processId, otpType);
         int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         if (OtpStatus.ACTIVE != otp.getStatus()) {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
@@ -144,7 +144,7 @@ public class CommonOtpService implements OtpService {
      * @throws OnboardingProcessException In case process is not found.
      */
     private void handleFailedOtpVerification(OnboardingProcessEntity process, OwnerId ownerId, OnboardingOtpEntity otp, OtpType otpType) throws OnboardingProcessException {
-        int failedAttempts = onboardingOtpRepository.getFailedAttemptsByProcess(process.getId(), otpType);
+        int failedAttempts = onboardingOtpRepository.countFailedAttemptsByProcessIdAndType(process.getId(), otpType);
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
         otp.setTimestampLastUpdated(ownerId.getTimestamp());

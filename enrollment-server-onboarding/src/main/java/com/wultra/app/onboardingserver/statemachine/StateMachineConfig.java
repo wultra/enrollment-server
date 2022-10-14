@@ -262,7 +262,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationDocumentStartAction)
-                .guard(documentsVerificationPendingGuard)
+                .guard(createCompositeGuard(processIdentifierGuard, documentsVerificationPendingGuard))
                 .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
@@ -278,6 +278,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
                 .action(clientEvaluationInitAction)
                 .target(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS);
     }
@@ -288,6 +289,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(clientEvaluationAction)
+                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
 
                 .and()
@@ -303,6 +305,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
 
                 .and()
@@ -334,6 +337,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_SUBMITTED)
+                .guard(processIdentifierGuard)
                 .action(moveToPresenceCheckVerificationPendingAction)
                 .target(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
 
@@ -342,6 +346,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
                 .action(presenceCheckVerificationAction)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
 
                 .and()
@@ -386,6 +391,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_OTP_VERIFICATION)
 
                 .and()
