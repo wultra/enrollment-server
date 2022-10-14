@@ -16,12 +16,11 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
@@ -65,7 +64,7 @@ public class VerificationResultService {
     @Transactional
     public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification)
             throws IdentityVerificationException, OnboardingProcessException, RemoteCommunicationException{
-        identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification, IdentityVerificationPhase.COMPLETED);
+        identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification);
         if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
                 identityVerificationFinishService.finishIdentityVerification(ownerId);
         }
