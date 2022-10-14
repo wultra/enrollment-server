@@ -229,9 +229,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
-        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", request.getProcessId());
-        final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(processId).orElseThrow(() ->
-                new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
+        final OnboardingProcessEntity process = findProcessWithLock(processId);
 
         otpService.cancelOtp(process, OtpType.ACTIVATION);
         otpService.cancelOtp(process, OtpType.USER_VERIFICATION);

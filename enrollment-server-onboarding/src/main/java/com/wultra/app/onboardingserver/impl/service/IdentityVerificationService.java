@@ -90,8 +90,6 @@ public class IdentityVerificationService {
 
     private final AuditService auditService;
 
-    private final OnboardingProcessRepository onboardingProcessRepository;
-
     private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
@@ -107,7 +105,6 @@ public class IdentityVerificationService {
      * @param processService Common onboarding process service.
      * @param processLimitService Onboarding process limit service.
      * @param auditService Audit service.
-     * @param onboardingProcessRepository Onboarding process repository.
      */
     @Autowired
     public IdentityVerificationService(
@@ -122,7 +119,7 @@ public class IdentityVerificationService {
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
             final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
-            final AuditService auditService, OnboardingProcessRepository onboardingProcessRepository) {
+            final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
@@ -136,7 +133,6 @@ public class IdentityVerificationService {
         this.processLimitService = processLimitService;
         this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
         this.auditService = auditService;
-        this.onboardingProcessRepository = onboardingProcessRepository;
     }
 
     /**
@@ -326,8 +322,7 @@ public class IdentityVerificationService {
             DocumentsVerificationResult docVerificationResult = documentVerificationProvider.getVerificationResult(ownerId, entry.getKey());
             auditService.auditDocumentVerificationProvider(idVerification, "Got verification result: {} for user: {}", docVerificationResult.getStatus(), ownerId.getUserId());
 
-            logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", idVerification.getProcessId());
-            onboardingProcessRepository.findByIdWithLock(idVerification.getProcessId());
+            processService.findProcessWithLock(idVerification.getProcessId());
 
             verificationProcessingService.processVerificationResult(ownerId, entry.getValue(), docVerificationResult);
         }

@@ -24,7 +24,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
@@ -59,14 +61,19 @@ public class ClientEvaluationService {
 
     private final IdentityVerificationService identityVerificationService;
 
+    private final TransactionTemplate transactionTemplate;
+
+    private final CommonOnboardingService commonOnboardingService;
+
     private final AuditService auditService;
 
     /**
      * All-arg constructor.
-     *
      * @param onboardingProvider Onboarding provider.
      * @param config Identity verification config.
      * @param identityVerificationService Identity verification repository.
+     * @param transactionTemplate Transaction template.
+     * @param commonOnboardingService Common onboarding service.
      * @param auditService Audit service.
      */
     @Autowired
@@ -74,10 +81,14 @@ public class ClientEvaluationService {
             final OnboardingProvider onboardingProvider,
             final IdentityVerificationConfig config,
             final IdentityVerificationService identityVerificationService,
+            final TransactionTemplate transactionTemplate,
+            final CommonOnboardingService commonOnboardingService,
             final AuditService auditService) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.identityVerificationService = identityVerificationService;
+        this.transactionTemplate = transactionTemplate;
+        this.commonOnboardingService = commonOnboardingService;
         this.auditService = auditService;
     }
 
@@ -123,7 +134,13 @@ public class ClientEvaluationService {
     }
 
     private Consumer<EvaluateClientResponse> createSuccessConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        return response -> {
+        return response -> saveInANewTransaction(status -> {
+            try {
+                commonOnboardingService.findProcessWithLock(identityVerification.getProcessId());
+            } catch (OnboardingProcessException ex) {
+                logger.error(ex.getMessage(), ex);
+                return;
+            }
             auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
             // The timestampFinished parameter is not set yet, there may be other steps ahead
             if (response.isErrorOccurred()) {
@@ -147,11 +164,17 @@ public class ClientEvaluationService {
                 identityVerification.setTimestampFailed(ownerId.getTimestamp());
                 identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId);
             }
-        };
+        });
     }
 
     private Consumer<Throwable> createErrorConsumer(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        return t -> {
+        return t -> saveInANewTransaction(status -> {
+            try {
+                commonOnboardingService.findProcessWithLock(identityVerification.getProcessId());
+            } catch (OnboardingProcessException ex) {
+                logger.error(ex.getMessage(), ex);
+                return;
+            }
             logger.warn("Client evaluation failed for {} - {}", identityVerification, t.getMessage());
             logger.debug("Client evaluation failed for {}", identityVerification, t);
             identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
@@ -159,7 +182,12 @@ public class ClientEvaluationService {
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             final IdentityVerificationPhase phase = identityVerification.getPhase();
             identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
-        };
+        });
+    }
+
+    private void saveInANewTransaction(final Consumer<TransactionStatus> consumer) {
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transactionTemplate.executeWithoutResult(consumer);
     }
 
 }

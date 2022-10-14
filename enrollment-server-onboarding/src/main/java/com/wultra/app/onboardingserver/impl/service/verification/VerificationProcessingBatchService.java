@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
@@ -66,7 +67,7 @@ public class VerificationProcessingBatchService {
 
     private final AuditService auditService;
 
-    private final OnboardingProcessRepository onboardingProcessRepository;
+    private final CommonOnboardingService commonOnboardingService;
 
     /**
      * Service constructor.
@@ -76,7 +77,7 @@ public class VerificationProcessingBatchService {
      * @param identityVerificationService Identity verification service.
      * @param verificationProcessingService Verification processing service.
      * @param auditService Audit service.
-     * @param onboardingProcessRepository Onboarding process repository.
+     * @param commonOnboardingService Onboarding process service (common).
      */
     @Autowired
     public VerificationProcessingBatchService(
@@ -85,7 +86,8 @@ public class VerificationProcessingBatchService {
             final IdentityVerificationRepository identityVerificationRepository,
             final IdentityVerificationService identityVerificationService,
             final VerificationProcessingService verificationProcessingService,
-            final AuditService auditService, OnboardingProcessRepository onboardingProcessRepository) {
+            final AuditService auditService,
+            final CommonOnboardingService commonOnboardingService) {
 
         this.documentResultRepository = documentResultRepository;
         this.identityVerificationRepository = identityVerificationRepository;
@@ -93,7 +95,7 @@ public class VerificationProcessingBatchService {
         this.identityVerificationService = identityVerificationService;
         this.verificationProcessingService = verificationProcessingService;
         this.auditService = auditService;
-        this.onboardingProcessRepository = onboardingProcessRepository;
+        this.commonOnboardingService = commonOnboardingService;
     }
 
     /**
@@ -121,8 +123,12 @@ public class VerificationProcessingBatchService {
                 }
 
                 final String processId = docVerification.getIdentityVerification().getProcessId();
-                logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
-                onboardingProcessRepository.findByIdWithLock(processId);
+                try {
+                    commonOnboardingService.findProcessWithLock(processId);
+                } catch (OnboardingProcessException ex) {
+                    logger.error(ex.getMessage(), ex);
+                    return;
+                }
 
                 verificationProcessingService.processVerificationResult(ownerId, List.of(docVerification), docVerificationResult);
 
