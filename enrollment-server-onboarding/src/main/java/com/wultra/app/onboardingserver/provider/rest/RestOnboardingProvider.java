@@ -153,7 +153,7 @@ class RestOnboardingProvider implements OnboardingProvider {
                     .build();
 
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to evaluate client for " + request);
+            throw new OnboardingProviderException("Unable to evaluate client for " + request, e);
         }
     }
 
