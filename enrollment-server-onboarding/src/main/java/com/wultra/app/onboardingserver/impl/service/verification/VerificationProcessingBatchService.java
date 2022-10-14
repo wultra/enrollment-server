@@ -150,7 +150,7 @@ public class VerificationProcessingBatchService {
                 ownerId.setUserId(idVerification.getUserId());
 
                 try {
-                    identityVerificationService.checkVerificationResult(IdentityVerificationPhase.DOCUMENT_VERIFICATION, ownerId, idVerification);
+                    identityVerificationService.checkVerificationResult(ownerId, idVerification);
                     if (!IdentityVerificationStatus.IN_PROGRESS.equals(idVerification.getStatus())) {
                         countFinished.incrementAndGet();
                     }
