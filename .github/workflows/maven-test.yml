@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'develop'
-      - 'master'
-      - 'releases/**'
+     - 'develop'
+     - 'master'
+     - 'releases/**'
+     - 'test/ci'
   pull_request:
     branches:
       - 'develop'
