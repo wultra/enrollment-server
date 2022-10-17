@@ -17,7 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.model.enumeration;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -72,7 +71,7 @@ public enum DocumentType {
     /**
      * Document types ordered by the preference to provide a person photo (the most preferred type is the first)
      */
-    public static final List<DocumentType> PREFERRED_SOURCE_OF_PERSON_PHOTO = Arrays.asList(
+    public static final List<DocumentType> PREFERRED_SOURCE_OF_PERSON_PHOTO = List.of(
             DocumentType.ID_CARD,
             DocumentType.PASSPORT,
             DocumentType.DRIVING_LICENSE

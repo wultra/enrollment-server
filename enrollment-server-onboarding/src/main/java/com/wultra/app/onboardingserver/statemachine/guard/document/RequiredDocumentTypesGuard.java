@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
@@ -37,6 +38,8 @@ import static java.util.stream.Collectors.toList;
 @Component
 @Slf4j
 public class RequiredDocumentTypesGuard {
+
+    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(DocumentType.ID_CARD, DocumentType.PASSPORT, DocumentType.DRIVING_LICENSE);
 
     /**
      * Evaluate all required document types to be present and accepted.
@@ -68,6 +71,7 @@ public class RequiredDocumentTypesGuard {
     private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
         return 2 == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
+                .filter(it -> PHYSICAL_DOCUMENTS.contains(it))
                 .distinct()
                 .count();
     }

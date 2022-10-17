@@ -127,6 +127,19 @@ class RequiredDocumentTypesGuardTest {
     }
 
     @Test
+    void testOtherDocumentsCards() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
+                createDocumentVerification(DocumentType.PASSPORT),
+                createDocumentVerification(DocumentType.UNKNOWN),
+                createDocumentVerification(DocumentType.SELFIE_PHOTO));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertTrue(result);
+    }
+
+    @Test
     void testTwoTravelPassports() {
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.PASSPORT),
