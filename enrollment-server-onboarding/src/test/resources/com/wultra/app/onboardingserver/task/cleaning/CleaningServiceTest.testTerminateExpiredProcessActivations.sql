@@ -1,7 +1,7 @@
 INSERT INTO es_onboarding_process(id, identification_data, status, error_score, timestamp_created) VALUES
-    ('11111111-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '5' minute),
-    ('22222222-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '5' minute),
-    ('33333333-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '5' minute),
+    ('11111111-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '301' second),
+    ('22222222-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '301' second),
+    ('33333333-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now() - interval '301' second),
     ('44444444-df91-4053-bb3d-3970979baf5d', '{}', 'ACTIVATION_IN_PROGRESS', 0, now()); -- to be kept
 
 INSERT INTO es_identity_verification(id, activation_id, user_id, process_id, status, phase, timestamp_created, timestamp_last_updated) VALUES
