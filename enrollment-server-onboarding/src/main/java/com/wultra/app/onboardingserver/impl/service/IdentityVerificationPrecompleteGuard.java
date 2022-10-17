@@ -125,7 +125,7 @@ class IdentityVerificationPrecompleteGuard {
             logger.trace("OTP verification is disabled");
             return true;
         }
-        return onboardingOtpRepository.findLastOtp(idVerification.getProcessId(), OtpType.USER_VERIFICATION)
+        return onboardingOtpRepository.findNewestByProcessIdAndType(idVerification.getProcessId(), OtpType.USER_VERIFICATION)
                 .map(OnboardingOtpEntity::getStatus)
                 .filter(it -> it == OtpStatus.VERIFIED)
                 .isPresent();

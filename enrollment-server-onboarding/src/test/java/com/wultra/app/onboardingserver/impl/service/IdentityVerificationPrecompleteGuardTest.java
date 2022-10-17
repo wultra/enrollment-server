@@ -76,7 +76,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
         final OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setStatus(OtpStatus.VERIFIED);
-        when(onboardingOtpRepository.findLastOtp("process-1", OtpType.USER_VERIFICATION))
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
                 .thenReturn(Optional.of(otp));
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
@@ -101,7 +101,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
         final OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setStatus(OtpStatus.FAILED);
-        when(onboardingOtpRepository.findLastOtp("process-1", OtpType.USER_VERIFICATION))
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
                 .thenReturn(Optional.of(otp));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
