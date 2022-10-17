@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
 
 /**
  * Validate all critical conditions were met before finishing the onboarding.
@@ -145,7 +146,7 @@ class IdentityVerificationPrecompleteGuard {
     private boolean isPrefinalPhaseAndStateValid(final IdentityVerificationEntity idVerification) {
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
-        return (phase == OTP_VERIFICATION && status == ACCEPTED) ||
+        return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
                 (phase == PRESENCE_CHECK && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled()) ||
                 (phase == CLIENT_EVALUATION && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled() &&!identityVerificationConfig.isPresenceCheckEnabled());
     }

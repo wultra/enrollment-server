@@ -38,8 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -85,7 +84,7 @@ class IdentityVerificationPrecompleteGuardTest {
         idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
         idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setStatus(VERIFICATION_PENDING);
 
         final var result = tested.evaluate(idVerification);
 
@@ -107,7 +106,7 @@ class IdentityVerificationPrecompleteGuardTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setStatus(VERIFICATION_PENDING);
 
         final var result = tested.evaluate(idVerification);
 
@@ -125,7 +124,7 @@ class IdentityVerificationPrecompleteGuardTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setStatus(VERIFICATION_PENDING);
         idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
 
         final var result = tested.evaluate(idVerification);
