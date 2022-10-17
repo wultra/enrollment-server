@@ -29,9 +29,10 @@ import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -46,7 +47,6 @@ import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingS
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
-import com.wultra.security.powerauth.client.v3.ActivationStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +59,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 
 /**
@@ -76,8 +76,6 @@ public class IdentityVerificationService {
     private final DocumentDataRepository documentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final IdentityVerificationRepository identityVerificationRepository;
-    private final OnboardingOtpRepository onboardingOtpRepository;
-    private final ActivationService activationService;
     private final DocumentProcessingService documentProcessingService;
     private final VerificationProcessingService verificationProcessingService;
     private final DocumentVerificationProvider documentVerificationProvider;
@@ -86,10 +84,9 @@ public class IdentityVerificationService {
     private final OnboardingProcessLimitService processLimitService;
 
     private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+    private final IdentityVerificationPrecompleteGuard identityVerificationPrecompleteGuard;
 
     private final AuditService auditService;
-
-    static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = List.of(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
      * Service constructor.
@@ -97,8 +94,6 @@ public class IdentityVerificationService {
      * @param documentDataRepository Document data repository.
      * @param documentVerificationRepository Document verification repository.
      * @param identityVerificationRepository Identity verification repository.
-     * @param onboardingOtpRepository Onboarding otp repository.
-     * @param activationService Activation service.
      * @param documentProcessingService Document processing service.
      * @param verificationProcessingService Verification processing service.
      * @param documentVerificationProvider Document verification provider.
@@ -108,13 +103,11 @@ public class IdentityVerificationService {
      * @param auditService Audit service.
      */
     @Autowired
-    public IdentityVerificationService(
+    IdentityVerificationService(
             final IdentityVerificationConfig identityVerificationConfig,
             final DocumentDataRepository documentDataRepository,
             final DocumentVerificationRepository documentVerificationRepository,
             final IdentityVerificationRepository identityVerificationRepository,
-            final OnboardingOtpRepository onboardingOtpRepository,
-            final ActivationService activationService,
             final DocumentProcessingService documentProcessingService,
             final VerificationProcessingService verificationProcessingService,
             final DocumentVerificationProvider documentVerificationProvider,
@@ -122,14 +115,13 @@ public class IdentityVerificationService {
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
             final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
+            final IdentityVerificationPrecompleteGuard identityVerificationPrecompleteGuard,
             final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentDataRepository = documentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.identityVerificationRepository = identityVerificationRepository;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.activationService = activationService;
         this.documentProcessingService = documentProcessingService;
         this.verificationProcessingService = verificationProcessingService;
         this.documentVerificationProvider = documentVerificationProvider;
@@ -137,6 +129,7 @@ public class IdentityVerificationService {
         this.processService = processService;
         this.processLimitService = processLimitService;
         this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
+        this.identityVerificationPrecompleteGuard = identityVerificationPrecompleteGuard;
         this.auditService = auditService;
     }
 
@@ -366,11 +359,13 @@ public class IdentityVerificationService {
      */
     @Transactional
     public void processDocumentVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        if(isValidBeforeFinish(idVerification)) {
+        final var result = identityVerificationPrecompleteGuard.evaluate(idVerification);
+        if (result.isSuccessful()) {
             logger.debug("Final validation passed, {}", ownerId);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
         } else {
-            logger.warn("Final validation did not passed, marking identity verification as failed due to '{}', {}", idVerification.getErrorDetail(), ownerId);
+            logger.warn("Final validation did not passed, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
+            idVerification.setErrorDetail(result.getErrorDetail());
             idVerification.setTimestampFailed(ownerId.getTimestamp());
             idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);
@@ -378,94 +373,6 @@ public class IdentityVerificationService {
         idVerification.setTimestampFinished(ownerId.getTimestamp());
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
-    }
-
-    /**
-     * Validate all critical conditions were met before finishing the onboarding.
-     * <p>
-     * This should never happen for the state machine.
-     * It works as a safety stop.
-     *
-     * @return validation result
-     */
-    private boolean isValidBeforeFinish(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        List<DocumentVerificationEntity> documentVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(idVerification, DOCUMENT_STATUSES_PROCESSED);
-
-        if (!documentVerifications.stream()
-                .map(DocumentVerificationEntity::getStatus)
-                .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
-            logger.debug("Some documents are not accepted for identity verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Some documents not accepted");
-            return false;
-        }
-
-        if (!requiredDocumentTypesGuard.evaluate(documentVerifications, idVerification.getId())) {
-            logger.debug("Not all required documents are present for verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Required documents not present");
-            return false;
-        }
-
-        if (!isPrefinalPhaseAndStateValid(idVerification)) {
-            logger.debug("Not valid phase and state for verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Not valid phase and state");
-            return false;
-        }
-
-        if (!isOtpValid(idVerification)) {
-            logger.debug("Not valid OTP for verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Not valid OTP");
-            return false;
-        }
-
-        if (!isPresenceCheckValid(idVerification)) {
-            logger.debug("Presence check did not pass for verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Presence check did not pass");
-            return false;
-        }
-
-        if (!isActivationValid(idVerification)) {
-            logger.debug("Activation is not valid for verification ID: {}", idVerification.getProcessId());
-            idVerification.setErrorDetail("Activation is not valid");
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        final ActivationStatus activationStatus = activationService.fetchActivationStatus(idVerification.getActivationId());
-        return activationStatus == ActivationStatus.ACTIVE;
-    }
-
-    private boolean isOtpValid(final IdentityVerificationEntity idVerification) {
-        if (!identityVerificationConfig.isVerificationOtpEnabled()) {
-            logger.trace("OTP verification is disabled");
-            return true;
-        }
-        return onboardingOtpRepository.findLastOtp(idVerification.getProcessId(), OtpType.USER_VERIFICATION)
-                .map(OnboardingOtpEntity::getStatus)
-                .filter(it -> it == OtpStatus.VERIFIED)
-                .isPresent();
-    }
-
-    private boolean isPresenceCheckValid(final IdentityVerificationEntity identityVerification) {
-        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.trace("Presence check is disabled");
-            return true;
-        }
-        final RejectOrigin rejectOrigin = identityVerification.getRejectOrigin();
-        final ErrorOrigin errorOrigin = identityVerification.getErrorOrigin();
-
-        return errorOrigin != ErrorOrigin.PRESENCE_CHECK && rejectOrigin != RejectOrigin.PRESENCE_CHECK;
-    }
-
-    private boolean isPrefinalPhaseAndStateValid(final IdentityVerificationEntity idVerification) {
-        final IdentityVerificationPhase phase = idVerification.getPhase();
-        final IdentityVerificationStatus status = idVerification.getStatus();
-        return (phase == OTP_VERIFICATION && status == ACCEPTED) ||
-                (phase == PRESENCE_CHECK && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled()) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled() &&!identityVerificationConfig.isPresenceCheckEnabled());
     }
 
     /**

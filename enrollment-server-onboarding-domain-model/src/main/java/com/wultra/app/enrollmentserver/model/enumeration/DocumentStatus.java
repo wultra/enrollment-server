@@ -80,4 +80,9 @@ public enum DocumentStatus {
             FAILED
     );
 
+    /**
+     * All processed statuses, successful and unsuccessful.
+     */
+    public static final List<DocumentStatus> ALL_PROCESSED = List.of(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
+
 }
