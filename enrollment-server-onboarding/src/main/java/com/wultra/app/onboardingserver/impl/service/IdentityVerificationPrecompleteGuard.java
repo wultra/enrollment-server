@@ -148,7 +148,7 @@ class IdentityVerificationPrecompleteGuard {
         final IdentityVerificationStatus status = idVerification.getStatus();
         return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
                 (phase == PRESENCE_CHECK && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled()) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled() &&!identityVerificationConfig.isPresenceCheckEnabled());
+                (phase == CLIENT_EVALUATION && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled() && !identityVerificationConfig.isPresenceCheckEnabled());
     }
 
     @Getter
