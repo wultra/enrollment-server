@@ -20,7 +20,6 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
-import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
@@ -134,27 +133,6 @@ class IdentityVerificationPrecompleteCheckTest {
 
         assertFalse(result.isSuccessful());
         assertEquals("Not valid activation OTP", result.getErrorDetail());
-    }
-
-    @Test
-    void testProcessDocumentVerificationResult_invalidPresenceCheck() throws Exception {
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
-                .thenReturn(true);
-        when(identityVerificationConfig.isPresenceCheckEnabled())
-                .thenReturn(true);
-        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
-                .thenReturn(Optional.of(createOtp()));
-
-        final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
-        idVerification.setProcessId("process-1");
-        idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(VERIFICATION_PENDING);
-        idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
-
-        final var result = tested.evaluate(idVerification);
-
-        assertFalse(result.isSuccessful());
-        assertEquals("Presence check did not pass", result.getErrorDetail());
     }
 
     @Test

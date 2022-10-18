@@ -113,15 +113,12 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Not valid activation OTP");
         }
 
-        if (!isPresenceCheckValid(idVerification)) {
-            logger.debug("Presence check did not pass for verification ID: {}", processId);
-            return Result.failed("Presence check did not pass");
-        }
-
         if (!isActivationValid(idVerification)) {
             logger.debug("Activation is not valid for verification ID: {}", processId);
             return Result.failed("Activation is not valid");
         }
+
+        // TODO (racansky, 2022-10-18, #453) validate presence check when the data available
 
         return Result.successful();
     }
@@ -148,17 +145,6 @@ class IdentityVerificationPrecompleteCheck {
                 .map(OnboardingOtpEntity::getStatus)
                 .filter(it -> it == OtpStatus.VERIFIED)
                 .isPresent();
-    }
-
-    private boolean isPresenceCheckValid(final IdentityVerificationEntity identityVerification) {
-        if (!identityVerificationConfig.isPresenceCheckEnabled()) {
-            logger.trace("Presence check is disabled");
-            return true;
-        }
-        final RejectOrigin rejectOrigin = identityVerification.getRejectOrigin();
-        final ErrorOrigin errorOrigin = identityVerification.getErrorOrigin();
-
-        return errorOrigin != ErrorOrigin.PRESENCE_CHECK && rejectOrigin != RejectOrigin.PRESENCE_CHECK;
     }
 
     private boolean isPrecompletePhaseAndStateValid(final IdentityVerificationEntity idVerification) {
