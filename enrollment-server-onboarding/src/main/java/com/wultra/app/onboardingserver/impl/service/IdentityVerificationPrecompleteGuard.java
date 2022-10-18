@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -32,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
@@ -57,16 +57,20 @@ class IdentityVerificationPrecompleteGuard {
 
     private final OnboardingOtpRepository onboardingOtpRepository;
 
+    private final DocumentVerificationRepository documentVerificationRepository;
+
     private final ActivationService activationService;
 
     IdentityVerificationPrecompleteGuard(
             final IdentityVerificationConfig identityVerificationConfig,
             final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
             final OnboardingOtpRepository onboardingOtpRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
             final ActivationService activationService) {
         this.identityVerificationConfig = identityVerificationConfig;
         this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
         this.onboardingOtpRepository = onboardingOtpRepository;
+        this.documentVerificationRepository = documentVerificationRepository;
         this.activationService = activationService;
     }
 
@@ -77,9 +81,8 @@ class IdentityVerificationPrecompleteGuard {
      * @return evaluation result
      */
     Result evaluate(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        final List<DocumentVerificationEntity> documentVerifications = idVerification.getDocumentVerifications().stream()
-                .filter(it -> DocumentStatus.ALL_PROCESSED.contains(it.getStatus()))
-                .collect(Collectors.toList());
+        final List<DocumentVerificationEntity> documentVerifications = documentVerificationRepository
+                .findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED);
 
         if (!documentVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
@@ -93,7 +96,7 @@ class IdentityVerificationPrecompleteGuard {
             return Result.failed("Required documents not present");
         }
 
-        if (!isPrefinalPhaseAndStateValid(idVerification)) {
+        if (!isPrecompletePhaseAndStateValid(idVerification)) {
             logger.debug("Not valid phase and state for verification ID: {}", idVerification.getProcessId());
             return Result.failed("Not valid phase and state");
         }
@@ -143,7 +146,7 @@ class IdentityVerificationPrecompleteGuard {
         return errorOrigin != ErrorOrigin.PRESENCE_CHECK && rejectOrigin != RejectOrigin.PRESENCE_CHECK;
     }
 
-    private boolean isPrefinalPhaseAndStateValid(final IdentityVerificationEntity idVerification) {
+    private boolean isPrecompletePhaseAndStateValid(final IdentityVerificationEntity idVerification) {
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
         return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||

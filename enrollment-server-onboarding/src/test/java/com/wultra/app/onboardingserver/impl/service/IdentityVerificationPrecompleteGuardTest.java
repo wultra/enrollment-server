@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -34,8 +35,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
@@ -59,6 +60,9 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Mock
     private OnboardingOtpRepository onboardingOtpRepository;
+
+    @Mock
+    private DocumentVerificationRepository documentVerificationRepository;
 
     @Mock
     private ActivationService activationService;
@@ -191,7 +195,9 @@ class IdentityVerificationPrecompleteGuardTest {
         documentVerification.setStatus(DocumentStatus.FAILED);
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
-        idVerification.setDocumentVerifications(Set.of(documentVerification));
+
+        when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
+                .thenReturn(List.of(documentVerification));
 
         final var result = tested.evaluate(idVerification);
 
@@ -205,7 +211,9 @@ class IdentityVerificationPrecompleteGuardTest {
         documentVerification.setStatus(DocumentStatus.ACCEPTED);
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
-        idVerification.setDocumentVerifications(Set.of(documentVerification));
+
+        when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
+                .thenReturn(List.of(documentVerification));
 
         when(requiredDocumentTypesGuard.evaluate(any(), any()))
                 .thenReturn(false);
