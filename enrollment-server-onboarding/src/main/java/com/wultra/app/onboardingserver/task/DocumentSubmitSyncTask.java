@@ -47,8 +47,9 @@ public class DocumentSubmitSyncTask {
     @SchedulerLock(name = SchedulerLockNames.DOCUMENT_SUBMIT_SYNC_LOCK, lockAtMostFor = "5m")
     public void checkInProgressDocumentSubmits() {
         LockAssert.assertLocked();
-        logger.debug("checkInProgressDocumentSubmits");
+        logger.debug("Task checkInProgressDocumentSubmits started");
         documentProcessingBatchService.checkInProgressDocumentSubmits();
+        logger.debug("Task checkInProgressDocumentSubmits finished");
     }
 
 }
