@@ -29,13 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test for {@link RequiredDocumentTypesGuard}.
+ * Test for {@link RequiredDocumentTypesCheck}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-class RequiredDocumentTypesGuardTest {
+class RequiredDocumentTypesCheckTest {
 
-    private final RequiredDocumentTypesGuard tested = new RequiredDocumentTypesGuard();
+    private final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck();
 
     @Test
     void testEmptyCollection() {

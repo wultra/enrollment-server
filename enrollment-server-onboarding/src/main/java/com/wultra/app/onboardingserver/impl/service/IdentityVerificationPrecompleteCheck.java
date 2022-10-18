@@ -25,7 +25,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import com.wultra.security.powerauth.client.v3.ActivationStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -49,11 +49,11 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 // TODO (racansky, 2022-10-14) consider make it Guard for Spring State Machine
 @Component
 @Slf4j
-class IdentityVerificationPrecompleteGuard {
+class IdentityVerificationPrecompleteCheck {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
-    private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+    private final RequiredDocumentTypesCheck requiredDocumentTypesCheck;
 
     private final OnboardingOtpRepository onboardingOtpRepository;
 
@@ -61,14 +61,14 @@ class IdentityVerificationPrecompleteGuard {
 
     private final ActivationService activationService;
 
-    IdentityVerificationPrecompleteGuard(
+    IdentityVerificationPrecompleteCheck(
             final IdentityVerificationConfig identityVerificationConfig,
-            final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
+            final RequiredDocumentTypesCheck requiredDocumentTypesCheck,
             final OnboardingOtpRepository onboardingOtpRepository,
             final DocumentVerificationRepository documentVerificationRepository,
             final ActivationService activationService) {
         this.identityVerificationConfig = identityVerificationConfig;
-        this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
+        this.requiredDocumentTypesCheck = requiredDocumentTypesCheck;
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.activationService = activationService;
@@ -93,7 +93,7 @@ class IdentityVerificationPrecompleteGuard {
             return Result.failed("Some documents not accepted");
         }
 
-        if (!requiredDocumentTypesGuard.evaluate(documentVerifications, idVerification.getId())) {
+        if (!requiredDocumentTypesCheck.evaluate(documentVerifications, idVerification.getId())) {
             logger.debug("Not all required documents are present for verification ID: {}", processId);
             return Result.failed("Required documents not present");
         }

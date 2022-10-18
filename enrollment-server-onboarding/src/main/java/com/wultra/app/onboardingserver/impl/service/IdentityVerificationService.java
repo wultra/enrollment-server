@@ -46,7 +46,7 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoun
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,8 +83,8 @@ public class IdentityVerificationService {
     private final CommonOnboardingService processService;
     private final OnboardingProcessLimitService processLimitService;
 
-    private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
-    private final IdentityVerificationPrecompleteGuard identityVerificationPrecompleteGuard;
+    private final RequiredDocumentTypesCheck requiredDocumentTypesCheck;
+    private final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
 
     private final AuditService auditService;
 
@@ -114,8 +114,8 @@ public class IdentityVerificationService {
             final IdentityVerificationLimitService identityVerificationLimitService,
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
-            final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
-            final IdentityVerificationPrecompleteGuard identityVerificationPrecompleteGuard,
+            final RequiredDocumentTypesCheck requiredDocumentTypesCheck,
+            final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck,
             final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
@@ -128,8 +128,8 @@ public class IdentityVerificationService {
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
-        this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
-        this.identityVerificationPrecompleteGuard = identityVerificationPrecompleteGuard;
+        this.requiredDocumentTypesCheck = requiredDocumentTypesCheck;
+        this.identityVerificationPrecompleteCheck = identityVerificationPrecompleteCheck;
         this.auditService = auditService;
     }
 
@@ -331,7 +331,7 @@ public class IdentityVerificationService {
             return;
         }
 
-        if (!requiredDocumentTypesGuard.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
+        if (!requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
             return;
         }
@@ -359,7 +359,7 @@ public class IdentityVerificationService {
      */
     @Transactional
     public void processDocumentVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        final var result = identityVerificationPrecompleteGuard.evaluate(idVerification);
+        final var result = identityVerificationPrecompleteCheck.evaluate(idVerification);
         if (result.isSuccessful()) {
             logger.debug("Final validation passed, {}", ownerId);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);

@@ -27,7 +27,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import com.wultra.security.powerauth.client.v3.ActivationStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,15 +45,15 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Test for {@link IdentityVerificationPrecompleteGuard}.
+ * Test for {@link IdentityVerificationPrecompleteCheck}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ExtendWith(MockitoExtension.class)
-class IdentityVerificationPrecompleteGuardTest {
+class IdentityVerificationPrecompleteCheckTest {
 
     @Mock
-    private RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+    private RequiredDocumentTypesCheck requiredDocumentTypesCheck;
 
     @Mock
     private IdentityVerificationConfig identityVerificationConfig;
@@ -68,11 +68,11 @@ class IdentityVerificationPrecompleteGuardTest {
     private ActivationService activationService;
 
     @InjectMocks
-    private IdentityVerificationPrecompleteGuard tested;
+    private IdentityVerificationPrecompleteCheck tested;
 
     @Test
     void testProcessDocumentVerificationResult_valid() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(identityVerificationConfig.isVerificationOtpEnabled())
                 .thenReturn(true);
@@ -97,7 +97,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidVerificationOtp() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(identityVerificationConfig.isVerificationOtpEnabled())
                 .thenReturn(true);
@@ -118,7 +118,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidActivationOtp() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
 
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
@@ -138,7 +138,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidPresenceCheck() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(identityVerificationConfig.isPresenceCheckEnabled())
                 .thenReturn(true);
@@ -159,7 +159,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_validStateWithoutOtp() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
@@ -179,7 +179,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_validStateWithoutOtpAndPresenceCheck() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
@@ -199,7 +199,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidActivation() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.REMOVED);
@@ -244,7 +244,7 @@ class IdentityVerificationPrecompleteGuardTest {
         when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
                 .thenReturn(List.of(documentVerification));
 
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(false);
 
         final var result = tested.evaluate(idVerification);
@@ -255,7 +255,7 @@ class IdentityVerificationPrecompleteGuardTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidStatus() throws Exception {
-        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();

@@ -52,7 +52,7 @@ class IdentityVerificationServiceTest {
     private AuditService auditService;
 
     @Mock
-    private IdentityVerificationPrecompleteGuard identityVerificationPrecompleteGuard;
+    private IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
 
     @InjectMocks
     private IdentityVerificationService tested;
@@ -63,8 +63,8 @@ class IdentityVerificationServiceTest {
         idVerification.setPhase(OTP_VERIFICATION);
         idVerification.setStatus(ACCEPTED);
 
-        when(identityVerificationPrecompleteGuard.evaluate(idVerification))
-                .thenReturn(IdentityVerificationPrecompleteGuard.Result.successful());
+        when(identityVerificationPrecompleteCheck.evaluate(idVerification))
+                .thenReturn(IdentityVerificationPrecompleteCheck.Result.successful());
 
         tested.processDocumentVerificationResult(new OwnerId(), idVerification);
 
@@ -82,8 +82,8 @@ class IdentityVerificationServiceTest {
         idVerification.setPhase(OTP_VERIFICATION);
         idVerification.setStatus(ACCEPTED);
 
-        when(identityVerificationPrecompleteGuard.evaluate(idVerification))
-                .thenReturn(IdentityVerificationPrecompleteGuard.Result.failed("Not valid OTP"));
+        when(identityVerificationPrecompleteCheck.evaluate(idVerification))
+                .thenReturn(IdentityVerificationPrecompleteCheck.Result.failed("Not valid OTP"));
 
         tested.processDocumentVerificationResult(new OwnerId(), idVerification);
 
