@@ -47,8 +47,9 @@ public class DocumentSubmitVerificationSyncTask {
     @SchedulerLock(name = SchedulerLockNames.DOCUMENT_SUBMIT_VERIFICATION_LOCK, lockAtMostFor = "5m")
     public void checkDocumentSubmitVerifications() {
         LockAssert.assertLocked();
-        logger.debug("checkDocumentSubmitVerifications");
+        logger.debug("Task checkDocumentSubmitVerifications started");
         verificationProcessingBatchService.checkDocumentSubmitVerifications();
+        logger.debug("Task checkDocumentSubmitVerifications finished");
     }
 
 }
