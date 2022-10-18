@@ -77,10 +77,10 @@ class IdentityVerificationPrecompleteGuardTest {
         when(identityVerificationConfig.isVerificationOtpEnabled())
                 .thenReturn(true);
 
-        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
-        otp.setStatus(OtpStatus.VERIFIED);
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
-                .thenReturn(Optional.of(otp));
+                .thenReturn(Optional.of(createOtp()));
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
 
@@ -96,16 +96,14 @@ class IdentityVerificationPrecompleteGuardTest {
     }
 
     @Test
-    void testProcessDocumentVerificationResult_invalidOtp() throws Exception {
+    void testProcessDocumentVerificationResult_invalidVerificationOtp() throws Exception {
         when(requiredDocumentTypesGuard.evaluate(any(), any()))
                 .thenReturn(true);
         when(identityVerificationConfig.isVerificationOtpEnabled())
                 .thenReturn(true);
 
-        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
-        otp.setStatus(OtpStatus.FAILED);
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
-                .thenReturn(Optional.of(otp));
+                .thenReturn(Optional.of(createFailedOtp()));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
@@ -115,7 +113,27 @@ class IdentityVerificationPrecompleteGuardTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Not valid OTP", result.getErrorDetail());
+        assertEquals("Not valid user verification OTP", result.getErrorDetail());
+    }
+
+    @Test
+    void testProcessDocumentVerificationResult_invalidActivationOtp() throws Exception {
+        when(requiredDocumentTypesGuard.evaluate(any(), any()))
+                .thenReturn(true);
+
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createFailedOtp()));
+
+        final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-1");
+        idVerification.setActivationId("activation-1");
+        idVerification.setPhase(OTP_VERIFICATION);
+        idVerification.setStatus(VERIFICATION_PENDING);
+
+        final var result = tested.evaluate(idVerification);
+
+        assertFalse(result.isSuccessful());
+        assertEquals("Not valid activation OTP", result.getErrorDetail());
     }
 
     @Test
@@ -124,6 +142,8 @@ class IdentityVerificationPrecompleteGuardTest {
                 .thenReturn(true);
         when(identityVerificationConfig.isPresenceCheckEnabled())
                 .thenReturn(true);
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
@@ -143,8 +163,11 @@ class IdentityVerificationPrecompleteGuardTest {
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-1");
         idVerification.setPhase(PRESENCE_CHECK);
         idVerification.setStatus(ACCEPTED);
         idVerification.setActivationId("activation-1");
@@ -160,8 +183,11 @@ class IdentityVerificationPrecompleteGuardTest {
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
         idVerification.setPhase(CLIENT_EVALUATION);
         idVerification.setStatus(ACCEPTED);
@@ -177,8 +203,11 @@ class IdentityVerificationPrecompleteGuardTest {
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.REMOVED);
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
         idVerification.setPhase(CLIENT_EVALUATION);
         idVerification.setStatus(ACCEPTED);
@@ -237,5 +266,17 @@ class IdentityVerificationPrecompleteGuardTest {
 
         assertFalse(result.isSuccessful());
         assertEquals("Not valid phase and state", result.getErrorDetail());
+    }
+
+    private static OnboardingOtpEntity createOtp() {
+        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
+        otp.setStatus(OtpStatus.VERIFIED);
+        return otp;
+    }
+
+    private static OnboardingOtpEntity createFailedOtp() {
+        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
+        otp.setStatus(OtpStatus.FAILED);
+        return otp;
     }
 }

@@ -84,35 +84,42 @@ class IdentityVerificationPrecompleteGuard {
         final List<DocumentVerificationEntity> documentVerifications = documentVerificationRepository
                 .findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED);
 
+        final String processId = idVerification.getProcessId();
+
         if (!documentVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
-            logger.debug("Some documents are not accepted for identity verification ID: {}", idVerification.getProcessId());
+            logger.debug("Some documents are not accepted for identity verification ID: {}", processId);
             return Result.failed("Some documents not accepted");
         }
 
         if (!requiredDocumentTypesGuard.evaluate(documentVerifications, idVerification.getId())) {
-            logger.debug("Not all required documents are present for verification ID: {}", idVerification.getProcessId());
+            logger.debug("Not all required documents are present for verification ID: {}", processId);
             return Result.failed("Required documents not present");
         }
 
         if (!isPrecompletePhaseAndStateValid(idVerification)) {
-            logger.debug("Not valid phase and state for verification ID: {}", idVerification.getProcessId());
+            logger.debug("Not valid phase and state for verification ID: {}", processId);
             return Result.failed("Not valid phase and state");
         }
 
-        if (!isOtpValid(idVerification)) {
-            logger.debug("Not valid OTP for verification ID: {}", idVerification.getProcessId());
-            return Result.failed("Not valid OTP");
+        if (!isVerificationOtpValid(idVerification)) {
+            logger.debug("Not valid user verification OTP for verification ID: {}", processId);
+            return Result.failed("Not valid user verification OTP");
+        }
+
+        if (!isActivationOtpValid(idVerification)) {
+            logger.debug("Not valid activation OTP for verification ID: {}", processId);
+            return Result.failed("Not valid activation OTP");
         }
 
         if (!isPresenceCheckValid(idVerification)) {
-            logger.debug("Presence check did not pass for verification ID: {}", idVerification.getProcessId());
+            logger.debug("Presence check did not pass for verification ID: {}", processId);
             return Result.failed("Presence check did not pass");
         }
 
         if (!isActivationValid(idVerification)) {
-            logger.debug("Activation is not valid for verification ID: {}", idVerification.getProcessId());
+            logger.debug("Activation is not valid for verification ID: {}", processId);
             return Result.failed("Activation is not valid");
         }
 
@@ -124,12 +131,20 @@ class IdentityVerificationPrecompleteGuard {
         return activationStatus == ActivationStatus.ACTIVE;
     }
 
-    private boolean isOtpValid(final IdentityVerificationEntity idVerification) {
+    private boolean isVerificationOtpValid(final IdentityVerificationEntity idVerification) {
         if (!identityVerificationConfig.isVerificationOtpEnabled()) {
             logger.trace("OTP verification is disabled");
             return true;
         }
-        return onboardingOtpRepository.findNewestByProcessIdAndType(idVerification.getProcessId(), OtpType.USER_VERIFICATION)
+        return isOtpValid(idVerification, OtpType.USER_VERIFICATION);
+    }
+
+    private boolean isActivationOtpValid(final IdentityVerificationEntity idVerification) {
+        return isOtpValid(idVerification, OtpType.ACTIVATION);
+    }
+
+    private boolean isOtpValid(IdentityVerificationEntity idVerification, OtpType otpType) {
+        return onboardingOtpRepository.findNewestByProcessIdAndType(idVerification.getProcessId(), otpType)
                 .map(OnboardingOtpEntity::getStatus)
                 .filter(it -> it == OtpStatus.VERIFIED)
                 .isPresent();
