@@ -32,7 +32,7 @@ import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Action to process verification result
+ * Action to process verification result.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
@@ -51,7 +51,7 @@ public class VerificationProcessResultAction implements Action<OnboardingState, 
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         try {
-            verificationResultService.checkVerificationResult(ownerId, identityVerification);
+            verificationResultService.processVerificationResult(ownerId, identityVerification);
         } catch (IdentityVerificationException | OnboardingProcessException | RemoteCommunicationException e) {
             context.getStateMachine().setStateMachineError(e);
         }

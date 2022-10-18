@@ -23,11 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
 /**
- * Guard for presence of all required documents.
+ * Validate presence of all required documents.
  * <p>
  * It means a primary document (ID card or travel passport), and another document (e.g. driving licence).
  *
@@ -36,7 +37,9 @@ import static java.util.stream.Collectors.toList;
 // TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
 @Slf4j
-public class RequiredDocumentTypesGuard {
+public class RequiredDocumentTypesCheck {
+
+    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(DocumentType.ID_CARD, DocumentType.PASSPORT, DocumentType.DRIVING_LICENSE);
 
     /**
      * Evaluate all required document types to be present and accepted.
@@ -68,6 +71,7 @@ public class RequiredDocumentTypesGuard {
     private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
         return 2 == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
+                .filter(it -> PHYSICAL_DOCUMENTS.contains(it))
                 .distinct()
                 .count();
     }

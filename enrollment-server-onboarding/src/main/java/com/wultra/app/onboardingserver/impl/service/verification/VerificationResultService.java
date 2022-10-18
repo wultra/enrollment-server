@@ -53,7 +53,8 @@ public class VerificationResultService {
     }
 
     /**
-     * Checks documents verification result and when accepted finishes the verification
+     * Process documents verification result.
+     * When accepted, finishes the verification.
      *
      * @param ownerId Owner identification.
      * @param identityVerification Identity verification entity.
@@ -62,8 +63,8 @@ public class VerificationResultService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public void checkVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification)
-            throws IdentityVerificationException, OnboardingProcessException, RemoteCommunicationException{
+    public void processVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification)
+            throws IdentityVerificationException, OnboardingProcessException, RemoteCommunicationException {
         identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification);
         if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
                 identityVerificationFinishService.finishIdentityVerification(ownerId);

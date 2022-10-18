@@ -194,6 +194,7 @@ public class IdentityVerificationOtpService {
         final String rejectReason = idVerification.getRejectReason();
         final RejectOrigin rejectOrigin = idVerification.getRejectOrigin();
 
+        // TODO (racansky, 2022-10-18, #453) this is quite fragile condition, could be improved e.g. with data historization
         if (errorOrigin == ErrorOrigin.PRESENCE_CHECK || rejectOrigin == RejectOrigin.PRESENCE_CHECK) {
             logger.info("SCA failed, identity verification ID: {}, {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), ownerId, errorDetail, rejectReason);

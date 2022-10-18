@@ -80,4 +80,11 @@ public enum DocumentStatus {
             FAILED
     );
 
+    /**
+     * All processed statuses, successful and unsuccessful.
+     * <p>
+     * Mind that it does not contain {@code DISPOSED}, as not processed, unlike {@link #ALL_FAILED}.
+     */
+    public static final List<DocumentStatus> ALL_PROCESSED = List.of(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
+
 }

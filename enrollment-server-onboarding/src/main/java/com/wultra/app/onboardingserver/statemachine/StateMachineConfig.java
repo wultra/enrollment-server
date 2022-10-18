@@ -401,7 +401,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .last(OnboardingState.OTP_VERIFICATION_PENDING);
     }
 
-    private static Guard<OnboardingState, OnboardingEvent> createCompositeGuard(Guard<OnboardingState, OnboardingEvent>... guards) {
+    private static Guard<OnboardingState, OnboardingEvent> createCompositeGuard(final Guard<OnboardingState, OnboardingEvent>... guards) {
         return context -> Arrays.stream(guards).allMatch(it -> it.evaluate(context));
     }
 

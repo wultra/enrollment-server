@@ -29,7 +29,6 @@ import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -47,10 +46,9 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoun
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
@@ -71,9 +69,8 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@Slf4j
 public class IdentityVerificationService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IdentityVerificationService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentDataRepository documentDataRepository;
@@ -86,11 +83,10 @@ public class IdentityVerificationService {
     private final CommonOnboardingService processService;
     private final OnboardingProcessLimitService processLimitService;
 
-    private final RequiredDocumentTypesGuard requiredDocumentTypesGuard;
+    private final RequiredDocumentTypesCheck requiredDocumentTypesCheck;
+    private final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
 
     private final AuditService auditService;
-
-    private static final List<DocumentStatus> DOCUMENT_STATUSES_PROCESSED = Arrays.asList(DocumentStatus.ACCEPTED, DocumentStatus.FAILED, DocumentStatus.REJECTED);
 
     /**
      * Service constructor.
@@ -107,7 +103,7 @@ public class IdentityVerificationService {
      * @param auditService Audit service.
      */
     @Autowired
-    public IdentityVerificationService(
+    IdentityVerificationService(
             final IdentityVerificationConfig identityVerificationConfig,
             final DocumentDataRepository documentDataRepository,
             final DocumentVerificationRepository documentVerificationRepository,
@@ -118,7 +114,8 @@ public class IdentityVerificationService {
             final IdentityVerificationLimitService identityVerificationLimitService,
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
-            final RequiredDocumentTypesGuard requiredDocumentTypesGuard,
+            final RequiredDocumentTypesCheck requiredDocumentTypesCheck,
+            final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck,
             final AuditService auditService) {
 
         this.identityVerificationConfig = identityVerificationConfig;
@@ -131,7 +128,8 @@ public class IdentityVerificationService {
         this.identityVerificationLimitService = identityVerificationLimitService;
         this.processService = processService;
         this.processLimitService = processLimitService;
-        this.requiredDocumentTypesGuard = requiredDocumentTypesGuard;
+        this.requiredDocumentTypesCheck = requiredDocumentTypesCheck;
+        this.identityVerificationPrecompleteCheck = identityVerificationPrecompleteCheck;
         this.auditService = auditService;
     }
 
@@ -328,19 +326,17 @@ public class IdentityVerificationService {
         }
 
         if (allDocVerifications.stream()
-                .anyMatch(docVerification -> DocumentStatus.VERIFICATION_IN_PROGRESS.equals(docVerification.getStatus()))) {
+                .anyMatch(docVerification -> docVerification.getStatus() == DocumentStatus.VERIFICATION_IN_PROGRESS)) {
             logger.debug("Some documents still VERIFICATION_IN_PROGRESS for identity verification ID: {}", idVerification.getId());
             return;
         }
 
-        if (!requiredDocumentTypesGuard.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
+        if (!requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
             return;
         }
 
-        resolveIdentityVerificationResult(IdentityVerificationPhase.DOCUMENT_VERIFICATION, idVerification, allDocVerifications, ownerId);
-        idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-        identityVerificationRepository.save(idVerification);
+        moveToDocumentVerificationAndStatusByDocuments(idVerification, allDocVerifications, ownerId);
 
         // Update process error score in case of a failed verification and check process error limits
         if (idVerification.getStatus() == FAILED || idVerification.getStatus() == REJECTED) {
@@ -359,36 +355,47 @@ public class IdentityVerificationService {
      * Process identity verification result for document verifications which have already been previously processed.
      * @param ownerId Owner identification.
      * @param idVerification Identity verification entity.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public void processDocumentVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        List<DocumentVerificationEntity> processedDocVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(idVerification, DOCUMENT_STATUSES_PROCESSED);
-        resolveIdentityVerificationResult(IdentityVerificationPhase.COMPLETED, idVerification, processedDocVerifications, ownerId);
+    public void processDocumentVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+        final var result = identityVerificationPrecompleteCheck.evaluate(idVerification);
+        if (result.isSuccessful()) {
+            logger.debug("Final validation passed, {}", ownerId);
+            moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
+        } else {
+            logger.warn("Final validation did not passed, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
+            idVerification.setErrorDetail(result.getErrorDetail());
+            idVerification.setTimestampFailed(ownerId.getTimestamp());
+            idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
+            moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);
+        }
         idVerification.setTimestampFinished(ownerId.getTimestamp());
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
     }
 
     /**
-     * Resolve identity verification result for an identity verification entity using specified document verification results.
-     * @param phase Identity verification phase.
+     * Move identity verification to {@code DOCUMENT_VERIFICATION} phase and status based on the given document verifications.
+     *
      * @param idVerification Identity verification entity.
-     * @param docVerifications Document verification results.
+     * @param docVerifications Document verifications to determine identity verification status.
      */
-    private void resolveIdentityVerificationResult(
-            final IdentityVerificationPhase phase,
+    private void moveToDocumentVerificationAndStatusByDocuments(
             final IdentityVerificationEntity idVerification,
             final List<DocumentVerificationEntity> docVerifications,
             final OwnerId ownerId) {
+
+        final IdentityVerificationPhase phase = IdentityVerificationPhase.DOCUMENT_VERIFICATION;
         final Date now = ownerId.getTimestamp();
         if (docVerifications.stream()
-                .allMatch(docVerification -> DocumentStatus.ACCEPTED.equals(docVerification.getStatus()))) {
+                .map(DocumentVerificationEntity::getStatus)
+                .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
             // The timestampFinished parameter is not set yet, there may be other steps ahead
             moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
         } else {
             docVerifications.stream()
-                    .filter(docVerification -> DocumentStatus.FAILED.equals(docVerification.getStatus()))
+                    .filter(docVerification -> docVerification.getStatus() == DocumentStatus.FAILED)
                     .findAny()
                     .ifPresent(failed -> {
                         idVerification.setErrorDetail(failed.getErrorDetail());
@@ -398,7 +405,7 @@ public class IdentityVerificationService {
                     });
 
             docVerifications.stream()
-                    .filter(docVerification -> DocumentStatus.REJECTED.equals(docVerification.getStatus()))
+                    .filter(docVerification -> docVerification.getStatus() == DocumentStatus.REJECTED)
                     .findAny()
                     .ifPresent(failed -> {
                         idVerification.setErrorDetail(failed.getRejectReason());
