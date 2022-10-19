@@ -49,7 +49,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
 
     @Query("SELECT d.id FROM DocumentVerificationEntity d " +
-            "WHERE d.timestampLastUpdated < :cleanupDate " +
+            "WHERE d.timestampCreated < :cleanupDate " +
             "AND d.status IN :statuses")
     List<String> findExpiredVerifications(Date cleanupDate, List<DocumentStatus> statuses);
 
