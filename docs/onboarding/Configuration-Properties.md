@@ -102,6 +102,7 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.document-verification.zenid.documentCountry` | `Cz` | Zen ID country configuration for submitted documents. |
 | `enrollment-server-onboarding.document-verification.zenid.serviceBaseUrl` |  | Base REST service URL for Zen ID. |
 | `enrollment-server-onboarding.document-verification.zenid.serviceUserAgent` | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to Zen ID REST service. |
+| `enrollment-server-onboarding.document-verification.zenid.profile` |  | Optional profile name to determine Zen ID validators configuration. |
 | `enrollment-server-onboarding.document-verification.zenid.restClientConfig.acceptInvalidSslCertificate` | `false` | Whether invalid SSL certificate is accepted when calling Zen ID REST service. |
 | `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize` | `10485760` | Maximum in memory size of HTTP requests when calling Zen ID REST service. |
 | `enrollment-server-onboarding.document-verification.zenid.restClientConfig.proxyEnabled` | `false` | Whether proxy server is enabled when calling Zen ID REST service. |
