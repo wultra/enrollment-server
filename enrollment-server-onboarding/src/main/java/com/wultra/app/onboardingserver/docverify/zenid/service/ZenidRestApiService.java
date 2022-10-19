@@ -149,6 +149,9 @@ public class ZenidRestApiService {
         sampleIds.forEach(sampleId -> queryParams.add("sampleIDs", sampleId));
         queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
 
+        configProps.getProfile().ifPresent(profile ->
+                queryParams.add("profile", profile));
+
         return restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
     }
 
@@ -214,6 +217,9 @@ public class ZenidRestApiService {
         queryParams.add("customData", ownerId.getActivationId());
         queryParams.add("uploadSessionID", sessionId);
         queryParams.add("country", configProps.getDocumentCountry().toString());
+
+        configProps.getProfile().ifPresent(profile ->
+                queryParams.add("profile", profile));
 
         ZenidSharedMineAllResult.DocumentCodeEnum documentCode = toDocumentCode(document.getType());
         if (documentCode != null) {

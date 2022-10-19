@@ -25,6 +25,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Optional;
+
 /**
  * Zenid configuration properties.
  *
@@ -58,6 +60,11 @@ public class ZenidConfigProps {
     private ZenidSharedMineAllResult.DocumentCountryEnum documentCountry;
 
     /**
+     * Optional name of profile.
+     */
+    private String profile;
+
+    /**
      * Service base URL
      */
     private String serviceBaseUrl;
@@ -72,4 +79,12 @@ public class ZenidConfigProps {
      */
     private RestClientConfiguration restClientConfig;
 
+    /**
+     * Return profile name.
+     *
+     * @return profile name
+     */
+    public Optional<String> getProfile() {
+        return Optional.ofNullable(profile);
+    }
 }
