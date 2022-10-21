@@ -51,8 +51,6 @@ public class IdentityVerificationStatusService {
 
     private final ActivationFlagService activationFlagService;
 
-    private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
-
     /**
      * Service constructor.
      *
@@ -62,9 +60,9 @@ public class IdentityVerificationStatusService {
      */
     @Autowired
     public IdentityVerificationStatusService(
-            IdentityVerificationService identityVerificationService,
-            OnboardingServiceImpl onboardingService,
-            ActivationFlagService activationFlagService) {
+            final IdentityVerificationService identityVerificationService,
+            final OnboardingServiceImpl onboardingService,
+            final ActivationFlagService activationFlagService) {
         this.identityVerificationService = identityVerificationService;
         this.onboardingService = onboardingService;
         this.activationFlagService = activationFlagService;
@@ -105,8 +103,8 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
-        // Check activation flags, the identity verification entity may need to be re-initialized after cleanup
-        if (idVerification.getPhase() != IdentityVerificationPhase.COMPLETED && !containsActivationFlagVerificationInProgress(ownerId)) {
+        // Check activation flags, the mobile application needs to start over after cleanup or reaching attempts limit
+        if (containsActivationFlagVerificationPending(ownerId)) {
             // Initialization is required because verification is not in progress for current identity verification
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
@@ -118,8 +116,8 @@ public class IdentityVerificationStatusService {
         return response;
     }
 
-    private boolean containsActivationFlagVerificationInProgress(OwnerId ownerId) throws RemoteCommunicationException {
+    private boolean containsActivationFlagVerificationPending(OwnerId ownerId) throws RemoteCommunicationException {
         final List<String> flags = activationFlagService.listActivationFlags(ownerId);
-        return flags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
+        return flags.contains(ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING);
     }
 }
