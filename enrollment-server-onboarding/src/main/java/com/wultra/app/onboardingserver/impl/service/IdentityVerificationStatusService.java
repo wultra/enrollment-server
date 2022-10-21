@@ -26,10 +26,12 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -47,18 +49,23 @@ public class IdentityVerificationStatusService {
 
     private final OnboardingServiceImpl onboardingService;
 
+    private final ActivationFlagService activationFlagService;
+
     /**
      * Service constructor.
      *
      * @param identityVerificationService       Identity verification service.
      * @param onboardingService                 Onboarding service.
+     * @param activationFlagService             Activation flags service.
      */
     @Autowired
     public IdentityVerificationStatusService(
             final IdentityVerificationService identityVerificationService,
-            final OnboardingServiceImpl onboardingService) {
+            final OnboardingServiceImpl onboardingService,
+            final ActivationFlagService activationFlagService) {
         this.identityVerificationService = identityVerificationService;
         this.onboardingService = onboardingService;
+        this.activationFlagService = activationFlagService;
     }
 
     /**
@@ -96,8 +103,21 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
+        // Check activation flags, the mobile application needs to start over after cleanup or reaching attempts limit
+        if (containsActivationFlagVerificationPending(ownerId)) {
+            // Initialization is required because verification is not in progress for current identity verification
+            response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
+            response.setIdentityVerificationPhase(null);
+            return response;
+        }
+
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
+    }
+
+    private boolean containsActivationFlagVerificationPending(OwnerId ownerId) throws RemoteCommunicationException {
+        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
+        return flags.contains(ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING);
     }
 }

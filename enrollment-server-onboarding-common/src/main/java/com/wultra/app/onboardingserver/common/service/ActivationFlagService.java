@@ -133,6 +133,21 @@ public class ActivationFlagService {
     /**
      * Obtain list of activation flags.
      * @param ownerId Owner identification.
+     * @throws RemoteCommunicationException Thrown when list of activation flags could not be obtained.
+     */
+    public List<String> listActivationFlags(OwnerId ownerId) throws RemoteCommunicationException {
+        try {
+            return listActivationFlagsInternal(ownerId);
+        } catch (PowerAuthClientException ex) {
+            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
+            logger.debug(ex.getMessage(), ex);
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+        }
+    }
+
+    /**
+     * Obtain list of activation flags.
+     * @param ownerId Owner identification.
      * @throws PowerAuthClientException Thrown when list of activation flags could not be obtained.
      */
     private List<String> listActivationFlagsInternal(OwnerId ownerId) throws PowerAuthClientException {
