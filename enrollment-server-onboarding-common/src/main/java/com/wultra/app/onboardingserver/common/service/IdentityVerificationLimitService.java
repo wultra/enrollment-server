@@ -119,8 +119,7 @@ public class IdentityVerificationLimitService {
 
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
             activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
-            logger.warn("Max failed attempts reached for identity verification, {}.", ownerId);
-            throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification");
+            throw new OnboardingProcessLimitException("Max failed attempts reached for identity verification, " + ownerId);
         }
     }
 
@@ -147,8 +146,7 @@ public class IdentityVerificationLimitService {
             logger.info("Switched to {}/FAILED; {}", phase, ownerId);
             auditService.audit(identityVerification, "Switched to {}/FAILED; user ID: {}", phase, ownerId.getUserId());
             resetIdentityVerification(ownerId);
-            logger.warn("Max failed attempts reached for document upload, {}.", ownerId);
-            throw new IdentityVerificationLimitException("Max failed attempts reached for document upload");
+            throw new IdentityVerificationLimitException("Max failed attempts reached for document upload, " + ownerId);
         }
     }
 

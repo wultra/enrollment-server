@@ -132,8 +132,7 @@ public class PresenceCheckService {
         if (!idVerification.isPresenceCheckInitialized()) {
             List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
             if (docsWithPhoto.isEmpty()) {
-                logger.error("Missing person photo to initialize presence check, {}", ownerId);
-                throw new PresenceCheckException("Unable to initialize presence check");
+                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
             } else {
                 Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
                 presenceCheckProvider.initPresenceCheck(ownerId, photo);
@@ -171,8 +170,7 @@ public class PresenceCheckService {
 
         Image photo = result.getPhoto();
         if (photo == null) {
-            logger.error("Missing person photo from presence verification, {}", ownerId);
-            throw new PresenceCheckException("Missing person photo from presence verification");
+            throw new PresenceCheckException("Missing person photo from presence verification, " + ownerId);
         }
         logger.debug("Obtained a photo from the result, {}", ownerId);
 
@@ -323,18 +321,15 @@ public class PresenceCheckService {
         final IdentityVerificationStatus status = idVerification.getStatus();
 
         if (phase == PRESENCE_CHECK && status == ACCEPTED) {
-            logger.error("The presence check is already accepted, not allowed to initialize it again, {}", ownerId);
-            throw new PresenceCheckException("Unable to initialize presence check");
+            throw new PresenceCheckException("The presence check is already accepted, not allowed to initialize it again, " + ownerId);
         } else if (phase == PRESENCE_CHECK && status == IN_PROGRESS) {
             logger.info("The presence check is currently in progress, ready to be initialized again, {}", ownerId);
         } else if (phase == PRESENCE_CHECK && status == REJECTED) {
             logger.info("The presence check is rejected, ready to be initialized again, {}", ownerId);
         } else if (phase != PRESENCE_CHECK) {
-            logger.error("The verification phase is {} but expected PRESENCE_CHECK, {}", phase, ownerId);
-            throw new PresenceCheckException("Unable to initialize presence check");
+            throw new PresenceCheckException(String.format("The verification phase is %s but expected PRESENCE_CHECK, %s", phase, ownerId));
         } else if (status != NOT_INITIALIZED) {
-            logger.error("The verification status is {} but expected NOT_INITIALIZED, {}", status, ownerId);
-            throw new PresenceCheckException("Unable to initialize presence check");
+            throw new PresenceCheckException(String.format("The verification status is %s but expected NOT_INITIALIZED, %s", status, ownerId));
         }
 
         return idVerification;

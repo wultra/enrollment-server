@@ -70,7 +70,7 @@ public class ActivationFlagService {
         try {
             final List<String> activationFlags = listActivationFlagsInternal(ownerId);
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
-                throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification");
+                throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification, " + ownerId);
             }
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_PENDING);
             activationFlags.add(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);

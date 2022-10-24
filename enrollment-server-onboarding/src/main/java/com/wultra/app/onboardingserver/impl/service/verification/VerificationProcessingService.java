@@ -148,7 +148,7 @@ public class VerificationProcessingService {
             docResult.setPhase(DocumentProcessingPhase.VERIFICATION);
             docResult.setTimestampCreated(ownerId.getTimestamp());
         } else {
-            throw new DocumentVerificationException("Unexpected identity verification phase: " + phase);
+            throw new DocumentVerificationException(String.format("Unexpected identity verification phase: %s, %s", phase, ownerId));
         }
         return docResult;
     }
@@ -184,7 +184,8 @@ public class VerificationProcessingService {
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
                 break;
             default:
-                throw new IllegalStateException("Unexpected verification result status: " + docVerificationResult.getStatus());
+                throw new IllegalStateException(
+                        String.format("Unexpected verification result status: %s, %s", docVerificationResult.getStatus(), ownerId));
         }
         audit(docVerification, ownerId);
         logger.info("Finished verification of {} with status: {}, {}", docVerification, docVerification.getStatus(), ownerId);

@@ -25,4 +25,30 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class InvalidRequestObjectException extends Exception {
     private static final long serialVersionUID = 1383969189713398388L;
+
+    /**
+     * No-arg constructor.
+     */
+    public InvalidRequestObjectException() {
+        super();
+    }
+
+    /**
+     * Constructs a new exception with the specified cause.
+     *
+     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
+     */
+    public InvalidRequestObjectException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message and cause.
+     *
+     * @param message detail message
+     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
+     */
+    public InvalidRequestObjectException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

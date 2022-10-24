@@ -212,8 +212,7 @@ public class IProovRestApiService {
             logger.error("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
         }
         if (!USER_ID_REGEX_PATTERN.matcher(value).matches()) {
-            logger.error("The userId value: '{}', does not match the iProov regex pattern", value);
-            throw new IllegalArgumentException("Invalid userId value for iProov call");
+            throw new IllegalArgumentException(String.format("The userId value: '%s', does not match the iProov regex pattern", value));
         }
         return value;
     }
