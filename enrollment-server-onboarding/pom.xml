@@ -168,13 +168,6 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
             </plugin>
             <plugin>
@@ -268,7 +261,6 @@
                 <additionalparam>-Xdoclint:none</additionalparam>
             </properties>
         </profile>
-
         <profile>
             <id>standalone</id>
             <dependencies>
@@ -277,6 +269,27 @@
                     <artifactId>postgresql</artifactId>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <id>public-repository</id>
+            <activation>
+                <property>
+                    <name>!useInternalRepo</name>
+                </property>
+            </activation>
+            <properties>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
