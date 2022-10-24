@@ -57,8 +57,8 @@ public class ActivationProcessService {
     public void updateProcess(String processId, String userId, String activationId, OnboardingStatus status) throws OnboardingProcessException {
         final String processUserId = getUserId(processId);
         if (!processUserId.equals(userId)) {
-            logger.warn("User ID does not match to onboarding process: {}, {} ", processId, userId);
-            throw new OnboardingProcessException();
+            throw new OnboardingProcessException(
+                    String.format("User ID does not match to onboarding process: %s, %s ", processId, userId));
         }
 
         final UpdateProcessRequest request = UpdateProcessRequest.builder()

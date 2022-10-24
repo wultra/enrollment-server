@@ -46,8 +46,7 @@ public class OtpGeneratorService {
      */
     public String generateOtpCode(int length) throws OnboardingProcessException {
         if (length < OTP_MIN_LENGTH || length > OTP_MAX_LENGTH) {
-            logger.warn("Invalid OTP length: {}", length);
-            throw new OnboardingProcessException();
+            throw new OnboardingProcessException("Invalid OTP length: " + length);
         }
         SecureRandom random = new SecureRandom();
         BigInteger bound = BigInteger.TEN.pow(length).subtract(BigInteger.ONE);

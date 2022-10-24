@@ -64,7 +64,6 @@ import java.time.Duration;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -259,11 +258,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, process ID: {}", processId);
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatusWithLock(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
-        String expectedProcessId = process.getId();
+        final String expectedProcessId = process.getId();
 
         if (!expectedProcessId.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);
-            throw new OnboardingProcessException();
+            throw new OnboardingProcessException(
+                    String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
         }
     }
 
@@ -276,11 +275,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     public void verifyProcessId(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
-        String expectedProcessId = process.getId();
+        final String expectedProcessId = process.getId();
 
         if (!expectedProcessId.equals(processId)) {
-            logger.warn("Invalid process ID received in request: {}, {}", processId, ownerId);
-            throw new OnboardingProcessException();
+            throw new OnboardingProcessException(
+                    String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
         }
     }
 
@@ -291,12 +290,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findExistingProcessWithVerificationInProgress(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findByActivationIdAndStatus(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        if (processOptional.isEmpty()) {
-            logger.warn("Onboarding process not found, activation ID: {}", activationId);
-            throw new OnboardingProcessException();
-        }
-        return processOptional.get();
+        return onboardingProcessRepository.findByActivationIdAndStatus(activationId, OnboardingStatus.VERIFICATION_IN_PROGRESS)
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + activationId));
     }
 
     /**
@@ -306,12 +301,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     public OnboardingProcessEntity findProcessByActivationId(String activationId) throws OnboardingProcessException {
-        Optional<OnboardingProcessEntity> processOptional = onboardingProcessRepository.findByActivationId(activationId);
-        if (processOptional.isEmpty()) {
-            logger.warn("Onboarding process not found, activation ID: {}", activationId);
-            throw new OnboardingProcessException();
-        }
-        return processOptional.get();
+        return onboardingProcessRepository.findByActivationId(activationId).orElseThrow(() ->
+                new OnboardingProcessException("Onboarding process not found, activation ID: " + activationId));
     }
 
     /**
@@ -469,8 +460,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         try {
             return normalizedMapper.writeValueAsString(identification);
         } catch (JsonProcessingException ex) {
-            logger.warn("Invalid identification data: {}", identification);
-            throw new InvalidRequestObjectException();
+            throw new InvalidRequestObjectException("Invalid identification data: " + identification, ex);
         }
     }
 
@@ -486,8 +476,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         try {
             onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
-            logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException(e);
+            throw new OnboardingOtpDeliveryException("OTP code delivery failed, error: " + e.getMessage(), e);
         }
 
         auditService.auditOnboardingProvider(process, "Sent activation OTP for user: {}", process.getUserId());
@@ -506,8 +495,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         try {
             onboardingProvider.sendOtpCode(sendOtpCodeRequest);
         } catch (OnboardingProviderException e) {
-            logger.warn("OTP code resend failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException(e);
+            throw new OnboardingOtpDeliveryException("OTP code resend failed, error: " + e.getMessage(), e);
         }
 
         auditService.auditOnboardingProvider(process, "Resent activation OTP for user: {}", userId);

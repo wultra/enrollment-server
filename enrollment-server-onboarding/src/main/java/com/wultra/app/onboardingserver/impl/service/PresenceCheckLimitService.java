@@ -19,7 +19,10 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -36,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
@@ -101,15 +102,11 @@ public class PresenceCheckLimitService {
         final int otpCount = otpRepository.countByProcessIdAndType(processId, OtpType.USER_VERIFICATION);
         // TODO (racansky, 2022-10-20, #453) OTP verification could be turned off, logic should be based on another data
         if (otpCount > identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
-            final Optional<IdentityVerificationEntity> identityVerificationOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId());
-            if (identityVerificationOptional.isEmpty()) {
-                logger.warn("Identity verification was not found, {}.", ownerId);
-                throw new IdentityVerificationException("Identity verification was not found");
-            }
-            final IdentityVerificationEntity identityVerification = identityVerificationOptional.get();
+            final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId())
+                    .orElseThrow(() ->
+                            new IdentityVerificationException("Identity verification was not found, " + ownerId));
             if (!identityVerification.getProcessId().equals(processId)) {
-                logger.warn("Process identifier mismatch for owner {}: {}.", ownerId, processId);
-                throw new IdentityVerificationException("Process identifier mismatch");
+                throw new IdentityVerificationException(String.format("Process identifier mismatch for owner %s: %s", ownerId, processId));
             }
             final OnboardingProcessEntity onboardingProcess = onboardingProcessRepository.findById(processId).orElseThrow(() ->
                 new IdentityVerificationException("Onboarding process not found, " + ownerId));
@@ -133,7 +130,7 @@ public class PresenceCheckLimitService {
             // Remove flag VERIFICATION_IN_PROGRESS and add VERIFICATION_PENDING flag
             activationFlagService.updateActivationFlagsForFailedIdentityVerification(ownerId);
 
-            throw new PresenceCheckLimitException("Max failed attempts reached for presence check");
+            throw new PresenceCheckLimitException("Max failed attempts reached for presence check, " + ownerId);
         }
     }
 }

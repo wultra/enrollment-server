@@ -174,8 +174,8 @@ public class DocumentProcessingService {
                                       DocumentSubmitRequest request,
                                       DocumentVerificationEntity docVerification) throws DocumentSubmitException {
         if (request.isResubmit() && docVerification.getOriginalDocumentId() == null) {
-            logger.error("Detected a resubmit request without specified originalDocumentId for {}, {}", docVerification, ownerId);
-            throw new DocumentSubmitException("Missing originalDocumentId in a resubmit request");
+            throw new DocumentSubmitException(
+                    String.format("Detected a resubmit request without specified originalDocumentId for %s, %s", docVerification, ownerId));
         } else if (request.isResubmit()) {
             Optional<DocumentVerificationEntity> originalDocOptional =
                     documentVerificationRepository.findById(docVerification.getOriginalDocumentId());
@@ -192,9 +192,8 @@ public class DocumentProcessingService {
                 auditService.audit(docVerification, "Document replaced with new one for user: {}", ownerId.getUserId());
             }
         } else if (!request.isResubmit() && docVerification.getOriginalDocumentId() != null) {
-            logger.error("Detected a submit request with specified originalDocumentId={} for {}, {}",
-                    docVerification.getOriginalDocumentId(), docVerification, ownerId);
-            throw new DocumentSubmitException("Specified originalDocumentId in a submit request");
+            throw new DocumentSubmitException(
+                    String.format("Detected a submit request with specified originalDocumentId=%s for %s, %s", docVerification.getOriginalDocumentId(), docVerification, ownerId));
         }
     }
 
@@ -358,30 +357,21 @@ public class DocumentProcessingService {
         submittedDoc.setType(docMetadata.getType());
 
         if (docMetadata.getUploadId() == null) {
-            Optional<Document> docOptional = docs.stream()
+            final Document document = docs.stream()
                     .filter(doc -> doc.getFilename().equals(docMetadata.getFilename()))
-                    .findFirst();
-            if (docOptional.isPresent()) {
-                photo.setData(docOptional.get().getData());
-            } else {
-                logger.error("Missing {} in data, {}", docMetadata, ownerId);
-                throw new DocumentSubmitException("Not found document data in sent request");
-            }
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new DocumentSubmitException(String.format("Missing %s in data, %s", docMetadata, ownerId)));
+            photo.setData(document.getData());
         } else {
-            Optional<DocumentDataEntity> docDataOptional =
-                    documentDataRepository.findById(docMetadata.getUploadId());
-            if (docDataOptional.isPresent()) {
-                DocumentDataEntity documentData = docDataOptional.get();
-                if (!ownerId.getActivationId().equals(documentData.getActivationId())) {
-                    logger.error("The referenced document data uploadId={} are from different activation, {}",
-                            docMetadata, ownerId);
-                    throw new DocumentSubmitException("Invalid reference on uploaded document data in sent request");
-                }
-                photo.setData(documentData.getData());
-            } else {
-                logger.error("Missing {} in data, {}", docMetadata, ownerId);
-                throw new DocumentSubmitException("Not found document data in saved upload");
+            final DocumentDataEntity documentData = documentDataRepository.findById(docMetadata.getUploadId())
+                    .orElseThrow(() ->
+                            new DocumentSubmitException(String.format("Missing %s in data, %s", docMetadata, ownerId)));
+            if (!ownerId.getActivationId().equals(documentData.getActivationId())) {
+                throw new DocumentSubmitException(
+                        String.format("The referenced document data uploadId=%s are from different activation, %s", docMetadata, ownerId));
             }
+            photo.setData(documentData.getData());
         }
         return submittedDoc;
     }

@@ -269,8 +269,7 @@ public class IdentityVerificationOtpService {
         try {
             onboardingProvider.sendOtpCode(request);
         } catch (OnboardingProviderException e) {
-            logger.warn("OTP code delivery failed, error: {}", e.getMessage(), e);
-            throw new OnboardingOtpDeliveryException(e);
+            throw new OnboardingOtpDeliveryException("OTP code delivery failed, error: " + e.getMessage(), e);
         }
 
         final String resentPrefix = isResend ? "Resent" : "Sent";

@@ -149,13 +149,8 @@ public class IdentityVerificationService {
      * @throws IdentityVerificationNotFoundException When the verification identity entity was not found
      */
     public IdentityVerificationEntity findBy(OwnerId ownerId) throws IdentityVerificationNotFoundException {
-        Optional<IdentityVerificationEntity> identityVerificationOptional = findByOptional(ownerId);
-
-        if (identityVerificationOptional.isEmpty()) {
-            logger.error("No identity verification entity found, {}", ownerId);
-            throw new IdentityVerificationNotFoundException("Not existing identity verification");
-        }
-        return identityVerificationOptional.get();
+        return findByOptional(ownerId).orElseThrow(() ->
+                new IdentityVerificationNotFoundException("No identity verification entity found, " + ownerId));
     }
 
     /**
@@ -212,8 +207,7 @@ public class IdentityVerificationService {
 
         String processId = idVerification.getProcessId();
         if (!processId.equals(request.getProcessId())) {
-            logger.warn("Invalid process ID in request: {}", processId);
-            throw new DocumentSubmitException("Invalid process ID");
+            throw new DocumentSubmitException("Invalid process ID: " + processId);
         }
 
         final IdentityVerificationPhase phase = idVerification.getPhase();
@@ -221,13 +215,13 @@ public class IdentityVerificationService {
         if (phase == IdentityVerificationPhase.DOCUMENT_VERIFICATION && status == IdentityVerificationStatus.IN_PROGRESS) {
             moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.VERIFICATION_PENDING);
         } else if (phase != DOCUMENT_UPLOAD) {
-            logger.error("The verification phase is {} but expected DOCUMENT_UPLOAD, {}", phase, ownerId);
-            throw new DocumentSubmitException("Not allowed submit of documents during not upload phase");
+            throw new DocumentSubmitException(
+                    String.format("Not allowed submit of documents during not upload phase %s, %s", phase, ownerId));
         } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(status)) {
             moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.IN_PROGRESS);
         } else if (status != IdentityVerificationStatus.IN_PROGRESS) {
-            logger.error("The verification status is {} but expected IN_PROGRESS, {}", status, ownerId);
-            throw new DocumentSubmitException("Not allowed submit of documents during not in progress status");
+            throw new DocumentSubmitException(
+                    String.format("Not allowed submit of documents during not in progress status %s, %s", status, ownerId));
         }
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
