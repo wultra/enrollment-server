@@ -58,8 +58,8 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(InvalidRequestObjectException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleInvalidRequestException(InvalidRequestObjectException ex) {
-        logger.warn("Error occurred when registering to push server.", ex);
-        return new ErrorResponse("INVALID_REQUEST", "Invalid request object sent to Mobile Token API component.");
+        logger.warn("Error occurred when processing request object.", ex);
+        return new ErrorResponse("INVALID_REQUEST", "Invalid request object.");
     }
 
     /**
