@@ -183,7 +183,7 @@ public class IdentityVerificationService {
         final IdentityVerificationEntity savedIdentityVerification = identityVerificationRepository.save(identityVerification);
         logger.info("Switched to {}/{}; {}", phase, status, ownerId);
         auditService.audit(identityVerification, "Switched to {}/{}; user ID: {}", phase, status, ownerId.getUserId());
-        return  savedIdentityVerification;
+        return savedIdentityVerification;
     }
 
     /**
@@ -489,10 +489,8 @@ public class IdentityVerificationService {
         documentDataRepository.deleteAllByActivationId(ownerId.getActivationId());
         // Set status of all not finished document verifications to failed
         documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
-        // Set status of all currently running identity verifications to failed
-        identityVerificationRepository.failRunningVerifications(ownerId.getActivationId(), ownerId.getTimestamp());
-        // Reset activation flags, the client is expected to call /api/identity/init for the next round of verification
-        identityVerificationLimitService.resetIdentityVerification(ownerId);
+        // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification
+        identityVerificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.CLEANUP, "reset due to cleanup");
     }
 
     /**
