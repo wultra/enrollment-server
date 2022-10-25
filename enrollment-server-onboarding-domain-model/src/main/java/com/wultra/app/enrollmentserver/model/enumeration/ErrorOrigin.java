@@ -36,5 +36,7 @@ public enum ErrorOrigin {
 
     USER_REQUEST,
 
-    FINAL_VALIDATION
+    FINAL_VALIDATION,
+
+    CLEANUP
 }

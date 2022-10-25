@@ -98,19 +98,18 @@ public class IdentityVerificationLimitService {
             final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                     .orElseThrow(() -> new IdentityVerificationException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
 
+            final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
+            final String errorDetail = OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION;
+
             // In case any of the identity verifications is not FAILED or REJECTED yet, fail it.
             identityVerifications.stream()
                     .filter(verification -> verification.getStatus() != IdentityVerificationStatus.FAILED
                             && verification.getStatus() != IdentityVerificationStatus.REJECTED)
-                    .forEach(verification -> {
-                        verification.setStatus(IdentityVerificationStatus.FAILED);
-                        logger.info("Switched to {}/FAILED; {}", verification.getPhase(), ownerId);
-                        auditService.audit(verification, "Switched to {}/FAILED; user ID: {}", verification.getPhase(), ownerId.getUserId());
-                    });
-            identityVerificationRepository.saveAll(identityVerifications);
+                    .forEach(verification ->
+                            moveToFailedPhaseAndStatus(verification, ownerId, errorOrigin, errorDetail));
 
-            process.setErrorDetail(OnboardingProcessEntity.ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION);
-            process.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+            process.setErrorDetail(errorDetail);
+            process.setErrorOrigin(errorOrigin);
             process.setTimestampLastUpdated(ownerId.getTimestamp());
             process.setTimestampFailed(ownerId.getTimestamp());
             process.setStatus(OnboardingStatus.FAILED);
@@ -124,44 +123,50 @@ public class IdentityVerificationLimitService {
     }
 
     /**
-     * Check the limit for maximum number of document uploads.
+     * Reset the given identity verification if the limit for maximum number of document uploads reached.
+     * In that case, thrown of {@link IdentityVerificationLimitException} is expected.
+     *
      * @param ownerId Owner identifier.
+     * @param identityVerification Identity verification.
      * @throws IdentityVerificationLimitException Thrown when document upload limit is reached.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
+    public void checkDocumentUploadLimit(OwnerId ownerId, IdentityVerificationEntity identityVerification)
+            throws IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
         final List<DocumentVerificationEntity> documentVerificationsFailed = documentVerificationRepository.findAllDocumentVerifications(identityVerification, DocumentStatus.ALL_FAILED);
         if (documentVerificationsFailed.size() > config.getDocumentUploadMaxFailedAttempts()) {
-            final IdentityVerificationPhase phase = identityVerification.getPhase();
-
-            identityVerification.setStatus(IdentityVerificationStatus.FAILED);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
-            identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-            identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationRepository.save(identityVerification);
-            logger.info("Switched to {}/FAILED; {}", phase, ownerId);
-            auditService.audit(identityVerification, "Switched to {}/FAILED; user ID: {}", phase, ownerId.getUserId());
-            resetIdentityVerification(ownerId);
+            resetIdentityVerification(ownerId, ErrorOrigin.PROCESS_LIMIT_CHECK, IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD);
             throw new IdentityVerificationLimitException("Max failed attempts reached for document upload, " + ownerId);
         }
     }
 
     /**
-     * Reset identity verification by setting activation flag to VERIFICATION_PENDING.
+     * Reset identity verification.
+     * <p>
+     * Set activation flag to {@code VERIFICATION_PENDING} and move the identity verification to {@code COMPLETED / FAILED}.
      *
      * @param ownerId Owner identification.
+     * @param errorOrigin Error origin.
+     * @param errorDetail Error detail.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws IdentityVerificationException Thrown when identity verification reset fails.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void resetIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
+    public void resetIdentityVerification(
+            final OwnerId ownerId,
+            final ErrorOrigin errorOrigin,
+            final String errorDetail) throws RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
+
         OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
+
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId())
+                .orElseThrow(() -> new IdentityVerificationException("Identity verification not found, activation ID: " + ownerId.getActivationId()));
+        moveToFailedPhaseAndStatus(identityVerification, ownerId, errorOrigin, errorDetail);
 
         // Increase process error score
         processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_IDENTITY_VERIFICATION_RESET);
@@ -193,4 +198,20 @@ public class IdentityVerificationLimitService {
         throw new OnboardingProcessLimitException("Max error score reached for onboarding process, process ID: " + process.getId() +", owner ID: " + ownerId);
     }
 
+    private void moveToFailedPhaseAndStatus(
+            final IdentityVerificationEntity identityVerification,
+            final OwnerId ownerId,
+            final ErrorOrigin errorOrigin,
+            final String errorDetail) {
+
+        identityVerification.setPhase(IdentityVerificationPhase.COMPLETED);
+        identityVerification.setStatus(IdentityVerificationStatus.FAILED);
+        identityVerification.setErrorOrigin(errorOrigin);
+        identityVerification.setErrorDetail(errorDetail);
+        identityVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+        identityVerification.setTimestampFailed(ownerId.getTimestamp());
+        identityVerificationRepository.save(identityVerification);
+        logger.info("Switched to COMPLETED/FAILED; {}", ownerId);
+        auditService.audit(identityVerification, "Switched to COMPLETED/FAILED; user ID: {}", ownerId.getUserId());
+    }
 }

@@ -39,17 +39,6 @@ import java.util.stream.Stream;
 @Repository
 public interface IdentityVerificationRepository extends CrudRepository<IdentityVerificationEntity, String> {
 
-    @Modifying
-    @Query("UPDATE IdentityVerificationEntity i " +
-            "SET i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED, " +
-            "    i.timestampLastUpdated = :timestamp " +
-            "WHERE i.activationId = :activationId " +
-            "AND i.status IN (" +
-                "com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS, " +
-                "com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING" +
-            ")")
-    int failRunningVerifications(String activationId, Date timestamp);
-
     Optional<IdentityVerificationEntity> findFirstByActivationIdOrderByTimestampCreatedDesc(String activationId);
 
     List<IdentityVerificationEntity> findByActivationIdOrderByTimestampCreatedDesc(String activationId);
