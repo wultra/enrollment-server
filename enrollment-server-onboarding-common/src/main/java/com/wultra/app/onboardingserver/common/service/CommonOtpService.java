@@ -196,7 +196,7 @@ public class CommonOtpService implements OtpService {
         if (otp.getType() == OtpType.USER_VERIFICATION) {
             // Reset current identity verification, if possible.
             try {
-                verificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.USER_VERIFICATION, "OTP for user verification failed");
+                verificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.OTP_VERIFICATION, "OTP for user verification failed");
             } catch (RemoteCommunicationException | IdentityVerificationException | OnboardingProcessLimitException | OnboardingProcessException ex) {
                 logger.error("Identity verification reset failed, error: {}", ex.getMessage(), ex);
                 // Obtain most current process entity, the process may have failed due to reached limit of identity verification resets

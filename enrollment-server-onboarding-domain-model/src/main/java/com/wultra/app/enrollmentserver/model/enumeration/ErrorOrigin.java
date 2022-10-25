@@ -32,8 +32,6 @@ public enum ErrorOrigin {
 
     OTP_VERIFICATION,
 
-    USER_VERIFICATION,
-
     PROCESS_LIMIT_CHECK,
 
     USER_REQUEST,
