@@ -228,6 +228,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public Response performCleanup(OnboardingCleanupRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
+        logger.info("Cleaning up process ID: {}", processId);
+
         final OnboardingProcessEntity process = findProcessWithLock(processId);
 
         otpService.cancelOtp(process, OtpType.ACTIVATION);
@@ -448,7 +450,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             try {
                 logger.info("Removing activation ID: {} of process ID: {}", activationId, process.getId());
                 activationService.removeActivation(activationId);
-                auditService.auditActivation(process, "Cleanup activation for user: {}", process.getUserId());
+                auditService.auditActivation(process, "Remove activation for user: {}", process.getUserId());
             } catch (RemoteCommunicationException e) {
                 throw new OnboardingProcessException(
                         String.format("Unable to remove activation ID: %s of process ID: %s", activationId, process.getId()), e);
