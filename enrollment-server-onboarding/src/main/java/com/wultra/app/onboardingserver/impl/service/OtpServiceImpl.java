@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -162,7 +163,7 @@ public class OtpServiceImpl extends CommonOtpService {
         calendar.add(Calendar.SECOND, (int) onboardingConfig.getOtpExpirationTime().getSeconds());
         Date timestampExpiration = calendar.getTime();
 
-        OnboardingOtpEntity otp = new OnboardingOtpEntity();
+        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setProcess(process);
         otp.setOtpCode(otpCode);
         otp.setType(otpType);
@@ -170,6 +171,14 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampCreated(timestampCreated);
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
+
+        if (otpType == OtpType.USER_VERIFICATION) {
+            final String activationId = process.getActivationId();
+            final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId)
+                    .orElseThrow(() -> new OnboardingProcessException("Identity verification not found, activation ID: " + activationId));
+            otp.setIdentityVerification(identityVerification);
+        }
+
         final OnboardingOtpEntity savedOtp = onboardingOtpRepository.save(otp);
         auditService.auditDebug(savedOtp, "Generated OTP for user: {}", process.getUserId());
         return otpCode;
