@@ -183,9 +183,9 @@ public class CommonOtpService implements OtpService {
         } else {
             // Increase error score for process based on OTP type
             if (otpType == OtpType.ACTIVATION) {
-                process = processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_ACTIVATION_OTP_FAILED);
+                process = processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_ACTIVATION_OTP_FAILED, ownerId);
             } else if (otpType == OtpType.USER_VERIFICATION) {
-                process = processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED);
+                process = processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED, ownerId);
             }
             // Check onboarding process error limit
             process = processLimitService.checkOnboardingProcessErrorLimits(process);

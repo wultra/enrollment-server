@@ -169,7 +169,7 @@ public class IdentityVerificationLimitService {
         moveToFailedPhaseAndStatus(identityVerification, ownerId, errorOrigin, errorDetail);
 
         // Increase process error score
-        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_IDENTITY_VERIFICATION_RESET);
+        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_IDENTITY_VERIFICATION_RESET, ownerId);
 
         // Check process error limits
         process = processLimitService.checkOnboardingProcessErrorLimits(process);

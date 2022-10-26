@@ -224,7 +224,7 @@ public class IdentityVerificationOtpService {
 
         markVerificationOtpAsFailed(process.getId(), idVerification);
 
-        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED);
+        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED, ownerId);
         final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
         response.setOnboardingStatus(status);
         response.setVerified(false);
