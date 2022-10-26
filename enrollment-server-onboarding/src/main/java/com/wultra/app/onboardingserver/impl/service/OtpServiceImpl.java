@@ -17,9 +17,11 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -32,8 +34,7 @@ import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitServ
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,9 +49,8 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class OtpServiceImpl extends CommonOtpService {
-
-    private static final Logger logger = LoggerFactory.getLogger(OtpServiceImpl.class);
 
     private final OtpGeneratorService otpGeneratorService;
 
@@ -182,4 +182,7 @@ public class OtpServiceImpl extends CommonOtpService {
         return Math.abs(System.currentTimeMillis() - date.getTime()) < (duration.getSeconds() * 1_000);
     }
 
+    public OtpVerifyResponse verifyOtpUserVerificationCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
+        return super.verifyOtpCode(processId, ownerId, otpCode, OtpType.USER_VERIFICATION);
+    }
 }

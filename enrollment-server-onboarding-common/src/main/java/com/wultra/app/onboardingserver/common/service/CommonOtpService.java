@@ -82,7 +82,11 @@ public class CommonOtpService implements OtpService {
     }
 
     @Override
-    public OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode, OtpType otpType) throws OnboardingProcessException {
+    public OtpVerifyResponse verifyOtpActivationCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
+        return verifyOtpCode(processId, ownerId, otpCode, OtpType.ACTIVATION);
+    }
+
+    protected OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode, OtpType otpType) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
             new OnboardingProcessException("Onboarding process not found: " + processId));
 

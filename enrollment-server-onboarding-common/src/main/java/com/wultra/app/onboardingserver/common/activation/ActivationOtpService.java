@@ -18,7 +18,6 @@
 package com.wultra.app.onboardingserver.common.activation;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.api.OtpService;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -49,7 +48,7 @@ public class ActivationOtpService {
      * @return OTP verification response.
      */
     public OtpVerifyResponse verifyOtpCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
-        return otpService.verifyOtpCode(processId, ownerId, otpCode, OtpType.ACTIVATION);
+        return otpService.verifyOtpActivationCode(processId, ownerId, otpCode);
     }
 
 }
