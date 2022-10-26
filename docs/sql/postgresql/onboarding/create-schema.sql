@@ -46,6 +46,7 @@ CREATE INDEX onboarding_process_timestamp_2 ON es_onboarding_process (timestamp_
 CREATE TABLE es_onboarding_otp (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     process_id VARCHAR(36) NOT NULL,
+    identity_verification_id VARCHAR(36),
     otp_code VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL,
     type VARCHAR(32) NOT NULL,
@@ -57,7 +58,8 @@ CREATE TABLE es_onboarding_otp (
     timestamp_last_updated TIMESTAMP,
     timestamp_verified TIMESTAMP,
     timestamp_failed TIMESTAMP,
-    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id),
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
 );
 
 -- PostgreSQL does not create indexes on foreign keys automatically

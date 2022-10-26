@@ -61,6 +61,13 @@ public class OnboardingOtpEntity implements Serializable {
     @JoinColumn(name = "process_id", referencedColumnName = "id", nullable = false)
     private OnboardingProcessEntity process;
 
+    /**
+     * Not-null only for {@link OtpType#USER_VERIFICATION} when limit is needed to count not over the whole process.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "identity_verification_id", referencedColumnName = "id", updatable = false)
+    private IdentityVerificationEntity identityVerification;
+
     @Column(name = "otp_code", nullable = false)
     private String otpCode;
 
