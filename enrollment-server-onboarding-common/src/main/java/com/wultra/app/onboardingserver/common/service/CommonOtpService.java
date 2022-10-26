@@ -25,8 +25,10 @@ import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.api.OtpService;
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
@@ -50,6 +52,7 @@ public class CommonOtpService implements OtpService {
 
     protected final OnboardingOtpRepository onboardingOtpRepository;
     protected final OnboardingProcessRepository onboardingProcessRepository;
+    protected final IdentityVerificationRepository identityVerificationRepository;
     protected final CommonOnboardingConfig commonOnboardingConfig;
     protected final OnboardingProcessLimitService processLimitService;
     protected final IdentityVerificationLimitService verificationLimitService;
@@ -60,6 +63,7 @@ public class CommonOtpService implements OtpService {
      * Service constructor.
      * @param onboardingOtpRepository Onboarding OTP repository.
      * @param onboardingProcessRepository Onboarding process repository.
+     * @param identityVerificationRepository Identity verification repository.
      * @param onboardingConfig Common onboarding configuration.
      * @param processLimitService Common onboarding process limit service.
      * @param verificationLimitService Common identity verification limit service.
@@ -68,6 +72,7 @@ public class CommonOtpService implements OtpService {
     public CommonOtpService(
             final OnboardingOtpRepository onboardingOtpRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
             final CommonOnboardingConfig onboardingConfig,
             final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationLimitService verificationLimitService,
@@ -75,6 +80,7 @@ public class CommonOtpService implements OtpService {
 
         this.onboardingOtpRepository = onboardingOtpRepository;
         this.onboardingProcessRepository = onboardingProcessRepository;
+        this.identityVerificationRepository = identityVerificationRepository;
         this.commonOnboardingConfig = onboardingConfig;
         this.processLimitService = processLimitService;
         this.verificationLimitService = verificationLimitService;
@@ -97,7 +103,7 @@ public class CommonOtpService implements OtpService {
         final Date now = ownerId.getTimestamp();
         boolean expired = false;
         boolean verified = false;
-        int failedAttempts = onboardingOtpRepository.countFailedAttemptsByProcessIdAndType(processId, otpType);
+        int failedAttempts = fetchFailedAttemptsCount(process, otpType);
         int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         if (OtpStatus.ACTIVE != otp.getStatus()) {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
@@ -139,6 +145,17 @@ public class CommonOtpService implements OtpService {
         return response;
     }
 
+    private int fetchFailedAttemptsCount(final OnboardingProcessEntity process, final OtpType otpType) throws OnboardingProcessException {
+        if (otpType == OtpType.ACTIVATION) {
+            return onboardingOtpRepository.countFailedAttempts(process, otpType);
+        } else {
+            final String activationId = process.getActivationId();
+            final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId)
+                    .orElseThrow(() -> new OnboardingProcessException("Identity verification not found, activation ID: " + activationId));
+            return onboardingOtpRepository.countFailedAttempts(process, otpType, identityVerification);
+        }
+    }
+
     /**
      * Handle failed OTP verification.
      * @param process Onboarding process entity.
@@ -148,7 +165,7 @@ public class CommonOtpService implements OtpService {
      * @throws OnboardingProcessException In case process is not found.
      */
     private void handleFailedOtpVerification(OnboardingProcessEntity process, OwnerId ownerId, OnboardingOtpEntity otp, OtpType otpType) throws OnboardingProcessException {
-        int failedAttempts = onboardingOtpRepository.countFailedAttemptsByProcessIdAndType(process.getId(), otpType);
+        int failedAttempts = fetchFailedAttemptsCount(process, otpType);
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
         otp.setTimestampLastUpdated(ownerId.getTimestamp());

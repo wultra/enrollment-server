@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -60,6 +61,7 @@ public class OtpServiceImpl extends CommonOtpService {
      * Service constructor.
      * @param otpGeneratorService OTP generator service.
      * @param onboardingOtpRepository Onboarding OTP repository.
+     * @param identityVerificationRepository Identity verification repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingConfig Onboarding configuration.
      * @param processLimitService Onboarding process limit service.
@@ -69,13 +71,14 @@ public class OtpServiceImpl extends CommonOtpService {
     public OtpServiceImpl(
             final OtpGeneratorService otpGeneratorService,
             final OnboardingOtpRepository onboardingOtpRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingConfig onboardingConfig,
             final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationLimitService verificationLimitService,
             final AuditService auditService) {
 
-        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService, verificationLimitService, auditService);
+        super(onboardingOtpRepository, onboardingProcessRepository, identityVerificationRepository, onboardingConfig, processLimitService, verificationLimitService, auditService);
         this.otpGeneratorService = otpGeneratorService;
         this.onboardingConfig = onboardingConfig;
     }
