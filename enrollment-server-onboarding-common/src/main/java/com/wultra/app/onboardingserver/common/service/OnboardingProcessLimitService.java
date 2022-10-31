@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.common.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -67,9 +68,13 @@ public class OnboardingProcessLimitService {
      * Increment error score for an onboarding process.
      * @param process Onboarding process entity.
      * @param error Onboarding process error.
+     * @param ownerId Owner identification.
      */
-    public OnboardingProcessEntity incrementErrorScore(OnboardingProcessEntity process, OnboardingProcessError error) {
-        process.setErrorScore(process.getErrorScore() + error.getErrorScore());
+    public OnboardingProcessEntity incrementErrorScore(final OnboardingProcessEntity process, final OnboardingProcessError error, final OwnerId ownerId) {
+        final int errorScoreIncrement = error.getErrorScore();
+        final int errorScoreTotal = process.getErrorScore() + errorScoreIncrement;
+        logger.info("Incrementing error score by {} to total {}, {}", errorScoreIncrement, errorScoreTotal, ownerId);
+        process.setErrorScore(errorScoreTotal);
         return onboardingProcessRepository.save(process);
     }
     

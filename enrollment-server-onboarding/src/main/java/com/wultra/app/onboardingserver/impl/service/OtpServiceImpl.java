@@ -17,11 +17,15 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -32,8 +36,7 @@ import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitServ
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,9 +51,8 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class OtpServiceImpl extends CommonOtpService {
-
-    private static final Logger logger = LoggerFactory.getLogger(OtpServiceImpl.class);
 
     private final OtpGeneratorService otpGeneratorService;
 
@@ -60,6 +62,7 @@ public class OtpServiceImpl extends CommonOtpService {
      * Service constructor.
      * @param otpGeneratorService OTP generator service.
      * @param onboardingOtpRepository Onboarding OTP repository.
+     * @param identityVerificationRepository Identity verification repository.
      * @param onboardingProcessRepository Onboarding process repository.
      * @param onboardingConfig Onboarding configuration.
      * @param processLimitService Onboarding process limit service.
@@ -69,13 +72,14 @@ public class OtpServiceImpl extends CommonOtpService {
     public OtpServiceImpl(
             final OtpGeneratorService otpGeneratorService,
             final OnboardingOtpRepository onboardingOtpRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
             final OnboardingProcessRepository onboardingProcessRepository,
             final OnboardingConfig onboardingConfig,
             final OnboardingProcessLimitService processLimitService,
             final IdentityVerificationLimitService verificationLimitService,
             final AuditService auditService) {
 
-        super(onboardingOtpRepository, onboardingProcessRepository, onboardingConfig, processLimitService, verificationLimitService, auditService);
+        super(onboardingOtpRepository, onboardingProcessRepository, identityVerificationRepository, onboardingConfig, processLimitService, verificationLimitService, auditService);
         this.otpGeneratorService = otpGeneratorService;
         this.onboardingConfig = onboardingConfig;
     }
@@ -159,7 +163,7 @@ public class OtpServiceImpl extends CommonOtpService {
         calendar.add(Calendar.SECOND, (int) onboardingConfig.getOtpExpirationTime().getSeconds());
         Date timestampExpiration = calendar.getTime();
 
-        OnboardingOtpEntity otp = new OnboardingOtpEntity();
+        final OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setProcess(process);
         otp.setOtpCode(otpCode);
         otp.setType(otpType);
@@ -167,6 +171,14 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampCreated(timestampCreated);
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
+
+        if (otpType == OtpType.USER_VERIFICATION) {
+            final String activationId = process.getActivationId();
+            final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId)
+                    .orElseThrow(() -> new OnboardingProcessException("Identity verification not found, activation ID: " + activationId));
+            otp.setIdentityVerification(identityVerification);
+        }
+
         final OnboardingOtpEntity savedOtp = onboardingOtpRepository.save(otp);
         auditService.auditDebug(savedOtp, "Generated OTP for user: {}", process.getUserId());
         return otpCode;
@@ -182,4 +194,7 @@ public class OtpServiceImpl extends CommonOtpService {
         return Math.abs(System.currentTimeMillis() - date.getTime()) < (duration.getSeconds() * 1_000);
     }
 
+    public OtpVerifyResponse verifyOtpUserVerificationCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
+        return super.verifyOtpCode(processId, ownerId, otpCode, OtpType.USER_VERIFICATION);
+    }
 }

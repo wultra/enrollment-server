@@ -18,8 +18,10 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -69,8 +71,29 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
             "WHERE o.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired);
 
-    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
-    int countFailedAttemptsByProcessIdAndType(String processId, OtpType type);
+    /**
+     * Count failed OTP attempts of the given process and OTP type not used for identity verification.
+     *
+     * @param process process
+     * @param type OTP type
+     * @return failed attempts count
+     * @see #countFailedAttempts(OnboardingProcessEntity, OtpType, IdentityVerificationEntity)
+     */
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o " +
+            "WHERE o.process = :process AND o.identityVerification is null AND o.type = :type")
+    int countFailedAttempts(OnboardingProcessEntity process, OtpType type);
+
+    /**
+     * Count failed OTP attempts of the given process, OTP type and identity verification.
+     *
+     * @param process process
+     * @param type OTP type
+     * @return failed attempts count
+     * @see #countFailedAttempts(OnboardingProcessEntity, OtpType)
+     */
+    @Query("SELECT SUM(o.failedAttempts) FROM OnboardingOtpEntity o " +
+            "WHERE o.process = :process AND o.identityVerification = :identityVerification AND o.type = :type")
+    int countFailedAttempts(OnboardingProcessEntity process, OtpType type, IdentityVerificationEntity identityVerification);
 
     @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     Date getNewestOtpCreatedTimestamp(String processId, OtpType type);

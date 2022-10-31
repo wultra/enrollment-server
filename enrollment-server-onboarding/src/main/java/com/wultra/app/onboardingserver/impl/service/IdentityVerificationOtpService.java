@@ -155,7 +155,7 @@ public class IdentityVerificationOtpService {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
             new OnboardingProcessException(String.format("Onboarding Process ID: %s not found.", processId)));
 
-        final OtpVerifyResponse response = otpService.verifyOtpCode(process.getId(), ownerId, otpCode, OtpType.USER_VERIFICATION);
+        final OtpVerifyResponse response = otpService.verifyOtpUserVerificationCode(process.getId(), ownerId, otpCode);
         logger.debug("OTP code verified: {}, process ID: {}", response.isVerified(), processId);
         if (!identityVerificationConfig.isPresenceCheckEnabled()) {
             return response;
@@ -224,7 +224,7 @@ public class IdentityVerificationOtpService {
 
         markVerificationOtpAsFailed(process.getId(), idVerification);
 
-        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED);
+        processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_USER_VERIFICATION_OTP_FAILED, ownerId);
         final OnboardingStatus status = processLimitService.checkOnboardingProcessErrorLimits(process).getStatus();
         response.setOnboardingStatus(status);
         response.setVerified(false);

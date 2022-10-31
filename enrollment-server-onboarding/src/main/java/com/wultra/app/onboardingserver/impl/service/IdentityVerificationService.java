@@ -336,10 +336,10 @@ public class IdentityVerificationService {
         if (idVerification.getStatus() == FAILED || idVerification.getStatus() == REJECTED) {
             OnboardingProcessEntity process = processService.findProcess(idVerification.getProcessId());
             if (idVerification.getStatus() == FAILED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED);
+                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
             }
             if (idVerification.getStatus() == REJECTED) {
-                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED);
+                processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
             }
             processLimitService.checkOnboardingProcessErrorLimits(process);
         }
