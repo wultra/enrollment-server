@@ -31,7 +31,6 @@ import java.util.List;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-// TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
 @Slf4j
 public class RequiredDocumentTypesCheck {
