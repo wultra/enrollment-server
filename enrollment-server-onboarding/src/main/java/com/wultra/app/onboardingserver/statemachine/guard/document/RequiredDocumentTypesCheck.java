@@ -16,7 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Validate presence of all required documents.
@@ -42,24 +39,20 @@ public class RequiredDocumentTypesCheck {
     private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(DocumentType.ID_CARD, DocumentType.PASSPORT, DocumentType.DRIVING_LICENSE);
 
     /**
-     * Evaluate all required document types to be present and accepted.
+     * Evaluate all required document types to be present.
      *
      * @param documentVerifications document verifications to evaluate
      * @param identityVerificationId identity verification ID to log
      * @return true when all required document types present and accepted
      */
     public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
-        final Collection<DocumentVerificationEntity> acceptedDocumentVerifications = documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .collect(toList());
-
-        if (!isTwoDistinctDocumentsPresent(acceptedDocumentVerifications)) {
+        if (!isTwoDistinctDocumentsPresent(documentVerifications)) {
             logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);
             return false;
-        } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
+        } else if (!containsPrimaryDocument(documentVerifications)) {
             logger.debug("There is no accepted primary document yet for identity verification ID: {}", identityVerificationId);
             return false;
-        } else if (!containsSecondDocument(acceptedDocumentVerifications)) {
+        } else if (!containsSecondDocument(documentVerifications)) {
             logger.debug("There is no accepted secondary document yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else {
@@ -71,7 +64,7 @@ public class RequiredDocumentTypesCheck {
     private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
         return 2 == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
-                .filter(it -> PHYSICAL_DOCUMENTS.contains(it))
+                .filter(PHYSICAL_DOCUMENTS::contains)
                 .distinct()
                 .count();
     }
