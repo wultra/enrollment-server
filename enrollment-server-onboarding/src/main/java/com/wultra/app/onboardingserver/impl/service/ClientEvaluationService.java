@@ -125,9 +125,11 @@ public class ClientEvaluationService {
 
     private static String getVerificationId(final IdentityVerificationEntity identityVerification) {
         return identityVerification.getDocumentVerifications().stream()
+                .filter(DocumentVerificationEntity::isUsedForVerification)
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .findAny()
                 .map(DocumentVerificationEntity::getVerificationId)
-                .orElseThrow(() -> new IllegalStateException("No document verification for " + identityVerification));
+                .orElseThrow(() -> new IllegalStateException("No accepted document verification for " + identityVerification));
     }
 
     private void processEvaluationSuccess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
