@@ -135,12 +135,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws RemoteCommunicationException, DocumentVerificationException {
         DocumentsSubmitResult result = new DocumentsSubmitResult();
 
-        String sessionId = UUID.randomUUID().toString();
         for (SubmittedDocument document : documents) {
             ResponseEntity<ZenidWebUploadSampleResponse> responseEntity;
 
             try {
-                responseEntity = zenidApiService.uploadSample(id, sessionId, document);
+                responseEntity = zenidApiService.uploadSample(id, document);
             } catch (RestClientException e) {
                 throw new RemoteCommunicationException(
                         String.format("Failed REST call to submit documents to ZenID, statusCode=%s, responseBody='%s', %s",
