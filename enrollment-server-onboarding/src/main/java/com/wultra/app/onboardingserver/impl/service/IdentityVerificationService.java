@@ -264,7 +264,8 @@ public class IdentityVerificationService {
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
 
-        DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        logger.info("Verified documents upload ID: {}, verification ID: {}, {}", uploadIds, result.getVerificationId(), ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
         moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
