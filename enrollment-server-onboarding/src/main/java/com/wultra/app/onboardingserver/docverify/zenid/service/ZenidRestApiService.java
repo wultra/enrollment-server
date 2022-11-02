@@ -98,15 +98,14 @@ public class ZenidRestApiService {
      * Uploads photo data as a sample DocumentPicture
      *
      * @param ownerId Owner identification.
-     * @param sessionId Session id which allows to link several uploads together.
      * @param document Submitted document.
      * @return Response entity with the upload result
      */
-    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, String sessionId, SubmittedDocument document)
+    public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, SubmittedDocument document)
             throws RestClientException {
         Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
 
-        MultiValueMap<String, String> queryParams = buildQueryParams(ownerId, sessionId, document);
+        final MultiValueMap<String, String> queryParams = buildQueryParams(ownerId, document);
 
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("file", new ByteArrayResource(document.getPhoto().getData()) {
@@ -209,13 +208,12 @@ public class ZenidRestApiService {
         return restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
     }
 
-    private MultiValueMap<String, String> buildQueryParams(OwnerId ownerId, String sessionId, SubmittedDocument document) {
+    private MultiValueMap<String, String> buildQueryParams(OwnerId ownerId, SubmittedDocument document) {
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
         queryParams.add("async", String.valueOf(configProps.isAsyncProcessingEnabled()).toLowerCase());
         queryParams.add("expectedSampleType", toSampleType(document.getType()).toString());
         queryParams.add("customData", ownerId.getActivationId());
-        queryParams.add("uploadSessionID", sessionId);
         queryParams.add("country", configProps.getDocumentCountry().toString());
 
         configProps.getProfile().ifPresent(profile ->
