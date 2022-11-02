@@ -185,6 +185,13 @@ CREATE TABLE IF NOT EXISTS audit_log (
     build_time         TIMESTAMP
 );
 
+CREATE TABLE audit_param (
+    audit_log_id       VARCHAR(36),
+    timestamp_created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    param_key          VARCHAR(256),
+    param_value        VARCHAR(4000)
+);
+
 CREATE INDEX IF NOT EXISTS audit_log_timestamp ON audit_log (timestamp_created);
 CREATE INDEX IF NOT EXISTS audit_log_application ON audit_log (application_name);
 CREATE INDEX IF NOT EXISTS audit_log_level ON audit_log (audit_level);

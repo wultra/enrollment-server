@@ -156,25 +156,17 @@ CREATE TABLE ES_DOCUMENT_RESULT (
 CREATE INDEX DOCUMENT_VERIF_RESULT ON ES_DOCUMENT_RESULT (DOCUMENT_VERIFICATION_ID);
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
-BEGIN EXECUTE IMMEDIATE '
-    CREATE TABLE shedlock (
-                                   name VARCHAR2(64 CHAR) NOT NULL,
-                                   lock_until TIMESTAMP(3) NOT NULL,
-                                   locked_at TIMESTAMP(3) NOT NULL,
-                                   locked_by VARCHAR2(255 CHAR) NOT NULL,
-                                   PRIMARY KEY (name)
-    )';
-EXCEPTION
-   WHEN OTHERS THEN
-      IF SQLCODE != -955 THEN
-         RAISE;
-      END IF;
-END;
+BEGIN EXECUTE IMMEDIATE 'CREATE TABLE shedlock (
+    name VARCHAR2(64 CHAR) NOT NULL,
+    lock_until TIMESTAMP(3) NOT NULL,
+    locked_at TIMESTAMP(3) NOT NULL,
+    locked_by VARCHAR2(255 CHAR) NOT NULL,
+    PRIMARY KEY (name))';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
 /
 
 -- Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library
-BEGIN EXECUTE IMMEDIATE '
-CREATE TABLE audit_log (
+BEGIN EXECUTE IMMEDIATE 'CREATE TABLE audit_log (
     audit_log_id       VARCHAR2(36 CHAR) PRIMARY KEY,
     application_name   VARCHAR2(256 CHAR) NOT NULL,
     audit_level        VARCHAR2(32 CHAR) NOT NULL,
@@ -187,21 +179,46 @@ CREATE TABLE audit_log (
     calling_class      VARCHAR2(256 CHAR) NOT NULL,
     thread_name        VARCHAR2(256 CHAR) NOT NULL,
     version            VARCHAR2(256 CHAR),
-    build_time         TIMESTAMP
-);
+    build_time         TIMESTAMP)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
 
-CREATE INDEX audit_log_timestamp ON audit_log (timestamp_created);
-CREATE INDEX audit_log_application ON audit_log (application_name);
-CREATE INDEX audit_log_level ON audit_log (audit_level);
-CREATE INDEX audit_log_type ON audit_log (audit_type);
-CREATE INDEX audit_param_log ON audit_param (audit_log_id);
-CREATE INDEX audit_param_timestamp ON audit_param (timestamp_created);
-CREATE INDEX audit_param_key ON audit_param (param_key);
-CREATE INDEX audit_param_value ON audit_param (param_value);';
-EXCEPTION
-   WHEN OTHERS THEN
-      IF SQLCODE != -955 THEN
-         RAISE;
-END IF;
-END;
+BEGIN EXECUTE IMMEDIATE 'CREATE TABLE audit_param (
+    audit_log_id       VARCHAR2(36 CHAR),
+    timestamp_created  TIMESTAMP,
+    param_key          VARCHAR2(256 CHAR),
+    param_value        VARCHAR2(4000 CHAR))';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_timestamp ON audit_log (timestamp_created)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_application ON audit_log (application_name)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_level ON audit_log (audit_level)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_log_type ON audit_log (audit_type)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_log ON audit_param (audit_log_id)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_timestamp ON audit_param (timestamp_created)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_key ON audit_param (param_key)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
+/
+
+BEGIN EXECUTE IMMEDIATE 'CREATE INDEX audit_param_value ON audit_param (param_value)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
 /
