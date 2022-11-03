@@ -88,3 +88,12 @@ The following Java runtime versions are supported:
 - Java 17 (LTS release)
 
 The Enrollment Server may run on other Java versions, however we do not perform extensive testing with non-LTS releases.
+
+## How to Disable Display of Tomcat Version
+
+It case you do not want to show Tomcat version on error pages when deploying Enrollment server, you can use the following configuration:
+
+- Edit the file `<install-directory>/conf/server.xml`.
+- Search for the parameters `<Host name="..."/>`.
+- Just below that line, insert the following parameters `<Valve className="org.apache.catalina.valves.ErrorReportValve" showReport="false" showServerInfo="false"/>`.
+- Restart Tomcat.
