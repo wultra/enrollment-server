@@ -264,14 +264,17 @@ public class IdentityVerificationService {
                 .map(DocumentVerificationEntity::getUploadId)
                 .collect(Collectors.toList());
 
-        DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
-        auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", result.getStatus(), ownerId.getUserId());
+        final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        final String verificationId = result.getVerificationId();
+        final DocumentVerificationStatus status = result.getStatus();
+        logger.info("Verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
+        auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
 
         moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
 
         docVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
-            docVerification.setVerificationId(result.getVerificationId());
+            docVerification.setVerificationId(verificationId);
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
             auditService.auditDebug(docVerification, "Started document verification for user: {}", ownerId.getUserId());
         });

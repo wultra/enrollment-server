@@ -431,9 +431,11 @@ public class DocumentProcessingService {
 
     private void verifyDocumentWithUpload(OwnerId ownerId, DocumentVerificationEntity docVerification, String uploadId) {
         try {
-            DocumentsVerificationResult docsVerificationResult =
-                    documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
-            docVerification.setVerificationId(docsVerificationResult.getVerificationId());
+            final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
+            final String verificationId = result.getVerificationId();
+            final DocumentVerificationStatus status = result.getStatus();
+            logger.info("Verified document upload ID: {}, verification ID: {}, status: {}, {}", uploadId, verificationId, status, ownerId);
+            docVerification.setVerificationId(verificationId);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.debug("Unable to verify document with uploadId: {}, {}", uploadId, ownerId, e);
             logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);
