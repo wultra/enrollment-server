@@ -92,7 +92,7 @@ public class ZenidConfigProps {
 
     @PostConstruct
     void validate() {
-        // TODO (racansky, 2022-11-03) DocumentVerificationFinalAction works only in sync mode
+        // TODO (racansky, 2022-11-03, #495) DocumentVerificationFinalAction works only in sync mode
         Assert.state(!asyncProcessingEnabled, "ZenId async functionality is not fully supported yet");
     }
 }
