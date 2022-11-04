@@ -39,6 +39,7 @@ public class AuditService {
     private static final String ACTIVATION_ID = "activationId";
     private static final String USER_ID = "userId";
     private static final String OTP_ID = "otpId";
+    private static final String DOCUMENT_ID = "documentId";
     private static final String DOCUMENT_VERIFICATION_ID = "documentVerificationId";
 
     private final Audit audit;
@@ -250,15 +251,16 @@ public class AuditService {
                 .build();
     }
 
-    private static AuditDetail createAuditDetail(final DocumentVerificationEntity documentVerification) {
-        final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
+    private static AuditDetail createAuditDetail(final DocumentVerificationEntity document) {
+        final IdentityVerificationEntity identityVerification = document.getIdentityVerification();
         return AuditDetail.builder()
                 .type(AuditType.DOCUMENT_VERIFICATION.code)
                 .param(IDENTITY_VERIFICATION_ID, identityVerification.getId())
                 .param(PROCESS_ID, identityVerification.getProcessId())
                 .param(ACTIVATION_ID, identityVerification.getActivationId())
                 .param(USER_ID, identityVerification.getUserId())
-                .param(DOCUMENT_VERIFICATION_ID, documentVerification.getId())
+                .param(DOCUMENT_ID, document.getId())
+                .param(DOCUMENT_VERIFICATION_ID, document.getVerificationId())
                 .build();
     }
 

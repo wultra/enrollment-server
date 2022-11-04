@@ -30,9 +30,18 @@ public enum IdentityVerificationPhase {
     DOCUMENT_UPLOAD,
 
     /**
-     * Document verification is in progress.
+     * Document verification. The client may interact.
+     *
+     * @see #DOCUMENT_VERIFICATION_FINAL
      */
     DOCUMENT_VERIFICATION,
+
+    /**
+     * Final document verification. The client may not interact.
+     *
+     * @see #DOCUMENT_VERIFICATION
+     */
+    DOCUMENT_VERIFICATION_FINAL,
 
     /**
      * Client evaluation is in progress.

@@ -71,7 +71,7 @@ public class RequiredDocumentTypesCheck {
     private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
         return 2 == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
-                .filter(it -> PHYSICAL_DOCUMENTS.contains(it))
+                .filter(PHYSICAL_DOCUMENTS::contains)
                 .distinct()
                 .count();
     }

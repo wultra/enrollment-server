@@ -24,7 +24,9 @@ import lombok.Setter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
+import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 /**
@@ -86,5 +88,11 @@ public class ZenidConfigProps {
      */
     public Optional<String> getProfile() {
         return Optional.ofNullable(profile);
+    }
+
+    @PostConstruct
+    void validate() {
+        // TODO (racansky, 2022-11-03, #495) DocumentVerificationFinalAction works only in sync mode
+        Assert.state(!asyncProcessingEnabled, "ZenId async functionality is not fully supported yet");
     }
 }

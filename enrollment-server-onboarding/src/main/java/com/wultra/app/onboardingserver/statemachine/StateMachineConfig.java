@@ -96,6 +96,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final VerificationProcessResultAction verificationProcessResultAction;
 
+    private final DocumentVerificationFinalAction documentVerificationFinalAction;
+
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
@@ -128,6 +130,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final VerificationDocumentStartAction verificationDocumentStartAction,
             final VerificationInitAction verificationInitAction,
             final VerificationProcessResultAction verificationProcessResultAction,
+            final DocumentVerificationFinalAction documentVerificationFinalAction,
             final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard,
             final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
             final OtpVerifiedGuard otpVerifiedGuard,
@@ -152,6 +155,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.verificationDocumentStartAction = verificationDocumentStartAction;
         this.verificationInitAction = verificationInitAction;
         this.verificationProcessResultAction = verificationProcessResultAction;
+        this.documentVerificationFinalAction = documentVerificationFinalAction;
 
         this.documentUploadVerificationPendingGuard = documentUploadVerificationPendingGuard;
 
@@ -205,6 +209,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         configureInitialTransition(transitions);
         configureDocumentUploadTransitions(transitions);
         configureDocumentVerificationTransitions(transitions);
+        configureDocumentVerificationFinalTransitions(transitions);
         configureClientEvaluationTransitions(transitions);
         configurePresenceCheckTransitions(transitions);
         configureOtpTransitions(transitions);
@@ -277,6 +282,16 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
+                .action(documentVerificationFinalAction)
+                .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS);
+    }
+
+    private void configureDocumentVerificationFinalTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
+        transitions
+                .withExternal()
+                .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .action(clientEvaluationInitAction)
