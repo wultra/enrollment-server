@@ -19,17 +19,15 @@ package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import com.wultra.app.onboardingserver.statemachine.action.ActionUtil;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 /**
  * Action to initialize client evaluation.
@@ -53,14 +51,6 @@ public class ClientEvaluationInitAction implements Action<OnboardingState, Onboa
 
         clientEvaluationService.initClientEvaluation(ownerId, identityVerification);
 
-        sendNextStateEvent(context);
-    }
-
-    private static void sendNextStateEvent(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final Message<OnboardingEvent> message = MessageBuilder.withPayload(OnboardingEvent.EVENT_NEXT_STATE)
-                .setHeader(EventHeaderName.OWNER_ID, context.getMessageHeader(EventHeaderName.OWNER_ID))
-                .setHeader(EventHeaderName.PROCESS_ID, context.getMessageHeader(EventHeaderName.PROCESS_ID))
-                .build();
-        context.getStateMachine().sendEvent(Mono.just(message)).subscribe();
+        ActionUtil.sendNextStateEvent(context);
     }
 }

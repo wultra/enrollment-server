@@ -16,7 +16,10 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
@@ -31,6 +34,7 @@ import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitServ
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.statemachine.action.ActionUtil;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -89,6 +93,7 @@ public class DocumentVerificationFinalAction implements Action<OnboardingState, 
         try {
             // TODO Lubos extract to service
             executeInternal(identityVerification, ownerId);
+            ActionUtil.sendNextStateEvent(context);
         } catch (RemoteCommunicationException | DocumentVerificationException | OnboardingProcessException e) {
             context.getStateMachine().setStateMachineError(e);
         }
