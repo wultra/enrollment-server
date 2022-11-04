@@ -64,7 +64,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     @Test
-    void checkDocumentUploadTest() throws Exception {
+    void checkDocumentUploadTest() {
         SubmittedDocument document = createSubmittedDocument();
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
 
@@ -90,16 +90,16 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     @Test
-    void verifyDocumentsTest() throws Exception {
+    void verifyDocumentsTest() {
         List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
-        assertEquals(DocumentVerificationStatus.IN_PROGRESS, result.getStatus());
+        assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
         assertNotNull(result.getVerificationId());
     }
 
     @Test
-    void getVerificationResultTest() throws Exception {
+    void getVerificationResultTest() {
         List<String> uploadIds = List.of("doc_1", "doc_2");
 
         DocumentsVerificationResult result = provider.verifyDocuments(ownerId, uploadIds);
@@ -132,14 +132,14 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     @Test
-    void cleanupDocumentsTest() throws Exception {
+    void cleanupDocumentsTest() {
         List<String> uploadIds = List.of("doc_1", "doc_2");
 
         provider.cleanupDocuments(ownerId, uploadIds);
     }
 
     @Test
-    void parseRejectionReasonsTest() throws Exception {
+    void parseRejectionReasonsTest() {
         DocumentResultEntity docResultRejected = new DocumentResultEntity();
         docResultRejected.setVerificationResult("{\"reason\":\"rejected\"}");
         assertEquals(List.of("Rejection reason"), provider.parseRejectionReasons(docResultRejected));
@@ -150,7 +150,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     @Test
-    void initVerificationSdkTest() throws Exception {
+    void initVerificationSdkTest() {
         Map<String, String> attributes = Map.of(MockConst.SDK_INIT_TOKEN, "mock-sdk-init-token");
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
         assertNotNull(verificationSdkInfo.getAttributes().get(MockConst.SDK_INIT_RESPONSE), "Missing SDK init response");

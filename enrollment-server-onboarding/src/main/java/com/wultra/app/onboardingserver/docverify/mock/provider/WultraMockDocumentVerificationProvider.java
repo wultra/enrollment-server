@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.docverify.mock.MockConst;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Mock implementation of the {@link DocumentVerificationProvider}
@@ -53,6 +55,9 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     private final Cache<String, List<String>> verificationUploadIds;
 
     private final Cache<String, DocumentSubmitResult> submittedDocs;
+
+    @Value("${enrollment-server.document-verification.mock.asyncProcessingEnabled:false}")
+    private boolean asyncProcessingEnabled;
 
     public WultraMockDocumentVerificationProvider() {
         logger.warn("Using mocked version of {}", DocumentVerificationProvider.class.getName());
@@ -99,7 +104,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
         List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(doc -> toDocumentSubmitResult(doc.getDocumentId()))
-                .collect(Collectors.toList());
+                .collect(toList());
 
         DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {
@@ -108,7 +113,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         }
         result.setResults(submitResults);
         submitResults.forEach(submitResult ->
-            submittedDocs.put(submitResult.getUploadId(), submitResult));
+                submittedDocs.put(submitResult.getUploadId(), submitResult));
 
         logger.info("Mock - submitted documents, {}", id);
         return result;
@@ -116,43 +121,59 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) {
-        String verificationId = UUID.randomUUID().toString();
+        final String verificationId = UUID.randomUUID().toString();
 
-        DocumentsVerificationResult result = new DocumentsVerificationResult();
-        result.setStatus(DocumentVerificationStatus.IN_PROGRESS);
-        result.setVerificationId(verificationId);
+        final DocumentsVerificationResult result;
+        if (asyncProcessingEnabled) {
+            result = new DocumentsVerificationResult();
+            result.setStatus(DocumentVerificationStatus.IN_PROGRESS);
+            result.setVerificationId(verificationId);
+        } else {
+            result = createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
+        }
 
         verificationUploadIds.put(verificationId, uploadIds);
 
-        logger.info("Mock - verifying documents uploadIds={}, {}", uploadIds, id);
+        logger.info("Mock - verifying documents uploadIds={}, asyncProcessingEnabled={}, {}", uploadIds, asyncProcessingEnabled, id);
         return result;
     }
 
     @Override
     public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) {
-        DocumentsVerificationResult result = new DocumentsVerificationResult();
-        List<String> uploadIds = verificationUploadIds.getIfPresent(verificationId);
+        final DocumentsVerificationResult result;
+        final List<String> uploadIds = verificationUploadIds.getIfPresent(verificationId);
         if (uploadIds == null) {
+            result = new DocumentsVerificationResult();
             result.setStatus(DocumentVerificationStatus.FAILED);
             result.setErrorDetail("not existing verificationId: " + verificationId);
         } else {
-            List<DocumentVerificationResult> verificationResults = uploadIds.stream()
-                    .map(uploadId -> {
-                        DocumentVerificationResult verificationResult = new DocumentVerificationResult();
-                        verificationResult.setExtractedData("{\"extracted\": \"data-" + uploadId + "\"}");
-                        verificationResult.setUploadId(uploadId);
-                        verificationResult.setVerificationResult("{\"verificationResult\": \"data-" + uploadId + "\"}");
-                        return verificationResult;
-                    })
-                    .collect(Collectors.toList());
-
-            result.setResults(verificationResults);
-            result.setStatus(DocumentVerificationStatus.ACCEPTED);
-            result.setVerificationId(verificationId);
+            result = createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
         }
 
         logger.info("Mock - getting verification result verificationId={}, {}", verificationId, id);
         return result;
+    }
+
+    private static DocumentsVerificationResult createSuccessfulDocumentsVerificationResult(final String verificationId, final List<String> uploadIds) {
+        final DocumentsVerificationResult result = new DocumentsVerificationResult();
+
+        final List<DocumentVerificationResult> verificationResults = uploadIds.stream()
+                .map(WultraMockDocumentVerificationProvider::createDocumentVerificationResult)
+                .collect(toList());
+
+        result.setResults(verificationResults);
+        result.setStatus(DocumentVerificationStatus.ACCEPTED);
+        result.setVerificationId(verificationId);
+
+        return result;
+    }
+
+    private static DocumentVerificationResult createDocumentVerificationResult(final String uploadId) {
+        final DocumentVerificationResult verificationResult = new DocumentVerificationResult();
+        verificationResult.setExtractedData("{\"extracted\": \"data-" + uploadId + "\"}");
+        verificationResult.setUploadId(uploadId);
+        verificationResult.setVerificationResult("{\"verificationResult\": \"data-" + uploadId + "\"}");
+        return verificationResult;
     }
 
     @Override
