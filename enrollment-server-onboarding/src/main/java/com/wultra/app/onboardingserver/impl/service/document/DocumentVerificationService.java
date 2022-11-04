@@ -184,11 +184,11 @@ public class DocumentVerificationService {
 
     private void incrementErrorScore(
             final IdentityVerificationEntity identityVerification,
-            final OnboardingProcessError errorDocumentVerificationFailed,
+            final OnboardingProcessError error,
             final OwnerId ownerId) throws OnboardingProcessException {
 
         final OnboardingProcessEntity process = processService.findProcess(identityVerification.getProcessId());
-        processLimitService.incrementErrorScore(process, errorDocumentVerificationFailed, ownerId);
+        processLimitService.incrementErrorScore(process, error, ownerId);
         processLimitService.checkOnboardingProcessErrorLimits(process);
     }
 
