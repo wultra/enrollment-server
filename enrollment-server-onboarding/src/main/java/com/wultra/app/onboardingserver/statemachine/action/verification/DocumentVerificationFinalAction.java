@@ -34,8 +34,7 @@ import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Call final document verification at {@code DOCUMENT_VERIFICATION_FINAL} phase and move to {@code CLIENT_EVALUATION / IN_PROGRESS}
- * or in case or error to {@code DOCUMENT_VERIFICATION_FINAL / FAILED} or {@code DOCUMENT_VERIFICATION_FINAL / REJECTED}.
+ * Call final document verification at {@code DOCUMENT_VERIFICATION_FINAL} phase and move to the next state.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */

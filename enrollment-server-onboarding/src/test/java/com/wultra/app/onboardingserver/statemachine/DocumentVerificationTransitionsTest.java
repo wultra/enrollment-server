@@ -110,7 +110,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
+                .expectState(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
                 .and()
                 .build()
                 .test();

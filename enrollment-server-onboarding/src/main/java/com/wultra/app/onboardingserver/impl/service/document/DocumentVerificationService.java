@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static java.util.stream.Collectors.toList;
 
@@ -81,8 +81,7 @@ public class DocumentVerificationService {
     /**
      * Execute final document verification of the given identity verification.
      * <p>
-     * Based on the result of calling document verification provider, move the identity verification to {@code CLIENT_EVALUATION / IN_PROGRESS}
-     * or in case or error to {@code DOCUMENT_VERIFICATION_FINAL / FAILED} or {@code DOCUMENT_VERIFICATION_FINAL / REJECTED}.
+     * Based on the result of calling document verification provider, change the identity verification status.
      * Also change status of the document verifications accordingly.
      *
      * @param identityVerification Identification verification whose documents should be verified
@@ -93,6 +92,8 @@ public class DocumentVerificationService {
      */
     public void executeFinalDocumentVerification(final IdentityVerificationEntity identityVerification, final OwnerId ownerId)
             throws RemoteCommunicationException, DocumentVerificationException, OnboardingProcessException {
+
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION_FINAL, IN_PROGRESS, ownerId);
 
         final List<DocumentVerificationEntity> documentVerifications = filterDocumentVerifications(identityVerification);
 
@@ -134,7 +135,7 @@ public class DocumentVerificationService {
             final OwnerId ownerId) {
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, CLIENT_EVALUATION, IN_PROGRESS, ownerId);
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION_FINAL, ACCEPTED, ownerId);
     }
 
     private void reject(
