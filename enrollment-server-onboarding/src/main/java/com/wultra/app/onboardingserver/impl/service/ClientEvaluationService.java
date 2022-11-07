@@ -115,14 +115,15 @@ public class ClientEvaluationService {
 
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
         for (int i = 0; i < maxFailedAttempts; i++) {
+            final int attempt = i + 1;
             try {
                 final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
                 processEvaluationSuccess(identityVerification, ownerId, response);
-                logger.debug("Client evaluation finished for {}, attempt: {}", identityVerification, i + 1);
+                logger.debug("Client evaluation finished for {}, attempt: {}", identityVerification, attempt);
                 return;
             } catch (Exception e) {
-                logger.warn("Client evaluation failed for {}, attempt: {}, {}, {}", identityVerification, i + 1, ownerId, e.getMessage());
-                logger.debug("Client evaluation failed for {} - attempt: {}, {}", identityVerification, i + 1, ownerId, e);
+                logger.warn("Client evaluation failed for {}, attempt: {}, {}, {}", identityVerification, attempt, ownerId, e.getMessage());
+                logger.debug("Client evaluation failed for {} - attempt: {}, {}", identityVerification, attempt, ownerId, e);
             }
         }
         processTooManyEvaluationError(identityVerification, ownerId);
