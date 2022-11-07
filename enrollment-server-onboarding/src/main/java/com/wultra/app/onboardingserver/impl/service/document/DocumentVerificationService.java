@@ -93,8 +93,6 @@ public class DocumentVerificationService {
     public void executeFinalDocumentVerification(final IdentityVerificationEntity identityVerification, final OwnerId ownerId)
             throws RemoteCommunicationException, DocumentVerificationException, OnboardingProcessException {
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION_FINAL, IN_PROGRESS, ownerId);
-
         final List<DocumentVerificationEntity> documentVerifications = filterDocumentVerifications(identityVerification);
 
         final List<String> uploadIds = documentVerifications.stream()

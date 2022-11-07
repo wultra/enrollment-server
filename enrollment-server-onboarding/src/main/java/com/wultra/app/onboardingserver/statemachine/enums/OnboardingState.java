@@ -44,7 +44,7 @@ public enum OnboardingState {
 
     DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.IN_PROGRESS),
 
-    DOCUMENT_VERIFICATION_FINAL_IN_ACCEPTED(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.ACCEPTED),
+    DOCUMENT_VERIFICATION_FINAL_ACCEPTED(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.ACCEPTED),
 
     DOCUMENT_VERIFICATION_FINAL_FAILED(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.FAILED),
 

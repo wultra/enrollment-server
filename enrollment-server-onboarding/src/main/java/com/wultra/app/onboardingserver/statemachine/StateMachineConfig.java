@@ -88,6 +88,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction;
 
+    private final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction;
+
     private final DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
 
     private final VerificationDocumentStartAction verificationDocumentStartAction;
@@ -126,6 +128,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
             final PresenceCheckVerificationAction presenceCheckVerificationAction,
             final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction,
             final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction,
+            final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction,
             final DocumentsVerificationPendingGuard documentsVerificationPendingGuard,
             final VerificationDocumentStartAction verificationDocumentStartAction,
             final VerificationInitAction verificationInitAction,
@@ -150,6 +153,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         this.presenceCheckVerificationAction = presenceCheckVerificationAction;
 
         this.moveToPresenceCheckVerificationPendingAction = moveToPresenceCheckVerificationPendingAction;
+        this.moveToDocumentVerificationFinalInProgressAction = moveToDocumentVerificationFinalInProgressAction;
         this.moveToDocumentUploadVerificationPendingAction = moveToDocumentUploadVerificationPendingAction;
         this.documentsVerificationPendingGuard = documentsVerificationPendingGuard;
         this.verificationDocumentStartAction = verificationDocumentStartAction;
@@ -284,7 +288,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
-                .action(documentVerificationFinalAction)
+                .action(moveToDocumentVerificationFinalInProgressAction)
                 .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS);
     }
 
@@ -292,6 +296,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(processIdentifierGuard)
+                .action(documentVerificationFinalAction)
+                .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .action(clientEvaluationInitAction)
