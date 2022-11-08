@@ -14,49 +14,55 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.action.verification;
+package com.wultra.app.onboardingserver.statemachine.action;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
-import org.springframework.stereotype.Component;
 
 /**
- * Call final document verification at {@code DOCUMENT_VERIFICATION_FINAL} phase and move to the next state.
+ * Action adapter to move the given identity verification to the status and the phase
+ * defined in {@link #getStatus()} and {@link #getPhase()}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Component
-@Slf4j
-public class DocumentVerificationFinalAction implements Action<OnboardingState, OnboardingEvent> {
+public abstract class MoveActionAdapter implements Action<OnboardingState, OnboardingEvent> {
 
-    private final DocumentVerificationService documentVerificationService;
+    private final IdentityVerificationService identityVerificationService;
 
     @Autowired
-    public DocumentVerificationFinalAction(final DocumentVerificationService documentVerificationService) {
-        this.documentVerificationService = documentVerificationService;
+    protected MoveActionAdapter(final IdentityVerificationService identityVerificationService) {
+        this.identityVerificationService = identityVerificationService;
     }
 
     @Override
-    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
+    public void execute(StateContext <OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-
-        try {
-            documentVerificationService.executeFinalDocumentVerification(identityVerification, ownerId);
-        } catch (RemoteCommunicationException | DocumentVerificationException | OnboardingProcessException e) {
-            context.getStateMachine().setStateMachineError(e);
-        }
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, getPhase(), getStatus(), ownerId);
     }
+
+    /**
+     * Return the phase to that the identity verification should be moved to.
+     *
+     * @return phase
+     */
+    protected abstract IdentityVerificationPhase getPhase();
+
+    /**
+     * Return the status to that the identity verification should be moved to.
+     *
+     * @return status
+     */
+    protected abstract IdentityVerificationStatus getStatus();
+
 }

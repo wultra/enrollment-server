@@ -35,9 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -80,17 +78,7 @@ public class ClientEvaluationService {
     }
 
     /**
-     * Set phase and status of the given identity verification to {@code CLIENT_EVALUATION / IN_PROGRESS}.
-     *
-     * @param ownerId owner ID to set timestampLastUpdated
-     * @param idVerification identity verification to change
-     */
-    public void initClientEvaluation(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
-        identityVerificationService.moveToPhaseAndStatus(idVerification, CLIENT_EVALUATION, IN_PROGRESS, ownerId);
-    }
-
-    /**
-     * Process client evaluation of the given identity verification initialized in {@link #initClientEvaluation(OwnerId, IdentityVerificationEntity)}.
+     * Process client evaluation of the given identity verification.
      *
      * @param identityVerification identity verification to process
      * @param ownerId Owner identification.

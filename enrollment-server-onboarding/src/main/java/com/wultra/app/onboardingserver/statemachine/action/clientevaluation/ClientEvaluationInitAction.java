@@ -16,18 +16,15 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
-import com.wultra.app.onboardingserver.statemachine.action.ActionUtil;
-import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.statemachine.action.MoveActionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
+
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 
 /**
  * Action to initialize client evaluation.
@@ -35,22 +32,20 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
-public class ClientEvaluationInitAction implements Action<OnboardingState, OnboardingEvent> {
-
-    private final ClientEvaluationService clientEvaluationService;
+public class ClientEvaluationInitAction extends MoveActionAdapter {
 
     @Autowired
-    public ClientEvaluationInitAction(ClientEvaluationService clientEvaluationService) {
-        this.clientEvaluationService = clientEvaluationService;
+    public ClientEvaluationInitAction(final IdentityVerificationService identityVerificationService) {
+        super(identityVerificationService);
     }
 
     @Override
-    public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+    protected IdentityVerificationPhase getPhase() {
+        return CLIENT_EVALUATION;
+    }
 
-        clientEvaluationService.initClientEvaluation(ownerId, identityVerification);
-
-        ActionUtil.sendNextStateEvent(context);
+    @Override
+    protected IdentityVerificationStatus getStatus() {
+        return IN_PROGRESS;
     }
 }

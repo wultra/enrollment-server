@@ -16,13 +16,11 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
@@ -41,7 +39,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
@@ -113,7 +110,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
         prepareTest(stateMachine)
                 .sendEvent(message)
-                .expectState(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
+                .expectState(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
                 .and()
                 .build()
                 .test();
@@ -143,14 +140,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
     }
 
     private IdentityVerificationEntity createIdentityVerificationLocal(IdentityVerificationPhase phase, IdentityVerificationStatus status) {
-        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
-        documentVerification.setUsedForVerification(true);
-        documentVerification.setStatus(DocumentStatus.ACCEPTED);
-        documentVerification.setVerificationId("verificationId-1");
-
         final IdentityVerificationEntity idVerification = super.createIdentityVerification(phase, status);
-        idVerification.setDocumentVerifications(Set.of(documentVerification));
-        documentVerification.setIdentityVerification(idVerification);
 
         when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));

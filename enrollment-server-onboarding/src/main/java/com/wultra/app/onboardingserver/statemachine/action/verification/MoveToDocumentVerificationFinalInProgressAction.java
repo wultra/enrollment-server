@@ -23,29 +23,29 @@ import com.wultra.app.onboardingserver.statemachine.action.MoveActionAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS;
 
 /**
- * Action to move the given identity verification to {@code DOCUMENT_UPLOAD / VERIFICATION_PENDING}.
+ * Action to move the given identity verification to {@code DOCUMENT_VERIFICATION_FINAL / IN_PROGRESS}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
-public class MoveToDocumentUploadVerificationPendingAction extends MoveActionAdapter {
+public class MoveToDocumentVerificationFinalInProgressAction extends MoveActionAdapter {
 
     @Autowired
-    public MoveToDocumentUploadVerificationPendingAction(final IdentityVerificationService identityVerificationService) {
+    public MoveToDocumentVerificationFinalInProgressAction(final IdentityVerificationService identityVerificationService) {
         super(identityVerificationService);
     }
 
     @Override
     protected IdentityVerificationPhase getPhase() {
-        return DOCUMENT_UPLOAD;
+        return DOCUMENT_VERIFICATION_FINAL;
     }
 
     @Override
     protected IdentityVerificationStatus getStatus() {
-        return VERIFICATION_PENDING;
+        return IN_PROGRESS;
     }
 }
