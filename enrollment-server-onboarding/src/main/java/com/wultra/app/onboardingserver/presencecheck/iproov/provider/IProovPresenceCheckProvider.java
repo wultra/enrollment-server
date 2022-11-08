@@ -173,12 +173,9 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                 if (ClientErrorResponse.ErrorEnum.INVALID_TOKEN.equals(clientErrorResponse.getError())) {
                     logger.warn("Invalid iProov token - reused token or validation called before verification, {}", id);
                 }
-                result.setStatus(PresenceCheckStatus.FAILED);
-                result.setErrorDetail(e.getResponse());
-            } else {
-                result.setStatus(PresenceCheckStatus.FAILED);
-                result.setErrorDetail(e.getResponse());
             }
+            result.setStatus(PresenceCheckStatus.FAILED);
+            result.setErrorDetail(e.getResponse());
             return result;
         } catch (Exception e) {
             throw new RemoteCommunicationException("Unexpected error when validating a verification in iProov, " + id, e);
