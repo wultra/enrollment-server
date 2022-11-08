@@ -191,15 +191,12 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         if (response.isPassed()) {
             result.setStatus(PresenceCheckStatus.ACCEPTED);
 
-            String frameJpeg = response.getFrame();
-            frameJpeg = unescapeSlashes(frameJpeg);
-            byte[] photoData = Base64.getDecoder().decode(frameJpeg);
-
-            final Image photo = new Image();
-            photo.setFilename("person_photo_from_id.jpg");
-            photo.setData(photoData);
-
-            result.setPhoto(photo);
+            if (Boolean.parseBoolean(response.getFrameAvailable())) {
+                logger.debug("Parsing frame image {}", id);
+                result.setPhoto(parseImage(response));
+            } else {
+                logger.debug("Frame is not available, {}", id);
+            }
         } else {
             result.setStatus(PresenceCheckStatus.REJECTED);
             result.setRejectReason(response.getReason());
@@ -251,8 +248,17 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         }
     }
 
-    private String unescapeSlashes(String value) {
-        return value.replace("\\", "");
+    private static Image parseImage(final ClaimValidateResponse response) {
+        final String frameJpeg = unescapeSlashes(response.getFrame());
+        final byte[] photoData = Base64.getDecoder().decode(frameJpeg);
+
+        final Image photo = new Image();
+        photo.setFilename("person_photo_from_id.jpg");
+        photo.setData(photoData);
+        return photo;
     }
 
+    private static String unescapeSlashes(final String value) {
+        return value.replace("\\", "");
+    }
 }
