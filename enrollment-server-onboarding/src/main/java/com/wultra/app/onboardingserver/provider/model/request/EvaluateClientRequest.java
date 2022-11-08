@@ -20,10 +20,7 @@ package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * Request object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
@@ -34,6 +31,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @PublicApi
+@EqualsAndHashCode
 public final class EvaluateClientRequest {
 
     @NonNull
