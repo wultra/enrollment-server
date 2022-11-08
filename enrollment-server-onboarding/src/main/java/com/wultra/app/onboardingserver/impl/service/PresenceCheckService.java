@@ -159,7 +159,7 @@ public class PresenceCheckService {
                                           IdentityVerificationEntity idVerification,
                                           SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, updateSessionInfo(ownerId, idVerification, sessionInfo));
-        auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: ", result.getStatus(), ownerId.getUserId());
+        auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
             logger.info("Not accepted presence check, status: {}, {}", result.getStatus(), ownerId);
