@@ -40,12 +40,12 @@ public class MoveToDocumentVerificationFinalInProgressAction extends MoveActionA
     }
 
     @Override
-    protected IdentityVerificationStatus getStatus() {
-        return IN_PROGRESS;
+    protected IdentityVerificationPhase getPhase() {
+        return DOCUMENT_VERIFICATION_FINAL;
     }
 
     @Override
-    protected IdentityVerificationPhase getPhase() {
-        return DOCUMENT_VERIFICATION_FINAL;
+    protected IdentityVerificationStatus getStatus() {
+        return IN_PROGRESS;
     }
 }

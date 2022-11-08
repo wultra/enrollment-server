@@ -40,12 +40,12 @@ public class MoveToDocumentUploadVerificationPendingAction extends MoveActionAda
     }
 
     @Override
-    protected IdentityVerificationStatus getStatus() {
-        return VERIFICATION_PENDING;
+    protected IdentityVerificationPhase getPhase() {
+        return DOCUMENT_UPLOAD;
     }
 
     @Override
-    protected IdentityVerificationPhase getPhase() {
-        return DOCUMENT_UPLOAD;
+    protected IdentityVerificationStatus getStatus() {
+        return VERIFICATION_PENDING;
     }
 }

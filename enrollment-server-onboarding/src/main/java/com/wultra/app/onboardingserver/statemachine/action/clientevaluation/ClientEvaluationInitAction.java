@@ -40,12 +40,12 @@ public class ClientEvaluationInitAction extends MoveActionAdapter {
     }
 
     @Override
-    protected IdentityVerificationStatus getStatus() {
-        return IN_PROGRESS;
+    protected IdentityVerificationPhase getPhase() {
+        return CLIENT_EVALUATION;
     }
 
     @Override
-    protected IdentityVerificationPhase getPhase() {
-        return CLIENT_EVALUATION;
+    protected IdentityVerificationStatus getStatus() {
+        return IN_PROGRESS;
     }
 }
