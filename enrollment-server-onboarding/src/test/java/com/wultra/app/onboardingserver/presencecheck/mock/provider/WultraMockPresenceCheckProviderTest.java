@@ -23,7 +23,6 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.presencecheck.mock.MockConst;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,13 +70,13 @@ class WultraMockPresenceCheckProviderTest {
 
         assertNotNull(sessionInfo);
         assertNotNull(sessionInfo.getSessionAttributes());
-        assertNotNull(sessionInfo.getSessionAttributes().get(MockConst.VERIFICATION_TOKEN));
+        assertNotNull(sessionInfo.getSessionAttributes().get("mockVerificationToken"));
     }
 
     @Test
     void getResultTest() {
         SessionInfo sessionInfo = new SessionInfo();
-        sessionInfo.getSessionAttributes().put(MockConst.VERIFICATION_TOKEN, "token");
+        sessionInfo.getSessionAttributes().put("mockVerificationToken", "token");
 
         PresenceCheckResult result = provider.getResult(ownerId, sessionInfo);
 
