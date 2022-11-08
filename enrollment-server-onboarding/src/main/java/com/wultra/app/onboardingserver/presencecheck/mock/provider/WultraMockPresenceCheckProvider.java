@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.presencecheck.mock.MockConst;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,6 +42,11 @@ import java.util.UUID;
 public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
     /**
+     * Session parameter name of the verification token
+     */
+    private static final String VERIFICATION_TOKEN = "mockVerificationToken";
+
+    /**
      * Service constructor.
      */
     public WultraMockPresenceCheckProvider() {
@@ -59,7 +63,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
         String token = UUID.randomUUID().toString();
 
         SessionInfo sessionInfo = new SessionInfo();
-        sessionInfo.getSessionAttributes().put(MockConst.VERIFICATION_TOKEN, token);
+        sessionInfo.getSessionAttributes().put(VERIFICATION_TOKEN, token);
 
         logger.info("Mock - started presence check, {}", id);
 

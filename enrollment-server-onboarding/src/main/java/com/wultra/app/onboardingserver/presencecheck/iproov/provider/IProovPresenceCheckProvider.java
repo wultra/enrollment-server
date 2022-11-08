@@ -55,7 +55,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
     /**
      * Session parameter name of the verification token
      */
-    private static final String VERIFICATION_TOKEN = "iproov-verification-token";
+    private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
 
     private final ObjectMapper objectMapper;
 
@@ -172,15 +172,10 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
                 final ClientErrorResponse clientErrorResponse = parseResponse(e.getResponse(), ClientErrorResponse.class);
                 if (ClientErrorResponse.ErrorEnum.INVALID_TOKEN.equals(clientErrorResponse.getError())) {
                     logger.warn("Invalid iProov token - reused token or validation called before verification, {}", id);
-                    result.setStatus(PresenceCheckStatus.IN_PROGRESS);
-                } else {
-                    result.setStatus(PresenceCheckStatus.FAILED);
-                    result.setErrorDetail(e.getResponse());
                 }
-            } else {
-                result.setStatus(PresenceCheckStatus.FAILED);
-                result.setErrorDetail(e.getResponse());
             }
+            result.setStatus(PresenceCheckStatus.FAILED);
+            result.setErrorDetail(e.getResponse());
             return result;
         } catch (Exception e) {
             throw new RemoteCommunicationException("Unexpected error when validating a verification in iProov, " + id, e);
