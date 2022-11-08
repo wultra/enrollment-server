@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("external-service")
 class IProovPresenceCheckProviderTest {
 
-    private static final String VERIFICATION_TOKEN = "iproov-verification-token";
+    private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
 
     private IProovPresenceCheckProvider provider;
 

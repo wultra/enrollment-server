@@ -55,7 +55,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
     /**
      * Session parameter name of the verification token
      */
-    private static final String VERIFICATION_TOKEN = "iproov-verification-token";
+    private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
 
     private final ObjectMapper objectMapper;
 
