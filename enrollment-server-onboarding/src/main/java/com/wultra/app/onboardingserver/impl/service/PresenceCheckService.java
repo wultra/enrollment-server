@@ -158,7 +158,7 @@ public class PresenceCheckService {
     public void checkPresenceVerification(OwnerId ownerId,
                                           IdentityVerificationEntity idVerification,
                                           SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
-        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
+        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, updateSessionInfo(ownerId, idVerification, sessionInfo));
         auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: ", result.getStatus(), ownerId.getUserId());
 
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
@@ -333,6 +333,12 @@ public class PresenceCheckService {
         }
 
         return idVerification;
+    }
+
+    private SessionInfo updateSessionInfo(final OwnerId ownerId, final IdentityVerificationEntity identityVerification, final SessionInfo sessionInfo) {
+        sessionInfo.getSessionAttributes().put("timestampLastUsed", ownerId.getTimestamp());
+        identityVerification.setSessionInfo(jsonSerializationService.serialize(sessionInfo));
+        return sessionInfo;
     }
 
 }
