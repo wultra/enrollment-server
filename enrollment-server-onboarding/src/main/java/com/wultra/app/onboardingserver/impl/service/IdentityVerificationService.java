@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 
 /**
@@ -217,7 +218,7 @@ public class IdentityVerificationService {
             throw new DocumentSubmitException(
                     String.format("Not allowed submit of documents during not upload phase %s/%s, %s", phase, status, ownerId));
         }
-        moveToPhaseAndStatus(idVerification, DOCUMENT_UPLOAD, VERIFICATION_PENDING, ownerId);
+        moveToPhaseAndStatus(idVerification, DOCUMENT_VERIFICATION, IN_PROGRESS, ownerId);
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
@@ -324,7 +325,6 @@ public class IdentityVerificationService {
         }
 
         moveToDocumentVerificationAndStatusByDocuments(idVerification, allDocVerifications, ownerId);
-
     }
 
     /**
