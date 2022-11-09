@@ -369,20 +369,18 @@ public class IdentityVerificationService {
 
         final IdentityVerificationPhase phase = IdentityVerificationPhase.DOCUMENT_VERIFICATION;
 
-        final boolean allDocumentsChecked;
-        if (!requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
+        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId());
+        if (!allRequiredDocumentsChecked) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
-            allDocumentsChecked = false;
         } else {
             logger.debug("All required document types are present for identity verification ID: {}", idVerification.getId());
-            allDocumentsChecked = true;
         }
 
         if (docVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
             // The timestampFinished parameter is not set yet, there may be other steps ahead
-            if (allDocumentsChecked) {
+            if (allRequiredDocumentsChecked) {
                 // Move to DOCUMENT_VERIFICATION / ACCEPTED only in case all documents were checked
                 moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
             } else {
@@ -390,54 +388,52 @@ public class IdentityVerificationService {
                 moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
             }
         } else {
-            // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow submission of additional documents
+            // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow re-submission of failed documents
             moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
-            docVerifications.stream()
-                    .filter(docVerification -> docVerification.getStatus() == DocumentStatus.FAILED)
-                    .findAny()
-                    .ifPresent(failed -> {
-                        logger.debug("At least one document is FAILED, {}", ownerId);
-                        idVerification.setErrorDetail(failed.getErrorDetail());
-                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-                        try {
-                            handleLimitsForRejectOrFail(idVerification, FAILED, ownerId);
-                        } catch (OnboardingProcessException ex) {
-                            logger.warn("Onboarding process not found, {}", ownerId);
-                        }
-                    });
-
-            docVerifications.stream()
-                    .filter(docVerification -> docVerification.getStatus() == DocumentStatus.REJECTED)
-                    .findAny()
-                    .ifPresent(failed -> {
-                        logger.debug("At least one document is REJECTED, {}", ownerId);
-                        idVerification.setErrorDetail(failed.getRejectReason());
-                        idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-                        try {
-                            handleLimitsForRejectOrFail(idVerification, REJECTED, ownerId);
-                        } catch (OnboardingProcessException ex) {
-                            logger.warn("Onboarding process not found, {}", ownerId);
-                        }
-                    });
+            handleDocumentStatus(docVerifications, idVerification, DocumentStatus.FAILED, ownerId);
+            handleDocumentStatus(docVerifications, idVerification, DocumentStatus.REJECTED, ownerId);
         }
+    }
 
+    private void handleDocumentStatus(
+            final List<DocumentVerificationEntity> docVerifications,
+            final IdentityVerificationEntity idVerification,
+            final DocumentStatus status,
+            final OwnerId ownerId) {
+
+        docVerifications.stream()
+                .filter(docVerification -> docVerification.getStatus() == status)
+                .findAny()
+                .ifPresent(docVerification -> {
+                    logger.debug("At least one document is {}, ID: {}, {}", status, docVerification.getId(), ownerId);
+                    idVerification.setErrorDetail(docVerification.getRejectReason());
+                    idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                    handleLimitsForRejectOrFail(idVerification, status, ownerId);
+                });
     }
 
     /**
-     * Handle process limits for rejected or failed verification.
+     * Update process error score in case of a rejected or a failed verification and check process error limits.
+     *
      * @param idVerification Identity verification entity.
      * @param status Identity verification status.
      * @param ownerId Owner identifier.
-     * @throws OnboardingProcessException Thrown in case onboarding process is not found.
      */
-    private void handleLimitsForRejectOrFail(IdentityVerificationEntity idVerification, IdentityVerificationStatus status, OwnerId ownerId) throws OnboardingProcessException {
-        // Update process error score in case of a failed verification and check process error limits
-        if (status == FAILED || status == REJECTED) {
-            OnboardingProcessEntity process = processService.findProcess(idVerification.getProcessId());
-            if (status == FAILED) {
+    private void handleLimitsForRejectOrFail(IdentityVerificationEntity idVerification, DocumentStatus status, OwnerId ownerId) {
+        if (status == DocumentStatus.FAILED || status == DocumentStatus.REJECTED) {
+            final OnboardingProcessEntity process;
+            try {
+                process = processService.findProcess(idVerification.getProcessId());
+            } catch (OnboardingProcessException e) {
+                logger.trace("Onboarding process not found, {}", ownerId, e);
+                logger.warn("Onboarding process not found, {}, {}", e.getMessage(), ownerId);
+                return;
+            }
+
+            if (status == DocumentStatus.FAILED) {
                 processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
             }
-            if (status == REJECTED) {
+            if (status == DocumentStatus.REJECTED) {
                 processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
             }
             processLimitService.checkOnboardingProcessErrorLimits(process);
