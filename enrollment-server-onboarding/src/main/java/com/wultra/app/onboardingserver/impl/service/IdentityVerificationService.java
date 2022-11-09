@@ -198,6 +198,7 @@ public class IdentityVerificationService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
+    @Transactional
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
@@ -212,17 +213,11 @@ public class IdentityVerificationService {
 
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
-        if (phase == IdentityVerificationPhase.DOCUMENT_VERIFICATION && status == IdentityVerificationStatus.IN_PROGRESS) {
-            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.VERIFICATION_PENDING);
-        } else if (phase != DOCUMENT_UPLOAD) {
+        if (phase != IdentityVerificationPhase.DOCUMENT_UPLOAD || status != IdentityVerificationStatus.IN_PROGRESS) {
             throw new DocumentSubmitException(
-                    String.format("Not allowed submit of documents during not upload phase %s, %s", phase, ownerId));
-        } else if (IdentityVerificationStatus.VERIFICATION_PENDING.equals(status)) {
-            moveToDocumentUpload(ownerId, idVerification, IdentityVerificationStatus.IN_PROGRESS);
-        } else if (status != IdentityVerificationStatus.IN_PROGRESS) {
-            throw new DocumentSubmitException(
-                    String.format("Not allowed submit of documents during not in progress status %s, %s", status, ownerId));
+                    String.format("Not allowed submit of documents during not upload phase %s/%s, %s", phase, status, ownerId));
         }
+        moveToPhaseAndStatus(idVerification, DOCUMENT_UPLOAD, VERIFICATION_PENDING, ownerId);
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
