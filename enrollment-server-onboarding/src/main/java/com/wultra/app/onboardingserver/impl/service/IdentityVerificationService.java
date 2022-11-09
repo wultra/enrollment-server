@@ -434,10 +434,10 @@ public class IdentityVerificationService {
         // Update process error score in case of a failed verification and check process error limits
         if (status == FAILED || status == REJECTED) {
             OnboardingProcessEntity process = processService.findProcess(idVerification.getProcessId());
-            if (idVerification.getStatus() == FAILED) {
+            if (status == FAILED) {
                 processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
             }
-            if (idVerification.getStatus() == REJECTED) {
+            if (status == REJECTED) {
                 processLimitService.incrementErrorScore(process, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
             }
             processLimitService.checkOnboardingProcessErrorLimits(process);
