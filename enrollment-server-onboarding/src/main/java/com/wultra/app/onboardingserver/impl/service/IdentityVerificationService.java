@@ -372,8 +372,6 @@ public class IdentityVerificationService {
         final boolean allDocumentsChecked;
         if (!requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", idVerification.getId());
-            // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow submission of additional documents
-            moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
             allDocumentsChecked = false;
         } else {
             logger.debug("All required document types are present for identity verification ID: {}", idVerification.getId());
@@ -387,8 +385,13 @@ public class IdentityVerificationService {
             if (allDocumentsChecked) {
                 // Move to DOCUMENT_VERIFICATION / ACCEPTED only in case all documents were checked
                 moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
+            } else {
+                // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow submission of additional documents
+                moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
             }
         } else {
+            // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow submission of additional documents
+            moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
             docVerifications.stream()
                     .filter(docVerification -> docVerification.getStatus() == DocumentStatus.FAILED)
                     .findAny()
