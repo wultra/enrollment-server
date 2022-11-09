@@ -368,7 +368,6 @@ public class IdentityVerificationService {
             final OwnerId ownerId) {
 
         final IdentityVerificationPhase phase = IdentityVerificationPhase.DOCUMENT_VERIFICATION;
-        final Date now = ownerId.getTimestamp();
 
         final boolean allDocumentsChecked;
         if (!requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), idVerification.getId())) {
