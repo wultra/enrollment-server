@@ -202,8 +202,10 @@ public class DocumentVerificationService {
             final OwnerId ownerId) {
 
         final IdentityVerificationPhase phase = identityVerification.getPhase();
-        documentVerifications.forEach(docVerification ->
-            auditService.audit(docVerification, "Document accepted at phase {} for user: {}", phase, identityVerification.getUserId()));
+        documentVerifications.forEach(docVerification -> {
+            docVerification.setStatus(DocumentStatus.ACCEPTED);
+            auditService.audit(docVerification, "Document accepted at phase {} for user: {}", phase, identityVerification.getUserId());
+        });
         identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
     }
 
