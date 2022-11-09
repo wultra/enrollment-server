@@ -16,12 +16,10 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -31,16 +29,17 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static java.util.stream.Collectors.toList;
 
@@ -61,6 +60,12 @@ public class DocumentVerificationService {
 
     private final OnboardingProcessLimitService processLimitService;
 
+    private final DocumentVerificationRepository documentVerificationRepository;
+
+    private final IdentityVerificationConfig identityVerificationConfig;
+
+    private final DocumentProcessingService documentProcessingService;
+
     private final AuditService auditService;
 
     @Autowired
@@ -69,12 +74,18 @@ public class DocumentVerificationService {
             final IdentityVerificationService identityVerificationService,
             final CommonOnboardingService processService,
             final OnboardingProcessLimitService processLimitService,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final IdentityVerificationConfig identityVerificationConfig,
+            final DocumentProcessingService documentProcessingService,
             final AuditService auditService) {
 
         this.documentVerificationProvider = documentVerificationProvider;
         this.identityVerificationService = identityVerificationService;
         this.processService = processService;
         this.processLimitService = processLimitService;
+        this.documentVerificationRepository = documentVerificationRepository;
+        this.identityVerificationConfig = identityVerificationConfig;
+        this.documentProcessingService = documentProcessingService;
         this.auditService = auditService;
     }
 
@@ -105,10 +116,68 @@ public class DocumentVerificationService {
         logger.info("Cross verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Cross verified documents: {} for user: {}", status, ownerId.getUserId());
 
+        processResult(result, identityVerification, ownerId, documentVerifications);
+    }
+
+    /**
+     * Starts the verification process
+     *
+     * @param ownerId Owner identification.
+     * @param identityVerification Identity verification.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     * @throws DocumentVerificationException In case of business logic error.
+     */
+    @Transactional
+    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException, RemoteCommunicationException, OnboardingProcessException {
+        final List<DocumentVerificationEntity> docVerifications =
+                documentVerificationRepository.findAllDocumentVerifications(identityVerification, List.of(DocumentStatus.VERIFICATION_PENDING));
+
+        final List<DocumentVerificationEntity> selfiePhotoVerifications = docVerifications.stream()
+                        .filter(entity -> entity.getType() == DocumentType.SELFIE_PHOTO)
+                        .collect(toList());
+
+        // If not enabled then remove selfie photos from the verification process
+        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            docVerifications.removeAll(selfiePhotoVerifications);
+        }
+
+        documentProcessingService.pairTwoSidedDocuments(docVerifications);
+
+        List<String> uploadIds = docVerifications.stream()
+                .map(DocumentVerificationEntity::getUploadId)
+                .collect(toList());
+
+        final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        final String verificationId = result.getVerificationId();
+        final DocumentVerificationStatus status = result.getStatus();
+        logger.info("Verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
+        auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
+
+        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
+            logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
+            selfiePhotoVerifications.forEach(selfiePhotoVerification -> {
+                selfiePhotoVerification.setStatus(DocumentStatus.ACCEPTED);
+                selfiePhotoVerification.setTimestampLastUpdated(ownerId.getTimestamp());
+                auditService.audit(selfiePhotoVerification, "Selfie document accepted for user: {}", ownerId.getUserId());
+            });
+            documentVerificationRepository.saveAll(selfiePhotoVerifications);
+        }
+
+        processResult(result, identityVerification, ownerId, docVerifications);
+    }
+
+    private void processResult(
+            final DocumentsVerificationResult result,
+            final IdentityVerificationEntity identityVerification,
+            final OwnerId ownerId,
+            final List<DocumentVerificationEntity> documentVerifications) throws OnboardingProcessException, DocumentVerificationException {
+
         documentVerifications.forEach(docVerification -> {
             docVerification.setVerificationId(result.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
+
+        final DocumentVerificationStatus status = result.getStatus();
 
         switch (status) {
             case ACCEPTED:
@@ -131,9 +200,11 @@ public class DocumentVerificationService {
             final IdentityVerificationEntity identityVerification,
             final List<DocumentVerificationEntity> documentVerifications,
             final OwnerId ownerId) {
+
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
         documentVerifications.forEach(docVerification ->
-            auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION_FINAL, ACCEPTED, ownerId);
+            auditService.audit(docVerification, "Document accepted at phase {} for user: {}", phase, identityVerification.getUserId()));
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
     }
 
     private void reject(
@@ -142,18 +213,20 @@ public class DocumentVerificationService {
             final List<DocumentVerificationEntity> documentVerifications,
             final OwnerId ownerId) throws OnboardingProcessException {
 
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(result.getRejectReason());
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
-            auditService.audit(docVerification, "Document rejected at final verification for user: {}", identityVerification.getUserId());
+            auditService.audit(docVerification, "Document rejected at phase {} for user: {}", phase, identityVerification.getUserId());
         });
 
         identityVerification.setRejectReason(result.getRejectReason());
         identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), REJECTED, ownerId);
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, REJECTED, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
     }
@@ -164,18 +237,20 @@ public class DocumentVerificationService {
             final List<DocumentVerificationEntity> documentVerifications,
             final OwnerId ownerId) throws OnboardingProcessException {
 
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(result.getErrorDetail());
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-            auditService.audit(docVerification, "Document failed at final verification for user: {}", identityVerification.getUserId());
+            auditService.audit(docVerification, "Document failed at phase {} for user: {}", phase, identityVerification.getUserId());
         });
 
         identityVerification.setErrorDetail(result.getErrorDetail());
         identityVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), FAILED, ownerId);
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
     }

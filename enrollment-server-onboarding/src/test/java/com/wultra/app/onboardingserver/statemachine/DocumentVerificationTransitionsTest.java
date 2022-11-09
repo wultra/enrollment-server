@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.DocumentsVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -62,6 +63,9 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockBean
     private IdentityVerificationService identityVerificationService;
+
+    @MockBean
+    private DocumentVerificationService documentVerificationService;
 
     @MockBean
     private DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
@@ -124,7 +128,7 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(identityStatus);
             return null;
-        }).when(identityVerificationService).startVerification(OWNER_ID, idVerification);
+        }).when(documentVerificationService).startVerification(OWNER_ID, idVerification);
         when(documentsVerificationPendingGuard.evaluate(any()))
                 .thenReturn(true);
 

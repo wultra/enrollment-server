@@ -18,9 +18,10 @@ package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -32,9 +33,6 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
-
 /**
  * Action to start the verification process
  *
@@ -45,24 +43,23 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
 
     private static final Logger logger = LoggerFactory.getLogger(VerificationDocumentStartAction.class);
 
-    private final IdentityVerificationService identityVerificationService;
+    private final DocumentVerificationService documentVerificationService;
 
     @Autowired
-    public VerificationDocumentStartAction(IdentityVerificationService identityVerificationService) {
-        this.identityVerificationService = identityVerificationService;
+    public VerificationDocumentStartAction(final DocumentVerificationService documentVerificationService) {
+        this.documentVerificationService = documentVerificationService;
     }
 
     @Override
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         try {
-            identityVerificationService.startVerification(ownerId, identityVerification);
+            documentVerificationService.startVerification(ownerId, identityVerification);
             logger.info("Started document verification process of {}", identityVerification);
-        } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION, FAILED, ownerId);
-            logger.warn("Verification start failed, {}", ownerId, e);
+        } catch (DocumentVerificationException | RemoteCommunicationException | OnboardingProcessException e) {
+            context.getStateMachine().setStateMachineError(e);
         }
     }
 

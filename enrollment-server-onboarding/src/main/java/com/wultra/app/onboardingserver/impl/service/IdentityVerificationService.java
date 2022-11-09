@@ -228,63 +228,6 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Starts the verification process
-     *
-     * @param ownerId Owner identification.
-     * @param identityVerification Identity verification.
-     * @throws RemoteCommunicationException In case of remote communication error.
-     * @throws DocumentVerificationException In case of business logic error.
-     */
-    @Transactional
-    public void startVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) throws DocumentVerificationException, RemoteCommunicationException {
-        List<DocumentVerificationEntity> docVerifications =
-                documentVerificationRepository.findAllDocumentVerifications(identityVerification,
-                        Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
-
-        List<DocumentVerificationEntity> selfiePhotoVerifications =
-                docVerifications.stream()
-                        .filter(entity -> DocumentType.SELFIE_PHOTO.equals(entity.getType()))
-                        .collect(Collectors.toList());
-
-        // If not enabled then remove selfie photos from the verification process
-        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
-            docVerifications.removeAll(selfiePhotoVerifications);
-        }
-
-        documentProcessingService.pairTwoSidedDocuments(docVerifications);
-
-        List<String> uploadIds = docVerifications.stream()
-                .map(DocumentVerificationEntity::getUploadId)
-                .collect(Collectors.toList());
-
-        final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
-        final String verificationId = result.getVerificationId();
-        final DocumentVerificationStatus status = result.getStatus();
-        logger.info("Verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
-        auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
-
-        moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
-
-        docVerifications.forEach(docVerification -> {
-            docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
-            docVerification.setVerificationId(verificationId);
-            docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            auditService.auditDebug(docVerification, "Started document verification for user: {}", ownerId.getUserId());
-        });
-        documentVerificationRepository.saveAll(docVerifications);
-
-        if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
-            logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
-            selfiePhotoVerifications.forEach(selfiePhotoVerification -> {
-                selfiePhotoVerification.setStatus(DocumentStatus.ACCEPTED);
-                selfiePhotoVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-                auditService.audit(selfiePhotoVerification, "Selfie document accepted for user: {}", ownerId.getUserId());
-            });
-            documentVerificationRepository.saveAll(selfiePhotoVerifications);
-        }
-    }
-
-    /**
      * Checks verification result and evaluates the final state of the identity verification process
      *
      * @param ownerId Owner identification.
