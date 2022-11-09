@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 
 /**
@@ -199,7 +198,6 @@ public class IdentityVerificationService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    @Transactional
     public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
                                                             OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
@@ -218,7 +216,6 @@ public class IdentityVerificationService {
             throw new DocumentSubmitException(
                     String.format("Not allowed submit of documents during not upload phase %s/%s, %s", phase, status, ownerId));
         }
-        moveToPhaseAndStatus(idVerification, DOCUMENT_VERIFICATION, IN_PROGRESS, ownerId);
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
