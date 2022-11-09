@@ -165,13 +165,7 @@ public class VerificationProcessingService {
         docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
         switch (docVerificationResult.getStatus()) {
             case ACCEPTED:
-                if (IdentityVerificationPhase.DOCUMENT_UPLOAD.equals(docVerification.getIdentityVerification().getPhase())) {
-                    logger.debug("Document ID: {} only partially verified and cannot be accepted now, it waits for the standard verification process, {}",
-                            docVerification.getId(), ownerId);
-                    docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-                } else {
-                    docVerification.setStatus(DocumentStatus.ACCEPTED);
-                }
+                docVerification.setStatus(DocumentStatus.ACCEPTED);
                 break;
             case FAILED:
                 docVerification.setStatus(DocumentStatus.FAILED);
