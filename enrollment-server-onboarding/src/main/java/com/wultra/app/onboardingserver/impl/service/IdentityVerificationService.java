@@ -396,7 +396,6 @@ public class IdentityVerificationService {
                     .ifPresent(failed -> {
                         logger.debug("At least one document is FAILED, {}", ownerId);
                         idVerification.setErrorDetail(failed.getErrorDetail());
-                        idVerification.setTimestampFailed(now);
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                         try {
                             handleLimitsForRejectOrFail(idVerification, FAILED, ownerId);
@@ -412,7 +411,6 @@ public class IdentityVerificationService {
                         logger.debug("At least one document is REJECTED, {}", ownerId);
                         idVerification.setErrorDetail(failed.getRejectReason());
                         idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-                        idVerification.setTimestampFinished(now);
                         try {
                             handleLimitsForRejectOrFail(idVerification, REJECTED, ownerId);
                         } catch (OnboardingProcessException ex) {
