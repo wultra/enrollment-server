@@ -98,7 +98,7 @@ class DocumentsVerificationPendingGuardTest {
                         createDocumentVerification(DocumentStatus.FAILED)));
 
         final boolean result = tested.evaluate(context);
-        assertFalse(result);
+        assertTrue(result);
     }
 
     private DocumentVerificationEntity createDocumentVerification(final DocumentStatus status) {

@@ -17,9 +17,11 @@
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -33,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Guard that all documents for verification of the given identity verification are in status {@code VERIFICATION_PENDING} or {@code ACCEPTED}.
+ * Guard for presence of document verification in status {@code VERIFICATION_PENDING}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -51,24 +53,25 @@ public class DocumentsVerificationPendingGuard implements Guard<OnboardingState,
     @Override
     @Transactional(readOnly = true)
     public boolean evaluate(final StateContext<OnboardingState, OnboardingEvent> context) {
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         final List<DocumentVerificationEntity> documentVerifications = documentVerificationRepository.findAllUsedForVerification(identityVerification);
         if (documentVerifications.isEmpty()) {
-            logger.debug("No document uploaded yet for {}", identityVerification);
+            logger.debug("No document uploaded yet for {}, {}", identityVerification, ownerId);
             return false;
         }
 
-        final boolean allDocumentsPendingVerification = documentVerifications.stream()
+        final boolean pendingVerificationDocumentPresent = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
-                .allMatch(it -> it == DocumentStatus.VERIFICATION_PENDING || it == DocumentStatus.ACCEPTED);
+                .anyMatch(it -> it == DocumentStatus.VERIFICATION_PENDING);
 
-        if (allDocumentsPendingVerification) {
-            logger.info("All documents for verification of {} are pending verification or accepted", identityVerification);
+        if (pendingVerificationDocumentPresent) {
+            logger.info("Pending verification document present for {}, {}", identityVerification, ownerId);
         } else {
-            logger.debug("Not all documents for verification of {} are pending verification or accepted", identityVerification);
+            logger.debug("No pending verification document present for {}, {}", identityVerification, ownerId);
         }
 
-        return allDocumentsPendingVerification;
+        return pendingVerificationDocumentPresent;
     }
 }
