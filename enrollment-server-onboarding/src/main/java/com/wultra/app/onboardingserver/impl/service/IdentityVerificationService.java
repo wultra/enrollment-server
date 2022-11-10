@@ -352,23 +352,25 @@ public class IdentityVerificationService {
      * Move identity verification to {@code DOCUMENT_VERIFICATION} phase and status based on the given document verifications.
      *
      * @param idVerification Identity verification entity.
-     * @param docVerifications Document verifications to determine identity verification status.
+     * @param docVerificationsToProcess Document verifications to determine identity verification status.
      */
     private void moveToDocumentVerificationAndStatusByDocuments(
             final IdentityVerificationEntity idVerification,
-            final List<DocumentVerificationEntity> docVerifications,
+            final List<DocumentVerificationEntity> docVerificationsToProcess,
             final OwnerId ownerId) {
 
         final String identityVerificationId = idVerification.getId();
+        // docVerificationsToProcess have been modified, so idVerification.getDocumentVerifications() must be reloaded to reflect these modifications
+        final List<DocumentVerificationEntity> allDocumentVerifications = documentVerificationRepository.findAllUsedForVerification(idVerification);
 
-        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(idVerification.getDocumentVerifications(), identityVerificationId);
+        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, identityVerificationId);
         if (!allRequiredDocumentsChecked) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", identityVerificationId);
         } else {
             logger.debug("All required document types are present for identity verification ID: {}", identityVerificationId);
         }
 
-        if (docVerifications.stream()
+        if (docVerificationsToProcess.stream()
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
             // The timestampFinished parameter is not set yet, there may be other steps ahead
@@ -382,8 +384,8 @@ public class IdentityVerificationService {
         } else {
             // Identity verification status is changed to DOCUMENT_UPLOAD / IN_PROGRESS to allow re-submission of failed documents
             moveToDocumentUpload(ownerId, idVerification, IN_PROGRESS);
-            handleDocumentStatus(docVerifications, idVerification, DocumentStatus.FAILED, ownerId);
-            handleDocumentStatus(docVerifications, idVerification, DocumentStatus.REJECTED, ownerId);
+            handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.FAILED, ownerId);
+            handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.REJECTED, ownerId);
         }
     }
 
