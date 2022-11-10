@@ -402,22 +402,18 @@ public class IdentityVerificationService {
                 .findAny()
                 .ifPresent(docVerification -> {
                     logger.debug("At least one document is {}, ID: {}, {}", status, docVerification.getId(), ownerId);
-                    idVerification.setErrorDetail(fetchErrorDetailShort(docVerification));
+                    idVerification.setErrorDetail(fetchErrorDetail(docVerification.getStatus()));
                     idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     handleLimitsForRejectOrFail(idVerification, status, ownerId);
                 });
     }
 
-    private static String fetchErrorDetailShort(final DocumentVerificationEntity docVerification) {
-        return StringUtils.truncate(fetchErrorDetail(docVerification), ERROR_DETAIL_LENGTH);
-    }
 
-    private static String fetchErrorDetail(final DocumentVerificationEntity docVerification) {
-        final DocumentStatus status = docVerification.getStatus();
+    private static String fetchErrorDetail(final DocumentStatus status) {
         if (status == DocumentStatus.REJECTED) {
-            return docVerification.getRejectReason();
+            return IdentityVerificationEntity.DOCUMENT_VERIFICATION_REJECTED;
         } else if (status == DocumentStatus.FAILED) {
-            return docVerification.getErrorDetail();
+            return IdentityVerificationEntity.DOCUMENT_VERIFICATION_FAILED;
         } else {
             return "";
         }
