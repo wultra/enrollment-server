@@ -72,6 +72,8 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @Slf4j
 public class IdentityVerificationService {
 
+    private static final int ERROR_DETAIL_LENGTH = 256;
+
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentDataRepository documentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -173,9 +175,9 @@ public class IdentityVerificationService {
      */
     @Transactional
     public IdentityVerificationEntity moveToPhaseAndStatus(final IdentityVerificationEntity identityVerification,
-                                     final IdentityVerificationPhase phase,
-                                     final IdentityVerificationStatus status,
-                                     final OwnerId ownerId) {
+                                                           final IdentityVerificationPhase phase,
+                                                           final IdentityVerificationStatus status,
+                                                           final OwnerId ownerId) {
 
         identityVerification.setPhase(phase);
         identityVerification.setStatus(status);
@@ -400,10 +402,25 @@ public class IdentityVerificationService {
                 .findAny()
                 .ifPresent(docVerification -> {
                     logger.debug("At least one document is {}, ID: {}, {}", status, docVerification.getId(), ownerId);
-                    idVerification.setErrorDetail(docVerification.getRejectReason());
+                    idVerification.setErrorDetail(fetchErrorDetailShort(docVerification));
                     idVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                     handleLimitsForRejectOrFail(idVerification, status, ownerId);
                 });
+    }
+
+    private static String fetchErrorDetailShort(final DocumentVerificationEntity docVerification) {
+        return StringUtils.truncate(fetchErrorDetail(docVerification), ERROR_DETAIL_LENGTH);
+    }
+
+    private static String fetchErrorDetail(final DocumentVerificationEntity docVerification) {
+        final DocumentStatus status = docVerification.getStatus();
+        if (status == DocumentStatus.REJECTED) {
+            return docVerification.getRejectReason();
+        } else if (status == DocumentStatus.FAILED) {
+            return docVerification.getErrorDetail();
+        } else {
+            return "";
+        }
     }
 
     /**
