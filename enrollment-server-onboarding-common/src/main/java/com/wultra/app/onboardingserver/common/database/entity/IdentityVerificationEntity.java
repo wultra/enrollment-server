@@ -52,6 +52,9 @@ public class IdentityVerificationEntity implements Serializable {
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION = "maxFailedAttemptsClientEvaluation";
 
+    public static final String DOCUMENT_VERIFICATION_FAILED = "documentVerificationFailed";
+    public static final String DOCUMENT_VERIFICATION_REJECTED = "documentVerificationRejected";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
