@@ -148,6 +148,9 @@ public class DocumentProcessingService {
 
             DocumentSubmitResult docSubmitResult = submitDocumentToProvider(ownerId, docVerification, submittedDoc);
 
+            // TODO - after synchronous submission to document verification provider the document state should be
+            // set to VERIFICATION_PENDING, for asynchronous processing the UPLOAD_IN_PROGRESS state should remain
+
             DocumentResultEntity docResult = createDocumentResult(docVerification, docSubmitResult);
             docResult.setTimestampCreated(ownerId.getTimestamp());
 
