@@ -72,8 +72,6 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @Slf4j
 public class IdentityVerificationService {
 
-    private static final int ERROR_DETAIL_LENGTH = 256;
-
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentDataRepository documentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
