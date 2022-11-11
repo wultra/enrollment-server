@@ -101,7 +101,7 @@ public class PresenceCheckLimitService {
     public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException {
         final int otpCount = otpRepository.countByProcessIdAndType(processId, OtpType.USER_VERIFICATION);
         // TODO (racansky, 2022-10-20, #453) OTP verification could be turned off, logic should be based on another data
-        if (otpCount > identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
+        if (otpCount >= identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
             final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId())
                     .orElseThrow(() ->
                             new IdentityVerificationException("Identity verification was not found, " + ownerId));
