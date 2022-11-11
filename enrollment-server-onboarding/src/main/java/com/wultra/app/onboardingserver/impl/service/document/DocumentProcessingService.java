@@ -148,6 +148,9 @@ public class DocumentProcessingService {
 
             DocumentSubmitResult docSubmitResult = submitDocumentToProvider(ownerId, docVerification, submittedDoc);
 
+            // TODO - after synchronous submission to document verification provider the document state should be
+            // set to VERIFICATION_PENDING, for asynchronous processing the UPLOAD_IN_PROGRESS state should remain
+
             DocumentResultEntity docResult = createDocumentResult(docVerification, docSubmitResult);
             docResult.setTimestampCreated(ownerId.getTimestamp());
 
@@ -418,30 +421,10 @@ public class DocumentProcessingService {
             } else if (docSubmitResult.getExtractedData() == null) { // only finished upload contains extracted data
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
                 auditService.auditDebug(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
-            } else if (identityVerificationConfig.isDocumentVerificationOnSubmitEnabled()) {
-                verifyDocumentWithUpload(ownerId, docVerification, docSubmitResult.getUploadId());
-                docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
-                auditService.auditDebug(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else { // no document verification during upload, wait for the final all documents verification
                 docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
                 auditService.audit(docVerification, "Document verification pending for user: {}", ownerId.getUserId());
             }
-        }
-    }
-
-    private void verifyDocumentWithUpload(OwnerId ownerId, DocumentVerificationEntity docVerification, String uploadId) {
-        try {
-            final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, List.of(uploadId));
-            final String verificationId = result.getVerificationId();
-            final DocumentVerificationStatus status = result.getStatus();
-            logger.info("Verified document upload ID: {}, verification ID: {}, status: {}, {}", uploadId, verificationId, status, ownerId);
-            docVerification.setVerificationId(verificationId);
-        } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            logger.debug("Unable to verify document with uploadId: {}, {}", uploadId, ownerId, e);
-            logger.warn("Unable to verify document with uploadId: {}, reason: {}, {}", uploadId, e.getMessage(), ownerId);
-            docVerification.setStatus(DocumentStatus.FAILED);
-            docVerification.setErrorDetail(e.getMessage());
-            docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         }
     }
 
