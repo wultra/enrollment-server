@@ -73,7 +73,6 @@ public class InboxController {
     }
 
     @PostMapping("message/list")
-    @PowerAuthEncryption
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
@@ -82,7 +81,6 @@ public class InboxController {
     }
 
     @PostMapping("message/detail")
-    @PowerAuthEncryption
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
