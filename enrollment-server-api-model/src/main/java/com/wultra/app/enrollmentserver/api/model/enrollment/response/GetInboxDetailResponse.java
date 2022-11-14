@@ -34,7 +34,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class GetInboxDetailResponse {
 
-    private String messageId;
+    private String id;
     private String subject;
     private boolean read;
     private Date timestampCreated;

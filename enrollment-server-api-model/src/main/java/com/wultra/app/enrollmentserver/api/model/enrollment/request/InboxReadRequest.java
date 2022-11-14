@@ -47,7 +47,7 @@ public class InboxReadRequest {
 
     @NotNull
     @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "Message identifier")
-    private String messageId;
+    @Schema(type = "string", example = "Inbox message identifier")
+    private String id;
 
 }
