@@ -27,8 +27,8 @@ import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Controller with facade for Inbox services in Push server.
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @ConditionalOnExpression("!'${powerauth.push.service.url}'.empty and ${enrollment-server.inbox.enabled}")
 @RestController
@@ -60,11 +60,12 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest) throws InboxException {
-        final GetInboxCountRequest request = objectRequest.getRequestObject();
+    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        final String userId = apiAuthentication.getUserId();
+        final String applicationId = apiAuthentication.getApplicationId();
         final GetInboxCountResponse response = new GetInboxCountResponse();
         try {
-            final ObjectResponse<io.getlime.push.model.response.GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(request.getUserId(), request.getAppId());
+            final ObjectResponse<io.getlime.push.model.response.GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, applicationId);
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
         } catch (PushServerClientException ex) {
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);

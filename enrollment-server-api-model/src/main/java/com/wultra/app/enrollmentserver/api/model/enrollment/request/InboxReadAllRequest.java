@@ -18,12 +18,7 @@
 
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Model class for inbox message detail request.
@@ -31,18 +26,6 @@ import lombok.NoArgsConstructor;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class InboxReadAllRequest {
-
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "User identifier")
-    private String userId;
-
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "Application identifier")
-    private String appId;
 
 }

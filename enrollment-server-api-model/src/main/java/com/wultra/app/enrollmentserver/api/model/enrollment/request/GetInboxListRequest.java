@@ -35,23 +35,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GetInboxListRequest {
 
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "User identifier")
-    private String userId;
-
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "Application identifier")
-    private String appId;
-
-    @Schema(type = "boolean", example = "Retrieve only unread messages")
-    private boolean onlyUnread = false;
-
     @Schema(type = "int", example = "Page number")
     private int page;
 
     @Schema(type = "int", example = "Page size")
     private int size;
+
+    @Schema(type = "boolean", example = "Retrieve only unread messages")
+    private boolean onlyUnread = false;
 
 }

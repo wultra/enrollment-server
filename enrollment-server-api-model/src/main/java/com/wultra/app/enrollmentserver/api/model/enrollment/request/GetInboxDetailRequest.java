@@ -37,16 +37,6 @@ public class GetInboxDetailRequest {
 
     @NotNull
     @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "User identifier")
-    private String userId;
-
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Schema(type = "string", example = "Application identifier")
-    private String appId;
-
-    @NotNull
-    @Size(min = 1, max = 255)
     @Schema(type = "string", example = "Inbox message identifier")
     private String id;
 
