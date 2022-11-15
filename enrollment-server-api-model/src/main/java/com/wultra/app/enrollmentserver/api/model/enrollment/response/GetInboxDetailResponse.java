@@ -21,6 +21,7 @@ package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.Date;
 
@@ -36,6 +37,7 @@ public class GetInboxDetailResponse {
 
     private String id;
     private String subject;
+    @ToString.Exclude
     private String body;
     private boolean read;
     private Date timestampCreated;
