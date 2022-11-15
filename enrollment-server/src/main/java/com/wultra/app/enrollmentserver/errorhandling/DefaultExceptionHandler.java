@@ -134,4 +134,16 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
     }
 
+    /**
+     * Handling of inbox exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(InboxException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleInboxException(InboxException ex) {
+        logger.warn("Unable to process inbox request", ex);
+        return new ErrorResponse("INBOX_FAILED", "Unable to process inbox request.");
+    }
+
 }

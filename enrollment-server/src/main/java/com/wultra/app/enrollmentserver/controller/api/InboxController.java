@@ -19,6 +19,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.enrollment.request.*;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxCountResponse;
+import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxDetailResponse;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxListResponse;
 import com.wultra.app.enrollmentserver.errorhandling.InboxException;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
@@ -26,6 +27,10 @@ import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
+import io.getlime.push.model.entity.InboxMessage;
+import io.getlime.push.model.entity.ListOfInboxMessages;
+import io.getlime.push.model.response.GetInboxMessageCountResponse;
+import io.getlime.push.model.response.GetInboxMessageDetailResponse;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
@@ -61,13 +66,15 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
-        final String applicationId = apiAuthentication.getApplicationId();
+        final String appId = apiAuthentication.getApplicationId();
         final GetInboxCountResponse response = new GetInboxCountResponse();
         try {
-            final ObjectResponse<io.getlime.push.model.response.GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, applicationId);
+            final ObjectResponse<GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, appId);
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
         } catch (PushServerClientException ex) {
+            logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
         return new ObjectResponse<>(response);
@@ -77,23 +84,60 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxListResponse> fetchMessageList(ObjectRequest<GetInboxListRequest> objectRequest) throws InboxException {
-        return new ObjectResponse<>(new GetInboxListResponse());
+    public ObjectResponse<GetInboxListResponse> fetchMessageList(ObjectRequest<GetInboxListRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        checkApiAuthentication(apiAuthentication);
+        final String userId = apiAuthentication.getUserId();
+        final String appId = apiAuthentication.getApplicationId();
+        final GetInboxListRequest request = objectRequest.getRequestObject();
+        final GetInboxListResponse response = new GetInboxListResponse();
+        try {
+            final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
+                    userId, appId, request.getPage(), request.getSize());
+            pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
+        } catch (PushServerClientException ex) {
+            logger.debug(ex.getMessage(), ex);
+            throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
+        }
+        return new ObjectResponse<>(response);
     }
 
     @PostMapping("message/detail")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxListResponse> fetchMessageDetail(ObjectRequest<GetInboxDetailRequest> objectRequest) throws InboxException {
-        return new ObjectResponse<>(new GetInboxListResponse());
+    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(ObjectRequest<GetInboxDetailRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        checkApiAuthentication(apiAuthentication);
+        final String userId = apiAuthentication.getUserId();
+        final String appId = apiAuthentication.getApplicationId();
+        final GetInboxDetailRequest request = objectRequest.getRequestObject();
+        GetInboxDetailResponse response;
+        try {
+            final ObjectResponse<GetInboxMessageDetailResponse> pushResponse = pushClient.fetchMessageDetail(
+                    userId, appId, request.getId());
+            final GetInboxMessageDetailResponse inbox = pushResponse.getResponseObject();
+            response = convertMessageDetail(inbox);
+        } catch (PushServerClientException ex) {
+            logger.debug(ex.getMessage(), ex);
+            throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
+        }
+        return new ObjectResponse<>(response);
     }
 
     @PostMapping("message/read")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response readMessage(ObjectRequest<InboxReadRequest> objectRequest) throws InboxException {
+    public Response readMessage(ObjectRequest<InboxReadRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        checkApiAuthentication(apiAuthentication);
+        final String userId = apiAuthentication.getUserId();
+        final String appId = apiAuthentication.getApplicationId();
+        final InboxReadRequest request = objectRequest.getRequestObject();
+        try {
+            pushClient.readMessage(userId, appId, request.getId());
+        } catch (PushServerClientException ex) {
+            logger.debug(ex.getMessage(), ex);
+            throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
+        }
         return new Response();
     }
 
@@ -101,8 +145,42 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response readAllMessages(ObjectRequest<InboxReadAllRequest> objectRequest) throws InboxException {
+    public Response readAllMessages(ObjectRequest<InboxReadAllRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        checkApiAuthentication(apiAuthentication);
+        final String userId = apiAuthentication.getUserId();
+        final String appId = apiAuthentication.getApplicationId();
+        try {
+            pushClient.readAllMessages(userId, appId);
+        } catch (PushServerClientException ex) {
+            logger.debug(ex.getMessage(), ex);
+            throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
+        }
         return new Response();
     }
 
+    private void checkApiAuthentication(final PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+        if (apiAuthentication == null || apiAuthentication.getUserId() == null || apiAuthentication.getApplicationId() == null) {
+            logger.debug("API authentication: {}", apiAuthentication);
+            throw new InboxException("Inbox request authentication failed");
+        }
+    }
+
+    private GetInboxListResponse.InboxMessage convertMessageInList(final InboxMessage message) {
+        final GetInboxListResponse.InboxMessage result = new GetInboxListResponse.InboxMessage();
+        result.setId(message.getId());
+        result.setSubject(message.getSubject());
+        result.setRead(message.isRead());
+        result.setTimestampCreated(message.getTimestampCreated());
+        return result;
+    }
+
+    private GetInboxDetailResponse convertMessageDetail(final GetInboxMessageDetailResponse message) {
+        final GetInboxDetailResponse result = new GetInboxDetailResponse();
+        result.setId(message.getId());
+        result.setSubject(message.getSubject());
+        result.setBody(message.getBody());
+        result.setRead(message.isRead());
+        result.setTimestampCreated(message.getTimestampCreated());
+        return result;
+    }
 }

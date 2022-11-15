@@ -36,6 +36,7 @@ public class GetInboxDetailResponse {
 
     private String id;
     private String subject;
+    private String body;
     private boolean read;
     private Date timestampCreated;
 

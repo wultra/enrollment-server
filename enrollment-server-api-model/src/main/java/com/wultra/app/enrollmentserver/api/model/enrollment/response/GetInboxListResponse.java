@@ -18,9 +18,13 @@
 
 package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Model class for inbox message list response.
@@ -28,6 +32,18 @@ import java.util.ArrayList;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class GetInboxListResponse extends ArrayList<GetInboxDetailResponse> {
+@EqualsAndHashCode(callSuper = true)
+public class GetInboxListResponse extends ArrayList<GetInboxListResponse.InboxMessage> {
 
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class InboxMessage {
+
+        private String id;
+        private String subject;
+        private boolean read;
+        private Date timestampCreated;
+
+    }
 }
