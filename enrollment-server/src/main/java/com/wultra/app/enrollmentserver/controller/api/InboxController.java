@@ -34,6 +34,7 @@ import io.getlime.push.model.response.GetInboxMessageDetailResponse;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,7 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -84,7 +85,7 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxListResponse> fetchMessageList(ObjectRequest<GetInboxListRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxListResponse> fetchMessageList(ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -105,7 +106,7 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(ObjectRequest<GetInboxDetailRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -127,7 +128,7 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response readMessage(ObjectRequest<InboxReadRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public Response readMessage(ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -145,7 +146,7 @@ public class InboxController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public Response readAllMessages(ObjectRequest<InboxReadAllRequest> objectRequest, PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public Response readAllMessages(ObjectRequest<InboxReadAllRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
