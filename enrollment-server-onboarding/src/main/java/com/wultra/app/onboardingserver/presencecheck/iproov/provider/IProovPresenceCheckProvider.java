@@ -56,6 +56,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
      * Session parameter name of the verification token
      */
     private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
+    private static final String SELFIE_FILENAME = "person_photo_from_iProov.jpg";
 
     private final ObjectMapper objectMapper;
 
@@ -257,7 +258,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         final byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 
         final Image photo = new Image();
-        photo.setFilename("person_photo_from_id.jpg");
+        photo.setFilename(SELFIE_FILENAME);
         photo.setData(photoData);
         return photo;
     }

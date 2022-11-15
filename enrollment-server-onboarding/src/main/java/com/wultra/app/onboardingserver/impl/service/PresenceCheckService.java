@@ -168,13 +168,13 @@ public class PresenceCheckService {
         }
         logger.debug("Processing a result of an accepted presence check, {}", ownerId);
 
-        Image photo = result.getPhoto();
+        final Image photo = result.getPhoto();
         if (photo == null) {
             throw new PresenceCheckException("Missing person photo from presence verification, " + ownerId);
         }
         logger.debug("Obtained a photo from the result, {}", ownerId);
 
-        SubmittedDocument submittedDoc = new SubmittedDocument();
+        final SubmittedDocument submittedDoc = new SubmittedDocument();
         // TODO use different random id approach
         submittedDoc.setDocumentId(
                 Ascii.truncate("selfie-photo-" + ownerId.getActivationId(), 36, "...")
