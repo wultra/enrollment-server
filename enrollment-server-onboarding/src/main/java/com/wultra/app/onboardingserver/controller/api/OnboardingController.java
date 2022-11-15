@@ -89,12 +89,10 @@ public class OnboardingController {
                                                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed during onboarding");
             throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received during onboarding");
             throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
@@ -118,12 +116,10 @@ public class OnboardingController {
                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed during onboarding");
             throw new PowerAuthEncryptionException("ECIES decryption failed while resending OTP code");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received during onboarding");
             throw new PowerAuthEncryptionException("Invalid request received while resending OTP code");
         }
 
@@ -145,12 +141,10 @@ public class OnboardingController {
                                                               @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed during onboarding");
             throw new PowerAuthEncryptionException("ECIES decryption failed while getting status");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received during onboarding");
             throw new PowerAuthEncryptionException("Invalid request received while getting status");
         }
 
@@ -174,13 +168,11 @@ public class OnboardingController {
                                    @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
-            logger.error("ECIES encryption failed during onboarding");
-            throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
+            throw new PowerAuthEncryptionException("ECIES decryption failed during cleanup");
         }
 
         if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received during onboarding");
-            throw new PowerAuthEncryptionException("Invalid request received during onboarding");
+            throw new PowerAuthEncryptionException("Invalid request received during cleanup");
         }
 
         return onboardingService.performCleanup(request.getRequestObject());

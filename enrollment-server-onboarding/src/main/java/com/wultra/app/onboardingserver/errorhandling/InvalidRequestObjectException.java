@@ -34,6 +34,15 @@ public class InvalidRequestObjectException extends Exception {
     }
 
     /**
+     * Constructs a new exception with the specified detail message.
+     *
+     * @param message detail message
+     */
+    public InvalidRequestObjectException(final String message) {
+        super(message);
+    }
+
+    /**
      * Constructs a new exception with the specified cause.
      *
      * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
@@ -46,7 +55,7 @@ public class InvalidRequestObjectException extends Exception {
      * Constructs a new exception with the specified detail message and cause.
      *
      * @param message detail message
-     * @param  cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
+     * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method).
      */
     public InvalidRequestObjectException(final String message, final Throwable cause) {
         super(message, cause);

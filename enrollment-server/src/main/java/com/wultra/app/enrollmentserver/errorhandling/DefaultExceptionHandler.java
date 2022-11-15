@@ -20,8 +20,7 @@ package com.wultra.app.enrollmentserver.errorhandling;
 
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,9 +33,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Petr Dvorak, petr@wultra.com
  */
 @ControllerAdvice
+@Slf4j
 public class DefaultExceptionHandler {
-
-    private final static Logger logger = LoggerFactory.getLogger(DefaultExceptionHandler.class);
 
     /**
      * Default exception handler, for unexpected errors.
