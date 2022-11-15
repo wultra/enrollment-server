@@ -90,7 +90,7 @@ public class DocumentVerificationEntity implements Serializable {
     private String otherSideId;
 
     /**
-     * Name of provider which performed the verification
+     * Name identifying {@code DocumentVerificationProvider}.
      */
     @Column(name = "provider_name")
     private String providerName;
