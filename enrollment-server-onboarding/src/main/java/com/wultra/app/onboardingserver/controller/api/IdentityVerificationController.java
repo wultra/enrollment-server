@@ -250,7 +250,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("presence-check/submit")
     @PowerAuth(resourceId = "/api/identity/presence-check/submit", signatureType = PowerAuthSignatureTypes.POSSESSION)
-    public ResponseEntity<Response> submitPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckSubmitRequest> request,
+    public ResponseEntity<Response> submitPresenceCheck(@RequestBody ObjectRequest<PresenceCheckSubmitRequest> request,
                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
