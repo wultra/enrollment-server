@@ -35,8 +35,7 @@ import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,9 +50,8 @@ import org.springframework.web.bind.annotation.RestController;
 @ConditionalOnExpression("!'${powerauth.push.service.url}'.empty and ${enrollment-server.inbox.enabled}")
 @RestController
 @RequestMapping(value = "api/inbox")
+@Slf4j
 public class InboxController {
-
-    private static final Logger logger = LoggerFactory.getLogger(InboxController.class);
 
     private final PushServerClient pushClient;
 
