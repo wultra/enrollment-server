@@ -16,9 +16,9 @@
  */
 package com.wultra.app.onboardingserver.statemachine.interceptor;
 
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.*;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
@@ -60,23 +60,33 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
         Response response;
 
         if (e instanceof OnboardingProcessException) {
-            logger.warn("Onboarding process failed", e);
+            logger.warn("Onboarding process failed: {}", e.getMessage());
+            logger.debug("Onboarding process failed", e);
             response = new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof OnboardingOtpDeliveryException) {
-            logger.warn("Onboarding process failed", e);
+            logger.warn("Onboarding process failed: {}", e.getMessage());
+            logger.debug("Onboarding process failed", e);
             response = new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckNotEnabledException) {
-            logger.warn("Presence check transition with a not enabled presence check service", e);
+            logger.warn("Presence check transition with a not enabled presence check service: {}", e.getMessage());
+            logger.debug("Presence check transition with a not enabled presence check service", e);
             response = new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckException) {
-            logger.warn("Presence check failed", e);
+            logger.warn("Presence check failed: {}", e.getMessage());
+            logger.debug("Presence check failed", e);
             response = new ErrorResponse("PRESENCE_CHECK_FAILED", "Presence check failed.");
             status = HttpStatus.BAD_REQUEST;
+        } else if (e instanceof PresenceCheckLimitException) {
+            logger.warn("Presence check limit reached: {}", e.getMessage());
+            logger.debug("Presence check limit reached", e);
+            response = new ErrorResponse("PRESENCE_CHECK_LIMIT_REACHED", "Presence check limit reached.");
+            status = HttpStatus.TOO_MANY_REQUESTS;
         } else if (e instanceof DocumentVerificationException) {
-            logger.warn("Document verification failed", e);
+            logger.warn("Document verification failed: {}", e.getMessage());
+            logger.debug("Document verification failed", e);
             response = new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
             status = HttpStatus.BAD_REQUEST;
         } else {
