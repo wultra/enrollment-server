@@ -84,7 +84,7 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
                 presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
             } catch (PresenceCheckException | RemoteCommunicationException e) {
                 logger.error("Checking presence verification failed, {}", ownerId, e);
-                identityVerification.setErrorDetail(e.getMessage());
+                identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
                 identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 identityVerification.setTimestampFailed(ownerId.getTimestamp());
                 identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);

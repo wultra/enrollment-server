@@ -55,6 +55,11 @@ public class IdentityVerificationEntity implements Serializable {
     public static final String DOCUMENT_VERIFICATION_FAILED = "documentVerificationFailed";
     public static final String DOCUMENT_VERIFICATION_REJECTED = "documentVerificationRejected";
 
+    public static final String PRESENCE_CHECK_REJECTED = "presenceCheckRejected";
+    public static final String PRESENCE_CHECK_FAILED = "presenceCheckFailed";
+
+    public static final String CLIENT_EVALUATION_FAILED = "clientEvaluationFailed";
+
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")

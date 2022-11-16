@@ -338,7 +338,7 @@ public class IdentityVerificationService {
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
         } else {
             logger.warn("Final validation did not pass, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
-            idVerification.setErrorDetail(result.getErrorDetail());
+            idVerification.setErrorDetail(IdentityVerificationEntity.DOCUMENT_VERIFICATION_FAILED);
             idVerification.setTimestampFailed(ownerId.getTimestamp());
             idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);

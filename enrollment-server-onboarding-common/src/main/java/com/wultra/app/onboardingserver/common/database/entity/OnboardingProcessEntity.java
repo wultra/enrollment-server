@@ -55,6 +55,7 @@ public class OnboardingProcessEntity implements Serializable {
     public static final String ERROR_MAX_FAILED_ATTEMPTS_IDENTITY_VERIFICATION = "maxFailedAttemptsIdentityVerification";
     public static final String ERROR_TOO_MANY_PROCESSES_PER_USER = "tooManyProcessesPerUser";
     public static final String ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED = "maxProcessErrorScoreExceeded";
+    public static final String ERROR_USER_LOOKUP = "userLookupFailed";
 
     @Id
     @GeneratedValue(generator = "uuid")

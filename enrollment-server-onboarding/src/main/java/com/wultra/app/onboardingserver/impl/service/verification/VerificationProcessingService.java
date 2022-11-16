@@ -169,13 +169,15 @@ public class VerificationProcessingService {
                 break;
             case FAILED:
                 docVerification.setStatus(DocumentStatus.FAILED);
-                docVerification.setErrorDetail(docVerificationResult.getErrorDetail());
+                docVerification.setErrorDetail(DocumentVerificationEntity.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                logger.info("Document verification ID: {} failed: {}, {}", docVerification.getId(), docVerificationResult.getErrorDetail(), ownerId);
                 break;
             case REJECTED:
                 docVerification.setStatus(DocumentStatus.REJECTED);
-                docVerification.setRejectReason(docVerificationResult.getRejectReason());
+                docVerification.setRejectReason(DocumentVerificationEntity.DOCUMENT_VERIFICATION_REJECTED);
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+                logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), docVerificationResult.getRejectReason(), ownerId);
                 break;
             default:
                 throw new IllegalStateException(
@@ -204,10 +206,12 @@ public class VerificationProcessingService {
     private void updateDocumentResult(DocumentResultEntity docResult,
                                       DocumentVerificationResult docVerificationResult) {
         if (StringUtils.isNotBlank(docResult.getErrorDetail())) {
-            docResult.setErrorDetail(docVerificationResult.getErrorDetail());
+            logger.info("Document result ID: {} failed: {}", docResult.getId(), docVerificationResult.getErrorDetail());
+            docResult.setErrorDetail(DocumentResultEntity.DOCUMENT_VERIFICATION_FAILED);
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         } else if (StringUtils.isNotBlank(docResult.getRejectReason())) {
-            docResult.setRejectReason(docVerificationResult.getRejectReason());
+            logger.info("Document result ID: {} rejected: {}", docResult.getId(), docVerificationResult.getRejectReason());
+            docResult.setRejectReason(DocumentResultEntity.DOCUMENT_VERIFICATION_REJECTED);
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
         docResult.setVerificationResult(docVerificationResult.getVerificationResult());

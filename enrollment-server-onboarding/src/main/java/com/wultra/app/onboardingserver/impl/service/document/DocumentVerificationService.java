@@ -144,12 +144,14 @@ public class DocumentVerificationService {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(result.getRejectReason());
+            docVerification.setRejectReason(DocumentVerificationEntity.DOCUMENT_VERIFICATION_REJECTED);
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+            logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), result.getRejectReason(), ownerId);
             auditService.audit(docVerification, "Document rejected at final verification for user: {}", identityVerification.getUserId());
         });
 
-        identityVerification.setRejectReason(result.getRejectReason());
+        logger.info("Identity verification ID: {} rejected: {}, {}", identityVerification.getId(), result.getRejectReason(), ownerId);
+        identityVerification.setRejectReason(IdentityVerificationEntity.DOCUMENT_VERIFICATION_REJECTED);
         identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
@@ -166,14 +168,16 @@ public class DocumentVerificationService {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.FAILED);
-            docVerification.setErrorDetail(result.getErrorDetail());
+            docVerification.setErrorDetail(DocumentVerificationEntity.DOCUMENT_VERIFICATION_FAILED);
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+            logger.info("Document verification ID: {}, failed: {}, {}", docVerification.getId(), result.getErrorDetail(), ownerId);
             auditService.audit(docVerification, "Document failed at final verification for user: {}", identityVerification.getUserId());
         });
 
-        identityVerification.setErrorDetail(result.getErrorDetail());
+        identityVerification.setErrorDetail(IdentityVerificationEntity.DOCUMENT_VERIFICATION_FAILED);
         identityVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
+        logger.info("Identity verification ID: {}, failed: {}, {}", identityVerification.getId(), result.getErrorDetail(), ownerId);
 
         identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), FAILED, ownerId);
 

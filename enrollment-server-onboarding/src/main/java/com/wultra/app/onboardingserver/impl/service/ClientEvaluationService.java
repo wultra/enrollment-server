@@ -138,7 +138,7 @@ public class ClientEvaluationService {
         if (response.isErrorOccurred()) {
             logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
             identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
-            identityVerification.setErrorDetail(response.getErrorDetail());
+            identityVerification.setErrorDetail(IdentityVerificationEntity.CLIENT_EVALUATION_FAILED);
             auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getErrorDetail());
         }
 

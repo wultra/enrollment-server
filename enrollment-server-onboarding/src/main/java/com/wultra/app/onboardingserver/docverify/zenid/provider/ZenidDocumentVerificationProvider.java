@@ -374,7 +374,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         } else if (state == ZenidWebUploadSampleResponse.StateEnum.NOTDONE) {
             logger.debug("Document upload of {} is still in progress in ZenID, {}", uploadContext, id);
         } else if (state == ZenidWebUploadSampleResponse.StateEnum.REJECTED) {
-            logger.debug("Document upload of {} is rejected in ZenID, {}", uploadContext, id);
+            logger.debug("Document upload of {} is rejected in ZenID, {}, {}", uploadContext, response.getErrorText(), id);
             documentSubmitResult.setRejectReason(response.getErrorText());
         } else {
             throw new DocumentVerificationException(String.format("Document upload of %s failed in ZenID: %s, %s", uploadContext, state, id));
@@ -486,7 +486,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 // TODO Consider using an object instead of simple array (call for a standard json)
                 List<ZenidWebInvestigationValidatorResponse> validations = new ArrayList<>(entry.getValue());
 
-                DocumentVerificationResult verificationResult = new DocumentVerificationResult();
+                final DocumentVerificationResult verificationResult = new DocumentVerificationResult();
                 verificationResult.setExtractedData(extractedData);
                 verificationResult.setUploadId(entry.getKey());
 
@@ -496,7 +496,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                         // Sort the validations by difference between the actual score and the accepted score value
                         .max(Comparator.comparingInt((value -> value.getAcceptScore() - value.getScore())));
                 if (failedValidation.isPresent()) {
-                    String rejectReason = failedValidation.get().getIssues().get(0).getIssueDescription();
+                    final String rejectReason = failedValidation.get().getIssues().get(0).getIssueDescription();
+                    logger.debug("Document rejected in ZenID, {}, {}", rejectReason, id);
                     verificationResult.setRejectReason(rejectReason);
                 }
 

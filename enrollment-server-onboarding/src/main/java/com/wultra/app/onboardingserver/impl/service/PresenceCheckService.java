@@ -285,7 +285,7 @@ public class PresenceCheckService {
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
                 break;
             case FAILED:
-                idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFailed(ownerId.getTimestamp());
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
@@ -295,7 +295,7 @@ public class PresenceCheckService {
                 logger.debug("Presence check still in progress, {}", ownerId);
                 break;
             case REJECTED:
-                idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setRejectReason(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
