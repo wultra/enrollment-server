@@ -138,7 +138,7 @@ public class IdentityVerificationController {
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ObjectResponse<DocumentSubmitResponse> submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
+    public Response submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {

@@ -190,7 +190,6 @@ public class IdentityVerificationService {
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param ownerId Owner identification.
-     * @return Document verification entities.
      * @throws DocumentSubmitException Thrown when document submission fails.
      * @throws IdentityVerificationLimitException Thrown when document upload limit is reached.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
@@ -198,8 +197,7 @@ public class IdentityVerificationService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public List<DocumentVerificationEntity> submitDocuments(DocumentSubmitRequest request,
-                                                            OwnerId ownerId)
+    public void submitDocuments(final DocumentSubmitRequest request, final OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         final IdentityVerificationEntity idVerification = findByOptional(ownerId).orElseThrow(() ->
@@ -219,12 +217,10 @@ public class IdentityVerificationService {
 
         identityVerificationLimitService.checkDocumentUploadLimit(ownerId, idVerification);
 
-        List<DocumentVerificationEntity> docsVerifications =
-                documentProcessingService.submitDocuments(idVerification, request, ownerId);
+        final List<DocumentVerificationEntity> docsVerifications = documentProcessingService.submitDocuments(idVerification, request, ownerId);
         documentProcessingService.pairTwoSidedDocuments(docsVerifications);
 
         identityVerificationRepository.save(idVerification);
-        return docsVerifications;
     }
 
     /**

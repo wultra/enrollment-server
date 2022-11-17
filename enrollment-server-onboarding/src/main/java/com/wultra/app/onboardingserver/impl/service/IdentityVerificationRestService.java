@@ -20,12 +20,10 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
-import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
@@ -61,7 +59,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -215,7 +212,7 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @Transactional
-    public ObjectResponse<DocumentSubmitResponse> submitDocuments(ObjectRequest<DocumentSubmitRequest> request,
+    public Response submitDocuments(ObjectRequest<DocumentSubmitRequest> request,
                                                                   EciesEncryptionContext eciesContext,
                                                                   PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
@@ -232,16 +229,9 @@ public class IdentityVerificationRestService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        // Submit documents for verification
-        final List<DocumentVerificationEntity> docVerificationEntities =
-                identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
+        identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
 
-        final DocumentSubmitResponse response = new DocumentSubmitResponse();
-        final List<DocumentMetadataResponseDto> respsMetadata =
-                identityVerificationService.createDocsMetadata(docVerificationEntities);
-        response.setDocuments(respsMetadata);
-
-        return new ObjectResponse<>(response);
+        return new Response();
     }
 
     /**
