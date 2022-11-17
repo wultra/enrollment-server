@@ -20,11 +20,14 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -36,10 +39,18 @@ import static java.util.stream.Collectors.toList;
  */
 // TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
+@EnableConfigurationProperties(RequiredDocumentConfiguration.class)
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
-    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(DocumentType.ID_CARD, DocumentType.PASSPORT, DocumentType.DRIVING_LICENSE);
+    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(ID_CARD, PASSPORT, DRIVING_LICENSE);
+
+    private final RequiredDocumentConfiguration requiredDocumentConfiguration;
+
+    @Autowired
+    RequiredDocumentTypesCheck(final RequiredDocumentConfiguration requiredDocumentConfiguration) {
+        this.requiredDocumentConfiguration = requiredDocumentConfiguration;
+    }
 
     /**
      * Evaluate all required document types to be present and accepted.
@@ -53,7 +64,7 @@ public class RequiredDocumentTypesCheck {
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .collect(toList());
 
-        if (!isTwoDistinctDocumentsPresent(acceptedDocumentVerifications)) {
+        if (!areDistinctDocumentsPresent(acceptedDocumentVerifications)) {
             logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);
             return false;
         } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
@@ -68,21 +79,26 @@ public class RequiredDocumentTypesCheck {
         }
     }
 
-    private static boolean isTwoDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return 2 == documentVerifications.stream()
+    private boolean areDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return requiredDocumentConfiguration.getCount() == documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
                 .filter(PHYSICAL_DOCUMENTS::contains)
                 .distinct()
                 .count();
     }
 
-    private static boolean containsPrimaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return containsBothSidesOfId(documentVerifications) || containsPassport(documentVerifications);
+    private boolean containsPrimaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
+        return (isConfiguredAsPrimary(ID_CARD) && containsBothSidesOfId(documentVerifications)) ||
+                (isConfiguredAsPrimary(PASSPORT) && containsPassport(documentVerifications));
+    }
+
+    private boolean isConfiguredAsPrimary(final DocumentType type) {
+        return requiredDocumentConfiguration.getPrimaryDocuments().contains(type);
     }
 
     private static boolean containsBothSidesOfId(final Collection<DocumentVerificationEntity> documentVerifications) {
         return 2 == documentVerifications.stream()
-                .filter(it -> it.getType() == DocumentType.ID_CARD)
+                .filter(it -> it.getType() == ID_CARD)
                 .map(DocumentVerificationEntity::getSide)
                 .distinct()
                 .count();
@@ -91,7 +107,7 @@ public class RequiredDocumentTypesCheck {
     private static boolean containsPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == DocumentType.PASSPORT);
+                .anyMatch(it -> it == PASSPORT);
     }
 
     private static boolean containsSecondDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
@@ -103,6 +119,6 @@ public class RequiredDocumentTypesCheck {
     private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
         return documentVerifications.stream()
                 .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == DocumentType.DRIVING_LICENSE);
+                .anyMatch(it -> it == DRIVING_LICENSE);
     }
 }

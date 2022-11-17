@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class RequiredDocumentTypesCheckTest {
 
-    private final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck();
+    private final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(new RequiredDocumentConfiguration());
 
     @Test
     void testEmptyCollection() {
@@ -52,13 +52,27 @@ class RequiredDocumentTypesCheckTest {
     }
 
     @Test
-    void testOnlyIdCard() {
+    void testOnlyIdCardFailed() {
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
 
         boolean result = tested.evaluate(documentVerifications, "1");
         assertFalse(result);
+    }
+
+    @Test
+    void testOnlyIdCardSuccessful() {
+        final var configuration = new RequiredDocumentConfiguration();
+        configuration.setCount(1);
+        final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(configuration);
+
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertTrue(result);
     }
 
     @Test
@@ -94,13 +108,27 @@ class RequiredDocumentTypesCheckTest {
     }
 
     @Test
-    void testTravelPassportAndDrivingLicence() {
+    void testTravelPassportAndDrivingLicenceSuccessful() {
+        final var configuration = new RequiredDocumentConfiguration();
+        configuration.setPrimaryDocuments(List.of(DocumentType.ID_CARD, DocumentType.PASSPORT));
+        final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(configuration);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.PASSPORT),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
         boolean result = tested.evaluate(documentVerifications, "1");
         assertTrue(result);
+    }
+
+    @Test
+    void testTravelPassportAndDrivingLicenceFailed() {
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.PASSPORT),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE));
+
+        boolean result = tested.evaluate(documentVerifications, "1");
+        assertFalse(result);
     }
 
     @Test
