@@ -166,10 +166,19 @@ public class DocumentVerificationService {
 
         changeDocumentVerificationStatusAndVerificationId(docVerifications, result, identityVerification, ownerId);
 
-        if (status == DocumentVerificationStatus.ACCEPTED) {
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
-        } else {
-            logger.info("Documents not accepted, identity verification phase and status not change, {}", ownerId);
+        switch (status) {
+            case ACCEPTED:
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+                break;
+            case FAILED:
+            case REJECTED:
+                logger.info("Documents verification ID: {} {}, returning to DOCUMENT_UPLOAD / IN_PROGRESS, {}", result.getVerificationId(), status, ownerId);
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+                break;
+            case IN_PROGRESS:
+                throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
+            default:
+                throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
         }
     }
 
