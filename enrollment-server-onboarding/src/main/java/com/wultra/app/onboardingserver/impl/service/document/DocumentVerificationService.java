@@ -116,7 +116,8 @@ public class DocumentVerificationService {
         logger.info("Cross verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Cross verified documents: {} for user: {}", status, ownerId.getUserId());
 
-        processResult(result, identityVerification, ownerId, documentVerifications);
+        changeDocumentVerificationStatusAndVerificationId(documentVerifications, result, identityVerification, ownerId);
+        moveIdentityVerificationToDocumentVerificationFinal(result, identityVerification, ownerId);
     }
 
     /**
@@ -163,14 +164,21 @@ public class DocumentVerificationService {
             documentVerificationRepository.saveAll(selfiePhotoVerifications);
         }
 
-        processResult(result, identityVerification, ownerId, docVerifications);
+        changeDocumentVerificationStatusAndVerificationId(docVerifications, result, identityVerification, ownerId);
+
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
     }
 
-    private void processResult(
+    /**
+     * Change status of the given document verification entities base on the give verification result and set the verification ID.
+     * Increment error score in case of failed or rejected documents.
+     * Async processing is not supported yet.
+     */
+    private void changeDocumentVerificationStatusAndVerificationId(
+            final List<DocumentVerificationEntity> documentVerifications,
             final DocumentsVerificationResult result,
             final IdentityVerificationEntity identityVerification,
-            final OwnerId ownerId,
-            final List<DocumentVerificationEntity> documentVerifications) throws OnboardingProcessException, DocumentVerificationException {
+            final OwnerId ownerId) throws OnboardingProcessException, DocumentVerificationException {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setVerificationId(result.getVerificationId());
@@ -181,7 +189,7 @@ public class DocumentVerificationService {
 
         switch (status) {
             case ACCEPTED:
-                accept(identityVerification, documentVerifications, ownerId);
+                accept(identityVerification, documentVerifications);
                 break;
             case FAILED:
                 fail(identityVerification, result, documentVerifications, ownerId);
@@ -196,17 +204,51 @@ public class DocumentVerificationService {
         }
     }
 
+    /**
+     * Move the given identity verification to {@code DOCUMENT_VERIFICATION_FINAL} phase
+     * and set its status according to the given document verification result.
+     * Async processing is not supported yet.
+     */
+    private void moveIdentityVerificationToDocumentVerificationFinal(
+            final DocumentsVerificationResult result,
+            final IdentityVerificationEntity identityVerification,
+            final OwnerId ownerId) throws DocumentVerificationException {
+
+        final DocumentVerificationStatus status = result.getStatus();
+        final IdentityVerificationPhase phase = IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
+
+        switch (status) {
+            case ACCEPTED:
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
+                break;
+            case FAILED:
+                identityVerification.setErrorDetail(result.getErrorDetail());
+                identityVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+                identityVerification.setTimestampFailed(ownerId.getTimestamp());
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
+                break;
+            case REJECTED:
+                identityVerification.setRejectReason(result.getRejectReason());
+                identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+                identityVerification.setTimestampFailed(ownerId.getTimestamp());
+                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, REJECTED, ownerId);
+                break;
+            case IN_PROGRESS:
+                throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
+            default:
+                throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
+        }
+    }
+
     private void accept(
             final IdentityVerificationEntity identityVerification,
-            final List<DocumentVerificationEntity> documentVerifications,
-            final OwnerId ownerId) {
+            final List<DocumentVerificationEntity> documentVerifications) {
 
         final IdentityVerificationPhase phase = identityVerification.getPhase();
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.ACCEPTED);
             auditService.audit(docVerification, "Document accepted at phase {} for user: {}", phase, identityVerification.getUserId());
         });
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
     }
 
     private void reject(
@@ -223,12 +265,6 @@ public class DocumentVerificationService {
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
             auditService.audit(docVerification, "Document rejected at phase {} for user: {}", phase, identityVerification.getUserId());
         });
-
-        identityVerification.setRejectReason(result.getRejectReason());
-        identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
-        identityVerification.setTimestampFailed(ownerId.getTimestamp());
-
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, REJECTED, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
     }
@@ -247,12 +283,6 @@ public class DocumentVerificationService {
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
             auditService.audit(docVerification, "Document failed at phase {} for user: {}", phase, identityVerification.getUserId());
         });
-
-        identityVerification.setErrorDetail(result.getErrorDetail());
-        identityVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        identityVerification.setTimestampFailed(ownerId.getTimestamp());
-
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
     }
