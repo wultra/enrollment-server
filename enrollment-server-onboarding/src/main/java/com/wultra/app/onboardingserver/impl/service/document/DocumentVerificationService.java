@@ -166,7 +166,11 @@ public class DocumentVerificationService {
 
         changeDocumentVerificationStatusAndVerificationId(docVerifications, result, identityVerification, ownerId);
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+        if (status == DocumentVerificationStatus.ACCEPTED) {
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+        } else {
+            logger.info("Documents not accepted, identity verification phase and status not change, {}", ownerId);
+        }
     }
 
     /**
