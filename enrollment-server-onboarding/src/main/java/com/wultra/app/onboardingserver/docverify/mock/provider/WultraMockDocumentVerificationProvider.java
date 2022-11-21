@@ -102,11 +102,11 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
-        List<DocumentSubmitResult> submitResults = documents.stream()
-                .map(doc -> toDocumentSubmitResult(doc.getDocumentId()))
+        final List<DocumentSubmitResult> submitResults = documents.stream()
+                .map(this::toDocumentSubmitResult)
                 .collect(toList());
 
-        DocumentsSubmitResult result = new DocumentsSubmitResult();
+        final DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {
             // set extracted photo id only on a relevant documents submit
             result.setExtractedPhotoId("extracted-photo-id");
@@ -115,7 +115,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         submitResults.forEach(submitResult ->
                 submittedDocs.put(submitResult.getUploadId(), submitResult));
 
-        logger.info("Mock - submitted documents, {}", id);
+        logger.info("Mock - submitted documents, asyncProcessingEnabled={}, {}", asyncProcessingEnabled, id);
         return result;
     }
 
@@ -211,15 +211,12 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         return verificationSdkInfo;
     }
 
-    private DocumentSubmitResult toDocumentSubmitResult(String docId) {
-        if (docId == null) {
-            // document from the submit request has no documentId, generate one
-            docId = UUID.randomUUID().toString();
-        }
-        DocumentSubmitResult submitResult = new DocumentSubmitResult();
+    private DocumentSubmitResult toDocumentSubmitResult(final SubmittedDocument document) {
+        final String docId = document.getDocumentId() != null ? document.getDocumentId() : UUID.randomUUID().toString();
+        final DocumentSubmitResult submitResult = new DocumentSubmitResult();
         submitResult.setDocumentId(docId);
-        submitResult.setExtractedData(null);
-        String uploadedDocId;
+
+        final String uploadedDocId;
         if (docId.startsWith("upload")) {
             uploadedDocId = docId;
         } else {
@@ -227,6 +224,18 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         }
         submitResult.setUploadId(uploadedDocId);
         submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");
+
+        if (!asyncProcessingEnabled) {
+            final String filename = document.getPhoto().getFilename();
+            if (document.getSide() != null && !filename.contains(document.getSide().name().toLowerCase())) {
+                submitResult.setRejectReason("Different document side than expected");
+            } else if (document.getType() != null && document.getType() != DocumentType.SELFIE_PHOTO && !filename.contains(document.getType().name().toLowerCase())) {
+                submitResult.setRejectReason("Different document type than expected");
+            } else {
+                submitResult.setExtractedData("{\"extracted\": \"data-" + uploadedDocId + "\"}");
+            }
+        }
+
         return submitResult;
     }
 

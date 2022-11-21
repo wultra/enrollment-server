@@ -43,7 +43,7 @@ public class DocumentSubmitSyncTask {
     /**
      * Scheduled task to check in progress document submits at the target provider
      */
-    @Scheduled(cron = "${enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits.cron:0/5 * * * * *}", zone = "UTC")
+    @Scheduled(cron = "${enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits.cron:-}", zone = "UTC")
     @SchedulerLock(name = SchedulerLockNames.DOCUMENT_SUBMIT_SYNC_LOCK, lockAtMostFor = "5m")
     public void checkInProgressDocumentSubmits() {
         LockAssert.assertLocked();
