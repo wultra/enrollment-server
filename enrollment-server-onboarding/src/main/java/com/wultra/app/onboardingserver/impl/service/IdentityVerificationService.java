@@ -255,16 +255,9 @@ public class IdentityVerificationService {
         final DocumentVerificationStatus status = result.getStatus();
         logger.info("Verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
+        verificationProcessingService.processVerificationResult(ownerId, docVerifications, result);
 
-        moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
-
-        docVerifications.forEach(docVerification -> {
-            docVerification.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
-            docVerification.setVerificationId(verificationId);
-            docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            auditService.auditDebug(docVerification, "Started document verification for user: {}", ownerId.getUserId());
-        });
-        documentVerificationRepository.saveAll(docVerifications);
+        moveToDocumentVerificationAndStatusByDocuments(identityVerification, docVerifications, ownerId);
 
         if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
             logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
