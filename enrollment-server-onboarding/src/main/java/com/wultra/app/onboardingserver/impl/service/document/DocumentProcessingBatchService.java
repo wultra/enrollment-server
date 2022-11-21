@@ -74,7 +74,7 @@ public class DocumentProcessingBatchService {
                 try {
                     this.documentProcessingService.checkDocumentSubmitWithProvider(ownerId, docResult);
                 } catch (Exception e) {
-                    logger.error("Unable to check submit status of {} at provider, {}", docResult, ownerId);
+                    logger.error("Unable to check submit status of {} at provider, {}", docResult, ownerId, e);
                 }
 
                 if (!DocumentStatus.UPLOAD_IN_PROGRESS.equals(docVerification.getStatus())) {

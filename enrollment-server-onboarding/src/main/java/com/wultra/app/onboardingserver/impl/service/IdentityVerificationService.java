@@ -257,7 +257,7 @@ public class IdentityVerificationService {
         auditService.auditDocumentVerificationProvider(identityVerification, "Documents verified: {} for user: {}", status, ownerId.getUserId());
         verificationProcessingService.processVerificationResult(ownerId, docVerifications, result);
 
-        moveToPhaseAndStatus(identityVerification, IdentityVerificationPhase.DOCUMENT_VERIFICATION, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+        moveToDocumentVerificationAndStatusByDocuments(identityVerification, docVerifications, ownerId);
 
         if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
             logger.debug("Selfie photos verification disabled, changing selfie document status to ACCEPTED, {}", ownerId);
