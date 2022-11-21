@@ -134,8 +134,9 @@ public class PresenceCheckService {
             if (docsWithPhoto.isEmpty()) {
                 throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
             } else {
-                Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
+                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
                 presenceCheckProvider.initPresenceCheck(ownerId, photo);
+                logger.info("Presence check initialized, {}", ownerId);
                 auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
             }
         }
@@ -228,7 +229,8 @@ public class PresenceCheckService {
      * @throws RemoteCommunicationException In case of remote communication error.
      */
     private SessionInfo startPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
-        SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
+        final SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
+        logger.info("Presence check started, {}", ownerId);
         auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
         String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
