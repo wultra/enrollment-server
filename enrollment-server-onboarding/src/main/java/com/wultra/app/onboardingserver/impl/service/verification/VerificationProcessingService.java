@@ -22,6 +22,7 @@ import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
@@ -169,13 +170,13 @@ public class VerificationProcessingService {
                 break;
             case FAILED:
                 docVerification.setStatus(DocumentStatus.FAILED);
-                docVerification.setErrorDetail(DocumentVerificationEntity.DOCUMENT_VERIFICATION_FAILED);
+                docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 logger.info("Document verification ID: {} failed: {}, {}", docVerification.getId(), docVerificationResult.getErrorDetail(), ownerId);
                 break;
             case REJECTED:
                 docVerification.setStatus(DocumentStatus.REJECTED);
-                docVerification.setRejectReason(DocumentVerificationEntity.DOCUMENT_VERIFICATION_REJECTED);
+                docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
                 logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), docVerificationResult.getRejectReason(), ownerId);
                 break;
@@ -207,11 +208,11 @@ public class VerificationProcessingService {
                                       DocumentVerificationResult docVerificationResult) {
         if (StringUtils.isNotBlank(docResult.getErrorDetail())) {
             logger.info("Document result ID: {} failed: {}", docResult.getId(), docVerificationResult.getErrorDetail());
-            docResult.setErrorDetail(DocumentResultEntity.DOCUMENT_VERIFICATION_FAILED);
+            docResult.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         } else if (StringUtils.isNotBlank(docResult.getRejectReason())) {
             logger.info("Document result ID: {} rejected: {}", docResult.getId(), docVerificationResult.getRejectReason());
-            docResult.setRejectReason(DocumentResultEntity.DOCUMENT_VERIFICATION_REJECTED);
+            docResult.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
         docResult.setVerificationResult(docVerificationResult.getVerificationResult());
