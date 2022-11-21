@@ -80,6 +80,8 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits` | `0/5 * * * * *` | Cron scheduler for checking status of submitted documents. |
 | `enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron` | `0/5 * * * * *` | Cron scheduler for checking pending document verifications. |
 | `enrollment-server-onboarding.document-verification.checkDocumentSubmitVerifications.cron` | `0/5 * * * * *` | Cron scheduler for checking document submit verifications. |
+| `enrollment-server-onboarding.document-verification.required.primaryDocuments` | `ID_CARD` | Required primary document types to be present. Possible values: `ID_CARD`, `PASSPORT` |
+| `enrollment-server-onboarding.document-verification.required.count` | `2`  | Required count of documents to be present. |
 
 ## Presence Check Provider Configuration
 
