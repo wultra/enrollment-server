@@ -400,7 +400,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             if (response.isErrorOccurred()) {
                 logger.warn("Business logic error occurred during user lookup, process ID: {}, error detail: {}", process.getId(), response.getErrorDetail());
                 process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
-                process.setErrorDetail(response.getErrorDetail());
+                process.setErrorDetail(OnboardingProcessEntity.ERROR_USER_LOOKUP);
                 process.setTimestampLastUpdated(new Date());
                 onboardingProcessRepository.save(process);
                 auditService.auditOnboardingProvider(process, "Error to look up user: {}, {}", response.getUserId(), response.getErrorDetail());

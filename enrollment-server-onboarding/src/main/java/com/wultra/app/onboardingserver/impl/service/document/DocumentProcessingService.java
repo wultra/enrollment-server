@@ -25,10 +25,7 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -139,8 +136,10 @@ public class DocumentProcessingService {
             try {
                 submittedDoc = createSubmittedDocument(ownerId, docMetadata, documents);
             } catch (DocumentSubmitException e) {
+                logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
+                logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
                 docVerification.setStatus(DocumentStatus.FAILED);
-                docVerification.setErrorDetail(e.getMessage());
+                docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
                 return docVerifications;
@@ -217,6 +216,8 @@ public class DocumentProcessingService {
             auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
+            logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
+            logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
             docsSubmitResults = new DocumentsSubmitResult();
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
@@ -226,11 +227,15 @@ public class DocumentProcessingService {
         commonOnboardingService.findProcessWithLock(processId);
 
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
-            documentResultEntity.setErrorDetail(docSubmitResult.getErrorDetail());
+            logger.debug("Document result ID: {}, error detail: {}, {}",
+                    documentResultEntity.getId(), docSubmitResult.getErrorDetail(), ownerId);
+            documentResultEntity.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         }
         if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
-            documentResultEntity.setRejectReason(docSubmitResult.getRejectReason());
+            logger.debug("Document result ID: {}, reject reason: {}, {}",
+                    documentResultEntity.getId(), docSubmitResult.getRejectReason(), ownerId);
+            documentResultEntity.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             documentResultEntity.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         }
 
@@ -247,6 +252,8 @@ public class DocumentProcessingService {
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}", ownerId.getUserId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
+            logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
+            logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
             docsSubmitResults = new DocumentsSubmitResult();
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
@@ -398,13 +405,17 @@ public class DocumentProcessingService {
                                           DocumentsSubmitResult docsSubmitResults, DocumentSubmitResult docSubmitResult) {
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
-            docVerification.setErrorDetail(docSubmitResult.getErrorDetail());
+            docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
+            logger.info("Document verification ID: {}, failed: {}, {}",
+                    docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
             auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
         } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
-            docVerification.setRejectReason(docSubmitResult.getRejectReason());
+            docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
+            logger.info("Document verification ID: {}, rejected: {}, {}",
+                    docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
             auditService.audit(docVerification, "Document verification rejected for user: {}", ownerId.getUserId());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());

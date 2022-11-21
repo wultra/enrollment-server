@@ -29,10 +29,7 @@ import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -334,7 +331,7 @@ public class IdentityVerificationService {
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
         } else {
             logger.warn("Final validation did not pass, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
-            idVerification.setErrorDetail(result.getErrorDetail());
+            idVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             idVerification.setTimestampFailed(ownerId.getTimestamp());
             idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);
@@ -405,9 +402,9 @@ public class IdentityVerificationService {
 
     private static String fetchErrorDetail(final DocumentStatus status) {
         if (status == DocumentStatus.REJECTED) {
-            return IdentityVerificationEntity.DOCUMENT_VERIFICATION_REJECTED;
+            return ErrorDetail.DOCUMENT_VERIFICATION_REJECTED;
         } else if (status == DocumentStatus.FAILED) {
-            return IdentityVerificationEntity.DOCUMENT_VERIFICATION_FAILED;
+            return ErrorDetail.DOCUMENT_VERIFICATION_FAILED;
         } else {
             return "";
         }

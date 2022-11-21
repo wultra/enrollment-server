@@ -134,8 +134,9 @@ public class PresenceCheckService {
             if (docsWithPhoto.isEmpty()) {
                 throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
             } else {
-                Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
+                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
                 presenceCheckProvider.initPresenceCheck(ownerId, photo);
+                logger.info("Presence check initialized, {}", ownerId);
                 auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
             }
         }
@@ -228,7 +229,8 @@ public class PresenceCheckService {
      * @throws RemoteCommunicationException In case of remote communication error.
      */
     private SessionInfo startPresenceCheck(OwnerId ownerId, IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
-        SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
+        final SessionInfo sessionInfo = presenceCheckProvider.startPresenceCheck(ownerId);
+        logger.info("Presence check started, {}", ownerId);
         auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
         String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
@@ -285,7 +287,7 @@ public class PresenceCheckService {
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
                 break;
             case FAILED:
-                idVerification.setErrorDetail(result.getErrorDetail());
+                idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFailed(ownerId.getTimestamp());
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
@@ -295,7 +297,7 @@ public class PresenceCheckService {
                 logger.debug("Presence check still in progress, {}", ownerId);
                 break;
             case REJECTED:
-                idVerification.setRejectReason(result.getRejectReason());
+                idVerification.setRejectReason(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
