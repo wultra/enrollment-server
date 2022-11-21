@@ -20,13 +20,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.ConfigurationResponse;
 import com.wultra.app.enrollmentserver.configuration.MobileApplicationConfigurationProperties;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
-import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
-import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
-import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
-import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,23 +47,11 @@ public class ConfigurationController {
     /**
      * Fetch enrollment server configuration.
      *
-     * @param request request
-     * @param eciesContext ECIES context.
      * @return configuration
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @PostMapping
     @Operation(summary = "Provide enrollment configuration")
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public ObjectResponse<ConfigurationResponse> fetchConfiguration(@EncryptedRequestBody Object request,
-                                                     @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException{
-
-        if (eciesContext == null) {
-            throw new PowerAuthEncryptionException("Encryption failed");
-        }
-
-        logger.debug("Server successfully decrypted signed data: {}", request);
-
+    public ObjectResponse<ConfigurationResponse> fetchConfiguration() {
         return new ObjectResponse<>(createConfigurationResponse());
     }
 
