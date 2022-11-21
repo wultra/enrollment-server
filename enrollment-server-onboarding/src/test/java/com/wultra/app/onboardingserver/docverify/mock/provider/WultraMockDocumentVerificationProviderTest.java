@@ -41,6 +41,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Test for {@link WultraMockDocumentVerificationProvider}.
+ *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
@@ -164,10 +166,14 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     private SubmittedDocument createSubmittedDocument() {
-        SubmittedDocument document = new SubmittedDocument();
+        final Image photo = new Image();
+        photo.setFilename("test_id_card_front.jpg");
+
+        final SubmittedDocument document = new SubmittedDocument();
         document.setDocumentId("documentId");
         document.setType(DocumentType.ID_CARD);
         document.setSide(CardSide.FRONT);
+        document.setPhoto(photo);
 
         return document;
     }

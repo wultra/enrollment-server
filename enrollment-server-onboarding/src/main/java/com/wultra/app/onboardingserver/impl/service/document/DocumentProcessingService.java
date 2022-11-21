@@ -428,12 +428,15 @@ public class DocumentProcessingService {
             if (docVerification.getType() == DocumentType.SELFIE_PHOTO) {
                 final DocumentStatus status = identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ? DocumentStatus.VERIFICATION_PENDING : DocumentStatus.ACCEPTED;
                 docVerification.setStatus(status);
+                logger.info("Document selfie changed status to {}, {}", status, ownerId);
                 auditService.audit(docVerification, "Document selfie changed status to {} for user: {}", status, ownerId.getUserId());
             } else if (docSubmitResult.getExtractedData() == null) { // only finished upload contains extracted data
                 docVerification.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
+                logger.info("Document upload ID: {} in progress, {}", docSubmitResult.getUploadId(), ownerId);
                 auditService.auditDebug(docVerification, "Document upload in progress for user: {}", ownerId.getUserId());
             } else { // no document verification during upload, wait for the final all documents verification
                 docVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+                logger.info("Document upload ID: {} verification pending, {}", docSubmitResult.getUploadId(), ownerId);
                 auditService.audit(docVerification, "Document verification pending for user: {}", ownerId.getUserId());
             }
         }
