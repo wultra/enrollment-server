@@ -106,7 +106,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
         final ResponseEntity<String> responseEntityEnrol;
         try {
-            responseEntityEnrol = iProovRestApiService.enrolUserImageForToken(token, photo);
+            responseEntityEnrol = iProovRestApiService.enrolUserImageForToken(token, photo, id);
         } catch (RestClientException e) {
             throw new RemoteCommunicationException(
                     String.format("Failed to enrol a user image to iProov, statusCode=%s, responseBody='%s', %s",
