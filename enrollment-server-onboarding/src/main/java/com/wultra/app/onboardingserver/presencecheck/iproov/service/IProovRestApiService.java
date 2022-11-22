@@ -42,7 +42,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of the REST service to iProov (https://www.iproov.com/)
+ * Implementation of the REST service to <a href="https://www.iproov.com/">iProov</a>.
  *
  * <p>
  *     The userId is filled with a secured user identification
@@ -172,22 +172,6 @@ public class IProovRestApiService {
         request.setUserId(userId);
 
         return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
-    }
-
-    /**
-     * Deletes user person data
-     *
-     * @param id Owner identification.
-     * @return Response entity with the result json
-     */
-    public ResponseEntity<String> deleteUserPersona(OwnerId id) throws RestClientException {
-        // TODO implement this, oauth call on DELETE /users/activationId
-        logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
-        return ResponseEntity.ok("{\n" +
-                "  \"user_id\": \"" + id.getUserIdSecured() + "\",\n" +
-                "  \"name\": \"user name\",\n" +
-                "  \"status\": \"Deleted\"\n" +
-                "}");
     }
 
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {
