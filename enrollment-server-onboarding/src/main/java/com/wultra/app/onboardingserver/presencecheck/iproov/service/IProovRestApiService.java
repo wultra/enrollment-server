@@ -25,8 +25,7 @@ import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.EnrolImage
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -57,25 +56,24 @@ import java.util.regex.Pattern;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Service
+@Slf4j
 public class IProovRestApiService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
-    public static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
-
-    public static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
+    private static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
 
     /**
      * Max length of the user id value defined by iProov
      */
-    public static final int USER_ID_MAX_LENGTH = 256;
+    protected static final int USER_ID_MAX_LENGTH = 256;
 
     /**
      * Regex used by iProov on user id values
      */
-    public static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
+    private static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
 
-    public static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
+    private static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
 
     /**
      * Configuration properties.
@@ -209,7 +207,7 @@ public class IProovRestApiService {
     public static String ensureValidUserIdValue(String value) {
         if (value.length() > USER_ID_MAX_LENGTH) {
             value = value.substring(0, USER_ID_MAX_LENGTH);
-            logger.error("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
+            logger.warn("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
         }
         if (!USER_ID_REGEX_PATTERN.matcher(value).matches()) {
             throw new IllegalArgumentException(String.format("The userId value: '%s', does not match the iProov regex pattern", value));
