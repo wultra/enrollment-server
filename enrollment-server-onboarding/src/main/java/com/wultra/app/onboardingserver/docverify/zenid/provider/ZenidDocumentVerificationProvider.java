@@ -59,6 +59,9 @@ import java.util.*;
 @Slf4j
 public class ZenidDocumentVerificationProvider implements DocumentVerificationProvider {
 
+    private static final String INTERNAL_SERVER_ERROR = "InternalServerError";
+    private static final String LICENSE_INVALID = "License invalid";
+
     private final ZenidConfigProps zenidConfigProps;
 
     private final ObjectMapper objectMapper;
@@ -105,17 +108,18 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                     String.format("Unexpected error when checking %s upload in ZenID, %s", document, id), e);
         }
 
-        if (responseEntity == null || responseEntity.getBody() == null) {
+        final ZenidWebUploadSampleResponse response = responseEntity.getBody();
+        if (response == null) {
             throw new RemoteCommunicationException(String.format("Missing response body when checking %s upload in ZenID, %s", document, id));
         }
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new DocumentVerificationException(
                     String.format("Failed to check %s upload in ZenID, statusCode=%s, responseBody='%s', %s",
-                            document, responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                            document, responseEntity.getStatusCode(), response, id));
         }
+        handleLicenceError(response.getErrorCode(), response.getErrorText());
 
-        ZenidWebUploadSampleResponse response = responseEntity.getBody();
         DocumentSubmitResult documentSubmitResult =
                 createDocumentSubmitResult(id, document.getUploadId(), document.toString(), response);
         if (response.getMinedData() != null) {
@@ -149,17 +153,18 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 throw new RemoteCommunicationException(String.format("Unexpected error when submitting documents to ZenID, %s", id), e);
             }
 
-            if (responseEntity.getBody() == null) {
+            final ZenidWebUploadSampleResponse response = responseEntity.getBody();
+            if (response == null) {
                 throw new RemoteCommunicationException(String.format("Missing response body when submitting documents to ZenID, %s", id));
             }
 
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
                 throw new DocumentVerificationException(
                         String.format("Failed to submit documents to ZenID, statusCode=%s, responseBody='%s', %s",
-                                responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                                responseEntity.getStatusCode(), response, id));
             }
+            handleLicenceError(response.getErrorCode(), response.getErrorText());
 
-            ZenidWebUploadSampleResponse response = responseEntity.getBody();
             DocumentSubmitResult documentSubmitResult =
                     createDocumentSubmitResult(id, document.getDocumentId(), document.toString(), response);
             if (response.getMinedData() != null) {
@@ -187,16 +192,18 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             throw new RemoteCommunicationException(String.format("Unexpected error when verifying documents %s in ZenID", uploadIds), e);
         }
 
-        if (responseEntity.getBody() == null) {
+        final ZenidWebInvestigateResponse response = responseEntity.getBody();
+        if (response == null) {
             throw new RemoteCommunicationException(String.format("Missing response body when verifying documents %s in ZenID, %s", uploadIds, id));
         }
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new DocumentVerificationException(
-                    String.format("Failed to verify documents %s in ZenID, statusCode=%s, responseBody='%s', %s", uploadIds, responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                    String.format("Failed to verify documents %s in ZenID, statusCode=%s, responseBody='%s', %s", uploadIds, responseEntity.getStatusCode(), response, id));
         }
+        handleLicenceError(response.getErrorCode(), response.getErrorText());
 
-        return toResult(id, responseEntity.getBody(), uploadIds);
+        return toResult(id, response, uploadIds);
     }
 
     @Override
@@ -211,7 +218,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             throw new RemoteCommunicationException("Unexpected error when getting a verification result for verificationId=" + verificationId, e);
         }
 
-        if (responseEntity.getBody() == null) {
+        final ZenidWebInvestigateResponse response = responseEntity.getBody();
+        if (response == null) {
             throw new RemoteCommunicationException(
                     String.format("Unexpected error when getting a verification result for verificationId=%s from ZenID, %s", verificationId, id));
         }
@@ -219,11 +227,12 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new DocumentVerificationException(
                     String.format("Failed to get a verification result for verificationId=%s from ZenID, statusCode=%s, responseBody='%s', %s",
-                            verificationId, responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                            verificationId, responseEntity.getStatusCode(), response, id));
         }
+        handleLicenceError(response.getErrorCode(), response.getErrorText());
 
         List<String> uploadIds = documentVerificationRepository.findAllUploadIds(verificationId);
-        return toResult(id, responseEntity.getBody(), uploadIds);
+        return toResult(id, response, uploadIds);
     }
 
     @Override
@@ -271,17 +280,18 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 throw new RemoteCommunicationException("Unexpected error when cleaning up documents from ZenID, " + id, e);
             }
 
-            if (responseEntity.getBody() == null) {
+            final ZenidWebDeleteSampleResponse response = responseEntity.getBody();
+            if (response == null) {
                 throw new RemoteCommunicationException("Missing response body when cleaning up documents from ZenID, " + id);
             }
 
             if (!responseEntity.getStatusCode().is2xxSuccessful()) {
                 throw new DocumentVerificationException(
                         String.format("Failed to cleanup a document uploadId=%s from ZenID, statusCode=%s, responseBody='%s', %s",
-                                uploadId, responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                                uploadId, responseEntity.getStatusCode(), response, id));
             }
+            handleLicenceError(response.getErrorCode(), response.getErrorText());
 
-            ZenidWebDeleteSampleResponse response = responseEntity.getBody();
             if (ZenidWebDeleteSampleResponse.ErrorCodeEnum.UNKNOWNSAMPLEID.equals(response.getErrorCode())) {
                 logger.info("Cleanup of an unknown document with uploadId={}", uploadId);
             } else if (response.getErrorCode() != null) {
@@ -333,17 +343,16 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             throw new RemoteCommunicationException("Unexpected error when initializing ZenID SDK, " + id, e);
         }
 
-        if (responseEntity.getBody() == null) {
+        final ZenidWebInitSdkResponse response = responseEntity.getBody();
+        if (response == null) {
             throw new RemoteCommunicationException("Missing response body when initializing ZenID SDK, " + id);
         }
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
             throw new DocumentVerificationException(
                     String.format("Failed to initialize ZenID SDK, statusCode=%s, responseBody='%s', %s",
-                        responseEntity.getStatusCode(), responseEntity.getBody(), id));
+                        responseEntity.getStatusCode(), response, id));
         }
-
-        ZenidWebInitSdkResponse response = responseEntity.getBody();
 
         VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
         verificationSdkInfo.getAttributes().put(ZenidConst.SDK_INIT_RESPONSE, response.getResponse());
@@ -596,4 +605,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
     }
 
+    private static void handleLicenceError(final Enum<?> errorCode, final String errorText) throws RemoteCommunicationException {
+        if (errorCode != null && INTERNAL_SERVER_ERROR.equals(errorCode.name()) && StringUtils.startsWithIgnoreCase(errorText, LICENSE_INVALID)) {
+            throw new RemoteCommunicationException("Out of ZenID licence: " + errorText);
+        }
+    }
 }

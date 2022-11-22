@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Implementation of the REST service to ZenID (https://zenid.trask.cz/)
+ * Implementation of the REST service to <a href="https://zenid.trask.cz/">ZenID</a>.
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
