@@ -606,7 +606,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     private static void handleLicenceError(final Enum<?> errorCode, final String errorText) throws RemoteCommunicationException {
-        if (errorCode!= null && INTERNAL_SERVER_ERROR.equals(errorCode.name()) && StringUtils.startsWithIgnoreCase(errorText, LICENSE_INVALID)) {
+        if (errorCode != null && INTERNAL_SERVER_ERROR.equals(errorCode.name()) && StringUtils.startsWithIgnoreCase(errorText, LICENSE_INVALID)) {
             throw new RemoteCommunicationException("Out of ZenID licence: " + errorText);
         }
     }
