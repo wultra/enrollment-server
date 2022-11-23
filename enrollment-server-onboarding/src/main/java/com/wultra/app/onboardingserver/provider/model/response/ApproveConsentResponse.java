@@ -21,6 +21,7 @@ package com.wultra.app.onboardingserver.provider.model.response;
 import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
+import lombok.ToString;
 
 /**
  * Response object for {@link OnboardingProvider#approveConsent(ApproveConsentRequest)}.
@@ -28,6 +29,7 @@ import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequ
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @PublicApi
+@ToString
 public final class ApproveConsentResponse {
     // empty so far, open to change in the future
 }

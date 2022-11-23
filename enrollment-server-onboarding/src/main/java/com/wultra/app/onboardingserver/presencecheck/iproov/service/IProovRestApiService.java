@@ -25,8 +25,7 @@ import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.EnrolImage
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,7 +42,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of the REST service to iProov (https://www.iproov.com/)
+ * Implementation of the REST service to <a href="https://www.iproov.com/">iProov</a>.
  *
  * <p>
  *     The userId is filled with a secured user identification
@@ -57,25 +56,24 @@ import java.util.regex.Pattern;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Service
+@Slf4j
 public class IProovRestApiService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IProovRestApiService.class);
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
-    public static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
-
-    public static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
+    private static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
 
     /**
      * Max length of the user id value defined by iProov
      */
-    public static final int USER_ID_MAX_LENGTH = 256;
+    protected static final int USER_ID_MAX_LENGTH = 256;
 
     /**
      * Regex used by iProov on user id values
      */
-    public static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
+    private static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
 
-    public static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
+    private static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
 
     /**
      * Configuration properties.
@@ -108,8 +106,9 @@ public class IProovRestApiService {
      * @return Response entity with the result json
      */
     public ResponseEntity<String> generateEnrolToken(OwnerId id) throws RestClientException {
-        ServerClaimRequest request = createServerClaimRequest(id);
+        final ServerClaimRequest request = createServerClaimRequest(id);
 
+        logger.debug("Calling /claim/enrol/token userId={}, {}", request.getUserId(), id);
         return restClient.post("/claim/enrol/token", request, STRING_TYPE_REFERENCE);
     }
 
@@ -118,9 +117,10 @@ public class IProovRestApiService {
      *
      * @param token An enrolment token value
      * @param photo Trusted photo of a person
+     * @param id Owner identification.
      * @return Response entity with the result json
      */
-    public ResponseEntity<String> enrolUserImageForToken(String token, Image photo) throws RestClientException {
+    public ResponseEntity<String> enrolUserImageForToken(String token, Image photo, OwnerId id) throws RestClientException {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("api_key", configProps.getApiKey());
         bodyBuilder.part("secret", configProps.getApiSecret());
@@ -139,6 +139,7 @@ public class IProovRestApiService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
+        logger.debug("Calling /claim/enroll/image token={}, {}", token, id);
         return restClient.post("/claim/enrol/image", bodyBuilder.build(), EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
@@ -149,8 +150,9 @@ public class IProovRestApiService {
      * @return Response entity with the result json
      */
     public ResponseEntity<String> generateVerificationToken(OwnerId id) throws RestClientException {
-        ServerClaimRequest request = createServerClaimRequest(id);
+        final ServerClaimRequest request = createServerClaimRequest(id);
 
+        logger.debug("Calling /claim/verify/token userId={}, {}", request.getUserId(), id);
         return restClient.post("/claim/verify/token", request, STRING_TYPE_REFERENCE);
     }
 
@@ -162,7 +164,7 @@ public class IProovRestApiService {
      * @return Response entity with the result json
      */
     public ResponseEntity<String> validateVerification(OwnerId id, String token) throws RestClientException {
-        ClaimValidateRequest request = new ClaimValidateRequest();
+        final ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
         request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId()); // TODO value from the device
@@ -170,37 +172,22 @@ public class IProovRestApiService {
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
 
-        String userId = getUserId(id);
+        final String userId = getUserId(id);
         request.setUserId(userId);
 
+        logger.debug("Calling /claim/verify/validate userId={}, token={}, {}", userId, token, id);
         return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
     }
 
-    /**
-     * Deletes user person data
-     *
-     * @param id Owner identification.
-     * @return Response entity with the result json
-     */
-    public ResponseEntity<String> deleteUserPersona(OwnerId id) throws RestClientException {
-        // TODO implement this, oauth call on DELETE /users/activationId
-        logger.warn("Not deleting user in iProov (not implemented yet), {}", id);
-        return ResponseEntity.ok("{\n" +
-                "  \"user_id\": \"" + id.getUserIdSecured() + "\",\n" +
-                "  \"name\": \"user name\",\n" +
-                "  \"status\": \"Deleted\"\n" +
-                "}");
-    }
-
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {
-        ServerClaimRequest request = new ServerClaimRequest();
+        final ServerClaimRequest request = new ServerClaimRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
         request.setAssuranceType(configProps.getAssuranceType());
         request.setResource(I_PROOV_RESOURCE_CONTEXT + id.getActivationId());
         request.setRiskProfile(configProps.getRiskProfile());
 
-        String userId = getUserId(id);
+        final String userId = getUserId(id);
         request.setUserId(userId);
 
         return request;
@@ -209,7 +196,7 @@ public class IProovRestApiService {
     public static String ensureValidUserIdValue(String value) {
         if (value.length() > USER_ID_MAX_LENGTH) {
             value = value.substring(0, USER_ID_MAX_LENGTH);
-            logger.error("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
+            logger.warn("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);
         }
         if (!USER_ID_REGEX_PATTERN.matcher(value).matches()) {
             throw new IllegalArgumentException(String.format("The userId value: '%s', does not match the iProov regex pattern", value));

@@ -106,7 +106,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
         final ResponseEntity<String> responseEntityEnrol;
         try {
-            responseEntityEnrol = iProovRestApiService.enrolUserImageForToken(token, photo);
+            responseEntityEnrol = iProovRestApiService.enrolUserImageForToken(token, photo, id);
         } catch (RestClientException e) {
             throw new RemoteCommunicationException(
                     String.format("Failed to enrol a user image to iProov, statusCode=%s, responseBody='%s', %s",
@@ -206,25 +206,9 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException {
-        final ResponseEntity<String> responseEntity;
-        try {
-            responseEntity = iProovRestApiService.deleteUserPersona(id);
-        } catch (RestClientException e) {
-            throw new RemoteCommunicationException(
-                    String.format("Failed REST call to delete a user persona from iProov, statusCode=%s, responseBody='%s', %s",
-                            e.getStatusCode(), e.getResponse(), id),
-                    e);
-        } catch (Exception e) {
-            throw new RemoteCommunicationException("Unexpected error when deleting a user persona in iProov, " + id, e);
-        }
-
-        if (responseEntity.getBody() == null) {
-            throw new RemoteCommunicationException("Missing response body when validating a verification in iProov, " + id);
-        }
-
-        UserResponse userResponse = parseResponse(responseEntity.getBody(), UserResponse.class);
-        logger.info("Deleted a user persona in iProov, status={}, {}", userResponse.getStatus(), id);
+    public void cleanupIdentityData(final OwnerId id) {
+        // https://docs.iproov.com/docs/Content/ImplementationGuide/security/data-retention.htm
+        logger.info("No data deleted, retention policy left to iProov server, {}", id);
     }
 
     private ResponseEntity<String> callGenerateEnrolToken(OwnerId id) throws RemoteCommunicationException {

@@ -34,10 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class IProovRestApiServiceTest {
 
     @Test
-    void ensureValidUserIdValueTest() throws Exception {
-        assertThrows(IllegalArgumentException.class, () -> {
-            IProovRestApiService.ensureValidUserIdValue("invalidChars,[=");
-        });
+    void ensureValidUserIdValueTest() {
+        assertThrows(IllegalArgumentException.class, () ->
+                IProovRestApiService.ensureValidUserIdValue("invalidChars,[="));
 
         String userIdTooLong = RandomStringUtils.randomAlphabetic(IProovRestApiService.USER_ID_MAX_LENGTH + 1);
         String userIdEnsured = IProovRestApiService.ensureValidUserIdValue(userIdTooLong);
