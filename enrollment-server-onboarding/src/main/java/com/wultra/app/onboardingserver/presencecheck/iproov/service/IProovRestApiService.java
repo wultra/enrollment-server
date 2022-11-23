@@ -108,7 +108,7 @@ public class IProovRestApiService {
     public ResponseEntity<String> generateEnrolToken(OwnerId id) throws RestClientException {
         final ServerClaimRequest request = createServerClaimRequest(id);
 
-        logger.info("Calling /claim/enrol/token userId={}, {}", request.getUserId(), id);
+        logger.debug("Calling /claim/enrol/token userId={}, {}", request.getUserId(), id);
         return restClient.post("/claim/enrol/token", request, STRING_TYPE_REFERENCE);
     }
 
@@ -139,7 +139,7 @@ public class IProovRestApiService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        logger.info("Calling /claim/enroll/image token={}, {}", token, id);
+        logger.debug("Calling /claim/enroll/image token={}, {}", token, id);
         return restClient.post("/claim/enrol/image", bodyBuilder.build(), EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);
     }
 
@@ -152,7 +152,7 @@ public class IProovRestApiService {
     public ResponseEntity<String> generateVerificationToken(OwnerId id) throws RestClientException {
         final ServerClaimRequest request = createServerClaimRequest(id);
 
-        logger.info("Calling /claim/verify/token userId={}, {}", request.getUserId(), id);
+        logger.debug("Calling /claim/verify/token userId={}, {}", request.getUserId(), id);
         return restClient.post("/claim/verify/token", request, STRING_TYPE_REFERENCE);
     }
 
@@ -175,7 +175,7 @@ public class IProovRestApiService {
         final String userId = getUserId(id);
         request.setUserId(userId);
 
-        logger.info("Calling /claim/verify/validate userId={}, token={}, {}", userId, token, id);
+        logger.debug("Calling /claim/verify/validate userId={}, token={}, {}", userId, token, id);
         return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
     }
 
