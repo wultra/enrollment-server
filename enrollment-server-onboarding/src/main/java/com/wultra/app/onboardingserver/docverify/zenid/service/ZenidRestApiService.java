@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -49,6 +50,7 @@ import java.util.List;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
 @Service
+@Slf4j
 public class ZenidRestApiService {
 
     private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
@@ -119,7 +121,10 @@ public class ZenidRestApiService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        return restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
+        final ResponseEntity<ZenidWebUploadSampleResponse> response =
+                restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
+        logger.debug("/api/sample response {}, {}", response, ownerId);
+        return response;
     }
 
     /**
@@ -131,7 +136,9 @@ public class ZenidRestApiService {
     public ResponseEntity<ZenidWebUploadSampleResponse> syncSample(String documentId)
             throws RestClientException {
         String apiPath = "/api/sample/" + documentId;
-        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
+        final ResponseEntity<ZenidWebUploadSampleResponse> response = restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
+        logger.debug("{} response {}", apiPath, response);
+        return response;
     }
 
     /**
@@ -151,7 +158,10 @@ public class ZenidRestApiService {
         configProps.getProfile().ifPresent(profile ->
                 queryParams.add("profile", profile));
 
-        return restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
+        final ResponseEntity<ZenidWebInvestigateResponse> response =
+                restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
+        logger.debug("/api/investigateSamples response {} for IDs: {}", response, sampleIds);
+        return response;
     }
 
     /**
@@ -163,7 +173,10 @@ public class ZenidRestApiService {
     public ResponseEntity<ZenidWebDeleteSampleResponse> deleteSample(String sampleId) throws RestClientException {
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         queryParams.add("sampleId", sampleId);
-        return restClient.get("/api/deleteSample", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_DELETE);
+        final ResponseEntity<ZenidWebDeleteSampleResponse> response =
+                restClient.get("/api/deleteSample", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_DELETE);
+        logger.debug("/api/deleteSample/{} response {}", sampleId, response);
+        return response;
     }
 
     /**
@@ -192,7 +205,9 @@ public class ZenidRestApiService {
     public ResponseEntity<ZenidWebInvestigateResponse> getInvestigation(String investigationId)
             throws RestClientException {
         String apiPath = String.format("/api/investigation/%s", investigationId);
-        return restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
+        final ResponseEntity<ZenidWebInvestigateResponse> response = restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
+        logger.debug("{} response {}", apiPath, response);
+        return response;
     }
 
     /**
@@ -205,7 +220,10 @@ public class ZenidRestApiService {
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         queryParams.add("token", token);
 
-        return restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
+        final ResponseEntity<ZenidWebInitSdkResponse> response =
+                restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
+        logger.debug("/api/initSdk response {}", response);
+        return response;
     }
 
     private MultiValueMap<String, String> buildQueryParams(OwnerId ownerId, SubmittedDocument document) {
