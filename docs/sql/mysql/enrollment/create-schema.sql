@@ -23,7 +23,8 @@ CREATE TABLE es_operation_template (
     language VARCHAR(8) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    attributes TEXT
+    attributes TEXT,
+    ui TEXT
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
