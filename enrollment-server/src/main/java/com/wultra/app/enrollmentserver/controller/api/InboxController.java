@@ -62,7 +62,10 @@ public class InboxController {
 
     @PostMapping("count")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(ObjectRequest<GetInboxCountRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
@@ -81,7 +84,10 @@ public class InboxController {
 
     @PostMapping("message/list")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxListResponse> fetchMessageList(ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
@@ -102,7 +108,10 @@ public class InboxController {
 
     @PostMapping("message/detail")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
@@ -124,7 +133,10 @@ public class InboxController {
 
     @PostMapping("message/read")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readMessage(ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
@@ -142,7 +154,10 @@ public class InboxController {
 
     @PostMapping("message/read-all")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readAllMessages(ObjectRequest<InboxReadAllRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
