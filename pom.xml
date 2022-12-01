@@ -98,7 +98,6 @@
         <shedlock-spring.version>4.42.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
-        <jakarta-validation-api.version>3.0.2</jakarta-validation-api.version>
         <springdoc-openapi.version>1.6.12</springdoc-openapi.version>
         <wultra-rest-client.version>1.6.0-SNAPSHOT</wultra-rest-client.version>
         <wultra-audit.version>1.6.0-SNAPSHOT</wultra-audit.version>
