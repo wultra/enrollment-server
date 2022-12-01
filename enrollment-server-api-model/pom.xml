@@ -37,7 +37,6 @@
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <version>${jakarta-validation-api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
