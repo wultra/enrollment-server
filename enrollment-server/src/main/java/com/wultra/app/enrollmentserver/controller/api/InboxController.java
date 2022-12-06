@@ -68,7 +68,7 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@RequestBody ObjectRequest<GetInboxCountRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -95,16 +95,17 @@ public class InboxController {
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxListRequest request = objectRequest.getRequestObject();
-        final GetInboxListResponse response = new GetInboxListResponse();
+        final boolean onlyUnread = request.isOnlyUnread();
         try {
             final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
-                    userId, appId, request.getPage(), request.getSize());
+                    userId, appId, onlyUnread, request.getPage(), request.getSize());
+            final GetInboxListResponse response = new GetInboxListResponse();
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
+            return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
-        return new ObjectResponse<>(response);
     }
 
     @PostMapping("message/detail")
@@ -160,7 +161,7 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public Response readAllMessages(@RequestBody ObjectRequest<InboxReadAllRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
