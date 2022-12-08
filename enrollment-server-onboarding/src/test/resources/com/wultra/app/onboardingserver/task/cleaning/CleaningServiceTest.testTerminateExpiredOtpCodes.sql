@@ -1,5 +1,5 @@
-INSERT INTO es_onboarding_process(id, identification_data, status, error_score, timestamp_created) VALUES
-    ('b4662611-df91-4053-bb3d-3970979baf5d', '{}', 'VERIFICATION_IN_PROGRESS', 0, now());
+INSERT INTO es_onboarding_process(id, identification_data, status, error_score, custom_data, timestamp_created) VALUES
+    ('b4662611-df91-4053-bb3d-3970979baf5d', '{}', 'VERIFICATION_IN_PROGRESS', 0, '{}', now());
 
 INSERT INTO es_onboarding_otp(id, process_id, otp_code, failed_attempts, status, type, timestamp_created, timestamp_expiration) VALUES
     ('f50b8c04-649d-43a7-8079-4dbf9b0bbc72', 'b4662611-df91-4053-bb3d-3970979baf5d', '123', 0, 'ACTIVE', 'USER_VERIFICATION', now(), now()),
