@@ -32,6 +32,7 @@ CREATE TABLE es_onboarding_process (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     error_score INTEGER NOT NULL DEFAULT 0,
+    custom_data VARCHAR(1024) NOT NULL,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP,
     timestamp_finished TIMESTAMP,

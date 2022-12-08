@@ -413,6 +413,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
     }
 
+    @SneakyThrows(OnboardingProcessException.class)
     private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData) {
         final OnboardingProcessEntity process = createNewProcess(identificationData);
         logger.debug("Created process ID: {}", process.getId());
@@ -422,11 +423,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return process;
     }
 
-    private OnboardingProcessEntity createNewProcess(final String identificationData) {
+    private OnboardingProcessEntity createNewProcess(final String identificationData) throws OnboardingProcessException {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
+        setLocaleToCustomData(process);
         return onboardingProcessRepository.save(process);
     }
 
@@ -434,6 +436,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private OnboardingProcessEntity resumeExistingProcess(final OnboardingProcessEntity process, final Map<String, Object> identification) {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
+        setLocaleToCustomData(process);
         final String userId = lookupUser(process, identification);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
@@ -442,6 +445,18 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
         auditService.audit(process, "Process resumed for user: {}", userId);
         return process;
+    }
+
+    @SuppressWarnings("unchecked") // unchecked readValue
+    private void setLocaleToCustomData(final OnboardingProcessEntity process) throws OnboardingProcessException {
+        try {
+            logger.debug("Setting locale to custom_data: {} of process ID: {}", process.getCustomData(), process.getId());
+            final Map<String, Object> json = normalizedMapper.readValue(process.getCustomData(), Map.class);
+            json.put(OnboardingProcessEntity.CUSTOM_DATA_LOCALE, LocaleContextHolder.getLocale().getLanguage());
+            process.setCustomData(normalizedMapper.writeValueAsString(json));
+        } catch (JsonProcessingException e) {
+            throw new OnboardingProcessException("Problem to parse custom_data of process ID: " + process.getId(), e);
+        }
     }
 
     private void removeActivation(final OnboardingProcessEntity process) throws OnboardingProcessException {
