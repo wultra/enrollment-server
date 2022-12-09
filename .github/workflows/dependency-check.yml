@@ -1,0 +1,30 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    name: Dependency Check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build project with Maven
+        run: mvn -B clean package
+      - name: Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Dependency Check
+        with:
+          project: 'Enrollment Server'
+          path: '.'
+          format: 'HTML'
+      - name: Upload Report Results
+        uses: actions/upload-artifact@master
+        with:
+          name: Dependency Check Report
+          path: ${{github.workspace}}/reports
