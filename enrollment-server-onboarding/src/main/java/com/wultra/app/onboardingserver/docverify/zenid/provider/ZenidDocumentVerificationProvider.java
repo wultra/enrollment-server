@@ -309,7 +309,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             logger.warn("Missing the verification result in {} to parse rejected errors from", docResult);
             return Collections.emptyList();
         }
-        List<ZenidWebInvestigationValidatorResponse> validations;
+        final List<ZenidWebInvestigationValidatorResponse> validations;
         try {
             validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
         } catch (JsonProcessingException e) {
@@ -317,12 +317,14 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
 
         final List<String> errors = new ArrayList<>();
-        validations.forEach(validation -> {
-            if (validation.isOk()) {
-                return;
-            }
-            validation.getIssues().forEach(issue -> errors.add(issue.getIssueDescription()));
-        });
+        if (validations != null) {
+            validations.forEach(validation -> {
+                if (validation.isOk()) {
+                    return;
+                }
+                validation.getIssues().forEach(issue -> errors.add(issue.getIssueDescription()));
+            });
+        }
 
         return errors;
     }
