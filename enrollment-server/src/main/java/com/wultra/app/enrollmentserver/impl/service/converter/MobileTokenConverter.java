@@ -100,13 +100,13 @@ public class MobileTokenConverter {
 
             final String attributes = operationTemplate.getAttributes();
             if (attributes != null) {
-                final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(
-                        attributes, OperationTemplateParam[].class
-                );
-                for (OperationTemplateParam templateParam : operationTemplateParams) {
-                    final Attribute attribute = buildAttribute(templateParam, parameters);
-                    if (attribute != null) {
-                        formData.getAttributes().add(attribute);
+                final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
+                if (operationTemplateParams != null) {
+                    for (OperationTemplateParam templateParam : operationTemplateParams) {
+                        final Attribute attribute = buildAttribute(templateParam, parameters);
+                        if (attribute != null) {
+                            formData.getAttributes().add(attribute);
+                        }
                     }
                 }
             }
