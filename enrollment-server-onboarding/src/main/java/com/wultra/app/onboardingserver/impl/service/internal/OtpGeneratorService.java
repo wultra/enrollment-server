@@ -18,8 +18,6 @@
 package com.wultra.app.onboardingserver.impl.service.internal;
 
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -33,10 +31,10 @@ import java.security.SecureRandom;
 @Service
 public class OtpGeneratorService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OtpGeneratorService.class);
-
     private static final int OTP_MIN_LENGTH = 4;
     private static final int OTP_MAX_LENGTH = 12;
+
+    private final SecureRandom random = new SecureRandom();
 
     /**
      * Generate an OTP code.
@@ -48,7 +46,6 @@ public class OtpGeneratorService {
         if (length < OTP_MIN_LENGTH || length > OTP_MAX_LENGTH) {
             throw new OnboardingProcessException("Invalid OTP length: " + length);
         }
-        SecureRandom random = new SecureRandom();
         BigInteger bound = BigInteger.TEN.pow(length).subtract(BigInteger.ONE);
         long number = Math.abs(random.nextLong() % bound.longValue());
         return String.format("%0" + length + "d", number);
