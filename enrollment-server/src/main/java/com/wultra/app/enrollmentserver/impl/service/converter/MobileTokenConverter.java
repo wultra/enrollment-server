@@ -30,6 +30,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.entity.FormData;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.UiExtensions;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +49,11 @@ import java.util.Map;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Component
+@Slf4j
 public class MobileTokenConverter {
 
-    private static final Logger logger = LoggerFactory.getLogger(MobileTokenConverter.class);
+    private static final String RISK_FLAG_FLIP_BUTTONS = "X";
+    private static final String RISK_FLAG_BLOCK_APPROVAL_ON_CALL = "C";
 
     private final ObjectMapper objectMapper;
 
@@ -97,12 +100,7 @@ public class MobileTokenConverter {
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
 
-            // Set UI data
-            final String uiJsonString = operationTemplate.getUi();
-            if (StringUtils.hasText(uiJsonString)) {
-                final UiExtensions ui = objectMapper.readValue(uiJsonString, UiExtensions.class);
-                operation.setUi(ui);
-            }
+            operation.setUi(convertUiExtension(operationDetail, operationTemplate));
 
             // Prepare title and message with substituted attributes
             final FormData formData = new FormData();
@@ -135,6 +133,27 @@ public class MobileTokenConverter {
             logger.debug("Unable to parse JSON with operation template parameters: {}", e.getMessage());
             logger.debug("Exception detail", e);
             throw new MobileTokenConfigurationException("ERR_CONFIG", "Invalid JSON structure for the configuration: " + e.getMessage());
+        }
+    }
+
+    private UiExtensions convertUiExtension(final OperationDetailResponse operationDetail, final OperationTemplateEntity operationTemplate) throws JsonProcessingException {
+        if (StringUtils.hasText(operationTemplate.getUi())) {
+            final String uiJsonString = operationTemplate.getUi();
+            logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
+            return objectMapper.readValue(uiJsonString, UiExtensions.class);
+        } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {
+            final String riskFlags = operationDetail.getRiskFlags();
+            logger.debug("Converting riskFlags: '{}' of OperationDetail ID: {} to UiExtensions", riskFlags, operationDetail.getId());
+            final UiExtensions ui = new UiExtensions();
+            if (riskFlags.contains(RISK_FLAG_FLIP_BUTTONS)) {
+                ui.setFlipButtons(true);
+            }
+            if (riskFlags.contains(RISK_FLAG_BLOCK_APPROVAL_ON_CALL)) {
+                ui.setBlockApprovalOnCall(true);
+            }
+            return ui;
+        } else {
+            return null;
         }
     }
 
