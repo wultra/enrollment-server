@@ -126,8 +126,13 @@ public class MobileTokenConverter {
         final String text = templateParam.getText();
         switch (type) {
             case "AMOUNT": {
-                final String amountKey = templateParam.getParams().get("amount");
-                final String currencyKey = templateParam.getParams().get("currency");
+                final Map<String, String> templateParams = templateParam.getParams();
+                if (templateParams == null) {
+                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                final String amountKey = templateParams.get("amount");
+                final String currencyKey = templateParams.get("currency");
                 final String amount = params.get(amountKey);
                 final String currency = params.get(currencyKey);
                 try {
@@ -142,7 +147,12 @@ public class MobileTokenConverter {
                 return new HeadingAttribute(id, text);
             }
             case "NOTE": {
-                final String noteKey = templateParam.getParams().get("note");
+                final Map<String, String> templateParams = templateParam.getParams();
+                if (templateParams == null) {
+                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                final String noteKey = templateParams.get("note");
                 final String note = params.get(noteKey);
                 if (note == null) { // invalid element, does not contain note at all
                     return null;
@@ -150,7 +160,12 @@ public class MobileTokenConverter {
                 return new NoteAttribute(id, text, note);
             }
             case "KEY_VALUE": {
-                final String valueKey = templateParam.getParams().get("value");
+                final Map<String, String> templateParams = templateParam.getParams();
+                if (templateParams == null) {
+                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                final String valueKey = templateParams.get("value");
                 final String value = params.get(valueKey);
                 if (value == null) { // invalid element, does not contain note at all
                     return null;
@@ -159,7 +174,12 @@ public class MobileTokenConverter {
             }
             default: { // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
-                final String valueKey = templateParam.getParams().get("value");
+                final Map<String, String> templateParams = templateParam.getParams();
+                if (templateParams == null) {
+                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                final String valueKey = templateParams.get("value");
                 final String value = params.get(valueKey);
                 if (value == null) { // invalid element, does not contain note at all
                     return null;
