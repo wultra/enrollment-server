@@ -25,15 +25,10 @@ import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.AllowedSignatureType;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.FormData;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.UiExtensions;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -54,6 +49,7 @@ public class MobileTokenConverter {
 
     private static final String RISK_FLAG_FLIP_BUTTONS = "X";
     private static final String RISK_FLAG_BLOCK_APPROVAL_ON_CALL = "C";
+    private static final String RISK_FLAG_FRAUD_WARNING = "F";
 
     private final ObjectMapper objectMapper;
 
@@ -150,6 +146,11 @@ public class MobileTokenConverter {
             }
             if (riskFlags.contains(RISK_FLAG_BLOCK_APPROVAL_ON_CALL)) {
                 ui.setBlockApprovalOnCall(true);
+            }
+            if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
+                final PreApprovalScreen preApprovalScreen = new PreApprovalScreen();
+                preApprovalScreen.setType(PreApprovalScreen.ScreenType.WARNING);
+                ui.setPreApprovalScreen(preApprovalScreen);
             }
             return ui;
         } else {
