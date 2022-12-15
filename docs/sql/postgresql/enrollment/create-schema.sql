@@ -28,5 +28,6 @@ CREATE TABLE es_operation_template (
     language VARCHAR(8) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    attributes TEXT
+    attributes TEXT,
+    ui TEXT
 );
