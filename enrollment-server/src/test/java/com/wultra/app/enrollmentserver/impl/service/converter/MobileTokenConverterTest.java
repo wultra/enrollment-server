@@ -38,7 +38,23 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class MobileTokenConverterTest {
 
-    private MobileTokenConverter tested = new MobileTokenConverter(new ObjectMapper());
+    private static final String TEMPLATE_UI = "{\n" +
+            "  \"flipButtons\": true,\n" +
+            "  \"blockApprovalOnCall\": false,\n" +
+            "  \"preApprovalScreen\": {\n" +
+            "    \"type\": \"WARNING\",\n" +
+            "    \"heading\": \"Watch out!\",\n" +
+            "    \"message\": \"You may become a victim of an attack.\",\n" +
+            "    \"items\": [\n" +
+            "      \"You activate a new app and allow access to your accounts\",\n" +
+            "      \"Make sure the activation takes place on your device\",\n" +
+            "      \"If you have been prompted for this operation in connection with a payment, decline it\"\n" +
+            "    ],\n" +
+            "    \"approvalType\": \"SLIDER\"\n" +
+            "  }\n" +
+            "}";
+
+    private final MobileTokenConverter tested = new MobileTokenConverter(new ObjectMapper());
 
     @Test
     void testConvertUiNull() throws Exception {
@@ -61,21 +77,7 @@ class MobileTokenConverterTest {
         operationDetail.setRiskFlags("C");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"flipButtons\": true,\n" +
-                "  \"blockApprovalOnCall\": false,\n" +
-                "  \"preApprovalScreen\": {\n" +
-                "    \"type\": \"WARNING\",\n" +
-                "    \"heading\": \"Dejte si pozor!\",\n" +
-                "    \"message\": \"Můžete se stát obětí útoku.\",\n" +
-                "    \"items\": [\n" +
-                "      \"Aktivujete novou aplikaci a povolujete přístup k Vašim účtům\",\n" +
-                "      \"Ujistěte se, že aktivace probíhá na Vašem zařízení\",\n" +
-                "      \"Pokud jste byli vyzvání k této operaci v souvislosti s platbou, odmítněte ji\"\n" +
-                "    ],\n" +
-                "    \"approvalType\": \"SLIDER\"\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi(TEMPLATE_UI);
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -88,14 +90,14 @@ class MobileTokenConverterTest {
 
         final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
         assertEquals(PreApprovalScreen.ScreenType.WARNING, preApprovalScreen.getType());
-        assertEquals("Dejte si pozor!", preApprovalScreen.getHeading());
-        assertEquals("Můžete se stát obětí útoku.", preApprovalScreen.getMessage());
+        assertEquals("Watch out!", preApprovalScreen.getHeading());
+        assertEquals("You may become a victim of an attack.", preApprovalScreen.getMessage());
         assertEquals(PreApprovalScreen.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
         assertNotNull(preApprovalScreen.getItems());
 
         final List<String> items = preApprovalScreen.getItems();
         assertEquals(3, items.size());
-        assertEquals("Aktivujete novou aplikaci a povolujete přístup k Vašim účtům", items.get(0));
+        assertEquals("You activate a new app and allow access to your accounts", items.get(0));
     }
 
     @Test
