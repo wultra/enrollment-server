@@ -131,6 +131,10 @@ public class MobileTokenConverter {
                     logger.warn("Params of OperationTemplateParam ID: {} is null", id);
                     return null;
                 }
+                if (params == null) {
+                    logger.warn("Params of OperationDetailResponse is null");
+                    return null;
+                }
                 final String amountKey = templateParams.get("amount");
                 final String currencyKey = templateParams.get("currency");
                 final String amount = params.get(amountKey);
@@ -152,6 +156,10 @@ public class MobileTokenConverter {
                     logger.warn("Params of OperationTemplateParam ID: {} is null", id);
                     return null;
                 }
+                if (params == null) {
+                    logger.warn("Params of OperationDetailResponse is null");
+                    return null;
+                }
                 final String noteKey = templateParams.get("note");
                 final String note = params.get(noteKey);
                 if (note == null) { // invalid element, does not contain note at all
@@ -163,6 +171,10 @@ public class MobileTokenConverter {
                 final Map<String, String> templateParams = templateParam.getParams();
                 if (templateParams == null) {
                     logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                if (params == null) {
+                    logger.warn("Params of OperationDetailResponse is null");
                     return null;
                 }
                 final String valueKey = templateParams.get("value");
@@ -177,6 +189,10 @@ public class MobileTokenConverter {
                 final Map<String, String> templateParams = templateParam.getParams();
                 if (templateParams == null) {
                     logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+                    return null;
+                }
+                if (params == null) {
+                    logger.warn("Params of OperationDetailResponse is null");
                     return null;
                 }
                 final String valueKey = templateParams.get("value");
