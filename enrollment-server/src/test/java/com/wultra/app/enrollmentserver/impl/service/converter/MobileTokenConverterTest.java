@@ -41,7 +41,7 @@ class MobileTokenConverterTest {
     private MobileTokenConverter tested = new MobileTokenConverter(new ObjectMapper());
 
     @Test
-    void testConvertUi_null() throws Exception {
+    void testConvertUiNull() throws Exception {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
@@ -54,7 +54,7 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertUi_overriddenByEnrollment() throws Exception {
+    void testConvertUiOverriddenByEnrollment() throws Exception {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
@@ -99,7 +99,7 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertUi_riskFlags_X() throws Exception {
+    void testConvertUiRiskFlagsX() throws Exception {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
@@ -118,7 +118,7 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertUi_riskFlags_C() throws Exception {
+    void testConvertUiRiskFlagsC() throws Exception {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
@@ -137,7 +137,7 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertUi_riskFlags_XCF() throws Exception {
+    void testConvertUiRiskFlagsXCF() throws Exception {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
