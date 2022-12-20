@@ -99,11 +99,11 @@
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.0</swagger-annotations.version>
         <springdoc-openapi.version>1.6.12</springdoc-openapi.version>
-        <wultra-rest-client.version>1.6.0-SNAPSHOT</wultra-rest-client.version>
-        <wultra-audit.version>1.6.0-SNAPSHOT</wultra-audit.version>
-        <powerauth-crypto.version>1.4.0-SNAPSHOT</powerauth-crypto.version>
-        <powerauth-restful-integration.version>1.4.0-SNAPSHOT</powerauth-restful-integration.version>
-        <powerauth-push.version>1.4.0-SNAPSHOT</powerauth-push.version>
+        <wultra-rest-client.version>1.6.0</wultra-rest-client.version>
+        <wultra-audit.version>1.6.0</wultra-audit.version>
+        <powerauth-crypto.version>1.4.0</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.4.0</powerauth-restful-integration.version>
+        <powerauth-push.version>1.4.0</powerauth-push.version>
     </properties>
 
     <dependencyManagement>
