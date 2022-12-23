@@ -22,9 +22,7 @@ import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.UiExtensions;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -38,29 +36,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class MobileTokenConverterTest {
 
-    private static final String TEMPLATE_UI = "{\n" +
-            "  \"flipButtons\": true,\n" +
-            "  \"blockApprovalOnCall\": false,\n" +
-            "  \"preApprovalScreen\": {\n" +
-            "    \"type\": \"WARNING\",\n" +
-            "    \"heading\": \"Watch out!\",\n" +
-            "    \"message\": \"You may become a victim of an attack.\",\n" +
-            "    \"items\": [\n" +
-            "      \"You activate a new app and allow access to your accounts\",\n" +
-            "      \"Make sure the activation takes place on your device\",\n" +
-            "      \"If you have been prompted for this operation in connection with a payment, decline it\"\n" +
-            "    ],\n" +
-            "    \"approvalType\": \"SLIDER\"\n" +
-            "  }\n" +
-            "}";
-
     private final MobileTokenConverter tested = new MobileTokenConverter(new ObjectMapper());
 
     @Test
     void testConvertUiNull() throws Exception {
-        final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
-        operationDetail.setStatus(OperationStatus.APPROVED);
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
 
@@ -71,13 +51,25 @@ class MobileTokenConverterTest {
 
     @Test
     void testConvertUiOverriddenByEnrollment() throws Exception {
-        final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
-        operationDetail.setStatus(OperationStatus.APPROVED);
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setRiskFlags("C");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi(TEMPLATE_UI);
+        operationTemplate.setUi("{\n" +
+                "  \"flipButtons\": true,\n" +
+                "  \"blockApprovalOnCall\": false,\n" +
+                "  \"preApprovalScreen\": {\n" +
+                "    \"type\": \"WARNING\",\n" +
+                "    \"heading\": \"Watch out!\",\n" +
+                "    \"message\": \"You may become a victim of an attack.\",\n" +
+                "    \"items\": [\n" +
+                "      \"You activate a new app and allow access to your accounts\",\n" +
+                "      \"Make sure the activation takes place on your device\",\n" +
+                "      \"If you have been prompted for this operation in connection with a payment, decline it\"\n" +
+                "    ],\n" +
+                "    \"approvalType\": \"SLIDER\"\n" +
+                "  }\n" +
+                "}");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -102,9 +94,7 @@ class MobileTokenConverterTest {
 
     @Test
     void testConvertUiRiskFlagsX() throws Exception {
-        final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
-        operationDetail.setStatus(OperationStatus.APPROVED);
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setRiskFlags("X");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
@@ -121,9 +111,7 @@ class MobileTokenConverterTest {
 
     @Test
     void testConvertUiRiskFlagsC() throws Exception {
-        final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
-        operationDetail.setStatus(OperationStatus.APPROVED);
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setRiskFlags("C");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
@@ -140,9 +128,7 @@ class MobileTokenConverterTest {
 
     @Test
     void testConvertUiRiskFlagsXCF() throws Exception {
-        final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
-        operationDetail.setStatus(OperationStatus.APPROVED);
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setRiskFlags("XCF");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
@@ -158,5 +144,69 @@ class MobileTokenConverterTest {
 
         final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
         assertEquals(PreApprovalScreen.ScreenType.WARNING, preApprovalScreen.getType());
+    }
+
+    @Test
+    void testConvertUiPostApprovalMerchantRedirect() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("{\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
+                "    \"heading\": \"Thank you for your order\",\n" +
+                "    \"message\": \"You will be redirected to the merchant application.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"type\": \"MERCHANT_REDIRECT\",\n" +
+                "      \"redirectText\": \"Go to the application\",\n" +
+                "      \"redirectUrl\": \"https://www.example.com\",\n" +
+                "      \"countdown\": 5\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final UiExtensions ui = result.getUi();
+        assertNotNull(ui);
+
+        assertInstanceOf(MerchantRedirectPostApprovalScreen.class, ui.getPostApprovalScreen());
+        final MerchantRedirectPostApprovalScreen postApprovalScreen = (MerchantRedirectPostApprovalScreen) ui.getPostApprovalScreen();
+
+        final MerchantRedirectPostApprovalScreen.MerchantRedirectPayload payload = postApprovalScreen.getPayload();
+        assertNotNull(payload);
+        assertEquals("Go to the application", payload.getRedirectText());
+        assertEquals("https://www.example.com", payload.getRedirectUrl());
+        assertEquals(5, payload.getCountdown());
+    }
+
+    @Test
+    void testConvertUiPostApprovalInfoMessage() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("{\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"INFO_MESSAGE\",\n" +
+                "    \"heading\": \"Thank you for your order\",\n" +
+                "    \"message\": \"You will be redirected to the merchant application.\"\n" +
+                "  }\n" +
+                "}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final UiExtensions ui = result.getUi();
+        assertNotNull(ui);
+
+        assertInstanceOf(InfoPostApprovalScreen.class, ui.getPostApprovalScreen());
+        final InfoPostApprovalScreen postApprovalScreen = (InfoPostApprovalScreen) ui.getPostApprovalScreen();
+        assertNull(postApprovalScreen.getPayload());
+    }
+
+    private static OperationDetailResponse createOperationDetailResponse() {
+        final OperationDetailResponse operationDetail = new OperationDetailResponse();
+        operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));
+        operationDetail.setStatus(OperationStatus.APPROVED);
+        return operationDetail;
     }
 }
