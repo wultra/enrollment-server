@@ -44,7 +44,7 @@ public class PostApprovalScreen {
     private String message;
 
     /**
-     * Optional specific payload which depends on type or post approval screen.
+     * Optional payload specific for type of the post approval screen.
      */
     private Payload payload;
 
@@ -64,9 +64,15 @@ public class PostApprovalScreen {
         @NotNull
         private String redirectText;
 
+        /**
+         * Url to website or application.
+         */
         @NotNull
         private String redirectUrl;
 
+        /**
+         * Time in seconds when the user will be redirected automatically.
+         */
         private int countdown;
     }
 }
