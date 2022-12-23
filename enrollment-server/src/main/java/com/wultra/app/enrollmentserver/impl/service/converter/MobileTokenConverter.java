@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -87,6 +88,9 @@ public class MobileTokenConverter {
      */
     public Operation convert(OperationDetailResponse operationDetail, OperationTemplateEntity operationTemplate) throws MobileTokenConfigurationException {
         try {
+            final Map<String, String> parameters = operationDetail.getParameters();
+            final StringSubstitutor sub = createStringSubstitutor(parameters);
+
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
             operation.setName(operationDetail.getOperationType());
@@ -96,13 +100,11 @@ public class MobileTokenConverter {
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
 
-            operation.setUi(convertUiExtension(operationDetail, operationTemplate));
+            operation.setUi(convertUiExtension(operationDetail, operationTemplate, sub));
 
             // Prepare title and message with substituted attributes
             final FormData formData = new FormData();
-            final Map<String, String> parameters = operationDetail.getParameters();
-            if (parameters != null && parameters.keySet().size() > 0) {
-                final StringSubstitutor sub = new StringSubstitutor(parameters);
+            if (sub != null) {
                 formData.setTitle(sub.replace(operationTemplate.getTitle()));
                 formData.setMessage(sub.replace(operationTemplate.getMessage()));
             } else {
@@ -132,9 +134,21 @@ public class MobileTokenConverter {
         }
     }
 
-    private UiExtensions convertUiExtension(final OperationDetailResponse operationDetail, final OperationTemplateEntity operationTemplate) throws JsonProcessingException {
+    private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
+        if (CollectionUtils.isEmpty(parameters)) {
+            return null;
+        } else {
+            return new StringSubstitutor(parameters);
+        }
+    }
+
+    private UiExtensions convertUiExtension(
+            final OperationDetailResponse operationDetail,
+            final OperationTemplateEntity operationTemplate,
+            final StringSubstitutor substitutor) throws JsonProcessingException {
+
         if (StringUtils.hasText(operationTemplate.getUi())) {
-            final String uiJsonString = operationTemplate.getUi();
+            final String uiJsonString = substitutor == null ? operationTemplate.getUi() : substitutor.replace(operationTemplate.getUi());
             logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
             return objectMapper.readValue(uiJsonString, UiExtensions.class);
         } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {

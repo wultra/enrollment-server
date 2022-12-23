@@ -26,6 +26,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -160,6 +161,43 @@ class MobileTokenConverterTest {
                 "      \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "      \"redirectText\": \"Go to the application\",\n" +
                 "      \"redirectUrl\": \"https://www.example.com\",\n" +
+                "      \"countdown\": 5\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final var expectedPayload = new PostApprovalScreen.MerchantRedirectPayload();
+        expectedPayload.setRedirectText("Go to the application");
+        expectedPayload.setRedirectUrl("https://www.example.com");
+        expectedPayload.setCountdown(5);
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getPostApprovalScreen)
+                .isNotNull()
+                .extracting(PostApprovalScreen::getPayload)
+                .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
+                .isEqualTo(expectedPayload);
+    }
+
+    @Test
+    void testConvertUiPostApprovalMerchantRedirectWithSubstitutedUrl() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.of("userId", "666", "redirectUrl", "https://www.example.com"));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("{\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"heading\": \"Thank you for your order\",\n" +
+                "    \"message\": \"You will be redirected to the merchant application.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"type\": \"MERCHANT_REDIRECT\",\n" +
+                "      \"redirectText\": \"Go to the application\",\n" +
+                "      \"redirectUrl\": \"${redirectUrl}\",\n" +
                 "      \"countdown\": 5\n" +
                 "    }\n" +
                 "  }\n" +
