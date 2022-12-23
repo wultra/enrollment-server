@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.from;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -179,8 +180,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
-                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
-                .hasFieldOrPropertyWithValue("message", "You will be redirected to the merchant application.")
+                .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
+                .returns("You will be redirected to the merchant application.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
                 .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
@@ -218,8 +219,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
-                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
-                .hasFieldOrPropertyWithValue("message", "You will be redirected to the merchant application.")
+                .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
+                .returns("You will be redirected to the merchant application.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
                 .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
@@ -245,8 +246,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
-                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
-                .hasFieldOrPropertyWithValue("message", "You may close the application now.")
+                .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
+                .returns("You may close the application now.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
                 .isNull();
     }
