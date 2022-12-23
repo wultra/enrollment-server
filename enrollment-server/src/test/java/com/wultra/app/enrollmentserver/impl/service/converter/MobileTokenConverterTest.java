@@ -153,7 +153,6 @@ class MobileTokenConverterTest {
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
                 "    \"message\": \"You will be redirected to the merchant application.\",\n" +
                 "    \"payload\": {\n" +
@@ -169,12 +168,10 @@ class MobileTokenConverterTest {
 
         final UiExtensions ui = result.getUi();
         assertNotNull(ui);
+        assertNotNull(ui.getPostApprovalScreen());
+        assertInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class, ui.getPostApprovalScreen().getPayload());
 
-        assertInstanceOf(MerchantRedirectPostApprovalScreen.class, ui.getPostApprovalScreen());
-        final MerchantRedirectPostApprovalScreen postApprovalScreen = (MerchantRedirectPostApprovalScreen) ui.getPostApprovalScreen();
-
-        final MerchantRedirectPostApprovalScreen.MerchantRedirectPayload payload = postApprovalScreen.getPayload();
-        assertNotNull(payload);
+        final PostApprovalScreen.MerchantRedirectPayload payload = (PostApprovalScreen.MerchantRedirectPayload) ui.getPostApprovalScreen().getPayload();
         assertEquals("Go to the application", payload.getRedirectText());
         assertEquals("https://www.example.com", payload.getRedirectUrl());
         assertEquals(5, payload.getCountdown());
@@ -187,7 +184,6 @@ class MobileTokenConverterTest {
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"INFO_MESSAGE\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
                 "    \"message\": \"You will be redirected to the merchant application.\"\n" +
                 "  }\n" +
@@ -198,8 +194,7 @@ class MobileTokenConverterTest {
         final UiExtensions ui = result.getUi();
         assertNotNull(ui);
 
-        assertInstanceOf(InfoPostApprovalScreen.class, ui.getPostApprovalScreen());
-        final InfoPostApprovalScreen postApprovalScreen = (InfoPostApprovalScreen) ui.getPostApprovalScreen();
+        final PostApprovalScreen postApprovalScreen = ui.getPostApprovalScreen();
         assertNull(postApprovalScreen.getPayload());
     }
 

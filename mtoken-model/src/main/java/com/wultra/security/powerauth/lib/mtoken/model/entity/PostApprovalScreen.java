@@ -28,28 +28,8 @@ import javax.validation.constraints.NotNull;
  *
  * @author Lubos Racansky, lubos.raansky@wultra.com
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = InfoPostApprovalScreen.class, name = "INFO_MESSAGE"),
-        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT")
-})
 @Data
-public abstract class PostApprovalScreen<T extends PostApprovalScreen.Payload> {
-
-    /**
-     * Type of the post-approval screen.
-     */
-    public enum ScreenType {
-        /**
-         * The purpose of the screen is to inform the user without any possible action.
-         */
-        INFO_MESSAGE,
-
-        /**
-         * The purpose of the screen is to be able to redirect the user to the merchant website or application.
-         */
-        MERCHANT_REDIRECT
-    }
+public class PostApprovalScreen {
 
     /**
      * Screen heading.
@@ -64,15 +44,29 @@ public abstract class PostApprovalScreen<T extends PostApprovalScreen.Payload> {
     private String message;
 
     /**
-     * Specific payload which depends on type or post approval screen.
+     * Optional specific payload which depends on type or post approval screen.
      */
-    private T payload;
+    private Payload payload;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
     @JsonSubTypes({
-            @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.MerchantRedirectPayload.class, name = "MERCHANT_REDIRECT")
+            @JsonSubTypes.Type(value = MerchantRedirectPayload.class, name = "MERCHANT_REDIRECT")
     })
+    public interface Payload {
+    }
+
+    /**
+     * Specialization of {@link Payload} for redirecting the user to the merchant website or application.
+     */
     @Data
-    public static class Payload {
+    public static class MerchantRedirectPayload implements Payload {
+
+        @NotNull
+        private String redirectText;
+
+        @NotNull
+        private String redirectUrl;
+
+        private int countdown;
     }
 }

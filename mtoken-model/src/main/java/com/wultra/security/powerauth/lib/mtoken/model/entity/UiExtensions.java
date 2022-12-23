@@ -53,5 +53,5 @@ public class UiExtensions {
      * approval screen. The purpose of the screen could be to provide additional information after
      * approving an operation, or to provide an option to execute simple consecutive actions.
      */
-    private PostApprovalScreen<?> postApprovalScreen;
+    private PostApprovalScreen postApprovalScreen;
 }
