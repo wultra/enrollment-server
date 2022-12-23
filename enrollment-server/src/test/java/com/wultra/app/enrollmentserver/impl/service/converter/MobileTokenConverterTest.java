@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -166,15 +167,20 @@ class MobileTokenConverterTest {
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
-        final UiExtensions ui = result.getUi();
-        assertNotNull(ui);
-        assertNotNull(ui.getPostApprovalScreen());
-        assertInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class, ui.getPostApprovalScreen().getPayload());
+        final var expectedPayload = new PostApprovalScreen.MerchantRedirectPayload();
+        expectedPayload.setRedirectText("Go to the application");
+        expectedPayload.setRedirectUrl("https://www.example.com");
+        expectedPayload.setCountdown(5);
 
-        final PostApprovalScreen.MerchantRedirectPayload payload = (PostApprovalScreen.MerchantRedirectPayload) ui.getPostApprovalScreen().getPayload();
-        assertEquals("Go to the application", payload.getRedirectText());
-        assertEquals("https://www.example.com", payload.getRedirectUrl());
-        assertEquals(5, payload.getCountdown());
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getPostApprovalScreen)
+                .isNotNull()
+                .extracting(PostApprovalScreen::getPayload)
+                .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
+                .isEqualTo(expectedPayload);
     }
 
     @Test
@@ -191,11 +197,14 @@ class MobileTokenConverterTest {
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
-        final UiExtensions ui = result.getUi();
-        assertNotNull(ui);
-
-        final PostApprovalScreen postApprovalScreen = ui.getPostApprovalScreen();
-        assertNull(postApprovalScreen.getPayload());
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getPostApprovalScreen)
+                .isNotNull()
+                .extracting(PostApprovalScreen::getPayload)
+                .isNull();
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
