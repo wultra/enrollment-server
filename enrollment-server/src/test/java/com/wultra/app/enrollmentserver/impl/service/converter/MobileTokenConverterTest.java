@@ -179,6 +179,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
+                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
+                .hasFieldOrPropertyWithValue("message", "You will be redirected to the merchant application.")
                 .extracting(PostApprovalScreen::getPayload)
                 .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
@@ -216,6 +218,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
+                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
+                .hasFieldOrPropertyWithValue("message", "You will be redirected to the merchant application.")
                 .extracting(PostApprovalScreen::getPayload)
                 .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
@@ -229,7 +233,7 @@ class MobileTokenConverterTest {
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You will be redirected to the merchant application.\"\n" +
+                "    \"message\": \"You may close the application now.\"\n" +
                 "  }\n" +
                 "}");
 
@@ -241,6 +245,8 @@ class MobileTokenConverterTest {
                 .isNotNull()
                 .extracting(UiExtensions::getPostApprovalScreen)
                 .isNotNull()
+                .hasFieldOrPropertyWithValue("heading", "Thank you for your order")
+                .hasFieldOrPropertyWithValue("message", "You may close the application now.")
                 .extracting(PostApprovalScreen::getPayload)
                 .isNull();
     }
