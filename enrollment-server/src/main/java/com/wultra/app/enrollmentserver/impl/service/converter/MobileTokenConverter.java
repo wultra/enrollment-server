@@ -90,6 +90,8 @@ public class MobileTokenConverter {
         try {
             final Map<String, String> parameters = operationDetail.getParameters();
             final StringSubstitutor sub = createStringSubstitutor(parameters);
+            final UiExtensions uiExtensions = convertUiExtension(operationDetail, operationTemplate, sub);
+            final FormData formData = prepareFormData(operationTemplate, parameters, sub);
 
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
@@ -99,39 +101,44 @@ public class MobileTokenConverter {
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
-
-            operation.setUi(convertUiExtension(operationDetail, operationTemplate, sub));
-
-            // Prepare title and message with substituted attributes
-            final FormData formData = new FormData();
-            if (sub != null) {
-                formData.setTitle(sub.replace(operationTemplate.getTitle()));
-                formData.setMessage(sub.replace(operationTemplate.getMessage()));
-            } else {
-                formData.setTitle(operationTemplate.getTitle());
-                formData.setMessage(operationTemplate.getMessage());
-            }
-
-            final String attributes = operationTemplate.getAttributes();
-            if (attributes != null) {
-                final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
-                if (operationTemplateParams != null) {
-                    for (OperationTemplateParam templateParam : operationTemplateParams) {
-                        final Attribute attribute = buildAttribute(templateParam, parameters);
-                        if (attribute != null) {
-                            formData.getAttributes().add(attribute);
-                        }
-                    }
-                }
-            }
-
+            operation.setUi(uiExtensions);
             operation.setFormData(formData);
+
             return operation;
         } catch (JsonProcessingException e) {
             logger.debug("Unable to parse JSON with operation template parameters: {}", e.getMessage());
             logger.debug("Exception detail", e);
             throw new MobileTokenConfigurationException("ERR_CONFIG", "Invalid JSON structure for the configuration: " + e.getMessage());
         }
+    }
+
+    private FormData prepareFormData(
+            final OperationTemplateEntity operationTemplate,
+            final Map<String, String> parameters,
+            final StringSubstitutor sub) throws JsonProcessingException {
+
+        final FormData formData = new FormData();
+        if (sub != null) {
+            formData.setTitle(sub.replace(operationTemplate.getTitle()));
+            formData.setMessage(sub.replace(operationTemplate.getMessage()));
+        } else {
+            formData.setTitle(operationTemplate.getTitle());
+            formData.setMessage(operationTemplate.getMessage());
+        }
+
+        final String attributes = operationTemplate.getAttributes();
+        if (attributes != null) {
+            final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
+            if (operationTemplateParams != null) {
+                for (OperationTemplateParam templateParam : operationTemplateParams) {
+                    final Attribute attribute = buildAttribute(templateParam, parameters);
+                    if (attribute != null) {
+                        formData.getAttributes().add(attribute);
+                    }
+                }
+            }
+        }
+        return formData;
     }
 
     private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
