@@ -34,6 +34,7 @@ import io.getlime.push.model.response.GetInboxMessageDetailResponse;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
 
 /**
  * Controller with facade for Inbox services in Push server.
@@ -68,7 +71,7 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -76,11 +79,11 @@ public class InboxController {
         try {
             final ObjectResponse<GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, appId);
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
+            return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
-        return new ObjectResponse<>(response);
     }
 
     @PostMapping("message/list")
@@ -90,7 +93,7 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -98,7 +101,7 @@ public class InboxController {
         final boolean onlyUnread = request.isOnlyUnread();
         try {
             final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
-                    userId, appId, onlyUnread, request.getPage(), request.getSize());
+                    userId, Collections.singletonList(appId), onlyUnread, request.getPage(), request.getSize());
             final GetInboxListResponse response = new GetInboxListResponse();
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
             return new ObjectResponse<>(response);
@@ -115,22 +118,19 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxDetailRequest request = objectRequest.getRequestObject();
-        GetInboxDetailResponse response;
         try {
-            final ObjectResponse<GetInboxMessageDetailResponse> pushResponse = pushClient.fetchMessageDetail(
-                    userId, appId, request.getId());
-            final GetInboxMessageDetailResponse inbox = pushResponse.getResponseObject();
-            response = convertMessageDetail(inbox);
+            final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
+            final GetInboxDetailResponse response = convertMessageDetail(messageDetail);
+            return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
-        return new ObjectResponse<>(response);
     }
 
     @PostMapping("message/read")
@@ -140,18 +140,21 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final InboxReadRequest request = objectRequest.getRequestObject();
         try {
-            pushClient.readMessage(userId, appId, request.getId());
+            final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
+            if (!messageDetail.isRead()) {
+                pushClient.readMessage(request.getId());
+            }
+            return new Response();
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
-        return new Response();
     }
 
     @PostMapping("message/read-all")
@@ -161,23 +164,25 @@ public class InboxController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         try {
             pushClient.readAllMessages(userId, appId);
+            return new Response();
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
-        return new Response();
     }
 
-    private void checkApiAuthentication(final PowerAuthApiAuthentication apiAuthentication) throws InboxException {
+    // Private methods
+
+    private void checkApiAuthentication(final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
         if (apiAuthentication == null || apiAuthentication.getUserId() == null || apiAuthentication.getApplicationId() == null) {
             logger.debug("API authentication: {}", apiAuthentication);
-            throw new InboxException("Inbox request authentication failed");
+            throw new PowerAuthAuthenticationException("Inbox request authentication failed");
         }
     }
 
@@ -199,4 +204,14 @@ public class InboxController {
         result.setTimestampCreated(message.getTimestampCreated());
         return result;
     }
+
+    private GetInboxMessageDetailResponse fetchInboxMessageDetail(String userId, String appId, String inboxId) throws PushServerClientException, InboxException {
+        final ObjectResponse<GetInboxMessageDetailResponse> objectResponse = pushClient.fetchMessageDetail(inboxId);
+        final GetInboxMessageDetailResponse messageDetail = objectResponse.getResponseObject();
+        if (!userId.equals(messageDetail.getUserId()) || messageDetail.getApplications() == null || !messageDetail.getApplications().contains(appId)) {
+            throw new InboxException("Unable to access inbox message detail.");
+        }
+        return messageDetail;
+    }
+
 }
