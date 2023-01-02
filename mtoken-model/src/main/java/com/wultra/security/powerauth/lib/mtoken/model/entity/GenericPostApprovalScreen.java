@@ -19,7 +19,6 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -47,7 +46,6 @@ public class GenericPostApprovalScreen extends PostApprovalScreen {
     /**
      * Specialization of {@link Payload} for generic usage.
      */
-    @Data
     public static class GenericPayload implements Payload {
 
         private final Map<String, Object> properties = new HashMap<>();

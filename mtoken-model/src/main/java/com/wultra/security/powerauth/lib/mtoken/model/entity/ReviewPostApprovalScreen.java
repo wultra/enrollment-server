@@ -17,46 +17,38 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.Attribute;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Information screen displayed after the operation approval.
+ * Specialization of {@link PostApprovalScreen} for review.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT"),
-        @JsonSubTypes.Type(value = GenericPostApprovalScreen.class, name = "GENERIC"),
-        @JsonSubTypes.Type(value = ReviewPostApprovalScreen.class, name = "REVIEW")
-})
-public abstract class PostApprovalScreen {
+public class ReviewPostApprovalScreen extends PostApprovalScreen {
 
-    /**
-     * Screen heading.
-     */
     @NotNull
-    private String heading;
+    private ReviewPayload payload;
 
-    /**
-     * Screen message displayed under heading.
-     */
-    @NotNull
-    private String message;
-
-    /**
-     * Return screen specific payload.
-     *
-     * @return payload
-     */
-    public abstract Payload getPayload();
-
-    public interface Payload {
+    @Override
+    public ReviewPayload getPayload() {
+        return payload;
     }
 
+    public void setPayload(ReviewPayload payload) {
+        this.payload = payload;
+    }
+
+    /**
+     * Specialization of {@link Payload} for review.
+     */
+    @Data
+    public static class ReviewPayload implements Payload {
+
+        private List<Attribute> attributes = new ArrayList<>();
+    }
 }

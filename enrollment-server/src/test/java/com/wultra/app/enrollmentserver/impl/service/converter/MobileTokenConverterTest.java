@@ -23,6 +23,7 @@ import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.NoteAttribute;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -227,7 +228,48 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertUiPostApprovalGeneralMessage() throws Exception {
+    void testConvertUiPostApprovalReview() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("{\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"REVIEW\",\n" +
+                "    \"heading\": \"Successful\",\n" +
+                "    \"message\": \"The operation was approved.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"attributes\": [" +
+                "          {\n" +
+                "            \"type\": \"NOTE\",\n" +
+                "            \"id\": \"1\",\n" +
+                "            \"label\": \"test label\",\n" +
+                "            \"note\": \"some note\"\n" +
+                "          }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final var expectedPayload = new ReviewPostApprovalScreen.ReviewPayload();
+        expectedPayload.getAttributes().add(new NoteAttribute("1", "test label", "some note"));
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getPostApprovalScreen)
+                .isNotNull()
+                .returns("Successful", from(PostApprovalScreen::getHeading))
+                .returns("The operation was approved.", from(PostApprovalScreen::getMessage))
+                .extracting(PostApprovalScreen::getPayload)
+                .isInstanceOf(ReviewPostApprovalScreen.ReviewPayload.class)
+                .isEqualTo(expectedPayload);
+    }
+
+    @Test
+    void testConvertUiPostApprovalGenericMessage() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
