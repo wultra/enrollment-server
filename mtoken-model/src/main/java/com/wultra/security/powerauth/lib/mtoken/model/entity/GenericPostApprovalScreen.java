@@ -26,29 +26,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Specialization of {@link PostApprovalScreen} for general usage.
+ * Specialization of {@link PostApprovalScreen} for generic usage.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-public class GeneralPostApprovalScreen extends PostApprovalScreen {
+public class GenericPostApprovalScreen extends PostApprovalScreen {
 
     @NotNull
-    private GeneralPayload payload;
+    private GenericPostApprovalScreen.GenericPayload payload;
 
     @Override
-    public GeneralPayload getPayload() {
+    public GenericPayload getPayload() {
         return payload;
     }
 
-    public void setPayload(GeneralPayload payload) {
+    public void setPayload(GenericPayload payload) {
         this.payload = payload;
     }
 
     /**
-     * Specialization of {@link Payload} for general usage.
+     * Specialization of {@link Payload} for generic usage.
      */
     @Data
-    public static class GeneralPayload implements Payload {
+    public static class GenericPayload implements Payload {
 
         private final Map<String, Object> properties = new HashMap<>();
 

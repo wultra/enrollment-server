@@ -233,7 +233,7 @@ class MobileTokenConverterTest {
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"GENERAL\",\n" +
+                "    \"type\": \"GENERIC\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
                 "    \"message\": \"You may close the application now.\",\n" +
                 "    \"payload\": {\n" +
@@ -255,8 +255,8 @@ class MobileTokenConverterTest {
                 .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
                 .returns("You may close the application now.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
-                .isInstanceOf(GeneralPostApprovalScreen.GeneralPayload.class)
-                .returns(expectedPayload, from(it -> ((GeneralPostApprovalScreen.GeneralPayload) it).getProperties()));
+                .isInstanceOf(GenericPostApprovalScreen.GenericPayload.class)
+                .returns(expectedPayload, from(it -> ((GenericPostApprovalScreen.GenericPayload) it).getProperties()));
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
