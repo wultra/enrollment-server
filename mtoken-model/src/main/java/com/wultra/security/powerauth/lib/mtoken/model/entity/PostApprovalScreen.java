@@ -31,8 +31,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT"),
         @JsonSubTypes.Type(value = GenericPostApprovalScreen.class, name = "GENERIC"),
+        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT"),
         @JsonSubTypes.Type(value = ReviewPostApprovalScreen.class, name = "REVIEW")
 })
 public abstract class PostApprovalScreen {

@@ -31,9 +31,9 @@ import lombok.Data;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AmountAttribute.class, name = "AMOUNT"),
+        @JsonSubTypes.Type(value = HeadingAttribute.class, name = "HEADING"),
         @JsonSubTypes.Type(value = KeyValueAttribute.class, name = "KEY_VALUE"),
-        @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE"),
-        @JsonSubTypes.Type(value = HeadingAttribute.class, name = "HEADING")
+        @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE")
 })
 public class Attribute {
 
