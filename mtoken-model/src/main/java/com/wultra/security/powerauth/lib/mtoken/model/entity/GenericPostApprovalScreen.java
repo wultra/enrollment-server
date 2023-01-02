@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -48,7 +48,7 @@ public class GenericPostApprovalScreen extends PostApprovalScreen {
      */
     public static class GenericPayload implements Payload {
 
-        private final Map<String, Object> properties = new HashMap<>();
+        private final Map<String, Object> properties = new LinkedHashMap<>();
 
         @JsonAnyGetter
         public Map<String, Object> getProperties() {
