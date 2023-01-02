@@ -156,10 +156,10 @@ class MobileTokenConverterTest {
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
                 "    \"message\": \"You will be redirected to the merchant application.\",\n" +
                 "    \"payload\": {\n" +
-                "      \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "      \"redirectText\": \"Go to the application\",\n" +
                 "      \"redirectUrl\": \"https://www.example.com\",\n" +
                 "      \"countdown\": 5\n" +
@@ -169,7 +169,7 @@ class MobileTokenConverterTest {
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
-        final var expectedPayload = new PostApprovalScreen.MerchantRedirectPayload();
+        final var expectedPayload = new MerchantRedirectPostApprovalScreen.MerchantRedirectPayload();
         expectedPayload.setRedirectText("Go to the application");
         expectedPayload.setRedirectUrl("https://www.example.com");
         expectedPayload.setCountdown(5);
@@ -183,7 +183,7 @@ class MobileTokenConverterTest {
                 .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
                 .returns("You will be redirected to the merchant application.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
-                .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
+                .isInstanceOf(MerchantRedirectPostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
     }
 
@@ -195,10 +195,10 @@ class MobileTokenConverterTest {
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
                 "    \"message\": \"You will be redirected to the merchant application.\",\n" +
                 "    \"payload\": {\n" +
-                "      \"type\": \"MERCHANT_REDIRECT\",\n" +
                 "      \"redirectText\": \"Go to the application\",\n" +
                 "      \"redirectUrl\": \"${redirectUrl}\",\n" +
                 "      \"countdown\": 5\n" +
@@ -208,7 +208,7 @@ class MobileTokenConverterTest {
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
-        final var expectedPayload = new PostApprovalScreen.MerchantRedirectPayload();
+        final var expectedPayload = new MerchantRedirectPostApprovalScreen.MerchantRedirectPayload();
         expectedPayload.setRedirectText("Go to the application");
         expectedPayload.setRedirectUrl("https://www.example.com");
         expectedPayload.setCountdown(5);
@@ -222,23 +222,29 @@ class MobileTokenConverterTest {
                 .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
                 .returns("You will be redirected to the merchant application.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
-                .isInstanceOf(PostApprovalScreen.MerchantRedirectPayload.class)
+                .isInstanceOf(MerchantRedirectPostApprovalScreen.MerchantRedirectPayload.class)
                 .isEqualTo(expectedPayload);
     }
 
     @Test
-    void testConvertUiPostApprovalInfoMessage() throws Exception {
+    void testConvertUiPostApprovalGeneralMessage() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("{\n" +
                 "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"GENERAL\",\n" +
                 "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You may close the application now.\"\n" +
+                "    \"message\": \"You may close the application now.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"customMessage\": \"See you next time.\"\n" +
+                "    }\n" +
                 "  }\n" +
                 "}");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final Map<String, Object> expectedPayload = Map.of("customMessage", "See you next time.");
 
         assertThat(result)
                 .isNotNull()
@@ -249,7 +255,8 @@ class MobileTokenConverterTest {
                 .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
                 .returns("You may close the application now.", from(PostApprovalScreen::getMessage))
                 .extracting(PostApprovalScreen::getPayload)
-                .isNull();
+                .isInstanceOf(GeneralPostApprovalScreen.GeneralPayload.class)
+                .returns(expectedPayload, from(it -> ((GeneralPostApprovalScreen.GeneralPayload) it).getProperties()));
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {

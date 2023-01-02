@@ -17,45 +17,49 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Information screen displayed after the operation approval.
+ * Specialization of {@link PostApprovalScreen} for general usage.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT"),
-        @JsonSubTypes.Type(value = GeneralPostApprovalScreen.class, name = "GENERAL")
-})
-public abstract class PostApprovalScreen {
+public class GeneralPostApprovalScreen extends PostApprovalScreen {
 
-    /**
-     * Screen heading.
-     */
     @NotNull
-    private String heading;
+    private GeneralPayload payload;
 
-    /**
-     * Screen message displayed under heading.
-     */
-    @NotNull
-    private String message;
-
-    /**
-     * Return screen specific payload.
-     *
-     * @return payload
-     */
-    public abstract Payload getPayload();
-
-    public interface Payload {
+    @Override
+    public GeneralPayload getPayload() {
+        return payload;
     }
 
+    public void setPayload(GeneralPayload payload) {
+        this.payload = payload;
+    }
+
+    /**
+     * Specialization of {@link Payload} for general usage.
+     */
+    @Data
+    public static class GeneralPayload implements Payload {
+
+        private final Map<String, Object> properties = new HashMap<>();
+
+        @JsonAnyGetter
+        public Map<String, Object> getProperties() {
+            return properties;
+        }
+
+        @JsonAnySetter
+        public void setProperty(String key, Object value) {
+            this.properties.put(key, value);
+        }
+    }
 }

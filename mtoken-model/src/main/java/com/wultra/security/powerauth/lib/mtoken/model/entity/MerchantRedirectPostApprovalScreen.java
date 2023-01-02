@@ -17,45 +17,47 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
 /**
- * Information screen displayed after the operation approval.
+ * Specialization of {@link PostApprovalScreen} for redirecting the user to the merchant website or application.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = MerchantRedirectPostApprovalScreen.class, name = "MERCHANT_REDIRECT"),
-        @JsonSubTypes.Type(value = GeneralPostApprovalScreen.class, name = "GENERAL")
-})
-public abstract class PostApprovalScreen {
+public class MerchantRedirectPostApprovalScreen extends PostApprovalScreen {
 
-    /**
-     * Screen heading.
-     */
     @NotNull
-    private String heading;
+    private MerchantRedirectPayload payload;
 
-    /**
-     * Screen message displayed under heading.
-     */
-    @NotNull
-    private String message;
-
-    /**
-     * Return screen specific payload.
-     *
-     * @return payload
-     */
-    public abstract Payload getPayload();
-
-    public interface Payload {
+    @Override
+    public MerchantRedirectPayload getPayload() {
+        return payload;
     }
 
+    public void setPayload(MerchantRedirectPayload payload) {
+        this.payload = payload;
+    }
+
+    /**
+     * Specialization of {@link Payload} for redirecting the user to the merchant website or application.
+     */
+    @Data
+    public static class MerchantRedirectPayload implements Payload {
+
+        @NotNull
+        private String redirectText;
+
+        /**
+         * Url to website or application.
+         */
+        @NotNull
+        private String redirectUrl;
+
+        /**
+         * Time in seconds when the user will be redirected automatically.
+         */
+        private int countdown;
+    }
 }
