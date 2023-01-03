@@ -301,6 +301,40 @@ class MobileTokenConverterTest {
                 .returns(expectedPayload, from(it -> ((GenericPostApprovalScreen.GenericPayload) it).getProperties()));
     }
 
+    @Test
+    void testConvertUiPostApprovalGenericMessageWithSubstitutedDangerousChars() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.of("message", "\""));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("{\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"GENERIC\",\n" +
+                "    \"heading\": \"Thank you for your order\",\n" +
+                "    \"message\": \"You may close the application now.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"customMessage\": \"${message}\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final Map<String, Object> expectedPayload = Map.of("customMessage", "\"");
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getPostApprovalScreen)
+                .isNotNull()
+                .returns("Thank you for your order", from(PostApprovalScreen::getHeading))
+                .returns("You may close the application now.", from(PostApprovalScreen::getMessage))
+                .extracting(PostApprovalScreen::getPayload)
+                .isInstanceOf(GenericPostApprovalScreen.GenericPayload.class)
+                .returns(expectedPayload, from(it -> ((GenericPostApprovalScreen.GenericPayload) it).getProperties()));
+    }
+
     private static OperationDetailResponse createOperationDetailResponse() {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
         operationDetail.setSignatureType(List.of(SignatureType.KNOWLEDGE));

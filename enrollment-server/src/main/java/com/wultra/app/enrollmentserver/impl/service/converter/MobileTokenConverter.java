@@ -28,6 +28,7 @@ import com.wultra.security.powerauth.client.model.response.OperationDetailRespon
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Converter related to mobile token services
@@ -145,7 +148,9 @@ public class MobileTokenConverter {
         if (CollectionUtils.isEmpty(parameters)) {
             return null;
         } else {
-            return new StringSubstitutor(parameters);
+            final Map<String, String> escapedParameters = parameters.entrySet().stream()
+                    .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
+            return new StringSubstitutor(escapedParameters);
         }
     }
 
