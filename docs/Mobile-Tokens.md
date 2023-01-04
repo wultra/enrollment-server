@@ -16,6 +16,9 @@ It is possible to substitute template variables based on operation parameters, e
 
 Payload of the review post approval screen shows the operation attributes.
 
+Mind that the payload attributes must be specified again at `es_operation_template.ui`.
+It usually could be only subset of `es_operation_template.attributes`.
+
 ```json
 {
   "postApprovalScreen": {
@@ -28,7 +31,7 @@ Payload of the review post approval screen shows the operation attributes.
           "type": "NOTE",
           "id": "1",
           "label": "test label",
-          "note": "some note"
+          "note": "${myNote}"
         }
       ]
     }
