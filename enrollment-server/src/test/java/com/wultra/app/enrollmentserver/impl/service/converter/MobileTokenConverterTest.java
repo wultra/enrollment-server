@@ -72,6 +72,14 @@ class MobileTokenConverterTest {
                 "      \"If you have been prompted for this operation in connection with a payment, decline it\"\n" +
                 "    ],\n" +
                 "    \"approvalType\": \"SLIDER\"\n" +
+                "  },\n" +
+                "  \"postApprovalScreen\": {\n" +
+                "    \"type\": \"GENERIC\",\n" +
+                "    \"heading\": \"Thank you for your order\",\n" +
+                "    \"message\": \"You may close the application now.\",\n" +
+                "    \"payload\": {\n" +
+                "      \"customMessage\": \"See you next time.\"\n" +
+                "    }\n" +
                 "  }\n" +
                 "}");
 
@@ -94,6 +102,10 @@ class MobileTokenConverterTest {
         final List<String> items = preApprovalScreen.getItems();
         assertEquals(3, items.size());
         assertEquals("You activate a new app and allow access to your accounts", items.get(0));
+
+        final PostApprovalScreen postApprovalScreen = ui.getPostApprovalScreen();
+        assertNotNull(postApprovalScreen);
+        assertEquals("You may close the application now.", postApprovalScreen.getMessage());
     }
 
     @Test
