@@ -174,6 +174,7 @@ class RestOnboardingProvider implements OnboardingProvider {
     private static ProcessEventRequestDto convert(final ProcessEventRequest source) {
         final ProcessEventRequestDto target = new ProcessEventRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
         target.setType(source.getType());
         target.getData().setLanguage(source.getLocale().getLanguage());
