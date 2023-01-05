@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,39 +14,43 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.provider.rest;
+package com.wultra.app.onboardingserver.provider.model.request;
 
-import lombok.Data;
+import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import lombok.*;
+
+import java.util.Locale;
 
 /**
- * Response object for client evaluation.
+ * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ClientEvaluateResponseDto {
+@Builder
+@Getter
+@ToString
+@PublicApi
+@EqualsAndHashCode
+public final class ProcessEventRequest {
+
+    @NonNull
+    private String processId;
+
+    @NonNull
+    private String userId;
+
+    @NonNull
+    private String identityVerificationId;
 
     /**
-     * Overall result of super aggregation function.
+     * Event type, e.g. FINISHED.
      */
-    private ResultEnum result;
+    @NonNull
+    private String type;
 
-    private ClientEvaluateResponseInfoDto info;
-
-    enum ResultEnum {
-
-        OK("OK"),
-        NOK("NOK");
-
-        private String value;
-
-        ResultEnum(String value) {
-            this.value = value;
-        }
-
-        public String value() {
-            return value;
-        }
-    }
+    @NonNull
+    private Locale locale;
 }

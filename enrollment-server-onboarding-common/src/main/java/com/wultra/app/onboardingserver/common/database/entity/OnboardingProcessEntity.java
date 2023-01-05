@@ -18,20 +18,21 @@
 
 package com.wultra.app.onboardingserver.common.database.entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Entity representing an onboarding process.
@@ -44,6 +45,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_onboarding_process")
+@Slf4j
 public class OnboardingProcessEntity implements Serializable {
 
     private static final long serialVersionUID = -438495244269415158L;
@@ -60,7 +62,7 @@ public class OnboardingProcessEntity implements Serializable {
     /**
      * Key for {@link #customData} storing locale.
      */
-    public static final String CUSTOM_DATA_LOCALE = "locale";
+    private static final String CUSTOM_DATA_LOCALE = "locale";
 
     @Id
     @GeneratedValue(generator = "uuid")
@@ -120,6 +122,44 @@ public class OnboardingProcessEntity implements Serializable {
     @OrderBy("timestampCreated")
     @ToString.Exclude
     private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
+
+    /**
+     * Set the given locale to {@code customData}.
+     *
+     * @param locale locale
+     * @throws OnboardingProcessException
+     */
+    @SuppressWarnings("unchecked") // unchecked readValue
+    public void setLocale(final Locale locale) throws OnboardingProcessException {
+        try {
+            logger.debug("Setting locale to custom_data: {} of process ID: {}", customData, id);
+            final ObjectMapper mapper = new ObjectMapper();
+            final Map<String, Object> json = mapper.readValue(customData, Map.class);
+            json.put(CUSTOM_DATA_LOCALE, locale.getLanguage());
+            customData = mapper.writeValueAsString(json);
+        } catch (JsonProcessingException e) {
+            throw new OnboardingProcessException("Problem to parse custom_data of process ID: " + id, e);
+        }
+    }
+
+    /**
+     * Get locale from {@code customData}.
+     *
+     * @return locale
+     * @throws OnboardingProcessException
+     */
+    @SuppressWarnings("unchecked") // unchecked readValue
+    public Locale getLocale() throws OnboardingProcessException {
+        try {
+            logger.debug("Getting locale from custom_data: {} of process ID: {}", customData, id);
+            final ObjectMapper mapper = new ObjectMapper();
+            final Map<String, Object> json = mapper.readValue(customData, Map.class);
+            final String language = json.get(CUSTOM_DATA_LOCALE).toString();
+            return new Locale(language);
+        } catch (JsonProcessingException e) {
+            throw new OnboardingProcessException("Problem to parse custom_data of process ID: " + id, e);
+        }
+    }
 
     @Override
     public boolean equals(Object o) {

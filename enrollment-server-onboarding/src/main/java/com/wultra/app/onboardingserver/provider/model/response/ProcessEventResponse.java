@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,39 +14,26 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
-package com.wultra.app.onboardingserver.provider.rest;
+package com.wultra.app.onboardingserver.provider.model.response;
 
-import lombok.Data;
+import com.wultra.app.onboardingserver.common.annotation.PublicApi;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
- * Response object for client evaluation.
+ * Response object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ClientEvaluateResponseDto {
-
-    /**
-     * Overall result of super aggregation function.
-     */
-    private ResultEnum result;
-
-    private ClientEvaluateResponseInfoDto info;
-
-    enum ResultEnum {
-
-        OK("OK"),
-        NOK("NOK");
-
-        private String value;
-
-        ResultEnum(String value) {
-            this.value = value;
-        }
-
-        public String value() {
-            return value;
-        }
-    }
+@Builder
+@Getter
+@ToString
+@PublicApi
+public final class ProcessEventResponse {
+    // empty so far
 }

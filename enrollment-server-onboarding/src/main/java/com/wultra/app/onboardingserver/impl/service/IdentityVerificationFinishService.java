@@ -26,6 +26,11 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
+import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,11 +44,13 @@ import java.util.Date;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
 public class IdentityVerificationFinishService {
 
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
+    private final OnboardingProvider onboardingProvider;
 
     private final AuditService auditService;
 
@@ -52,6 +59,7 @@ public class IdentityVerificationFinishService {
      * @param onboardingService Onboarding service.
      * @param identityVerificationService Identity verification service.
      * @param activationFlagService Activation flags service.
+     * @param onboardingProvider Onboarding provider.
      * @param auditService audit service.
      */
     @Autowired
@@ -59,11 +67,13 @@ public class IdentityVerificationFinishService {
             final OnboardingServiceImpl onboardingService,
             final IdentityVerificationService identityVerificationService,
             final ActivationFlagService activationFlagService,
+            final OnboardingProvider onboardingProvider,
             final AuditService auditService) {
 
         this.onboardingService = onboardingService;
         this.identityVerificationService = identityVerificationService;
         this.activationFlagService = activationFlagService;
+        this.onboardingProvider = onboardingProvider;
         this.auditService = auditService;
     }
 
@@ -95,5 +105,27 @@ public class IdentityVerificationFinishService {
         processEntity.setTimestampFinished(now);
         onboardingService.updateProcess(processEntity);
         auditService.audit(processEntity, identityVerification, "Process finished for user: {}", processEntity.getUserId());
+
+        sendFinishedEvent(processEntity, identityVerification, ownerId);
+    }
+
+    private void sendFinishedEvent(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        try {
+            final ProcessEventRequest request = ProcessEventRequest.builder()
+                    .type("FINISHED")
+                    .userId(identityVerification.getUserId())
+                    .processId(process.getId())
+                    .identityVerificationId(identityVerification.getId())
+                    .locale(process.getLocale())
+                    .build();
+
+            logger.info("Publishing finish event, {}", ownerId);
+            final ProcessEventResponse response = onboardingProvider.processEvent(request);
+            logger.info("Finish event published: {}, {}", response, ownerId);
+        } catch (OnboardingProviderException | OnboardingProcessException e) {
+            // unsuccessful event publishing does not stop the process
+            logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());
+            logger.debug("Unable to publish finished event to the onboarding adapter", e);
+        }
     }
 }

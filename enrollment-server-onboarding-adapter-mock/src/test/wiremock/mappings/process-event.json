@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/process/event"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-process-event.json"
+  }
+}

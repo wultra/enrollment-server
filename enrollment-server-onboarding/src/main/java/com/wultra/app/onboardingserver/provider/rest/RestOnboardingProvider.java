@@ -18,11 +18,12 @@
 package com.wultra.app.onboardingserver.provider.rest;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.onboardingserver.provider.*;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
+import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +32,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * Rest specialization of {@link OnboardingProvider}.
@@ -147,6 +145,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         try {
             final ParameterizedTypeReference<ClientEvaluateResponseDto> type = ParameterizedTypeReference.forType(ClientEvaluateResponseDto.class);
             ResponseEntity<ClientEvaluateResponseDto> response = restClient.post("/client/evaluate", requestDto, null, createHeaders(), type);
+            logger.debug("Got evaluating client response: {}", response);
             final boolean accepted = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
             return EvaluateClientResponse.builder()
                     .accepted(accepted)
@@ -155,6 +154,30 @@ class RestOnboardingProvider implements OnboardingProvider {
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to evaluate client for " + request, e);
         }
+    }
+
+    @Override
+    public ProcessEventResponse processEvent(final ProcessEventRequest request) throws OnboardingProviderException {
+        logger.debug("Processing event for {}", request);
+        final ProcessEventRequestDto requestDto = convert(request);
+
+        try {
+            final ParameterizedTypeReference<ProcessEventResponseDto> type = ParameterizedTypeReference.forType(ProcessEventResponseDto.class);
+            final ResponseEntity<ProcessEventResponseDto> response = restClient.post("/process/event", requestDto, null, createHeaders(), type);
+            logger.debug("Got processing event response: {}", response);
+            return ProcessEventResponse.builder().build();
+        } catch (RestClientException e) {
+            throw new OnboardingProviderException("Unable to process event for " + request, e);
+        }
+    }
+
+    private static ProcessEventRequestDto convert(final ProcessEventRequest source) {
+        final ProcessEventRequestDto target = new ProcessEventRequestDto();
+        target.setProcessId(source.getProcessId());
+        target.setUserId(source.getUserId());
+        target.setType(source.getType());
+        target.getData().setLanguage(source.getLocale().getLanguage());
+        return target;
     }
 
     private MultiValueMap<String, String> createHeaders() {
