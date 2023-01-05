@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
@@ -46,6 +47,8 @@ import java.util.Date;
 @Service
 @Slf4j
 public class IdentityVerificationFinishService {
+
+    private static final String EVENT_TYPE_FINISHED = "FINISHED";
 
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationService identityVerificationService;
@@ -110,19 +113,19 @@ public class IdentityVerificationFinishService {
     }
 
     private void sendFinishedEvent(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        try {
-            final ProcessEventRequest request = ProcessEventRequest.builder()
-                    .type("FINISHED")
-                    .userId(identityVerification.getUserId())
-                    .processId(process.getId())
-                    .identityVerificationId(identityVerification.getId())
-                    .locale(process.getLocale())
-                    .build();
+        final ProcessEventRequest request = ProcessEventRequest.builder()
+                .type(EVENT_TYPE_FINISHED)
+                .userId(identityVerification.getUserId())
+                .processId(process.getId())
+                .identityVerificationId(identityVerification.getId())
+                .locale(new OnboardingProcessEntityWrapper(process).getLocale())
+                .build();
 
+        try {
             logger.info("Publishing finish event, {}", ownerId);
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
             logger.info("Finish event published: {}, {}", response, ownerId);
-        } catch (OnboardingProviderException | OnboardingProcessException e) {
+        } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
             logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());
             logger.debug("Unable to publish finished event to the onboarding adapter", e);

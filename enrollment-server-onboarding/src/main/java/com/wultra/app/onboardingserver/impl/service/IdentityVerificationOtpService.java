@@ -27,6 +27,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -265,7 +266,7 @@ public class IdentityVerificationOtpService {
                 .userId(userId)
                 .otpCode(otpCode)
                 .resend(isResend)
-                .locale(process.getLocale())
+                .locale(new OnboardingProcessEntityWrapper(process).getLocale())
                 .otpType(SendOtpCodeRequest.OtpType.USER_VERIFICATION)
                 .build();
         try {

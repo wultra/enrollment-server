@@ -33,6 +33,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -428,7 +429,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
-        process.setLocale(LocaleContextHolder.getLocale());
+        new OnboardingProcessEntityWrapper(process).setLocale(LocaleContextHolder.getLocale());
         return onboardingProcessRepository.save(process);
     }
 
@@ -436,7 +437,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private OnboardingProcessEntity resumeExistingProcess(final OnboardingProcessEntity process, final Map<String, Object> identification) {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
-        process.setLocale(LocaleContextHolder.getLocale());
+        new OnboardingProcessEntityWrapper(process).setLocale(LocaleContextHolder.getLocale());
         final String userId = lookupUser(process, identification);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
