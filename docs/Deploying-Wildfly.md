@@ -15,7 +15,7 @@ Enrollment Server contains the following configuration in `jboss-deployment-stru
 
 		<resources>
 			<!-- use WAR provided Bouncy Castle -->
-			<resource-root path="WEB-INF/lib/bcprov-jdk15on-${BC_VERSION}.jar" use-physical-code-source="true"/>
+			<resource-root path="WEB-INF/lib/bcprov-jdk18on-${BC_VERSION}.jar" use-physical-code-source="true"/>
 		</resources>
 
 		<dependencies>
