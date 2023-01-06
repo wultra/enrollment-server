@@ -171,14 +171,22 @@ class RestOnboardingProvider implements OnboardingProvider {
         }
     }
 
-    private static ProcessEventRequestDto convert(final ProcessEventRequest source) {
+    private static ProcessEventRequestDto convert(final ProcessEventRequest source) throws OnboardingProviderException {
         final ProcessEventRequestDto target = new ProcessEventRequestDto();
         target.setProcessId(source.getProcessId());
         target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
-        target.setType(source.getType());
+        target.setType(convert(source.getType()));
         target.getData().setLanguage(source.getLocale().getLanguage());
         return target;
+    }
+
+    private static ProcessEventRequestDto.EventType convert(ProcessEventRequest.EventType source) throws OnboardingProviderException {
+        if (source == ProcessEventRequest.EventType.FINISHED) {
+            return ProcessEventRequestDto.EventType.FINISHED;
+        } else {
+            throw new OnboardingProviderException("No mapping for " + source);
+        }
     }
 
     private MultiValueMap<String, String> createHeaders() {

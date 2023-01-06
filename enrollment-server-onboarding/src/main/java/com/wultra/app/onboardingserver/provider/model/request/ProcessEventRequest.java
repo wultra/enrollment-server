@@ -45,12 +45,13 @@ public final class ProcessEventRequest {
     @NonNull
     private String identityVerificationId;
 
-    /**
-     * Event type, e.g. FINISHED.
-     */
     @NonNull
-    private String type;
+    private EventType type;
 
     @NonNull
     private Locale locale;
+
+    public enum EventType {
+        FINISHED
+    }
 }

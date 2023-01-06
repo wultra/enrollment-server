@@ -33,7 +33,7 @@ class ProcessEventRequestDto {
 
     private String userId;
 
-    private String type;
+    private EventType type;
 
     private EventDataDto data = new EventDataDto();
 
@@ -44,5 +44,9 @@ class ProcessEventRequestDto {
          * Language in ISO 3166-1 alpha-2 format lower cased.
          */
         private String language;
+    }
+
+    public enum EventType {
+        FINISHED
     }
 }

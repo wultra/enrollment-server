@@ -48,8 +48,6 @@ import java.util.Date;
 @Slf4j
 public class IdentityVerificationFinishService {
 
-    private static final String EVENT_TYPE_FINISHED = "FINISHED";
-
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
@@ -114,7 +112,7 @@ public class IdentityVerificationFinishService {
 
     private void sendFinishedEvent(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         final ProcessEventRequest request = ProcessEventRequest.builder()
-                .type(EVENT_TYPE_FINISHED)
+                .type(ProcessEventRequest.EventType.FINISHED)
                 .userId(identityVerification.getUserId())
                 .processId(process.getId())
                 .identityVerificationId(identityVerification.getId())
