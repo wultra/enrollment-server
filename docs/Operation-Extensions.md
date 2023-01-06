@@ -1,6 +1,6 @@
-# Mobile Tokens
+# Operation Extensions
 
-Enrollment server may expose mobile token API `api/auth/token/app`, if `enrollment-server.mtoken.enabled` set to `true.
+Enrollment server may expose mobile token API `api/auth/token/app`, if `enrollment-server.mtoken.enabled` set to `true`.
 
 ## Operation Templates
 
