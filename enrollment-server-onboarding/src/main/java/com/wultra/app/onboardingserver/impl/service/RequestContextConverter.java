@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.List;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 // TODO (racansky, 2023-01-09) duplicates com.wultra.app.enrollmentserver.impl.service.converter.RequestContextConverter, extract to lime-java-core
+@Component
 public class RequestContextConverter {
 
     /**
