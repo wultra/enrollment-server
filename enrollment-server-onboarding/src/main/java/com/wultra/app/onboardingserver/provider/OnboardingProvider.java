@@ -23,7 +23,7 @@ import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import reactor.core.publisher.Mono;
+import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 
 /**
  * Provider which allows customization of the onboarding process.
@@ -72,7 +72,17 @@ public interface OnboardingProvider {
      * Detects whether customer verification matches known records and customer identity is verified.
      *
      * @param request evaluation request
-     * @return mono with evaluation response
+     * @return evaluation client response
+     * @throws OnboardingProviderException if there is a problem to call client evaluation
      */
     EvaluateClientResponse evaluateClient(EvaluateClientRequest request) throws OnboardingProviderException;
+
+    /**
+     * Process event.
+     *
+     * @param request process event request
+     * @return process event response
+     * @throws OnboardingProviderException if there is a problem to call process event
+     */
+    ProcessEventResponse processEvent(ProcessEventRequest request) throws OnboardingProviderException;
 }

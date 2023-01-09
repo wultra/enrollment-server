@@ -22,7 +22,7 @@ import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import reactor.core.publisher.Mono;
+import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 
 /**
  * Implementation of {@link OnboardingProvider} throwing an exception for each method.
@@ -53,6 +53,11 @@ class EmptyOnboardingProvider implements OnboardingProvider {
 
     @Override
     public EvaluateClientResponse evaluateClient(EvaluateClientRequest request) throws OnboardingProviderException {
+        throw createException();
+    }
+
+    @Override
+    public ProcessEventResponse processEvent(ProcessEventRequest request) throws OnboardingProviderException {
         throw createException();
     }
 

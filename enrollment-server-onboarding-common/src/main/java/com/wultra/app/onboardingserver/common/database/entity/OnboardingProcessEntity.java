@@ -57,11 +57,6 @@ public class OnboardingProcessEntity implements Serializable {
     public static final String ERROR_MAX_PROCESS_ERROR_SCORE_EXCEEDED = "maxProcessErrorScoreExceeded";
     public static final String ERROR_USER_LOOKUP = "userLookupFailed";
 
-    /**
-     * Key for {@link #customData} storing locale.
-     */
-    public static final String CUSTOM_DATA_LOCALE = "locale";
-
     @Id
     @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")

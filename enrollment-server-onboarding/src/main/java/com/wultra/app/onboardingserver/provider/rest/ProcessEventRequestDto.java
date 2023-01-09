@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -20,33 +20,33 @@ package com.wultra.app.onboardingserver.provider.rest;
 import lombok.Data;
 
 /**
- * Response object for client evaluation.
+ * Request object for processing event.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Data
-class ClientEvaluateResponseDto {
+class ProcessEventRequestDto {
 
-    /**
-     * Overall result of super aggregation function.
-     */
-    private ResultEnum result;
+    private String processId;
 
-    private ClientEvaluateResponseInfoDto info;
+    private String identityVerificationId;
 
-    enum ResultEnum {
+    private String userId;
 
-        OK("OK"),
-        NOK("NOK");
+    private EventType type;
 
-        private String value;
+    private EventDataDto data = new EventDataDto();
 
-        ResultEnum(String value) {
-            this.value = value;
-        }
+    @Data
+    public static class EventDataDto {
 
-        public String value() {
-            return value;
-        }
+        /**
+         * Language in ISO 3166-1 alpha-2 format lower cased.
+         */
+        private String language;
+    }
+
+    public enum EventType {
+        FINISHED
     }
 }

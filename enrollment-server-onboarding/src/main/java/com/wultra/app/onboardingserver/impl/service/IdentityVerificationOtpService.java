@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
@@ -28,6 +27,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -43,8 +43,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.OTP_VERIFICATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
@@ -268,7 +266,7 @@ public class IdentityVerificationOtpService {
                 .userId(userId)
                 .otpCode(otpCode)
                 .resend(isResend)
-                .locale(getLocale(process))
+                .locale(new OnboardingProcessEntityWrapper(process).getLocale())
                 .otpType(SendOtpCodeRequest.OtpType.USER_VERIFICATION)
                 .build();
         try {
@@ -279,18 +277,6 @@ public class IdentityVerificationOtpService {
 
         final String resentPrefix = isResend ? "Resent" : "Sent";
         auditService.auditOnboardingProvider(process, "{} user verification OTP for user: {}", resentPrefix, userId);
-    }
-
-    @SuppressWarnings("unchecked") // unchecked readValue
-    private Locale getLocale(final OnboardingProcessEntity process) throws OnboardingProcessException {
-        try {
-            logger.debug("Getting locale from custom_data: {} of process ID: {}", process.getCustomData(), process.getId());
-            final Map<String, Object> json = mapper.readValue(process.getCustomData(), Map.class);
-            final String language = json.get(OnboardingProcessEntity.CUSTOM_DATA_LOCALE).toString();
-            return new Locale(language);
-        } catch (JsonProcessingException e) {
-            throw new OnboardingProcessException("Problem to parse custom_data of process ID: " + process.getId(), e);
-        }
     }
 
     private String createOtpCode(final boolean isResend, final OnboardingProcessEntity process) throws OnboardingOtpDeliveryException, OnboardingProcessException {
