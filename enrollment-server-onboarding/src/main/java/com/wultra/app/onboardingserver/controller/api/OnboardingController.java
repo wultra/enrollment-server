@@ -28,6 +28,8 @@ import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
+import com.wultra.app.onboardingserver.impl.service.RequestContext;
+import com.wultra.app.onboardingserver.impl.service.RequestContextConverter;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -44,6 +46,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Controller publishing REST services for the onboarding process.
@@ -62,13 +66,17 @@ public class OnboardingController {
 
     private final OnboardingServiceImpl onboardingService;
 
+    private final RequestContextConverter requestContextConverter;
+
     /**
      * Controller constructor.
      * @param onboardingService Onboarding service.
+     * @param requestContextConverter Request context converter.
      */
     @Autowired
-    public OnboardingController(OnboardingServiceImpl onboardingService) {
+    public OnboardingController(final OnboardingServiceImpl onboardingService, final RequestContextConverter requestContextConverter) {
         this.onboardingService = onboardingService;
+        this.requestContextConverter = requestContextConverter;
     }
 
     /**
@@ -76,6 +84,7 @@ public class OnboardingController {
      *
      * @param request Start onboarding process request.
      * @param eciesContext ECIES context.
+     * @param servletRequest HttpServletRequest.
      * @return Start onboarding process response.
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
      * @throws OnboardingProcessException Thrown in case onboarding process fails.
@@ -85,8 +94,11 @@ public class OnboardingController {
      */
     @PostMapping("start")
     @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
-    public ObjectResponse<OnboardingStartResponse> startOnboarding(@EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-                                                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
+    public ObjectResponse<OnboardingStartResponse> startOnboarding(
+            @EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
+            @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+            final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
+
         // Check if the request was correctly decrypted
         if (eciesContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
@@ -96,7 +108,9 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
-        OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject());
+        final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+
+        final OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject(), requestContext);
         return new ObjectResponse<>(response);
     }
 

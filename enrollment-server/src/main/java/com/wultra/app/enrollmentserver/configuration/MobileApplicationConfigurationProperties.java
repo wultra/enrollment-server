@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-// TODO (racansky, 2022-09-30, #408) should be extracted to db or make it reloadable to change configuration at runtime
+
 @Configuration
 @ConfigurationProperties("enrollment-server.mobile-application")
 @Getter

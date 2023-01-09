@@ -38,6 +38,9 @@ public final class OnboardingProcessEntityWrapper {
      * Key for {@link OnboardingProcessEntity#getCustomData()} storing locale.
      */
     private static final String CUSTOM_DATA_LOCALE_KEY = "locale";
+    private static final String CUSTOM_DATA_IP_ADDRESS_KEY = "ipAddress";
+    private static final String CUSTOM_DATA_USER_AGENT_KEY = "userAgent";
+
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
     private final OnboardingProcessEntity entity;
@@ -71,10 +74,32 @@ public final class OnboardingProcessEntityWrapper {
      * @param locale locale
      */
     public void setLocale(final Locale locale) {
+        setValue(CUSTOM_DATA_LOCALE_KEY, locale.getLanguage());
+    }
+
+    /**
+     * Set the given IP address to {@code customData}.
+     *
+     * @param ipAddress IP address
+     */
+    public void setIpAddress(final String ipAddress) {
+        setValue(CUSTOM_DATA_IP_ADDRESS_KEY, ipAddress);
+    }
+
+    /**
+     * Set the given user-agent to {@code customData}.
+     *
+     * @param userAgent User agent
+     */
+    public void setUserAgent(final String userAgent) {
+        setValue(CUSTOM_DATA_USER_AGENT_KEY, userAgent);
+    }
+
+    private void setValue(final String key, final Object value) {
         try {
-            logger.debug("Setting locale to custom_data: {} of process ID: {}", entity.getCustomData(), entity.getId());
+            logger.debug("Setting {} to custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
             final Map<String, Object> json = mapper.readValue(entity.getCustomData(), new TypeReference<>(){});
-            json.put(CUSTOM_DATA_LOCALE_KEY, locale.getLanguage());
+            json.put(key, value);
             entity.setCustomData(mapper.writeValueAsString(json));
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
