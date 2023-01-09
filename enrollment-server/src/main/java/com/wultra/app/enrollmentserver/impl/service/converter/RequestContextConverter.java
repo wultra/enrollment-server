@@ -50,6 +50,8 @@ public class RequestContextConverter {
             "REMOTE_ADDR"
     );
 
+    private static final String HTTP_HEADER_USER_AGENT = "User-Agent";
+
     /**
      * Convert HTTP Servlet Request to request context representation.
      *
@@ -61,7 +63,7 @@ public class RequestContextConverter {
             return null;
         }
         final RequestContext destination = new RequestContext();
-        destination.setUserAgent(source.getHeader("User-Agent"));
+        destination.setUserAgent(source.getHeader(HTTP_HEADER_USER_AGENT));
         destination.setIpAddress(getClientIpAddress(source));
         return destination;
     }
