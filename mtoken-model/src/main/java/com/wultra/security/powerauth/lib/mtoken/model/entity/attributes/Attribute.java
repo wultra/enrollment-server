@@ -17,6 +17,9 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity.attributes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 
 /**
@@ -25,6 +28,13 @@ import lombok.Data;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = AmountAttribute.class, name = "AMOUNT"),
+        @JsonSubTypes.Type(value = HeadingAttribute.class, name = "HEADING"),
+        @JsonSubTypes.Type(value = KeyValueAttribute.class, name = "KEY_VALUE"),
+        @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE")
+})
 public class Attribute {
 
     /**
@@ -61,6 +71,8 @@ public class Attribute {
     /**
      * Type of the attribute.
      */
+    // JsonIgnore added, otherwise type was serialized twice
+    @JsonIgnore
     protected Type type;
 
     /**

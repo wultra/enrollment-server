@@ -28,15 +28,19 @@ import com.wultra.security.powerauth.client.model.response.OperationDetailRespon
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Converter related to mobile token services
@@ -87,6 +91,11 @@ public class MobileTokenConverter {
      */
     public Operation convert(OperationDetailResponse operationDetail, OperationTemplateEntity operationTemplate) throws MobileTokenConfigurationException {
         try {
+            final Map<String, String> parameters = operationDetail.getParameters();
+            final StringSubstitutor sub = createStringSubstitutor(parameters);
+            final UiExtensions uiExtensions = convertUiExtension(operationDetail, operationTemplate, sub);
+            final FormData formData = prepareFormData(operationTemplate, parameters, sub);
+
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
             operation.setName(operationDetail.getOperationType());
@@ -95,35 +104,9 @@ public class MobileTokenConverter {
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
-
-            operation.setUi(convertUiExtension(operationDetail, operationTemplate));
-
-            // Prepare title and message with substituted attributes
-            final FormData formData = new FormData();
-            final Map<String, String> parameters = operationDetail.getParameters();
-            if (parameters != null && parameters.keySet().size() > 0) {
-                final StringSubstitutor sub = new StringSubstitutor(parameters);
-                formData.setTitle(sub.replace(operationTemplate.getTitle()));
-                formData.setMessage(sub.replace(operationTemplate.getMessage()));
-            } else {
-                formData.setTitle(operationTemplate.getTitle());
-                formData.setMessage(operationTemplate.getMessage());
-            }
-
-            final String attributes = operationTemplate.getAttributes();
-            if (attributes != null) {
-                final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
-                if (operationTemplateParams != null) {
-                    for (OperationTemplateParam templateParam : operationTemplateParams) {
-                        final Attribute attribute = buildAttribute(templateParam, parameters);
-                        if (attribute != null) {
-                            formData.getAttributes().add(attribute);
-                        }
-                    }
-                }
-            }
-
+            operation.setUi(uiExtensions);
             operation.setFormData(formData);
+
             return operation;
         } catch (JsonProcessingException e) {
             logger.debug("Unable to parse JSON with operation template parameters: {}", e.getMessage());
@@ -132,9 +115,52 @@ public class MobileTokenConverter {
         }
     }
 
-    private UiExtensions convertUiExtension(final OperationDetailResponse operationDetail, final OperationTemplateEntity operationTemplate) throws JsonProcessingException {
+    private FormData prepareFormData(
+            final OperationTemplateEntity operationTemplate,
+            final Map<String, String> parameters,
+            final StringSubstitutor sub) throws JsonProcessingException {
+
+        final FormData formData = new FormData();
+        if (sub != null) {
+            formData.setTitle(sub.replace(operationTemplate.getTitle()));
+            formData.setMessage(sub.replace(operationTemplate.getMessage()));
+        } else {
+            formData.setTitle(operationTemplate.getTitle());
+            formData.setMessage(operationTemplate.getMessage());
+        }
+
+        final String attributes = operationTemplate.getAttributes();
+        if (attributes != null) {
+            final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
+            if (operationTemplateParams != null) {
+                for (OperationTemplateParam templateParam : operationTemplateParams) {
+                    final Attribute attribute = buildAttribute(templateParam, parameters);
+                    if (attribute != null) {
+                        formData.getAttributes().add(attribute);
+                    }
+                }
+            }
+        }
+        return formData;
+    }
+
+    private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
+        if (CollectionUtils.isEmpty(parameters)) {
+            return null;
+        } else {
+            final Map<String, String> escapedParameters = parameters.entrySet().stream()
+                    .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
+            return new StringSubstitutor(escapedParameters);
+        }
+    }
+
+    private UiExtensions convertUiExtension(
+            final OperationDetailResponse operationDetail,
+            final OperationTemplateEntity operationTemplate,
+            final StringSubstitutor substitutor) throws JsonProcessingException {
+
         if (StringUtils.hasText(operationTemplate.getUi())) {
-            final String uiJsonString = operationTemplate.getUi();
+            final String uiJsonString = substitutor == null ? operationTemplate.getUi() : substitutor.replace(operationTemplate.getUi());
             logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
             return objectMapper.readValue(uiJsonString, UiExtensions.class);
         } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {

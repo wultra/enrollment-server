@@ -48,4 +48,10 @@ public class UiExtensions {
      */
     private PreApprovalScreen preApprovalScreen;
 
+    /**
+     * Property that defines a screen content that is displayed after the user sees the operation
+     * approval screen. The purpose of the screen could be to provide additional information after
+     * approving an operation, or to provide an option to execute simple consecutive actions.
+     */
+    private PostApprovalScreen postApprovalScreen;
 }
