@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.enrollmentserver.impl.service.converter;
+package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,9 @@ import java.util.List;
  * Converter for HTTP request context information.
  *
  * @author Petr Dvorak, petr@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+// TODO (racansky, 2023-01-09) duplicates com.wultra.app.enrollmentserver.impl.service.converter.RequestContextConverter, extract to lime-java-core
 @Component
 public class RequestContextConverter {
 
