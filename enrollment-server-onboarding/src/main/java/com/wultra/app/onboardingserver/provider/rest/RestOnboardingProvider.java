@@ -177,7 +177,7 @@ class RestOnboardingProvider implements OnboardingProvider {
         target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
         target.setType(convert(source.getType()));
-        target.getData().setLanguage(source.getLocale().getLanguage());
+        target.setData(source.getEventData().asMap());
         return target;
     }
 

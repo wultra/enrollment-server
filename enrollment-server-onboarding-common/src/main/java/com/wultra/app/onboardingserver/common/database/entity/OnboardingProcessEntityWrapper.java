@@ -87,12 +87,30 @@ public final class OnboardingProcessEntityWrapper {
     }
 
     /**
-     * Set the given user-agent to {@code customData}.
+     * Get IP address from {@code customData}.
+     *
+     * @return IP address
+     */
+    public String getIpAddress() {
+        return getValue(CUSTOM_DATA_IP_ADDRESS_KEY);
+    }
+
+    /**
+     * Set the given user agent to {@code customData}.
      *
      * @param userAgent User agent
      */
     public void setUserAgent(final String userAgent) {
         setValue(CUSTOM_DATA_USER_AGENT_KEY, userAgent);
+    }
+
+    /**
+     * Get user agent from {@code customData}.
+     *
+     * @return user agent
+     */
+    public String getUserAgent() {
+        return getValue(CUSTOM_DATA_USER_AGENT_KEY);
     }
 
     private void setValue(final String key, final Object value) {
@@ -103,6 +121,17 @@ public final class OnboardingProcessEntityWrapper {
             entity.setCustomData(mapper.writeValueAsString(json));
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
+        }
+    }
+
+    private String getValue(final String key) {
+        try {
+            logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
+            final Map<String, Object> json = mapper.readValue(entity.getCustomData(), new TypeReference<>(){});
+            return json.getOrDefault(key, "unknown").toString();
+        } catch (JsonProcessingException e) {
+            logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
+            return "unknown";
         }
     }
 }
