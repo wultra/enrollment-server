@@ -38,10 +38,6 @@
     <Parameter name="enrollment-server.mtoken.enabled" value="${ENROLLMENT_SERVER_MTOKEN_ENABLED}"/>
     <Parameter name="enrollment-server.inbox.enabled" value="${ENROLLMENT_SERVER_INBOX_ENABLED}"/>
     <Parameter name="enrollment-server.activation-spawn.enabled" value="${ENROLLMENT_SERVER_ACTIVATION_SPAWN_ENABLED}"/>
-    <Parameter name="enrollment-server.mobile-application.ios.current-version" value="${ENROLLMENT_SERVER_MOBILE_APPLICATION_IOS_CURRENT_VERSION}"/>
-    <Parameter name="enrollment-server.mobile-application.ios.minimal-version" value="${ENROLLMENT_SERVER_MOBILE_APPLICATION_IOS_MINIMAL_VERSION}"/>
-    <Parameter name="enrollment-server.mobile-application.android.current-version" value="${ENROLLMENT_SERVER_MOBILE_APPLICATION_ANDROID_CURRENT_VERSION}"/>
-    <Parameter name="enrollment-server.mobile-application.android.minimal-version" value="${ENROLLMENT_SERVER_MOBILE_APPLICATION_ANDROID_MINIMAL_VERSION}"/>
 
     <!--  Correlation HTTP Header Configuration  -->
     <Parameter name="powerauth.service.correlation-header.enabled" value="${ENROLLMENT_SERVER_CORRELATION_HEADER_ENABLED}"/>
