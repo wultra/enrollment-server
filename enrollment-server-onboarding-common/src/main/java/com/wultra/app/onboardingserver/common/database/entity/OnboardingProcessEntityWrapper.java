@@ -60,7 +60,7 @@ public final class OnboardingProcessEntityWrapper {
     public Locale getLocale() {
         try {
             logger.debug("Getting locale from custom_data: {} of process ID: {}", entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = readValue();
+            final Map<String, Object> json = readCustomData();
             final String language = json.getOrDefault(CUSTOM_DATA_LOCALE_KEY, DEFAULT_LOCALE.getLanguage()).toString();
             return new Locale(language);
         } catch (JsonProcessingException e) {
@@ -117,7 +117,7 @@ public final class OnboardingProcessEntityWrapper {
     private void setValue(final String key, final Object value) {
         try {
             logger.debug("Setting {} to custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = readValue();
+            final Map<String, Object> json = readCustomData();
             json.put(key, value);
             entity.setCustomData(mapper.writeValueAsString(json));
         } catch (JsonProcessingException e) {
@@ -128,7 +128,7 @@ public final class OnboardingProcessEntityWrapper {
     private String getValue(final String key) {
         try {
             logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = readValue();
+            final Map<String, Object> json = readCustomData();
             return json.getOrDefault(key, "unknown").toString();
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
@@ -136,7 +136,7 @@ public final class OnboardingProcessEntityWrapper {
         }
     }
 
-    private Map<String, Object> readValue() throws JsonProcessingException {
+    private Map<String, Object> readCustomData() throws JsonProcessingException {
         final Map<String, Object> value = mapper.readValue(entity.getCustomData(), new TypeReference<>() {});
         if (value == null) {
             logger.warn("Read null value from custom_data: {} of process ID: {} " + entity.getCustomData(), entity.getId());
