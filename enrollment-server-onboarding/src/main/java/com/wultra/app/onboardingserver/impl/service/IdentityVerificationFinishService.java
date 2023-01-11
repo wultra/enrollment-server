@@ -131,7 +131,7 @@ public class IdentityVerificationFinishService {
         }
     }
 
-    private ProcessEventRequest.EventData createBroadcomFinishEventData(final OnboardingProcessEntity process) {
+    private static ProcessEventRequest.EventData createBroadcomFinishEventData(final OnboardingProcessEntity process) {
         final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
         return ProcessEventRequest.BroadcomFinishedEventData.builder()
                 .locale(processWrapper.getLocale())
