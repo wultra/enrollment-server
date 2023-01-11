@@ -34,7 +34,12 @@ The Enrollment Server uses the following public configuration properties:
 | Property | Default | Note |
 |---|---|---|
 | `enrollment-server.mtoken.enabled` | `true` | Publishing of Mobile Token endpoints can be enabled or disabled using this property. |
+| `enrollment-server.inbox.enabled` | `true` | Publishing of Inbox endpoints can be enabled or disabled using this property. |
 | `enrollment-server.activation-spawn.enabled` | `false` | The activation spawn functionality can be enabled or disabled using this property. |
+| `enrollment-server.mobile-application.ios.current-version` | `2.0.0` | Current version of iOS mobile app. |
+| `enrollment-server.mobile-application.ios.minimal-version` | `1.5.4` | Optional minimal version of iOS mobile app. | 
+| `enrollment-server.mobile-application.android.current-version` | `1.5.4` | Current version of Android mobile app. |
+| `enrollment-server.mobile-application.android.minimal-version` | `1.4.0` | Optional minimal version of android mobile app. |
 
 ## Correlation HTTP Header Configuration
 
