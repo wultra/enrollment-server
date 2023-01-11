@@ -133,11 +133,11 @@ public class IdentityVerificationFinishService {
 
     private static ProcessEventRequest.EventData createBroadcomFinishEventData(final OnboardingProcessEntity process) {
         final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
-        return ProcessEventRequest.BroadcomFinishedEventData.builder()
+        return ProcessEventRequest.DefaultFinishedEventData.builder()
                 .locale(processWrapper.getLocale())
                 .clientIPAddress(processWrapper.getIpAddress())
                 .httpUserAgent(processWrapper.getUserAgent())
-                .callerId(UUID.randomUUID().toString())
+                .requestId(UUID.randomUUID().toString())
                 .build();
     }
 }
