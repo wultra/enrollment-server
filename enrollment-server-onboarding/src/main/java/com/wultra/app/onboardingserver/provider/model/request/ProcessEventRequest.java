@@ -89,7 +89,7 @@ public final class ProcessEventRequest {
         /**
          * Unique ID of the request
          */
-        private String callerId;
+        private String requestId;
 
         @Override
         public Map<String, Object> asMap() {
@@ -97,7 +97,7 @@ public final class ProcessEventRequest {
                     "language", locale.getLanguage(),
                     "httpUserAgent", httpUserAgent,
                     "clientIPAddress", clientIPAddress,
-                    "callerId", callerId
+                    "requestId", requestId
             );
         }
     }
