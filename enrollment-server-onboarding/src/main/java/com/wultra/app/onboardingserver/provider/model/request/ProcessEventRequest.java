@@ -61,18 +61,21 @@ public final class ProcessEventRequest {
         Map<String, Object> asMap();
     }
 
+    /**
+     * Specialization fo {@link EventData} for {@link EventType#FINISHED}.
+     */
     public interface FinishedEventData extends EventData {
     }
 
     /**
-     * Specialization of {@link EventData} for {@link EventType#FINISHED} at Broadcom FDS.
+     * Default implementation of {@link FinishedEventData}.
      */
     @Builder
     @Getter
     @ToString
     @PublicApi
     @EqualsAndHashCode
-    public static class BroadcomFinishedEventData implements FinishedEventData {
+    public static class DefaultFinishedEventData implements FinishedEventData {
 
         @NonNull
         private Locale locale;
@@ -88,29 +91,13 @@ public final class ProcessEventRequest {
          */
         private String callerId;
 
-        @Builder.Default
-        private String deviceIdType = "DEVICEID.HTTP";
-
-        /**
-         * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
-         */
-        private String deviceIdValue;
-
-        /**
-         * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
-         */
-        private String deviceSignature;
-
         @Override
         public Map<String, Object> asMap() {
             return Map.of(
                     "language", locale.getLanguage(),
                     "httpUserAgent", httpUserAgent,
                     "clientIPAddress", clientIPAddress,
-                    "callerId", callerId,
-                    "deviceIDType", deviceIdType
-                    // deviceIDValue - Not filled yet
-                    // deviceSignature - Not filled yet
+                    "callerId", callerId
             );
         }
     }

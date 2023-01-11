@@ -35,7 +35,7 @@ class ProcessEventRequestTest {
 
     @Test
     void testBroadcomFinishedEventDataAsMap() {
-        final Map<String, Object> result = ProcessEventRequest.BroadcomFinishedEventData.builder()
+        final Map<String, Object> result = ProcessEventRequest.DefaultFinishedEventData.builder()
                 .callerId("75ABE013-CA32-40FD-A104-0C481D44FCD1")
                 .locale(Locale.ENGLISH)
                 .clientIPAddress("127.0.0.1")
@@ -47,8 +47,7 @@ class ProcessEventRequestTest {
                 () -> assertEquals("75ABE013-CA32-40FD-A104-0C481D44FCD1", result.get("callerId")),
                 () -> assertEquals("en", result.get("language")),
                 () -> assertEquals("127.0.0.1", result.get("clientIPAddress")),
-                () -> assertEquals("Mozilla/5.0", result.get("httpUserAgent")),
-                () -> assertEquals("DEVICEID.HTTP", result.get("deviceIDType"))
+                () -> assertEquals("Mozilla/5.0", result.get("httpUserAgent"))
         );
     }
 }
