@@ -19,7 +19,7 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
 import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
-import com.wultra.app.enrollmentserver.model.request.PushRegisterRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
@@ -68,7 +68,7 @@ public class PushRegistrationController {
      * @throws InvalidRequestObjectException In case object validation fails.
      * @throws PushRegistrationFailedException In case push registration fails.
      */
-    @RequestMapping(value = "device/register", method = RequestMethod.POST)
+    @PostMapping("device/register")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
@@ -88,7 +88,7 @@ public class PushRegistrationController {
      * @throws InvalidRequestObjectException In case object validation fails.
      * @throws PushRegistrationFailedException In case push registration fails.
      */
-    @RequestMapping(value = "device/register/token", method = RequestMethod.POST)
+    @PostMapping("device/register/token")
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION,
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
@@ -113,7 +113,7 @@ public class PushRegistrationController {
         // This assures that the activation is assigned with a correct device.
         final String userId = apiAuthentication.getUserId();
         final String activationId = apiAuthentication.getActivationContext().getActivationId();
-        final Long applicationId = apiAuthentication.getApplicationId();
+        final String applicationId = apiAuthentication.getApplicationId();
 
         return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);
     }

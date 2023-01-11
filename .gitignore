@@ -22,3 +22,7 @@ dist/
 
 ### JRebel
 rebel.xml
+
+### Swagger
+.swagger-codegen
+.swagger-codegen-ignore

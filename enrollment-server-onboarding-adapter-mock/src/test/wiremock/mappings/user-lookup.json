@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/user/lookup"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-user-lookup.json"
+  }
+}

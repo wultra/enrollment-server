@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/client/evaluate"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-client-evaluate.json"
+  }
+}

@@ -1,6 +1,6 @@
 /*
- * Wultra Mobile Utility Server
- * Copyright (C) 2020  Wultra s.r.o.
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2020 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as

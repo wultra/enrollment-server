@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.wultra.app.enrollmentserver.database.entity.OperationTemplate;
+import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.OperationTemplateRepository;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +42,11 @@ public class OperationTemplateService {
         this.operationTemplateRepository = operationTemplateRepository;
     }
 
-    public OperationTemplate prepareTemplate(@NotNull String operationType, @NotNull String language) throws MobileTokenConfigurationException {
-        Optional<OperationTemplate> operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType);
-        if (!operationTemplateOptional.isPresent()) { // try fallback to EN locale
+    public OperationTemplateEntity prepareTemplate(@NotNull String operationType, @NotNull String language) throws MobileTokenConfigurationException {
+        Optional<OperationTemplateEntity> operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType);
+        if (operationTemplateOptional.isEmpty()) { // try fallback to EN locale
             operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
-            if (!operationTemplateOptional.isPresent()) {
+            if (operationTemplateOptional.isEmpty()) {
                 throw new MobileTokenConfigurationException("ERR_CONFIG", "Missing " + language + " template for operation " + operationType);
             }
         }

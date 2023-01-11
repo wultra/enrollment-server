@@ -15,7 +15,7 @@ Enrollment Server contains the following configuration in `jboss-deployment-stru
 
 		<resources>
 			<!-- use WAR provided Bouncy Castle -->
-			<resource-root path="WEB-INF/lib/bcprov-jdk15on-${BC_VERSION}.jar" use-physical-code-source="true"/>
+			<resource-root path="WEB-INF/lib/bcprov-jdk18on-${BC_VERSION}.jar" use-physical-code-source="true"/>
 		</resources>
 
 		<dependencies>
@@ -86,10 +86,10 @@ Use the `logback.xml` file to configure logging, for example:
 The `application-ext.properties` file is used to override default configuration properties, for example:
 ```
 # PowerAuth Client configuration
-powerauth.service.url=http://[host]:[port]/powerauth-java-server/rest
+powerauth.service.url=https://[host]:[port]/powerauth-java-server/rest
 
 # PowerAuth Push Server configuration
-powerauth.push.service.url=http://[host]:[port]/powerauth-push-server
+powerauth.push.service.url=https://[host]:[port]/powerauth-push-server
 ```
 
 Enrollment Server Spring application uses the `ext` Spring profile which activates overriding of default properties by `application-ext.properties`.

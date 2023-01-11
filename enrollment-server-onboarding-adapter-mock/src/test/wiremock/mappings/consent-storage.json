@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/consent/storage"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-consent-storage.json"
+  }
+}

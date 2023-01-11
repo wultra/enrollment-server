@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="EnrollmentServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <envs>
+      <env name="JDBC_DATABASE_SCHEMA" value="powerauth" />
+      <env name="JDBC_DATABASE_USERNAME" value="powerauth" />
+      <env name="JDBC_DATABASE_PASSWORD" value="" />
+    </envs>
+    <module name="enrollment-server" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.wultra.app.enrollmentserver.EnrollmentServerApplication" />
+    <option name="VM_PARAMETERS" value="-Dserver.servlet.context-path=/enrollment-server -Dserver.port=8081" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/otp/send"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-otp-send.json"
+  }
+}
