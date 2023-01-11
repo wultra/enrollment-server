@@ -45,6 +45,9 @@ public class OperationTemplateEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    /**
+     * Operation type at PowerAuth server.
+     */
     @Column(name = "placeholder", nullable = false)
     private String placeholder;
 

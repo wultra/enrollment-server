@@ -32,6 +32,13 @@ import java.util.Optional;
 @Repository
 public interface OperationTemplateRepository extends CrudRepository<OperationTemplateEntity, Long> {
 
+    /**
+     * Find an operation template by the given language and operation type.
+     *
+     * @param language language
+     * @param placeholder operation type
+     * @return operation template or empty
+     */
     Optional<OperationTemplateEntity> findFirstByLanguageAndPlaceholder(String language, String placeholder);
 
 }
