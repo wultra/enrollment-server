@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -59,7 +60,7 @@ public final class OnboardingProcessEntityWrapper {
     public Locale getLocale() {
         try {
             logger.debug("Getting locale from custom_data: {} of process ID: {}", entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = mapper.readValue(entity.getCustomData(), new TypeReference<>(){});
+            final Map<String, Object> json = readCustomData();
             final String language = json.getOrDefault(CUSTOM_DATA_LOCALE_KEY, DEFAULT_LOCALE.getLanguage()).toString();
             return new Locale(language);
         } catch (JsonProcessingException e) {
@@ -87,7 +88,16 @@ public final class OnboardingProcessEntityWrapper {
     }
 
     /**
-     * Set the given user-agent to {@code customData}.
+     * Get IP address from {@code customData}.
+     *
+     * @return IP address
+     */
+    public String getIpAddress() {
+        return getValue(CUSTOM_DATA_IP_ADDRESS_KEY);
+    }
+
+    /**
+     * Set the given user agent to {@code customData}.
      *
      * @param userAgent User agent
      */
@@ -95,14 +105,43 @@ public final class OnboardingProcessEntityWrapper {
         setValue(CUSTOM_DATA_USER_AGENT_KEY, userAgent);
     }
 
+    /**
+     * Get user agent from {@code customData}.
+     *
+     * @return user agent
+     */
+    public String getUserAgent() {
+        return getValue(CUSTOM_DATA_USER_AGENT_KEY);
+    }
+
     private void setValue(final String key, final Object value) {
         try {
             logger.debug("Setting {} to custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = mapper.readValue(entity.getCustomData(), new TypeReference<>(){});
+            final Map<String, Object> json = readCustomData();
             json.put(key, value);
             entity.setCustomData(mapper.writeValueAsString(json));
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
         }
+    }
+
+    private String getValue(final String key) {
+        try {
+            logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
+            final Map<String, Object> json = readCustomData();
+            return json.getOrDefault(key, "unknown").toString();
+        } catch (JsonProcessingException e) {
+            logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
+            return "unknown";
+        }
+    }
+
+    private Map<String, Object> readCustomData() throws JsonProcessingException {
+        final Map<String, Object> value = mapper.readValue(entity.getCustomData(), new TypeReference<>() {});
+        if (value == null) {
+            logger.warn("Read null value from custom_data: {} of process ID: {} " + entity.getCustomData(), entity.getId());
+            return Collections.emptyMap();
+        }
+        return value;
     }
 }

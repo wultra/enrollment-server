@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Service implementing finishing of identity verification.
@@ -116,7 +117,7 @@ public class IdentityVerificationFinishService {
                 .userId(identityVerification.getUserId())
                 .processId(process.getId())
                 .identityVerificationId(identityVerification.getId())
-                .locale(new OnboardingProcessEntityWrapper(process).getLocale())
+                .eventData(createBroadcomFinishEventData(process))
                 .build();
 
         try {
@@ -128,5 +129,15 @@ public class IdentityVerificationFinishService {
             logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());
             logger.debug("Unable to publish finished event to the onboarding adapter", e);
         }
+    }
+
+    private static ProcessEventRequest.EventData createBroadcomFinishEventData(final OnboardingProcessEntity process) {
+        final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
+        return ProcessEventRequest.BroadcomFinishedEventData.builder()
+                .locale(processWrapper.getLocale())
+                .clientIPAddress(processWrapper.getIpAddress())
+                .httpUserAgent(processWrapper.getUserAgent())
+                .callerId(UUID.randomUUID().toString())
+                .build();
     }
 }

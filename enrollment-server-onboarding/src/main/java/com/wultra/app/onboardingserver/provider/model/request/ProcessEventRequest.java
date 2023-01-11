@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import lombok.*;
 
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
@@ -49,7 +50,70 @@ public final class ProcessEventRequest {
     private EventType type;
 
     @NonNull
-    private Locale locale;
+    private EventData eventData;
+
+    public interface EventData {
+        /**
+         * Return data represented as a map.
+         *
+         * @return map
+         */
+        Map<String, Object> asMap();
+    }
+
+    public interface FinishedEventData extends EventData {
+    }
+
+    /**
+     * Specialization of {@link EventData} for {@link EventType#FINISHED} at Broadcom FDS.
+     */
+    @Builder
+    @Getter
+    @ToString
+    @PublicApi
+    @EqualsAndHashCode
+    public static class BroadcomFinishedEventData implements FinishedEventData {
+
+        @NonNull
+        private Locale locale;
+
+        @NonNull
+        private String httpUserAgent;
+
+        @NonNull
+        private String clientIPAddress;
+
+        /**
+         * Unique ID of the request
+         */
+        private String callerId;
+
+        @Builder.Default
+        private String deviceIdType = "DEVICEID.HTTP";
+
+        /**
+         * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
+         */
+        private String deviceIdValue;
+
+        /**
+         * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
+         */
+        private String deviceSignature;
+
+        @Override
+        public Map<String, Object> asMap() {
+            return Map.of(
+                    "language", locale.getLanguage(),
+                    "httpUserAgent", httpUserAgent,
+                    "clientIPAddress", clientIPAddress,
+                    "callerId", callerId,
+                    "deviceIDType", deviceIdType
+                    // deviceIDValue - Not filled yet
+                    // deviceSignature - Not filled yet
+            );
+        }
+    }
 
     public enum EventType {
         FINISHED
