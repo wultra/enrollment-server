@@ -89,12 +89,12 @@ public final class ProcessEventRequest {
         private String callerId;
 
         @Builder.Default
-        private String deviceIDType = "DEVICEID.HTTP";
+        private String deviceIdType = "DEVICEID.HTTP";
 
         /**
          * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
          */
-        private String deviceIDValue;
+        private String deviceIdValue;
 
         /**
          * Value to be obtained from Broadcom SDK on mobile device. Not filled yet.
@@ -104,11 +104,11 @@ public final class ProcessEventRequest {
         @Override
         public Map<String, Object> asMap() {
             return Map.of(
-                    "locale", locale.getLanguage(),
+                    "language", locale.getLanguage(),
                     "httpUserAgent", httpUserAgent,
                     "clientIPAddress", clientIPAddress,
                     "callerId", callerId,
-                    "deviceIDType", deviceIDType
+                    "deviceIDType", deviceIdType
                     // deviceIDValue - Not filled yet
                     // deviceSignature - Not filled yet
             );
