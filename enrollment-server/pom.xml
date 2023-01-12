@@ -65,6 +65,11 @@
             <artifactId>audit-base</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.getlime.core</groupId>
+            <artifactId>http-common</artifactId>
+        </dependency>
+
         <!-- Bouncy Castle -->
         <dependency>
             <groupId>org.bouncycastle</groupId>

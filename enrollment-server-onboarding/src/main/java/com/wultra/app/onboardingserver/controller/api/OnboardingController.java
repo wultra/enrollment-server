@@ -28,8 +28,8 @@ import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
 import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
-import com.wultra.app.onboardingserver.impl.service.RequestContext;
-import com.wultra.app.onboardingserver.impl.service.RequestContextConverter;
+import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.core.http.common.request.RequestContextConverter;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
@@ -66,17 +66,13 @@ public class OnboardingController {
 
     private final OnboardingServiceImpl onboardingService;
 
-    private final RequestContextConverter requestContextConverter;
-
     /**
      * Controller constructor.
      * @param onboardingService Onboarding service.
-     * @param requestContextConverter Request context converter.
      */
     @Autowired
-    public OnboardingController(final OnboardingServiceImpl onboardingService, final RequestContextConverter requestContextConverter) {
+    public OnboardingController(final OnboardingServiceImpl onboardingService) {
         this.onboardingService = onboardingService;
-        this.requestContextConverter = requestContextConverter;
     }
 
     /**
@@ -108,7 +104,7 @@ public class OnboardingController {
             throw new PowerAuthEncryptionException("Invalid request received during onboarding");
         }
 
-        final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+        final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
         final OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject(), requestContext);
         return new ObjectResponse<>(response);
