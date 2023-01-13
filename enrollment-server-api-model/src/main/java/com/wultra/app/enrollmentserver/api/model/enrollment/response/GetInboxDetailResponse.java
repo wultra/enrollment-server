@@ -36,7 +36,10 @@ import java.util.Date;
 public class GetInboxDetailResponse {
 
     private String id;
+    private String type;
     private String subject;
+    @ToString.Exclude
+    private String summary;
     @ToString.Exclude
     private String body;
     private boolean read;
