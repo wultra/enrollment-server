@@ -6,6 +6,7 @@ PowerAuth Enrollment Server is an easy to deploy backend service used for bootst
 
 - [Deploying Enrollment Server](./Deploying-Enrollment-Server.md)
 - [Deploying Enrollment Server on JBoss/Wildfly](./Deploying-Wildfly.md)
+- [Migration Instructions](./Migration-Instructions.md)
 - [Configuration Properties](./Configuration-Properties.md)
 - [Documentation for Onboarding Server](./onboarding/Home.md)
 
