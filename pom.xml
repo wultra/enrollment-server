@@ -104,7 +104,7 @@
         <wultra-audit.version>1.6.0</wultra-audit.version>
         <powerauth-crypto.version>1.4.0</powerauth-crypto.version>
         <powerauth-restful-integration.version>1.4.0</powerauth-restful-integration.version>
-        <powerauth-push.version>1.4.0</powerauth-push.version>
+        <powerauth-push.version>1.4.1</powerauth-push.version>
 
         <bcprov-jdk18on.version>1.72</bcprov-jdk18on.version>
     </properties>
