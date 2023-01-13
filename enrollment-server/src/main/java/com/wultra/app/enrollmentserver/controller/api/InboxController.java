@@ -27,6 +27,7 @@ import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
+import io.getlime.push.model.base.PagedResponse;
 import io.getlime.push.model.entity.InboxMessage;
 import io.getlime.push.model.entity.ListOfInboxMessages;
 import io.getlime.push.model.response.GetInboxMessageCountResponse;
@@ -99,12 +100,14 @@ public class InboxController {
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxListRequest request = objectRequest.getRequestObject();
         final boolean onlyUnread = request.isOnlyUnread();
+        final int page = request.getPage();
+        final int size = request.getSize();
         try {
             final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
-                    userId, Collections.singletonList(appId), onlyUnread, request.getPage(), request.getSize());
+                    userId, Collections.singletonList(appId), onlyUnread, page, size);
             final GetInboxListResponse response = new GetInboxListResponse();
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
-            return new ObjectResponse<>(response);
+            return new PagedResponse<>(response, page, size);
         } catch (PushServerClientException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
@@ -189,7 +192,9 @@ public class InboxController {
     private GetInboxListResponse.InboxMessage convertMessageInList(final InboxMessage message) {
         final GetInboxListResponse.InboxMessage result = new GetInboxListResponse.InboxMessage();
         result.setId(message.getId());
+        result.setType(message.getType().toLowerCaseString());
         result.setSubject(message.getSubject());
+        result.setSummary(message.getSummary());
         result.setRead(message.isRead());
         result.setTimestampCreated(message.getTimestampCreated());
         return result;
@@ -198,7 +203,9 @@ public class InboxController {
     private GetInboxDetailResponse convertMessageDetail(final GetInboxMessageDetailResponse message) {
         final GetInboxDetailResponse result = new GetInboxDetailResponse();
         result.setId(message.getId());
+        result.setType(message.getType().toLowerCaseString());
         result.setSubject(message.getSubject());
+        result.setSummary(message.getSummary());
         result.setBody(message.getBody());
         result.setRead(message.isRead());
         result.setTimestampCreated(message.getTimestampCreated());
