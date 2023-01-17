@@ -22,16 +22,16 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
-import com.wultra.app.enrollmentserver.impl.service.converter.RequestContextConverter;
-import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
+import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
@@ -66,17 +66,14 @@ public class MobileTokenController {
     private static final List<String> DISALLOWED_FLAGS = List.of("VERIFICATION_PENDING", "VERIFICATION_IN_PROGRESS");
 
     private final MobileTokenService mobileTokenService;
-    private final RequestContextConverter requestContextConverter;
 
     /**
      * Default constructor with autowired dependencies.
      *
      * @param mobileTokenService Mobile token service.
-     * @param requestContextConverter Converter for request context.
      */
     @Autowired
-    public MobileTokenController(MobileTokenService mobileTokenService, RequestContextConverter requestContextConverter) {
-        this.requestContextConverter = requestContextConverter;
+    public MobileTokenController(MobileTokenService mobileTokenService) {
         this.mobileTokenService = mobileTokenService;
     }
 
@@ -180,7 +177,7 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
-            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+            final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();
@@ -229,7 +226,7 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
-            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+            final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();
