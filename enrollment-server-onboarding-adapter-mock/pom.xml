@@ -32,6 +32,7 @@
     <description>Onboarding adapter mock for enrollment server.</description>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <wiremock.version>2.33.2</wiremock.version>
     </properties>
 
