@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ProcessEventRequestTest {
 
     @Test
-    void testBroadcomFinishedEventDataAsMap() {
+    void testFinishedEventDataAsMap() {
         final Map<String, Object> result = ProcessEventRequest.DefaultFinishedEventData.builder()
                 .requestId("75ABE013-CA32-40FD-A104-0C481D44FCD1")
                 .locale(Locale.ENGLISH)
