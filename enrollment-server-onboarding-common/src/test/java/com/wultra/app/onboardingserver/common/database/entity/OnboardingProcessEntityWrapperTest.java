@@ -20,9 +20,9 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for {@link OnboardingProcessEntityWrapper}.
@@ -55,5 +55,26 @@ class OnboardingProcessEntityWrapperTest {
                 () -> assertEquals("192.168.12.1", tested.getIpAddress()),
                 () -> assertEquals("Chrome/10.0", tested.getUserAgent())
         );
+    }
+
+    @Test
+    void testSetFdsValues() {
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        final OnboardingProcessEntityWrapper tested = new OnboardingProcessEntityWrapper(process);
+
+        tested.setFdsData(Map.of("fdsIdentifier", "42"));
+
+        assertEquals("{\"fdsData\":{\"fdsIdentifier\":\"42\"}}", process.getCustomData());
+    }
+
+    @Test
+    void testGetFdsValues() {
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setCustomData("{\"fdsData\":{\"fdsIdentifier\":\"42\"}}");
+
+        final OnboardingProcessEntityWrapper tested = new OnboardingProcessEntityWrapper(process);
+
+        assertNotNull(tested.getFdsData());
+        assertEquals("42", tested.getFdsData().get("fdsIdentifier"));
     }
 }
