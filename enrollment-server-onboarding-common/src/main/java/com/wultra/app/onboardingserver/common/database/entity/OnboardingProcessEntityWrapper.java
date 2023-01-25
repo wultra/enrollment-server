@@ -41,6 +41,7 @@ public final class OnboardingProcessEntityWrapper {
     private static final String CUSTOM_DATA_LOCALE_KEY = "locale";
     private static final String CUSTOM_DATA_IP_ADDRESS_KEY = "ipAddress";
     private static final String CUSTOM_DATA_USER_AGENT_KEY = "userAgent";
+    private static final String CUSTOM_DATA_FDS_DATA_KEY = "fdsData";
 
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
@@ -93,7 +94,7 @@ public final class OnboardingProcessEntityWrapper {
      * @return IP address
      */
     public String getIpAddress() {
-        return getValue(CUSTOM_DATA_IP_ADDRESS_KEY);
+        return getValueString(CUSTOM_DATA_IP_ADDRESS_KEY);
     }
 
     /**
@@ -111,7 +112,15 @@ public final class OnboardingProcessEntityWrapper {
      * @return user agent
      */
     public String getUserAgent() {
-        return getValue(CUSTOM_DATA_USER_AGENT_KEY);
+        return getValueString(CUSTOM_DATA_USER_AGENT_KEY);
+    }
+
+    public Map<String, Object> getFdsData() {
+        return getValueMap(CUSTOM_DATA_FDS_DATA_KEY);
+    }
+
+    public void setFdsData(Map<String, Object> fdsData) {
+        setValue(CUSTOM_DATA_FDS_DATA_KEY, fdsData);
     }
 
     private void setValue(final String key, final Object value) {
@@ -125,7 +134,7 @@ public final class OnboardingProcessEntityWrapper {
         }
     }
 
-    private String getValue(final String key) {
+    private String getValueString(final String key) {
         try {
             logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
             final Map<String, Object> json = readCustomData();
@@ -133,6 +142,19 @@ public final class OnboardingProcessEntityWrapper {
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
             return "unknown";
+        }
+    }
+
+    private Map<String, Object> getValueMap(final String key) {
+        try {
+            logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
+            final Map<String, Object> json = readCustomData();
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> map = (Map<String, Object>) json.get(key);
+            return map;
+        } catch (JsonProcessingException e) {
+            logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
+            return null;
         }
     }
 

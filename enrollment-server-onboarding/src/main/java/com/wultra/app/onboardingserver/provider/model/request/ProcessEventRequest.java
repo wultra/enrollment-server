@@ -22,6 +22,8 @@ import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import lombok.*;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -91,14 +93,19 @@ public final class ProcessEventRequest {
          */
         private String requestId;
 
+        private Map<String, Object> fdsData;
+
         @Override
         public Map<String, Object> asMap() {
-            return Map.of(
-                    "language", locale.getLanguage(),
-                    "httpUserAgent", httpUserAgent,
-                    "clientIPAddress", clientIPAddress,
-                    "requestId", requestId
-            );
+            final Map<String, Object> map = new LinkedHashMap<>();
+            map.put("language", locale.getLanguage());
+            map.put("httpUserAgent", httpUserAgent);
+            map.put("clientIPAddress", clientIPAddress);
+            map.put("requestId", requestId);
+            if (fdsData != null) {
+                map.putAll(fdsData);
+            }
+            return Collections.unmodifiableMap(map);
         }
     }
 

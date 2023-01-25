@@ -138,6 +138,7 @@ public class IdentityVerificationFinishService {
                 .clientIPAddress(processWrapper.getIpAddress())
                 .httpUserAgent(processWrapper.getUserAgent())
                 .requestId(UUID.randomUUID().toString())
+                .fdsData(processWrapper.getFdsData())
                 .build();
     }
 }
