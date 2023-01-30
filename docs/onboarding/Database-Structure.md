@@ -6,7 +6,6 @@ You can download DDL scripts for supported databases:
 
 - [PostgreSQL - Create Database Schema](../sql/postgresql/onboarding/create-schema.sql)
 - [Oracle - Create Database Schema](../sql/oracle/onboarding/create-schema.sql)
-- [MySQL - Create Database Schema](../sql/mysql/onboarding/create-schema.sql)
 
 ## ShedLock
 
