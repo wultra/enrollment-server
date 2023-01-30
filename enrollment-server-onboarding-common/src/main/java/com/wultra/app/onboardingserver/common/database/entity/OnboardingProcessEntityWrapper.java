@@ -41,7 +41,6 @@ public final class OnboardingProcessEntityWrapper {
     private static final String CUSTOM_DATA_LOCALE_KEY = "locale";
     private static final String CUSTOM_DATA_IP_ADDRESS_KEY = "ipAddress";
     private static final String CUSTOM_DATA_USER_AGENT_KEY = "userAgent";
-    private static final String CUSTOM_DATA_FDS_DATA_KEY = "fdsData";
 
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
@@ -115,12 +114,41 @@ public final class OnboardingProcessEntityWrapper {
         return getValueString(CUSTOM_DATA_USER_AGENT_KEY);
     }
 
+    /**
+     * Return string {@code OnboardingProcessEntity#fdsData} as map.
+     *
+     * @return FDS data or null
+     */
     public Map<String, Object> getFdsData() {
-        return getValueMap(CUSTOM_DATA_FDS_DATA_KEY);
+        try {
+            final String fdsData = entity.getFdsData();
+            logger.debug("Getting fds_data: {} of process ID: {}", fdsData, entity.getId());
+            if (fdsData == null) {
+                return null;
+            }
+            return mapper.readValue(fdsData, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            logger.warn("Problem to parse fds_data of process ID: {}", entity.getId(), e);
+            return null;
+        }
     }
 
-    public void setFdsData(Map<String, Object> fdsData) {
-        setValue(CUSTOM_DATA_FDS_DATA_KEY, fdsData);
+    /**
+     * Set the given map of FDS data to string {@code OnboardingProcessEntity#fdsData}.
+     *
+     * @param fdsData FDS data, may be null
+     */
+    public void setFdsData(final Map<String, Object> fdsData) {
+        try {
+            if (fdsData == null) {
+                entity.setFdsData(null);
+            } else {
+                logger.debug("Setting fds_data: {} of process ID: {}", fdsData, entity.getId());
+                entity.setFdsData(mapper.writeValueAsString(fdsData));
+            }
+        } catch (JsonProcessingException e) {
+            logger.warn("Problem to parse fds_data of process ID: {}", entity.getId(), e);
+        }
     }
 
     private void setValue(final String key, final Object value) {
@@ -142,19 +170,6 @@ public final class OnboardingProcessEntityWrapper {
         } catch (JsonProcessingException e) {
             logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
             return "unknown";
-        }
-    }
-
-    private Map<String, Object> getValueMap(final String key) {
-        try {
-            logger.debug("Getting {} from custom_data: {} of process ID: {}", key, entity.getCustomData(), entity.getId());
-            final Map<String, Object> json = readCustomData();
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> map = (Map<String, Object>) json.get(key);
-            return map;
-        } catch (JsonProcessingException e) {
-            logger.warn("Problem to parse custom_data of process ID: {}", entity.getId(), e);
-            return null;
         }
     }
 

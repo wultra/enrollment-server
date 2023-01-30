@@ -64,13 +64,13 @@ class OnboardingProcessEntityWrapperTest {
 
         tested.setFdsData(Map.of("fdsIdentifier", "42"));
 
-        assertEquals("{\"fdsData\":{\"fdsIdentifier\":\"42\"}}", process.getCustomData());
+        assertEquals("{\"fdsIdentifier\":\"42\"}", process.getFdsData());
     }
 
     @Test
     void testGetFdsValues() {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
-        process.setCustomData("{\"fdsData\":{\"fdsIdentifier\":\"42\"}}");
+        process.setFdsData("{\"fdsIdentifier\":\"42\"}");
 
         final OnboardingProcessEntityWrapper tested = new OnboardingProcessEntityWrapper(process);
 

@@ -72,6 +72,12 @@ public class OnboardingProcessEntity implements Serializable {
     @Column(name = "custom_data", nullable = false)
     private String customData = "{}";
 
+    /**
+     * Optional Json with fraud detection system data, vendor specific format.
+     */
+    @Column(name = "fds_data")
+    private String fdsData;
+
     @Column(name = "user_id")
     private String userId;
 
