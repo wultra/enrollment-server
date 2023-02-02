@@ -184,89 +184,77 @@ public class MobileTokenConverter {
         }
     }
 
-    private Attribute buildAttribute(OperationTemplateParam templateParam, Map<String, String> params) {
+    private static Attribute buildAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
         final String type = templateParam.getType();
-        final String id = templateParam.getId();
-        final String text = templateParam.getText();
         switch (type) {
             case "AMOUNT": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String amountKey = templateParams.get("amount");
-                final String currencyKey = templateParams.get("currency");
-                final String amount = params.get(amountKey);
-                final String currency = params.get(currencyKey);
-                try {
-                    final BigDecimal amountValue = new BigDecimal(amount);
-                    return new AmountAttribute(id, text, amountValue, currency, amount, currency);
-                } catch (NumberFormatException ex) {
-                    logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
-                    return null;
-                }
+                return buildAmountAttribute(templateParam, params);
             }
             case "HEADING": {
-                return new HeadingAttribute(id, text);
+                return new HeadingAttribute(templateParam.getId(), templateParam.getText());
             }
             case "NOTE": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String noteKey = templateParams.get("note");
-                final String note = params.get(noteKey);
-                if (note == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new NoteAttribute(id, text, note);
+                return buildNoteAttribute(templateParam, params);
             }
             case "KEY_VALUE": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String valueKey = templateParams.get("value");
-                final String value = params.get(valueKey);
-                if (value == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new KeyValueAttribute(id, text, value);
+                return buildKeyValueAttribute(templateParam, params);
             }
             default: { // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String valueKey = templateParams.get("value");
-                final String value = params.get(valueKey);
-                if (value == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new KeyValueAttribute(id, text, value);
+                return buildKeyValueAttribute(templateParam, params);
             }
         }
     }
 
+    private static KeyValueAttribute buildKeyValueAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final String value = fetchTemplateParamValue(templateParam, params, "value");
+        if (value == null) { // invalid element, does not contain note at all
+            return null;
+        }
+        return new KeyValueAttribute(id, text, value);
+    }
+
+    private static NoteAttribute buildNoteAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final String note = fetchTemplateParamValue(templateParam, params, "note");
+        if (note == null) { // invalid element, does not contain note at all
+            return null;
+        }
+        return new NoteAttribute(id, text, note);
+    }
+
+    private static AmountAttribute buildAmountAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final String amount = fetchTemplateParamValue(templateParam, params, "amount");
+        if (amount == null) {
+            return null;
+        }
+        final String currency = fetchTemplateParamValue(templateParam, params, "currency");
+        try {
+            final BigDecimal amountValue = new BigDecimal(amount);
+            return new AmountAttribute(id, text, amountValue, currency, amount, currency);
+        } catch (NumberFormatException ex) {
+            logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
+            return null;
+        }
+    }
+
+    private static String fetchTemplateParamValue(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
+        final String id = templateParam.getId();
+        final Map<String, String> templateParams = templateParam.getParams();
+        if (templateParams == null) {
+            logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+            return null;
+        }
+        if (params == null) {
+            logger.warn("Params of OperationDetailResponse is null");
+            return null;
+        }
+        final String paramKey = templateParams.get(key);
+        return params.get(paramKey);
+    }
 }

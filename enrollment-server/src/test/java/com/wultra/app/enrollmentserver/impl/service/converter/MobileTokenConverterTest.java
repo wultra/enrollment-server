@@ -23,9 +23,10 @@ import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
-import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.NoteAttribute;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -345,6 +346,60 @@ class MobileTokenConverterTest {
                 .extracting(PostApprovalScreen::getPayload)
                 .isInstanceOf(GenericPostApprovalScreen.GenericPayload.class)
                 .returns(expectedPayload, from(it -> ((GenericPostApprovalScreen.GenericPayload) it).getProperties()));
+    }
+
+    @Test
+    void testConvertAttributes() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.of(
+                "amount", "13.7",
+                "currency", "EUR",
+                "iban", "AT483200000012345864",
+                "note", "Remember me"));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("[\n" +
+                "  {\n" +
+                "    \"id\": \"operation.amount\",\n" +
+                "    \"type\": \"AMOUNT\",\n" +
+                "    \"text\": \"Amount\",\n" +
+                "    \"params\": {\n" +
+                "      \"amount\": \"amount\",\n" +
+                "      \"currency\": \"currency\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"operation.account\",\n" +
+                "    \"type\": \"KEY_VALUE\",\n" +
+                "    \"text\": \"To Account\",\n" +
+                "    \"params\": {\n" +
+                "      \"value\": \"iban\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"operation.note\",\n" +
+                "    \"type\": \"NOTE\",\n" +
+                "    \"text\": \"Note\",\n" +
+                "    \"params\": {\n" +
+                "      \"note\": \"note\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"operation.heading\",\n" +
+                "    \"type\": \"HEADING\",\n" +
+                "    \"text\": \"Heading\"\n" +
+                "  }\n" +
+                "]");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<Attribute> attributes = result.getFormData().getAttributes();
+
+        assertEquals(4, attributes.size());
+        assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.7", "EUR"), attributes.get(0));
+        assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), attributes.get(1));
+        assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), attributes.get(2));
+        assertEquals(new HeadingAttribute("operation.heading", "Heading"), attributes.get(3));
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
