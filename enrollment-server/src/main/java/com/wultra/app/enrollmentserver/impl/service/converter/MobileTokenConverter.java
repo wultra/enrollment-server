@@ -187,22 +187,19 @@ public class MobileTokenConverter {
     private static Optional<Attribute> buildAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
         final String type = templateParam.getType();
         switch (type) {
-            case "AMOUNT": {
+            case "AMOUNT":
                 return buildAmountAttribute(templateParam, params);
-            }
-            case "HEADING": {
+            case "HEADING":
                 return Optional.of(new HeadingAttribute(templateParam.getId(), templateParam.getText()));
-            }
-            case "NOTE": {
+            case "NOTE":
                 return buildNoteAttribute(templateParam, params);
-            }
-            case "KEY_VALUE": {
+            case "KEY_VALUE":
                 return buildKeyValueAttribute(templateParam, params);
-            }
-            default: { // attempt fallback to key-value type
+            case "IMAGE":
+                return buildImageAttribute(templateParam, params);
+            default: // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
                 return buildKeyValueAttribute(templateParam, params);
-            }
         }
     }
 
@@ -237,6 +234,22 @@ public class MobileTokenConverter {
         }
     }
 
+    private static Optional<Attribute> buildImageAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> thumbnailUrl = fetchTemplateParamValue(templateParam, params, "thumbnailUrl");
+        if (thumbnailUrl.isEmpty()) {
+            logger.warn("ThumbnailUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
+            return Optional.empty();
+        }
+        final Optional<String> originalUrl = fetchTemplateParamValue(templateParam, params, "originalUrl");
+        if (originalUrl.isEmpty()) {
+            logger.warn("OriginalUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
+            return Optional.empty();
+        }
+        return Optional.of(new ImageAttribute(id, text, thumbnailUrl.get(), originalUrl.get()));
+    }
+
     private static Optional<String> fetchTemplateParamValue(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
         final String id = templateParam.getId();
         final Map<String, String> templateParams = templateParam.getParams();
@@ -248,7 +261,7 @@ public class MobileTokenConverter {
             logger.warn("Params of OperationDetailResponse is null");
             return Optional.empty();
         }
-        final String paramKey = templateParams.get(key);
-        return Optional.ofNullable(params.get(paramKey));
+        return Optional.ofNullable(templateParams.get(key))
+                .map(params::get);
     }
 }

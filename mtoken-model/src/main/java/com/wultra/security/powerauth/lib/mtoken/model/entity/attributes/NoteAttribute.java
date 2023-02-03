@@ -36,8 +36,7 @@ public class NoteAttribute extends Attribute {
      * Default constructor.
      */
     public NoteAttribute() {
-        super();
-        this.setType(Type.NOTE);
+        super(Type.NOTE);
     }
 
     /**

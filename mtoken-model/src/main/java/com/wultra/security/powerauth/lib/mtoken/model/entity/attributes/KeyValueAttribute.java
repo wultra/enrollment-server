@@ -39,8 +39,7 @@ public class KeyValueAttribute extends Attribute {
      * Default constructor.
      */
     public KeyValueAttribute() {
-        super();
-        this.setType(Type.KEY_VALUE);
+        super(Type.KEY_VALUE);
     }
 
     /**
