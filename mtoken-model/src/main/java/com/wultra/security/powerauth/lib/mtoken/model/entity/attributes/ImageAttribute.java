@@ -1,6 +1,6 @@
 /*
  * PowerAuth Mobile Token Model
- * Copyright (C) 2017 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -20,47 +20,45 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity.attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
-
 /**
- * Attribute representing a financial amount item, with attributes for amount
- * and currency, that can be rendered on a mobile application.
+ * Attribute represents an image that can be rendered on a mobile application.
+ * Consists of a URL to the thumbnail and the higher resolution,
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class AmountAttribute extends Attribute {
-
-    private BigDecimal amount;
-    private String currency;
-    private String amountFormatted;
-    private String currencyFormatted;
+public class ImageAttribute extends Attribute {
 
     /**
-     * Default constructor.
+     * A URL to the thumbnail, the image in lower resolution.
      */
-    public AmountAttribute() {
-        super(Type.AMOUNT);
+    private String thumbnailUrl;
+
+    /**
+     * A URL to the original image in higher resolution.
+     */
+    private String originalUrl;
+
+    /**
+     * No-arg constructor.
+     */
+    public ImageAttribute() {
+        super(Type.IMAGE);
     }
 
     /**
      * Constructor with all details.
      * @param id Attribute ID.
      * @param label Attribute label.
-     * @param amount Amount.
-     * @param currency Currency.
-     * @param amountFormatted Formatted amount.
-     * @param currencyFormatted  Formatted currency.
+     * @param thumbnailUrl Amount.
+     * @param originalUrl  Formatted currency.
      */
-    public AmountAttribute(String id, String label, BigDecimal amount, String currency, String amountFormatted, String currencyFormatted) {
+    public ImageAttribute(String id, String label, String thumbnailUrl, String originalUrl) {
         this();
         this.id = id;
         this.label = label;
-        this.amount = amount;
-        this.currency = currency;
-        this.amountFormatted = amountFormatted;
-        this.currencyFormatted = currencyFormatted;
+        this.thumbnailUrl = thumbnailUrl;
+        this.originalUrl = originalUrl;
     }
-
 }

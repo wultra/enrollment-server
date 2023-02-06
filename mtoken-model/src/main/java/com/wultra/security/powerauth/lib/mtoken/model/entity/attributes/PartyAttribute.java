@@ -36,8 +36,7 @@ public class PartyAttribute extends Attribute {
      * Default constructor.
      */
     public PartyAttribute() {
-        super();
-        this.setType(Type.PARTY_INFO);
+        super(Type.PARTY_INFO);
     }
 
     /**

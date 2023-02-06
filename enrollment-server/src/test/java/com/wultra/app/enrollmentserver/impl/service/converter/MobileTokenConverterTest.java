@@ -355,7 +355,9 @@ class MobileTokenConverterTest {
                 "amount", "13.7",
                 "currency", "EUR",
                 "iban", "AT483200000012345864",
-                "note", "Remember me"));
+                "note", "Remember me",
+                "thumbnailUrl", "https://example.com/123_thumb.jpeg",
+                "originalUrl", "https://example.com/123.jpeg"));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("[\n" +
@@ -388,6 +390,15 @@ class MobileTokenConverterTest {
                 "    \"id\": \"operation.heading\",\n" +
                 "    \"type\": \"HEADING\",\n" +
                 "    \"text\": \"Heading\"\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"operation.image\",\n" +
+                "    \"type\": \"IMAGE\",\n" +
+                "    \"text\": \"Image\",\n" +
+                "    \"params\": {\n" +
+                "      \"thumbnailUrl\": \"thumbnailUrl\",\n" +
+                "      \"originalUrl\": \"originalUrl\"\n" +
+                "    }\n" +
                 "  }\n" +
                 "]");
 
@@ -395,11 +406,12 @@ class MobileTokenConverterTest {
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
-        assertEquals(4, attributes.size());
+        assertEquals(5, attributes.size());
         assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.7", "EUR"), attributes.get(0));
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), attributes.get(1));
         assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), attributes.get(2));
         assertEquals(new HeadingAttribute("operation.heading", "Heading"), attributes.get(3));
+        assertEquals(new ImageAttribute("operation.image", "Image", "https://example.com/123_thumb.jpeg", "https://example.com/123.jpeg"), attributes.get(4));
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {

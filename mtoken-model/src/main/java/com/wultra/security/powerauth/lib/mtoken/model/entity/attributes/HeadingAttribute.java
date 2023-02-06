@@ -33,8 +33,7 @@ public class HeadingAttribute extends Attribute {
      * Default constructor.
      */
     public HeadingAttribute() {
-        super();
-        this.setType(Type.HEADING);
+        super(Type.HEADING);
     }
 
     /**
