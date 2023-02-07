@@ -18,9 +18,9 @@
  */
 package com.wultra.app.onboardingserver.provider.model.response;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
+import com.wultra.core.annotations.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;

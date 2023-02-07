@@ -18,9 +18,9 @@
 package com.wultra.app.onboardingserver.common.api;
 
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.common.api.model.UpdateProcessRequest;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.core.annotations.PublicApi;
 
 /**
  * Service implementing the onboarding process.

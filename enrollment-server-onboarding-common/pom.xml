@@ -48,6 +48,11 @@
 
         <dependency>
             <groupId>io.getlime.core</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.getlime.core</groupId>
             <artifactId>audit-base</artifactId>
         </dependency>
 
