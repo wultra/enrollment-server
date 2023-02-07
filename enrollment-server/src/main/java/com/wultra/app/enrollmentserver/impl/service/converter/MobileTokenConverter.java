@@ -189,6 +189,8 @@ public class MobileTokenConverter {
         switch (type) {
             case "AMOUNT":
                 return buildAmountAttribute(templateParam, params);
+            case "AMOUNT_CONVERSION":
+                return buildAmountConversionAttribute(templateParam, params);
             case "HEADING":
                 return Optional.of(new HeadingAttribute(templateParam.getId(), templateParam.getText()));
             case "NOTE":
@@ -224,12 +226,50 @@ public class MobileTokenConverter {
         if (amount.isEmpty()) {
             return Optional.empty();
         }
-        final Optional<String> currency = fetchTemplateParamValue(templateParam, params, "currency");
+        final String currency = fetchTemplateParamValue(templateParam, params, "currency").orElse(null);
         try {
             final BigDecimal amountValue = new BigDecimal(amount.get());
-            return Optional.of(new AmountAttribute(id, text, amountValue, currency.orElse(null), amount.get(), currency.orElse(null)));
+            // TODO (racansky, 2023-02-07, #657) implement formatting based on locale
+            return Optional.of(new AmountAttribute(id, text, amountValue, currency, amount.get(), currency));
         } catch (NumberFormatException ex) {
             logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<Attribute> buildAmountConversionAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> sourceAmount = fetchTemplateParamValue(templateParam, params, "sourceAmount");
+        final Optional<String> targetAmount = fetchTemplateParamValue(templateParam, params, "targetAmount");
+        if (sourceAmount.isEmpty() || targetAmount.isEmpty()) {
+            return Optional.empty();
+        }
+        final String sourceCurrency = fetchTemplateParamValue(templateParam, params, "sourceCurrency").orElse(null);
+        final String targetCurrency = fetchTemplateParamValue(templateParam, params, "targetCurrency").orElse(null);
+        final boolean dynamic = fetchTemplateParamValue(templateParam, params, "dynamic")
+                .map(Boolean::parseBoolean)
+                .orElse(false);
+
+        try {
+            final BigDecimal sourceAmountValue = new BigDecimal(sourceAmount.get());
+            final BigDecimal targetAmountValue = new BigDecimal(targetAmount.get());
+            return Optional.of(AmountConversionAttribute.builder()
+                    .id(id)
+                    .label(text)
+                    .dynamic(dynamic)
+                    .sourceAmount(sourceAmountValue)
+                    // TODO (racansky, 2023-02-07, #657) implement formatting based on locale
+                    .sourceAmountFormatted(sourceAmount.get())
+                    .sourceCurrency(sourceCurrency)
+                    .sourceCurrencyFormatted(sourceCurrency)
+                    .targetAmount(targetAmountValue)
+                    .targetAmountFormatted(targetAmount.get())
+                    .targetCurrency(targetCurrency)
+                    .targetCurrencyFormatted(targetCurrency)
+                    .build());
+        } catch (NumberFormatException ex) {
+            logger.warn("Invalid number format: {}, skipping the AMOUNT_CONVERSION attribute!", sourceAmount);
             return Optional.empty();
         }
     }
