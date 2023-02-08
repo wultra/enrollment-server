@@ -33,6 +33,7 @@ import lombok.NoArgsConstructor;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AmountAttribute.class, name = "AMOUNT"),
+        @JsonSubTypes.Type(value = AmountConversionAttribute.class, name = "AMOUNT_CONVERSION"),
         @JsonSubTypes.Type(value = HeadingAttribute.class, name = "HEADING"),
         @JsonSubTypes.Type(value = KeyValueAttribute.class, name = "KEY_VALUE"),
         @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE"),
@@ -49,6 +50,11 @@ public class Attribute {
          * Amount attribute type - represents amount and currency.
          */
         AMOUNT,
+
+        /**
+         * Amount conversion attribute type - represents amount and currency conversion.
+         */
+        AMOUNT_CONVERSION,
 
         /**
          * Key-value attribute type - represents generic single-line key value.
