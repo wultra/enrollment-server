@@ -19,8 +19,8 @@ package com.wultra.app.onboardingserver.common.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.core.annotations.PublicApi;
 
 /**
  * Service implementing OTP verification during onboarding process.

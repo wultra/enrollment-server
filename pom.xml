@@ -99,9 +99,7 @@
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.8</swagger-annotations.version>
         <springdoc-openapi.version>1.6.14</springdoc-openapi.version>
-        <wultra-rest-client.version>1.6.0</wultra-rest-client.version>
-        <wultra-audit.version>1.6.0</wultra-audit.version>
-        <wultra-http.version>1.7.0-SNAPSHOT</wultra-http.version>
+        <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
         <powerauth-crypto.version>1.4.0</powerauth-crypto.version>
         <powerauth-restful-integration.version>1.4.0</powerauth-restful-integration.version>
         <powerauth-push.version>1.4.1</powerauth-push.version>
@@ -131,26 +129,38 @@
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${wultra-core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.core</groupId>
                 <artifactId>rest-client-base</artifactId>
-                <version>${wultra-rest-client.version}</version>
+                <version>${wultra-core.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>rest-model-base</artifactId>
-                <version>${wultra-rest-client.version}</version>
+                <version>${wultra-core.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.core</groupId>
+                <artifactId>rest-model-base</artifactId>
+                <version>${wultra-core.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>audit-base</artifactId>
-                <version>${wultra-audit.version}</version>
+                <version>${wultra-core.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.getlime.core</groupId>
                 <artifactId>http-common</artifactId>
-                <version>${wultra-http.version}</version>
+                <version>${wultra-core.version}</version>
             </dependency>
 
             <dependency>
