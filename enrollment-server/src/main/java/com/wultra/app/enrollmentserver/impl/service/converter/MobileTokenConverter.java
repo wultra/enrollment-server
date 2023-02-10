@@ -31,15 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -228,15 +226,22 @@ public class MobileTokenConverter {
         if (amount.isEmpty()) {
             return Optional.empty();
         }
-        final String currency = fetchTemplateParamValue(templateParam, params, "currency").orElse(null);
+        final Optional<String> currency = fetchTemplateParamValue(templateParam, params, "currency");
+        if (currency.isEmpty()) {
+            return Optional.empty();
+        }
+        final BigDecimal amountRaw;
         try {
-            final BigDecimal amountValue = new BigDecimal(amount.get());
-            // TODO (racansky, 2023-02-07, #657) implement formatting based on locale
-            return Optional.of(new AmountAttribute(id, text, amountValue, currency, amount.get(), currency));
+            amountRaw = new BigDecimal(amount.get());
         } catch (NumberFormatException ex) {
             logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
             return Optional.empty();
         }
+        final Locale locale = LocaleContextHolder.getLocale();
+        final String currencyRaw = currency.get();
+        final String currencyFormatted = MonetaryConverter.formatCurrency(currencyRaw, locale);
+        final String amountFormatted = MonetaryConverter.formatAmount(amountRaw, currencyRaw, locale);
+        return Optional.of(new AmountAttribute(id, text, amountRaw, currencyRaw, amountFormatted, currencyFormatted));
     }
 
     private static Optional<Attribute> buildAmountConversionAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
@@ -247,33 +252,46 @@ public class MobileTokenConverter {
         if (sourceAmount.isEmpty() || targetAmount.isEmpty()) {
             return Optional.empty();
         }
-        final String sourceCurrency = fetchTemplateParamValue(templateParam, params, "sourceCurrency").orElse(null);
-        final String targetCurrency = fetchTemplateParamValue(templateParam, params, "targetCurrency").orElse(null);
+        final Optional<String> sourceCurrency = fetchTemplateParamValue(templateParam, params, "sourceCurrency");
+        final Optional<String> targetCurrency = fetchTemplateParamValue(templateParam, params, "targetCurrency");
+        if (sourceCurrency.isEmpty() || targetCurrency.isEmpty()) {
+            return Optional.empty();
+        }
+
         final boolean dynamic = fetchTemplateParamValue(templateParam, params, "dynamic")
                 .map(Boolean::parseBoolean)
                 .orElse(false);
 
+        final BigDecimal sourceAmountRaw;
+        final BigDecimal targetAmountRaw;
         try {
-            final BigDecimal sourceAmountValue = new BigDecimal(sourceAmount.get());
-            final BigDecimal targetAmountValue = new BigDecimal(targetAmount.get());
-            return Optional.of(AmountConversionAttribute.builder()
-                    .id(id)
-                    .label(text)
-                    .dynamic(dynamic)
-                    .sourceAmount(sourceAmountValue)
-                    // TODO (racansky, 2023-02-07, #657) implement formatting based on locale
-                    .sourceAmountFormatted(sourceAmount.get())
-                    .sourceCurrency(sourceCurrency)
-                    .sourceCurrencyFormatted(sourceCurrency)
-                    .targetAmount(targetAmountValue)
-                    .targetAmountFormatted(targetAmount.get())
-                    .targetCurrency(targetCurrency)
-                    .targetCurrencyFormatted(targetCurrency)
-                    .build());
+            sourceAmountRaw = new BigDecimal(sourceAmount.get());
+            targetAmountRaw = new BigDecimal(targetAmount.get());
         } catch (NumberFormatException ex) {
             logger.warn("Invalid number format: {}, skipping the AMOUNT_CONVERSION attribute!", sourceAmount);
             return Optional.empty();
         }
+
+        final Locale locale = LocaleContextHolder.getLocale();
+        final String sourceCurrencyRaw = sourceCurrency.get();
+        final String targetCurrencyRaw = targetCurrency.get();
+        final String sourceCurrencyFormatted = MonetaryConverter.formatCurrency(sourceCurrencyRaw, locale);
+        final String targetCurrencyFormatted = MonetaryConverter.formatCurrency(targetCurrencyRaw, locale);
+        final String sourceAmountFormatted = MonetaryConverter.formatAmount(sourceAmountRaw, sourceCurrencyRaw, locale);
+        final String targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
+        return Optional.of(AmountConversionAttribute.builder()
+                .id(id)
+                .label(text)
+                .dynamic(dynamic)
+                .sourceAmount(sourceAmountRaw)
+                .sourceAmountFormatted(sourceAmountFormatted)
+                .sourceCurrency(sourceCurrencyRaw)
+                .sourceCurrencyFormatted(sourceCurrencyFormatted)
+                .targetAmount(targetAmountRaw)
+                .targetAmountFormatted(targetAmountFormatted)
+                .targetCurrency(targetCurrencyRaw)
+                .targetCurrencyFormatted(targetCurrencyFormatted)
+                .build());
     }
 
     private static Optional<Attribute> buildImageAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
