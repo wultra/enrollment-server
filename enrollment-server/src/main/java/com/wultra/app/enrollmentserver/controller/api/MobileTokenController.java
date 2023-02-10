@@ -27,6 +27,7 @@ import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.response.MobileTokenResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
@@ -43,6 +44,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -101,7 +103,8 @@ public class MobileTokenController {
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String language = locale.getLanguage();
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, true);
-                return new ObjectResponse<>(listResponse);
+                final Date currentTimestamp = new Date();
+                return new MobileTokenResponse<>(listResponse, currentTimestamp);
             } else {
                 throw new MobileTokenAuthException();
             }
