@@ -69,10 +69,13 @@ An exact details of the operation data structure can be found in the separate do
 
 | Flag | Meaning                      |
 |------|:-----------------------------|
-| `B`  | Operation can be signed with biometric factor |
+| `B`  | Operation can be signed with biometric factor     |
+| `X`  | The approval button will be flipped               |
+| `F`  | The fraud warning will be shown                   |
+| `C`  | Operation cannot be approved during a phone call  |
 
 Examples:
-- `B` - biometric 2FA is allowed
+- `BF` - biometric 2FA is allowed and fraud warning is shown
 - ` ` (empty string) - only knowledge factor is allowed for 2FA
 
 ## Signature
