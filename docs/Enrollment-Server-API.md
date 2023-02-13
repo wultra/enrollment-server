@@ -48,11 +48,11 @@ Following endpoints are published in Enrollment Server RESTful API:
 
 #### Message Inbox API
 
-- `POST` [/api/inbox/count](#inbox-count) - Get inbox message count
-- `POST` [/api/inbox/message/list](#inbox-message-list) - Get inbox message list
-- `POST` [/api/inbox/message/detail](#inbox-message-detail) - Get inbox message detail
-- `POST` [/api/inbox/message/read](#inbox-message-read) - Read an inbox message
-- `POST` [/api/inbox/message/read-all](#inbox-message-read-all) - Read all inbox messages
+- `POST` [/api/inbox/count](#inbox-count) - Get Inbox message count
+- `POST` [/api/inbox/message/list](#inbox-message-list) - Get Inbox message list
+- `POST` [/api/inbox/message/detail](#inbox-message-detail) - Get Inbox message detail
+- `POST` [/api/inbox/message/read](#inbox-message-read) - Read an Inbox message
+- `POST` [/api/inbox/message/read-all](#inbox-message-read-all) - Read all Inbox messages
 <!-- end -->
 
 ### Error Handling
@@ -639,3 +639,243 @@ Handle a request for activation code in activation spawn.
 ```
 
 <!-- end -->
+
+## Message Inbox
+
+Message Inbox API provides endpoints for managing the message inbox.
+
+<!-- begin api POST /api/inbox/count -->
+### Inbox Message Count
+
+Get count of unread messages in Inbox.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/inbox/count</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Token: ...`
+
+```json
+{}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK",
+  "responseObject": {
+    "countUnread": 10
+  }
+}
+```
+
+<!-- end -->
+
+<!-- begin api POST /api/inbox/message/list -->
+### Inbox Message List
+
+Get messages in Inbox.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/inbox/message/list</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Token: ...`
+
+```json
+{
+  "requestObject": {
+    "page": 0,
+    "size": 10,
+    "onlyUnread": false
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK",
+  "responseObject": [
+    {
+      "id": "ae641389-d37a-4425-bd14-41c29484596f",
+      "type": "text",
+      "subject": "Example subject",
+      "summary": "Example summary",
+      "read": false,
+      "timestampCreated": "2022-08-25T22:34:58.702+00:00"
+    }
+  ]
+}
+```
+
+<!-- end -->
+
+<!-- begin api POST /api/inbox/message/detail -->
+### Inbox Message Detail
+
+Get detail of a message in Inbox.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/inbox/message/detail</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Token: ...`
+
+```json
+{
+  "requestObject": {
+    "id": "ae641389-d37a-4425-bd14-41c29484596f"
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK",
+  "responseObject": [
+    {
+      "id": "ae641389-d37a-4425-bd14-41c29484596f",
+      "type": "text",
+      "subject": "Example subject",
+      "summary": "Example summary",
+      "body": "Example message body",
+      "read": false,
+      "timestampCreated": "2022-08-25T22:34:58.702+00:00"
+    }
+  ]
+}
+```
+
+<!-- end -->
+
+<!-- begin api POST /api/inbox/message/read -->
+### Inbox Message Read
+
+Mark a message in inbox as read.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/inbox/message/read</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Token: ...`
+
+```json
+{
+  "requestObject": {
+    "id": "ae641389-d37a-4425-bd14-41c29484596f"
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK"
+}
+```
+
+<!-- end -->
+
+<!-- begin api POST /api/inbox/message/read-all -->
+### Inbox Message Read All
+
+Mark all messages in inbox as read.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/inbox/message/read-all</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Token: ...`
+
+```json
+{}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK"
+}
+```
+
+<!-- end -->
+
+<!-- end -->
+
