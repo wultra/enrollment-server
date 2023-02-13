@@ -8,11 +8,11 @@
 
 **Mobile Token**
 
+- [Mobile Token API](./Mobile-Token-API.md)
 - [Operation Extensions](./Operation-Extensions.md)
 - [Operation Data](./Operation-Data.md)
 - [Operation Form Data](./Operation-Form-Data.md)
 - [Offline Signatures](./Offline-Signatures-QR-Code.md)
-- [Mobile Token API](./Mobile-Token-API.md)
 
 **Implementation Tutorials**
 
