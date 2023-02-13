@@ -1,12 +1,7 @@
 # Mobile Token API
 <!-- template api -->
 
-Enrollment Server provides a RESTful API used by the Mobile Token application. The API consists of following parts:
-
-- [Operations API](#operations-api)
-- [Push Registration API](#push-registration-api)
-- [Activation Spawn API](#activation-spawn-api)
-- [Message Inbox API](#message-inbox-api)
+Enrollment Server provides a RESTful API used by the Mobile Token application.
 
 The generated REST API documentation in deployed Enrollment server, and it includes standard PowerAuth RESTful API:
 
