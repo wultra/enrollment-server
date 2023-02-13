@@ -1,4 +1,4 @@
-# Enrollment Server API
+# Mobile Token API
 <!-- template api -->
 
 Enrollment Server provides a RESTful API used by the Mobile Token application. The API consists of following parts:

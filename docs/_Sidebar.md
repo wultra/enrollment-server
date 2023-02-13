@@ -12,8 +12,7 @@
 - [Operation Data](./Operation-Data.md)
 - [Operation Form Data](./Operation-Form-Data.md)
 - [Offline Signatures](./Offline-Signatures-QR-Code.md)
-- [Mobile Token Operations API](./Mobile-Token-Operations-API.md)
-- [Mobile Push Registration API](./Mobile-Push-Registration-API.md)  
+- [Mobile Token API](./Mobile-Token-API.md)
 
 **Implementation Tutorials**
 
