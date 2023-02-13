@@ -19,34 +19,23 @@ Following endpoints are published in Enrollment Server RESTful API:
 <!-- begin remove -->
 ## Methods
 
-##### **Request**
-- Headers:
-    - `Content-Type: application/json`
-- required extensive details stored in `requestObject`
-
-#### **Response**
-- Status Code: `200`
-- Headers:
-    - `Content-Type: application/json`
-- extensive details stored in `responseObject`
-
-#### Operations API
+### Operations API
 
 - `POST` [/api/auth/token/app/operation/list](#get-pending-operations) - List pending Mobile Token operations
 - `POST` [/api/auth/token/app/operation/history](#get-history-of-operations) - Get history of Mobile Token operations
 - `POST` [/api/auth/token/app/operation/authorize](#confirm-operation) - Confirm a Mobile Token operation
 - `POST` [/api/auth/token/app/operation/cancel](#reject-operation) - Reject a Mobile Token operation
 
-#### Push Registration API
+### Push Registration API
 
 - `POST` [/api/push/device/register](#register-for-push-messages-signed) - Register a mobile device for push messages with PowerAuth signature
 - `POST` [/api/push/device/register/token](#register-for-push-messages-token) - Register a mobile device for push messages with PowerAuth token
 
-#### Activation Spawn API
+### Activation Spawn API
 
 - `POST` [/api/activation/code](#activation-code) - Handle request for activation code in activation spawn
 
-#### Message Inbox API
+### Message Inbox API
 
 - `POST` [/api/inbox/count](#inbox-count) - Get Inbox message count
 - `POST` [/api/inbox/message/list](#inbox-message-list) - Get Inbox message list

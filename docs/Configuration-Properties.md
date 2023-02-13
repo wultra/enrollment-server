@@ -44,4 +44,4 @@ The Enrollment Server uses the following public configuration properties:
 | `powerauth.service.correlation-header.enabled` | `false` | Whether correlation header is enabled |
 | `powerauth.service.correlation-header.name` | `X-Correlation-ID` | Correlation header name |
 | `powerauth.service.correlation-header.value.validation-regexp` | `[a-zA-Z0-9\\-]{8,1024}` | Regular expression for correlation header value validation |
-| `logging.pattern.console` | [See application.properties](https://github.com/wultra/enrollment-server/blob/develop/enrollment-server/src/main/resources/application.properties#L160) | Logging pattern for console which includes the correlation header value |
+| `logging.pattern.console` | [See application.properties](../enrollment-server/src/main/resources/application.properties#L82) | Logging pattern for console which includes the correlation header value |
