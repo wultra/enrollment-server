@@ -192,6 +192,7 @@ Get the list with all operations that are pending confirmation.
   ]
 }
 ```
+<!-- end -->
 
 <!-- begin api POST /api/auth/token/app/operation/history -->
 ### Get History of Operations
@@ -296,6 +297,7 @@ Get the list of confirmed or rejected Mobile Token operations.
   ]
 }
 ```
+<!-- end -->
 
 <!-- begin api POST /api/auth/token/app/operation/authorize -->
 ### Confirm Operation
@@ -338,6 +340,7 @@ Confirms an operation with given ID and data. This endpoint requires a signature
   "status": "OK"
 }
 ```
+<!-- end -->
 
 <!-- begin api POST /api/auth/token/app/operation/cancel -->
 ### Reject Operation
@@ -491,6 +494,8 @@ Returned when PowerAuth authentication fails.
   }
 }
 ```
+
+<!-- end -->
 
 <!-- begin api POST /api/push/device/register/token -->
 ### Register for Push Messages (Token)
@@ -663,6 +668,8 @@ Get count of unread messages in Inbox.
 }
 ```
 
+<!-- end -->
+
 <!-- begin api POST /api/inbox/message/list -->
 ### Inbox Message List
 
@@ -770,6 +777,8 @@ Get detail of a message in Inbox.
 }
 ```
 
+<!-- end -->
+
 <!-- begin api POST /api/inbox/message/read -->
 ### Inbox Message Read
 
@@ -811,6 +820,8 @@ Mark a message in inbox as read.
 }
 ```
 
+<!-- end -->
+
 <!-- begin api POST /api/inbox/message/read-all -->
 ### Inbox Message Read All
 
@@ -849,6 +860,3 @@ Mark all messages in inbox as read.
 ```
 
 <!-- end -->
-
-<!-- end -->
-
