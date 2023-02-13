@@ -33,7 +33,7 @@ Following endpoints are published in Enrollment Server RESTful API:
 #### Operations API
 
 - `POST` [/api/auth/token/app/operation/list](#get-pending-operations) - List pending Mobile Token operations
-- `POST` [/api/auth/token/app/operation/history](#get-operations-history) - Get history of Mobile Token operations
+- `POST` [/api/auth/token/app/operation/history](#get-history-of-operations) - Get history of Mobile Token operations
 - `POST` [/api/auth/token/app/operation/authorize](#confirm-operation) - Confirm a Mobile Token operation
 - `POST` [/api/auth/token/app/operation/cancel](#reject-operation) - Reject a Mobile Token operation
 
@@ -211,7 +211,7 @@ Get the list with all operations that are pending confirmation.
 <!-- end -->
 
 <!-- begin api POST /api/auth/token/app/operation/history -->
-### Get Operations History
+### Get History of Operations
 
 Get the list of confirmed or rejected Mobile Token operations. 
 
