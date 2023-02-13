@@ -63,6 +63,8 @@ Stores onboarding processes created for tracking status of user onboarding.
 <!-- begin database table es_onboarding_otp -->
 ### Onboarding OTP Table
 
+#### Schema
+
 Stores onboarding OTP codes used during activation and user verification.
 
 | Name | Type | Info | Note |
@@ -85,6 +87,8 @@ Stores onboarding OTP codes used during activation and user verification.
 
 <!-- begin database table es_identity_verification -->
 ### Identity Verification Table
+
+#### Schema
 
 Stores information related to identity verification within an onboarding process.
 
@@ -110,6 +114,8 @@ Stores information related to identity verification within an onboarding process
 
 <!-- begin database table es_document_verification -->
 ### Document Verification Table
+
+#### Schema
 
 Stores information related to document verification within an identity verification.
 
@@ -145,6 +151,8 @@ Stores information related to document verification within an identity verificat
 <!-- begin database table es_document_data -->
 ### Document Data Table
 
+#### Schema
+
 Stores data for large documents (temporarily) during the identity verification.
 
 | Name | Type | Info | Note |
@@ -160,6 +168,8 @@ Stores data for large documents (temporarily) during the identity verification.
 
 <!-- begin database table es_document_result -->
 ### Document Result Table
+
+#### Schema
 
 Stores result of document verification.
 
