@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.UnknownCurrencyException;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Currency;
 import java.util.Locale;
@@ -34,7 +35,9 @@ import java.util.Locale;
 @Slf4j
 class MonetaryConverter {
 
-    private static final int DEFAULT_FRACTIONS_DIGITS = 2;
+    private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 2;
+    private static final int MAXIMAL_FRACTION_DIGITS = 18;
+
 
     private MonetaryConverter() {
         // hidden constructor
@@ -60,6 +63,7 @@ class MonetaryConverter {
 
     /**
      * Convert the given amount according to the given code and locale.
+     * Amount is rounded down if limit of maximum fraction digits reached.
      *
      * @param amount amount to format
      * @param code currency code
@@ -71,7 +75,8 @@ class MonetaryConverter {
 
         final NumberFormat format = NumberFormat.getInstance(locale);
         format.setMinimumFractionDigits(fractionDigits);
-        format.setMaximumFractionDigits(Integer.MAX_VALUE);
+        format.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
+        format.setRoundingMode(RoundingMode.DOWN);
         return format.format(amount);
     }
 
@@ -82,7 +87,7 @@ class MonetaryConverter {
         } catch (UnknownCurrencyException e) {
             logger.debug("No currency mapping for code={}, most probably not FIAT", code);
             logger.trace("No currency mapping for code={}", code, e);
-            return DEFAULT_FRACTIONS_DIGITS;
+            return DEFAULT_MINIMAL_FRACTION_DIGITS;
         }
     }
 }
