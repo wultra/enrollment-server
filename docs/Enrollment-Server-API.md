@@ -44,7 +44,7 @@ Following endpoints are published in Enrollment Server RESTful API:
 
 #### Activation Spawn API
 
-- `POST` [/api/activation/code](#activation-spawn) - Handle request for activation code in activation spawn
+- `POST` [/api/activation/code](#activation-code) - Handle request for activation code in activation spawn
 
 #### Message Inbox API
 
@@ -81,6 +81,7 @@ All error responses that are produced by the Enrollment Server have the followin
 - `status` - `OK`, `ERROR`
 - `code` - `ERROR_GENERIC`
 - `message` - Message that describes certain error.
+
 
 ## Mobile Token API for Operations
 
@@ -429,7 +430,7 @@ Reject an operation with given ID, with a provided reason.
 | `ECDSA` | ECDSA signature with device private key. |
 
 
-#@ Mobile Push Registration API
+## Mobile Push Registration API
 
 In order to register mobile device to the push notifications, following endpoints are published.
 
@@ -590,5 +591,51 @@ Returned when PowerAuth authentication fails.
 ```
 
 <!-- end -->
+
+## Activation Spawn
+
+Activation Spawn API contains a single endpoint which is used for requesting the activation code.
+
+<!-- begin api POST /api/activation/code -->
+### Activation Code
+
+Handle a request for activation code in activation spawn.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/activation/code</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `X-PowerAuth-Authorization: ...`
+
+```json
+{
+  "requestObject": {
+    "applicationId": "app1",
+    "otp": "12345678"
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK"
+}
+```
 
 <!-- end -->
