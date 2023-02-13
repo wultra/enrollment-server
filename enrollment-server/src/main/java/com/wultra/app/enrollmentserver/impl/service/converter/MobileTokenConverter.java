@@ -239,9 +239,8 @@ public class MobileTokenConverter {
         }
         final Locale locale = LocaleContextHolder.getLocale();
         final String currencyRaw = currency.get();
-        final String currencyFormatted = MonetaryConverter.formatCurrency(currencyRaw, locale);
         final String amountFormatted = MonetaryConverter.formatAmount(amountRaw, currencyRaw, locale);
-        return Optional.of(new AmountAttribute(id, text, amountRaw, currencyRaw, amountFormatted, currencyFormatted));
+        return Optional.of(new AmountAttribute(id, text, amountRaw, currencyRaw, amountFormatted, currencyRaw));
     }
 
     private static Optional<Attribute> buildAmountConversionAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
@@ -275,8 +274,6 @@ public class MobileTokenConverter {
         final Locale locale = LocaleContextHolder.getLocale();
         final String sourceCurrencyRaw = sourceCurrency.get();
         final String targetCurrencyRaw = targetCurrency.get();
-        final String sourceCurrencyFormatted = MonetaryConverter.formatCurrency(sourceCurrencyRaw, locale);
-        final String targetCurrencyFormatted = MonetaryConverter.formatCurrency(targetCurrencyRaw, locale);
         final String sourceAmountFormatted = MonetaryConverter.formatAmount(sourceAmountRaw, sourceCurrencyRaw, locale);
         final String targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
         return Optional.of(AmountConversionAttribute.builder()
@@ -286,11 +283,11 @@ public class MobileTokenConverter {
                 .sourceAmount(sourceAmountRaw)
                 .sourceAmountFormatted(sourceAmountFormatted)
                 .sourceCurrency(sourceCurrencyRaw)
-                .sourceCurrencyFormatted(sourceCurrencyFormatted)
+                .sourceCurrencyFormatted(sourceCurrencyRaw)
                 .targetAmount(targetAmountRaw)
                 .targetAmountFormatted(targetAmountFormatted)
                 .targetCurrency(targetCurrencyRaw)
-                .targetCurrencyFormatted(targetCurrencyFormatted)
+                .targetCurrencyFormatted(targetCurrencyRaw)
                 .build());
     }
 

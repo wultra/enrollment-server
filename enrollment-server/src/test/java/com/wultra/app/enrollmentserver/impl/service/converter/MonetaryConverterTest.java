@@ -34,19 +34,6 @@ class MonetaryConverterTest {
 
     @ParameterizedTest
     @CsvSource({
-            "CZK, en, CZK",
-            "CZK, cs, Kč",
-            "USD, en, $",
-            "USD, cs, US$",
-            "BTC, cs, BTC"
-    })
-    void testFormatCurrency(final String source, final String locale, final String expected) {
-        final String result = MonetaryConverter.formatCurrency(source, new Locale(locale));
-        assertEquals(expected, result);
-    }
-
-    @ParameterizedTest
-    @CsvSource({
             "1710.9817,               CZK, en, '1,710.9817'",
             "1710.9817,               CZK, cs, '1 710,9817'",
             "1710,                    CZK, cs, '1 710,00'",
