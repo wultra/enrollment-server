@@ -199,6 +199,8 @@ public class MobileTokenConverter {
                 return buildKeyValueAttribute(templateParam, params);
             case "IMAGE":
                 return buildImageAttribute(templateParam, params);
+            case "PARTY_INFO":
+                return buildPartyInfoAttribute(templateParam, params);
             default: // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
                 return buildKeyValueAttribute(templateParam, params);
@@ -290,6 +292,18 @@ public class MobileTokenConverter {
         return Optional.of(new ImageAttribute(id, text, thumbnailUrl.get(), originalUrl.get()));
     }
 
+    private static Optional<Attribute> buildPartyInfoAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final PartyInfo partyInfo = PartyInfo.builder()
+                .logoUrl(fetchTemplateParamValueNullable(templateParam, params, "logoUrl"))
+                .name(fetchTemplateParamValueNullable(templateParam, params, "name"))
+                .description(fetchTemplateParamValueNullable(templateParam, params, "description"))
+                .websiteUrl(fetchTemplateParamValueNullable(templateParam, params, "websiteUrl"))
+                .build();
+        return Optional.of(new PartyAttribute(id, text, partyInfo));
+    }
+
     private static Optional<String> fetchTemplateParamValue(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
         final String id = templateParam.getId();
         final Map<String, String> templateParams = templateParam.getParams();
@@ -303,5 +317,10 @@ public class MobileTokenConverter {
         }
         return Optional.ofNullable(templateParams.get(key))
                 .map(params::get);
+    }
+
+    private static String fetchTemplateParamValueNullable(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
+        return fetchTemplateParamValue(templateParam, params, key)
+                .orElse(null);
     }
 }

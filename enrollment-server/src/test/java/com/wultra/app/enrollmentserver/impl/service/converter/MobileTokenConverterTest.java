@@ -364,6 +364,10 @@ class MobileTokenConverterTest {
                 .put("targetAmount", "1710.98")
                 .put("targetCurrency", "USD")
                 .put("dynamic", "true")
+                .put("partyLogoUrl", "https://example.com/img/logo/logo.svg")
+                .put("partyName", "Example Ltd.")
+                .put("partyDescription", "Find out more about Example...")
+                .put("partyUrl", "https://example.com/hello")
                 .build());
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
@@ -418,6 +422,17 @@ class MobileTokenConverterTest {
                 "      \"targetAmount\": \"targetAmount\",\n" +
                 "      \"targetCurrency\": \"targetCurrency\"\n" +
                 "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"id\": \"operation.partyInfo\",\n" +
+                "    \"type\": \"PARTY_INFO\",\n" +
+                "    \"text\": \"Party Info\",\n" +
+                "    \"params\": {\n" +
+                "      \"logoUrl\": \"partyLogoUrl\",\n" +
+                "      \"name\": \"partyName\",\n" +
+                "      \"description\": \"partyDescription\",\n" +
+                "      \"websiteUrl\": \"partyUrl\"\n" +
+                "    }\n" +
                 "  }\n" +
                 "]");
 
@@ -425,7 +440,7 @@ class MobileTokenConverterTest {
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
-        assertEquals(6, attributes.size());
+        assertEquals(7, attributes.size());
         final var atributesIterator = attributes.iterator();
         assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.7", "EUR"), atributesIterator.next());
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), atributesIterator.next());
@@ -445,6 +460,12 @@ class MobileTokenConverterTest {
                 .targetCurrency("USD")
                 .targetCurrencyFormatted("USD")
                 .build(), atributesIterator.next());
+        assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
+                        .logoUrl("https://example.com/img/logo/logo.svg")
+                        .name("Example Ltd.")
+                        .description("Find out more about Example...")
+                        .websiteUrl("https://example.com/hello")
+                        .build()), atributesIterator.next());
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
