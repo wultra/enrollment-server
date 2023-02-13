@@ -34,10 +34,7 @@ import java.util.Locale;
 @Slf4j
 class MonetaryConverter {
 
-    /**
-     * One bitcoin is divisible to eight decimal places (100 millionths of one bitcoin), and this smallest unit is referred to as a satoshi.
-     */
-    private static final int NON_FIAT_FRACTIONS_DIGITS = 8;
+    private static final int DEFAULT_FRACTIONS_DIGITS = 2;
 
     private MonetaryConverter() {
         // hidden constructor
@@ -74,7 +71,7 @@ class MonetaryConverter {
 
         final NumberFormat format = NumberFormat.getInstance(locale);
         format.setMinimumFractionDigits(fractionDigits);
-        format.setMaximumFractionDigits(fractionDigits);
+        format.setMaximumFractionDigits(Integer.MAX_VALUE);
         return format.format(amount);
     }
 
@@ -85,7 +82,7 @@ class MonetaryConverter {
         } catch (UnknownCurrencyException e) {
             logger.debug("No currency mapping for code={}, most probably not FIAT", code);
             logger.trace("No currency mapping for code={}", code, e);
-            return NON_FIAT_FRACTIONS_DIGITS;
+            return DEFAULT_FRACTIONS_DIGITS;
         }
     }
 }

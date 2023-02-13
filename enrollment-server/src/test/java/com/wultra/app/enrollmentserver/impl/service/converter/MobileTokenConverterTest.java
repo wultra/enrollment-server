@@ -455,7 +455,7 @@ class MobileTokenConverterTest {
                 .label("Amount Conversion")
                 .dynamic(true)
                 .sourceAmount(new BigDecimal("1.26"))
-                .sourceAmountFormatted("1.26000000")
+                .sourceAmountFormatted("1.26")
                 .sourceCurrency("ETH")
                 .sourceCurrencyFormatted("ETH")
                 .targetAmount(new BigDecimal("1710.98"))

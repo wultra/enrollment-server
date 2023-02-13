@@ -47,13 +47,13 @@ class MonetaryConverterTest {
 
     @ParameterizedTest
     @CsvSource({
-            "1710.981,    CZK, en, '1,710.98'",
-            "1710.981,    CZK, cs, '1 710,98'",
+            "1710.9817,   CZK, en, '1,710.9817'",
+            "1710.9817,   CZK, cs, '1 710,9817'",
             "1710,        CZK, cs, '1 710,00'",
             "1710,        USD, en, '1,710.00'",
             "1710,        JPY, jp, '1,710'",
-            "1,           BTC, en, '1.00000000'",
-            "0.123456789, BTC, en, '0.12345679'"
+            "1,           BTC, en, '1.00'",
+            "0.123456789, BTC, en, '0.123456789'"
     })
     void testFormatAmount(final String amount, final String code, final String locale, final String expected) {
         final String result = MonetaryConverter.formatAmount(new BigDecimal(amount), code, new Locale(locale));
