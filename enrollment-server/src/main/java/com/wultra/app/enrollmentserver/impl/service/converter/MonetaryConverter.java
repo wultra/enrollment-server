@@ -24,10 +24,11 @@ import javax.money.Monetary;
 import javax.money.UnknownCurrencyException;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.util.Currency;
 import java.util.Locale;
 
 /**
- * Convert amount.
+ * Convert currency and amount.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -40,6 +41,24 @@ class MonetaryConverter {
 
     private MonetaryConverter() {
         // hidden constructor
+    }
+
+    /**
+     * Convert the given currency code and locale.
+     * If there is no specific representation for the given currency and locale, original {@code code} is returned.
+     *
+     * @param code code to format
+     * @param locale locale to be used for the conversion
+     * @return localized currency or original code if there is no mapping available
+     */
+    static String formatCurrency(final String code, final Locale locale) {
+        try {
+            return Currency.getInstance(code).getSymbol(locale);
+        } catch (final IllegalArgumentException e) {
+            logger.debug("No currency mapping for code={}, locale={}", code, locale);
+            logger.trace("No currency mapping for code={}, locale={}", code, locale, e);
+            return code;
+        }
     }
 
     /**
