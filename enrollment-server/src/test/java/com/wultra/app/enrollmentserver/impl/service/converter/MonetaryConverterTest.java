@@ -38,6 +38,15 @@ class MonetaryConverterTest {
             "CZK, cs, Kč",
             "USD, en, $",
             "USD, cs, US$",
+            "UYU, cs, UYU",
+            "UYU, en, UYU",
+            "UYU, uy, UYU",
+            "CAD, cs, CA$",
+            "CAD, ca, CAD",
+            "CAD, en, CA$",
+            "NZD, en, NZ$",
+            "NZD, cs, NZ$",
+            "NZD, nz, NZ$",
             "BTC, cs, BTC"
     })
     void testFormatCurrency(final String source, final String locale, final String expected) {
