@@ -105,7 +105,7 @@ public class MobileTokenService {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
-        request.setApplicationId(List.of(applicationId));
+        request.setApplications(List.of(applicationId));
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
         final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =
