@@ -99,10 +99,11 @@
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.8</swagger-annotations.version>
         <springdoc-openapi.version>1.6.14</springdoc-openapi.version>
+
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
-        <powerauth-crypto.version>1.4.0</powerauth-crypto.version>
-        <powerauth-restful-integration.version>1.4.0</powerauth-restful-integration.version>
-        <powerauth-push.version>1.4.1</powerauth-push.version>
+        <powerauth-crypto.version>1.5.0-SNAPSHOT</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.5.0-SNAPSHOT</powerauth-restful-integration.version>
+        <powerauth-push.version>1.5.0-SNAPSHOT</powerauth-push.version>
 
         <bcprov-jdk18on.version>1.72</bcprov-jdk18on.version>
     </properties>
