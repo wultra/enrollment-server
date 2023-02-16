@@ -99,6 +99,7 @@
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
         <swagger-annotations.version>2.2.8</swagger-annotations.version>
         <springdoc-openapi.version>1.6.14</springdoc-openapi.version>
+        <moneta.version>1.4.2</moneta.version>
 
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
         <powerauth-crypto.version>1.5.0-SNAPSHOT</powerauth-crypto.version>
@@ -192,6 +193,12 @@
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-push-client</artifactId>
                 <version>${powerauth-push.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.javamoney.moneta</groupId>
+                <artifactId>moneta-core</artifactId>
+                <version>${moneta.version}</version>
             </dependency>
 
             <dependency>

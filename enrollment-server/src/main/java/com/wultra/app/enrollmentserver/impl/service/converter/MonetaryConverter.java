@@ -19,6 +19,9 @@ package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.money.UnknownCurrencyException;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -79,9 +82,9 @@ class MonetaryConverter {
 
     private static int getFractionDigits(String code) {
         try {
-            final Currency currency = Currency.getInstance(code);
-            return currency.getDefaultFractionDigits();
-        } catch (IllegalArgumentException e) {
+            final CurrencyUnit currencyUnit = Monetary.getCurrency(code);
+            return currencyUnit.getDefaultFractionDigits();
+        } catch (UnknownCurrencyException e) {
             logger.debug("No currency mapping for code={}, most probably not FIAT", code);
             logger.trace("No currency mapping for code={}", code, e);
             return DEFAULT_MINIMAL_FRACTION_DIGITS;
