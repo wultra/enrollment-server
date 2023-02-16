@@ -53,6 +53,8 @@ class MonetaryConverter {
      */
     static String formatCurrency(final String code, final Locale locale) {
         try {
+            // TODO (racansky, 2023-02-16) we should rely on javax.money.CurrencyUnit instead of java.util.Currency, but there is no support for display name yet
+            // https://github.com/JavaMoney/jsr354-api/issues/58
             return Currency.getInstance(code).getSymbol(locale);
         } catch (final IllegalArgumentException e) {
             logger.debug("No currency mapping for code={}, locale={}", code, locale);
