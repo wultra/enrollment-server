@@ -26,9 +26,11 @@ import com.wultra.security.powerauth.client.model.response.OperationDetailRespon
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -360,7 +362,7 @@ class MobileTokenConverterTest {
                 .put("thumbnailUrl", "https://example.com/123_thumb.jpeg")
                 .put("originalUrl", "https://example.com/123.jpeg")
                 .put("sourceAmount", "1.26")
-                .put("sourceCurrency", "ETC")
+                .put("sourceCurrency", "ETH")
                 .put("targetAmount", "1710.98")
                 .put("targetCurrency", "USD")
                 .put("dynamic", "true")
@@ -436,13 +438,14 @@ class MobileTokenConverterTest {
                 "  }\n" +
                 "]");
 
+        LocaleContextHolder.setLocale(new Locale("en"));
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
         assertEquals(7, attributes.size());
         final var atributesIterator = attributes.iterator();
-        assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.7", "EUR"), atributesIterator.next());
+        assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.70", "€"), atributesIterator.next());
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), atributesIterator.next());
         assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), atributesIterator.next());
         assertEquals(new HeadingAttribute("operation.heading", "Heading"), atributesIterator.next());
@@ -453,12 +456,12 @@ class MobileTokenConverterTest {
                 .dynamic(true)
                 .sourceAmount(new BigDecimal("1.26"))
                 .sourceAmountFormatted("1.26")
-                .sourceCurrency("ETC")
-                .sourceCurrencyFormatted("ETC")
+                .sourceCurrency("ETH")
+                .sourceCurrencyFormatted("ETH")
                 .targetAmount(new BigDecimal("1710.98"))
-                .targetAmountFormatted("1710.98")
+                .targetAmountFormatted("1,710.98")
                 .targetCurrency("USD")
-                .targetCurrencyFormatted("USD")
+                .targetCurrencyFormatted("$")
                 .build(), atributesIterator.next());
         assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
                         .logoUrl("https://example.com/img/logo/logo.svg")
