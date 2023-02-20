@@ -91,7 +91,7 @@
         <maven-deploy-plugin.version>3.0.0</maven-deploy-plugin.version>
         <maven-enforcer-plugin.version>3.2.1</maven-enforcer-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
+        <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-swagger-codegen-plugin.version>3.0.34</maven-swagger-codegen-plugin.version>
         <maven-swagger-codegen-handlebars.version>4.3.0</maven-swagger-codegen-handlebars.version>
 
