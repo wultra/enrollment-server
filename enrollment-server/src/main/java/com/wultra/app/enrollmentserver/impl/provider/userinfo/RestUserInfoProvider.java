@@ -26,6 +26,8 @@ import io.getlime.security.powerauth.rest.api.spring.provider.UserInfoProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 import java.util.Map;
@@ -38,6 +40,8 @@ import java.util.Map;
 @Slf4j
 public class RestUserInfoProvider implements UserInfoProvider {
 
+    private static final MultiValueMap<String, String> EMPTY_HEADERS = new LinkedMultiValueMap<>();
+
     private final RestClient restClient;
 
     public RestUserInfoProvider(final RestClientConfiguration restClientConfig) throws RestClientException {
@@ -47,9 +51,13 @@ public class RestUserInfoProvider implements UserInfoProvider {
     @Override
     public Map<String, Object> fetchUserClaimsForUserId(final UserInfoContext context) {
         final String userId = context.getUserId();
-        logger.info("Fetch claims of user ID: {}", userId);
+        logger.info("Fetching claims of user ID: {}", userId);
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+        queryParams.add("userId", userId);
+
         try {
-            final ResponseEntity<Map<String, Object>> responseEntity = restClient.get("/userinfo/" + userId, ParameterizedTypeReference.forType(Map.class));
+            final ResponseEntity<Map<String, Object>> responseEntity = restClient.get("/private/user-claims", queryParams, EMPTY_HEADERS, ParameterizedTypeReference.forType(Map.class));
             logger.info("Fetched claims of user ID: {}", userId);
             final Map<String, Object> claims = responseEntity.getBody();
             if (claims == null) {
