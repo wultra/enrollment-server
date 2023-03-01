@@ -58,11 +58,14 @@ class RestUserInfoProviderTest {
         mockWebServer.enqueue(new MockResponse()
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON)
                 .setBody("{\n" +
-                        "  \"sub\": \"83692\",\n" +
-                        "  \"name\": \"Petr Adams\",\n" +
-                        "  \"email\": \"petr@example.com\",\n" +
-                        "  \"birthdate\": \"1975-12-31\",\n" +
-                        "  \"https://claims.example.com/department\": \"engineering\"\n" +
+                        "  \"status\": \"OK\",\n" +
+                        "  \"responseObject\": {\n" +
+                        "    \"sub\": \"83692\",\n" +
+                        "    \"name\": \"Petr Adams\",\n" +
+                        "    \"email\": \"petr@example.com\",\n" +
+                        "    \"birthdate\": \"1975-12-31\",\n" +
+                        "    \"https://claims.example.com/department\": \"xxx\"\n" +
+                        "  }\n" +
                         "}"));
 
         final Map<String, Object> result = tested.fetchUserClaimsForUserId(UserInfoContext.builder()

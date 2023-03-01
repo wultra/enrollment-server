@@ -21,11 +21,10 @@ import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
+import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.model.UserInfoContext;
 import io.getlime.security.powerauth.rest.api.spring.provider.UserInfoProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -57,11 +56,17 @@ public class RestUserInfoProvider implements UserInfoProvider {
         queryParams.add("userId", userId);
 
         try {
-            final ResponseEntity<Map<String, Object>> responseEntity = restClient.get("/private/user-claims", queryParams, EMPTY_HEADERS, ParameterizedTypeReference.forType(Map.class));
+            final var response = restClient.getObject("/private/user-claims", queryParams, EMPTY_HEADERS, Map.class);
+            if (!Response.Status.OK.equals(response.getStatus())) {
+                logger.warn("Unable to fetch claims of user ID: {}, status: {}", userId, response.getStatus());
+                return Collections.emptyMap();
+            }
+
             logger.info("Fetched claims of user ID: {}", userId);
-            final Map<String, Object> claims = responseEntity.getBody();
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> claims = response.getResponseObject();
             if (claims == null) {
-                logger.warn("Response claims to fetch claims of user ID: {} is null, {}", userId, responseEntity);
+                logger.warn("Response claims to fetch claims of user ID: {} is null", userId);
                 return Collections.emptyMap();
             }
             logger.debug("Fetched claims of user ID: {}, {}", userId, claims);
