@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
 @Configuration
 @EnableConfigurationProperties
 @Slf4j
-public class PowerAuthRestfulIntegrationConfiguration {
+public class UserInfoProviderConfiguration {
 
     /**
      * Prepare minimal user-info provider.
