@@ -16,7 +16,7 @@
 Database changes are driven by Liquibase.
 
 This is an example how to manually check the Liquibase status.
-Important and fixed parameter is `changeloge-file`.
+Important and fixed parameter is `changelog-file`.
 Others (like URL, username, password) depend on your environment.
 
 ```shell
@@ -39,7 +39,7 @@ liquibase --changelog-file=enrollment-server/src/main/resources/db/changelog/db.
 Database changes are driven by Liquibase.
 
 This is an example how to manually check the Liquibase status.
-Important and fixed parameter is `changeloge-file`.
+Important and fixed parameter is `changelog-file`.
 Others (like URL, username, password) depend on your environment.
 
 ```shell
