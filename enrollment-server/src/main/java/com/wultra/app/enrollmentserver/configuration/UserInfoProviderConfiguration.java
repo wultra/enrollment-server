@@ -68,7 +68,7 @@ public class UserInfoProviderConfiguration {
     @ConfigurationProperties(prefix = "enrollment-server.user-info.rest-provider")
     @Component
     @Getter
-    public class RestUserInfoProviderConfiguration {
+    public static class RestUserInfoProviderConfiguration {
         final RestClientConfiguration restClientConfig = new RestClientConfiguration();
     }
 }

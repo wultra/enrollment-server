@@ -39,14 +39,14 @@ The Enrollment Server uses the following public configuration properties:
 
 ## UserInfoProvider Configuration
 
-| Property                                                                           | Default   | Note                                                                                                                    |
-|------------------------------------------------------------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------|
-| `enrollment-server.user-info.minimal-provider.enabled`                             | `false`   | Whether to register minimal claims provider. Must not be set to `true` when `rest-provider.enabled` set also to `true`. |
-| `enrollment-server.user-info.rest-provider.enabled`                                | `false`   | Whether to register REST provider. Must not be set to `true` when `minimal-provider.enabled` set also to `true`.        |
-| `enrollment-server.user-info.rest-provider.restClientConfig.baseUrl`               | `_empty_` | Base URL of user-info storage.                                                                                          |
-| `enrollment-server.user-info.rest-provider.restClientConfig.httpDigestAuthEnabled` | `false`   | Whether Digest authentication enabled.                                                                                  |
-| `enrollment-server.user-info.rest-provider.restClientConfig.httpDigestUsername`    | `_empty_` | Digest authentication username.                                                                                         |
-| `enrollment-server.user-info.rest-provider.restClientConfig.httpDigestPassword`    | `_empty_` | Digest authentication password.                                                                                         |
+| Property                                                                          | Default   | Note                                                                                                                    |
+|-----------------------------------------------------------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------|
+| `enrollment-server.user-info.minimal-provider.enabled`                            | `false`   | Whether to register minimal claims provider. Must not be set to `true` when `rest-provider.enabled` set also to `true`. |
+| `enrollment-server.user-info.rest-provider.enabled`                               | `false`   | Whether to register REST provider. Must not be set to `true` when `minimal-provider.enabled` set also to `true`.        |
+| `enrollment-server.user-info.rest-provider.restClientConfig.baseUrl`              | `_empty_` | Base URL of user-info storage.                                                                                          |
+| `enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthEnabled` | `false`   | Whether Basic authentication enabled.                                                                                   |
+| `enrollment-server.user-info.rest-provider.restClientConfig.httpBasicUsername`    | `_empty_` | Basic authentication username.                                                                                          |
+| `enrollment-server.user-info.rest-provider.restClientConfig.httpBasicPassword`    | `_empty_` | Basic authentication password.                                                                                          |
 
 ## Correlation HTTP Header Configuration
 
