@@ -3,7 +3,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <changeSet id="enrollment-server-onboarding-20230302-add-tag-1.4.0" author="racansky" labels="enrollment-server-onboarding">
+    <changeSet id="enrollment-server-onboarding-20230302-add-tag-1.4.0" author="Lubos Racansky" labels="enrollment-server-onboarding">
         <tagDatabase tag="enrollment-server-onboarding-1.4.0"/>
     </changeSet>
 
