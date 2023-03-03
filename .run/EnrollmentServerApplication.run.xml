@@ -5,6 +5,7 @@
       <env name="JDBC_DATABASE_SCHEMA" value="powerauth" />
       <env name="JDBC_DATABASE_USERNAME" value="powerauth" />
       <env name="JDBC_DATABASE_PASSWORD" value="" />
+      <env name="ENROLLMENT_SERVER_LIQUIBASE_ENABLED" value="true" />
     </envs>
     <module name="enrollment-server" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.wultra.app.enrollmentserver.EnrollmentServerApplication" />
