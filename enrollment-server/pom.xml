@@ -231,7 +231,7 @@
             </build>
         </profile>
         <profile>
-            <id>embedded-db</id>
+            <id>liquibase</id>
             <dependencies>
                 <dependency>
                     <groupId>org.liquibase</groupId>
