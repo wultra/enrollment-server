@@ -251,7 +251,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${basedir}/target/classes/db/changelog/changesets/${project.artifactId}</outputDirectory>
+                                    <outputDirectory>${basedir}/target/classes/db/changelog</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>${project.parent.basedir}/docs/db/changelog/changesets/${project.artifactId}</directory>
