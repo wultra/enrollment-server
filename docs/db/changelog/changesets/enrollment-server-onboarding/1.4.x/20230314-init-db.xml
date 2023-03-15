@@ -41,9 +41,6 @@
             <column name="custom_data" type="varchar(1024)">
                 <constraints nullable="false" />
             </column>
-            <column name="fds_data" type="text">
-                <constraints nullable="false" />
-            </column>
             <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
                 <constraints nullable="false" />
             </column>
