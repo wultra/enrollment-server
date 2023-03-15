@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="es_operation_template_seq"/>
+            </not>
+        </preConditions>
+        <comment>Create a new sequence es_operation_template_seq</comment>
+        <createSequence sequenceName="es_operation_template_seq" cacheSize="20"/>
+    </changeSet>
+
+    <changeSet id="2" logicalFilePath="enrollment-server/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="es_operation_template"/>
+            </not>
+        </preConditions>
+        <comment>Create a new sequence es_operation_template_seq</comment>
+        <createTable tableName="es_operation_template">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="placeholder" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="language" type="varchar(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attributes" type="text" />
+            <column name="ui" type="text" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" logicalFilePath="enrollment-server/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_operation_template_placeholder"/>
+            </not>
+        </preConditions>
+        <comment>Create a new unique index on es_operation_template(placeholder, language)</comment>
+        <createIndex tableName="es_operation_template" indexName="es_operation_template_placeholder" unique="true">
+            <column name="placeholder" />
+            <column name="language" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
