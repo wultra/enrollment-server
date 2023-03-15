@@ -432,7 +432,7 @@
             <column name="filename" type="varchar(256)">
                 <constraints nullable="false" />
             </column>
-            <column name="data" type="blob">
+            <column name="data" type="${blob_type}">
                 <constraints nullable="false" />
             </column>
             <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
