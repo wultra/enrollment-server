@@ -5,7 +5,6 @@
 
     <include file="20230314-init-db.xml" relativeToChangelogFile="true" />
     <include file="20230314-shedlock.xml" relativeToChangelogFile="true" />
-    <include file="20230314-audit.xml" relativeToChangelogFile="true" />
     <include file="20230315-add-tag-1.4.0.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
