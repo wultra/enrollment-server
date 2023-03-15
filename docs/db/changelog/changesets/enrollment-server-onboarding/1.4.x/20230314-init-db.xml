@@ -101,94 +101,6 @@
     <changeSet id="7" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="es_onboarding_otp"/>
-            </not>
-        </preConditions>
-        <comment>Create a new table es_onboarding_otp</comment>
-        <createTable tableName="es_onboarding_otp">
-            <column name="id" type="varchar(36)">
-                <constraints primaryKey="true"/>
-            </column>
-            <column name="process_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_onboarding_process_id" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
-            </column>
-            <column name="identity_verification_id" type="varchar(36)">
-                <constraints foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id" />
-            </column>
-            <column name="otp_code" type="varchar(32)">
-                <constraints nullable="false" />
-            </column>
-            <column name="status" type="varchar(32)">
-                <constraints nullable="false" />
-            </column>
-            <column name="type" type="varchar(32)">
-                <constraints nullable="false" />
-            </column>
-            <column name="error_detail" type="varchar(256)" />
-            <column name="error_origin" type="varchar(256)" />
-            <column name="failed_attempts" type="integer" />
-            <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
-                <constraints nullable="false" />
-            </column>
-            <column name="timestamp_expiration" type="timestamp" />
-            <column name="timestamp_last_updated" type="timestamp" />
-            <column name="timestamp_verified" type="timestamp" />
-            <column name="timestamp_failed" type="timestamp" />
-        </createTable>
-    </changeSet>
-
-    <!--  PostgreSQL does not create indexes on foreign keys automatically  -->
-    <changeSet id="8" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <indexExists tableName="es_onboarding_otp" indexName="onboarding_process"/>
-            </not>
-        </preConditions>
-        <comment>Create a new index on es_onboarding_otp(process_id)</comment>
-        <createIndex tableName="es_onboarding_otp" indexName="onboarding_process">
-            <column name="process_id" />
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="9" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_status"/>
-            </not>
-        </preConditions>
-        <comment>Create a new index on es_onboarding_otp(status)</comment>
-        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_status">
-            <column name="status" />
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="10" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_1"/>
-            </not>
-        </preConditions>
-        <comment>Create a new index on es_onboarding_otp(timestamp_created)</comment>
-        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_1">
-            <column name="timestamp_created" />
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="11" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_2"/>
-            </not>
-        </preConditions>
-        <comment>Create a new index on es_onboarding_otp(timestamp_last_updated)</comment>
-        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_2">
-            <column name="timestamp_last_updated" />
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="12" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions onFail="MARK_RAN">
-            <not>
                 <tableExists tableName="es_identity_verification"/>
             </not>
         </preConditions>
@@ -227,7 +139,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="13" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="8" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_activation"/>
@@ -239,7 +151,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="14" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="9" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_user"/>
@@ -251,7 +163,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="15" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="10" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_status"/>
@@ -263,7 +175,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="16" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="11" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_phase"/>
@@ -275,7 +187,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="17" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="12" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_timestamp_1"/>
@@ -287,7 +199,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="18" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="13" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_identity_verification" indexName="identity_verif_timestamp_2"/>
@@ -299,7 +211,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="19" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="14" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="es_document_verification"/>
@@ -349,7 +261,7 @@
     </changeSet>
 
     <!--  PostgreSQL does not create indexes on foreign keys automatically  -->
-    <changeSet id="20" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
+    <changeSet id="15" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
         <preConditions>
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_ident_verif" />
@@ -361,7 +273,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="21" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="16" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions>
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_activation" />
@@ -373,7 +285,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="22" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="17" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions>
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_status" />
@@ -385,7 +297,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="23" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="18" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions>
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_timestamp_1" />
@@ -397,7 +309,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="24" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="19" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions>
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_timestamp_2" />
@@ -409,7 +321,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="25" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+    <changeSet id="20" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="es_document_data"/>
@@ -436,6 +348,94 @@
                 <constraints nullable="false" />
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="21" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="es_onboarding_otp"/>
+            </not>
+        </preConditions>
+        <comment>Create a new table es_onboarding_otp</comment>
+        <createTable tableName="es_onboarding_otp">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="process_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_es_onboarding_process_id" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
+            </column>
+            <column name="identity_verification_id" type="varchar(36)">
+                <constraints foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id" />
+            </column>
+            <column name="otp_code" type="varchar(32)">
+                <constraints nullable="false" />
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false" />
+            </column>
+            <column name="type" type="varchar(32)">
+                <constraints nullable="false" />
+            </column>
+            <column name="error_detail" type="varchar(256)" />
+            <column name="error_origin" type="varchar(256)" />
+            <column name="failed_attempts" type="integer" />
+            <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
+                <constraints nullable="false" />
+            </column>
+            <column name="timestamp_expiration" type="timestamp" />
+            <column name="timestamp_last_updated" type="timestamp" />
+            <column name="timestamp_verified" type="timestamp" />
+            <column name="timestamp_failed" type="timestamp" />
+        </createTable>
+    </changeSet>
+
+    <!--  PostgreSQL does not create indexes on foreign keys automatically  -->
+    <changeSet id="22" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_onboarding_otp" indexName="onboarding_process"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_onboarding_otp(process_id)</comment>
+        <createIndex tableName="es_onboarding_otp" indexName="onboarding_process">
+            <column name="process_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="23" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_status"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_onboarding_otp(status)</comment>
+        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_status">
+            <column name="status" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="24" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_1"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_onboarding_otp(timestamp_created)</comment>
+        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_1">
+            <column name="timestamp_created" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="25" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_2"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_onboarding_otp(timestamp_last_updated)</comment>
+        <createIndex tableName="es_onboarding_otp" indexName="onboarding_otp_timestamp_2">
+            <column name="timestamp_last_updated" />
+        </createIndex>
     </changeSet>
 
     <changeSet id="26" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
