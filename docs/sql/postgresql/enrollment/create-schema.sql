@@ -31,3 +31,5 @@ CREATE TABLE es_operation_template (
     attributes TEXT,
     ui TEXT
 );
+
+CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
