@@ -40,8 +40,8 @@
     <Parameter name="enrollment-server.activation-spawn.enabled" value="${ENROLLMENT_SERVER_ACTIVATION_SPAWN_ENABLED}"/>
 
     <!--  User-info configuration  -->
-    <Parameter name="enrollment-server.user-info.minimal-provider.enabled" value="${ENROLLMENT_SERVER_USER_INFO_MINIMAL_ENABLED}"/>
-    <Parameter name="enrollment-server.user-info.rest-provider.enabled" value="${ENROLLMENT_SERVER_USER_INFO_REST_ENABLED}"/>
+    <Parameter name="enrollment-server.user-info.minimal-provider.enabled" value="${ENROLLMENT_SERVER_USER_INFO_MINIMAL_ENABLED:false}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.enabled" value="${ENROLLMENT_SERVER_USER_INFO_REST_ENABLED:false}"/>
     <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.baseUrl" value="${ENROLLMENT_SERVER_USER_INFO_REST_URL}"/>
     <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthEnabled" value="${ENROLLMENT_SERVER_USER_INFO_REST_BASIC_ENABLED}"/>
     <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthUsername" value="${ENROLLMENT_SERVER_USER_INFO_REST_BASIC_USERNAME}"/>
