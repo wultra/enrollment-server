@@ -260,9 +260,8 @@
         </createTable>
     </changeSet>
 
-    <!--  PostgreSQL does not create indexes on foreign keys automatically  -->
-    <changeSet id="15" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
-        <preConditions>
+    <changeSet id="15" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_ident_verif" />
             </not>
@@ -274,7 +273,7 @@
     </changeSet>
 
     <changeSet id="16" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_activation" />
             </not>
@@ -286,7 +285,7 @@
     </changeSet>
 
     <changeSet id="17" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_status" />
             </not>
@@ -298,7 +297,7 @@
     </changeSet>
 
     <changeSet id="18" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_timestamp_1" />
             </not>
@@ -310,7 +309,7 @@
     </changeSet>
 
     <changeSet id="19" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="document_verif_timestamp_2" />
             </not>
@@ -389,8 +388,7 @@
         </createTable>
     </changeSet>
 
-    <!--  PostgreSQL does not create indexes on foreign keys automatically  -->
-    <changeSet id="22" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
+    <changeSet id="22" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_onboarding_otp" indexName="onboarding_process"/>
@@ -439,7 +437,7 @@
     </changeSet>
 
     <changeSet id="26" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_data" indexName="document_data_activation" />
             </not>
@@ -451,7 +449,7 @@
     </changeSet>
 
     <changeSet id="27" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_data" indexName="document_data_timestamp" />
             </not>
@@ -491,9 +489,8 @@
         </createTable>
     </changeSet>
 
-    <!-- PostgreSQL does not create indexes on foreign keys automatically -->
-    <changeSet id="29" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky" dbms="postgresql">
-        <preConditions>
+    <changeSet id="29" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_result" indexName="document_verif_result" />
             </not>
