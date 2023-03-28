@@ -204,13 +204,12 @@ public class VerificationProcessingService {
      * @param docResult Document result.
      * @param docVerificationResult Document verification result.
      */
-    private void updateDocumentResult(DocumentResultEntity docResult,
-                                      DocumentVerificationResult docVerificationResult) {
-        if (StringUtils.isNotBlank(docResult.getErrorDetail())) {
+    private void updateDocumentResult(DocumentResultEntity docResult, DocumentVerificationResult docVerificationResult) {
+        if (StringUtils.isNotBlank(docVerificationResult.getErrorDetail())) {
             logger.info("Document result ID: {} failed: {}", docResult.getId(), docVerificationResult.getErrorDetail());
             docResult.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        } else if (StringUtils.isNotBlank(docResult.getRejectReason())) {
+        } else if (StringUtils.isNotBlank(docVerificationResult.getRejectReason())) {
             logger.info("Document result ID: {} rejected: {}", docResult.getId(), docVerificationResult.getRejectReason());
             docResult.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
