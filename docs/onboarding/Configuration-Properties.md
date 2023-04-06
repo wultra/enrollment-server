@@ -122,7 +122,6 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.presence-check.iproov.ensureUserIdValueEnabled` | `false` | Whether iProov user ID value should be validated and trimmed. |
 | `enrollment-server-onboarding.presence-check.iproov.riskProfile` |  | iProov risk profile. |
 | `enrollment-server-onboarding.presence-check.iproov.serviceBaseUrl` |  | Base REST service URL for iProov.  |
-| `enrollment-server-onboarding.presence-check.iproov.serviceHostname` |  | Hostname to be used for iProov REST service calls. |
 | `enrollment-server-onboarding.presence-check.iproov.serviceUserAgent` | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to iProov REST service. |
 | `enrollment-server-onboarding.presence-check.iproov.restClientConfig.acceptInvalidSslCertificate` | `false` | Whether invalid SSL certificate is accepted when calling Zen ID REST service.  |
 | `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize` | `10485760` | Maximum in memory size of HTTP requests when calling iProov REST service. |

@@ -9,24 +9,3 @@ This guide contains instructions for migration from PowerAuth Enrollment Server 
 ### Drop MySQL Support
 
 Since version `1.5.0`, MySQL database is not supported anymore.
-
-
-### FDS Data
-
-A new column `fds_data` has been added to the table `es_onboarding_process`.
-
-
-#### PostgreSQL
-
-```sql
-ALTER TABLE es_onboarding_process
-    ADD COLUMN fds_data TEXT;
-```
-
-
-#### Oracle
-
-```sql
-ALTER TABLE es_onboarding_process
-    ADD fds_data CLOB;
-```
