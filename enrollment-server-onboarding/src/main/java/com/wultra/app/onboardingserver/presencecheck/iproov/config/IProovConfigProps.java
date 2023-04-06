@@ -63,11 +63,6 @@ public class IProovConfigProps {
     private String serviceBaseUrl;
 
     /**
-     * Service hostname
-     */
-    private String serviceHostname;
-
-    /**
      * Identification of the application calling the REST services passed as the User-Agent header
      */
     private String serviceUserAgent;

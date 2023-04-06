@@ -17,7 +17,6 @@ Following system variables need to be defined:
 - IPROOV_ASSURANCE_TYPE - assurance type of the claim, accepts `genuine_presence` (default) or `liveness` values
 - IPROOV_RISK_PROFILE - optional configuration of risk tolerance for an authentication attempt
 - IPROOV_SERVICE_BASE_URL - e.g. `https://secure.iproov.me/api/v2`
-- IPROOV_SERVICE_HOSTNAME - hostname value where the service runs, used in the `Host` header, e.g. `secure.iproov.me`
 
 ### ZenID
 

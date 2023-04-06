@@ -59,7 +59,6 @@ public class IProovConfig {
     @Bean("restClientIProov")
     public RestClient restClientIProov(IProovConfigProps configProps) throws RestClientException {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.HOST, configProps.getServiceHostname());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
         RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();

@@ -3,6 +3,7 @@
 Onboarding server is used for verifying user identity using personal identity documents and a video presence check.
 
 The following chapters are available:
+- [Migration Instructions](./Migration-Instructions.md)
 - [Configuration Properties](./Configuration-Properties.md)
 - [Database Structure](./Database-Structure.md)
 - [Deploying Onboarding Server](./Deploying-Onboarding-Server.md)
