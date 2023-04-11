@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
+@ActiveProfiles("test")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.mock"})
 @EnableConfigurationProperties
 class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {

@@ -42,7 +42,7 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
+@ActiveProfiles("test")
 @Transactional
 @Sql
 class ActivationCleaningServiceTest {

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
+@ActiveProfiles("test")
 @Transactional
 class CleaningServiceTest {
 

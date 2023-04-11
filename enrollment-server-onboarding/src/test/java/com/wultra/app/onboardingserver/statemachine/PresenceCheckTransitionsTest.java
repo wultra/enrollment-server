@@ -51,7 +51,7 @@ import static org.mockito.Mockito.*;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("test-onboarding")
+@ActiveProfiles("test")
 @Transactional
 class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 

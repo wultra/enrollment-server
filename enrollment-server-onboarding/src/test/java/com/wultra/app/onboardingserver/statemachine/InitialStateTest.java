@@ -30,7 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("test-onboarding")
+@ActiveProfiles("test")
 class InitialStateTest extends AbstractStateMachineTest {
 
     @Autowired

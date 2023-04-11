@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("test-onboarding")
+@ActiveProfiles("test")
 class InitialTransitionTest extends AbstractStateMachineTest {
 
     @Autowired
