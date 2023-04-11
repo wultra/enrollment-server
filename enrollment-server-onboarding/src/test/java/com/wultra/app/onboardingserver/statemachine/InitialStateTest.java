@@ -24,15 +24,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test-onboarding")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class InitialStateTest extends AbstractStateMachineTest {
 
     @Autowired
