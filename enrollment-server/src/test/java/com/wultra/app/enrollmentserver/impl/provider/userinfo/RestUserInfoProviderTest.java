@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +51,7 @@ class RestUserInfoProviderTest {
 
         final RestClientConfiguration restClientConfig = new RestClientConfiguration();
         restClientConfig.setBaseUrl(mockWebServer.url("user-data-store").toString());
-        tested = new RestUserInfoProvider(restClientConfig);
+        tested = new RestUserInfoProvider(restClientConfig, Collections.emptySet());
     }
 
     @Test

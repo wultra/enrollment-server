@@ -22,6 +22,7 @@ import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
 import io.getlime.core.rest.model.base.response.Response;
+import io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage;
 import io.getlime.security.powerauth.rest.api.spring.model.UserInfoContext;
 import io.getlime.security.powerauth.rest.api.spring.provider.UserInfoProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * REST specialization of {@link UserInfoProvider}.
@@ -43,8 +45,16 @@ public class RestUserInfoProvider implements UserInfoProvider {
 
     private final RestClient restClient;
 
-    public RestUserInfoProvider(final RestClientConfiguration restClientConfig) throws RestClientException {
+    private final Set<UserInfoStage> allowedStages;
+
+    public RestUserInfoProvider(final RestClientConfiguration restClientConfig, Set<UserInfoStage> allowedStages) throws RestClientException {
         restClient = new DefaultRestClient(restClientConfig);
+        this.allowedStages = allowedStages;
+    }
+
+    @Override
+    public boolean shouldReturnUserInfo(final UserInfoContext context) {
+        return allowedStages.contains(context.getStage());
     }
 
     @Override

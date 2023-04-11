@@ -20,9 +20,11 @@ package com.wultra.app.enrollmentserver.configuration;
 import com.wultra.app.enrollmentserver.impl.provider.userinfo.RestUserInfoProvider;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
+import io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage;
 import io.getlime.security.powerauth.rest.api.spring.provider.MinimalClaimsUserInfoProvider;
 import io.getlime.security.powerauth.rest.api.spring.provider.UserInfoProvider;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,6 +32,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
+
+import static io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage.USER_INFO_ENDPOINT;
 
 /**
  * Configuration of PowerAuth Restful Integration.
@@ -62,13 +68,15 @@ public class UserInfoProviderConfiguration {
     @ConditionalOnProperty(value = "enrollment-server.user-info.rest-provider.enabled", havingValue = "true")
     public UserInfoProvider restUserInfoProvider(RestUserInfoProviderConfiguration restUserInfoProviderConfiguration) throws RestClientException {
         logger.info("Registering RestUserInfoProvider");
-        return new RestUserInfoProvider(restUserInfoProviderConfiguration.restClientConfig);
+        return new RestUserInfoProvider(restUserInfoProviderConfiguration.restClientConfig, restUserInfoProviderConfiguration.getAllowedStages());
     }
 
     @ConfigurationProperties(prefix = "enrollment-server.user-info.rest-provider")
     @Component
     @Getter
+    @Setter
     public static class RestUserInfoProviderConfiguration {
-        final RestClientConfiguration restClientConfig = new RestClientConfiguration();
+        private RestClientConfiguration restClientConfig = new RestClientConfiguration();
+        private Set<UserInfoStage> allowedStages = Set.of(USER_INFO_ENDPOINT);
     }
 }
