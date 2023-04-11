@@ -38,8 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck.mock"})
+@ActiveProfiles("test")
+@ComponentScan(basePackages = "com.wultra.app.onboardingserver.presencecheck.mock")
 @EnableConfigurationProperties
 class WultraMockPresenceCheckProviderTest {
 

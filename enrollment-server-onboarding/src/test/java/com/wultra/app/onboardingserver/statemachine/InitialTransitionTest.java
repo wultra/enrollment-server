@@ -31,7 +31,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
@@ -42,10 +41,9 @@ import static org.mockito.Mockito.when;
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
-@ActiveProfiles("test-onboarding")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class InitialTransitionTest extends AbstractStateMachineTest {
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test")
+class InitialTransitionTest extends AbstractStateMachineTest {
 
     @Autowired
     private StateMachineService stateMachineService;
@@ -57,7 +55,7 @@ public class InitialTransitionTest extends AbstractStateMachineTest {
     private IdentityVerificationCreateService identityVerificationCreateService;
 
     @Test
-    public void testInitialTransition() throws Exception {
+    void testInitialTransition() throws Exception {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.prepareStateMachine(PROCESS_ID, OnboardingState.INITIAL, null);
 
