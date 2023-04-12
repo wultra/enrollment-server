@@ -53,7 +53,7 @@ public class UserInfoProviderConfiguration {
      * @return user-info provider.
      */
     @Bean
-    @ConditionalOnProperty(value = "enrollment-server.user-info.minimal-provider.enabled", havingValue = "true")
+    @ConditionalOnProperty(value = "enrollment-server.user-info.provider", havingValue = "MINIMAL")
     public UserInfoProvider minimalUserInfoProvider() {
         logger.info("Registering MinimalClaimsUserInfoProvider");
         return new MinimalClaimsUserInfoProvider();
@@ -65,7 +65,7 @@ public class UserInfoProviderConfiguration {
      * @return user-info provider.
      */
     @Bean
-    @ConditionalOnProperty(value = "enrollment-server.user-info.rest-provider.enabled", havingValue = "true")
+    @ConditionalOnProperty(value = "enrollment-server.user-info.provider", havingValue = "REST")
     public UserInfoProvider restUserInfoProvider(RestUserInfoProviderConfiguration restUserInfoProviderConfiguration) throws RestClientException {
         logger.info("Registering RestUserInfoProvider");
         return new RestUserInfoProvider(restUserInfoProviderConfiguration.restClientConfig, restUserInfoProviderConfiguration.getAllowedStages());
