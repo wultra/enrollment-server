@@ -24,7 +24,10 @@ import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerification
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.*;
+import com.wultra.security.powerauth.client.model.request.ListActivationFlagsRequest;
+import com.wultra.security.powerauth.client.model.request.RemoveActivationFlagsRequest;
+import com.wultra.security.powerauth.client.model.request.UpdateActivationFlagsRequest;
+import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

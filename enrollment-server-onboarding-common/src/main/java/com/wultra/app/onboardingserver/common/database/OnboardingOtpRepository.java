@@ -18,9 +18,9 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -60,13 +60,14 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
      *
      * @param ids OTP IDs
      * @param timestampExpired last updated and failed timestamp
+     * @param errorOrigin error origin
      */
     @Modifying
     @Query("UPDATE OnboardingOtpEntity o SET " +
             "o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
             "o.timestampLastUpdated = :timestampExpired, " +
             "o.errorDetail = '" + OnboardingOtpEntity.ERROR_EXPIRED + "', " +
-            "o.errorOrigin = 'OTP_VERIFICATION', " +
+            "o.errorOrigin = com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.OTP_VERIFICATION, " +
             "o.timestampFailed = :timestampExpired " +
             "WHERE o.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired);

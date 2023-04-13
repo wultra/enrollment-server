@@ -17,9 +17,8 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Specialization of {@link PostApprovalScreen} for redirecting the user to the merchant website or application.

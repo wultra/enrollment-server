@@ -39,11 +39,11 @@ import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResp
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**

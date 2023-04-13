@@ -121,7 +121,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         }
 
         final EnrolResponse enrolResponse = parseResponse(responseEntityEnrol.getBody(), EnrolResponse.class);
-        if (!enrolResponse.isSuccess()) {
+        if (!enrolResponse.getSuccess()) {
             throw new PresenceCheckException("Not successful enrol of a user image to iProov, " + id);
         }
     }
@@ -189,7 +189,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         final PresenceCheckResult result = new PresenceCheckResult();
 
         final ClaimValidateResponse response = parseResponse(responseEntity.getBody(), ClaimValidateResponse.class);
-        if (response.isPassed()) {
+        if (response.getPassed()) {
             result.setStatus(PresenceCheckStatus.ACCEPTED);
 
             if (ifFrameAvailable(response)) {

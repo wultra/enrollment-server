@@ -17,9 +17,8 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Request for online token signature verification.

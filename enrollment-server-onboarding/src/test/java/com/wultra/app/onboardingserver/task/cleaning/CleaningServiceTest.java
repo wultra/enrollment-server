@@ -20,14 +20,13 @@ package com.wultra.app.onboardingserver.task.cleaning;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.*;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.PROCESS_LIMIT_CHECK;
 import static org.junit.jupiter.api.Assertions.*;
