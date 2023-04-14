@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="EnrollmentServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="dev" />
+    <option name="DEBUG_MODE" value="true" />
     <envs>
       <env name="JDBC_DATABASE_SCHEMA" value="powerauth" />
       <env name="JDBC_DATABASE_USERNAME" value="powerauth" />
