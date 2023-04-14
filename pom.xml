@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.10</version>
+        <version>3.0.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -84,21 +84,12 @@
     </modules>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <openapi-generator-maven-plugin.version>6.5.0</openapi-generator-maven-plugin.version>
 
-        <java.version>11</java.version>
-        <maven.compiler.release>${java.version}</maven.compiler.release>
-        <maven-deploy-plugin.version>3.0.0</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.2.1</maven-enforcer-plugin.version>
-        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
-        <maven-swagger-codegen-plugin.version>3.0.34</maven-swagger-codegen-plugin.version>
-        <maven-swagger-codegen-handlebars.version>4.3.0</maven-swagger-codegen-handlebars.version>
-
-        <shedlock-spring.version>4.44.0</shedlock-spring.version>
+        <shedlock-spring.version>5.1.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
-        <swagger-annotations.version>2.2.8</swagger-annotations.version>
-        <springdoc-openapi.version>1.6.14</springdoc-openapi.version>
+        <swagger-annotations-jakarta.version>2.2.8</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.1.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
@@ -197,8 +188,8 @@
 
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-annotations</artifactId>
-                <version>${swagger-annotations.version}</version>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations-jakarta.version}</version>
             </dependency>
 
             <!-- Bouncy Castle -->
@@ -211,13 +202,8 @@
             <!-- Documentation -->
             <dependency>
                 <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-ui</artifactId>
-                <version>${springdoc-openapi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-security</artifactId>
-                <version>${springdoc-openapi.version}</version>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

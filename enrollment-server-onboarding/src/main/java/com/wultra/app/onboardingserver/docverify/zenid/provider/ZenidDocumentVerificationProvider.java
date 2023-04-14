@@ -319,7 +319,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         final List<String> errors = new ArrayList<>();
         if (validations != null) {
             validations.forEach(validation -> {
-                if (validation.isOk()) {
+                if (Boolean.TRUE.equals(validation.getOk())) {
                     return;
                 }
                 validation.getIssues().forEach(issue -> errors.add(issue.getIssueDescription()));
@@ -503,7 +503,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
                 // Find a first failed validation, use its description as the rejected reason for the document
                 Optional<ZenidWebInvestigationValidatorResponse> failedValidation = validations.stream()
-                        .filter(validation -> !validation.isOk())
+                        .filter(validation -> !Boolean.TRUE.equals(validation.getOk()))
                         // Sort the validations by difference between the actual score and the accepted score value
                         .max(Comparator.comparingInt((value -> value.getAcceptScore() - value.getScore())));
                 if (failedValidation.isPresent()) {
@@ -551,7 +551,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         result.setCode(value.getCode());
         result.setName(value.getName());
         result.setScore(value.getScore());
-        result.setOk(value.isOk());
+        result.setOk(value.getOk());
         return result;
     }
 

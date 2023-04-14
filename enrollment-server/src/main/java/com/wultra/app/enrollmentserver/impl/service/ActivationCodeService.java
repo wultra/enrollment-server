@@ -26,11 +26,11 @@ import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestVali
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
 import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationOtpValidation;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ActivationOtpValidation;
-import com.wultra.security.powerauth.client.v3.AddActivationFlagsRequest;
-import com.wultra.security.powerauth.client.v3.InitActivationRequest;
-import com.wultra.security.powerauth.client.v3.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.request.AddActivationFlagsRequest;
+import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.extern.slf4j.Slf4j;

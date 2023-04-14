@@ -21,7 +21,6 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateRequest;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.EnrolImageBody;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -125,7 +124,7 @@ public class IProovRestApiService {
         bodyBuilder.part("api_key", configProps.getApiKey());
         bodyBuilder.part("secret", configProps.getApiSecret());
         bodyBuilder.part("rotation", 0);
-        bodyBuilder.part("source", EnrolImageBody.SourceEnum.OID.toString());
+        bodyBuilder.part("source", "oid");
         bodyBuilder.part("image", new ByteArrayResource(photo.getData()) {
 
             @Override

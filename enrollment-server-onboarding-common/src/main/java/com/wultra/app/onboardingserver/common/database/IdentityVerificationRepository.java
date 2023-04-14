@@ -112,7 +112,7 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
     @Modifying
     @Query("UPDATE IdentityVerificationEntity i SET " +
             "i.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED, " +
-            "i.status = com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED, " +
+            "i.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED, " +
             "i.timestampLastUpdated = :timestampExpired, " +
             "i.timestampFailed = :timestampExpired, " +
             "i.errorDetail = :errorDetail, " +
