@@ -154,8 +154,8 @@
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>${swagger-annotations.version}</version>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <version>${swagger-annotations-jakarta.version}</version>
         </dependency>
 
         <!-- For run at Apple M1 architecture -->

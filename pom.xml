@@ -88,8 +88,8 @@
 
         <shedlock-spring.version>5.1.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.0</spring-statemachine.version>
-        <swagger-annotations.version>2.2.8</swagger-annotations.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.0.4</springdoc-openapi-starter-webmvc-ui.version>
+        <swagger-annotations-jakarta.version>2.2.8</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.1.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
@@ -188,8 +188,8 @@
 
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-annotations</artifactId>
-                <version>${swagger-annotations.version}</version>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations-jakarta.version}</version>
             </dependency>
 
             <!-- Bouncy Castle -->
