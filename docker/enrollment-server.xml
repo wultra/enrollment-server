@@ -17,7 +17,7 @@
     <Parameter name="spring.jpa.database-platform" value="${ENROLLMENT_SERVER_JPA_DATABASE_PLATFORM}"/>
 
     <!-- Database Lock Timeout Configuration -->
-    <Parameter name="spring.jpa.properties.javax.persistence.lock.timeout" value="${ENROLLMENT_SERVER_JPA_LOCK_TIMEOUT}"/>
+    <Parameter name="spring.jpa.properties.jakarta.persistence.lock.timeout" value="${ENROLLMENT_SERVER_JPA_LOCK_TIMEOUT}"/>
 
     <!-- Database Configuration - JNDI -->
     <Parameter name="spring.datasource.jndi-name" value="${ENROLLMENT_SERVER_DATASOURCE_JNDI_NAME}"/>
