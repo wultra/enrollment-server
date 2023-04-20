@@ -23,6 +23,11 @@
             <groupId>io.getlime.core</groupId>
             <artifactId>rest-model-base</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
