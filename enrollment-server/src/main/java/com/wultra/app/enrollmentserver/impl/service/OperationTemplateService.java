@@ -44,7 +44,7 @@ public class OperationTemplateService {
     }
 
     /**
-     * Try to find the operation template for the given type and language. Falling back to EN locale.
+     * Find the operation template for the given type and language. Falling back to EN locale.
      *
      * @param operationType Operation type.
      * @param language Template language.
