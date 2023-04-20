@@ -40,11 +40,13 @@ import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service responsible for mobile token features.
@@ -52,6 +54,7 @@ import java.util.List;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Service
+@Slf4j
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
@@ -117,10 +120,15 @@ public class MobileTokenService {
         for (OperationDetailResponse operationDetail: pendingList) {
             final String activationFlag = operationDetail.getActivationFlag();
             if (activationFlag == null || activationFlags.contains(activationFlag)) { // only return data if there is no flag, or if flag matches flags of activation
-                final OperationTemplateEntity operationTemplate = operationTemplateService.prepareTemplate(operationDetail.getOperationType(), language);
-                final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate);
+                final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
+                if (operationTemplate.isEmpty()) {
+                    logger.warn("No template found for operationType={}, skipping the entry.", operationDetail.getOperationType());
+                    continue;
+                }
+                final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
                 responseObject.add(operation);
-                if (responseObject.size() >= OPERATION_LIST_LIMIT) { // limit the list size in response
+                if (responseObject.size() >= OPERATION_LIST_LIMIT) {
+                    logger.info("Reached the limit of operation list ({}) for user ID: {}", OPERATION_LIST_LIMIT, userId);
                     break;
                 }
             }
