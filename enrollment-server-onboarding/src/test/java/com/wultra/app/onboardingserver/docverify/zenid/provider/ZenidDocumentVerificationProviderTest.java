@@ -17,15 +17,15 @@
  */
 package com.wultra.app.onboardingserver.docverify.zenid.provider;
 
-import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
-import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
+import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
 import com.wultra.app.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -123,9 +122,9 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
 
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
 
-        List<String> uploadIds = submitResult.getResults().stream()
+        final List<String> uploadIds = submitResult.getResults().stream()
                 .map(DocumentSubmitResult::getUploadId)
-                .collect(Collectors.toList());
+                .toList();
 
         DocumentsVerificationResult verificationResult = provider.verifyDocuments(ownerId, uploadIds);
 
@@ -139,9 +138,9 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
 
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
 
-        List<String> uploadIds = submitResult.getResults().stream()
+        final List<String> uploadIds = submitResult.getResults().stream()
                 .map(DocumentSubmitResult::getUploadId)
-                .collect(Collectors.toList());
+                .toList();
 
         DocumentsVerificationResult verifyDocumentsResult = provider.verifyDocuments(ownerId, uploadIds);
         Mockito.when(documentVerificationRepository.findAllUploadIds(verifyDocumentsResult.getVerificationId()))
@@ -198,9 +197,9 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
     private DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> documents) throws Exception {
         DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
 
-        List<String> uploadIdsFromSubmit = result.getResults().stream()
+        final List<String> uploadIdsFromSubmit = result.getResults().stream()
                 .map(DocumentSubmitResult::getUploadId)
-                .collect(Collectors.toList());
+                .toList();
         uploadIds.addAll(uploadIdsFromSubmit);
 
         return result;

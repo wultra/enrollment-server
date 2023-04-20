@@ -39,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static java.util.stream.Collectors.toList;
-
 /**
  * Mock implementation of the {@link DocumentVerificationProvider}
  */
@@ -104,7 +102,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
         final List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(this::toDocumentSubmitResult)
-                .collect(toList());
+                .toList();
 
         final DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {
@@ -159,7 +157,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
         final List<DocumentVerificationResult> verificationResults = uploadIds.stream()
                 .map(WultraMockDocumentVerificationProvider::createDocumentVerificationResult)
-                .collect(toList());
+                .toList();
 
         result.setResults(verificationResults);
         result.setStatus(DocumentVerificationStatus.ACCEPTED);

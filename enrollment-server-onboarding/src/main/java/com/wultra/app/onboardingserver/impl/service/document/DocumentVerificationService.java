@@ -43,7 +43,6 @@ import java.util.List;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Document verification service providing {@link #executeFinalDocumentVerification(IdentityVerificationEntity, OwnerId)}.
@@ -98,7 +97,7 @@ public class DocumentVerificationService {
 
         final List<String> uploadIds = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
-                .collect(toList());
+                .toList();
 
         final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         final String verificationId = result.getVerificationId();
@@ -199,6 +198,6 @@ public class DocumentVerificationService {
         return identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .collect(toList());
+                .toList();
     }
 }
