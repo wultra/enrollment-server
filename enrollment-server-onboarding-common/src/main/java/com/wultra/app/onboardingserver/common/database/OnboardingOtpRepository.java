@@ -60,7 +60,6 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
      *
      * @param ids OTP IDs
      * @param timestampExpired last updated and failed timestamp
-     * @param errorOrigin error origin
      */
     @Modifying
     @Query("UPDATE OnboardingOtpEntity o SET " +

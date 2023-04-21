@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case presence check is not enabled.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class PresenceCheckNotEnabledException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -6830136273098780465L;
 
     public PresenceCheckNotEnabledException() { }

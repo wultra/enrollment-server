@@ -18,6 +18,8 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception related to mobile token functionality.
  *
@@ -25,6 +27,7 @@ package com.wultra.app.enrollmentserver.errorhandling;
  */
 public class MobileTokenConfigurationException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 5651595562114641314L;
 
     private final String code;

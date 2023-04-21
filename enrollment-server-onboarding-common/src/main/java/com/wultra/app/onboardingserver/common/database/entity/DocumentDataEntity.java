@@ -25,6 +25,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -42,6 +43,7 @@ import java.util.Objects;
 @Table(name = "es_document_data")
 public class DocumentDataEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 7685715667785423079L;
 
     @Id
@@ -72,8 +74,7 @@ public class DocumentDataEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentDataEntity)) return false;
-        DocumentDataEntity that = (DocumentDataEntity) o;
+        if (!(o instanceof final DocumentDataEntity that)) return false;
         return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 

@@ -21,6 +21,8 @@ package com.wultra.app.enrollmentserver.database.entity;
 import lombok.*;
 
 import jakarta.persistence.*;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -37,6 +39,7 @@ import java.util.Objects;
 @Table(name = "es_operation_template")
 public class OperationTemplateEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 5914420785283118800L;
 
     @Id
@@ -69,8 +72,7 @@ public class OperationTemplateEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OperationTemplateEntity)) return false;
-        OperationTemplateEntity that = (OperationTemplateEntity) o;
+        if (!(o instanceof final OperationTemplateEntity that)) return false;
         return Objects.equals(placeholder, that.placeholder)
                 && Objects.equals(language, that.language)
                 && Objects.equals(title, that.title)

@@ -38,7 +38,7 @@ import javax.sql.DataSource;
 public class SchedulerConfig {
 
     /**
-     * Defines a bean with the lock provider for https://github.com/lukas-krecan/ShedLock
+     * Defines a bean with the lock provider for <a href="https://github.com/lukas-krecan/ShedLock">ShedLock</a>.
      * @param dataSource Data source
      * @return Scheduler lock provider
      */

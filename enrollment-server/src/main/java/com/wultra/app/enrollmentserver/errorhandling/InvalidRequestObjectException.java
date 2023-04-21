@@ -18,11 +18,14 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception used when invalid request object is received on the server side.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 public class InvalidRequestObjectException extends Exception {
+    @Serial
     private static final long serialVersionUID = 1383969189713398388L;
 }

@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.common.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of an error during communication with remote system.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.common.errorhandling;
  */
 public class RemoteCommunicationException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -6809966084351557214L;
 
     public RemoteCommunicationException() {

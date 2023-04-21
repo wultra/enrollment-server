@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
 import lombok.*;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -32,6 +33,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class GetInboxListResponse extends ArrayList<GetInboxListResponse.InboxMessage> {
 
+    @Serial
     private static final long serialVersionUID = -8864636740564266079L;
 
     @Data

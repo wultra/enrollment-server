@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.errorhandling;
 
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case an identity verification cannot be found.
  *
@@ -26,6 +28,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerification
  */
 public class IdentityVerificationNotFoundException extends IdentityVerificationException {
 
+    @Serial
     private static final long serialVersionUID = -7599680135511121879L;
 
     public IdentityVerificationNotFoundException(String message) {

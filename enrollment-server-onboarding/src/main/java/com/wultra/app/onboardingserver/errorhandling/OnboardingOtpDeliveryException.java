@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case onboarding OTP delivery fails.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class OnboardingOtpDeliveryException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -2641221254167428346L;
 
     /**

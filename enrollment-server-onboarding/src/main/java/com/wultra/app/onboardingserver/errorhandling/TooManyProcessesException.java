@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case too many onboarding processes were created by user.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class TooManyProcessesException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 6611918579148298666L;
 
     /**

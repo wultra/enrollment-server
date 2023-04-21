@@ -28,6 +28,6 @@ import lombok.Data;
 @Data
 public class OnboardingConsentTextResponse {
 
-    @Schema(required = true, description = "Consent text in HTML format in requested language.")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Consent text in HTML format in requested language.")
     private String consentText;
 }

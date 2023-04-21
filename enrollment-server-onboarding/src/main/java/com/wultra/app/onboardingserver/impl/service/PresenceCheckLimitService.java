@@ -58,9 +58,9 @@ public class PresenceCheckLimitService {
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final ActivationFlagService activationFlagService;
 
-    private IdentityVerificationService identityVerificationService;
+    private final IdentityVerificationService identityVerificationService;
 
-    private AuditService auditService;
+    private final AuditService auditService;
 
     /**
      * Service constructor.

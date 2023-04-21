@@ -39,7 +39,7 @@ class ClientEvaluateResponseDto {
         OK("OK"),
         NOK("NOK");
 
-        private String value;
+        private final String value;
 
         ResultEnum(String value) {
             this.value = value;

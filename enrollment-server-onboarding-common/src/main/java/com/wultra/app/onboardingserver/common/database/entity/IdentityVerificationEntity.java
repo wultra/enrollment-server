@@ -29,6 +29,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
@@ -45,6 +46,7 @@ import java.util.*;
 @Table(name = "es_identity_verification")
 public class IdentityVerificationEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 6307591849271145826L;
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
@@ -116,8 +118,7 @@ public class IdentityVerificationEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof IdentityVerificationEntity)) return false;
-        IdentityVerificationEntity that = (IdentityVerificationEntity) o;
+        if (!(o instanceof final IdentityVerificationEntity that)) return false;
         return activationId.equals(that.activationId) && timestampCreated.equals(that.timestampCreated);
     }
 

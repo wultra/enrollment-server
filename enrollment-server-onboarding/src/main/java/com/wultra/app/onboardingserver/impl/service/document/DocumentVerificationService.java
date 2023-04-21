@@ -111,19 +111,11 @@ public class DocumentVerificationService {
         });
 
         switch (status) {
-            case ACCEPTED:
-                accept(identityVerification, documentVerifications, ownerId);
-                break;
-            case FAILED:
-                fail(identityVerification, result, documentVerifications, ownerId);
-                break;
-            case REJECTED:
-                reject(identityVerification, result, documentVerifications, ownerId);
-                break;
-            case IN_PROGRESS:
-                throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
-            default:
-                throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
+            case ACCEPTED -> accept(identityVerification, documentVerifications, ownerId);
+            case FAILED -> fail(identityVerification, result, documentVerifications, ownerId);
+            case REJECTED -> reject(identityVerification, result, documentVerifications, ownerId);
+            case IN_PROGRESS -> throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
+            default -> throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
         }
     }
 

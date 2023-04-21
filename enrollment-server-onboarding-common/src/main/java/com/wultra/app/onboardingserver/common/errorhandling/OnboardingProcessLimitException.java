@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.common.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of a limit reached for an onboarding process.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.common.errorhandling;
  */
 public class OnboardingProcessLimitException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 1237390013243732984L;
 
     public OnboardingProcessLimitException() {

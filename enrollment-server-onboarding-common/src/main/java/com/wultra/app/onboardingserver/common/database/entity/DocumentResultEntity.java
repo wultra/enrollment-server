@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -44,6 +45,7 @@ import java.util.Objects;
 @Table(name = "es_document_result")
 public class DocumentResultEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -760284276164288362L;
 
     /**
@@ -113,8 +115,7 @@ public class DocumentResultEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentResultEntity)) return false;
-        DocumentResultEntity that = (DocumentResultEntity) o;
+        if (!(o instanceof final DocumentResultEntity that)) return false;
         return documentVerification.equals(that.documentVerification) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
     }
 

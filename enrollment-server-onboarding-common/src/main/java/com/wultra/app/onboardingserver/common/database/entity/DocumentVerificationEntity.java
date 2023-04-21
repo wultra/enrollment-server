@@ -26,6 +26,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -45,6 +46,7 @@ import java.util.Set;
 @Table(name = "es_document_verification")
 public class DocumentVerificationEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -8237002126712707796L;
 
     /**
@@ -210,8 +212,7 @@ public class DocumentVerificationEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentVerificationEntity)) return false;
-        DocumentVerificationEntity that = (DocumentVerificationEntity) o;
+        if (!(o instanceof final DocumentVerificationEntity that)) return false;
         return type == that.type && side == that.side && filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 

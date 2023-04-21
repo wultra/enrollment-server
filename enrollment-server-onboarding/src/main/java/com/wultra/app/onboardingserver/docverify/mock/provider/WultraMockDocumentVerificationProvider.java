@@ -26,7 +26,6 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -175,7 +174,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public Image getPhoto(String photoId) throws DocumentVerificationException {
+    public Image getPhoto(String photoId) {
         Image photo = new Image();
         photo.setData(new byte[]{});
         photo.setFilename("id_photo.jpg");
