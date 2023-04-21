@@ -184,25 +184,26 @@ public class MobileTokenConverter {
 
     private static Optional<Attribute> buildAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
         final String type = templateParam.getType();
-        switch (type) {
-            case "AMOUNT":
-                return buildAmountAttribute(templateParam, params);
-            case "AMOUNT_CONVERSION":
-                return buildAmountConversionAttribute(templateParam, params);
-            case "HEADING":
-                return Optional.of(new HeadingAttribute(templateParam.getId(), templateParam.getText()));
-            case "NOTE":
-                return buildNoteAttribute(templateParam, params);
-            case "KEY_VALUE":
-                return buildKeyValueAttribute(templateParam, params);
-            case "IMAGE":
-                return buildImageAttribute(templateParam, params);
-            case "PARTY_INFO":
-                return buildPartyInfoAttribute(templateParam, params);
-            default: // attempt fallback to key-value type
+        return switch (type) {
+            case "AMOUNT" ->
+                buildAmountAttribute(templateParam, params);
+            case "AMOUNT_CONVERSION" ->
+                buildAmountConversionAttribute(templateParam, params);
+            case "HEADING" ->
+                Optional.of(new HeadingAttribute(templateParam.getId(), templateParam.getText()));
+            case "NOTE" ->
+                buildNoteAttribute(templateParam, params);
+            case "KEY_VALUE" ->
+                buildKeyValueAttribute(templateParam, params);
+            case "IMAGE" ->
+                buildImageAttribute(templateParam, params);
+            case "PARTY_INFO" ->
+                buildPartyInfoAttribute(templateParam, params);
+            default -> { // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
-                return buildKeyValueAttribute(templateParam, params);
-        }
+                yield buildKeyValueAttribute(templateParam, params);
+            }
+        };
     }
 
     private static Optional<Attribute> buildKeyValueAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
@@ -304,10 +305,9 @@ public class MobileTokenConverter {
         }
         final Optional<String> originalUrl = fetchTemplateParamValue(templateParam, params, "originalUrl");
         if (originalUrl.isEmpty()) {
-            logger.warn("OriginalUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
-            return Optional.empty();
+            logger.debug("OriginalUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
         }
-        return Optional.of(new ImageAttribute(id, text, thumbnailUrl.get(), originalUrl.get()));
+        return Optional.of(new ImageAttribute(id, text, thumbnailUrl.get(), originalUrl.orElse(null)));
     }
 
     private static Optional<Attribute> buildPartyInfoAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {

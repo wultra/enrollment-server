@@ -63,29 +63,30 @@ class MobileTokenConverterTest {
         operationDetail.setRiskFlags("C");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"flipButtons\": true,\n" +
-                "  \"blockApprovalOnCall\": false,\n" +
-                "  \"preApprovalScreen\": {\n" +
-                "    \"type\": \"WARNING\",\n" +
-                "    \"heading\": \"Watch out!\",\n" +
-                "    \"message\": \"You may become a victim of an attack.\",\n" +
-                "    \"items\": [\n" +
-                "      \"You activate a new app and allow access to your accounts\",\n" +
-                "      \"Make sure the activation takes place on your device\",\n" +
-                "      \"If you have been prompted for this operation in connection with a payment, decline it\"\n" +
-                "    ],\n" +
-                "    \"approvalType\": \"SLIDER\"\n" +
-                "  },\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"GENERIC\",\n" +
-                "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You may close the application now.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"customMessage\": \"See you next time.\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "flipButtons": true,
+                  "blockApprovalOnCall": false,
+                  "preApprovalScreen": {
+                    "type": "WARNING",
+                    "heading": "Watch out!",
+                    "message": "You may become a victim of an attack.",
+                    "items": [
+                      "You activate a new app and allow access to your accounts",
+                      "Make sure the activation takes place on your device",
+                      "If you have been prompted for this operation in connection with a payment, decline it"
+                    ],
+                    "approvalType": "SLIDER"
+                  },
+                  "postApprovalScreen": {
+                    "type": "GENERIC",
+                    "heading": "Thank you for your order",
+                    "message": "You may close the application now.",
+                    "payload": {
+                      "customMessage": "See you next time."
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -171,18 +172,19 @@ class MobileTokenConverterTest {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
-                "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You will be redirected to the merchant application.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"redirectText\": \"Go to the application\",\n" +
-                "      \"redirectUrl\": \"https://www.example.com\",\n" +
-                "      \"countdown\": 5\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "postApprovalScreen": {
+                    "type": "MERCHANT_REDIRECT",
+                    "heading": "Thank you for your order",
+                    "message": "You will be redirected to the merchant application.",
+                    "payload": {
+                      "redirectText": "Go to the application",
+                      "redirectUrl": "https://www.example.com",
+                      "countdown": 5
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -210,18 +212,19 @@ class MobileTokenConverterTest {
         operationDetail.setParameters(Map.of("userId", "666", "redirectUrl", "https://www.example.com"));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"MERCHANT_REDIRECT\",\n" +
-                "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You will be redirected to the merchant application.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"redirectText\": \"Go to the application\",\n" +
-                "      \"redirectUrl\": \"${redirectUrl}\",\n" +
-                "      \"countdown\": 5\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "postApprovalScreen": {
+                    "type": "MERCHANT_REDIRECT",
+                    "heading": "Thank you for your order",
+                    "message": "You will be redirected to the merchant application.",
+                    "payload": {
+                      "redirectText": "Go to the application",
+                      "redirectUrl": "${redirectUrl}",
+                      "countdown": 5
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -248,23 +251,23 @@ class MobileTokenConverterTest {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"REVIEW\",\n" +
-                "    \"heading\": \"Successful\",\n" +
-                "    \"message\": \"The operation was approved.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"attributes\": [" +
-                "          {\n" +
-                "            \"type\": \"NOTE\",\n" +
-                "            \"id\": \"1\",\n" +
-                "            \"label\": \"test label\",\n" +
-                "            \"note\": \"some note\"\n" +
-                "          }\n" +
-                "      ]\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "postApprovalScreen": {
+                    "type": "REVIEW",
+                    "heading": "Successful",
+                    "message": "The operation was approved.",
+                    "payload": {
+                      "attributes": [          {
+                            "type": "NOTE",
+                            "id": "1",
+                            "label": "test label",
+                            "note": "some note"
+                          }
+                      ]
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -289,16 +292,17 @@ class MobileTokenConverterTest {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"GENERIC\",\n" +
-                "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You may close the application now.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"customMessage\": \"See you next time.\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "postApprovalScreen": {
+                    "type": "GENERIC",
+                    "heading": "Thank you for your order",
+                    "message": "You may close the application now.",
+                    "payload": {
+                      "customMessage": "See you next time."
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -323,16 +327,17 @@ class MobileTokenConverterTest {
         operationDetail.setParameters(Map.of("message", "\""));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setUi("{\n" +
-                "  \"postApprovalScreen\": {\n" +
-                "    \"type\": \"GENERIC\",\n" +
-                "    \"heading\": \"Thank you for your order\",\n" +
-                "    \"message\": \"You may close the application now.\",\n" +
-                "    \"payload\": {\n" +
-                "      \"customMessage\": \"${message}\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "}");
+        operationTemplate.setUi("""
+                {
+                  "postApprovalScreen": {
+                    "type": "GENERIC",
+                    "heading": "Thank you for your order",
+                    "message": "You may close the application now.",
+                    "payload": {
+                      "customMessage": "${message}"
+                    }
+                  }
+                }""");
 
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
@@ -373,70 +378,71 @@ class MobileTokenConverterTest {
                 .build());
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
-        operationTemplate.setAttributes("[\n" +
-                "  {\n" +
-                "    \"id\": \"operation.amount\",\n" +
-                "    \"type\": \"AMOUNT\",\n" +
-                "    \"text\": \"Amount\",\n" +
-                "    \"params\": {\n" +
-                "      \"amount\": \"amount\",\n" +
-                "      \"currency\": \"currency\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.account\",\n" +
-                "    \"type\": \"KEY_VALUE\",\n" +
-                "    \"text\": \"To Account\",\n" +
-                "    \"params\": {\n" +
-                "      \"value\": \"iban\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.note\",\n" +
-                "    \"type\": \"NOTE\",\n" +
-                "    \"text\": \"Note\",\n" +
-                "    \"params\": {\n" +
-                "      \"note\": \"note\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.heading\",\n" +
-                "    \"type\": \"HEADING\",\n" +
-                "    \"text\": \"Heading\"\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.image\",\n" +
-                "    \"type\": \"IMAGE\",\n" +
-                "    \"text\": \"Image\",\n" +
-                "    \"params\": {\n" +
-                "      \"thumbnailUrl\": \"thumbnailUrl\",\n" +
-                "      \"originalUrl\": \"originalUrl\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.amountConversion\",\n" +
-                "    \"type\": \"AMOUNT_CONVERSION\",\n" +
-                "    \"text\": \"Amount Conversion\",\n" +
-                "    \"params\": {\n" +
-                "      \"dynamic\": \"dynamic\",\n" +
-                "      \"sourceAmount\": \"sourceAmount\",\n" +
-                "      \"sourceCurrency\": \"sourceCurrency\",\n" +
-                "      \"targetAmount\": \"targetAmount\",\n" +
-                "      \"targetCurrency\": \"targetCurrency\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"id\": \"operation.partyInfo\",\n" +
-                "    \"type\": \"PARTY_INFO\",\n" +
-                "    \"text\": \"Party Info\",\n" +
-                "    \"params\": {\n" +
-                "      \"logoUrl\": \"partyLogoUrl\",\n" +
-                "      \"name\": \"partyName\",\n" +
-                "      \"description\": \"partyDescription\",\n" +
-                "      \"websiteUrl\": \"partyUrl\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "]");
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.amount",
+                    "type": "AMOUNT",
+                    "text": "Amount",
+                    "params": {
+                      "amount": "amount",
+                      "currency": "currency"
+                    }
+                  },
+                  {
+                    "id": "operation.account",
+                    "type": "KEY_VALUE",
+                    "text": "To Account",
+                    "params": {
+                      "value": "iban"
+                    }
+                  },
+                  {
+                    "id": "operation.note",
+                    "type": "NOTE",
+                    "text": "Note",
+                    "params": {
+                      "note": "note"
+                    }
+                  },
+                  {
+                    "id": "operation.heading",
+                    "type": "HEADING",
+                    "text": "Heading"
+                  },
+                  {
+                    "id": "operation.image",
+                    "type": "IMAGE",
+                    "text": "Image",
+                    "params": {
+                      "thumbnailUrl": "thumbnailUrl",
+                      "originalUrl": "originalUrl"
+                    }
+                  },
+                  {
+                    "id": "operation.amountConversion",
+                    "type": "AMOUNT_CONVERSION",
+                    "text": "Amount Conversion",
+                    "params": {
+                      "dynamic": "dynamic",
+                      "sourceAmount": "sourceAmount",
+                      "sourceCurrency": "sourceCurrency",
+                      "targetAmount": "targetAmount",
+                      "targetCurrency": "targetCurrency"
+                    }
+                  },
+                  {
+                    "id": "operation.partyInfo",
+                    "type": "PARTY_INFO",
+                    "text": "Party Info",
+                    "params": {
+                      "logoUrl": "partyLogoUrl",
+                      "name": "partyName",
+                      "description": "partyDescription",
+                      "websiteUrl": "partyUrl"
+                    }
+                  }
+                ]""");
 
         LocaleContextHolder.setLocale(new Locale("en"));
         final Operation result = tested.convert(operationDetail, operationTemplate);
@@ -469,6 +475,35 @@ class MobileTokenConverterTest {
                         .description("Find out more about Example...")
                         .websiteUrl("https://example.com/hello")
                         .build()), atributesIterator.next());
+    }
+
+    @Test
+    void testConvertImageAttributeWithoutOriginalUrl() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.of("thumbnailUrl", "https://example.com/123_thumb.jpeg"));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.image",
+                    "type": "IMAGE",
+                    "text": "Image",
+                    "params": {
+                      "thumbnailUrl": "thumbnailUrl",
+                      "originalUrl": "originalUrl"
+                    }
+                  }
+                ]""");
+
+        LocaleContextHolder.setLocale(new Locale("en"));
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<Attribute> attributes = result.getFormData().getAttributes();
+
+        assertEquals(1, attributes.size());
+        final Attribute imageAttribute = attributes.iterator().next();
+        assertEquals(new ImageAttribute("operation.image", "Image", "https://example.com/123_thumb.jpeg", null), imageAttribute);
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
