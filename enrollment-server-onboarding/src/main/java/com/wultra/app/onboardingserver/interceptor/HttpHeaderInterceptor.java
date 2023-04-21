@@ -48,13 +48,13 @@ public class HttpHeaderInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
         MDC.put(correlationHeaderName, getCorrelationId(request));
         return true;
     }
 
     @Override
-    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, Exception ex) throws Exception {
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, Exception ex) {
         MDC.remove(correlationHeaderName);
     }
 
