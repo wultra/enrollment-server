@@ -118,8 +118,7 @@ public class IdentityVerificationEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof IdentityVerificationEntity)) return false;
-        IdentityVerificationEntity that = (IdentityVerificationEntity) o;
+        if (!(o instanceof IdentityVerificationEntity that)) return false;
         return activationId.equals(that.activationId) && timestampCreated.equals(that.timestampCreated);
     }
 

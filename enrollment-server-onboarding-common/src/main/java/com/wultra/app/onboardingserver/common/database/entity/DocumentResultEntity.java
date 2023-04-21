@@ -115,8 +115,7 @@ public class DocumentResultEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentResultEntity)) return false;
-        DocumentResultEntity that = (DocumentResultEntity) o;
+        if (!(o instanceof DocumentResultEntity that)) return false;
         return documentVerification.equals(that.documentVerification) && phase == that.phase && timestampCreated.equals(that.timestampCreated);
     }
 
