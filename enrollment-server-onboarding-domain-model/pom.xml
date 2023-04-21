@@ -38,11 +38,6 @@
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-java-crypto</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations-jakarta</artifactId>
-        </dependency>
     </dependencies>
 
     <profiles>
