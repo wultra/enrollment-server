@@ -31,12 +31,12 @@ import lombok.EqualsAndHashCode;
 public class ImageAttribute extends Attribute {
 
     /**
-     * A URL to the thumbnail, the image in lower resolution.
+     * A mandatory URL to the thumbnail, the image in lower resolution.
      */
     private String thumbnailUrl;
 
     /**
-     * A URL to the original image in higher resolution.
+     * An optional URL to the original image in higher resolution.
      */
     private String originalUrl;
 
@@ -51,8 +51,8 @@ public class ImageAttribute extends Attribute {
      * Constructor with all details.
      * @param id Attribute ID.
      * @param label Attribute label.
-     * @param thumbnailUrl Amount.
-     * @param originalUrl  Formatted currency.
+     * @param thumbnailUrl URL to the thumbnail, the image in lower resolution. Mandatory.
+     * @param originalUrl  URL to the original image in higher resolution. May be {@code null}.
      */
     public ImageAttribute(String id, String label, String thumbnailUrl, String originalUrl) {
         this();
