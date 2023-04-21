@@ -176,7 +176,7 @@ public final class OnboardingProcessEntityWrapper {
     private Map<String, Object> readCustomData() throws JsonProcessingException {
         final Map<String, Object> value = mapper.readValue(entity.getCustomData(), new TypeReference<>() {});
         if (value == null) {
-            logger.warn("Read null value from custom_data: {} of process ID: {} " + entity.getCustomData(), entity.getId());
+            logger.warn("Read null value from custom_data: {} of process ID: {} ", entity.getCustomData(), entity.getId());
             return Collections.emptyMap();
         }
         return value;
