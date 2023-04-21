@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of a limit reached for a presence check.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class PresenceCheckLimitException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -814024875324296277L;
 
     public PresenceCheckLimitException() {

@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.database.entity;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.Map;
 @Data
 public class OperationTemplateParam implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -1881010348580035348L;
 
     private String type;

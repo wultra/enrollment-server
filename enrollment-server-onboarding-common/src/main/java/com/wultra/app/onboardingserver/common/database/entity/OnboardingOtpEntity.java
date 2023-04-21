@@ -28,6 +28,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -45,6 +46,7 @@ import java.util.Objects;
 @Table(name = "es_onboarding_otp")
 public class OnboardingOtpEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -5626187612981527923L;
 
     public static final String ERROR_CANCELED = "canceledOtp";

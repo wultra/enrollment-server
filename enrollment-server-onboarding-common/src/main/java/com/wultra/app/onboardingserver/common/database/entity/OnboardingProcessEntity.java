@@ -27,6 +27,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -46,6 +47,7 @@ import java.util.Set;
 @Table(name = "es_onboarding_process")
 public class OnboardingProcessEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -438495244269415158L;
 
     public static final String ERROR_PROCESS_CANCELED = "canceledProcess";

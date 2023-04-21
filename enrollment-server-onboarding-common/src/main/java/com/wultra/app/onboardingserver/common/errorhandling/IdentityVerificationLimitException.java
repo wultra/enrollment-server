@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.common.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of a limit reached for an identity verification.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.common.errorhandling;
  */
 public class IdentityVerificationLimitException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -74028268220605950L;
 
     public IdentityVerificationLimitException() {

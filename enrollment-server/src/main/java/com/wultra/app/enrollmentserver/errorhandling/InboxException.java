@@ -18,6 +18,8 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of any inbox error.
  *
@@ -25,6 +27,7 @@ package com.wultra.app.enrollmentserver.errorhandling;
  */
 public class InboxException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 1277411772243823772L;
 
     public InboxException(String message) {
