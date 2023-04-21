@@ -72,7 +72,7 @@ public class OperationTemplateEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OperationTemplateEntity that)) return false;
+        if (!(o instanceof final OperationTemplateEntity that)) return false;
         return Objects.equals(placeholder, that.placeholder)
                 && Objects.equals(language, that.language)
                 && Objects.equals(title, that.title)

@@ -74,7 +74,7 @@ public class DocumentDataEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentDataEntity that)) return false;
+        if (!(o instanceof final DocumentDataEntity that)) return false;
         return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 

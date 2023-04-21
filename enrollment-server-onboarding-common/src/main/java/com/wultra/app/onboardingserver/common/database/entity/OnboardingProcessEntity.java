@@ -127,7 +127,7 @@ public class OnboardingProcessEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingProcessEntity that)) return false;
+        if (!(o instanceof final OnboardingProcessEntity that)) return false;
         return identificationData.equals(that.identificationData) && timestampCreated.equals(that.timestampCreated);
     }
 

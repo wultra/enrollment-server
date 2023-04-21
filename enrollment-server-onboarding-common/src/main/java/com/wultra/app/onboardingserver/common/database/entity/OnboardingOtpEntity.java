@@ -109,7 +109,7 @@ public class OnboardingOtpEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingOtpEntity that)) return false;
+        if (!(o instanceof final OnboardingOtpEntity that)) return false;
         return process.equals(that.process) && type.equals(that.type) && timestampCreated.equals(that.timestampCreated);
     }
 

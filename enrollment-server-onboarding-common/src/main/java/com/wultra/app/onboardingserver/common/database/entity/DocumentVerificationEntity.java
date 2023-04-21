@@ -212,7 +212,7 @@ public class DocumentVerificationEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentVerificationEntity that)) return false;
+        if (!(o instanceof final DocumentVerificationEntity that)) return false;
         return type == that.type && side == that.side && filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 
