@@ -47,9 +47,6 @@ COPY docs/db/changelog $LB_HOME/db/changelog
 # Add valve for proxy with SSL termination
 RUN sed -i 's/<\/Host>/<Valve className="org.apache.catalina.valves.RemoteIpValve" remoteIpHeader="X-Forwarded-For" protocolHeader="X-Forwarded-Proto"\/><\/Host>/' $TOMCAT_HOME/conf/server.xml
 
-# Copy libraries
-COPY enrollment-server/target/dependency/postgresql*.jar $TOMCAT_HOME/lib/
-
 # Deploy and run applications
 COPY deploy/enrollment-server.xml $TOMCAT_HOME/conf/Catalina/localhost/
 COPY enrollment-server/target/enrollment-server-*.war $TOMCAT_HOME/webapps/enrollment-server.war
