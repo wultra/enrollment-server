@@ -21,7 +21,44 @@ Others (like URL, username, password) depend on your environment.
 
 ```shell
 liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth --hub-mode=off status
-``` 
+```
+
+
+### Docker
+
+
+### Build War
+
+```shell
+mvn clean package
+```
+
+
+### Copy dependencies
+
+```shell
+mvn dependency:copy-dependencies -Pstandalone
+```
+
+
+### Build the docker image
+
+```shell
+docker build . -t enrollment-server:1.5.0-SNAPSHOT
+```
+
+
+### Prepare environment variables
+
+* Copy `deploy/env.list.tmp` to `./env.list` and edit the values to use it via `docker run --env-file env.list IMAGE`
+* Or set environment variables via `docker run -e ENROLLMENT_SERVER_DATASOURCE_USERNAME='powerauth' IMAGE`
+
+
+### Run the docker image
+
+```shell
+docker run -p 80:8080 -e ENROLLMENT_SERVER_DATASOURCE_URL='jdbc:postgresql://host.docker.internal:5432/powerauth' -e ENROLLMENT_SERVER_DATASOURCE_USERNAME='powerauth' -e ENROLLMENT_SERVER_DATASOURCE_PASSWORD='' enrollment-server:1.5.0-SNAPSHOT 
+```
 
 
 ## Enrollment Server Onboarding
