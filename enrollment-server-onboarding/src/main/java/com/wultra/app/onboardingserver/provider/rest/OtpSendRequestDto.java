@@ -49,7 +49,7 @@ class OtpSendRequestDto {
         ACTIVATION("ACTIVATION"),
         USER_VERIFICATION("USER_VERIFICATION");
 
-        private String value;
+        private final String value;
 
         OtpTypeEnum(String value) {
             this.value = value;
