@@ -58,16 +58,17 @@ class RestUserInfoProviderTest {
     void testFetchUserClaimsForUserId() throws Exception {
         mockWebServer.enqueue(new MockResponse()
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON)
-                .setBody("{\n" +
-                        "  \"status\": \"OK\",\n" +
-                        "  \"responseObject\": {\n" +
-                        "    \"sub\": \"83692\",\n" +
-                        "    \"name\": \"Petr Adams\",\n" +
-                        "    \"email\": \"petr@example.com\",\n" +
-                        "    \"birthdate\": \"1975-12-31\",\n" +
-                        "    \"https://claims.example.com/department\": \"xxx\"\n" +
-                        "  }\n" +
-                        "}"));
+                .setBody("""
+                        {
+                          "status": "OK",
+                          "responseObject": {
+                            "sub": "83692",
+                            "name": "Petr Adams",
+                            "email": "petr@example.com",
+                            "birthdate": "1975-12-31",
+                            "https://claims.example.com/department": "xxx"
+                          }
+                        }"""));
 
         final Map<String, Object> result = tested.fetchUserClaimsForUserId(UserInfoContext.builder()
                 .userId("petr")
