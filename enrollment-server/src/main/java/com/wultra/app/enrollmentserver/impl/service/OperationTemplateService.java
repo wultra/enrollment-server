@@ -20,8 +20,8 @@ package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.database.OperationTemplateRepository;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
-import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +33,7 @@ import java.util.Optional;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Service
+@Slf4j
 public class OperationTemplateService {
 
     private final OperationTemplateRepository operationTemplateRepository;
@@ -42,15 +43,18 @@ public class OperationTemplateService {
         this.operationTemplateRepository = operationTemplateRepository;
     }
 
-    public OperationTemplateEntity prepareTemplate(@NotNull String operationType, @NotNull String language) throws MobileTokenConfigurationException {
-        Optional<OperationTemplateEntity> operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType);
-        if (operationTemplateOptional.isEmpty()) { // try fallback to EN locale
-            operationTemplateOptional = operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
-            if (operationTemplateOptional.isEmpty()) {
-                throw new MobileTokenConfigurationException("ERR_CONFIG", "Missing " + language + " template for operation " + operationType);
-            }
-        }
-        return operationTemplateOptional.get();
+    /**
+     * Find the operation template for the given type and language. Falling back to EN locale.
+     *
+     * @param operationType Operation type.
+     * @param language Template language.
+     * @return Found operation template or empty.
+     */
+    public Optional<OperationTemplateEntity> findTemplate(@NotNull String operationType, @NotNull String language) {
+        return operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType).or(() -> {
+            logger.debug("Trying fallback to EN locale for operationType={}", operationType);
+            return operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
+        });
     }
 
 }
