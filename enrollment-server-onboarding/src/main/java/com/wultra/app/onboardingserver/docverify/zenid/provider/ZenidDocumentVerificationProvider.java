@@ -564,32 +564,22 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     private DocumentVerificationStatus toStatus(ZenidWebInvestigateResponse.StateEnum stateEnum) {
-        switch (stateEnum) {
-            case DONE:
-                return DocumentVerificationStatus.ACCEPTED;
-            case ERROR:
-                return DocumentVerificationStatus.FAILED;
-            case NOTDONE:
-            case OPERATOR:
-                return DocumentVerificationStatus.IN_PROGRESS;
-            case REJECTED:
-                return DocumentVerificationStatus.REJECTED;
-            default:
-                throw new IllegalStateException("Unknown investigation status in ZenID: " + stateEnum);
-        }
+        return switch (stateEnum) {
+            case DONE -> DocumentVerificationStatus.ACCEPTED;
+            case ERROR -> DocumentVerificationStatus.FAILED;
+            case NOTDONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
+            case REJECTED -> DocumentVerificationStatus.REJECTED;
+            default -> throw new IllegalStateException("Unknown investigation status in ZenID: " + stateEnum);
+        };
     }
 
     private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
-        switch (documentRoleEnum) {
-            case DRV:
-                return DocumentType.DRIVING_LICENSE;
-            case IDC:
-                return DocumentType.ID_CARD;
-            case PAS:
-                return DocumentType.PASSPORT;
-            default:
-                return DocumentType.UNKNOWN;
-        }
+        return switch (documentRoleEnum) {
+            case DRV -> DocumentType.DRIVING_LICENSE;
+            case IDC -> DocumentType.ID_CARD;
+            case PAS -> DocumentType.PASSPORT;
+            default -> DocumentType.UNKNOWN;
+        };
     }
 
     @Nullable
@@ -597,14 +587,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         if (pageCodeEnum == null) {
             return null;
         }
-        switch (pageCodeEnum) {
-            case F:
-                return CardSide.FRONT;
-            case B:
-                return CardSide.BACK;
-            default:
-                throw new IllegalStateException("Unexpected side page code value: " + pageCodeEnum);
-        }
+        return switch (pageCodeEnum) {
+            case F -> CardSide.FRONT;
+            case B -> CardSide.BACK;
+            default -> throw new IllegalStateException("Unexpected side page code value: " + pageCodeEnum);
+        };
     }
 
     private static void handleLicenceError(final Enum<?> errorCode, final String errorText) throws RemoteCommunicationException {

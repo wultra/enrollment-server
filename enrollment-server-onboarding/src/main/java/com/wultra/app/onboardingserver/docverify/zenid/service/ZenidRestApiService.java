@@ -255,54 +255,39 @@ public class ZenidRestApiService {
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {
-        switch (documentType) {
-            case DRIVING_LICENSE:
-                return ZenidSharedMineAllResult.DocumentCodeEnum.DRV;
-            case PASSPORT:
-                return ZenidSharedMineAllResult.DocumentCodeEnum.PAS;
-//            case ID_CARD:
+        return switch (documentType) {
+            case DRIVING_LICENSE -> ZenidSharedMineAllResult.DocumentCodeEnum.DRV;
+            case PASSPORT -> ZenidSharedMineAllResult.DocumentCodeEnum.PAS;
+//            case ID_CARD ->
 //                // Not supported more than one version of a document
-//                return List.of(ZenidSharedMineAllResult.DocumentCodeEnum.IDC1, ZenidSharedMineAllResult.DocumentCodeEnum.IDC2);
-            default:
-                return null;
-        }
+//                List.of(ZenidSharedMineAllResult.DocumentCodeEnum.IDC1, ZenidSharedMineAllResult.DocumentCodeEnum.IDC2);
+            default -> null;
+        };
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentRoleEnum toDocumentRole(DocumentType documentType) {
-        switch (documentType) {
-            case DRIVING_LICENSE:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.DRV;
-            case ID_CARD:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.IDC;
-            case PASSPORT:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.PAS;
-            default:
-                return null;
-        }
+        return switch (documentType) {
+            case DRIVING_LICENSE -> ZenidSharedMineAllResult.DocumentRoleEnum.DRV;
+            case ID_CARD -> ZenidSharedMineAllResult.DocumentRoleEnum.IDC;
+            case PASSPORT -> ZenidSharedMineAllResult.DocumentRoleEnum.PAS;
+            default -> null;
+        };
     }
 
     private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(CardSide cardSide) {
-        switch (cardSide) {
-            case FRONT:
-                return ZenidSharedMineAllResult.PageCodeEnum.F;
-            case BACK:
-                return ZenidSharedMineAllResult.PageCodeEnum.B;
-            default:
-                throw new IllegalStateException("Unexpected card side value: " + cardSide);
-        }
+        return switch (cardSide) {
+            case FRONT -> ZenidSharedMineAllResult.PageCodeEnum.F;
+            case BACK -> ZenidSharedMineAllResult.PageCodeEnum.B;
+            default -> throw new IllegalStateException("Unexpected card side value: " + cardSide);
+        };
     }
 
     private ZenidWebUploadSampleResponse.SampleTypeEnum toSampleType(DocumentType type) {
-        switch (type) {
-            case ID_CARD:
-            case DRIVING_LICENSE:
-            case PASSPORT:
-                return ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
-            case SELFIE_PHOTO:
-                return ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
-            default:
-                throw new IllegalStateException("Not supported documentType: " + type);
-        }
+        return switch (type) {
+            case ID_CARD, DRIVING_LICENSE, PASSPORT -> ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
+            case SELFIE_PHOTO -> ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
+            default -> throw new IllegalStateException("Not supported documentType: " + type);
+        };
     }
 
 }

@@ -304,24 +304,17 @@ public class MobileTokenService {
      */
     private void handleStatus(OperationStatus status) throws MobileTokenException {
         switch (status) {
-            case PENDING: {
+            case PENDING -> {
                 // OK, this operation is still pending
-                break;
             }
-            case CANCELED: {
-                throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already canceled");
-            }
-            case APPROVED:
-            case REJECTED: {
-                throw new MobileTokenException("OPERATION_ALREADY_FINISHED", "Operation was already completed");
-            }
-            case FAILED: {
-                throw new MobileTokenException("OPERATION_ALREADY_FAILED", "Operation already failed");
-            }
-            case EXPIRED:
-            default: {
-                throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
-            }
+            case CANCELED ->
+                    throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already canceled");
+            case APPROVED, REJECTED ->
+                    throw new MobileTokenException("OPERATION_ALREADY_FINISHED", "Operation was already completed");
+            case FAILED ->
+                    throw new MobileTokenException("OPERATION_ALREADY_FAILED", "Operation already failed");
+            default ->
+                    throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
         }
     }
 

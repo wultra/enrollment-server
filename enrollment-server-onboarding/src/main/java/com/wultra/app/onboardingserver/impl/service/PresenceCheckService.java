@@ -282,29 +282,27 @@ public class PresenceCheckService {
 
         final IdentityVerificationPhase phase = idVerification.getPhase();
         switch (result.getStatus()) {
-            case ACCEPTED:
+            case ACCEPTED ->
                 // The timestampFinished parameter is not set yet, there may be other steps ahead
-                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
-                break;
-            case FAILED:
+                    identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
+            case FAILED -> {
                 idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFailed(ownerId.getTimestamp());
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
-                break;
-            case IN_PROGRESS:
-                logger.debug("Presence check still in progress, {}", ownerId);
-                break;
-            case REJECTED:
+            }
+            case IN_PROGRESS ->
+                    logger.debug("Presence check still in progress, {}", ownerId);
+            case REJECTED -> {
                 idVerification.setRejectReason(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, REJECTED, ownerId);
-                break;
-            default:
-                throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
+            }
+            default ->
+                    throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
     }
