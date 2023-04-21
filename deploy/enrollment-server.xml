@@ -5,15 +5,10 @@
     <Parameter name="spring.datasource.url" value="${ENROLLMENT_SERVER_DATASOURCE_URL:jdbc:postgresql://host.docker.internal:5432/powerauth}"/>
     <Parameter name="spring.datasource.username" value="${ENROLLMENT_SERVER_DATASOURCE_USERNAME:powerauth}"/>
     <Parameter name="spring.datasource.password" value="${ENROLLMENT_SERVER_DATASOURCE_PASSWORD:}"/>
-    <Parameter name="spring.datasource.driver-class-name" value="${ENROLLMENT_SERVER_DATASOURCE_DRIVER:org.postgresql.Driver}"/>
-    <Parameter name="spring.jpa.hibernate.ddl-auto" value="${ENROLLMENT_SERVER_JPA_DDL_AUTO:none}"/>
 
     <!-- Configuration of Database Charset -->
     <Parameter name="spring.jpa.properties.hibernate.connection.characterEncoding" value="${ENROLLMENT_SERVER_JPA_CHARACTER_ENCODING:utf8}"/>
     <Parameter name="spring.jpa.properties.hibernate.connection.useUnicode" value="${ENROLLMENT_SERVER_JPA_USE_UNICODE:true}"/>
-
-    <!-- Additional JPA Configuration -->
-    <Parameter name="spring.jpa.database-platform" value="${ENROLLMENT_SERVER_JPA_DATABASE_PLATFORM:org.hibernate.dialect.PostgreSQLDialect}"/>
 
     <!-- Database Lock Timeout Configuration -->
     <Parameter name="spring.jpa.properties.jakarta.persistence.lock.timeout" value="${ENROLLMENT_SERVER_JPA_LOCK_TIMEOUT:10000}"/>

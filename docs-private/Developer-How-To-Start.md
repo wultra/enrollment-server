@@ -34,13 +34,6 @@ mvn clean package
 ```
 
 
-### Copy dependencies
-
-```shell
-mvn dependency:copy-dependencies -Pstandalone
-```
-
-
 ### Build the docker image
 
 ```shell

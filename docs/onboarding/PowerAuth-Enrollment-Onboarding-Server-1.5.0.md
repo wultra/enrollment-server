@@ -53,3 +53,9 @@ ALTER TABLE es_onboarding_process
 ALTER TABLE es_onboarding_process
     ADD fds_data CLOB;
 ```
+
+
+## Dependencies
+
+PostgreSQL JDBC driver is already included in the WAR file.
+Oracle JDBC driver remains optional and must be added to your deployment if desired.

@@ -84,7 +84,6 @@ Follow the extra instructions in chapter [Deploying Enrollment Server on JBoss /
 ## Supported Java Runtime Versions
 
 The following Java runtime versions are supported:
-- Java 11 (LTS release)
 - Java 17 (LTS release)
 
 The Enrollment Server may run on other Java versions, however we do not perform extensive testing with non-LTS releases.
