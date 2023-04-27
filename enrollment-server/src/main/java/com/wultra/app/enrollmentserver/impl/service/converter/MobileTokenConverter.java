@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen.ScreenType.QR_SCAN;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -160,7 +161,7 @@ public class MobileTokenConverter {
         if (StringUtils.hasText(operationTemplate.getUi())) {
             final String uiJsonString = substitutor == null ? operationTemplate.getUi() : substitutor.replace(operationTemplate.getUi());
             logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
-            return objectMapper.readValue(uiJsonString, UiExtensions.class);
+            return deserializeUiExtensions(uiJsonString, operationDetail);
         } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {
             final String riskFlags = operationDetail.getRiskFlags();
             logger.debug("Converting riskFlags: '{}' of OperationDetail ID: {} to UiExtensions", riskFlags, operationDetail.getId());
@@ -174,12 +175,22 @@ public class MobileTokenConverter {
             if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
                 final PreApprovalScreen preApprovalScreen = new PreApprovalScreen();
                 preApprovalScreen.setType(PreApprovalScreen.ScreenType.WARNING);
+                preApprovalScreen.setApprovalType(PreApprovalScreen.ApprovalType.SLIDER);
                 ui.setPreApprovalScreen(preApprovalScreen);
             }
             return ui;
         } else {
             return null;
         }
+    }
+
+    private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
+        final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
+        if (uiExtensions.getPreApprovalScreen() != null && uiExtensions.getPreApprovalScreen().getType() == QR_SCAN && operationDetail.getTotp() == null) {
+            logger.debug("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());
+            uiExtensions.setPreApprovalScreen(null);
+        }
+        return uiExtensions;
     }
 
     private static Optional<Attribute> buildAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {

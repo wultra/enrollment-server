@@ -42,7 +42,12 @@ public class PreApprovalScreen {
         /**
          * The purpose of the screen is to inform user about a some specific operation context.
          */
-        INFO
+        INFO,
+
+        /**
+         * The purpose of the screen is to inform user to scan QR code to perform proximity verification.
+         */
+        QR_SCAN
     }
 
     /**

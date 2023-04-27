@@ -195,7 +195,19 @@ public class MobileTokenController {
                     logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
                     throw new MobileTokenAuthException();
                 }
-                return mobileTokenService.operationApprove(activationId, userId, applicationId, operationId, data, signatureFactors, requestContext, activationFlags);
+                final var serviceRequest = com.wultra.app.enrollmentserver.impl.service.OperationApproveRequest.builder()
+                        .activationId(activationId)
+                        .userId(userId)
+                        .applicationId(applicationId)
+                        .operationId(operationId)
+                        .data(data)
+                        .signatureFactors(signatureFactors)
+                        .requestContext(requestContext)
+                        .activationFlags(activationFlags)
+                        .otp(requestObject.getOtp())
+                        .build();
+
+                return mobileTokenService.operationApprove(serviceRequest);
             } else {
                 // make sure to fail operation as well, to increase the failed number
                 mobileTokenService.operationFailApprove(operationId, requestContext);
