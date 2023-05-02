@@ -241,10 +241,10 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         final String frameJpeg = unescapeSlashes(frame);
         final byte[] photoData = Base64.getDecoder().decode(frameJpeg);
 
-        final Image photo = new Image();
-        photo.setFilename(SELFIE_FILENAME);
-        photo.setData(photoData);
-        return photo;
+        return Image.builder()
+                .data(photoData)
+                .filename(SELFIE_FILENAME)
+                .build();
     }
 
     private static String unescapeSlashes(final String value) {

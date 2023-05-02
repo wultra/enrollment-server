@@ -166,8 +166,9 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     private SubmittedDocument createSubmittedDocument() {
-        final Image photo = new Image();
-        photo.setFilename("test_id_card_front.jpg");
+        final Image photo = Image.builder()
+                .filename("test_id_card_front.jpg")
+                .build();
 
         final SubmittedDocument document = new SubmittedDocument();
         document.setDocumentId("documentId");

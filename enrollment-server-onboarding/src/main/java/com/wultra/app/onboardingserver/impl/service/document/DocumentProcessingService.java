@@ -357,8 +357,9 @@ public class DocumentProcessingService {
             OwnerId ownerId,
             DocumentSubmitRequest.DocumentMetadata docMetadata,
             List<Document> docs) throws DocumentSubmitException {
-        Image photo = new Image();
-        photo.setFilename(docMetadata.getFilename());
+        final Image photo = Image.builder()
+                .filename(docMetadata.getFilename())
+                .build();
 
         SubmittedDocument submittedDoc = new SubmittedDocument();
         submittedDoc.setDocumentId(docMetadata.getUploadId());

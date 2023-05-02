@@ -41,6 +41,8 @@ import java.util.UUID;
 @Slf4j
 public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
+    private static final String SELFIE_PHOTO_PATH = "/images/specimen_photo.jpg";
+
     /**
      * Session parameter name of the verification token
      */
@@ -73,19 +75,10 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) {
-        String selfiePhotoPath = "/images/specimen_photo.jpg";
-        Image photo = new Image();
-        try (InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(selfiePhotoPath)) {
-            if (is != null) {
-                photo.setData(is.readAllBytes());
-            }
-        } catch (IOException e) {
-            logger.error("Unable to read image data from: {}", selfiePhotoPath);
-        }
-        if (photo.getData() == null) {
-            photo.setData(new byte[]{});
-        }
-        photo.setFilename(SELFIE_FILENAME);
+        final Image photo = Image.builder()
+                .data(readImage())
+                .filename(SELFIE_FILENAME)
+                .build();
 
         PresenceCheckResult result = new PresenceCheckResult();
         result.setStatus(PresenceCheckStatus.ACCEPTED);
@@ -94,6 +87,17 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
         logger.info("Mock - provided accepted result, {}", id);
 
         return result;
+    }
+
+    private static byte[] readImage() {
+        try (InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(SELFIE_PHOTO_PATH)) {
+            if (is != null) {
+                return is.readAllBytes();
+            }
+        } catch (IOException e) {
+            logger.error("Unable to read image data from: {}", SELFIE_PHOTO_PATH);
+        }
+        return new byte[]{};
     }
 
     @Override

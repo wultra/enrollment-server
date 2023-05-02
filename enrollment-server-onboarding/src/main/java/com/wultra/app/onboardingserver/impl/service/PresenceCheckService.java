@@ -65,6 +65,7 @@ public class PresenceCheckService {
     private final PresenceCheckProvider presenceCheckProvider;
     private final PresenceCheckLimitService presenceCheckLimitService;
     private final AuditService auditService;
+    private final ImageProcessor imageProcessor;
 
     /**
      * Service constructor.
@@ -75,6 +76,7 @@ public class PresenceCheckService {
      * @param presenceCheckProvider Presence check provider.
      * @param presenceCheckLimitService Presence check limit service.
      * @param auditService Audit service.
+     * @param imageProcessor Image processor.
      */
     @Autowired
     public PresenceCheckService(
@@ -85,7 +87,8 @@ public class PresenceCheckService {
             final JsonSerializationService jsonSerializationService,
             final PresenceCheckProvider presenceCheckProvider,
             final PresenceCheckLimitService presenceCheckLimitService,
-            final AuditService auditService) {
+            final AuditService auditService,
+            final ImageProcessor imageProcessor) {
 
         this.identityVerificationConfig = identityVerificationConfig;
         this.documentVerificationRepository = documentVerificationRepository;
@@ -95,6 +98,7 @@ public class PresenceCheckService {
         this.presenceCheckProvider = presenceCheckProvider;
         this.presenceCheckLimitService = presenceCheckLimitService;
         this.auditService = auditService;
+        this.imageProcessor = imageProcessor;
     }
 
     /**
@@ -135,7 +139,8 @@ public class PresenceCheckService {
                 throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
             } else {
                 final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
-                presenceCheckProvider.initPresenceCheck(ownerId, photo);
+                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
                 logger.info("Presence check initialized, {}", ownerId);
                 auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
             }
@@ -252,7 +257,7 @@ public class PresenceCheckService {
      * @throws RemoteCommunicationException In case of remote communication error.
      * @throws DocumentVerificationException In case of business logic error.
      */
-    public Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException, RemoteCommunicationException {
+    protected Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException, RemoteCommunicationException {
         docsWithPhoto.forEach(docWithPhoto ->
                 Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
         );

@@ -85,13 +85,15 @@ The Onboarding Server uses the following public configuration properties:
 
 ## Presence Check Provider Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server-onboarding.presence-check.enabled` | `true` | Whether presence check provider is enabled. |
-| `enrollment-server-onboarding.presence-check.provider` | `mock` | Presen check provider (`mock`, `iproov`). |
-| `enrollment-server-onboarding.presence-check.cleanupEnabled` | `false` | Whether cleanup of presence check data is enabled. |
+| Property                                                                       | Default | Note                                                                                   |
+|--------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.presence-check.enabled`                          | `true`  | Whether presence check provider is enabled.                                            |
+| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`).                                            |
+| `enrollment-server-onboarding.presence-check.cleanupEnabled`                   | `false` | Whether cleanup of presence check data is enabled.                                     |
 | `enrollment-server-onboarding.presence-check.verifySelfieWithDocumentsEnabled` | `false` | Whether verification of the presence check selfie photo with the documents is enabled. |
-| `enrollment-server-onboarding.presence-check.max-failed-attempts` | `5` | Maximum failed attempts for presence check and OTP verification. |
+| `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |
+| `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |
+| `enrollment-server-onboarding.presence-check.selfie.minimal-width`             | `400`   | Minimal width of selfie image (pixels) used to crosscheck presence.                    | 
 
 ## Zen ID Configuration
 
