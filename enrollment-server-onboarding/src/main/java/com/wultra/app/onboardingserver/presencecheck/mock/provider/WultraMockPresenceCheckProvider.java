@@ -90,7 +90,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     private static byte[] readImage() {
-        try (InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(SELFIE_PHOTO_PATH)) {
+        try (final InputStream is = WultraMockPresenceCheckProvider.class.getResourceAsStream(SELFIE_PHOTO_PATH)) {
             if (is != null) {
                 return is.readAllBytes();
             }

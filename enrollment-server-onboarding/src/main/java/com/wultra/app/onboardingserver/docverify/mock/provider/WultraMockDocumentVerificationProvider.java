@@ -175,7 +175,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public Image getPhoto(String photoId) {
-        Image photo = Image.builder()
+        final Image photo = Image.builder()
                 .data(new byte[]{})
                 .filename("id_photo.jpg")
                 .build();

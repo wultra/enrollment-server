@@ -97,7 +97,7 @@ class WultraMockPresenceCheckProviderTest {
     }
 
     private void initPresenceCheck() {
-        Image photo = Image.builder()
+        final Image photo = Image.builder()
                 .data(new byte[]{})
                 .filename("id_photo.jpg")
                 .build();
