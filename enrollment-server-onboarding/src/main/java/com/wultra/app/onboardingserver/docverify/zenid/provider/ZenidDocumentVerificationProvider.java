@@ -259,10 +259,10 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
         String filename = getContentDispositionFilename(responseEntity.getHeaders());
 
-        Image image = new Image();
-        image.setData(responseEntity.getBody());
-        image.setFilename(filename);
-        return image;
+        return Image.builder()
+                .data(responseEntity.getBody())
+                .filename(filename)
+                .build();
     }
 
     @Override

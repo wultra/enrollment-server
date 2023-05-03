@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -25,6 +26,7 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@Builder
 public class Image {
 
     private String filename;
