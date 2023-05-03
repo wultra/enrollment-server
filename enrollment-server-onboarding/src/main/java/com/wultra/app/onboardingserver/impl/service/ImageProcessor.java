@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.google.common.io.Files;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
@@ -24,14 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 
 /**
  * Component to image processing.
@@ -42,25 +39,27 @@ import java.util.Iterator;
 @Slf4j
 public class ImageProcessor {
 
+    private static final String TYPE_PNG = "PNG";
+    private static final String SUFFIX_PNG = ".png";
+    private static final int KILOBYTE = 1024;
+
     /**
      * Upscale the given image if its width is smaller than the required value, otherwise the original image is returned.
      *
      * @param ownerId Owner identification for logging purpose
      * @param sourceImage the image to upscale
      * @param minimalWidth required minimal width of the image in pixels
-     * @return the upscaled image if needed or the original
+     * @return the upscaled image (if needed) in PNG format or the original image in the original format
      */
     public Image upscaleImage(final OwnerId ownerId, final Image sourceImage, final int minimalWidth) throws PresenceCheckException {
         final String filename = sourceImage.getFilename();
         logger.debug("Attempt to upscale image: {} to minimalWidth: {} px, {}", filename, minimalWidth, ownerId);
 
         try {
-            final BufferedImageWrapper bufferedSourceImageWrapper = readImage(new ByteArrayInputStream(sourceImage.getData()));
-            final BufferedImage bufferedSourceImage = bufferedSourceImageWrapper.bufferedImage;
-            final String formatName = bufferedSourceImageWrapper.formatName;
+            final BufferedImage bufferedSourceImage = ImageIO.read(new ByteArrayInputStream(sourceImage.getData()));
             final int currentWidth = bufferedSourceImage.getWidth();
             final int currentHeight = bufferedSourceImage.getHeight();
-            logger.info("Processing image: {}, format: {}, size: {} x {} px, {}", filename, formatName, currentWidth, currentHeight, ownerId);
+            logger.info("Processing image: {}, resolution: {} x {} px, size: {} KB, {}", filename, currentWidth, currentHeight, sourceImage.getData().length / KILOBYTE, ownerId);
 
             if (currentWidth < minimalWidth) {
                 final double aspectRatio = minimalWidth / (double) currentWidth;
@@ -70,11 +69,15 @@ public class ImageProcessor {
                 final BufferedImage bufferedOutputImage = new BufferedImage(minimalWidth, minimalHeight, bufferedSourceImage.getType());
                 bufferedOutputImage.getGraphics().drawImage(upscaledImage, 0, 0, null);
                 final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ImageIO.write(bufferedOutputImage, formatName, outputStream);
+                ImageIO.write(bufferedOutputImage, TYPE_PNG, outputStream);
 
+                final String filenamePng = Files.getNameWithoutExtension(filename) + SUFFIX_PNG;
+
+                final byte[] targetData = outputStream.toByteArray();
+                logger.debug("Image: {}, size: {} KB, {}", filenamePng, targetData.length / KILOBYTE, ownerId);
                 return Image.builder()
-                        .data(outputStream.toByteArray())
-                        .filename(filename)
+                        .data(targetData)
+                        .filename(filenamePng)
                         .build();
             } else {
                 logger.debug("Returning original image: {}, {}", filename, ownerId);
@@ -83,24 +86,5 @@ public class ImageProcessor {
         } catch (IOException e) {
             throw new PresenceCheckException("Unable to read image", e);
         }
-    }
-
-    private static BufferedImageWrapper readImage(final InputStream inputStream) throws IOException {
-        try (final ImageInputStream imageInputStream = ImageIO.createImageInputStream(inputStream)) {
-            final Iterator<ImageReader> readers = ImageIO.getImageReaders(imageInputStream);
-
-            if (!readers.hasNext()) {
-                throw new IOException("No reader found");
-            }
-
-            final ImageReader reader = readers.next();
-            final String formatName = reader.getFormatName();
-            reader.setInput(imageInputStream);
-            final BufferedImage bufferedImage = reader.read(0);
-            return new BufferedImageWrapper(formatName, bufferedImage);
-        }
-    }
-
-    private record BufferedImageWrapper(String formatName, BufferedImage bufferedImage) {
     }
 }

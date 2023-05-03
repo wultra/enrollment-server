@@ -54,6 +54,7 @@ class ImageProcessorTest {
         final Image result = tested.upscaleImage(new OwnerId(), image, 200);
 
         assertEquals(data.length, result.getData().length);
+        assertEquals("specimen_photo.jpg", result.getFilename());
     }
 
     @Test
@@ -84,6 +85,7 @@ class ImageProcessorTest {
         final Image result = tested.upscaleImage(new OwnerId(), image, 400);
 
         assertTrue(result.getData().length > data.length);
+        assertEquals("specimen_photo.png", result.getFilename());
         return result;
     }
 
