@@ -63,8 +63,8 @@ public class ImageProcessor {
             logger.info("Processing image: {}, format: {}, size: {} x {} px, {}", filename, formatName, currentWidth, currentHeight, ownerId);
 
             if (currentWidth < minimalWidth) {
-                final double aspectRation = minimalWidth / (double) currentWidth;
-                final int minimalHeight = (int) (aspectRation * currentHeight);
+                final double aspectRatio = minimalWidth / (double) currentWidth;
+                final int minimalHeight = (int) (aspectRatio * currentHeight);
                 logger.info("Upscaling image: {} to minimal size: {} x {} px, {}", filename, minimalWidth, minimalHeight, ownerId);
                 final java.awt.Image upscaledImage = bufferedSourceImage.getScaledInstance(minimalWidth, minimalHeight, java.awt.Image.SCALE_SMOOTH);
                 final BufferedImage bufferedOutputImage = new BufferedImage(minimalWidth, minimalHeight, bufferedSourceImage.getType());
