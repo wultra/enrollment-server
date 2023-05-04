@@ -451,7 +451,15 @@ class MobileTokenConverterTest {
 
         assertEquals(7, attributes.size());
         final var atributesIterator = attributes.iterator();
-        assertEquals(new AmountAttribute("operation.amount", "Amount", new BigDecimal("13.7"), "EUR", "13.70", "€"), atributesIterator.next());
+        assertEquals(AmountAttribute.builder()
+                .id("operation.amount")
+                .label("Amount")
+                .amount(new BigDecimal("13.7"))
+                .amountFormatted("13.70")
+                .currency("EUR")
+                .currencyFormatted("€")
+                .valueFormatted("EUR13.70")
+                .build(), atributesIterator.next());
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), atributesIterator.next());
         assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), atributesIterator.next());
         assertEquals(new HeadingAttribute("operation.heading", "Heading"), atributesIterator.next());
@@ -464,10 +472,12 @@ class MobileTokenConverterTest {
                 .sourceAmountFormatted("1.26")
                 .sourceCurrency("ETH")
                 .sourceCurrencyFormatted("ETH")
+                .sourceValueFormatted("1.26 ETH")
                 .targetAmount(new BigDecimal("1710.98"))
                 .targetAmountFormatted("1,710.98")
                 .targetCurrency("USD")
                 .targetCurrencyFormatted("$")
+                .targetValueFormatted("USD1,710.98")
                 .build(), atributesIterator.next());
         assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
                         .logoUrl("https://example.com/img/logo/logo.svg")

@@ -42,10 +42,20 @@ public class AmountConversionAttribute extends Attribute {
     private String sourceAmountFormatted;
     private String sourceCurrencyFormatted;
 
+    /**
+     * Combine both {@link #sourceAmountFormatted} and {@link #sourceCurrencyFormatted} together. Order is locale specific.
+     */
+    private String sourceValueFormatted;
+
     private BigDecimal targetAmount;
     private String targetCurrency;
     private String targetAmountFormatted;
     private String targetCurrencyFormatted;
+
+    /**
+     * Combine both {@link #targetAmountFormatted} and {@link #targetCurrencyFormatted} together. Order is locale specific.
+     */
+    private String targetValueFormatted;
 
     /**
      * No-arg constructor.
@@ -63,10 +73,12 @@ public class AmountConversionAttribute extends Attribute {
         this.sourceCurrency = builder.sourceCurrency;
         this.sourceAmountFormatted = builder.sourceAmountFormatted;
         this.sourceCurrencyFormatted = builder.sourceCurrencyFormatted;
+        this.sourceValueFormatted = builder.sourceValueFormatted;
         this.targetAmount = builder.targetAmount;
         this.targetCurrency = builder.targetCurrency;
         this.targetAmountFormatted = builder.targetAmountFormatted;
         this.targetCurrencyFormatted = builder.targetCurrencyFormatted;
+        this.targetValueFormatted = builder.targetValueFormatted;
     }
 
     public static Builder builder() {
@@ -81,10 +93,12 @@ public class AmountConversionAttribute extends Attribute {
         private String sourceCurrency;
         private String sourceAmountFormatted;
         private String sourceCurrencyFormatted;
+        private String sourceValueFormatted;
         private BigDecimal targetAmount;
         private String targetCurrency;
         private String targetAmountFormatted;
         private String targetCurrencyFormatted;
+        private String targetValueFormatted;
 
         public Builder dynamic(boolean value) {
             this.dynamic = value;
@@ -121,6 +135,11 @@ public class AmountConversionAttribute extends Attribute {
             return this;
         }
 
+        public Builder sourceValueFormatted(String value) {
+            this.sourceValueFormatted = value;
+            return this;
+        }
+
         public Builder targetAmount(BigDecimal value) {
             this.targetAmount = value;
             return this;
@@ -138,6 +157,11 @@ public class AmountConversionAttribute extends Attribute {
 
         public Builder targetCurrencyFormatted(String value) {
             this.targetCurrencyFormatted = value;
+            return this;
+        }
+
+        public Builder targetValueFormatted(String value) {
+            this.targetValueFormatted = value;
             return this;
         }
 

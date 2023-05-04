@@ -18,10 +18,14 @@
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.javamoney.moneta.function.MonetaryOperators;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
+import javax.money.MonetaryAmount;
 import javax.money.UnknownCurrencyException;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -37,7 +41,8 @@ class MonetaryConverter {
 
     private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 2;
     private static final int MAXIMAL_FRACTION_DIGITS = 18;
-
+    private static final char NON_BREAKING_SPACE = '\u00a0';
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.DOWN;
 
     private MonetaryConverter() {
         // hidden constructor
@@ -78,8 +83,32 @@ class MonetaryConverter {
         final NumberFormat format = NumberFormat.getInstance(locale);
         format.setMinimumFractionDigits(fractionDigits);
         format.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
-        format.setRoundingMode(RoundingMode.DOWN);
+        format.setRoundingMode(ROUNDING_MODE);
         return format.format(amount);
+    }
+
+    /**
+     * Convert the given amount and currency according to the given code and locale.
+     *
+     * @param amount amount to format
+     * @param code currency code
+     * @param locale locale to be used for the conversion
+     * @return formatted amount with localized currency or original code if there is no mapping available
+     */
+    static String formatValue(final Number amount, final String code, final Locale locale) {
+        try {
+            final MonetaryAmount money = Monetary.getDefaultAmountFactory()
+                    .setCurrency(code)
+                    .setNumber(amount)
+                    .create()
+                    .with(MonetaryOperators.rounding(ROUNDING_MODE));
+            final MonetaryAmountFormat moneyFormat = MonetaryFormats.getAmountFormat(locale);
+            return moneyFormat.format(money);
+        } catch (UnknownCurrencyException e) {
+            logger.debug("No currency mapping for code={}, most probably not FIAT", code);
+            logger.trace("No currency mapping for code={}", code, e);
+            return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
+        }
     }
 
     private static int getFractionDigits(String code) {

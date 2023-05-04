@@ -74,4 +74,26 @@ class MonetaryConverterTest {
         final String result = MonetaryConverter.formatAmount(new BigDecimal(amount), code, new Locale(locale));
         assertEquals(expected, result);
     }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1710.9867,               CZK, en, 'CZK1,710.98'",
+            "1710.9867,               CZK, cs, '1 710,98 CZK'",
+            "1710,                    CZK, cs, '1 710,00 CZK'",
+            "1710,                    USD, en, 'USD1,710.00'",
+            "1710,                    USD, cs, '1 710,00 USD'",
+            "1710.1,                  CZK, cs, '1 710,10 CZK'",
+            "1710.1,                  USD, en, 'USD1,710.10'",
+            "1710,                    JPY, jp, 'JPY 1,710.00'",
+            "1710,                    JPY, en, 'JPY1,710.00'",
+            "1710,                    JPY, cs, '1 710,00 JPY'",
+            "1,                       BTC, en, '1.00 BTC'",
+            "1.1,                     BTC, en, '1.10 BTC'",
+            "0.123456789,             BTC, en, '0.123456789 BTC'",
+            "0.567567567567567567567, BTC, en, '0.567567567567567567 BTC'"
+    })
+    void testFormatValue(final String amount, final String code, final String locale, final String expected) {
+        final String result = MonetaryConverter.formatValue(new BigDecimal(amount), code, new Locale(locale));
+        assertEquals(expected, result);
+    }
 }
