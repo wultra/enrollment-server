@@ -18,14 +18,10 @@
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import lombok.extern.slf4j.Slf4j;
-import org.javamoney.moneta.function.MonetaryOperators;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-import javax.money.MonetaryAmount;
 import javax.money.UnknownCurrencyException;
-import javax.money.format.MonetaryAmountFormat;
-import javax.money.format.MonetaryFormats;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -42,6 +38,7 @@ class MonetaryConverter {
     private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 2;
     private static final int MAXIMAL_FRACTION_DIGITS = 18;
     private static final char NON_BREAKING_SPACE = '\u00a0';
+    private static final String CURRENCY_PLACEHOLDER = "¤";
     private static final RoundingMode ROUNDING_MODE = RoundingMode.DOWN;
 
     private MonetaryConverter() {
@@ -97,13 +94,13 @@ class MonetaryConverter {
      */
     static String formatValue(final Number amount, final String code, final Locale locale) {
         try {
-            final MonetaryAmount money = Monetary.getDefaultAmountFactory()
-                    .setCurrency(code)
-                    .setNumber(amount)
-                    .create()
-                    .with(MonetaryOperators.rounding(ROUNDING_MODE));
-            final MonetaryAmountFormat moneyFormat = MonetaryFormats.getAmountFormat(locale);
-            return moneyFormat.format(money);
+            final CurrencyUnit currency = Monetary.getCurrency(code);
+
+            final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
+            numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
+            numberFormat.setRoundingMode(ROUNDING_MODE);
+
+            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currency.getCurrencyCode());
         } catch (UnknownCurrencyException e) {
             logger.debug("No currency mapping for code={}, most probably not FIAT", code);
             logger.trace("No currency mapping for code={}", code, e);
