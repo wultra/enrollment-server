@@ -94,14 +94,13 @@ class MonetaryConverter {
      */
     static String formatValue(final Number amount, final String code, final Locale locale) {
         try {
-            final CurrencyUnit currency = Monetary.getCurrency(code);
-
             final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
             numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
             numberFormat.setRoundingMode(ROUNDING_MODE);
 
-            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currency.getCurrencyCode());
-        } catch (UnknownCurrencyException e) {
+            final String currencySymbol = Currency.getInstance(code).getSymbol(locale);
+            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
+        } catch (IllegalArgumentException e) {
             logger.debug("No currency mapping for code={}, most probably not FIAT", code);
             logger.trace("No currency mapping for code={}", code, e);
             return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
