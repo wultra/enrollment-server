@@ -93,18 +93,12 @@ class MonetaryConverter {
      * @return formatted amount with localized currency or original code if there is no mapping available
      */
     static String formatValue(final Number amount, final String code, final Locale locale) {
-        try {
-            final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
-            numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
-            numberFormat.setRoundingMode(ROUNDING_MODE);
+        final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
+        numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
+        numberFormat.setRoundingMode(ROUNDING_MODE);
 
-            final String currencySymbol = Currency.getInstance(code).getSymbol(locale);
-            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
-        } catch (IllegalArgumentException e) {
-            logger.debug("No currency mapping for code={}, most probably not FIAT", code);
-            logger.trace("No currency mapping for code={}", code, e);
-            return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
-        }
+        final String currencySymbol = formatCurrency(code, locale);
+        return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
     }
 
     private static int getFractionDigits(String code) {

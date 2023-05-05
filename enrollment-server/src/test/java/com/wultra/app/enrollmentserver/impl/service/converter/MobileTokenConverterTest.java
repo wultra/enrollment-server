@@ -458,7 +458,7 @@ class MobileTokenConverterTest {
                 .amountFormatted("13.70")
                 .currency("EUR")
                 .currencyFormatted("€")
-                .valueFormatted("EUR13.70")
+                .valueFormatted("€13.70")
                 .build(), atributesIterator.next());
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), atributesIterator.next());
         assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), atributesIterator.next());
@@ -472,12 +472,12 @@ class MobileTokenConverterTest {
                 .sourceAmountFormatted("1.26")
                 .sourceCurrency("ETH")
                 .sourceCurrencyFormatted("ETH")
-                .sourceValueFormatted("1.26 ETH")
+                .sourceValueFormatted("ETH1.26")
                 .targetAmount(new BigDecimal("1710.98"))
                 .targetAmountFormatted("1,710.98")
                 .targetCurrency("USD")
                 .targetCurrencyFormatted("$")
-                .targetValueFormatted("USD1,710.98")
+                .targetValueFormatted("$1,710.98")
                 .build(), atributesIterator.next());
         assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
                         .logoUrl("https://example.com/img/logo/logo.svg")
