@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Configuration
-@ConfigurationProperties(prefix = "enrollment-server-onboarding.presence-check.iproov", ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "enrollment-server-onboarding.presence-check.iproov")
 @Getter @Setter
 public class IProovConfigProps {
 

@@ -71,7 +71,7 @@ public class UserInfoProviderConfiguration {
         return new RestUserInfoProvider(restUserInfoProviderConfiguration.restClientConfig, restUserInfoProviderConfiguration.getAllowedStages());
     }
 
-    @ConfigurationProperties(prefix = "enrollment-server.user-info.rest-provider", ignoreInvalidFields = true)
+    @ConfigurationProperties(prefix = "enrollment-server.user-info.rest-provider")
     @Component
     @Getter
     @Setter
