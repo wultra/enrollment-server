@@ -36,7 +36,7 @@ import java.util.Optional;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
 @Configuration
-@ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.zenid", ignoreInvalidFields = true)
+@ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.zenid")
 @Getter @Setter
 public class ZenidConfigProps {
 
