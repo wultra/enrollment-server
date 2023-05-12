@@ -89,10 +89,10 @@ class MonetaryConverterTest {
             "1710,                    JPY, jp, 'JP¥ 1,710.00'",
             "1710,                    JPY, en, '¥1,710.00'",
             "1710,                    JPY, cs, '1 710,00 JP¥'",
-            "1,                       BTC, en, 'BTC1.00'",// TODO Lubos introduce BTC symbol ₿
-            "1.1,                     BTC, en, 'BTC1.10'",
-            "0.123456789,             BTC, en, 'BTC0.123456789'",
-            "0.567567567567567567567, BTC, en, 'BTC0.567567567567567567'"
+            "1,                       BTC, en, '1.00 BTC'",
+            "1.1,                     BTC, en, '1.10 BTC'",
+            "0.123456789,             BTC, en, '0.123456789 BTC'",
+            "0.567567567567567567567, BTC, en, '0.567567567567567567 BTC'"
     })
     void testFormatValue(final String amount, final String code, final String locale, final String expected) {
         final String result = MonetaryConverter.formatValue(new BigDecimal(amount), code, new Locale(locale));

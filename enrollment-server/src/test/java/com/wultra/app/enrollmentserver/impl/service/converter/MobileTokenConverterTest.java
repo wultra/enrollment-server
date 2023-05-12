@@ -472,7 +472,7 @@ class MobileTokenConverterTest {
                 .sourceAmountFormatted("1.26")
                 .sourceCurrency("ETH")
                 .sourceCurrencyFormatted("ETH")
-                .sourceValueFormatted("ETH1.26")
+                .sourceValueFormatted("1.26 ETH")
                 .targetAmount(new BigDecimal("1710.98"))
                 .targetAmountFormatted("1,710.98")
                 .targetCurrency("USD")

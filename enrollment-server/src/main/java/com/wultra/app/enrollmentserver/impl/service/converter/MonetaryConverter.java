@@ -97,8 +97,14 @@ class MonetaryConverter {
         numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
         numberFormat.setRoundingMode(ROUNDING_MODE);
 
-        final String currencySymbol = formatCurrency(code, locale);
-        return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
+        try {
+            final String currencySymbol = Currency.getInstance(code).getSymbol(locale);
+            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
+        } catch (IllegalArgumentException e) {
+            logger.debug("No currency mapping for code={}, most probably not FIAT", code);
+            logger.trace("No currency mapping for code={}", code, e);
+            return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
+        }
     }
 
     private static int getFractionDigits(String code) {
