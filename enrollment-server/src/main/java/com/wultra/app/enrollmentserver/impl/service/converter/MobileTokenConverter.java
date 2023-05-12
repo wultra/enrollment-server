@@ -39,7 +39,6 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen.ScreenType.QR_SCAN;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -186,7 +185,10 @@ public class MobileTokenConverter {
 
     private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
         final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
-        if (uiExtensions.getPreApprovalScreen() != null && uiExtensions.getPreApprovalScreen().getType() == QR_SCAN && operationDetail.getTotp() == null) {
+        if (uiExtensions.getPreApprovalScreen() != null
+                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreen.ScreenType.QR_SCAN
+                && operationDetail.getTotp() == null) {
+
             logger.debug("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());
             uiExtensions.setPreApprovalScreen(null);
         }
