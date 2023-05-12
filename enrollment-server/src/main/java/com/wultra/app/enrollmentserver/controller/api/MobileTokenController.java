@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
+import com.wultra.app.enrollmentserver.impl.service.OperationApproveParameterObject;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -195,7 +196,7 @@ public class MobileTokenController {
                     logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
                     throw new MobileTokenAuthException();
                 }
-                final var serviceRequest = com.wultra.app.enrollmentserver.impl.service.OperationApproveRequest.builder()
+                final var serviceRequest = OperationApproveParameterObject.builder()
                         .activationId(activationId)
                         .userId(userId)
                         .applicationId(applicationId)

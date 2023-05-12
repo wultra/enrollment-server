@@ -26,13 +26,13 @@ import lombok.NonNull;
 import java.util.List;
 
 /**
- * Parameter object for {@link MobileTokenService#operationApprove(OperationApproveRequest)}.
+ * Parameter object for {@link MobileTokenService#operationApprove(OperationApproveParameterObject)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
 @Getter
-public class OperationApproveRequest {
+public class OperationApproveParameterObject {
 
     @NonNull
     private String activationId;

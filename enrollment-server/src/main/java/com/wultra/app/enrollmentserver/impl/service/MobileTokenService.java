@@ -143,7 +143,7 @@ public class MobileTokenService {
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
-    public Response operationApprove(@NotNull final OperationApproveRequest request) throws MobileTokenException, PowerAuthClientException {
+    public Response operationApprove(@NotNull final OperationApproveParameterObject request) throws MobileTokenException, PowerAuthClientException {
 
         final OperationDetailResponse operationDetail = getOperationDetail(request.getOperationId());
 
