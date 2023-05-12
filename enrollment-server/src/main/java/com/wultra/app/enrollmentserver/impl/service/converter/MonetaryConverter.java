@@ -35,7 +35,7 @@ import java.util.Locale;
 @Slf4j
 class MonetaryConverter {
 
-    private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 2;
+    private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 0;
     private static final int MAXIMAL_FRACTION_DIGITS = 18;
     private static final char NON_BREAKING_SPACE = '\u00a0';
     private static final String CURRENCY_PLACEHOLDER = "¤";
@@ -75,13 +75,9 @@ class MonetaryConverter {
      * @return formatted amount
      */
     static String formatAmount(final Number amount, final String code, final Locale locale) {
-        final int fractionDigits = getFractionDigits(code);
-
-        final NumberFormat format = NumberFormat.getInstance(locale);
-        format.setMinimumFractionDigits(fractionDigits);
-        format.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
-        format.setRoundingMode(ROUNDING_MODE);
-        return format.format(amount);
+        final NumberFormat numberFormat = NumberFormat.getInstance(locale);
+        customizeNumberFormat(numberFormat, code);
+        return numberFormat.format(amount);
     }
 
     /**
@@ -94,8 +90,7 @@ class MonetaryConverter {
      */
     static String formatValue(final Number amount, final String code, final Locale locale) {
         final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
-        numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
-        numberFormat.setRoundingMode(ROUNDING_MODE);
+        customizeNumberFormat(numberFormat, code);
 
         try {
             final String currencySymbol = Currency.getInstance(code).getSymbol(locale);
@@ -105,6 +100,13 @@ class MonetaryConverter {
             logger.trace("No currency mapping for code={}", code, e);
             return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
         }
+    }
+
+    private static void customizeNumberFormat(final NumberFormat numberFormat, final String code) {
+        final int fractionDigits = getFractionDigits(code);
+        numberFormat.setMinimumFractionDigits(fractionDigits);
+        numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
+        numberFormat.setRoundingMode(ROUNDING_MODE);
     }
 
     private static int getFractionDigits(String code) {
