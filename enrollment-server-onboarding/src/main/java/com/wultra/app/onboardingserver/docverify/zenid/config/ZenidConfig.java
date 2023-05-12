@@ -34,6 +34,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 /**
  * ZenID configuration.
@@ -45,23 +46,35 @@ import java.time.OffsetDateTime;
 @Configuration
 public class ZenidConfig {
 
+    public static final Map<SerializationFeature, Boolean> SERIALIZATION_FEATURES = Map.of(
+            SerializationFeature.FAIL_ON_EMPTY_BEANS, false,
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false,
+            SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true
+    );
+
+    public static final Map<DeserializationFeature, Boolean> DESERIALIZATION_FEATURES = Map.of(
+            DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false
+    );
+
     /**
      * @return Object mapper bean specific to ZenID json format
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid() {
+        final JavaTimeModule javaTimeModule = createJavaTimeModule();
+
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(javaTimeModule);
+        DESERIALIZATION_FEATURES.forEach(mapper::configure);
+        SERIALIZATION_FEATURES.forEach(mapper::configure);
+        return mapper;
+    }
+
+    private static JavaTimeModule createJavaTimeModule() {
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         // Add custom deserialization to support also the ISO DATE format data where ISO DATE TIME expected (ZenID bug?)
         javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(javaTimeModule)
-                .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID);
-        return mapper;
+        return javaTimeModule;
     }
 
     /**
@@ -76,11 +89,15 @@ public class ZenidConfig {
         headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration = new RestClientConfiguration.JacksonConfiguration();
+        jacksonConfiguration.getSerialization().putAll(SERIALIZATION_FEATURES);
+        jacksonConfiguration.getDeserialization().putAll(DESERIALIZATION_FEATURES);
+
+        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
         restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
         restClientConfiguration.setDefaultHttpHeaders(headers);
-        restClientConfiguration.setObjectMapper(objectMapperZenid());
-        return new DefaultRestClient(restClientConfiguration);
+        restClientConfiguration.setJacksonConfiguration(jacksonConfiguration);
+        return new DefaultRestClient(restClientConfiguration, createJavaTimeModule());
     }
 
 }
