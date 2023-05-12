@@ -37,5 +37,5 @@ public class OperationApproveRequest {
     /**
      * Optional OTP used for proximity check. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
      */
-    private String otp;
+    private String proximityCheckOtp;
 }

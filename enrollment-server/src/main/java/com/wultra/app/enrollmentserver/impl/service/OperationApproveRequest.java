@@ -57,5 +57,5 @@ public class OperationApproveRequest {
 
     private List<String> activationFlags;
 
-    private String otp;
+    private String proximityCheckOtp;
 }

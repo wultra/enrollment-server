@@ -204,7 +204,7 @@ public class MobileTokenController {
                         .signatureFactors(signatureFactors)
                         .requestContext(requestContext)
                         .activationFlags(activationFlags)
-                        .otp(requestObject.getOtp())
+                        .proximityCheckOtp(requestObject.getProximityCheckOtp())
                         .build();
 
                 return mobileTokenService.operationApprove(serviceRequest);

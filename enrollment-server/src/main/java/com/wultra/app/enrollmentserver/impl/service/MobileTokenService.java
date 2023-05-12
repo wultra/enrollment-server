@@ -165,8 +165,8 @@ public class MobileTokenService {
         approveRequest.getAdditionalData().put(ATTR_USER_AGENT, request.getRequestContext().getUserAgent());
         approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, request.getSignatureFactors().toString());
 
-        if (request.getOtp() != null) {
-            approveRequest.getAdditionalData().put("proximity_otp", request.getOtp()); // TODO Lubos - constant, better name, is additional data correct?
+        if (request.getProximityCheckOtp() != null) {
+            approveRequest.getAdditionalData().put("proximity_otp", request.getProximityCheckOtp()); // TODO Lubos - constant, better name, is additional data correct?
         }
 
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
