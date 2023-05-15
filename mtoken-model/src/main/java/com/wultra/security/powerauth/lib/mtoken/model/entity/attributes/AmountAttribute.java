@@ -38,29 +38,78 @@ public class AmountAttribute extends Attribute {
     private String currencyFormatted;
 
     /**
-     * Default constructor.
+     * Combine both {@link #amountFormatted} and {@link #currencyFormatted} together. Order is locale specific.
      */
-    public AmountAttribute() {
+    private String valueFormatted;
+
+    /**
+     * No-arg constructor.
+     */
+    AmountAttribute() {
         super(Type.AMOUNT);
     }
 
-    /**
-     * Constructor with all details.
-     * @param id Attribute ID.
-     * @param label Attribute label.
-     * @param amount Amount.
-     * @param currency Currency.
-     * @param amountFormatted Formatted amount.
-     * @param currencyFormatted  Formatted currency.
-     */
-    public AmountAttribute(String id, String label, BigDecimal amount, String currency, String amountFormatted, String currencyFormatted) {
+    protected AmountAttribute(final Builder builder) {
         this();
-        this.id = id;
-        this.label = label;
-        this.amount = amount;
-        this.currency = currency;
-        this.amountFormatted = amountFormatted;
-        this.currencyFormatted = currencyFormatted;
+        this.id = builder.id;
+        this.label = builder.label;
+        this.amount = builder.amount;
+        this.currency = builder.currency;
+        this.amountFormatted = builder.amountFormatted;
+        this.currencyFormatted = builder.currencyFormatted;
+        this.valueFormatted = builder.valueFormatted;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String id;
+        private String label;
+        private BigDecimal amount;
+        private String currency;
+        private String amountFormatted;
+        private String currencyFormatted;
+        private String valueFormatted;
+
+        public Builder id(String value) {
+            this.id = value;
+            return this;
+        }
+
+        public Builder label(String value) {
+            this.label = value;
+            return this;
+        }
+
+        public Builder amount(BigDecimal value) {
+            this.amount = value;
+            return this;
+        }
+
+        public Builder currency(String value) {
+            this.currency = value;
+            return this;
+        }
+
+        public Builder amountFormatted(String value) {
+            this.amountFormatted = value;
+            return this;
+        }
+
+        public Builder currencyFormatted(String value) {
+            this.currencyFormatted = value;
+            return this;
+        }
+
+        public Builder valueFormatted(String value) {
+            this.valueFormatted = value;
+            return this;
+        }
+
+        public AmountAttribute build() {
+            return new AmountAttribute(this);
+        }
+    }
 }

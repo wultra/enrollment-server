@@ -35,9 +35,11 @@ import java.util.Locale;
 @Slf4j
 class MonetaryConverter {
 
-    private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 2;
+    private static final int DEFAULT_MINIMAL_FRACTION_DIGITS = 0;
     private static final int MAXIMAL_FRACTION_DIGITS = 18;
-
+    private static final char NON_BREAKING_SPACE = '\u00a0';
+    private static final String CURRENCY_PLACEHOLDER = "¤";
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.DOWN;
 
     private MonetaryConverter() {
         // hidden constructor
@@ -73,13 +75,38 @@ class MonetaryConverter {
      * @return formatted amount
      */
     static String formatAmount(final Number amount, final String code, final Locale locale) {
-        final int fractionDigits = getFractionDigits(code);
+        final NumberFormat numberFormat = NumberFormat.getInstance(locale);
+        customizeNumberFormat(numberFormat, code);
+        return numberFormat.format(amount);
+    }
 
-        final NumberFormat format = NumberFormat.getInstance(locale);
-        format.setMinimumFractionDigits(fractionDigits);
-        format.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
-        format.setRoundingMode(RoundingMode.DOWN);
-        return format.format(amount);
+    /**
+     * Convert the given amount and currency according to the given code and locale.
+     *
+     * @param amount amount to format
+     * @param code currency code
+     * @param locale locale to be used for the conversion
+     * @return formatted amount with localized currency or original code if there is no mapping available
+     */
+    static String formatValue(final Number amount, final String code, final Locale locale) {
+        final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(locale);
+        customizeNumberFormat(numberFormat, code);
+
+        try {
+            final String currencySymbol = Currency.getInstance(code).getSymbol(locale);
+            return numberFormat.format(amount).replace(CURRENCY_PLACEHOLDER, currencySymbol);
+        } catch (IllegalArgumentException e) {
+            logger.debug("No currency mapping for code={}, most probably not FIAT", code);
+            logger.trace("No currency mapping for code={}", code, e);
+            return formatAmount(amount, code, locale) + NON_BREAKING_SPACE + code;
+        }
+    }
+
+    private static void customizeNumberFormat(final NumberFormat numberFormat, final String code) {
+        final int fractionDigits = getFractionDigits(code);
+        numberFormat.setMinimumFractionDigits(fractionDigits);
+        numberFormat.setMaximumFractionDigits(MAXIMAL_FRACTION_DIGITS);
+        numberFormat.setRoundingMode(ROUNDING_MODE);
     }
 
     private static int getFractionDigits(String code) {

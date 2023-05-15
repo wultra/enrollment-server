@@ -65,13 +65,37 @@ class MonetaryConverterTest {
             "1710,                    JPY, jp, '1,710'",
             "1710,                    JPY, en, '1,710'",
             "1710,                    JPY, cs, '1 710'",
-            "1,                       BTC, en, '1.00'",
-            "1.1,                     BTC, en, '1.10'",
+            "1,                       BTC, en, '1'",
+            "1.1,                     BTC, en, '1.1'",
             "0.123456789,             BTC, en, '0.123456789'",
             "0.567567567567567567567, BTC, en, '0.567567567567567567'"
     })
     void testFormatAmount(final String amount, final String code, final String locale, final String expected) {
         final String result = MonetaryConverter.formatAmount(new BigDecimal(amount), code, new Locale(locale));
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1710.9867,               CZK, en, 'CZK1,710.9867'",
+            "1710.9867,               CZK, cs, '1 710,9867 Kč'",
+            "1710,                    CZK, cs, '1 710,00 Kč'",
+            "1710,                    USD, en, '$1,710.00'",
+            "1710,                    USD, cs, '1 710,00 US$'",
+            "1710.1,                  CZK, cs, '1 710,10 Kč'",
+            "1710.1,                  USD, en, '$1,710.10'",
+            "1710.1,                  EUR, cs, '1 710,10 €'",
+            "1710.1,                  EUR, en, '€1,710.10'",
+            "1710,                    JPY, jp, 'JP¥ 1,710'",
+            "1710,                    JPY, en, '¥1,710'",
+            "1710,                    JPY, cs, '1 710 JP¥'",
+            "1,                       BTC, en, '1 BTC'",
+            "1.1,                     BTC, en, '1.1 BTC'",
+            "0.123456789,             BTC, en, '0.123456789 BTC'",
+            "0.567567567567567567567, BTC, en, '0.567567567567567567 BTC'"
+    })
+    void testFormatValue(final String amount, final String code, final String locale, final String expected) {
+        final String result = MonetaryConverter.formatValue(new BigDecimal(amount), code, new Locale(locale));
         assertEquals(expected, result);
     }
 }
