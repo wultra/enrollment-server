@@ -26,12 +26,16 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
+import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +49,8 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class WultraMockDocumentVerificationProvider implements DocumentVerificationProvider {
+
+    private static final String SELFIE_PHOTO_PATH = "/images/specimen_photo.jpg";
 
     private static final List<DocumentType> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO =
             List.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
@@ -174,14 +180,23 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public Image getPhoto(String photoId) {
+    public Image getPhoto(String photoId) throws DocumentVerificationException {
         final Image photo = Image.builder()
-                .data(new byte[]{})
+                .data(readFile())
                 .filename("id_photo.jpg")
                 .build();
 
         logger.info("Mock - getting photoId={} from document verification", photoId);
         return photo;
+    }
+
+    private static byte[] readFile() throws DocumentVerificationException {
+        try (final InputStream inputStream = WultraMockDocumentVerificationProvider.class.getResourceAsStream(SELFIE_PHOTO_PATH)) {
+            Assert.state(inputStream != null, "Unable to read image");
+            return inputStream.readAllBytes();
+        } catch (IOException e) {
+            throw new DocumentVerificationException("Unable to read image", e);
+        }
     }
 
     @Override
