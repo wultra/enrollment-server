@@ -187,7 +187,7 @@ public class MobileTokenConverter {
         final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
         if (uiExtensions.getPreApprovalScreen() != null
                 && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreen.ScreenType.QR_SCAN
-                && operationDetail.getTotp() == null) {
+                && operationDetail.getProximityOtp() == null) {
 
             logger.info("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());
             uiExtensions.setPreApprovalScreen(null);

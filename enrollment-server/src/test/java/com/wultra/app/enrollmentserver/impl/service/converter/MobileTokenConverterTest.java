@@ -510,7 +510,7 @@ class MobileTokenConverterTest {
     @Test
     void testConvertUiPreapprovalScanQr() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
-        operationDetail.setTotp("1234");
+        operationDetail.setProximityOtp("1234");
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setUi("""

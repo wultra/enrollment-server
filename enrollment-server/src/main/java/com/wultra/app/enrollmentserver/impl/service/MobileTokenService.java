@@ -63,6 +63,7 @@ public class MobileTokenService {
     private static final String ATTR_USER_AGENT = "userAgent";
     private static final String ATTR_AUTH_FACTOR = "authFactor";
     private static final String ATTR_REJECT_REASON = "rejectReason";
+    private static final String PROXIMITY_OTP = "proximity_otp";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
@@ -166,7 +167,7 @@ public class MobileTokenService {
         approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, request.getSignatureFactors().toString());
 
         if (request.getProximityCheckOtp() != null) {
-            approveRequest.getAdditionalData().put("proximity_otp", request.getProximityCheckOtp()); // TODO Lubos - constant, better name, is additional data correct?
+            approveRequest.getAdditionalData().put(PROXIMITY_OTP, request.getProximityCheckOtp());
         }
 
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
