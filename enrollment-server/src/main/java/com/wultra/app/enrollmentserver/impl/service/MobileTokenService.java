@@ -37,7 +37,6 @@ import com.wultra.security.powerauth.client.model.response.OperationUserActionRe
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +63,7 @@ public class MobileTokenService {
     private static final String ATTR_USER_AGENT = "userAgent";
     private static final String ATTR_AUTH_FACTOR = "authFactor";
     private static final String ATTR_REJECT_REASON = "rejectReason";
+    private static final String PROXIMITY_OTP = "proximity_otp";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
@@ -139,47 +139,37 @@ public class MobileTokenService {
     /**
      * Approve an operation.
      *
-     * @param activationId Activation ID.
-     * @param userId User ID.
-     * @param applicationId Application ID.
-     * @param operationId Operation ID.
-     * @param data Operation Data.
-     * @param signatureFactors Used signature factors.
-     * @param requestContext Request context.
-     * @param activationFlags Activation flags.
+     * @param request request
      * @return Simple response.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
-    public Response operationApprove(
-            @NotNull String activationId,
-            @NotNull String userId,
-            @NotNull String applicationId,
-            @NotNull String operationId,
-            @NotNull String data,
-            @NotNull PowerAuthSignatureTypes signatureFactors,
-            @NotNull RequestContext requestContext,
-            List<String> activationFlags) throws MobileTokenException, PowerAuthClientException {
+    public Response operationApprove(@NotNull final OperationApproveParameterObject request) throws MobileTokenException, PowerAuthClientException {
 
-        final OperationDetailResponse operationDetail = getOperationDetail(operationId);
+        final OperationDetailResponse operationDetail = getOperationDetail(request.getOperationId());
 
         final String activationFlag = operationDetail.getActivationFlag();
-        if (activationFlag != null && !activationFlags.contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
+        if (activationFlag != null && !request.getActivationFlags().contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
             throw new MobileTokenException("OPERATION_REQUIRES_ACTIVATION_FLAG", "Operation requires activation flag: " + activationFlag + ", which is not present on activation.");
         }
 
         final com.wultra.security.powerauth.client.model.request.OperationApproveRequest approveRequest = new com.wultra.security.powerauth.client.model.request.OperationApproveRequest();
-        approveRequest.setOperationId(operationId);
-        approveRequest.setData(data);
-        approveRequest.setUserId(userId);
-        approveRequest.setSignatureType(SignatureType.enumFromString(signatureFactors.name())); // 'toString' would perform additional toLowerCase() call
-        approveRequest.setApplicationId(applicationId);
+        approveRequest.setOperationId(request.getOperationId());
+        approveRequest.setData(request.getData());
+        approveRequest.setUserId(request.getUserId());
+        approveRequest.setSignatureType(SignatureType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
+        approveRequest.setApplicationId(request.getApplicationId());
         // Prepare additional data
-        approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
-        approveRequest.getAdditionalData().put(ATTR_APPLICATION_ID, applicationId);
-        approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
-        approveRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
-        approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, signatureFactors.toString());
+        approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, request.getActivationId());
+        approveRequest.getAdditionalData().put(ATTR_APPLICATION_ID, request.getApplicationId());
+        approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, request.getRequestContext().getIpAddress());
+        approveRequest.getAdditionalData().put(ATTR_USER_AGENT, request.getRequestContext().getUserAgent());
+        approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, request.getSignatureFactors().toString());
+
+        if (request.getProximityCheckOtp() != null) {
+            approveRequest.getAdditionalData().put(PROXIMITY_OTP, request.getProximityCheckOtp());
+        }
+
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
                 approveRequest,
                 httpCustomizationService.getQueryParams(),

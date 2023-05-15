@@ -17,6 +17,7 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
+import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -33,4 +34,8 @@ public class OperationApproveRequest {
     @NotNull
     private String data;
 
+    /**
+     * Optional OTP used for proximity check. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
+     */
+    private String proximityCheckOtp;
 }

@@ -165,6 +165,7 @@ class MobileTokenConverterTest {
 
         final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
         assertEquals(PreApprovalScreen.ScreenType.WARNING, preApprovalScreen.getType());
+        assertEquals(PreApprovalScreen.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
     }
 
     @Test
@@ -514,6 +515,56 @@ class MobileTokenConverterTest {
         assertEquals(1, attributes.size());
         final Attribute imageAttribute = attributes.iterator().next();
         assertEquals(new ImageAttribute("operation.image", "Image", "https://example.com/123_thumb.jpeg", null), imageAttribute);
+    }
+
+    @Test
+    void testConvertUiPreapprovalScanQr() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setProximityOtp("1234");
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "preApprovalScreen": {
+                    "type": "QR_SCAN",
+                    "heading": "Scan the QR code!",
+                    "message": "You may become a victim of an attack."
+                  }
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNotNull(result.getUi());
+
+        final UiExtensions ui = result.getUi();
+        assertNotNull(ui.getPreApprovalScreen());
+
+        final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
+        assertEquals(PreApprovalScreen.ScreenType.QR_SCAN, preApprovalScreen.getType());
+        assertEquals("Scan the QR code!", preApprovalScreen.getHeading());
+        assertEquals("You may become a victim of an attack.", preApprovalScreen.getMessage());
+    }
+
+    @Test
+    void testConvertUiPreapprovalScanQrSuppressed() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "preApprovalScreen": {
+                    "type": "QR_SCAN",
+                    "heading": "Scan the QR code!",
+                    "message": "You may become a victim of an attack."
+                  }
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNotNull(result.getUi());
+
+        final UiExtensions ui = result.getUi();
+        assertNull(ui.getPreApprovalScreen());
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {

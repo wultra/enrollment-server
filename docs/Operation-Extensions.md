@@ -66,13 +66,23 @@ Optional information about screen that should be displayed before the operation 
 }
 ```
 
-| Attribute                        | Required | Default | Description                                                                                        |
-|----------------------------------|----------|---------|----------------------------------------------------------------------------------------------------|
-| `preApprovalScreen.type`         | `true`   | -       | Type of the screen. Use `WARNING` for warning screen, and `INFO` for a general information screen. |
-| `preApprovalScreen.heading`      | `true`   | -       | Heading of the screen.                                                                             |
-| `preApprovalScreen.message`      | `true`   | -       | Message displayed to the user, placed under the screen heading.                                    |
-| `preApprovalScreen.items`        | `false`  | `null`  | Bullet point items displayed by the message.                                                       |
-| `preApprovalScreen.approvalType` | `true`   | -       | Type of the approval screen component. Currently, only a `SLIDER` option is available.             |
+| Attribute                        | Required | Default | Description                                                                            |
+|----------------------------------|----------|---------|----------------------------------------------------------------------------------------|
+| `preApprovalScreen.type`         | `true`   | -       | Type of the screen. (`WARNING`, `INFO`, or `QR_SCAN`)                                  |
+| `preApprovalScreen.heading`      | `true`   | -       | Heading of the screen.                                                                 |
+| `preApprovalScreen.message`      | `true`   | -       | Message displayed to the user, placed under the screen heading.                        |
+| `preApprovalScreen.items`        | `false`  | `null`  | Bullet point items displayed by the message.                                           |
+| `preApprovalScreen.approvalType` | `false`  | `null`  | Type of the approval screen component. Currently, only a `SLIDER` option is available. |
+
+
+#### Pre-approval Screen Types
+
+Currently, the following types of pre-approval screen are supported.
+
+- `WARNING` for warning screen.
+- `INFO` for a general information screen.
+- `QR_SCAN` for screen to scan QR code to do proximity check.
+
 
 ### Post-approval Screen
 
