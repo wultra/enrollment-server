@@ -57,6 +57,9 @@ public class ImageProcessor {
 
         try {
             final BufferedImage bufferedSourceImage = ImageIO.read(new ByteArrayInputStream(sourceImage.getData()));
+            if (bufferedSourceImage == null) {
+                throw new PresenceCheckException("Unable to read image " + filename);
+            }
             final int currentWidth = bufferedSourceImage.getWidth();
             final int currentHeight = bufferedSourceImage.getHeight();
             logger.info("Processing image: {}, resolution: {} x {} px, size: {} KB, {}", filename, currentWidth, currentHeight, sourceImage.getData().length / KILOBYTE, ownerId);
