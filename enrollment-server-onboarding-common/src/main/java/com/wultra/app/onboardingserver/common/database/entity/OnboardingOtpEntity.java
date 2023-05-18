@@ -50,6 +50,7 @@ public class OnboardingOtpEntity implements Serializable {
     private static final long serialVersionUID = -5626187612981527923L;
 
     public static final String ERROR_CANCELED = "canceledOtp";
+    public static final String ERROR_RESEND = "resendOtp";
     public static final String ERROR_EXPIRED = "expiredOtp";
     public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttemptsOtp";
 
