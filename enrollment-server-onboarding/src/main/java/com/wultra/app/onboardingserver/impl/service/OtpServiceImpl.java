@@ -131,17 +131,17 @@ public class OtpServiceImpl extends CommonOtpService {
      */
     public void cancelOtp(OnboardingProcessEntity process, OtpType otpType) {
         final String processId = process.getId();
-        // Fail current OTP, if it is present
+        // Fail current OTP, if it is present and in ACTIVE state
         onboardingOtpRepository.findNewestByProcessIdAndType(processId, otpType).ifPresent(otp -> {
             final Date now = new Date();
-            if (otp.getStatus() != OtpStatus.FAILED) {
+            if (otp.getStatus() == OtpStatus.ACTIVE) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(now);
                 otp.setTimestampFailed(now);
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
-                auditService.audit(otp, "OTP canceled for user: {}", process.getUserId());
+                auditService.audit(otp, "OTP canceled for process ID: {}, user ID: {}, otp type: {}", process.getId(), process.getUserId(), otpType);
             }
         });
     }
