@@ -142,6 +142,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Documentation -->
         <dependency>
             <groupId>org.springdoc</groupId>

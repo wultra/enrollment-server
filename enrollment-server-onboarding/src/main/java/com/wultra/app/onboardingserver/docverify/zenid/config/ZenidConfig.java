@@ -17,9 +17,7 @@
  */
 package com.wultra.app.onboardingserver.docverify.zenid.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.onboardingserver.docverify.zenid.model.deserializer.CustomOffsetDateTimeDeserializer;
 import com.wultra.core.rest.client.base.DefaultRestClient;
@@ -32,9 +30,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 /**
  * ZenID configuration.
@@ -46,27 +44,20 @@ import java.util.Map;
 @Configuration
 public class ZenidConfig {
 
-    public static final Map<SerializationFeature, Boolean> SERIALIZATION_FEATURES = Map.of(
-            SerializationFeature.FAIL_ON_EMPTY_BEANS, false,
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false,
-            SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true
-    );
-
-    public static final Map<DeserializationFeature, Boolean> DESERIALIZATION_FEATURES = Map.of(
-            DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false
-    );
-
     /**
+     * @param configProps Configuration properties
      * @return Object mapper bean specific to ZenID json format
      */
     @Bean("objectMapperZenid")
-    public ObjectMapper objectMapperZenid() {
+    public ObjectMapper objectMapperZenid(final ZenidConfigProps configProps) {
         final JavaTimeModule javaTimeModule = createJavaTimeModule();
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(javaTimeModule);
-        DESERIALIZATION_FEATURES.forEach(mapper::configure);
-        SERIALIZATION_FEATURES.forEach(mapper::configure);
+        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration = configProps.getRestClientConfig().getJacksonConfiguration();
+        Assert.state(jacksonConfiguration != null, "Jackson configuration is expected to ZenId working properly");
+        jacksonConfiguration.getDeserialization().forEach(mapper::configure);
+        jacksonConfiguration.getSerialization().forEach(mapper::configure);
         return mapper;
     }
 
@@ -83,20 +74,15 @@ public class ZenidConfig {
      * @return REST client for ZenID service API calls
      */
     @Bean("restClientZenid")
-    public RestClient restClientZenid(ZenidConfigProps configProps) throws RestClientException {
-        HttpHeaders headers = new HttpHeaders();
+    public RestClient restClientZenid(final ZenidConfigProps configProps) throws RestClientException {
+        final HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration = new RestClientConfiguration.JacksonConfiguration();
-        jacksonConfiguration.getSerialization().putAll(SERIALIZATION_FEATURES);
-        jacksonConfiguration.getDeserialization().putAll(DESERIALIZATION_FEATURES);
-
         final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
         restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
         restClientConfiguration.setDefaultHttpHeaders(headers);
-        restClientConfiguration.setJacksonConfiguration(jacksonConfiguration);
         return new DefaultRestClient(restClientConfiguration, createJavaTimeModule());
     }
 
