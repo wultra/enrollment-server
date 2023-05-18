@@ -53,7 +53,8 @@ public class ZenidConfig {
     );
 
     public static final Map<DeserializationFeature, Boolean> DESERIALIZATION_FEATURES = Map.of(
-            DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false
+            DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false,
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false
     );
 
     /**
