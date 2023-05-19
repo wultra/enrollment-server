@@ -116,6 +116,7 @@ public class OtpServiceImpl extends CommonOtpService {
 
         if (existingOtp.getStatus() != OtpStatus.FAILED) {
             existingOtp.setStatus(OtpStatus.FAILED);
+            existingOtp.setErrorDetail(OnboardingOtpEntity.ERROR_RESEND);
             existingOtp.setTimestampLastUpdated(new Date());
             onboardingOtpRepository.save(existingOtp);
             logger.info("Marked previous {} as {} to allow new send of the OTP code", existingOtp, OtpStatus.FAILED);
