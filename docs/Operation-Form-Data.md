@@ -19,6 +19,7 @@ Following structured custom form data attributes are available:
 - `NOTE` - free text
 - `KEY_VALUE` - generic key-value field
 - `HEADING` - heading with label 
+- `ALERT` - alert with various alert types
 - `PARTY_INFO` - information about party
 
 ## Value Formatting
@@ -42,6 +43,8 @@ This snippet configure
 
 #### AMOUNT
 
+![Amount Cell](./images/cell_amount.png)
+
 ```json
 {
   "id": "operation.amount",
@@ -60,6 +63,8 @@ Remarks:
 - Use ISO 4217 format of `currency`, the value is also provided in localized form.
 
 #### AMOUNT_CONVERSION
+
+![Amount Conversion Cell](./images/cell_amount_conversion.png)
 
 ```json
 {
@@ -83,6 +88,8 @@ Remarks:
 
 #### IMAGE
 
+![Image Cell](./images/cell_image.png)
+
 ```json
 {
   "id": "operation.image",
@@ -102,6 +109,8 @@ Remarks:
 
 #### KEY_VALUE
 
+![Key-Value Cell](./images/cell_key_value.png)
+
 ```json
 {
   "id": "operation.account",
@@ -117,6 +126,8 @@ Remarks:
 - Always use `KEY_VALUE` as `type`
 
 #### NOTE
+
+![Note Cell](./images/cell_note.png)
 
 ```json
 {
@@ -134,6 +145,8 @@ Remarks:
 
 #### HEADING
 
+![Heading Cell](./images/cell_heading.png)
+
 ```json
 {
   "id": "operation.heading",
@@ -145,7 +158,35 @@ Remarks:
 Remarks:
 - Always use `HEADING` as `type`
 
+#### ALERT
+
+![Alert Cell](./images/cell_alert.png)
+
+```json
+{
+  "id": "operation.alert",
+  "type": "ALERT",
+  "text": "Balance alert",
+  "params": {
+    "type": "alert-type-key-may-be-changed",
+    "title": "title-key-may-be-changed",
+    "message": "message-key-may-be-changed"
+  }
+}
+```
+
+Remarks:
+- Always use `ALERT` as `type`
+- Alert type can be any of `SUCCESS`, `INFO`, `WARNING` and `ERROR`
+- The recommended formatting on the client side is the following:
+  - Each alert type should have an associated icon to it.
+  - If only message is specified, it is displayed as a regular text.
+  - If both message and title are specified, title is displayed as a highlighted part of the text (i.e., bold and above the value), message as the regular text.
+  - The element text present in the label value can be used for accessibility description of the cell or icon.
+
 #### PARTY_INFO
+
+![Party Info Cell](./images/cell_party_info.png)
 
 ```json
 {

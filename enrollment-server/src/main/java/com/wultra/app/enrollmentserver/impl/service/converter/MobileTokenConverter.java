@@ -203,11 +203,13 @@ public class MobileTokenConverter {
             case "AMOUNT_CONVERSION" ->
                 buildAmountConversionAttribute(templateParam, params);
             case "HEADING" ->
-                Optional.of(new HeadingAttribute(templateParam.getId(), templateParam.getText()));
+                buildHeadingAttribute(templateParam, params);
             case "NOTE" ->
                 buildNoteAttribute(templateParam, params);
             case "KEY_VALUE" ->
                 buildKeyValueAttribute(templateParam, params);
+            case "ALERT" ->
+                buildAlertAttribute(templateParam, params);
             case "IMAGE" ->
                 buildImageAttribute(templateParam, params);
             case "PARTY_INFO" ->
@@ -217,6 +219,14 @@ public class MobileTokenConverter {
                 yield buildKeyValueAttribute(templateParam, params);
             }
         };
+    }
+
+    private static Optional<Attribute> buildHeadingAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final int level = fetchTemplateParamValue(templateParam, params, "level")
+                .map(Integer::valueOf).orElse(0);
+        return Optional.of(new HeadingAttribute(id, text, level));
     }
 
     private static Optional<Attribute> buildKeyValueAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
@@ -231,6 +241,36 @@ public class MobileTokenConverter {
         final String text = templateParam.getText();
         return fetchTemplateParamValue(templateParam, params, "note")
                 .map(it -> new NoteAttribute(id, text, it));
+    }
+
+    private static Optional<Attribute> buildAlertAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> alertTypeOptional = fetchTemplateParamValue(templateParam, params, "type");
+        final AlertAttribute.AlertType alertType = alertTypeOptional
+                .map(MobileTokenConverter::convertAlertType)
+                .orElse(AlertAttribute.AlertType.INFO);
+        final Optional<String> titleOptional = fetchTemplateParamValue(templateParam, params, "title");
+        final String title = titleOptional.orElse(null);
+        final Optional<String> messageOptional = fetchTemplateParamValue(templateParam, params, "message");
+        final String message = messageOptional.orElse(null);
+        return Optional.of(AlertAttribute.builder()
+                .id(id)
+                .alertType(alertType)
+                .label(text)
+                .title(title)
+                .message(message)
+                .build()
+        );
+    }
+
+    private static AlertAttribute.AlertType convertAlertType(String alertTypeValue) {
+        return switch (alertTypeValue.toUpperCase()) {
+            case "SUCCESS" -> AlertAttribute.AlertType.SUCCESS;
+            case "WARNING" -> AlertAttribute.AlertType.WARNING;
+            case "ERROR" -> AlertAttribute.AlertType.ERROR;
+            default -> AlertAttribute.AlertType.INFO;
+        };
     }
 
     private static Optional<Attribute> buildAmountAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {

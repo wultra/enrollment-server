@@ -43,6 +43,13 @@ public class KeyValueAttribute extends Attribute {
     }
 
     /**
+     * Protected constructor for easier subclassing.
+     */
+    protected KeyValueAttribute(Type type) {
+        super(type);
+    }
+
+    /**
      * Constructor with all details.
      * @param id Attribute ID.
      * @param label Attribute label.

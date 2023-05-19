@@ -365,6 +365,7 @@ class MobileTokenConverterTest {
                 .put("currency", "EUR")
                 .put("iban", "AT483200000012345864")
                 .put("note", "Remember me")
+                .put("headingLevel", "3")
                 .put("thumbnailUrl", "https://example.com/123_thumb.jpeg")
                 .put("originalUrl", "https://example.com/123.jpeg")
                 .put("sourceAmount", "1.26")
@@ -376,6 +377,9 @@ class MobileTokenConverterTest {
                 .put("partyName", "Example Ltd.")
                 .put("partyDescription", "Find out more about Example...")
                 .put("partyUrl", "https://example.com/hello")
+                .put("alertType", "WARNING")
+                .put("alertTitle", "Insufficient Balance")
+                .put("alertMessage", "You have only $1.00 on your account with number 238400856/0300.")
                 .build());
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
@@ -407,9 +411,17 @@ class MobileTokenConverterTest {
                     }
                   },
                   {
-                    "id": "operation.heading",
+                    "id": "operation.heading.zero",
                     "type": "HEADING",
                     "text": "Heading"
+                  },
+                  {
+                    "id": "operation.heading",
+                    "type": "HEADING",
+                    "text": "Heading",
+                    "params": {
+                        "level": "headingLevel"
+                    }
                   },
                   {
                     "id": "operation.image",
@@ -433,6 +445,16 @@ class MobileTokenConverterTest {
                     }
                   },
                   {
+                    "id": "operation.alert",
+                    "type": "ALERT",
+                    "text": "Balance warning",
+                    "params": {
+                      "type": "alertType",
+                      "title": "alertTitle",
+                      "message": "alertMessage"
+                    }
+                  },
+                  {
                     "id": "operation.partyInfo",
                     "type": "PARTY_INFO",
                     "text": "Party Info",
@@ -450,7 +472,7 @@ class MobileTokenConverterTest {
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
-        assertEquals(7, attributes.size());
+        assertEquals(9, attributes.size());
         final var atributesIterator = attributes.iterator();
         assertEquals(AmountAttribute.builder()
                 .id("operation.amount")
@@ -463,7 +485,8 @@ class MobileTokenConverterTest {
                 .build(), atributesIterator.next());
         assertEquals(new KeyValueAttribute("operation.account", "To Account", "AT483200000012345864"), atributesIterator.next());
         assertEquals(new NoteAttribute("operation.note", "Note", "Remember me"), atributesIterator.next());
-        assertEquals(new HeadingAttribute("operation.heading", "Heading"), atributesIterator.next());
+        assertEquals(new HeadingAttribute("operation.heading.zero", "Heading", 0), atributesIterator.next());
+        assertEquals(new HeadingAttribute("operation.heading", "Heading", 3), atributesIterator.next());
         assertEquals(new ImageAttribute("operation.image", "Image", "https://example.com/123_thumb.jpeg", "https://example.com/123.jpeg"), atributesIterator.next());
         assertEquals(AmountConversionAttribute.builder()
                 .id("operation.amountConversion")
@@ -480,6 +503,8 @@ class MobileTokenConverterTest {
                 .targetCurrencyFormatted("$")
                 .targetValueFormatted("$1,710.98")
                 .build(), atributesIterator.next());
+        assertEquals(new AlertAttribute("operation.alert", AlertAttribute.AlertType.WARNING, "Balance warning",
+                "Insufficient Balance", "You have only $1.00 on your account with number 238400856/0300."), atributesIterator.next());
         assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
                         .logoUrl("https://example.com/img/logo/logo.svg")
                         .name("Example Ltd.")

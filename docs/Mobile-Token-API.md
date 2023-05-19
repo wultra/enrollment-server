@@ -144,6 +144,14 @@ Get the list with all operations that are pending confirmation.
         "message": "Hello,\nplease confirm following payment:",
         "attributes": [
           {
+            "type": "ALERT",
+            "alertType": "WARNING",
+            "id": "operation.warning",
+            "label": "Balance alert",
+            "title": "Insufficient Balance",
+            "message": "You have only $1.00 on your account with number 238400856/0300."
+          },
+          {
             "type": "HEADING",
             "id": "operation.heading",
             "label": "Utility Payment"
@@ -152,10 +160,26 @@ Get the list with all operations that are pending confirmation.
             "type": "AMOUNT",
             "id": "operation.amount",
             "label": "Amount",
-            "amount": 100,
+            "amount": 2199.40,
             "currency": "CZK",
-            "amountFormatted": "100,00",
+            "amountFormatted": "2199,40",
             "currencyFormatted": "Kč"
+          },
+          {
+            "type": "AMOUNT_CONVERSION",
+            "id": "operation.conversion",
+            "label": "Conversion Rate",
+            "dynamic": false,
+            "sourceAmount": 100.00,
+            "sourceCurrency": "USD",
+            "sourceAmountFormatted": "100.00",
+            "sourceCurrencyFormatted": "$",
+            "sourceValueFormatted": "$100.00",
+            "targetAmount": 2199.40,
+            "targetCurrency": "CZK",
+            "targetAmountFormatted": "2199,40",
+            "targetCurrencyFormatted": "Kč",
+            "targetValueFormatted": "2199,40 Kč"
           },
           {
             "type": "KEY_VALUE",
@@ -174,6 +198,13 @@ Get the list with all operations that are pending confirmation.
             "id": "operation.note",
             "label": "Note",
             "note": "Utility Bill Payment - 05/2019"
+          },
+          {
+            "type": "IMAGE",
+            "id": "operation.image",
+            "label": "Payment Check Preview",
+            "thumbnailUrl": "https://example.com/thumbnail.png",
+            "originalUrl": "https://example.com/image.png"
           },
           {
             "type": "PARTY_INFO",
@@ -249,6 +280,14 @@ Get the list of confirmed or rejected Mobile Token operations.
         "message": "Hello,\nplease confirm following payment:",
         "attributes": [
           {
+            "type": "ALERT",
+            "alertType": "WARNING",
+            "id": "operation.warning",
+            "label": "Balance alert",
+            "title": "Insufficient Balance",
+            "message": "You have only $1.00 on your account with number 238400856/0300."
+          },
+          {
             "type": "HEADING",
             "id": "operation.heading",
             "label": "Utility Payment"
@@ -257,10 +296,26 @@ Get the list of confirmed or rejected Mobile Token operations.
             "type": "AMOUNT",
             "id": "operation.amount",
             "label": "Amount",
-            "amount": 100,
+            "amount": 2199.40,
             "currency": "CZK",
-            "amountFormatted": "100,00",
+            "amountFormatted": "2199,40",
             "currencyFormatted": "Kč"
+          },
+          {
+            "type": "AMOUNT_CONVERSION",
+            "id": "operation.conversion",
+            "label": "Conversion Rate",
+            "dynamic": false,
+            "sourceAmount": 100.00,
+            "sourceCurrency": "USD",
+            "sourceAmountFormatted": "100.00",
+            "sourceCurrencyFormatted": "$",
+            "sourceValueFormatted": "$100.00",
+            "targetAmount": 2199.40,
+            "targetCurrency": "CZK",
+            "targetAmountFormatted": "2199,40",
+            "targetCurrencyFormatted": "Kč",
+            "targetValueFormatted": "2199,40 Kč"
           },
           {
             "type": "KEY_VALUE",
@@ -279,6 +334,13 @@ Get the list of confirmed or rejected Mobile Token operations.
             "id": "operation.note",
             "label": "Note",
             "note": "Utility Bill Payment - 05/2019"
+          },
+          {
+            "type": "IMAGE",
+            "id": "operation.image",
+            "label": "Payment Check Preview",
+            "thumbnailUrl": "https://example.com/thumbnail.png",
+            "originalUrl": "https://example.com/image.png"
           },
           {
             "type": "PARTY_INFO",
@@ -389,13 +451,16 @@ Reject an operation with given ID, with a provided reason.
 
 ### Form Attribute Types
 
-| Type | Description |
-|---|---|
-| `AMOUNT` | Form field representing an amount with currency. |
-| `KEY_VALUE` | Form field representing a key value item, where items are displayed next to each other. This realistically impose limitation on value length - it should fit into the single line. |
-| `NOTE` | Form field representing a generic text note, where label is displayed above the note. As a result, note can be of an arbitrary length and can be multi-line. |
-| `HEADING` | Form field representing a heading, where label is displayed as the heading text. |
-| `PARTY_INFO` | Form field representing a structured object with information about a third party. |
+| Type                | Description                                                                       |
+|---------------------|-----------------------------------------------------------------------------------|
+| `AMOUNT`            | Form field representing an amount with currency.                                  |
+| `AMOUNT_CONVERSION` | Form field representing a conversion between amounts.                             |
+| `KEY_VALUE`         | Form field representing a key value item with single-line value.                  |
+| `NOTE`              | Form field representing a generic text note with multi-line value.                |
+| `HEADING`           | Form field representing a heading, where label is displayed as the heading text.  |
+| `ALERT`             | Form field representing a alert with success, info, warning or error states.      |
+| `PARTY_INFO`        | Form field representing a structured object with information about a third party. |
+| `IMAGE`             | Form field representing an image.                                                 |
 
 ### Operation Rejection Reasons
 

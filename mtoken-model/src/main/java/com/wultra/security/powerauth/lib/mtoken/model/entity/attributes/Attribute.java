@@ -38,7 +38,8 @@ import lombok.NoArgsConstructor;
         @JsonSubTypes.Type(value = KeyValueAttribute.class, name = "KEY_VALUE"),
         @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE"),
         @JsonSubTypes.Type(value = ImageAttribute.class, name = "IMAGE"),
-        @JsonSubTypes.Type(value = PartyAttribute.class, name = "PARTY_INFO")
+        @JsonSubTypes.Type(value = PartyAttribute.class, name = "PARTY_INFO"),
+        @JsonSubTypes.Type(value = AlertAttribute.class, name = "ALERT")
 })
 public class Attribute {
 
@@ -71,6 +72,11 @@ public class Attribute {
          * Heading attribute type, represents a visual separator.
          */
         HEADING,
+
+        /**
+         * Alert attribute type, represents an alert of success (green), info (blue), warning (orange), and error (red).
+         */
+        ALERT,
 
         /**
          * Information about third-party subject.
