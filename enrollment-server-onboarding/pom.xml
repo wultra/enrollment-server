@@ -262,6 +262,12 @@
                     <artifactId>spring-boot-starter-tomcat</artifactId>
                     <scope>provided</scope>
                 </dependency>
+
+                <dependency>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>tomcat-embed-el</artifactId>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
