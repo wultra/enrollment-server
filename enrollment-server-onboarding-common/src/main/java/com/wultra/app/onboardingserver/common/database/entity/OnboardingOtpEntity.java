@@ -92,6 +92,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "failed_attempts")
     private int failedAttempts;
 
+    @Column(name = "total_attempts")
+    private int totalAttempts;
+
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 

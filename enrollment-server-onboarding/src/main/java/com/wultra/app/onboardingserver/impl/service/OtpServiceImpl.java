@@ -172,6 +172,7 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampCreated(timestampCreated);
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
+        otp.setTotalAttempts(0);
 
         if (otpType == OtpType.USER_VERIFICATION) {
             final String activationId = process.getActivationId();
