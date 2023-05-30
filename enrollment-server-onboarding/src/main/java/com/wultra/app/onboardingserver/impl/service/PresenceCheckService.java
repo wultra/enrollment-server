@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -131,20 +132,9 @@ public class PresenceCheckService {
 
         presenceCheckLimitService.checkPresenceCheckMaxAttemptLimit(ownerId, processId);
 
-        IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
+        final IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
 
-        if (!idVerification.isPresenceCheckInitialized()) {
-            List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
-            if (docsWithPhoto.isEmpty()) {
-                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
-            } else {
-                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
-                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
-                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
-                logger.info("Presence check initialized, {}", ownerId);
-                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
-            }
-        }
+        initPresentCheckWithImage(ownerId, idVerification);
         return startPresenceCheck(ownerId, idVerification);
     }
 
@@ -221,6 +211,38 @@ public class PresenceCheckService {
             auditService.auditPresenceCheckProvider(identityVerification, "Clean up presence check data for user: {}", ownerId.getUserId());
         } else {
             logger.debug("Skipped cleanup of presence check data at the provider (not enabled), {}", ownerId);
+        }
+    }
+
+    /**
+     * Init presence check and upload upscaled image.
+     *
+     * @param ownerId Owner identification.
+     * @param idVerification Verification identity.
+     * @throws DocumentVerificationException When not able to find documet image.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     */
+    private void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+            throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
+
+        if (!idVerification.isPresenceCheckInitialized()) {
+            if (StringUtils.hasText(idVerification.getSessionInfo())) {
+                logger.info("SessionInfo present, image already uploaded, ", ownerId);
+                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialization skipped for user: {}, image already uploaded", ownerId.getUserId());
+                return;
+            }
+
+            final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
+            if (docsWithPhoto.isEmpty()) {
+                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
+            } else {
+                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
+                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
+                logger.info("Presence check initialized, {}", ownerId);
+                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
+            }
         }
     }
 

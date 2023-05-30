@@ -202,13 +202,14 @@
                         </goals>
                         <configuration>
                             <verbose>false</verbose>
-                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.yaml</inputSpec>
+                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.json</inputSpec>
                             <generatorName>java</generatorName>
                             <generateApis>false</generateApis>
                             <generateModelDocumentation>false</generateModelDocumentation>
                             <generateModels>true</generateModels>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
+                            <skipValidateSpec>true</skipValidateSpec>
                             <configOptions>
                                 <library>native</library>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>

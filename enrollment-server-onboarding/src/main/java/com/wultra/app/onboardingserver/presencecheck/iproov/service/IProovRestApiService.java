@@ -166,8 +166,7 @@ public class IProovRestApiService {
         final ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
-        request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId()); // TODO value from the device
-        request.setIp("192.168.1.1"); // TODO deprecated but still required
+        request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId());
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
 
