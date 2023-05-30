@@ -11,7 +11,7 @@
         </preConditions>
         <comment>Add total_attempts column</comment>
         <addColumn tableName="es_onboarding_otp">
-            <column name="total_attempts" type="integer" />
+            <column name="total_attempts" type="integer" defaultValueNumeric="0" />
         </addColumn>
     </changeSet>
 </databaseChangeLog>
