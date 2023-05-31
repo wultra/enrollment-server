@@ -59,6 +59,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
      */
     private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
     private static final String SELFIE_FILENAME = "person_photo_from_iProov.jpg";
+    private static final String ALREADY_ENROLLED = ClientErrorResponse.ErrorEnum.ALREADY_ENROLLED.getValue();
 
     private final ObjectMapper objectMapper;
 
@@ -88,7 +89,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         }
 
         // Deleting the iProov enrollment properly is not implemented yet
-        if (body.contains("already_enrolled")) {
+        if (body.contains(ALREADY_ENROLLED)) {
             throw new RemoteCommunicationException("User already enrolled into iProov, " + id);
         }
 
