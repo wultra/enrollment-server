@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -57,6 +58,8 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 public class PresenceCheckService {
 
     private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
+
+    private static final String SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
 
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -227,7 +230,7 @@ public class PresenceCheckService {
             throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
 
         if (!idVerification.isPresenceCheckInitialized()) {
-            if (StringUtils.hasText(idVerification.getSessionInfo())) {
+            if (wasImageAlreadyUploaded(idVerification)) {
                 logger.info("SessionInfo present, image already uploaded, ", ownerId);
                 auditService.auditPresenceCheckProvider(idVerification, "Presence check initialization skipped for user: {}, image already uploaded", ownerId.getUserId());
                 return;
@@ -363,9 +366,26 @@ public class PresenceCheckService {
     }
 
     private SessionInfo updateSessionInfo(final OwnerId ownerId, final IdentityVerificationEntity identityVerification, final SessionInfo sessionInfo) {
-        sessionInfo.getSessionAttributes().put("timestampLastUsed", ownerId.getTimestamp());
+        sessionInfo.getSessionAttributes().put(SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED, ownerId.getTimestamp());
         identityVerification.setSessionInfo(jsonSerializationService.serialize(sessionInfo));
         return sessionInfo;
     }
 
+    /**
+     * Return whether the image was already uploaded.
+     * <p>
+     * The logic is based on the fact, that the given verification identity may have several attempts for presence check
+     * and when passed {@link #checkPresenceVerification}, specific attributes of {@link SessionInfo} were set.
+     *
+     * @param identityVerification Verification identity.
+     * @return true if image was already uploaded
+     */
+    private boolean wasImageAlreadyUploaded(final IdentityVerificationEntity identityVerification) {
+        final String sessionInfoString = identityVerification.getSessionInfo();
+        if (!StringUtils.hasText(sessionInfoString)) {
+            return false;
+        }
+        final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
+        return sessionInfo != null && !CollectionUtils.isEmpty(sessionInfo.getSessionAttributes()) && sessionInfo.getSessionAttributes().containsKey(SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED);
+    }
 }
