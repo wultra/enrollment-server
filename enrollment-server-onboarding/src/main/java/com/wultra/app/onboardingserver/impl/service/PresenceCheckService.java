@@ -386,6 +386,7 @@ public class PresenceCheckService {
             return false;
         }
         final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
+        // TODO (racansky, 2023-05-31) improve logic to something more robust than presence of the attribute `timestampLastUsed`
         return sessionInfo != null && !CollectionUtils.isEmpty(sessionInfo.getSessionAttributes()) && sessionInfo.getSessionAttributes().containsKey(SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED);
     }
 }
