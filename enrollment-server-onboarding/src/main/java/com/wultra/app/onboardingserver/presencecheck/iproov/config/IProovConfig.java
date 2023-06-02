@@ -106,7 +106,7 @@ public class IProovConfig {
                 .build();
     }
 
-    private AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
+    private static AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
         final String tokenUri = UriComponentsBuilder.fromHttpUrl(configProps.getServiceBaseUrl() + "/{apiKey}/access_token")
                 .buildAndExpand(configProps.getApiKey())
                 .toUriString();
@@ -134,7 +134,7 @@ public class IProovConfig {
 
 
     // TODO (racansky, 2023-06-05) remove when iProov fix API according the RFC
-    private ReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient() {
+    private static ReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient() {
         @SuppressWarnings("unchecked")
         final ExchangeFilterFunction tokenResponseFilter = ExchangeFilterFunction.ofResponseProcessor(response -> {
             final ClientResponse.Builder builder = response.mutate();
