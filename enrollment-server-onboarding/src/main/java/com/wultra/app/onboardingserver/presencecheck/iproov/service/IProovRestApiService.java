@@ -82,17 +82,21 @@ public class IProovRestApiService {
     private final IProovConfigProps configProps;
 
     /**
-     * REST client for iProov calls.
+     * REST client for iProov enroll and verification calls.
      */
     private final RestClient restClient;
 
+    /**
+     * WebClient for IProov management calls.
+     */
     private final WebClient managementWebClient;
 
     /**
      * Service constructor.
      *
      * @param configProps Configuration properties.
-     * @param restClient REST template for IProov calls.
+     * @param restClient REST template for IProov enroll and verification calls.
+     * @param webClient WebClient for IProov management calls.
      */
     @Autowired
     public IProovRestApiService(
