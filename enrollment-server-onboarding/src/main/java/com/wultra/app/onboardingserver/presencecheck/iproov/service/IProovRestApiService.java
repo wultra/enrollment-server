@@ -30,14 +30,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -84,6 +86,8 @@ public class IProovRestApiService {
      */
     private final RestClient restClient;
 
+    private final WebClient managementWebClient;
+
     /**
      * Service constructor.
      *
@@ -93,9 +97,11 @@ public class IProovRestApiService {
     @Autowired
     public IProovRestApiService(
             IProovConfigProps configProps,
-            @Qualifier("restClientIProov") RestClient restClient) {
+            @Qualifier("restClientIProov") RestClient restClient,
+            @Qualifier("iproovManagemenentWebClient") WebClient webClient) {
         this.configProps = configProps;
         this.restClient = restClient;
+        this.managementWebClient = webClient;
     }
 
     /**
@@ -177,6 +183,54 @@ public class IProovRestApiService {
         return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
     }
 
+    /**
+     * Deletes the given user if already exists at iProov.
+     *
+     * @param id Owner identification.
+     */
+    public void deleteUserIfAlreadyExists(final OwnerId id) {
+        final String userId = getUserId(id);
+        logger.debug("Checking whether iProov exists userId: {}, {}", userId, id);
+        final boolean userExists = doesUserExists(userId, new OwnerId());
+        logger.info("iProov userId: {}, exists: {}, {}", userId, userExists, id);
+        if (userExists) {
+            logger.debug("Deleting iProov userId: {}, {}", userId, id);
+            deleteUser(userId, id);
+        }
+    }
+
+    private boolean doesUserExists(final String userId, final OwnerId id) {
+        return Objects.requireNonNullElse(managementWebClient.get()
+                .uri("{baseUrl}/users/{userId}", configProps.getServiceBaseUrl(), userId)
+                .exchangeToMono(response -> {
+                    final HttpStatusCode httpStatusCode = response.statusCode();
+                    if (httpStatusCode == HttpStatus.OK) {
+                        return Mono.just(true);
+                    } else if (httpStatusCode == HttpStatus.BAD_REQUEST) {
+                        return Mono.just(false);
+                    }
+                    return response.createError();
+                })
+                .doOnError(e -> {
+                    if (e instanceof WebClientResponseException exception) {
+                        logger.error("Get user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    }
+                })
+                .block(), false);
+    }
+
+    private void deleteUser(final String userId, final OwnerId id) {
+        managementWebClient.delete()
+                .uri("{baseUrl}/users/{userId}", configProps.getServiceBaseUrl(), userId)
+                .exchangeToMono(Mono::just)
+                .doOnError(e -> {
+                    if (e instanceof WebClientResponseException exception) {
+                        logger.error("Delete user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    }
+                })
+                .block();
+    }
+
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {
         final ServerClaimRequest request = new ServerClaimRequest();
         request.setApiKey(configProps.getApiKey());
@@ -191,7 +245,7 @@ public class IProovRestApiService {
         return request;
     }
 
-    public static String ensureValidUserIdValue(String value) {
+    protected static String ensureValidUserIdValue(String value) {
         if (value.length() > USER_ID_MAX_LENGTH) {
             value = value.substring(0, USER_ID_MAX_LENGTH);
             logger.warn("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);

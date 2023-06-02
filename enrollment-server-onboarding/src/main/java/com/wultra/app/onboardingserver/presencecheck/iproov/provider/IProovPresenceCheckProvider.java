@@ -81,6 +81,8 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public void initPresenceCheck(final OwnerId id, final Image photo) throws PresenceCheckException, RemoteCommunicationException {
+        iProovRestApiService.deleteUserIfAlreadyExists(id);
+
         final ResponseEntity<String> responseEntityToken = callGenerateEnrolToken(id);
 
         final String body = responseEntityToken.getBody();
@@ -88,7 +90,6 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             throw new RemoteCommunicationException("Missing response body when generating an enrol token in iProov, " + id);
         }
 
-        // Deleting the iProov enrollment properly is not implemented yet
         if (body.contains(ALREADY_ENROLLED)) {
             throw new RemoteCommunicationException("User already enrolled into iProov, " + id);
         }
