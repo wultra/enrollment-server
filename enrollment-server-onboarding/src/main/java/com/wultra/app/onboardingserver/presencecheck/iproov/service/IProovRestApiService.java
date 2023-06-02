@@ -19,8 +19,10 @@ package com.wultra.app.onboardingserver.presencecheck.iproov.service;
 
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateRequest;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClientErrorResponse;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -39,6 +41,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -212,7 +215,14 @@ public class IProovRestApiService {
                     if (httpStatusCode == HttpStatus.OK) {
                         return Mono.just(true);
                     } else if (httpStatusCode == HttpStatus.BAD_REQUEST) {
-                        return Mono.just(false);
+                        return response.bodyToMono(Map.class).flatMap(map -> {
+                            final Object errorCode = map.get(ClientErrorResponse.JSON_PROPERTY_ERROR);
+                            if (ClientErrorResponse.ErrorEnum.INVALID_USER_ID.getValue().equals(errorCode)) {
+                                return Mono.just(false);
+                            } else {
+                                return Mono.error(new RemoteCommunicationException("Not expected error code: " + errorCode));
+                            }
+                        });
                     }
                     return response.createError();
                 })
