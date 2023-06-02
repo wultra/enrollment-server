@@ -196,12 +196,13 @@ public class IProovRestApiService {
         if (userExists) {
             logger.debug("Deleting iProov userId: {}, {}", userId, id);
             deleteUser(userId, id);
+            logger.info("Deleted iProov userId: {}, {}", userId, id);
         }
     }
 
     private boolean doesUserExists(final String userId, final OwnerId id) {
         return Objects.requireNonNullElse(managementWebClient.get()
-                .uri("{baseUrl}/users/{userId}", configProps.getServiceBaseUrl(), userId)
+                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
                 .exchangeToMono(response -> {
                     final HttpStatusCode httpStatusCode = response.statusCode();
                     if (httpStatusCode == HttpStatus.OK) {
@@ -212,7 +213,7 @@ public class IProovRestApiService {
                     return response.createError();
                 })
                 .doOnError(e -> {
-                    if (e instanceof WebClientResponseException exception) {
+                    if (e instanceof final WebClientResponseException exception) {
                         logger.error("Get user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
                     }
                 })
@@ -221,10 +222,10 @@ public class IProovRestApiService {
 
     private void deleteUser(final String userId, final OwnerId id) {
         managementWebClient.delete()
-                .uri("{baseUrl}/users/{userId}", configProps.getServiceBaseUrl(), userId)
+                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
                 .exchangeToMono(Mono::just)
                 .doOnError(e -> {
-                    if (e instanceof WebClientResponseException exception) {
+                    if (e instanceof final WebClientResponseException exception) {
                         logger.error("Delete user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
                     }
                 })

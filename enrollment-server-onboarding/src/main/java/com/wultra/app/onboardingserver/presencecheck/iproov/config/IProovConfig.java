@@ -48,6 +48,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 
@@ -106,7 +107,10 @@ public class IProovConfig {
     }
 
     private AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
-        final String tokenUri = "%s/%s/access_token".formatted(configProps.getServiceBaseUrl(), configProps.getApiKey());
+        final String tokenUri = UriComponentsBuilder.fromHttpUrl(configProps.getServiceBaseUrl() + "/{apiKey}/access_token")
+                .buildAndExpand(configProps.getApiKey())
+                .toUriString();
+        logger.debug("Resolved tokenUri: {}", tokenUri);
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId(OAUTH_REGISTRATION_ID)
                 .tokenUri(tokenUri)
                 .clientName(configProps.getServiceUserAgent())
