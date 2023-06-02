@@ -132,7 +132,6 @@ public class IProovConfig {
         return authorizedClientManager;
     }
 
-
     // TODO (racansky, 2023-06-05) remove when iProov fix API according the RFC
     private static ReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient() {
         @SuppressWarnings("unchecked")
