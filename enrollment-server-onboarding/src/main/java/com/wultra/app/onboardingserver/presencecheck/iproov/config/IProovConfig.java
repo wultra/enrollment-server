@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.presencecheck.iproov.config;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.AuthTokenResponse;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -64,7 +65,6 @@ import java.util.Map;
 public class IProovConfig {
 
     private static final String OAUTH_REGISTRATION_ID = "iproov";
-    private static final String OAUTH_SCOPE = "scope";
 
     /**
      * @return Object mapper bean specific to iProov json format
@@ -138,9 +138,9 @@ public class IProovConfig {
         final ExchangeFilterFunction tokenResponseFilter = ExchangeFilterFunction.ofResponseProcessor(response -> {
             final ClientResponse.Builder builder = response.mutate();
             return response.bodyToMono(Map.class).map(map -> {
-                if (map.containsKey(OAUTH_SCOPE)) {
+                if (map.containsKey(AuthTokenResponse.JSON_PROPERTY_SCOPE)) {
                     logger.debug("Removing scope because does not comply with RFC and not needed anyway");
-                    map.remove(OAUTH_SCOPE);
+                    map.remove(AuthTokenResponse.JSON_PROPERTY_SCOPE);
                     return builder.body(JSONObject.toJSONString(map)).build();
                 } else {
                     return builder.build();
