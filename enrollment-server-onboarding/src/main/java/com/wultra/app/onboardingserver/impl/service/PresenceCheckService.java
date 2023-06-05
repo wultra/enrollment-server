@@ -230,7 +230,7 @@ public class PresenceCheckService {
             throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
 
         if (!idVerification.isPresenceCheckInitialized()) {
-            if (wasImageAlreadyUploaded(idVerification)) {
+            if (imageAlreadyUploaded(idVerification)) {
                 logger.info("SessionInfo present, image already uploaded, ", ownerId);
                 auditService.auditPresenceCheckProvider(idVerification, "Presence check initialization skipped for user: {}, image already uploaded", ownerId.getUserId());
                 return;
@@ -380,7 +380,7 @@ public class PresenceCheckService {
      * @param identityVerification Verification identity.
      * @return true if image was already uploaded
      */
-    private boolean wasImageAlreadyUploaded(final IdentityVerificationEntity identityVerification) {
+    private boolean imageAlreadyUploaded(final IdentityVerificationEntity identityVerification) {
         final String sessionInfoString = identityVerification.getSessionInfo();
         if (!StringUtils.hasText(sessionInfoString)) {
             return false;
