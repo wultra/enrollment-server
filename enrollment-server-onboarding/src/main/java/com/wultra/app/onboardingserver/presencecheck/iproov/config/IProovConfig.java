@@ -114,8 +114,8 @@ public class IProovConfig {
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId(OAUTH_REGISTRATION_ID)
                 .tokenUri(tokenUri)
                 .clientName(configProps.getServiceUserAgent())
-                .clientId(configProps.getOAuthUsername())
-                .clientSecret(configProps.getOAuthPassword())
+                .clientId(configProps.getOAuthClientUsername())
+                .clientSecret(configProps.getOAuthClientPassword())
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .build();

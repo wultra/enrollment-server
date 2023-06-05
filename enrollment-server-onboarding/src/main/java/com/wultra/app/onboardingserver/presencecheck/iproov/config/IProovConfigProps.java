@@ -73,14 +73,14 @@ public class IProovConfigProps {
     private boolean ensureUserIdValueEnabled;
 
     /**
-     * OAuth username to iProov REST service.
+     * OAuth client username to iProov REST service.
      */
-    private String oAuthUsername;
+    private String oAuthClientUsername;
 
     /**
-     * OAuth password to iProov REST service.
+     * OAuth client password to iProov REST service.
      */
-    private String oAuthPassword;
+    private String oAuthClientPassword;
 
     /**
      * REST client configuration
