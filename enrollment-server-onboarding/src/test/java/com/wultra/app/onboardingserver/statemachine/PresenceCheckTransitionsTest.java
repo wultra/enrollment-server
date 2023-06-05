@@ -110,7 +110,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -142,7 +142,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         final Message<OnboardingEvent> presenceCheckSubmittedMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
@@ -178,7 +178,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         doAnswer(args -> {
             args.getArgument(0, StateContext.class)

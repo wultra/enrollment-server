@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
@@ -70,25 +69,16 @@ public class PresenceCheckVerificationAction implements Action<OnboardingState, 
         OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        final SessionInfo sessionInfo = jsonSerializationService.deserialize(identityVerification.getSessionInfo(), SessionInfo.class);
         final IdentityVerificationPhase phase = identityVerification.getPhase();
 
-        if (sessionInfo == null) {
-            logger.error("Checking presence verification failed due to invalid session info, {}", ownerId);
-            identityVerification.setErrorDetail("Unable to deserialize session info");
+        try {
+            presenceCheckService.checkPresenceVerification(ownerId, identityVerification);
+        } catch (PresenceCheckException | RemoteCommunicationException e) {
+            logger.error("Checking presence verification failed, {}", ownerId, e);
+            identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
             identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
             identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
-        } else {
-            try {
-                presenceCheckService.checkPresenceVerification(ownerId, identityVerification, sessionInfo);
-            } catch (PresenceCheckException | RemoteCommunicationException e) {
-                logger.error("Checking presence verification failed, {}", ownerId, e);
-                identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
-                identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-                identityVerification.setTimestampFailed(ownerId.getTimestamp());
-                identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, FAILED, ownerId);
-            }
         }
     }
 
