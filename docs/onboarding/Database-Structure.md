@@ -12,12 +12,11 @@ You can download DDL scripts for supported databases:
 Onboarding Server uses ShedLock to synchronize scheduled operations. You need to create appropriate DB table, i.e.:
 
 ```sql
-CREATE TABLE shedlock
-(
-    name       VARCHAR(64)  NOT NULL PRIMARY KEY,
-    lock_until TIMESTAMP    NOT NULL,
-    locked_at  TIMESTAMP    NOT NULL,
-    locked_by  VARCHAR(255) NOT NULL
+CREATE TABLE shedlock (
+    name VARCHAR(64) NOT NULL PRIMARY KEY,
+    lock_until TIMESTAMP NOT NULL,
+    locked_at TIMESTAMP NOT NULL,
+    locked_by VARCHAR(255) NOT NULL
 );
 ```
 
