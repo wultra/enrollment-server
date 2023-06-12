@@ -35,13 +35,16 @@ import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
@@ -56,6 +59,9 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 public class PresenceCheckService {
 
     private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
+
+    private static final String SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
+    private static final String SESSION_ATTRIBUTE_IMAGE_UPLOADED = "imageUploaded";
 
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -131,20 +137,9 @@ public class PresenceCheckService {
 
         presenceCheckLimitService.checkPresenceCheckMaxAttemptLimit(ownerId, processId);
 
-        IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
+        final IdentityVerificationEntity idVerification = fetchIdVerification(ownerId);
 
-        if (!idVerification.isPresenceCheckInitialized()) {
-            List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
-            if (docsWithPhoto.isEmpty()) {
-                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
-            } else {
-                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
-                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
-                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
-                logger.info("Presence check initialized, {}", ownerId);
-                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
-            }
-        }
+        initPresentCheckWithImage(ownerId, idVerification);
         return startPresenceCheck(ownerId, idVerification);
     }
 
@@ -156,15 +151,16 @@ public class PresenceCheckService {
      *
      * @param ownerId Owner identifier.
      * @param idVerification Identity verification entity.
-     * @param sessionInfo Session info with presence check data.
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
     @Transactional
-    public void checkPresenceVerification(OwnerId ownerId,
-                                          IdentityVerificationEntity idVerification,
-                                          SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
-        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, updateSessionInfo(ownerId, idVerification, sessionInfo));
+    public void checkPresenceVerification(
+            final OwnerId ownerId,
+            final IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
+
+        final SessionInfo sessionInfo = updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED, ownerId.getTimestamp()));
+        final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
         auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
@@ -225,6 +221,39 @@ public class PresenceCheckService {
     }
 
     /**
+     * Init presence check and upload upscaled image.
+     *
+     * @param ownerId Owner identification.
+     * @param idVerification Verification identity.
+     * @throws DocumentVerificationException When not able to find documet image.
+     * @throws PresenceCheckException In case of business logic error.
+     * @throws RemoteCommunicationException In case of remote communication error.
+     */
+    private void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+            throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
+
+        if (!idVerification.isPresenceCheckInitialized()) {
+            if (imageAlreadyUploaded(idVerification)) {
+                logger.info("Image already uploaded, {}", ownerId);
+                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialization skipped for user: {}, image already uploaded", ownerId.getUserId());
+                return;
+            }
+
+            final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
+            if (docsWithPhoto.isEmpty()) {
+                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
+            } else {
+                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
+                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
+                logger.info("Presence check initialized, {}", ownerId);
+                updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
+                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
+            }
+        }
+    }
+
+    /**
      * Starts new presence check process.
      *
      * @param ownerId Owner identification.
@@ -238,15 +267,10 @@ public class PresenceCheckService {
         logger.info("Presence check started, {}", ownerId);
         auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
-        String sessionInfoJson = jsonSerializationService.serialize(sessionInfo);
-        if (sessionInfoJson == null) {
-            throw new PresenceCheckException("JSON serialization of session info failed, " + ownerId);
-        }
-
-        idVerification.setSessionInfo(sessionInfoJson);
+        final SessionInfo updatedSessionInfo = updateSessionInfo(ownerId, idVerification, sessionInfo.getSessionAttributes());
         identityVerificationService.moveToPhaseAndStatus(idVerification, PRESENCE_CHECK, IN_PROGRESS, ownerId);
 
-        return sessionInfo;
+        return updatedSessionInfo;
     }
 
     /**
@@ -340,10 +364,25 @@ public class PresenceCheckService {
         return idVerification;
     }
 
-    private SessionInfo updateSessionInfo(final OwnerId ownerId, final IdentityVerificationEntity identityVerification, final SessionInfo sessionInfo) {
-        sessionInfo.getSessionAttributes().put("timestampLastUsed", ownerId.getTimestamp());
+    private SessionInfo updateSessionInfo(final OwnerId ownerId, final IdentityVerificationEntity identityVerification, final Map<String, Object> sessionAttributes) throws PresenceCheckException {
+        final String sessionInfoString = StringUtils.defaultIfEmpty(identityVerification.getSessionInfo(), "{}");
+        final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
+        if (sessionInfo == null) {
+            throw new PresenceCheckException("Unable to parse SessionInfo, identity verification ID: %s, %s".formatted(identityVerification.getId(), ownerId));
+        }
+        sessionInfo.getSessionAttributes().putAll(sessionAttributes);
         identityVerification.setSessionInfo(jsonSerializationService.serialize(sessionInfo));
         return sessionInfo;
     }
 
+    private boolean imageAlreadyUploaded(final IdentityVerificationEntity identityVerification) {
+        final String sessionInfoString = identityVerification.getSessionInfo();
+        if (StringUtils.isEmpty(sessionInfoString)) {
+            return false;
+        }
+        final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
+        return sessionInfo != null
+                && !CollectionUtils.isEmpty(sessionInfo.getSessionAttributes())
+                && Boolean.TRUE.equals(sessionInfo.getSessionAttributes().get(SESSION_ATTRIBUTE_IMAGE_UPLOADED));
+    }
 }

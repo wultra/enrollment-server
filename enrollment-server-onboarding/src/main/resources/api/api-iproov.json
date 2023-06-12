@@ -2,11 +2,11 @@
   "swagger": "2.0",
   "info": {
     "title": "iProov REST API",
-    "description": "This is the iProov API documentation guidelines, for simple integration of the iProov system\n# Introduction\nTo use the iProov service, you will need a valid account on [portal.iproov.com](https://portal.iproov.com), where you\nwill be able to set up your Service Provider API credentials.\n\nFor a full description of how to use these APIs in conjunction with your user journey and the iProov service, please\nrefer to [portal.iproov.com/documentation](https://portal.iproov.com/documentation).\n# Verifier\nTo use Verifier, you need to generate a token with the `/claim/TYPE/token` endpoint, where TYPE is `verify` or `enrol`.\nOnce the claim has finished, you should then make a server to server validation call to the `/claim/TYPE/validate`\nendpoint to ensure there has been no tampering with the result from the client.\n# Service Provider API Key and Secret Authentication\nGeneral operations are secured by the `api_key` and `secret` parameters in the request body. See the individual\noperation sample request bodies for example usage. The additional schemes below are used for Management and User APIs.\n",
+    "description": "This is the iProov API documentation guidelines, for simple integration of the iProov system. Note: The base_url that needs to be used is the one in the Service Location.\n# Introduction\nTo use the iProov service, you will need a valid account on [portal.iproov.com](https://portal.iproov.com), where you\nwill be able to set up your Service Provider API credentials.\n\nFor a full description of how to use the APIs and services in your user journeys see the\n[Documentation Centre](https://docs.iproov.com/docs/Content/ImplementationGuide/api/api-intro.htm).\n# Verifier\nTo use Verifier, you need to generate a token with the `/claim/TYPE/token` endpoint, where TYPE is `verify` or `enrol`.\nOnce the claim has finished, you should then make a server to server validation call to the `/claim/TYPE/validate`\nendpoint to ensure there has been no tampering with the result from the client.\n# Service Provider API Key and Secret Authentication\nGeneral operations are secured by the `api_key` and `secret` parameters in the request body. See the individual\noperation sample request bodies for example usage. The additional schemes below are used for Management and User APIs.\n",
     "contact": {
       "name": "iProov API Team"
     },
-    "version": "2.11.0",
+    "version": "2.13.0",
     "x-logo": {
       "url": "logo.svg"
     }
@@ -126,8 +126,8 @@
         "tags": [
           "Verify"
         ],
-        "summary": "Generate a verification token for an existing user to verify with a service provider",
-        "description": "Generate a verification token for an existing user to verify with a service provider",
+        "summary": "Generate a verification token for an existing user to verify with a service provider.",
+        "description": "Generate a verification token for an existing user to verify with a service provider.\n\nIf the given `assurance_type` is invalid or not allowed then the response will be a 403. For example:\n\n- GPA when only LA allowed with that SP key, will be rejected.\n- LA when only GPA allowed, will be rejected.\n- Unspecified (Default: GPA) and only LA allowed, will be rejected.\n\nNote:\n - The returned `token` is valid for 2 mins.\n",
         "operationId": "userVerifyServerToken",
         "produces": [
           "application/json"
@@ -162,9 +162,9 @@
             }
           },
           "403": {
-            "description": "Access Denied",
+            "description": "Invalid Assurance Type",
             "schema": {
-              "$ref": "#/definitions/InvalidCredentialErrorResponse"
+              "$ref": "#/definitions/InvalidAssuranceTypeResponse"
             }
           },
           "429": {
@@ -188,7 +188,7 @@
           "Verify"
         ],
         "summary": "Validate the verification was successful",
-        "description": "Validate the verification was successful.\n\nThis endpoint can only be called once after a full end to end transaction has been completed. Subsequent calls will emit\n a 400 response.\n\nNote that we strongly recommend you call this endpoint to avoid any man in the middle attacks between the user trying\nto authenticate and the iProov service (including by the user attempting to log in!).",
+        "description": "Validate the verification was successful.\n\nThis endpoint can only be called ONCE after a full end to end transaction has been completed. Subsequent calls will\nreturn a 400. This end-point will also return 400 if it is called before video streaming finishes.\n\nNote that we strongly recommend you call this endpoint to avoid any man in the middle attacks between the user trying\nto authenticate and the iProov service (including by the user attempting to log in!).",
         "operationId": "userVerifyValidate",
         "produces": [
           "application/json"
@@ -216,12 +216,6 @@
               "$ref": "#/definitions/ClientErrorResponse"
             }
           },
-          "403": {
-            "description": "Access Denied",
-            "schema": {
-              "$ref": "#/definitions/InvalidCredentialErrorResponse"
-            }
-          },
           "404": {
             "description": "Not Found",
             "schema": {
@@ -243,7 +237,7 @@
           "Management"
         ],
         "summary": "Allows a registered application to obtain an OAuth 2 Bearer Token",
-        "description": "Allows a registered application to obtain an OAuth 2 Bearer Token, which can be used to make API\nrequests on an application\u2019s own behalf, without a user context. Currently only client credentials are supported.\nNote that the OAuth username and password are to be provided via the Authorization header in Basic format. These are\ndistinct to the service provider API key and secret and supplied separately.",
+        "description": "Allows a registered application to obtain an OAuth 2 Bearer Token, which can be used to make API\nrequests on an application\u2019s own behalf, without a user context. Currently only `client_credentials` grant is\nsupported.\n\nNote:\n- The OAuth username and password are to be provided via the Authorization header in Basic format. These are\ndistinct to the service provider API key and secret and supplied separately.\n- The `access_token` returned expires after 1 hr, or after 50 requests, whichever is earlier.\n- The `access_token` needs to be refreshed after it expires.",
         "operationId": "generateToken",
         "consumes": [
           "application/x-www-form-urlencoded"
@@ -290,12 +284,6 @@
               "$ref": "#/definitions/ClientErrorResponse"
             }
           },
-          "403": {
-            "description": "Access Denied",
-            "schema": {
-              "$ref": "#/definitions/InvalidCredentialErrorResponse"
-            }
-          },
           "404": {
             "description": "Not Found",
             "schema": {
@@ -305,7 +293,7 @@
           "500": {
             "description": "Server Error",
             "schema": {
-              "$ref": "#/definitions/ServerErrorResponse"
+              "$ref": "#/definitions/OAuthServerErrorResponse"
             }
           }
         },
@@ -322,7 +310,7 @@
           "Enrol"
         ],
         "summary": "Generate an enrolment token for a new user to enrol with a service provider",
-        "description": "Generate an enrolment token for a new user to enrol with a service provider.\n\n - For **Capture Enrol**, this token should be used to launch the SDK.\n - For **Photo Enrol**, this token should be used for the Enrol Image API below.",
+        "description": "Generate an enrolment token for a new user to enrol with a service provider.\n\nIf the given `assurance_type` is invalid or not allowed then the response will be a 403. For example:\n\n- GPA when only LA allowed with that SP key, will be rejected.\n- LA when only GPA allowed, will be rejected.\n- Unspecified (Default: GPA) and only LA allowed, will be rejected.\n\n Note:\n - The returned `token` is valid for 2 mins.\n - For **Capture Enrol**, this token should be used to launch the SDK.\n - For **Photo Enrol**, this token should be used for the Enrol Image API below.",
         "operationId": "userEnrolServerToken",
         "produces": [
           "application/json"
@@ -357,9 +345,9 @@
             }
           },
           "403": {
-            "description": "Access Denied",
+            "description": "Invalid Assurance Type",
             "schema": {
-              "$ref": "#/definitions/InvalidCredentialErrorResponse"
+              "$ref": "#/definitions/InvalidAssuranceTypeResponse"
             }
           },
           "429": {
@@ -454,7 +442,7 @@
           "Enrol"
         ],
         "summary": "Enrol a user through a trusted photo",
-        "description": "Enrols a user through a photo that is trusted by the service provider to be a likeness of the user.\nTo call this endpoint you need to perform a previous API call:\n * Firstly get a token that is associated with a user ID\n * Secondly upload the image with this endpoint\n\nAccepted media types are jpeg and png images. JP2 image support is currently in progress.\n\nNote that due to the security implications of allowing users to enrol with just images this endpoint is restricted on a\nper service provider basis",
+        "description": "Enrols a user through a photo that is trusted by the service provider to be a likeness of the user.\nTo call this endpoint you need to perform a previous API call:\n * Firstly get a token that is associated with a user ID.\n * Secondly upload the image with this endpoint. File attachment size limit is 2 MB.\n\nAccepted media types are PNG, JPEG and JP2 images.\n\nNote that due to the security implications of allowing users to enrol with just images this endpoint is restricted on a\nper service provider basis",
         "operationId": "userEnrolImage",
         "consumes": [
           "multipart/form-data"
@@ -618,7 +606,7 @@
           "Enrol"
         ],
         "summary": "Validate the enrolment was successful and activate the user",
-        "description": "Validate the enrolment was successful and activate the user.\n\nThis endpoint can only be called once after a full end to end transaction has been completed. Subsequent calls will give a 400.\n\nNote that without this endpoint being called the user will not be activated and therefore will be unable to use iProov\nunless they were enrolled using the photo enrol API.",
+        "description": "Validate the enrolment was successful and activate the user.\n\nThis endpoint can only be called ONCE after a full end to end transaction has been completed. Subsequent calls will\nreturn a 400. This end-point will also return 400 if it is called before video streaming finishes.\n\nNote that without this endpoint being called the user will not be activated and therefore will be unable to use iProov\nunless they were enrolled using the photo enrol API.",
         "operationId": "userEnrolValidate",
         "produces": [
           "application/json"
@@ -646,7 +634,7 @@
               "$ref": "#/definitions/ClientErrorResponse"
             }
           },
-          "403": {
+          "401": {
             "description": "Access Denied",
             "schema": {
               "$ref": "#/definitions/InvalidCredentialErrorResponse"
@@ -877,13 +865,14 @@
       "type": "object"
     },
     "ClientErrorResponse": {
-      "description": "Missing data in the request,\nor the state of the requested entity object is such that the operation could not succeed.",
+      "description": "Missing data in the request, or the state of the requested entity object is such that the operation could not succeed.",
       "required": [
         "error",
         "error_description"
       ],
       "properties": {
         "error": {
+          "description": "\n - `invalid_agent`: **DEPRECATED**.\n - `invalid_user_id`: Malformed, illegal characters in the user_id, missing, or non-existent user_id given.\n     - Regex: `[a-zA-Z0-9'\\+_@\\.-]{1,256}`.\n\n - `invalid_token`: An invalid token was provided in the body.\n     - Ensure the correct claim token is passed from the POST /claim/enrol/token or POST /claim/verify/token calls.\n     - Ensure the token is incorrectly reused. For an Enrol Capture call, once an image has been **registered** against a token, it cannot be called again.\n     - Attempted to validate a claim token that was previously validated.\n     - Attempted to validate a claim token before video imagery finished streaming.\n\n - `invalid_validation`: The username does not match the username associated with the claim token, or the supplied `risk_profile` does not match the stored profile.\n     - Ensure the correct `user_id` and `risk_profile` are used.\n\n - `invalid_reason`: Malformed, illegal characters in `reason` parameter.\n     - Regex: `^[a-zA-Z0-9_.:=()\u2019\\'\\\"/\\s]{1,800}$`.\n\n - `invalid_risk_appetite`: Invalid risk profile specified, or risk profiles have not been enabled for your service provider.\n   If risk profiles are enabled, then it could be one of the following reasons:\n     - `risk_profile` missing in request.\n     - Malformed `risk_profile` in request:\n         - Regex: `^[a-zA-Z0-9_-]{0,100}$`.\n     - The given `risk_profile` doesn't exist.\n\n   Check the risk profile name is correct: https://portal.iproov.com/documentation/Optional_features/Risk_Profiles.\n   Speak to your Customer Success team to enable Risk Profiles on your Service Provider.\n\n - `invalid_ip`: **DEPRECATED**.\n - `invalid_grant`: Malformed, or missing `grant_type`. Correct the `grant_type` field.\n     - Regex: `^[a-zA-Z0-9_\\-.]{0,30}$`.\n\n - `invalid_request`: Malformed, or invalid IPv4 address given in `ip` field, or missing `grant_type` parameter.\n - `invalid_client`: Invalid, or missing basicAuth credentials for the given API key/Service Provider when requesting\n   OAuth `access_token`. Provide the correct credentials/API key - defined within your Service Provider. A key rotation\n   may have occurred.\n - `invalid_scope`: Malformed `scope` parameter in request.\n     - Regex: `^[a-zA-Z0-9_\\-.]{0,100}$`.\n\n - `unsupported_grant_type`: The request's `grant_type` parameter value is not `client_credentials`.\n - `missing_data`: Missing `resource`, `reason` or `token` parameter/value in request body.\n - `no_user`: The given `user_id` or username doesn't exist.\n - `inactive_user`: User is in the wrong state (should have an Active state). Ensure the user is not suspected (User management API).\n - `invalid_enrol_image`: Missing image attachment in multipart form data. Ensure the image is appended to the multipart form body correctly\n - `invalid_source`: The `source` request parameter value must be one of `oid`, `eid` or `selfie`.\n - `already_enrolled`: The given username or `user_id` has already enrolled. Did you mean to conduct a verify transaction?\n   If a re-enrol is required, then either pass a new user_id or use the User Management API to delete the user and\n   request a new enrol claim token.\n - `invalid_key`: Missing or incorrect API Key. Check your API Key is correct:\n     1. Log into the iPortal.\n     2. Select your Service Provider.\n     3. Copy your API key.\n     4. Ensure your API Key and Secret are for the correct service provider\n",
           "type": "string",
           "enum": [
             "invalid_agent",
@@ -900,7 +889,11 @@
             "unsupported_grant_type",
             "missing_data",
             "no_user",
-            "inactive_user"
+            "inactive_user",
+            "invalid_enrol_image",
+            "invalid_source",
+            "already_enrolled",
+            "invalid_key"
           ]
         },
         "error_description": {
@@ -917,6 +910,7 @@
       ],
       "properties": {
         "error": {
+          "description": "\n - `invalid_key`: Missing or incorrect API Key. Check your API Key is correct:\n     1. Log into the iPortal.\n     2. Select your Service Provider.\n     3. Copy your API key.\n     4. Ensure your API Key and Secret are for the correct service provider\n - `invalid_oauth`: Missing or invalid OAuth `access_token`.\n     - Call POST /{api_key}/access_token to obtain a new OAuth Access token. Access tokens expire after 1 hr or 50 requests.\n - `token_quota_exceeded`: 50/50 Oauth user requests used.\n     - Call POST /{api_key}/access_token to obtain a new OAuth Access token. Access tokens expire after 1 hr or 50 requests.",
           "type": "string",
           "enum": [
             "invalid_key",
@@ -957,6 +951,7 @@
       ],
       "properties": {
         "error": {
+          "description": "Generic iProov error code. If you receive this error code frequently please contact your customer success team or support@iproov.com.",
           "type": "string",
           "enum": [
             "server_error"
@@ -1032,21 +1027,6 @@
             "liveness"
           ]
         },
-        "success_url": {
-          "description": "The URL to redirect to on success. Note: This field has been deprecated and will be omitted in the next release.",
-          "type": "string",
-          "deprecated": true
-        },
-        "failure_url": {
-          "description": "The URL to redirect to on failure. Note: This field has been deprecated and will be omitted in the next release.",
-          "type": "string",
-          "deprecated": true
-        },
-        "abort_url": {
-          "description": "The URL to redirect to on user abort. Note: This field has been deprecated and will be omitted in the next release.",
-          "type": "string",
-          "deprecated": true
-        },
         "user_id": {
           "description": "The asserted identifier of the user.",
           "type": "string",
@@ -1076,7 +1056,7 @@
           }
         },
         "token": {
-          "description": "The token should be referenced if there are issues with an individuals claim and is used as a\ntransaction id",
+          "description": "The token should be referenced if there are issues with an individuals claim and is used as a\ntransaction id. Must be claimed within 2 mins, otherwise it expires.",
           "type": "string",
           "example": "31706131726336496d655177346e55503279616b69547344446e5258684c7542"
         },
@@ -1094,8 +1074,10 @@
           "example": "edge02.eu4"
         },
         "redirect_domain": {
-          "description": "If the service provider has a dedicated landing page hosted at iProov this will contain the URL\nto redirect to.",
-          "type": "string"
+          "description": "If the service provider has a dedicated landing page hosted at iProov this will contain the URL to redirect to.",
+          "type": "string",
+          "example": "This field is deprecated!",
+          "deprecated": true
         },
         "risk_profile": {
           "description": "If the service provider has specified a risk profile then it will be used.",
@@ -1123,58 +1105,27 @@
       },
       "type": "object"
     },
-    "ClientClaimRequest": {
+    "InvalidAssuranceTypeResponse": {
+      "description": "",
       "required": [
-        "api_key",
-        "resource",
-        "client"
+        "error",
+        "error_description"
       ],
       "properties": {
-        "api_key": {
-          "description": "The API key of the service provider",
-          "type": "string"
-        },
-        "client": {
-          "description": "Fingerprint or client identifier (e.g. User Agent)",
-          "type": "string"
-        },
-        "resource": {
-          "description": "The resource being accessed (e.g. URL)",
-          "type": "string"
-        },
-        "success_url": {
-          "description": "The URL to redirect to on success. Note: This field has been deprecated and will be omitted in the next release.",
+        "error": {
+          "description": "The given, or implied `assurance_type` is not allowed. With the given SP key if the given\n `assurance_type` is:\n\n - GPA when only LA allowed.\n - LA when only GPA allowed.\n - Unspecified (Default: GPA) and only LA allowed.",
           "type": "string",
-          "deprecated": true
+          "enum": [
+            "invalid_assurance_type"
+          ],
+          "example": "invalid_assurance_type"
         },
-        "failure_url": {
-          "description": "The URL to redirect to on failure. Note: This field has been deprecated and will be omitted in the next release.",
+        "error_description": {
           "type": "string",
-          "deprecated": true
-        },
-        "abort_url": {
-          "description": "The URL to redirect to on user abort. Note: This field has been deprecated and will be omitted in the next release.",
-          "type": "string",
-          "deprecated": true
+          "example": "This assurance_type is not enabled for your service provider"
         }
       },
       "type": "object"
-    },
-    "EnrolAssociateUserRequest": {
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/AssociateUserRequest"
-        },
-        {
-          "properties": {
-            "name": {
-              "description": "The display name of the user. If not provided it is parsed from the user id.",
-              "type": "string"
-            }
-          }
-        }
-      ]
     },
     "ClaimValidateResponse": {
       "required": [
@@ -1196,21 +1147,19 @@
           "example": "verify"
         },
         "frame_available": {
-          "description": "Present and True if there is frame available for returning to the integrator.\n\nEnabled on a per service provider basis. Contact support@iproov.com to request this functionality.",
+          "description": "Present and True if there is frame available for returning to the integrator.",
           "type": "string",
           "example": false
         },
         "frame": {
-          "description": "If `frame_available` is present and True, a base64 encoded representation of the frame.",
-          "type": "string"
+          "description": "If `frame_available` is present and True, a base64 encoded PNG format representation of the\n frame.\n\n Is enabled on a per service provider basis in iPortal.",
+          "type": "string",
+          "format": "PNG"
         },
         "frame_jpeg": {
-          "description": "a base64 encoded representation of the frame in JPEG format.",
-          "type": "string"
-        },
-        "iso_19794_5": {
-          "description": "If `frame_available` is present and True, a base64 encoded string that contains an ISO 19794_5\ncompliant image.",
-          "type": "string"
+          "description": "If `frame_available` is present and True, a base64 encoded representation of the frame in JPEG\n format.\n\n Is enabled on a per service provider basis. Contact support@iproov.com to enable this.",
+          "type": "string",
+          "format": "JPG"
         },
         "reason": {
           "description": "The failure reason (enabled on a per service provider basis)",
@@ -1229,6 +1178,73 @@
             "genuine_presence",
             "liveness"
           ]
+        },
+        "signals": {
+          "description": "An additional summary of failure reasons if the claim failed. Please speak to Customer\n Support or email support@iproov,com to enable this.",
+          "properties": {
+            "anti_spoofing": {
+              "description": "Whether the claim passed antispoofing biometric tests.",
+              "properties": {
+                "passed": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "matching": {
+              "description": "Whether the claim passed face matching. Only relevant when video verifying.",
+              "properties": {
+                "passed": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "multiple_faces_found": {
+              "description": "Whether multiple face detected during transaction.",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "return_frame_quality": {
+          "description": "Additional signal via validate call on image quality.",
+          "properties": {
+            "blur": {
+              "description": "The quality of blur.",
+              "type": "string",
+              "default": "not_available",
+              "enum": [
+                "not_available",
+                "Good",
+                "Acceptable",
+                "Poor"
+              ]
+            },
+            "pose": {
+              "description": "The quality of pose.",
+              "type": "string",
+              "default": "not_available",
+              "enum": [
+                "not_available",
+                "Good",
+                "Acceptable",
+                "Poor"
+              ]
+            },
+            "lighting": {
+              "description": "The lighting value of latimer.",
+              "type": "string",
+              "default": "not_available",
+              "enum": [
+                "not_available",
+                "Good",
+                "Acceptable",
+                "Poor"
+              ]
+            }
+          },
+          "type": "object"
         }
       },
       "type": "object"
@@ -1280,43 +1296,12 @@
       },
       "type": "object"
     },
-    "AssociateUserRequest": {
-      "required": [
-        "api_key",
-        "secret",
-        "user_id",
-        "token"
-      ],
-      "properties": {
-        "api_key": {
-          "description": "The API key of the service provider",
-          "type": "string"
-        },
-        "secret": {
-          "description": "The API secret for the service provider",
-          "type": "string",
-          "format": "password"
-        },
-        "user_id": {
-          "description": "The asserted identifier of the user.",
-          "type": "string",
-          "example": "enquiries@iproov.com"
-        },
-        "token": {
-          "description": "The token for the claim",
-          "type": "string",
-          "example": "31706131726336496d655177346e55503279616b69547344446e5258684c7542"
-        }
-      },
-      "type": "object"
-    },
     "ClaimValidateRequest": {
       "required": [
         "api_key",
         "secret",
         "user_id",
         "token",
-        "ip",
         "client"
       ],
       "properties": {
@@ -1338,11 +1323,6 @@
           "description": "The token for the claim",
           "type": "string",
           "example": "31706131726336496d655177346e55503279616b69547344446e5258684c7542"
-        },
-        "ip": {
-          "description": "IP address of the device making this request. Note: This field has been deprecated and will be omitted in the next release.",
-          "type": "string",
-          "deprecated": true
         },
         "client": {
           "description": "Fingerprint or client identifier of the device making the request (e.g. User Agent)",
@@ -1387,131 +1367,24 @@
       },
       "type": "object"
     },
-    "ProviderCreateRequest": {
+    "OAuthServerErrorResponse": {
       "required": [
-        "friendly_name",
-        "description",
-        "mode"
+        "error",
+        "error_description"
       ],
       "properties": {
-        "friendly_name": {
-          "description": "The friendly name of the service provider",
-          "type": "string"
+        "error": {
+          "description": "\n - `invalid_key`: Missing or incorrect API Key. Check your API Key is correct:\n\n     1. Log into the iPortal.\n     2. Select your Service Provider.\n     3. Copy your API key.\n     4. Ensure your API Key and Secret are for the correct service provider.\n - `server_error`: Generic iProov error code. If you receive this error code frequently please contact your customer success team or support@iproov.com.",
+          "type": "string",
+          "enum": [
+            "invalid_key",
+            "server_error"
+          ],
+          "example": "invalid_key"
         },
-        "internal_name": {
-          "description": "The internal name of the service provider",
-          "type": "string"
-        },
-        "mode": {
-          "description": "The mode the service provider accepts",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "verify",
-              "enrol",
-              "device"
-            ]
-          }
-        },
-        "flags": {
-          "description": "The flags for the service provider",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ServiceProviderFlags"
-          }
-        },
-        "factors": {
-          "description": "The factors for the service provider",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ServiceProviderFactors"
-          }
-        }
-      },
-      "type": "object"
-    },
-    "ServiceProviderFlags": {
-      "properties": {
-        "enable_deepsplice": {
-          "description": "Enable Deep Splice",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_deepmorph": {
-          "description": "Enable Deep Morph",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_welcome_message": {
-          "description": "Remove the welcome message from the API response to be shown to the user",
-          "type": "boolean",
-          "example": true
-        },
-        "enable_unvalidated_users": {
-          "description": "Allow unvalidated users to verify",
-          "type": "boolean",
-          "example": true
-        },
-        "enable_anomaly": {
-          "description": "Enable the anomaly module",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_risk_profile": {
-          "description": "Enable Risk Profiles (note risk profiles must be provisioned additionally)",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_unique": {
-          "description": "Enable Uniqueness Checking",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_image_enrol": {
-          "description": "Enable Photo Enrol",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_validate_frame": {
-          "description": "Enable frame return on validation of a claim",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_redirect_domain": {
-          "description": "Enable supplying redirect URLs",
-          "type": "boolean",
-          "example": false
-        },
-        "enable_production_mode": {
-          "description": "Enable production mode (disables setting client side requests etc.)",
-          "type": "boolean",
-          "example": false
-        }
-      },
-      "type": "object"
-    },
-    "ServiceProviderFactors": {
-      "properties": {
-        "welcome_message": {
-          "description": "The custom welcome message to use",
-          "type": "string"
-        },
-        "logo": {
-          "description": "The path to the logo to use (must be an iProov hosted URL via https://secure.iproov.me)",
-          "type": "string"
-        },
-        "push_message": {
-          "description": "The custom push message to use",
-          "type": "string"
-        },
-        "default_risk_profile": {
-          "description": "The default risk profile a service provider uses if one isn't specified when setting up a claim",
-          "type": "string"
-        },
-        "client_timeout": {
-          "description": "The service provider specific timeout to use",
-          "type": "integer"
+        "error_description": {
+          "type": "string",
+          "example": "Invalid API Key"
         }
       },
       "type": "object"
@@ -1579,7 +1452,7 @@
       "type": "oauth2",
       "description": "OAuth2 is used for the Management and User APIs.",
       "flow": "application",
-      "tokenUrl": "https://INTERNAL",
+      "tokenUrl": "/{api_key}/access_token",
       "scopes": {
         "user-write": "Update the user object",
         "user-write-status": "Update the status of a user",
@@ -1588,7 +1461,7 @@
     },
     "basicAuth": {
       "type": "basic",
-      "description": "Basic authentication is used to get an OAuth2 access token for the Management and User APIs.\n\nThe Management and User APIs should be used only by the integrator's backend services. Therefore, separate credentials\nare required for this purpose, instead of the `api_key` and `secret` used for the rest of the public API.\n\nTo obtain these basic authentication credentials which allow creation of the OAuth2 tokens, please request them by\ncontacting support@iproov.com.\n"
+      "description": "These can now be obtained via the iPortal - OAuth Username and OAuth password."
     }
   },
   "tags": [

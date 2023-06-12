@@ -20,15 +20,38 @@ package com.wultra.app.onboardingserver.presencecheck.iproov.config;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.AuthTokenResponse;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
+import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONObject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ClientCredentialsReactiveOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.InMemoryReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.endpoint.AbstractWebClientReactiveOAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2ClientCredentialsGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.ReactiveOAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.WebClientReactiveClientCredentialsTokenResponseClient;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.Map;
 
 /**
  * iProov configuration.
@@ -38,7 +61,10 @@ import org.springframework.http.HttpHeaders;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck"})
 @Configuration
+@Slf4j
 public class IProovConfig {
+
+    private static final String OAUTH_REGISTRATION_ID = "iproov";
 
     /**
      * @return Object mapper bean specific to iProov json format
@@ -65,6 +91,70 @@ public class IProovConfig {
         restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
         restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration);
+    }
+
+
+    @Bean
+    public WebClient iproovManagemenentWebClient(final IProovConfigProps configProps) {
+        final AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientManager = authorizedClientServiceReactiveOAuth2AuthorizedClientManager(configProps);
+
+        final ServerOAuth2AuthorizedClientExchangeFilterFunction oAuth2ExchangeFilterFunction = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        oAuth2ExchangeFilterFunction.setDefaultClientRegistrationId(OAUTH_REGISTRATION_ID);
+
+        return WebClient.builder()
+                .filter(oAuth2ExchangeFilterFunction)
+                .build();
+    }
+
+    private static AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
+        final String tokenUri = UriComponentsBuilder.fromHttpUrl(configProps.getServiceBaseUrl() + "/{apiKey}/access_token")
+                .buildAndExpand(configProps.getApiKey())
+                .toUriString();
+        logger.debug("Resolved tokenUri: {}", tokenUri);
+        final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId(OAUTH_REGISTRATION_ID)
+                .tokenUri(tokenUri)
+                .clientName(configProps.getServiceUserAgent())
+                .clientId(configProps.getOAuthClientUsername())
+                .clientSecret(configProps.getOAuthClientPassword())
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .build();
+
+        final ReactiveClientRegistrationRepository clientRegistrations = new InMemoryReactiveClientRegistrationRepository(clientRegistration);
+        final ReactiveOAuth2AuthorizedClientService clientService = new InMemoryReactiveOAuth2AuthorizedClientService(clientRegistrations);
+
+        final ClientCredentialsReactiveOAuth2AuthorizedClientProvider authorizedClientProvider = new ClientCredentialsReactiveOAuth2AuthorizedClientProvider();
+        authorizedClientProvider.setAccessTokenResponseClient(accessTokenResponseClient());
+
+        final AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientManager =
+                new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clientRegistrations, clientService);
+        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+        return authorizedClientManager;
+    }
+
+    // TODO (racansky, 2023-06-05) remove when iProov fix API according the RFC
+    private static ReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient() {
+        @SuppressWarnings("unchecked")
+        final ExchangeFilterFunction tokenResponseFilter = ExchangeFilterFunction.ofResponseProcessor(response -> {
+            final ClientResponse.Builder builder = response.mutate();
+            return response.bodyToMono(Map.class).map(map -> {
+                if (map.containsKey(AuthTokenResponse.JSON_PROPERTY_SCOPE)) {
+                    logger.debug("Removing scope because does not comply with RFC and not needed anyway");
+                    map.remove(AuthTokenResponse.JSON_PROPERTY_SCOPE);
+                    return builder.body(JSONObject.toJSONString(map)).build();
+                } else {
+                    return builder.build();
+                }
+            });
+        });
+
+        final WebClient webClient = WebClient.builder()
+                .filter(tokenResponseFilter)
+                .build();
+
+        final AbstractWebClientReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient = new WebClientReactiveClientCredentialsTokenResponseClient();
+        accessTokenResponseClient.setWebClient(webClient);
+        return accessTokenResponseClient;
     }
 
 }

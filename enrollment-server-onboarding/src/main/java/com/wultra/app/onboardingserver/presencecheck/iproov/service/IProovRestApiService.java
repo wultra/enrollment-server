@@ -19,8 +19,10 @@ package com.wultra.app.onboardingserver.presencecheck.iproov.service;
 
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.presencecheck.iproov.config.IProovConfigProps;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateRequest;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClientErrorResponse;
 import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -30,14 +32,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -80,22 +85,30 @@ public class IProovRestApiService {
     private final IProovConfigProps configProps;
 
     /**
-     * REST client for iProov calls.
+     * REST client for iProov enroll and verification calls.
      */
     private final RestClient restClient;
+
+    /**
+     * WebClient for IProov management calls.
+     */
+    private final WebClient managementWebClient;
 
     /**
      * Service constructor.
      *
      * @param configProps Configuration properties.
-     * @param restClient REST template for IProov calls.
+     * @param restClient REST template for IProov enroll and verification calls.
+     * @param webClient WebClient for IProov management calls.
      */
     @Autowired
     public IProovRestApiService(
             IProovConfigProps configProps,
-            @Qualifier("restClientIProov") RestClient restClient) {
+            @Qualifier("restClientIProov") RestClient restClient,
+            @Qualifier("iproovManagemenentWebClient") WebClient webClient) {
         this.configProps = configProps;
         this.restClient = restClient;
+        this.managementWebClient = webClient;
     }
 
     /**
@@ -166,8 +179,7 @@ public class IProovRestApiService {
         final ClaimValidateRequest request = new ClaimValidateRequest();
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
-        request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId()); // TODO value from the device
-        request.setIp("192.168.1.1"); // TODO deprecated but still required
+        request.setClient("Wultra Enrollment Server, activationId: " + id.getActivationId());
         request.setRiskProfile(configProps.getRiskProfile());
         request.setToken(token);
 
@@ -176,6 +188,62 @@ public class IProovRestApiService {
 
         logger.debug("Calling /claim/verify/validate userId={}, token={}, {}", userId, token, id);
         return restClient.post("/claim/verify/validate", request, STRING_TYPE_REFERENCE);
+    }
+
+    /**
+     * Deletes the given user if already exists at iProov.
+     *
+     * @param id Owner identification.
+     */
+    public void deleteUserIfAlreadyExists(final OwnerId id) {
+        final String userId = getUserId(id);
+        logger.debug("Checking whether iProov exists userId: {}, {}", userId, id);
+        final boolean userExists = doesUserExists(userId, new OwnerId());
+        logger.info("iProov userId: {}, exists: {}, {}", userId, userExists, id);
+        if (userExists) {
+            logger.debug("Deleting iProov userId: {}, {}", userId, id);
+            deleteUser(userId, id);
+            logger.info("Deleted iProov userId: {}, {}", userId, id);
+        }
+    }
+
+    private boolean doesUserExists(final String userId, final OwnerId id) {
+        return Objects.requireNonNullElse(managementWebClient.get()
+                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
+                .exchangeToMono(response -> {
+                    final HttpStatusCode httpStatusCode = response.statusCode();
+                    if (httpStatusCode == HttpStatus.OK) {
+                        return Mono.just(true);
+                    } else if (httpStatusCode == HttpStatus.BAD_REQUEST) {
+                        return response.bodyToMono(Map.class).flatMap(map -> {
+                            final Object errorCode = map.get(ClientErrorResponse.JSON_PROPERTY_ERROR);
+                            if (ClientErrorResponse.ErrorEnum.INVALID_USER_ID.getValue().equals(errorCode)) {
+                                return Mono.just(false);
+                            } else {
+                                return Mono.error(new RemoteCommunicationException("Not expected error code: " + errorCode));
+                            }
+                        });
+                    }
+                    return response.createError();
+                })
+                .doOnError(e -> {
+                    if (e instanceof final WebClientResponseException exception) {
+                        logger.error("Get user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    }
+                })
+                .block(), false);
+    }
+
+    private void deleteUser(final String userId, final OwnerId id) {
+        managementWebClient.delete()
+                .uri(configProps.getServiceBaseUrl() + "/users/{userId}", userId)
+                .exchangeToMono(Mono::just)
+                .doOnError(e -> {
+                    if (e instanceof final WebClientResponseException exception) {
+                        logger.error("Delete user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    }
+                })
+                .block();
     }
 
     private ServerClaimRequest createServerClaimRequest(OwnerId id) {
@@ -192,7 +260,7 @@ public class IProovRestApiService {
         return request;
     }
 
-    public static String ensureValidUserIdValue(String value) {
+    protected static String ensureValidUserIdValue(String value) {
         if (value.length() > USER_ID_MAX_LENGTH) {
             value = value.substring(0, USER_ID_MAX_LENGTH);
             logger.warn("The userId value: '{}', was too long for iProov, shortened to {} characters", value, USER_ID_MAX_LENGTH);

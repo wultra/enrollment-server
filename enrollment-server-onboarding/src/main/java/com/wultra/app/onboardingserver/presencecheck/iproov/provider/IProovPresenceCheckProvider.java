@@ -27,7 +27,10 @@ import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.*;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimResponse;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateResponse;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClientErrorResponse;
+import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.EnrolResponse;
 import com.wultra.app.onboardingserver.presencecheck.iproov.service.IProovRestApiService;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -40,7 +43,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Base64;
-import java.util.Calendar;
 
 /**
  * Implementation of the {@link PresenceCheckProvider} with <a href="https://www.iproov.com/">iProov</a>.
@@ -57,6 +59,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
      */
     private static final String VERIFICATION_TOKEN = "iProovVerificationToken";
     private static final String SELFIE_FILENAME = "person_photo_from_iProov.jpg";
+    private static final String ALREADY_ENROLLED = ClientErrorResponse.ErrorEnum.ALREADY_ENROLLED.getValue();
 
     private final ObjectMapper objectMapper;
 
@@ -77,31 +80,27 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException, RemoteCommunicationException {
-        ResponseEntity<String> responseEntityToken = callGenerateEnrolToken(id);
-        // FIXME temporary solution of repeated presence check initialization
-        // Deleting the iProov enrollment properly is not implemented yet, use random suffix to the current userId
-        if (responseEntityToken.getBody() != null && responseEntityToken.getBody().contains("already_enrolled")) {
-            logger.warn("Retrying the iProov enrollment with adapted userId");
-            final OwnerId adaptedId = new OwnerId();
-            adaptedId.setUserId(id.getUserId() + Calendar.getInstance().toInstant().getEpochSecond());
-            adaptedId.setActivationId(id.getActivationId());
-            adaptedId.setTimestamp(id.getTimestamp());
-            id = adaptedId;
-            responseEntityToken = callGenerateEnrolToken(id);
+    public void initPresenceCheck(final OwnerId id, final Image photo) throws PresenceCheckException, RemoteCommunicationException {
+        iProovRestApiService.deleteUserIfAlreadyExists(id);
+
+        final ResponseEntity<String> responseEntityToken = callGenerateEnrolToken(id);
+
+        final String body = responseEntityToken.getBody();
+        if (body == null) {
+            throw new RemoteCommunicationException("Missing response body when generating an enrol token in iProov, " + id);
         }
 
-        if (responseEntityToken.getBody() == null) {
-            throw new RemoteCommunicationException("Missing response body when generating an enrol token in iProov, " + id);
+        if (body.contains(ALREADY_ENROLLED)) {
+            throw new RemoteCommunicationException("User already enrolled into iProov, " + id);
         }
 
         if (!responseEntityToken.getStatusCode().is2xxSuccessful()) {
             throw new PresenceCheckException(
                     String.format("Failed to generate an enrol token, statusCode=%s, responseBody='%s', %s",
-                            responseEntityToken.getStatusCode(), responseEntityToken.getBody(), id));
+                            responseEntityToken.getStatusCode(), body, id));
         }
 
-        final ClaimResponse claimResponse = parseResponse(responseEntityToken.getBody(), ClaimResponse.class);
+        final ClaimResponse claimResponse = parseResponse(body, ClaimResponse.class);
         final String token = claimResponse.getToken();
 
         final ResponseEntity<String> responseEntityEnrol;
@@ -110,7 +109,7 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
         } catch (RestClientException e) {
             throw new RemoteCommunicationException(
                     String.format("Failed to enrol a user image to iProov, statusCode=%s, responseBody='%s', %s",
-                            responseEntityToken.getStatusCode(), responseEntityToken.getBody(), id),
+                            responseEntityToken.getStatusCode(), body, id),
                     e);
         } catch (Exception e) {
             throw new RemoteCommunicationException("Unexpected error when enrolling a user image to iProov, " + id, e);
