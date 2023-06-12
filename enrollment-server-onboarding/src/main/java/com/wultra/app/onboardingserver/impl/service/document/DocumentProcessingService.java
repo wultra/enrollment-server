@@ -249,7 +249,7 @@ public class DocumentProcessingService {
         try {
             docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
             final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
-            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}", ownerId.getUserId());
+            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document ID: {}", ownerId.getUserId(), docVerification.getId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
