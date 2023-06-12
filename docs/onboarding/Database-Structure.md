@@ -26,11 +26,11 @@ Only one ShedLock table is required per PowerAuth stack in case the same schema 
 
 ## Auditing
 
-The DDL files contain an `audit_log` table definition. The table differs slightly per database. 
+The DDL files contain an `audit_log` table definition. The table differs slightly per database.
 
 Only one `audit_log` table is required per PowerAuth stack in case the same schema is used for all deployed applications.
 
-For more information about auditing library, see the [Wultra auditing library documentation](https://github.com/wultra/lime-java-core#wultra-auditing-library). 
+For more information about auditing library, see the [Wultra auditing library documentation](https://github.com/wultra/lime-java-core#wultra-auditing-library).
 
 ## Table Documentation
 
@@ -78,7 +78,8 @@ Stores onboarding OTP codes used during activation and user verification.
 | `type` | `VARCHAR(32)` | `NOT NULL` | OTP code type (`ACTIVATION`, `USER_VERIFICATION`). |
 | `error_detail` | `VARCHAR(256)` |  | Detail of error (e.g. information about timeout or exceeded number of failed attempts). |
 | `error_origin` | `VARCHAR(256)` |  | Origin of the error (`DOCUMENT_VERIFICATION`, `PRESENCE_CHECK`, `CLIENT_EVALUATION`, `OTP_VERIFICATION`, `PROCESS_LIMIT_CHECK`, `USER_REQUEST`). |
-| `failed_attempts` | `INTEGER` |  | Number of failed attempts for verification, |
+| `failed_attempts` | `INTEGER` |  | Number of failed attempts for verification. |
+| `total_attempts` | `INTEGER` |  | Number of total attempts for verification. |
 | `timestamp_created` | `TIMESTAMP` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | Timestamp when process was started. |
 | `timestamp_expiration` | `TIMESTAMP` | `NOT NULL` | Timestamp when the OTP expires. |
 | `timestamp_last_updated` | `TIMESTAMP` |  | Timestamp when record was last updated. |

@@ -54,6 +54,26 @@ ALTER TABLE es_onboarding_process
     ADD fds_data CLOB;
 ```
 
+### Total Attempts
+
+A new column `total_attempts` has been added to the table `es_onboarding_otp`.
+
+
+#### PostgreSQL
+
+```sql
+ALTER TABLE es_onboarding_process
+    ADD COLUMN TOTAL_ATTEMPTS INTEGER DEFAULT 0;
+```
+
+
+#### Oracle
+
+```sql
+ALTER TABLE es_onboarding_process
+    ADD total_attempts INTEGER DEFAULT 0;
+```
+
 
 ## Dependencies
 
