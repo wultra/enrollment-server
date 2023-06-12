@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.5</version>
+        <version>3.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -91,6 +91,8 @@
         <swagger-annotations-jakarta.version>2.2.8</swagger-annotations-jakarta.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.1.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
+        <!--  TODO (racansky, 2023-06-12) 3.3.0 does not respect overriding scope of transitive dependency -->
+        <maven-enforcer-plugin.version>3.1.0</maven-enforcer-plugin.version>
 
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
         <powerauth-crypto.version>1.5.0-SNAPSHOT</powerauth-crypto.version>
@@ -252,7 +254,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>${maven-enforcer-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>enforce-banned-dependencies</id>
