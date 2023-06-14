@@ -107,10 +107,8 @@ public class CommonOtpService implements OtpService {
         int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         if (OtpStatus.ACTIVE != otp.getStatus()) {
             logger.warn("Unexpected not active {}, process ID: {}", otp, processId);
-            auditService.audit(otp, "Unexpected not active OTP ID: {}, process ID: {}", otp.getId(), processId);
         } else if (failedAttempts >= maxFailedAttempts) {
             logger.warn("Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
-            auditService.audit(otp, "Unexpected OTP code verification when already exhausted max failed attempts, process ID: {}", processId);
             failProcessOrIdentityVerification(process, otp, ownerId);
         } else if (otp.hasExpired()) {
             logger.info("Expired OTP code received, process ID: {}", processId);
@@ -131,6 +129,7 @@ public class CommonOtpService implements OtpService {
             logger.info("OTP {} verified, {}", otpType, ownerId);
             auditService.audit(otp, "OTP {} verified for user: {}", otpType, process.getUserId());
         } else {
+            auditService.audit(otp, "Unsuccessful OTP verification, process ID: {}", processId);
             handleFailedOtpVerification(process, ownerId, otp, otpType);
         }
 
