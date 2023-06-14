@@ -19,8 +19,10 @@
 package com.wultra.app.onboardingserver.common.database.entity;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -37,6 +39,8 @@ import java.util.Date;
 @Setter
 @Entity
 @Table(name = "es_sca_result")
+@ToString
+@EqualsAndHashCode(of = "id")
 public class ScaResultEntity implements Serializable {
 
     @Serial
