@@ -113,8 +113,8 @@ class IdentityVerificationPrecompleteCheck {
         }
 
         if (!isVerificationPassedSca(idVerification)) {
-            logger.debug("Did not passed is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Did not pass sca");
+            logger.debug("Did not pass SCA for verification ID: {}, process ID: {}", identityVerificationId, processId);
+            return Result.failed("Did not pass SCA");
         }
 
         return Result.successful();
