@@ -98,7 +98,4 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
     @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     Date getNewestOtpCreatedTimestamp(String processId, OtpType type);
 
-    @Query("SELECT COUNT(o.id) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
-    int countByProcessIdAndType(String processId, OtpType type);
-
 }
