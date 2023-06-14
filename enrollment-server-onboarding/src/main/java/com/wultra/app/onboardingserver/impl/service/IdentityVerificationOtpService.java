@@ -122,10 +122,10 @@ public class IdentityVerificationOtpService {
         }
         if (!response.isVerified()) {
             logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
-            saveScaOtpResult(ScaResultEntity.Result.SUCCESS, process, ownerId);
+            saveScaOtpResult(ScaResultEntity.Result.FAILED, process, ownerId);
             return response;
         } else {
-            saveScaOtpResult(ScaResultEntity.Result.FAILED, process, ownerId);
+            saveScaOtpResult(ScaResultEntity.Result.SUCCESS, process, ownerId);
         }
         return verifyPresenceCheck(process, response, ownerId);
     }
