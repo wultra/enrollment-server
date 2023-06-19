@@ -99,7 +99,7 @@
         <powerauth-restful-integration.version>1.5.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>1.5.0-SNAPSHOT</powerauth-push.version>
 
-        <bcprov-jdk18on.version>1.73</bcprov-jdk18on.version>
+        <bcprov-jdk18on.version>1.74</bcprov-jdk18on.version>
     </properties>
 
     <dependencyManagement>
