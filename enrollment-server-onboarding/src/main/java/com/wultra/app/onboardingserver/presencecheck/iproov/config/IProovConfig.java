@@ -49,6 +49,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
@@ -136,16 +137,24 @@ public class IProovConfig {
     private static ReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient() {
         @SuppressWarnings("unchecked")
         final ExchangeFilterFunction tokenResponseFilter = ExchangeFilterFunction.ofResponseProcessor(response -> {
-            final ClientResponse.Builder builder = response.mutate();
-            return response.bodyToMono(Map.class).map(map -> {
-                if (map.containsKey(AuthTokenResponse.JSON_PROPERTY_SCOPE)) {
-                    logger.debug("Removing scope because does not comply with RFC and not needed anyway");
-                    map.remove(AuthTokenResponse.JSON_PROPERTY_SCOPE);
-                    return builder.body(JSONObject.toJSONString(map)).build();
-                } else {
-                    return builder.build();
-                }
-            });
+        final ClientResponse.Builder builder = response.mutate();
+        return response.bodyToMono(Map.class).map(map -> {
+                    logger.trace("Got access token={}", map.get(AuthTokenResponse.JSON_PROPERTY_ACCESS_TOKEN));
+                    if (map.containsKey(AuthTokenResponse.JSON_PROPERTY_SCOPE)) {
+                        logger.debug("Removing scope because does not comply with RFC and not needed anyway");
+                        map.remove(AuthTokenResponse.JSON_PROPERTY_SCOPE);
+                        return builder.body(JSONObject.toJSONString(map)).build();
+                    } else {
+                        return builder.build();
+                    }
+                })
+                .doOnError(e -> {
+                    if (e instanceof final WebClientResponseException exception) {
+                        logger.error("Get access token - Error response body: {}", exception.getResponseBodyAsString());
+                    } else {
+                        logger.error("Get access token - Error", e);
+                    }
+                });
         });
 
         final WebClient webClient = WebClient.builder()

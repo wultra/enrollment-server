@@ -229,6 +229,8 @@ public class IProovRestApiService {
                 .doOnError(e -> {
                     if (e instanceof final WebClientResponseException exception) {
                         logger.error("Get user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    } else {
+                        logger.error("Get user - Error, userId: {}, {}", userId, id, e);
                     }
                 })
                 .block(), false);
@@ -241,6 +243,8 @@ public class IProovRestApiService {
                 .doOnError(e -> {
                     if (e instanceof final WebClientResponseException exception) {
                         logger.error("Delete user - Error response body: {}, userId: {}, {}", exception.getResponseBodyAsString(), userId, id);
+                    } else {
+                        logger.error("Get user - Error, userId: {}, {}", userId, id, e);
                     }
                 })
                 .block();
