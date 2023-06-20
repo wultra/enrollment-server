@@ -139,7 +139,7 @@ public class IProovConfig {
         final ExchangeFilterFunction tokenResponseFilter = ExchangeFilterFunction.ofResponseProcessor(response -> {
         final ClientResponse.Builder builder = response.mutate();
         return response.bodyToMono(Map.class).map(map -> {
-                    logger.trace("Got access token={}", map.get(AuthTokenResponse.JSON_PROPERTY_ACCESS_TOKEN));
+                    logger.trace("Got access token");
                     if (map.containsKey(AuthTokenResponse.JSON_PROPERTY_SCOPE)) {
                         logger.debug("Removing scope because does not comply with RFC and not needed anyway");
                         map.remove(AuthTokenResponse.JSON_PROPERTY_SCOPE);
