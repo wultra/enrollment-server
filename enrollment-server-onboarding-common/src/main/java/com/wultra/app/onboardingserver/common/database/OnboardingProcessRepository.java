@@ -89,8 +89,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
-            "AND p.activationId = :activationId " +
-            "ORDER BY p.timestampCreated DESC")
+            "AND p.activationId = :activationId")
     Optional<OnboardingProcessEntity> findByActivationIdAndStatusWithLock(String activationId, OnboardingStatus status);
 
     /**
