@@ -61,6 +61,9 @@ public class ScaResultEntity implements Serializable {
     @JoinColumn(name = "identity_verification_id", referencedColumnName = "id", nullable = false)
     private IdentityVerificationEntity identityVerification;
 
+    @Column(name = "process_id", nullable = false)
+    private String processId;
+
     /**
      * Result of presence check.
      */

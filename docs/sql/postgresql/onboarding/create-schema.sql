@@ -168,15 +168,18 @@ CREATE TABLE es_sca_result
 (
     id                       BIGINT      NOT NULL PRIMARY KEY,
     identity_verification_id VARCHAR(36) NOT NULL,
+    process_id               VARCHAR(36) NOT NULL,
     presence_check_result    VARCHAR(32),
     otp_verification_result  VARCHAR(32),
     sca_result               VARCHAR(32),
     timestamp_created        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated   TIMESTAMP,
-    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id)
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id),
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
 );
 
 CREATE INDEX identity_verification_id ON es_sca_result (identity_verification_id);
+CREATE INDEX process_id ON es_sca_result (process_id);
 
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
 CREATE TABLE IF NOT EXISTS shedlock (

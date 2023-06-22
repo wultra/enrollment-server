@@ -316,6 +316,7 @@ public class PresenceCheckService {
         final ScaResultEntity scaResultEntity = new ScaResultEntity();
         scaResultEntity.setPresenceCheckResult(presenceCheckResult);
         scaResultEntity.setIdentityVerification(identityVerification);
+        scaResultEntity.setProcessId(identityVerification.getProcessId());
         scaResultEntity.setTimestampCreated(new Date());
         scaResultRepository.save(scaResultEntity);
     }
