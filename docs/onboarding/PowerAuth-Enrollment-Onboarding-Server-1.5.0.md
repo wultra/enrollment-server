@@ -83,7 +83,7 @@ A new table `es_sca_result` has been created.
 #### PostgreSQL
 
 ```sql
-CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1 CACHE 2;
+CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1;
 
 CREATE TABLE es_sca_result
 (
@@ -104,7 +104,7 @@ CREATE INDEX identity_verification_id ON es_sca_result (identity_verification_id
 #### Oracle
 
 ```sql
-CREATE SEQUENCE ES_SCA_RESULT_SEQ INCREMENT BY 50 START WITH 1 CACHE 2;
+CREATE SEQUENCE ES_SCA_RESULT_SEQ INCREMENT BY 50 START WITH 1;
 
 CREATE TABLE ES_SCA_RESULT
 (

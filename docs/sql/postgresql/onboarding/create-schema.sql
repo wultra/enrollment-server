@@ -162,7 +162,7 @@ CREATE TABLE es_document_result (
 -- PostgreSQL does not create indexes on foreign keys automatically
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
 
-CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1 CACHE 2;
+CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1;
 
 CREATE TABLE es_sca_result
 (
