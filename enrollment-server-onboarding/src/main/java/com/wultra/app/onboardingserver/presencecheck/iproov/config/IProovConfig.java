@@ -54,9 +54,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * iProov configuration.
@@ -106,7 +108,7 @@ public class IProovConfig {
         final ServerOAuth2AuthorizedClientExchangeFilterFunction oAuth2ExchangeFilterFunction = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oAuth2ExchangeFilterFunction.setDefaultClientRegistrationId(OAUTH_REGISTRATION_ID);
 
-        return createWebClient(oAuth2ExchangeFilterFunction, configProps);
+        return createWebClient(oAuth2ExchangeFilterFunction, configProps, "user management client");
     }
 
     private static AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
@@ -159,20 +161,24 @@ public class IProovConfig {
                 });
         });
 
-        final WebClient webClient = createWebClient(tokenResponseFilter, configProps);
+        final WebClient webClient = createWebClient(tokenResponseFilter, configProps, "oAuth client");
 
         final AbstractWebClientReactiveOAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> accessTokenResponseClient = new WebClientReactiveClientCredentialsTokenResponseClient();
         accessTokenResponseClient.setWebClient(webClient);
         return accessTokenResponseClient;
     }
 
-    private static WebClient createWebClient(final ExchangeFilterFunction filter, IProovConfigProps configProps) {
+    private static WebClient createWebClient(final ExchangeFilterFunction filter, IProovConfigProps configProps, final String logContext) {
         final RestClientConfiguration restClientConfig = configProps.getRestClientConfig();
         final Integer connectionTimeout = restClientConfig.getConnectionTimeout();
         final Duration responseTimeout = restClientConfig.getResponseTimeout();
-        logger.debug("Setting connection timeout: {}, response timeout: {}", connectionTimeout, responseTimeout);
+        final Duration maxIdleTime = Objects.requireNonNull(restClientConfig.getMaxIdleTime(), "maxIdleTime must be specified");
+        logger.info("Setting {} connectionTimeout: {}, responseTimeout: {}, maxIdleTime: {}", logContext, connectionTimeout, responseTimeout, maxIdleTime);
 
-        final HttpClient httpClient = HttpClient.create()
+        final ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
+                .maxIdleTime(maxIdleTime)
+                .build();
+        final HttpClient httpClient = HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
                 .responseTimeout(responseTimeout);
         final ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
