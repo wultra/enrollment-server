@@ -410,14 +410,14 @@ public class DocumentProcessingService {
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {}, failed: {}, {}",
                     docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
-            auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
+            auditService.audit(docVerification, "Document verification failed for user: {}, detail: {}", ownerId.getUserId(), docSubmitResult.getErrorDetail());
         } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {}, rejected: {}, {}",
-                    docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
-            auditService.audit(docVerification, "Document verification rejected for user: {}", ownerId.getUserId());
+                    docVerification.getId(), docSubmitResult.getRejectReason(), ownerId);
+            auditService.audit(docVerification, "Document verification rejected for user: {}, reason: {}", ownerId.getUserId(), docSubmitResult.getRejectReason());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());
