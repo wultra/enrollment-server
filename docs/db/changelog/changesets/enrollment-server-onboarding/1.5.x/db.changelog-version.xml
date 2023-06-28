@@ -5,5 +5,6 @@
 
     <include file="20230315-add-column-fds-data.xml" relativeToChangelogFile="true" />
     <include file="20230530-add-column-total-attempts.xml" relativeToChangelogFile="true" />
+    <include file="20230614-add-sca-result.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

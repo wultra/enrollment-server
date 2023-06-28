@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="es_sca_result_seq"/>
+            </not>
+        </preConditions>
+        <comment>Create a new sequence es_sca_result_seq</comment>
+        <createSequence sequenceName="es_sca_result_seq" incrementBy="50"/>
+    </changeSet>
+
+    <changeSet id="2" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="es_sca_result"/>
+            </not>
+        </preConditions>
+        <comment>Create a new table es_onboarding_process</comment>
+        <createTable tableName="es_sca_result">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="identity_verification_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
+            </column>
+            <column name="process_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_es_onboarding_process_id" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
+            </column>
+            <column name="presence_check_result" type="varchar(32)" />
+            <column name="otp_verification_result" type="varchar(32)" />
+            <column name="sca_result" type="varchar(32)" />
+            <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
+                <constraints nullable="false" />
+            </column>
+            <column name="timestamp_last_updated" type="timestamp" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_sca_result" indexName="identity_verification_id" />
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_sca_result(identity_verification_id)</comment>
+        <createIndex tableName="es_sca_result" indexName="identity_verification_id">
+            <column name="identity_verification_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_sca_result" indexName="process_id" />
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_sca_result(process_id)</comment>
+        <createIndex tableName="es_sca_result" indexName="process_id">
+            <column name="process_id" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

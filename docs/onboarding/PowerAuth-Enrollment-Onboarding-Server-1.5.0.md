@@ -75,6 +75,59 @@ ALTER TABLE es_onboarding_otp
 ```
 
 
+### SCA Result
+
+A new table `es_sca_result` has been created.
+
+
+#### PostgreSQL
+
+```sql
+CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1;
+
+CREATE TABLE es_sca_result
+(
+    id                       BIGINT      NOT NULL PRIMARY KEY,
+    identity_verification_id VARCHAR(36) NOT NULL,
+    process_id               VARCHAR(36) NOT NULL,
+    presence_check_result    VARCHAR(32),
+    otp_verification_result  VARCHAR(32),
+    sca_result               VARCHAR(32),
+    timestamp_created        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated   TIMESTAMP,
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id),
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
+);
+
+CREATE INDEX identity_verification_id ON es_sca_result (identity_verification_id);
+CREATE INDEX process_id ON es_sca_result (process_id);
+```
+
+
+#### Oracle
+
+```sql
+CREATE SEQUENCE ES_SCA_RESULT_SEQ INCREMENT BY 50 START WITH 1;
+
+CREATE TABLE ES_SCA_RESULT
+(
+    ID                       NUMBER(19)        NOT NULL PRIMARY KEY,
+    IDENTITY_VERIFICATION_ID VARCHAR2(36 CHAR) NOT NULL,
+    PROCESS_ID               VARCHAR2(36 CHAR) NOT NULL,
+    PRESENCE_CHECK_RESULT    VARCHAR2(32 CHAR),
+    OTP_VERIFICATION_RESULT  VARCHAR2(32 CHAR),
+    SCA_RESULT               VARCHAR2(32 CHAR),
+    TIMESTAMP_CREATED        TIMESTAMP(6)      NOT NULL,
+    TIMESTAMP_LAST_UPDATED   TIMESTAMP(6),
+    FOREIGN KEY (IDENTITY_VERIFICATION_ID) REFERENCES ES_IDENTITY_VERIFICATION (ID),
+    FOREIGN KEY (PROCESS_ID) REFERENCES ES_ONBOARDING_PROCESS (ID)
+);
+
+CREATE INDEX IDENTITY_VERIFICATION_ID ON ES_SCA_RESULT (IDENTITY_VERIFICATION_ID);
+CREATE INDEX PROCESS_ID ON ES_SCA_RESULT (PROCESS_ID);
+```
+
+
 ## Dependencies
 
 PostgreSQL JDBC driver is already included in the WAR file.

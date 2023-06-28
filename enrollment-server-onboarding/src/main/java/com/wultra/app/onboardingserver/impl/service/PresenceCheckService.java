@@ -22,8 +22,10 @@ import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
@@ -35,14 +37,15 @@ import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
 import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
+import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +59,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@AllArgsConstructor
 public class PresenceCheckService {
 
     private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
@@ -72,40 +76,7 @@ public class PresenceCheckService {
     private final PresenceCheckLimitService presenceCheckLimitService;
     private final AuditService auditService;
     private final ImageProcessor imageProcessor;
-
-    /**
-     * Service constructor.
-     * @param documentVerificationRepository Document verification repository.
-     * @param documentProcessingService Document processing service.
-     * @param identityVerificationService Identity verification service.
-     * @param jsonSerializationService JSON serialization service.
-     * @param presenceCheckProvider Presence check provider.
-     * @param presenceCheckLimitService Presence check limit service.
-     * @param auditService Audit service.
-     * @param imageProcessor Image processor.
-     */
-    @Autowired
-    public PresenceCheckService(
-            final IdentityVerificationConfig identityVerificationConfig,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final DocumentProcessingService documentProcessingService,
-            final IdentityVerificationService identityVerificationService,
-            final JsonSerializationService jsonSerializationService,
-            final PresenceCheckProvider presenceCheckProvider,
-            final PresenceCheckLimitService presenceCheckLimitService,
-            final AuditService auditService,
-            final ImageProcessor imageProcessor) {
-
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.documentProcessingService = documentProcessingService;
-        this.identityVerificationService = identityVerificationService;
-        this.jsonSerializationService = jsonSerializationService;
-        this.presenceCheckProvider = presenceCheckProvider;
-        this.presenceCheckLimitService = presenceCheckLimitService;
-        this.auditService = auditService;
-        this.imageProcessor = imageProcessor;
-    }
+    private final ScaResultRepository scaResultRepository;
 
     /**
      * Prepares presence check to not initialized state.
@@ -311,15 +282,18 @@ public class PresenceCheckService {
 
         final IdentityVerificationPhase phase = idVerification.getPhase();
         switch (result.getStatus()) {
-            case ACCEPTED ->
+            case ACCEPTED -> {
                 // The timestampFinished parameter is not set yet, there may be other steps ahead
-                    identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
+                saveScaResult(ScaResultEntity.Result.SUCCESS, idVerification, ownerId);
+                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
+            }
             case FAILED -> {
                 idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFailed(ownerId.getTimestamp());
-                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
                 logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
+                saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
+                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
             }
             case IN_PROGRESS ->
                     logger.debug("Presence check still in progress, {}", ownerId);
@@ -328,12 +302,23 @@ public class PresenceCheckService {
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
+                saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
                 identityVerificationService.moveToPhaseAndStatus(idVerification, phase, REJECTED, ownerId);
             }
             default ->
                     throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
+    }
+
+    private void saveScaResult(final ScaResultEntity.Result presenceCheckResult, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        logger.debug("Saving SCA presence check result: {}, identity verification ID: {}, {}", presenceCheckResult, identityVerification.getId(), ownerId);
+        final ScaResultEntity scaResultEntity = new ScaResultEntity();
+        scaResultEntity.setPresenceCheckResult(presenceCheckResult);
+        scaResultEntity.setIdentityVerification(identityVerification);
+        scaResultEntity.setProcessId(identityVerification.getProcessId());
+        scaResultEntity.setTimestampCreated(new Date());
+        scaResultRepository.save(scaResultEntity);
     }
 
     /**

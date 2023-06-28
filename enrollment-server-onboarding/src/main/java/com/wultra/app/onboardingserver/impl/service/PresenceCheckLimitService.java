@@ -22,11 +22,11 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
@@ -35,9 +35,8 @@ import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -48,14 +47,15 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@Slf4j
+@AllArgsConstructor
 public class PresenceCheckLimitService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PresenceCheckLimitService.class);
 
     private final IdentityVerificationConfig identityVerificationConfig;
     private final OnboardingOtpRepository otpRepository;
     private final IdentityVerificationRepository identityVerificationRepository;
     private final OnboardingProcessRepository onboardingProcessRepository;
+    private final ScaResultRepository scaResultRepository;
     private final ActivationFlagService activationFlagService;
 
     private final IdentityVerificationService identityVerificationService;
@@ -63,35 +63,7 @@ public class PresenceCheckLimitService {
     private final AuditService auditService;
 
     /**
-     * Service constructor.
-     * @param identityVerificationConfig Identity verification configuration.
-     * @param otpRepository Onboarding OTP repository.
-     * @param identityVerificationRepository Identity verification repository.
-     * @param onboardingProcessRepository Onboarding process repository.
-     * @param activationFlagService Activation flag service.
-     * @param identityVerificationService Identity verification service.
-     */
-    @Autowired
-    public PresenceCheckLimitService(
-            final IdentityVerificationConfig identityVerificationConfig,
-            final OnboardingOtpRepository otpRepository,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final ActivationFlagService activationFlagService,
-            final IdentityVerificationService identityVerificationService,
-            final AuditService auditService) {
-
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.otpRepository = otpRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.activationFlagService = activationFlagService;
-        this.identityVerificationService = identityVerificationService;
-        this.auditService = auditService;
-    }
-
-    /**
-     * Check limit for maximum number of attempts for presence check and OTP verification.
+     * Check limit for maximum number of attempts for SCA (presence check and OTP verification).
      * @param ownerId Owner identification.
      * @param processId Process identifier.
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
@@ -99,12 +71,15 @@ public class PresenceCheckLimitService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     public void checkPresenceCheckMaxAttemptLimit(OwnerId ownerId, String processId) throws IdentityVerificationException, PresenceCheckLimitException, RemoteCommunicationException {
-        final int otpCount = otpRepository.countByProcessIdAndType(processId, OtpType.USER_VERIFICATION);
-        // TODO (racansky, 2022-10-20, #453) OTP verification could be turned off, logic should be based on another data
-        if (otpCount >= identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
-            final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId())
-                    .orElseThrow(() ->
-                            new IdentityVerificationException("Identity verification was not found, " + ownerId));
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(ownerId.getActivationId())
+                .orElseThrow(() ->
+                        new IdentityVerificationException("Identity verification was not found, " + ownerId));
+
+        final int count = scaResultRepository.countByIdentityVerification(identityVerification);
+        logger.debug("SCA attempts count so far {}, {}", count, ownerId);
+
+        if (count >= identityVerificationConfig.getPresenceCheckMaxFailedAttempts()) {
+
             if (!identityVerification.getProcessId().equals(processId)) {
                 throw new IdentityVerificationException(String.format("Process identifier mismatch for owner %s: %s", ownerId, processId));
             }

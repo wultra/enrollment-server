@@ -20,13 +20,16 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +52,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 // TODO (racansky, 2022-10-14) consider make it Guard for Spring State Machine
 @Component
 @Slf4j
+@AllArgsConstructor
 class IdentityVerificationPrecompleteCheck {
 
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -57,22 +61,11 @@ class IdentityVerificationPrecompleteCheck {
 
     private final OnboardingOtpRepository onboardingOtpRepository;
 
+    private final ScaResultRepository scaResultRepository;
+
     private final DocumentVerificationRepository documentVerificationRepository;
 
     private final ActivationService activationService;
-
-    IdentityVerificationPrecompleteCheck(
-            final IdentityVerificationConfig identityVerificationConfig,
-            final RequiredDocumentTypesCheck requiredDocumentTypesCheck,
-            final OnboardingOtpRepository onboardingOtpRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final ActivationService activationService) {
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.requiredDocumentTypesCheck = requiredDocumentTypesCheck;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.activationService = activationService;
-    }
 
     /**
      * Evaluate all precomplete conditions.
@@ -85,42 +78,53 @@ class IdentityVerificationPrecompleteCheck {
                 .findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED);
 
         final String processId = idVerification.getProcessId();
+        final String identityVerificationId = idVerification.getId();
 
         if (!documentVerifications.stream()
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
-            logger.debug("Some documents are not accepted for identity verification ID: {}", processId);
+            logger.debug("Some documents are not accepted for identity verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Some documents not accepted");
         }
 
-        if (!requiredDocumentTypesCheck.evaluate(documentVerifications, idVerification.getId())) {
-            logger.debug("Not all required documents are present for verification ID: {}", processId);
+        if (!requiredDocumentTypesCheck.evaluate(documentVerifications, identityVerificationId)) {
+            logger.debug("Not all required documents are present for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Required documents not present");
         }
 
         if (!isPrecompletePhaseAndStateValid(idVerification)) {
-            logger.debug("Not valid phase and state for verification ID: {}", processId);
+            logger.debug("Not valid phase and state for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Not valid phase and state");
         }
 
         if (!isVerificationOtpValid(idVerification)) {
-            logger.debug("Not valid user verification OTP for verification ID: {}", processId);
+            logger.debug("Not valid user verification OTP for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Not valid user verification OTP");
         }
 
         if (!isActivationOtpValid(idVerification)) {
-            logger.debug("Not valid activation OTP for verification ID: {}", processId);
+            logger.debug("Not valid activation OTP for verification ID: {}, process ID:{}", identityVerificationId, processId);
             return Result.failed("Not valid activation OTP");
         }
 
         if (!isActivationValid(idVerification)) {
-            logger.debug("Activation is not valid for verification ID: {}", processId);
+            logger.debug("Activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Activation is not valid");
         }
 
-        // TODO (racansky, 2022-10-18, #453) validate presence check when the data available
+        if (!isVerificationPassedSca(idVerification)) {
+            logger.debug("Did not pass SCA for verification ID: {}, process ID: {}", identityVerificationId, processId);
+            return Result.failed("Did not pass SCA");
+        }
 
         return Result.successful();
+    }
+
+    private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
+        return scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification)
+                .map(ScaResultEntity::getScaResult)
+                .filter(it -> it == ScaResultEntity.Result.SUCCESS)
+                .isPresent();
     }
 
     private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
