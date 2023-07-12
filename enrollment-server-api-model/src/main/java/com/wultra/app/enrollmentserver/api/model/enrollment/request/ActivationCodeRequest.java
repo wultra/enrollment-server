@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -27,7 +28,10 @@ import lombok.Data;
 @Data
 public class ActivationCodeRequest {
 
+    @NotNull
     private String applicationId;
+
+    @NotNull
     private String otp;
 
 }

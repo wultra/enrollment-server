@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -30,7 +31,10 @@ import lombok.Data;
 @Data
 public class PushRegisterRequest {
 
+    @NotNull
     private String platform;
+
+    @NotNull
     private String token;
 
 }
