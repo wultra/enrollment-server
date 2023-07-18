@@ -21,6 +21,9 @@ import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.Instant;
+import java.util.Optional;
+
 /**
  * Request for online token signature verification.
  *
@@ -35,7 +38,28 @@ public class OperationApproveRequest {
     private String data;
 
     /**
-     * Optional OTP used for proximity check. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
+     * Optional proximity check data. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
      */
-    private String proximityCheckOtp;
+    private ProximityCheck proximityCheck;
+
+    public Optional<ProximityCheck> getProximityCheck() {
+        return Optional.ofNullable(proximityCheck);
+    }
+
+    @Data
+    public class ProximityCheck {
+
+        @NotNull
+        private String otp;
+
+        /**
+         * When OTP received by the client. An optional hint for possible better estimation of the time shift correction.
+         */
+        private Instant timestampReceived;
+
+        /**
+         * When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.
+         */
+        private Instant timestampSent;
+    }
 }
