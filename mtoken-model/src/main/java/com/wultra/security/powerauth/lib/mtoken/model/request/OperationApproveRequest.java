@@ -18,6 +18,7 @@
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -40,6 +41,7 @@ public class OperationApproveRequest {
     /**
      * Optional proximity check data. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
      */
+    @Schema(description = "Optional proximity check data." )
     private ProximityCheck proximityCheck;
 
     public Optional<ProximityCheck> getProximityCheck() {
@@ -47,19 +49,22 @@ public class OperationApproveRequest {
     }
 
     @Data
-    public class ProximityCheck {
+    public static class ProximityCheck {
 
         @NotNull
+        @Schema(description = "OTP used for proximity check.")
         private String otp;
 
         /**
          * When OTP received by the client. An optional hint for possible better estimation of the time shift correction.
          */
+        @Schema(description = "When OTP received by the client. An optional hint for possible better estimation of the time shift correction.")
         private Instant timestampReceived;
 
         /**
          * When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.
          */
+        @Schema(description = "When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.")
         private Instant timestampSent;
     }
 }
