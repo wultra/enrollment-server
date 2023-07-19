@@ -56,15 +56,15 @@ public class OperationApproveRequest {
         private String otp;
 
         /**
-         * When OTP received by the client. An optional hint for possible better estimation of the time shift correction.
+         * When OTP obtained by the client. An optional hint for possible better estimation of the time shift correction.
          */
-        @Schema(description = "When OTP received by the client. An optional hint for possible better estimation of the time shift correction.")
-        private Instant timestampReceived;
+        @Schema(description = "When OTP obtained by the client. An optional hint for possible better estimation of the time shift correction.")
+        private Instant timestampObtained;
 
         /**
-         * When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.
+         * When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.
          */
-        @Schema(description = "When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.")
-        private Instant timestampSent;
+        @Schema(description = "When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.")
+        private Instant timestampSigned;
     }
 }

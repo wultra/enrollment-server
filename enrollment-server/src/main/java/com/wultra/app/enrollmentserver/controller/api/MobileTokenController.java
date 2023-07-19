@@ -226,7 +226,7 @@ public class MobileTokenController {
             return null;
         }
         final var proximityCheck = requestObject.getProximityCheck().get();
-        logger.info("Operation ID: {} using proximity check OTP, timestampReceived: {}, timestampSent: {}", requestObject.getId(), proximityCheck.getTimestampReceived(), proximityCheck.getTimestampSent());
+        logger.info("Operation ID: {} using proximity check OTP, timestampObtained: {}, timestampSigned: {}", requestObject.getId(), proximityCheck.getTimestampObtained(), proximityCheck.getTimestampSigned());
         return proximityCheck.getOtp();
     }
 
