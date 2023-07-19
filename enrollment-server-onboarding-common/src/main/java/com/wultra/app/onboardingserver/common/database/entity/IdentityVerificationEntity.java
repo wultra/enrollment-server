@@ -62,7 +62,7 @@ public class IdentityVerificationEntity implements Serializable {
 
     @Id
     @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
+    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
