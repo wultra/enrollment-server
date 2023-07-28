@@ -123,7 +123,12 @@ public class IdentityVerificationFinishService {
         try {
             logger.info("Publishing finish event, {}", ownerId);
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
-            logger.info("Finish event published: {}, {}", response, ownerId);
+            logger.debug("Got {} for processId={}", response, request.getProcessId());
+            if (response.isErrorOccurred()) {
+                logger.info("Finish event failed to published: {}, {}", response.getErrorDetail(), ownerId);
+            } else {
+                logger.info("Finish event published, {}", ownerId);
+            }
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
             logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());

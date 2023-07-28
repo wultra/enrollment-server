@@ -358,8 +358,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         try {
             final ApproveConsentResponse response = onboardingProvider.approveConsent(providerRequest);
-            auditService.auditOnboardingProvider(process, "Approve consent text for user: {}", userId);
             logger.debug("Got {} for processId={}", response, request.getProcessId());
+            if (response.isErrorOccurred()) {
+                final String errorDetail = response.getErrorDetail();
+                auditService.auditOnboardingProvider(process, "Consent text approval failed for user: {}, error: {}", userId, errorDetail);
+                throw new OnboardingProcessException("Consent text approval failed for process: %s, user: %s, error: %s"
+                        .formatted(process.getId(), userId, errorDetail));
+            }
+            auditService.auditOnboardingProvider(process, "Approve consent text for user: {}", userId);
         } catch (OnboardingProviderException e) {
             throw new OnboardingProcessException("An error when approving consent.", e);
         }
