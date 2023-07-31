@@ -35,5 +35,14 @@ import lombok.ToString;
 @ToString
 @PublicApi
 public final class ProcessEventResponse {
-    // empty so far
+
+    /**
+     * Whether business logic error occurred during event processing.
+     */
+    private boolean errorOccurred;
+
+    /**
+     * Error detail to store within onboarding process.
+     */
+    private String errorDetail;
 }

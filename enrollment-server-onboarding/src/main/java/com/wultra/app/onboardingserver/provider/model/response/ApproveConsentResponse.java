@@ -21,6 +21,7 @@ package com.wultra.app.onboardingserver.provider.model.response;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 import com.wultra.core.annotations.PublicApi;
+import lombok.Getter;
 import lombok.ToString;
 
 /**
@@ -30,6 +31,16 @@ import lombok.ToString;
  */
 @PublicApi
 @ToString
+@Getter
 public final class ApproveConsentResponse {
-    // empty so far, open to change in the future
+
+    /**
+     * Whether business logic error occurred during consent approval.
+     */
+    private boolean errorOccurred;
+
+    /**
+     * Error detail to store within onboarding process.
+     */
+    private String errorDetail;
 }
