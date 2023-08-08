@@ -10,7 +10,7 @@
             </not>
         </preConditions>
         <comment>Create a new sequence es_document_result_seq</comment>
-        <createSequence sequenceName="es_document_result_seq" cacheSize="20" incrementBy="10"/>
+        <createSequence sequenceName="es_document_result_seq" cacheSize="20" incrementBy="10" startValue="1" />
     </changeSet>
 
     <changeSet id="2" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-init-db.xml" author="Lubos Racansky">
