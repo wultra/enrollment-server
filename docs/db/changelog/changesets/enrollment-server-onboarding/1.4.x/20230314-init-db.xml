@@ -116,7 +116,7 @@
                 <constraints nullable="false" />
             </column>
             <column name="process_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_onboarding_process_id" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
+                <constraints nullable="false" foreignKeyName="fk_es_identity_verification_es_onboarding_process" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
             </column>
             <column name="status" type="varchar(32)">
                 <constraints nullable="false" />
@@ -226,7 +226,7 @@
                 <constraints nullable="false" />
             </column>
             <column name="identity_verification_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="fk_es_document_verification_es_identity_verification" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
             </column>
             <column name="type" type="varchar(32)">
                 <constraints nullable="false" />
@@ -335,7 +335,7 @@
                 <constraints nullable="false" />
             </column>
             <column name="identity_verification_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="fk_es_document_data_es_identity_verification" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
             </column>
             <column name="filename" type="varchar(256)">
                 <constraints nullable="false" />
@@ -361,10 +361,10 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="process_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_onboarding_process_id" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
+                <constraints nullable="false" foreignKeyName="fk_es_onboarding_otp_es_onboarding_process" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
             </column>
             <column name="identity_verification_id" type="varchar(36)">
-                <constraints foreignKeyName="fk_es_identity_verification_id" referencedTableName="es_identity_verification" referencedColumnNames="id" />
+                <constraints foreignKeyName="fk_es_onboarding_otp_es_identity_verification" referencedTableName="es_identity_verification" referencedColumnNames="id" />
             </column>
             <column name="otp_code" type="varchar(32)">
                 <constraints nullable="false" />
@@ -472,7 +472,7 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="document_verification_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="fk_es_document_verification_id" referencedTableName="es_document_verification" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="fk_es_document_result_es_document_verification" referencedTableName="es_document_verification" referencedColumnNames="id"/>
             </column>
             <column name="phase" type="varchar(36)">
                 <constraints nullable="false" />
