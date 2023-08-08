@@ -55,6 +55,9 @@ public class OperationApproveRequest {
         @Schema(description = "OTP used for proximity check.")
         private String otp;
 
+        @Schema(description = "Source from where the OTP has been gained.")
+        private Type type;
+
         /**
          * When OTP obtained by the client. An optional hint for possible better estimation of the time shift correction.
          */
@@ -66,5 +69,10 @@ public class OperationApproveRequest {
          */
         @Schema(description = "When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.")
         private Instant timestampSigned;
+
+        public enum Type {
+            QR_CODE,
+            DEEPLINK
+        }
     }
 }
