@@ -172,7 +172,7 @@ public class IProovConfig {
 
     private static WebClient createWebClient(final ExchangeFilterFunction filter, IProovConfigProps configProps, final String logContext) {
         final RestClientConfiguration restClientConfig = configProps.getRestClientConfig();
-        final Integer connectionTimeout = restClientConfig.getConnectionTimeout();
+        final Duration connectionTimeout = restClientConfig.getConnectionTimeout();
         final Duration responseTimeout = restClientConfig.getResponseTimeout();
         final Duration maxIdleTime = Objects.requireNonNull(restClientConfig.getMaxIdleTime(), "maxIdleTime must be specified");
         logger.info("Setting {} connectionTimeout: {}, responseTimeout: {}, maxIdleTime: {}", logContext, connectionTimeout, responseTimeout, maxIdleTime);
@@ -181,7 +181,7 @@ public class IProovConfig {
                 .maxIdleTime(maxIdleTime)
                 .build();
         HttpClient httpClient = HttpClient.create(connectionProvider)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectionTimeout.toMillis()))
                 .responseTimeout(responseTimeout);
 
         if (restClientConfig.isProxyEnabled()) {
