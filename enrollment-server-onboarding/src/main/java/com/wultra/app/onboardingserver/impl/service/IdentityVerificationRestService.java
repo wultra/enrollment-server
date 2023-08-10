@@ -127,6 +127,7 @@ public class IdentityVerificationRestService {
 
         this.integrationConfigDto = new ConfigurationDataDto();
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
 
     /**

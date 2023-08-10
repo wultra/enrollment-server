@@ -31,4 +31,9 @@ public class ConfigurationDataDto {
      */
     private String otpResendPeriod;
 
+    /**
+     * OTP resend period in seconds for easier parsing on mobile platforms.
+     */
+    private long otpResendPeriodSeconds;
+
 }

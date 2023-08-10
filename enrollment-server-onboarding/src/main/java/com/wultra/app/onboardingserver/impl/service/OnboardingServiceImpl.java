@@ -27,6 +27,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -84,6 +85,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final ActivationService activationService;
 
+    /**
+     * Configuration data for client integration
+     */
+    private final ConfigurationDataDto integrationConfigDto;
+
     // Special instance of ObjectMapper for normalized serialization of identification data
     private final ObjectMapper normalizedMapper = JsonMapper
             .builder()
@@ -121,6 +127,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
+        this.integrationConfigDto = new ConfigurationDataDto();
+        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
 
     /**
@@ -175,6 +184,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(process.getId());
         response.setOnboardingStatus(process.getStatus());
+        response.setConfigurationDataDto(integrationConfigDto);
         return response;
     }
 
@@ -223,6 +233,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         response.setOnboardingStatus(process.getStatus());
+        response.setConfigurationDataDto(integrationConfigDto);
         return response;
     }
 
