@@ -24,6 +24,19 @@ Make sure that you use dialect without version.
 
 Since version `1.5.0`, MySQL database is not supported anymore.
 
+### Oracle
+
+#### Operation Template
+
+In the `1.5.0` version, the `ES_OPERATION_TEMPLATE` table in the **Oracle** database had a change in the data type of the `MESSAGE` and `ATTRIBUTES` columns. They have been altered from `BLOB` to `CLOB`.
+
+You need to execute the following commands to alter the columns:
+
+```sql
+ALTER TABLE ES_OPERATION_TEMPLATE MODIFY (MESSAGE CLOB);
+ALTER TABLE ES_OPERATION_TEMPLATE MODIFY (ATTRIBUTES CLOB);
+```
+
 ## API Extensions
 
 Since version `1.5.0`, the API supports new cell types in operation responses. These are:
