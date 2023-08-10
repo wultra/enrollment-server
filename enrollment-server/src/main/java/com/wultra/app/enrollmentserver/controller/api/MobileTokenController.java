@@ -205,7 +205,7 @@ public class MobileTokenController {
                         .signatureFactors(signatureFactors)
                         .requestContext(requestContext)
                         .activationFlags(activationFlags)
-                        .proximityCheckOtp(requestObject.getProximityCheckOtp())
+                        .proximityCheckOtp(fetchProximityCheckOtp(requestObject))
                         .build();
 
                 return mobileTokenService.operationApprove(serviceRequest);
@@ -219,6 +219,15 @@ public class MobileTokenController {
             logger.error("Unable to call upstream service.", e);
             throw new MobileTokenAuthException();
         }
+    }
+
+    private static String fetchProximityCheckOtp(OperationApproveRequest requestObject) {
+        if (requestObject.getProximityCheck().isEmpty()) {
+            return null;
+        }
+        final var proximityCheck = requestObject.getProximityCheck().get();
+        logger.info("Operation ID: {} using proximity check OTP, timestampRequested: {}, timestampSigned: {}", requestObject.getId(), proximityCheck.getTimestampRequested(), proximityCheck.getTimestampSigned());
+        return proximityCheck.getOtp();
     }
 
     /**

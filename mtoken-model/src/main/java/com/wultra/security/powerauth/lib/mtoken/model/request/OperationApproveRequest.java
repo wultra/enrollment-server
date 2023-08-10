@@ -18,8 +18,12 @@
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Request for online token signature verification.
@@ -35,7 +39,40 @@ public class OperationApproveRequest {
     private String data;
 
     /**
-     * Optional OTP used for proximity check. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
+     * Optional proximity check data. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
      */
-    private String proximityCheckOtp;
+    @Schema(description = "Optional proximity check data." )
+    private ProximityCheck proximityCheck;
+
+    public Optional<ProximityCheck> getProximityCheck() {
+        return Optional.ofNullable(proximityCheck);
+    }
+
+    @Data
+    public static class ProximityCheck {
+
+        @NotNull
+        @Schema(description = "OTP used for proximity check.")
+        private String otp;
+
+        @Schema(description = "Source from where the OTP has been gained.")
+        private Type type;
+
+        /**
+         * When OTP obtained by the client. An optional hint for possible better estimation of the time shift correction.
+         */
+        @Schema(description = "When OTP requested by the client. An optional hint for possible better estimation of the time shift correction.")
+        private Instant timestampRequested;
+
+        /**
+         * When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.
+         */
+        @Schema(description = "When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.")
+        private Instant timestampSigned;
+
+        public enum Type {
+            QR_CODE,
+            DEEPLINK
+        }
+    }
 }
