@@ -24,7 +24,8 @@ Make sure that you use dialect without version.
 
 Since version `1.5.0`, MySQL database is not supported anymore.
 
-### Oracle 
+### Oracle
+
 #### Operation Template
 
 In the `1.5.0` version, the `ES_OPERATION_TEMPLATE` table in the **Oracle** database had a change in the data type of the `MESSAGE` and `ATTRIBUTES` columns. They have been altered from `BLOB` to `CLOB`.
