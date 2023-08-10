@@ -65,7 +65,7 @@ class RestOnboardingProviderAutoConfiguration {
 
         final RestClientConfiguration config = new RestClientConfiguration();
         config.setBaseUrl(url);
-        config.setConnectionTimeout((int) configuration.getConnectionTimeout().toMillis());
+        config.setConnectionTimeout(configuration.getConnectionTimeout());
         config.setResponseTimeout(configuration.getResponseTimeout());
         config.setHandshakeTimeout(configuration.getHandshakeTimeout());
         config.setDefaultHttpHeaders(headers);
