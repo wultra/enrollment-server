@@ -127,9 +127,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
-        this.integrationConfigDto = new ConfigurationDataDto();
-        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
-        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
+        this.integrationConfigDto = ConfigurationDataDto.builder()
+                .otpResendPeriod(onboardingConfig.getOtpResendPeriod().toString())
+                .otpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds()).build();
     }
 
     /**
@@ -184,7 +184,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(process.getId());
         response.setOnboardingStatus(process.getStatus());
-        response.setConfigurationDataDto(integrationConfigDto);
+        response.setConfig(integrationConfigDto);
         return response;
     }
 
@@ -233,7 +233,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         response.setOnboardingStatus(process.getStatus());
-        response.setConfigurationDataDto(integrationConfigDto);
+        response.setConfig(integrationConfigDto);
         return response;
     }
 

@@ -31,6 +31,6 @@ public class OnboardingStartResponse {
 
     private String processId;
     private OnboardingStatus onboardingStatus;
-    private ConfigurationDataDto configurationDataDto;
+    private ConfigurationDataDto config;
 
 }
