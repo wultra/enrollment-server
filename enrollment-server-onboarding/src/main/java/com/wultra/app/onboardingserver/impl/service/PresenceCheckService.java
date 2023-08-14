@@ -134,13 +134,14 @@ public class PresenceCheckService {
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
         auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
+        // Evaluate the result
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
             logger.info("Not accepted presence check, status: {}, {}", result.getStatus(), ownerId);
-            evaluatePresenceCheckResult(ownerId, idVerification, result);
-            return;
+        } else {
+            logger.debug("Processing a result of an accepted presence check, {}", ownerId);
         }
-        logger.debug("Processing a result of an accepted presence check, {}", ownerId);
 
+        // Process the photo irrespective of the result status
         final Image photo = result.getPhoto();
         if (photo == null) {
             throw new PresenceCheckException("Missing person photo from presence verification, " + ownerId);
