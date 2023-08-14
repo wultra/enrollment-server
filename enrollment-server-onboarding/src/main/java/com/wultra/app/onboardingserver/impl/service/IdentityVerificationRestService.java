@@ -125,8 +125,10 @@ public class IdentityVerificationRestService {
         this.presenceCheckService = presenceCheckService;
         this.stateMachineService = stateMachineService;
 
-        this.integrationConfigDto = new ConfigurationDataDto();
-        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        this.integrationConfigDto = ConfigurationDataDto.builder()
+                .otpResendPeriod(onboardingConfig.getOtpResendPeriod().toString())
+                .otpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds())
+                .build();
     }
 
     /**
