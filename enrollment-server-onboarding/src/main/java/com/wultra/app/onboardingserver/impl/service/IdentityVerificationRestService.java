@@ -154,7 +154,7 @@ public class IdentityVerificationRestService {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
-        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock., {}", processId);
+        logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
