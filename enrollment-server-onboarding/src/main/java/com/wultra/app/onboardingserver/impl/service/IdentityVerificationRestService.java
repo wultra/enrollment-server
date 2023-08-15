@@ -35,7 +35,6 @@ import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentApprovalRequestValidator;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentTextRequestValidator;
-import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -50,6 +49,7 @@ import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenti
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.getlime.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -143,7 +143,7 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public ResponseEntity<Response> initializeIdentityVerification(ObjectRequest<IdentityVerificationInitRequest> request,
-                                                                   PowerAuthApiAuthentication apiAuthentication)
+                                                                   final PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
 
         final String operationDescription = "initializing identity verification";
@@ -151,7 +151,7 @@ public class IdentityVerificationRestService {
         checkRequestObject(request, operationDescription);
 
         // Initialize identity verification
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -182,7 +182,7 @@ public class IdentityVerificationRestService {
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
 
         logger.debug("Onboarding process will not be locked, {}", ownerId);
         // Check verification status
@@ -283,7 +283,7 @@ public class IdentityVerificationRestService {
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
@@ -316,7 +316,7 @@ public class IdentityVerificationRestService {
         checkEciesContext(eciesContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
@@ -353,7 +353,7 @@ public class IdentityVerificationRestService {
         checkEciesContext(eciesContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -383,7 +383,7 @@ public class IdentityVerificationRestService {
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -477,7 +477,7 @@ public class IdentityVerificationRestService {
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkRequestObject(request, operationDescription);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -543,7 +543,7 @@ public class IdentityVerificationRestService {
         logger.debug("Approving consent for {}", requestObject);
         OnboardingConsentApprovalRequestValidator.validate(requestObject);
 
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
+        final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = requestObject.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
@@ -620,6 +620,8 @@ public class IdentityVerificationRestService {
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(onboardingProcess.getActivationId());
         ownerId.setUserId(onboardingProcess.getUserId());
+        MDC.put("userId", ownerId.getUserId());
+        MDC.put("activationId", ownerId.getActivationId());
         return ownerId;
     }
 
