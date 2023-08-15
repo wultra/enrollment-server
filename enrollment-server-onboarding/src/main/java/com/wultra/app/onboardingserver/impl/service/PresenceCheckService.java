@@ -144,6 +144,7 @@ public class PresenceCheckService {
         // Process the photo irrespective of the result status
         final Image photo = result.getPhoto();
         if (photo == null) {
+            evaluatePresenceCheckResult(ownerId, idVerification, result);
             throw new PresenceCheckException("Missing person photo from presence verification, " + ownerId);
         }
         logger.debug("Obtained a photo from the result, {}", ownerId);
