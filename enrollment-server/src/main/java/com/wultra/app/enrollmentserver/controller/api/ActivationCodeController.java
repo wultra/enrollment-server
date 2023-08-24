@@ -24,13 +24,13 @@ import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.enrollmentserver.impl.service.ActivationCodeService;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
-import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -73,7 +73,7 @@ public class ActivationCodeController {
      * Controller request handler for requesting the activation code.
      *
      * @param request Request with activation OTP.
-     * @param eciesContext ECIES encryption context.
+     * @param encryptionContext ECIES encryption context.
      * @param apiAuthentication Authentication object with user and app details.
      * @return New activation code, activation code signature and activation ID.
      * @throws PowerAuthAuthenticationException In case user authentication fails.
@@ -82,13 +82,13 @@ public class ActivationCodeController {
      * @throws ActivationCodeException In case fetching the activation code fails.
      */
     @PostMapping("code")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/activation/code", signatureType = {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request,
-                                                                        @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                        @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
         // Check if the authentication object is present
         if (apiAuthentication == null) {
@@ -97,7 +97,7 @@ public class ActivationCodeController {
         }
 
         // Check if the request was correctly decrypted
-        if (eciesContext == null) {
+        if (encryptionContext == null) {
             logger.error("ECIES encryption failed when fetching activation code");
             throw new PowerAuthEncryptionException("ECIES decryption failed when fetching activation code");
         }

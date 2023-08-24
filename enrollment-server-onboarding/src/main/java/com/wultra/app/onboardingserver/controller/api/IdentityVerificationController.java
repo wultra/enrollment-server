@@ -27,14 +27,14 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestServ
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.getlime.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
@@ -118,7 +118,7 @@ public class IdentityVerificationController {
     /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
@@ -130,22 +130,22 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @PostMapping("document/submit")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public Response submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
-                                                                  @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                  @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                                   @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        return identityVerificationRestService.submitDocuments(request, eciesContext, apiAuthentication);
+        return identityVerificationRestService.submitDocuments(request, encryptionContext, apiAuthentication);
     }
 
     /**
      * Upload a single document related to identity verification. This endpoint is used for upload of large documents.
      * @param requestData Binary request data.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Document upload response.
      * @throws IdentityVerificationException Thrown when identity verification was not found.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -154,16 +154,16 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     @PostMapping("document/upload")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuthToken(signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
-                                                                 @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                                 @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
 
-        return identityVerificationRestService.uploadDocument(requestData, eciesContext, apiAuthentication);
+        return identityVerificationRestService.uploadDocument(requestData, encryptionContext, apiAuthentication);
     }
 
     /**
@@ -189,7 +189,7 @@ public class IdentityVerificationController {
     /**
      * Initialize document verification SDK for an integration.
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Verification SDK initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -199,24 +199,24 @@ public class IdentityVerificationController {
      * @throws RemoteCommunicationException In case of remote communication error.
      */
     @PostMapping("document/init-sdk")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/document/init-sdk", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
             @EncryptedRequestBody ObjectRequest<DocumentVerificationSdkInitRequest> request,
-            @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+            @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
-        return identityVerificationRestService.initVerificationSdk(request, eciesContext, apiAuthentication);
+        return identityVerificationRestService.initVerificationSdk(request, encryptionContext, apiAuthentication);
     }
 
     /**
      * Initialize presence check process.
      *
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Presence check initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -225,16 +225,16 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("presence-check/init")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
     public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
-                                                      @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+                                                      @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        return identityVerificationRestService.initPresenceCheck(request, eciesContext, apiAuthentication);
+        return identityVerificationRestService.initPresenceCheck(request, encryptionContext, apiAuthentication);
     }
 
     /**
@@ -278,18 +278,18 @@ public class IdentityVerificationController {
     /**
      * Verify an OTP code received from the user.
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Send OTP response.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @PostMapping("otp/verify")
-    @PowerAuthEncryption(scope = EciesScope.ACTIVATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
-                                                       @Parameter(hidden = true) EciesEncryptionContext eciesContext)
+                                                       @Parameter(hidden = true) EncryptionContext encryptionContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        return identityVerificationRestService.verifyOtp(request, eciesContext);
+        return identityVerificationRestService.verifyOtp(request, encryptionContext);
     }
 
     /**

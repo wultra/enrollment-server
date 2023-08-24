@@ -33,10 +33,10 @@ import com.wultra.core.http.common.request.RequestContextConverter;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.security.powerauth.crypto.lib.encryptor.ecies.model.EciesScope;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,7 +78,7 @@ public class OnboardingController {
      * Start an onboarding process.
      *
      * @param request Start onboarding process request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @param servletRequest HttpServletRequest.
      * @return Start onboarding process response.
      * @throws PowerAuthEncryptionException Thrown when request is invalid.
@@ -88,14 +88,14 @@ public class OnboardingController {
      * @throws InvalidRequestObjectException Thrown in case request is invalid.
      */
     @PostMapping("start")
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
             @EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-            @Parameter(hidden = true) EciesEncryptionContext eciesContext,
+            @Parameter(hidden = true) EncryptionContext encryptionContext,
             final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
 
         // Check if the request was correctly decrypted
-        if (eciesContext == null) {
+        if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
         }
 
@@ -113,18 +113,18 @@ public class OnboardingController {
      * Resend an onboarding OTP code.
      *
      * @param request Resend an OTP code request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Response.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process fails.
      * @throws OnboardingOtpDeliveryException Thrown when onboarding OTP delivery fails.
      */
     @PostMapping("otp/resend")
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public Response resendOtp(@EncryptedRequestBody ObjectRequest<OnboardingOtpResendRequest> request,
-                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+                              @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
         // Check if the request was correctly decrypted
-        if (eciesContext == null) {
+        if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while resending OTP code");
         }
 
@@ -139,17 +139,17 @@ public class OnboardingController {
      * Get onboarding process status.
      *
      * @param request Onboarding status request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Onboarding status response.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @PostMapping("status")
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStatusResponse> getStatus(@EncryptedRequestBody ObjectRequest<OnboardingStatusRequest> request,
-                                                              @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
+                                                              @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
-        if (eciesContext == null) {
+        if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while getting status");
         }
 
@@ -166,17 +166,17 @@ public class OnboardingController {
      * Perform cleanup related to an onboarding process.
      *
      * @param request Onboarding cleanup request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Onboarding cleanup response.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @PostMapping("cleanup")
-    @PowerAuthEncryption(scope = EciesScope.APPLICATION_SCOPE)
+    @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public Response performCleanup(@EncryptedRequestBody ObjectRequest<OnboardingCleanupRequest> request,
-                                   @Parameter(hidden = true) EciesEncryptionContext eciesContext) throws PowerAuthEncryptionException, OnboardingProcessException {
+                                   @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
         // Check if the request was correctly decrypted
-        if (eciesContext == null) {
+        if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during cleanup");
         }
 
