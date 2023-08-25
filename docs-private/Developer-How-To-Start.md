@@ -20,7 +20,7 @@ Important and fixed parameter is `changelog-file`.
 Others (like URL, username, password) depend on your environment.
 
 ```shell
-liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth --hub-mode=off status
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth status
 ```
 
 
@@ -73,5 +73,5 @@ Important and fixed parameter is `changelog-file`.
 Others (like URL, username, password) depend on your environment.
 
 ```shell
-liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth --hub-mode=off status
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth status
 ``` 
