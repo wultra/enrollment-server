@@ -127,9 +127,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
-        this.integrationConfigDto = ConfigurationDataDto.builder()
-                .otpResendPeriod(onboardingConfig.getOtpResendPeriod().toString())
-                .otpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds()).build();
+        this.integrationConfigDto = new ConfigurationDataDto();
+        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
 
     /**

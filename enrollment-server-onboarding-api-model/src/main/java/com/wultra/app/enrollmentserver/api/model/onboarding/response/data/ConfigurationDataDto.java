@@ -16,7 +16,6 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.response.data;
 
-import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -25,7 +24,6 @@ import lombok.Data;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Data
-@Builder
 public class ConfigurationDataDto {
 
     /**
