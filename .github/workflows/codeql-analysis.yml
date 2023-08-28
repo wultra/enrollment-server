@@ -2,13 +2,11 @@ name: "CodeQL"
 
 on:
   workflow_dispatch:
-    branches:
-      - 'develop'
   push:
-    branches: [ develop, main ]
+    branches: [ 'develop', 'main', 'releases/**' ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ develop ]
+    branches: [ 'develop', 'main', 'releases/**' ]
   schedule:
     - cron: '0 2 * * 4'
 
@@ -21,4 +19,3 @@ jobs:
       # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
       # Use only 'java' to analyze code written in Java, Kotlin or both
       # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
-      # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
