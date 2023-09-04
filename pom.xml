@@ -88,8 +88,8 @@
 
         <shedlock-spring.version>5.1.0</shedlock-spring.version>
         <spring-statemachine.version>3.2.1</spring-statemachine.version>
-        <swagger-annotations-jakarta.version>2.2.8</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.1.0</springdoc-openapi-starter-webmvc-ui.version>
+        <swagger-annotations-jakarta.version>2.2.15</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.2.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
         <wultra-core.version>1.7.0-SNAPSHOT</wultra-core.version>
