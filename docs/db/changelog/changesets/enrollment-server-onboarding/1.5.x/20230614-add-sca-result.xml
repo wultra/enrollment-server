@@ -10,7 +10,7 @@
             </not>
         </preConditions>
         <comment>Create a new sequence es_sca_result_seq</comment>
-        <createSequence sequenceName="es_sca_result_seq" startValue="1" incrementBy="50" cacheSize="20" type="bigint" />
+        <createSequence sequenceName="es_sca_result_seq" startValue="1" incrementBy="50" cacheSize="20" />
     </changeSet>
 
     <changeSet id="2" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
