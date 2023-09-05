@@ -10,7 +10,7 @@
             </not>
         </preConditions>
         <comment>Create a new sequence es_sca_result_seq</comment>
-        <createSequence sequenceName="es_sca_result_seq" incrementBy="50" startValue="1" />
+        <createSequence sequenceName="es_sca_result_seq" startValue="1" incrementBy="50" cacheSize="20" />
     </changeSet>
 
     <changeSet id="2" logicalFilePath="enrollment-server-onboarding/1.5.x/20230614-add-sca-result.xml" author="Lubos Racansky">
@@ -25,10 +25,10 @@
                 <constraints primaryKey="true"/>
             </column>
             <column name="identity_verification_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="sca_result_identity_verification_fk" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
+                <constraints nullable="false" foreignKeyName="es_sca_result_identity_verification_id_fk" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
             </column>
             <column name="process_id" type="varchar(36)">
-                <constraints nullable="false" foreignKeyName="sca_result_onboarding_process_fk" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
+                <constraints nullable="false" foreignKeyName="es_sca_result_process_id_fk" referencedTableName="es_onboarding_process" referencedColumnNames="id" />
             </column>
             <column name="presence_check_result" type="varchar(32)" />
             <column name="otp_verification_result" type="varchar(32)" />
