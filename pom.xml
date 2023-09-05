@@ -86,7 +86,7 @@
     <properties>
         <openapi-generator-maven-plugin.version>6.5.0</openapi-generator-maven-plugin.version>
 
-        <shedlock-spring.version>5.1.0</shedlock-spring.version>
+        <shedlock.version>5.7.0</shedlock.version>
         <spring-statemachine.version>3.2.1</spring-statemachine.version>
         <swagger-annotations-jakarta.version>2.2.15</swagger-annotations-jakarta.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.2.0</springdoc-openapi-starter-webmvc-ui.version>
@@ -219,6 +219,15 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
+            </dependency>
+
+            <!-- Job Scheduling -->
+            <dependency>
+                <groupId>net.javacrumbs.shedlock</groupId>
+                <artifactId>shedlock-bom</artifactId>
+                <version>${shedlock.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
