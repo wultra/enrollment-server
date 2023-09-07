@@ -185,23 +185,29 @@ public class IProovPresenceCheckProvider implements PresenceCheckProvider {
             throw new RemoteCommunicationException("Missing response body when validating a verification in iProov, " + id);
         }
 
-        final PresenceCheckResult result = new PresenceCheckResult();
-
         final ClaimValidateResponse response = parseResponse(responseEntity.getBody(), ClaimValidateResponse.class);
-        if (response.getPassed()) {
-            result.setStatus(PresenceCheckStatus.ACCEPTED);
+        return convert(response, id);
+    }
 
-            if (ifFrameAvailable(response)) {
-                logger.debug("Parsing frame image {}", id);
-                result.setPhoto(parseImage(response.getFrame()));
-            } else {
-                logger.debug("Frame is not available, {}", id);
-            }
+    private static PresenceCheckResult convert(final ClaimValidateResponse source, final OwnerId id) {
+        final PresenceCheckResult target = new PresenceCheckResult();
+
+        if (source.getPassed()) {
+            target.setStatus(PresenceCheckStatus.ACCEPTED);
         } else {
-            result.setStatus(PresenceCheckStatus.REJECTED);
-            result.setRejectReason(response.getReason());
+            logger.debug("Image rejected with reason={}, {}", source.getReason(), id);
+            target.setStatus(PresenceCheckStatus.REJECTED);
+            target.setRejectReason(source.getReason());
         }
-        return result;
+
+        if (ifFrameAvailable(source)) {
+            logger.debug("Parsing frame image {}", id);
+            target.setPhoto(parseImage(source.getFrame()));
+        } else {
+            logger.debug("Frame is not available, {}", id);
+        }
+
+        return target;
     }
 
     @Override
