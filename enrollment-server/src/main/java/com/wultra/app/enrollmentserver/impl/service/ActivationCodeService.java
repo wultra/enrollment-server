@@ -186,6 +186,6 @@ public class ActivationCodeService {
                 .param("activationId", response.getActivationId())
                 .param("userId", userId)
                 .build();
-        audit.info("Init activation for user: {}", auditDetail);
+        audit.info("Init activation for user: {}", auditDetail, userId);
     }
 }
