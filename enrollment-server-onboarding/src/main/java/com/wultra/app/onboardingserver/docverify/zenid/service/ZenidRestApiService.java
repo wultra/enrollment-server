@@ -284,7 +284,6 @@ public class ZenidRestApiService {
         return switch (cardSide) {
             case FRONT -> ZenidSharedMineAllResult.PageCodeEnum.F;
             case BACK -> ZenidSharedMineAllResult.PageCodeEnum.B;
-            default -> throw new IllegalStateException("Unexpected card side value: " + cardSide);
         };
     }
 

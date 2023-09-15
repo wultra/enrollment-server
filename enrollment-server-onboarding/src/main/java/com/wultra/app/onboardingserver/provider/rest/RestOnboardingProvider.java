@@ -214,11 +214,10 @@ class RestOnboardingProvider implements OnboardingProvider {
         return target;
     }
 
-    private static OtpSendRequestDto.OtpTypeEnum convert(SendOtpCodeRequest.OtpType source) throws OnboardingProviderException {
+    private static OtpSendRequestDto.OtpTypeEnum convert(SendOtpCodeRequest.OtpType source) {
         return switch (source) {
             case ACTIVATION -> OtpSendRequestDto.OtpTypeEnum.ACTIVATION;
             case USER_VERIFICATION -> OtpSendRequestDto.OtpTypeEnum.USER_VERIFICATION;
-            default -> throw new OnboardingProviderException("No mapping for " + source);
         };
     }
 
