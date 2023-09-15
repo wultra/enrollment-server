@@ -58,17 +58,17 @@ public class AlertAttribute extends Attribute {
     /**
      * Alert type.
      */
-    protected AlertType alertType;
+    private AlertType alertType;
 
     /**
      * Optional alert title.
      */
-    protected String title;
+    private String title;
 
     /**
      * Alert message.
      */
-    protected String message;
+    private String message;
 
     /**
      * Default constructor.
