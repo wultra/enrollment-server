@@ -569,7 +569,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             case ERROR -> DocumentVerificationStatus.FAILED;
             case NOTDONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
             case REJECTED -> DocumentVerificationStatus.REJECTED;
-            default -> throw new IllegalStateException("Unknown investigation status in ZenID: " + stateEnum);
         };
     }
 
@@ -590,7 +589,6 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         return switch (pageCodeEnum) {
             case F -> CardSide.FRONT;
             case B -> CardSide.BACK;
-            default -> throw new IllegalStateException("Unexpected side page code value: " + pageCodeEnum);
         };
     }
 
