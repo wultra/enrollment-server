@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/1.5.x/20230919-add-otp-fake.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_onboarding_otp" columnName="fake"/>
+            </not>
+        </preConditions>
+        <comment>Add fake column</comment>
+        <addColumn tableName="es_onboarding_otp">
+            <column name="fake" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -173,11 +173,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
-        final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         if (userId == null) {
             logger.debug("User ID is null, OTP is not sent");
+            otpService.createFakeOtpCode(process, OtpType.ACTIVATION);
         } else {
             logger.debug("Sending OTP for user ID: {}", userId);
+            final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
             sendOtp(process, otpCode);
         }
 

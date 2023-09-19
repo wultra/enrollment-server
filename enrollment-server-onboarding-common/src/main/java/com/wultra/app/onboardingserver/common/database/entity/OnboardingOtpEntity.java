@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
@@ -95,6 +94,12 @@ public class OnboardingOtpEntity implements Serializable {
 
     @Column(name = "total_attempts")
     private int totalAttempts;
+
+    /**
+     * Whether is a fake entry not supposed to be sent.
+     */
+    @Column(name = "fake")
+    private boolean fake;
 
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;

@@ -96,6 +96,18 @@ public class OtpServiceImpl extends CommonOtpService {
     }
 
     /**
+     * Create a fake OTP code for onboarding process.
+     *
+     * @param process Onboarding process.
+     * @param otpType OTP type.
+     * @throws OnboardingProcessException Thrown in case OTP code could not be generated.
+     * @see #createOtpCode(OnboardingProcessEntity, OtpType)
+     */
+    public void createFakeOtpCode(OnboardingProcessEntity process, OtpType otpType) throws OnboardingProcessException {
+        generateFakeOtpCode(process, otpType);
+    }
+
+    /**
      * Create an OTP code for onboarding process for resend.
      * @param process Onboarding process.
      * @param otpType OTP type.
@@ -155,6 +167,31 @@ public class OtpServiceImpl extends CommonOtpService {
      * @throws OnboardingProcessException Thrown in case OTP code could not be generated.
      */
     private String generateOtpCode(OnboardingProcessEntity process, OtpType otpType) throws OnboardingProcessException {
+        return generateOtpCode(process, otpType, false);
+    }
+
+    /**
+     * Generate a fake OTP code for an onboarding process.
+     *
+     * @param process Onboarding process.
+     * @param otpType OTP type.
+     * @return OTP code.
+     * @throws OnboardingProcessException Thrown in case OTP code could not be generated.
+     */
+    private void generateFakeOtpCode(OnboardingProcessEntity process, OtpType otpType) throws OnboardingProcessException {
+        generateOtpCode(process, otpType, true);
+    }
+
+    /**
+     * Generate an OTP code for an onboarding process.
+     *
+     * @param process Onboarding process.
+     * @param otpType OTP type.
+     * @param fake Whether OTP should be marked as a fake.
+     * @return OTP code.
+     * @throws OnboardingProcessException Thrown in case OTP code could not be generated.
+     */
+    private String generateOtpCode(OnboardingProcessEntity process, OtpType otpType, boolean fake) throws OnboardingProcessException {
         int otpLength = onboardingConfig.getOtpLength();
         String otpCode = otpGeneratorService.generateOtpCode(otpLength);
 
@@ -173,6 +210,7 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
         otp.setTotalAttempts(0);
+        otp.setFake(fake);
 
         if (otpType == OtpType.USER_VERIFICATION) {
             final String activationId = process.getActivationId();

@@ -56,6 +56,7 @@ CREATE TABLE es_onboarding_otp (
     error_origin VARCHAR(256),
     failed_attempts INTEGER,
     total_attempts INTEGER DEFAULT 0,
+    fake BOOLEAN NOT NULL DEFAULT false,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_expiration TIMESTAMP NOT NULL,
     timestamp_last_updated TIMESTAMP,
