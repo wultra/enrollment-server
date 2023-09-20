@@ -4,7 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <!--  Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library  -->
-    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="1" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="audit_log"/>
@@ -42,7 +42,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="2" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="2" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="audit_param"/>
@@ -59,7 +59,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="3" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_log" indexName="audit_log_timestamp" />
@@ -73,7 +73,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="4" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_log" indexName="audit_log_application" />
@@ -87,7 +87,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="5" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="5" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_log" indexName="audit_log_level" />
@@ -101,7 +101,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="6" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="6" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_log" indexName="audit_log_type" />
@@ -115,7 +115,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="7" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="7" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_param" indexName="audit_param_log" />
@@ -129,7 +129,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="8" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="8" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_param" indexName="audit_param_timestamp" />
@@ -143,7 +143,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="9" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="9" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_param" indexName="audit_param_key" />
@@ -157,7 +157,7 @@
         <rollback />
     </changeSet>
 
-    <changeSet id="10" logicalFilePath="enrollment-server-onboarding/1.4.x/20230314-audit.xml" author="Lubos Racansky">
+    <changeSet id="10" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="audit_param" indexName="audit_param_value" />
