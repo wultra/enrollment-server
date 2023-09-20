@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,7 +41,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**

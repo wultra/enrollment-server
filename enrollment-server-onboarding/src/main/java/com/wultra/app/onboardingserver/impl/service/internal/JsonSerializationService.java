@@ -19,11 +19,10 @@ package com.wultra.app.onboardingserver.impl.service.internal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Nullable;
 
 /**
  * Service class used for JSON serialization.
