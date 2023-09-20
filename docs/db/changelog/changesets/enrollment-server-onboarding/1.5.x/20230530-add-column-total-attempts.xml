@@ -3,7 +3,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <changeSet id="1" logicalFilePath="enrollment-server/1.5.x/20230530-add-column-total-attempts.xml" author="Jan Dusil">
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/1.5.x/20230530-add-column-total-attempts.xml" author="Jan Dusil">
         <preConditions onFail="MARK_RAN">
             <not>
                 <columnExists tableName="es_onboarding_otp" columnName="total_attempts"/>
