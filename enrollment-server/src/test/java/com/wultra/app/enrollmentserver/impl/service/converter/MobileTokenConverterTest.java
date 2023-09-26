@@ -626,10 +626,9 @@ class MobileTokenConverterTest {
                 ]""");
 
         final Operation operation = tested.convert(operationDetail, operationTemplate);
-        final List<Attribute> attributes = operation.getFormData().getAttributes();
-
-
         assertNotNull(operation);
+
+        final List<Attribute> attributes = operation.getFormData().getAttributes();
         assertNotNull(attributes);
         assertEquals(1, attributes.size());
         assertEquals("operation.amount", attributes.get(0).getId());
