@@ -142,7 +142,7 @@ public class MobileTokenConverter {
         return formData;
     }
 
-    static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
+    private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
         if (CollectionUtils.isEmpty(parameters)) {
             return null;
         } else {

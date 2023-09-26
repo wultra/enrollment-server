@@ -26,7 +26,6 @@ import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
-import org.apache.commons.text.StringSubstitutor;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -603,14 +602,6 @@ class MobileTokenConverterTest {
         params.put("currency", "EUR");
         params.put("iban", null);
         operationDetail.setParameters(params);
-
-        final StringSubstitutor stringSubstitutor = MobileTokenConverter.createStringSubstitutor(operationDetail.getParameters());
-
-        assertNotNull(stringSubstitutor);
-        assertEquals("100.00", stringSubstitutor.replace("${amount}"));
-        assertEquals("EUR", stringSubstitutor.replace("${currency}"));
-        // Expect the placeholder unchanged
-        assertEquals("${iban}", stringSubstitutor.replace("${iban}"));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("""
