@@ -142,11 +142,12 @@ public class MobileTokenConverter {
         return formData;
     }
 
-    private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
+    static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
         if (CollectionUtils.isEmpty(parameters)) {
             return null;
         } else {
             final Map<String, String> escapedParameters = parameters.entrySet().stream()
+                    .filter(entry -> entry.getValue() != null)
                     .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
             return new StringSubstitutor(escapedParameters);
         }
