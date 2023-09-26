@@ -37,7 +37,7 @@ mvn clean package
 ### Build the docker image
 
 ```shell
-docker build . -t enrollment-server:1.5.0-SNAPSHOT
+docker build . -t enrollment-server:1.5.0
 ```
 
 
@@ -50,7 +50,7 @@ docker build . -t enrollment-server:1.5.0-SNAPSHOT
 ### Run the docker image
 
 ```shell
-docker run -p 80:8080 -e ENROLLMENT_SERVER_DATASOURCE_URL='jdbc:postgresql://host.docker.internal:5432/powerauth' -e ENROLLMENT_SERVER_DATASOURCE_USERNAME='powerauth' -e ENROLLMENT_SERVER_DATASOURCE_PASSWORD='' enrollment-server:1.5.0-SNAPSHOT 
+docker run -p 80:8080 -e ENROLLMENT_SERVER_DATASOURCE_URL='jdbc:postgresql://host.docker.internal:5432/powerauth' -e ENROLLMENT_SERVER_DATASOURCE_USERNAME='powerauth' -e ENROLLMENT_SERVER_DATASOURCE_PASSWORD='' enrollment-server:1.5.0 
 ```
 
 
