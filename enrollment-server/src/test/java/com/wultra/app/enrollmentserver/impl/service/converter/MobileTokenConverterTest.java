@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.impl.service.converter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
+import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -506,11 +508,11 @@ class MobileTokenConverterTest {
         assertEquals(new AlertAttribute("operation.alert", AlertAttribute.AlertType.WARNING, "Balance warning",
                 "Insufficient Balance", "You have only $1.00 on your account with number 238400856/0300."), atributesIterator.next());
         assertEquals(new PartyAttribute("operation.partyInfo", "Party Info", PartyInfo.builder()
-                        .logoUrl("https://example.com/img/logo/logo.svg")
-                        .name("Example Ltd.")
-                        .description("Find out more about Example...")
-                        .websiteUrl("https://example.com/hello")
-                        .build()), atributesIterator.next());
+                .logoUrl("https://example.com/img/logo/logo.svg")
+                .name("Example Ltd.")
+                .description("Find out more about Example...")
+                .websiteUrl("https://example.com/hello")
+                .build()), atributesIterator.next());
     }
 
     @Test
@@ -590,6 +592,46 @@ class MobileTokenConverterTest {
 
         final UiExtensions ui = result.getUi();
         assertNull(ui.getPreApprovalScreen());
+    }
+
+    @Test
+    void testCreateStringSubstitutorWithNullValue() throws MobileTokenConfigurationException {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        final Map<String, String> params = new HashMap<>();
+        params.put("amount", "100.00");
+        params.put("currency", "EUR");
+        params.put("iban", null);
+        operationDetail.setParameters(params);
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.amount",
+                    "type": "AMOUNT",
+                    "text": "Amount",
+                    "params": {
+                      "amount": "amount",
+                      "currency": "currency"
+                    }
+                  },
+                  {
+                    "id": "operation.account",
+                    "type": "KEY_VALUE",
+                    "text": "To Account",
+                    "params": {
+                      "value": "iban"
+                    }
+                  }
+                ]""");
+
+        final Operation operation = tested.convert(operationDetail, operationTemplate);
+        assertNotNull(operation);
+
+        final List<Attribute> attributes = operation.getFormData().getAttributes();
+        assertNotNull(attributes);
+        assertEquals(1, attributes.size());
+        assertEquals("operation.amount", attributes.get(0).getId());
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {

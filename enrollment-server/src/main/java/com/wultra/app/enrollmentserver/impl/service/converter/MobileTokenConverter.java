@@ -147,6 +147,7 @@ public class MobileTokenConverter {
             return null;
         } else {
             final Map<String, String> escapedParameters = parameters.entrySet().stream()
+                    .filter(entry -> entry.getValue() != null)
                     .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
             return new StringSubstitutor(escapedParameters);
         }
