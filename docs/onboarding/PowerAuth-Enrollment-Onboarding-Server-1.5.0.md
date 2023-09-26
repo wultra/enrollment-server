@@ -128,6 +128,27 @@ CREATE INDEX PROCESS_ID ON ES_SCA_RESULT (PROCESS_ID);
 ```
 
 
+### OTP Fake Marker
+
+A new column `fake` has been added to the table `es_onboarding_otp`.
+
+
+#### PostgreSQL
+
+```sql
+ALTER TABLE es_onboarding_otp
+    ADD COLUMN fake BOOLEAN NOT NULL DEFAULT FALSE;
+```
+
+
+#### Oracle
+
+```sql
+ALTER TABLE es_onboarding_OTP
+    ADD fake NUMBER(1) NOT NULL DEFAULT 0;
+```
+
+
 ## Dependencies
 
 PostgreSQL JDBC driver is already included in the WAR file.
