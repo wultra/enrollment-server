@@ -6,7 +6,6 @@
     <include file="20230315-add-column-fds-data.xml" relativeToChangelogFile="true" />
     <include file="20230530-add-column-total-attempts.xml" relativeToChangelogFile="true" />
     <include file="20230614-add-sca-result.xml" relativeToChangelogFile="true" />
-    <include file="20230919-add-otp-fake.xml" relativeToChangelogFile="true" />
-    <include file="20230919-add-tag-1.5.0.xml" relativeToChangelogFile="true" />
+    <include file="20230824-add-tag-1.5.0.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
