@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.model.request;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ProcessEventRequestTest {
 
     @Test
-    void testBroadcomFinishedEventDataAsMap() {
+    void testFinishedEventDataAsMap() {
         final Map<String, Object> result = ProcessEventRequest.DefaultFinishedEventData.builder()
                 .requestId("75ABE013-CA32-40FD-A104-0C481D44FCD1")
                 .locale(Locale.ENGLISH)
@@ -48,6 +49,32 @@ class ProcessEventRequestTest {
                 () -> assertEquals("en", result.get("language")),
                 () -> assertEquals("127.0.0.1", result.get("clientIPAddress")),
                 () -> assertEquals("Mozilla/5.0", result.get("httpUserAgent"))
+        );
+    }
+
+    @Test
+    void testFinishedEventDataAsMapWithFdsData() {
+        final Map<String, Object> fdsData = new HashMap<>();
+        fdsData.put("nullKey", null);
+        fdsData.put("fdsIdentifier", "42");
+        fdsData.put("fdsChecksum", "1a2b3c");
+
+        final Map<String, Object> result = ProcessEventRequest.DefaultFinishedEventData.builder()
+                .requestId("75ABE013-CA32-40FD-A104-0C481D44FCD1")
+                .locale(Locale.ENGLISH)
+                .clientIPAddress("127.0.0.1")
+                .httpUserAgent("Mozilla/5.0")
+                .fdsData(fdsData)
+                .build()
+                .asMap();
+
+        assertAll(
+                () -> assertEquals("75ABE013-CA32-40FD-A104-0C481D44FCD1", result.get("requestId")),
+                () -> assertEquals("en", result.get("language")),
+                () -> assertEquals("127.0.0.1", result.get("clientIPAddress")),
+                () -> assertEquals("Mozilla/5.0", result.get("httpUserAgent")),
+                () -> assertEquals("42", result.get("fdsIdentifier")),
+                () -> assertEquals("1a2b3c", result.get("fdsChecksum"))
         );
     }
 }

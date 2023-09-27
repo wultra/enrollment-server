@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of an error during document submit.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class DocumentSubmitException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = -5868335942741210351L;
 
     public DocumentSubmitException(String message) {

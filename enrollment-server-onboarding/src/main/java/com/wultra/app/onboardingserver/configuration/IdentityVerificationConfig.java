@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 
 /**
@@ -69,6 +69,12 @@ public class IdentityVerificationConfig {
 
     @Value("${enrollment-server-onboarding.presence-check.max-failed-attempts:5}")
     private int presenceCheckMaxFailedAttempts;
+
+    /**
+     * Minimal width of selfie image (pixels) used to crosscheck presence.
+     */
+    @Value("${enrollment-server-onboarding.presence-check.selfie.minimal-width:400}")
+    private int minimalSelfieWidth;
 
     @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:5}")
     private int clientEvaluationMaxFailedAttempts;

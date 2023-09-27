@@ -38,8 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck.mock"})
+@ActiveProfiles("test")
+@ComponentScan(basePackages = "com.wultra.app.onboardingserver.presencecheck.mock")
 @EnableConfigurationProperties
 class WultraMockPresenceCheckProviderTest {
 
@@ -97,9 +97,10 @@ class WultraMockPresenceCheckProviderTest {
     }
 
     private void initPresenceCheck() {
-        Image photo = new Image();
-        photo.setData(new byte[]{});
-        photo.setFilename("id_photo.jpg");
+        final Image photo = Image.builder()
+                .data(new byte[]{})
+                .filename("id_photo.jpg")
+                .build();
         provider.initPresenceCheck(ownerId, photo);
     }
 

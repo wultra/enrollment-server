@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.4.0</version>
+        <version>1.5.0</version>
     </parent>
 
     <artifactId>enrollment-server-onboarding-common</artifactId>
@@ -44,6 +44,11 @@
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-restful-security-spring-annotation</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.getlime.core</groupId>
+            <artifactId>annotations</artifactId>
         </dependency>
 
         <dependency>

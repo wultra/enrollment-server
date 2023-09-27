@@ -18,9 +18,9 @@
  */
 package com.wultra.app.onboardingserver.provider.model.response;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
+import com.wultra.core.annotations.PublicApi;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,5 +35,14 @@ import lombok.ToString;
 @ToString
 @PublicApi
 public final class ProcessEventResponse {
-    // empty so far
+
+    /**
+     * Whether business logic error occurred during event processing.
+     */
+    private boolean errorOccurred;
+
+    /**
+     * Error detail to store within onboarding process.
+     */
+    private String errorDetail;
 }

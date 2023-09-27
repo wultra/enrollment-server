@@ -20,13 +20,14 @@ package com.wultra.app.onboardingserver.common.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
-import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -46,6 +47,7 @@ import java.util.Set;
 @Table(name = "es_onboarding_process")
 public class OnboardingProcessEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -438495244269415158L;
 
     public static final String ERROR_PROCESS_CANCELED = "canceledProcess";
@@ -58,8 +60,8 @@ public class OnboardingProcessEntity implements Serializable {
     public static final String ERROR_USER_LOOKUP = "userLookupFailed";
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -71,6 +73,12 @@ public class OnboardingProcessEntity implements Serializable {
      */
     @Column(name = "custom_data", nullable = false)
     private String customData = "{}";
+
+    /**
+     * Optional Json with fraud detection system data, vendor specific format.
+     */
+    @Column(name = "fds_data")
+    private String fdsData;
 
     @Column(name = "user_id")
     private String userId;
@@ -119,8 +127,7 @@ public class OnboardingProcessEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingProcessEntity)) return false;
-        OnboardingProcessEntity that = (OnboardingProcessEntity) o;
+        if (!(o instanceof final OnboardingProcessEntity that)) return false;
         return identificationData.equals(that.identificationData) && timestampCreated.equals(that.timestampCreated);
     }
 

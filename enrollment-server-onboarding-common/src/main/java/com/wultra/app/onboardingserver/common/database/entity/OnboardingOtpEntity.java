@@ -21,13 +21,15 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
-import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -45,15 +47,17 @@ import java.util.Objects;
 @Table(name = "es_onboarding_otp")
 public class OnboardingOtpEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -5626187612981527923L;
 
     public static final String ERROR_CANCELED = "canceledOtp";
+    public static final String ERROR_RESEND = "resendOtp";
     public static final String ERROR_EXPIRED = "expiredOtp";
     public static final String ERROR_MAX_FAILED_ATTEMPTS = "maxFailedAttemptsOtp";
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -89,6 +93,9 @@ public class OnboardingOtpEntity implements Serializable {
     @Column(name = "failed_attempts")
     private int failedAttempts;
 
+    @Column(name = "total_attempts")
+    private int totalAttempts;
+
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
@@ -107,8 +114,7 @@ public class OnboardingOtpEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OnboardingOtpEntity)) return false;
-        OnboardingOtpEntity that = (OnboardingOtpEntity) o;
+        if (!(o instanceof final OnboardingOtpEntity that)) return false;
         return process.equals(that.process) && type.equals(that.type) && timestampCreated.equals(that.timestampCreated);
     }
 

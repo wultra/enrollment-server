@@ -45,10 +45,11 @@ import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EciesEncryptionContext;
+import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.getlime.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -58,7 +59,6 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -127,6 +127,7 @@ public class IdentityVerificationRestService {
 
         this.integrationConfigDto = new ConfigurationDataDto();
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
 
     /**
@@ -194,7 +195,7 @@ public class IdentityVerificationRestService {
     /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
@@ -207,17 +208,17 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public Response submitDocuments(ObjectRequest<DocumentSubmitRequest> request,
-                                                                  EciesEncryptionContext eciesContext,
+                                                                  EncryptionContext encryptionContext,
                                                                   PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
         final String operationDescription = "submitting documents for verification";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
+        checkEncryptionContext(encryptionContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
         // Extract user ID from onboarding process for current activation
-        final OwnerId ownerId = extractOwnerId(eciesContext);
+        final OwnerId ownerId = extractOwnerId(encryptionContext);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -231,7 +232,7 @@ public class IdentityVerificationRestService {
     /**
      * Upload a single document related to identity verification. This endpoint is used for upload of large documents.
      * @param requestData Binary request data.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Document upload response.
      * @throws IdentityVerificationException Thrown when identity verification was not found.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -240,17 +241,17 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
      */
     public ObjectResponse<DocumentUploadResponse> uploadDocument(byte[] requestData,
-                                                                 EciesEncryptionContext eciesContext,
+                                                                 EncryptionContext encryptionContext,
                                                                  PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
 
         final String operationDescription = "uploading document for verification";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
+        checkEncryptionContext(encryptionContext, operationDescription);
         checkRequest(requestData, operationDescription);
 
         // Extract user ID from onboarding process for current activation
-        final OwnerId ownerId = extractOwnerId(eciesContext);
+        final OwnerId ownerId = extractOwnerId(encryptionContext);
 
         logger.debug("Onboarding process will not be locked, {}", ownerId);
         IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId);
@@ -294,7 +295,7 @@ public class IdentityVerificationRestService {
     /**
      * Initialize document verification SDK for an integration.
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Verification SDK initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -305,13 +306,13 @@ public class IdentityVerificationRestService {
      */
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
             ObjectRequest<DocumentVerificationSdkInitRequest> request,
-            EciesEncryptionContext eciesContext,
+            EncryptionContext encryptionContext,
             PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
         final String operationDescription = "initializing document verification SDK";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
+        checkEncryptionContext(encryptionContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
@@ -332,7 +333,7 @@ public class IdentityVerificationRestService {
      * Initialize presence check process.
      *
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @param apiAuthentication PowerAuth authentication.
      * @return Presence check initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
@@ -342,13 +343,13 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public ResponseEntity<Response> initPresenceCheck(ObjectRequest<PresenceCheckInitRequest> request,
-                                                      EciesEncryptionContext eciesContext,
+                                                      EncryptionContext encryptionContext,
                                                       PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
         final String operationDescription = "initializing presence check";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEciesContext(eciesContext, operationDescription);
+        checkEncryptionContext(encryptionContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
@@ -421,21 +422,21 @@ public class IdentityVerificationRestService {
     /**
      * Verify an OTP code received from the user.
      * @param request Presence check initialization request.
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Send OTP response.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @Transactional
     public ObjectResponse<OtpVerifyResponse> verifyOtp(ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
-                                                       EciesEncryptionContext eciesContext)
+                                                       EncryptionContext encryptionContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        checkEciesContext(eciesContext, "verifying OTP during identity verification");
+        checkEncryptionContext(encryptionContext, "verifying OTP during identity verification");
         checkRequestObject(request, "verifying OTP during identity verification");
 
         // Extract user ID from onboarding process for current activation
-        final OwnerId ownerId = extractOwnerId(eciesContext);
+        final OwnerId ownerId = extractOwnerId(encryptionContext);
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
@@ -565,12 +566,12 @@ public class IdentityVerificationRestService {
 
     /**
      * Checks if the request was correctly decrypted
-     * @param eciesContext ECIES encryption context
+     * @param encryptionContext ECIES encryption context
      * @param description Additional description
      * @throws PowerAuthEncryptionException When the ECIES encryption context does not exist
      */
-    private void checkEciesContext(@Nullable EciesEncryptionContext eciesContext, String description) throws PowerAuthEncryptionException {
-        if (eciesContext == null) {
+    private void checkEncryptionContext(@Nullable EncryptionContext encryptionContext, String description) throws PowerAuthEncryptionException {
+        if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed when " + description);
         }
     }
@@ -588,13 +589,13 @@ public class IdentityVerificationRestService {
     }
 
     /**
-     * Extract owner identification from an ECIES context. The onboarding process is not locked.
+     * Extract owner identification from an Encryption context. The onboarding process is not locked.
      *
-     * @param eciesContext ECIES context.
+     * @param encryptionContext Encryption context.
      * @return Owner identification.
      */
-    private OwnerId extractOwnerId(EciesEncryptionContext eciesContext) throws OnboardingProcessException {
-        return extractOwnerId(eciesContext.getActivationId());
+    private OwnerId extractOwnerId(EncryptionContext encryptionContext) throws OnboardingProcessException {
+        return extractOwnerId(encryptionContext.getActivationId());
     }
 
     /**

@@ -53,7 +53,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
@@ -234,10 +233,10 @@ public class IdentityVerificationService {
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
                         Collections.singletonList(DocumentStatus.VERIFICATION_PENDING));
 
-        List<DocumentVerificationEntity> selfiePhotoVerifications =
+        final List<DocumentVerificationEntity> selfiePhotoVerifications =
                 docVerifications.stream()
                         .filter(entity -> DocumentType.SELFIE_PHOTO.equals(entity.getType()))
-                        .collect(Collectors.toList());
+                        .toList();
 
         // If not enabled then remove selfie photos from the verification process
         if (!identityVerificationConfig.isVerifySelfieWithDocumentsEnabled()) {
@@ -246,9 +245,9 @@ public class IdentityVerificationService {
 
         documentProcessingService.pairTwoSidedDocuments(docVerifications);
 
-        List<String> uploadIds = docVerifications.stream()
+        final List<String> uploadIds = docVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
-                .collect(Collectors.toList());
+                .toList();
 
         final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         final String verificationId = result.getVerificationId();
@@ -457,12 +456,12 @@ public class IdentityVerificationService {
         if (request.getFilter() != null) {
             final List<String> documentIds = request.getFilter().stream()
                     .map(DocumentStatusRequest.DocumentFilter::getDocumentId)
-                    .collect(Collectors.toList());
+                    .toList();
             entities = Streamable.of(documentVerificationRepository.findAllById(documentIds)).toList();
         } else {
             entities = idVerification.getDocumentVerifications().stream()
                     .filter(DocumentVerificationEntity::isUsedForVerification)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         // Ensure that all entities are related to the identity verification

@@ -21,10 +21,10 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.ActivationStatus;
-import com.wultra.security.powerauth.client.v3.GetActivationStatusRequest;
-import com.wultra.security.powerauth.client.v3.RemoveActivationRequest;
+import com.wultra.security.powerauth.client.model.request.GetActivationStatusRequest;
+import com.wultra.security.powerauth.client.model.request.RemoveActivationRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

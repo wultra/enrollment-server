@@ -116,6 +116,7 @@ public class OtpServiceImpl extends CommonOtpService {
 
         if (existingOtp.getStatus() != OtpStatus.FAILED) {
             existingOtp.setStatus(OtpStatus.FAILED);
+            existingOtp.setErrorDetail(OnboardingOtpEntity.ERROR_RESEND);
             existingOtp.setTimestampLastUpdated(new Date());
             onboardingOtpRepository.save(existingOtp);
             logger.info("Marked previous {} as {} to allow new send of the OTP code", existingOtp, OtpStatus.FAILED);
@@ -131,17 +132,17 @@ public class OtpServiceImpl extends CommonOtpService {
      */
     public void cancelOtp(OnboardingProcessEntity process, OtpType otpType) {
         final String processId = process.getId();
-        // Fail current OTP, if it is present
+        // Fail current OTP, if it is present and in ACTIVE state
         onboardingOtpRepository.findNewestByProcessIdAndType(processId, otpType).ifPresent(otp -> {
             final Date now = new Date();
-            if (otp.getStatus() != OtpStatus.FAILED) {
+            if (otp.getStatus() == OtpStatus.ACTIVE) {
                 otp.setStatus(OtpStatus.FAILED);
                 otp.setTimestampLastUpdated(now);
                 otp.setTimestampFailed(now);
                 otp.setErrorDetail(OnboardingOtpEntity.ERROR_CANCELED);
                 otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
                 onboardingOtpRepository.save(otp);
-                auditService.audit(otp, "OTP canceled for user: {}", process.getUserId());
+                auditService.audit(otp, "OTP canceled for process ID: {}, user ID: {}, otp type: {}", process.getId(), process.getUserId(), otpType);
             }
         });
     }
@@ -171,6 +172,7 @@ public class OtpServiceImpl extends CommonOtpService {
         otp.setTimestampCreated(timestampCreated);
         otp.setTimestampExpiration(timestampExpiration);
         otp.setFailedAttempts(0);
+        otp.setTotalAttempts(0);
 
         if (otpType == OtpType.USER_VERIFICATION) {
             final String activationId = process.getActivationId();

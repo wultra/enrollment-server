@@ -19,6 +19,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.response;
 
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 
+import java.io.Serial;
 import java.util.ArrayList;
 
 /**
@@ -27,5 +28,6 @@ import java.util.ArrayList;
  * @author Petr Dvorak, petr@wultra.com
  */
 public class OperationListResponse extends ArrayList<Operation> {
+    @Serial
     private static final long serialVersionUID = 3244852586716741686L;
 }

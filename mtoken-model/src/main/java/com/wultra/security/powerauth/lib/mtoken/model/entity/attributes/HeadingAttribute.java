@@ -29,12 +29,13 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class HeadingAttribute extends Attribute {
 
+    private int level;
+
     /**
      * Default constructor.
      */
     public HeadingAttribute() {
-        super();
-        this.setType(Type.HEADING);
+        super(Type.HEADING);
     }
 
     /**
@@ -42,10 +43,11 @@ public class HeadingAttribute extends Attribute {
      * @param id Attribute ID.
      * @param label Heading text.
      */
-    public HeadingAttribute(String id, String label) {
+    public HeadingAttribute(String id, String label, int level) {
         this();
         this.id = id;
         this.label = label;
+        this.level = level;
     }
 
 }

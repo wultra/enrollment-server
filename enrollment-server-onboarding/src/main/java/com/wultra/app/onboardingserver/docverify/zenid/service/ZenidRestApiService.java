@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
 import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,7 +41,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -123,7 +123,8 @@ public class ZenidRestApiService {
 
         final ResponseEntity<ZenidWebUploadSampleResponse> response =
                 restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
-        logger.debug("/api/sample response {}, {}", response, ownerId);
+        logger.debug("/api/sample response status code: {}, {}", response.getStatusCode(), ownerId);
+        logger.trace("/api/sample response: {}, {}", response, ownerId);
         return response;
     }
 
@@ -137,7 +138,8 @@ public class ZenidRestApiService {
             throws RestClientException {
         String apiPath = "/api/sample/" + documentId;
         final ResponseEntity<ZenidWebUploadSampleResponse> response = restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
-        logger.debug("{} response {}", apiPath, response);
+        logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+        logger.trace("{} response {}", apiPath, response);
         return response;
     }
 
@@ -160,7 +162,8 @@ public class ZenidRestApiService {
 
         final ResponseEntity<ZenidWebInvestigateResponse> response =
                 restClient.get("/api/investigateSamples", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
-        logger.debug("/api/investigateSamples response {} for IDs: {}", response, sampleIds);
+        logger.debug("/api/investigateSamples response status code: {} for IDs: {}", response.getStatusCode(), sampleIds);
+        logger.trace("/api/investigateSamples response: {} for IDs: {}", response, sampleIds);
         return response;
     }
 
@@ -175,7 +178,7 @@ public class ZenidRestApiService {
         queryParams.add("sampleId", sampleId);
         final ResponseEntity<ZenidWebDeleteSampleResponse> response =
                 restClient.get("/api/deleteSample", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_DELETE);
-        logger.debug("/api/deleteSample/{} response {}", sampleId, response);
+        logger.debug("/api/deleteSample/{} response: {}", sampleId, response);
         return response;
     }
 
@@ -185,10 +188,12 @@ public class ZenidRestApiService {
      * @return Response entity with the image data
      */
     public ResponseEntity<byte[]> getImage(String imageHash) throws RestClientException {
-        String apiPath = String.format("/History/Image/%s", imageHash);
-        HttpHeaders httpHeaders = new HttpHeaders();
+        final String apiPath = String.format("/History/Image/%s", imageHash);
+        final HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
-        return restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
+        final ResponseEntity<byte[]> result = restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
+        logger.debug("{} called", apiPath);
+        return result;
     }
 
     /**
@@ -206,7 +211,8 @@ public class ZenidRestApiService {
             throws RestClientException {
         String apiPath = String.format("/api/investigation/%s", investigationId);
         final ResponseEntity<ZenidWebInvestigateResponse> response = restClient.get(apiPath, RESPONSE_TYPE_REFERENCE_INVESTIGATE);
-        logger.debug("{} response {}", apiPath, response);
+        logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+        logger.trace("{} response: {}", apiPath, response);
         return response;
     }
 
@@ -222,7 +228,7 @@ public class ZenidRestApiService {
 
         final ResponseEntity<ZenidWebInitSdkResponse> response =
                 restClient.get("/api/initSdk", queryParams, EMPTY_ADDITIONAL_HEADERS, RESPONSE_TYPE_REFERENCE_INIT_SDK);
-        logger.debug("/api/initSdk response {}", response);
+        logger.debug("/api/initSdk response: {}", response);
         return response;
     }
 
@@ -255,54 +261,38 @@ public class ZenidRestApiService {
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentCodeEnum toDocumentCode(DocumentType documentType) {
-        switch (documentType) {
-            case DRIVING_LICENSE:
-                return ZenidSharedMineAllResult.DocumentCodeEnum.DRV;
-            case PASSPORT:
-                return ZenidSharedMineAllResult.DocumentCodeEnum.PAS;
-//            case ID_CARD:
+        return switch (documentType) {
+            case DRIVING_LICENSE -> ZenidSharedMineAllResult.DocumentCodeEnum.DRV;
+            case PASSPORT -> ZenidSharedMineAllResult.DocumentCodeEnum.PAS;
+//            case ID_CARD ->
 //                // Not supported more than one version of a document
-//                return List.of(ZenidSharedMineAllResult.DocumentCodeEnum.IDC1, ZenidSharedMineAllResult.DocumentCodeEnum.IDC2);
-            default:
-                return null;
-        }
+//                List.of(ZenidSharedMineAllResult.DocumentCodeEnum.IDC1, ZenidSharedMineAllResult.DocumentCodeEnum.IDC2);
+            default -> null;
+        };
     }
 
     private @Nullable ZenidSharedMineAllResult.DocumentRoleEnum toDocumentRole(DocumentType documentType) {
-        switch (documentType) {
-            case DRIVING_LICENSE:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.DRV;
-            case ID_CARD:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.IDC;
-            case PASSPORT:
-                return ZenidSharedMineAllResult.DocumentRoleEnum.PAS;
-            default:
-                return null;
-        }
+        return switch (documentType) {
+            case DRIVING_LICENSE -> ZenidSharedMineAllResult.DocumentRoleEnum.DRV;
+            case ID_CARD -> ZenidSharedMineAllResult.DocumentRoleEnum.IDC;
+            case PASSPORT -> ZenidSharedMineAllResult.DocumentRoleEnum.PAS;
+            default -> null;
+        };
     }
 
     private ZenidSharedMineAllResult.PageCodeEnum toPageCodeEnum(CardSide cardSide) {
-        switch (cardSide) {
-            case FRONT:
-                return ZenidSharedMineAllResult.PageCodeEnum.F;
-            case BACK:
-                return ZenidSharedMineAllResult.PageCodeEnum.B;
-            default:
-                throw new IllegalStateException("Unexpected card side value: " + cardSide);
-        }
+        return switch (cardSide) {
+            case FRONT -> ZenidSharedMineAllResult.PageCodeEnum.F;
+            case BACK -> ZenidSharedMineAllResult.PageCodeEnum.B;
+        };
     }
 
     private ZenidWebUploadSampleResponse.SampleTypeEnum toSampleType(DocumentType type) {
-        switch (type) {
-            case ID_CARD:
-            case DRIVING_LICENSE:
-            case PASSPORT:
-                return ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
-            case SELFIE_PHOTO:
-                return ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
-            default:
-                throw new IllegalStateException("Not supported documentType: " + type);
-        }
+        return switch (type) {
+            case ID_CARD, DRIVING_LICENSE, PASSPORT -> ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
+            case SELFIE_PHOTO -> ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
+            default -> throw new IllegalStateException("Not supported documentType: " + type);
+        };
     }
 
 }

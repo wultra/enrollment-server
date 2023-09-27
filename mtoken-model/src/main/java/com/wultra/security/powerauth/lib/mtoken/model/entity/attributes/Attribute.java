@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Base class for generic attribute of mobile token form data.
@@ -28,12 +29,17 @@ import lombok.Data;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
+@NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AmountAttribute.class, name = "AMOUNT"),
+        @JsonSubTypes.Type(value = AmountConversionAttribute.class, name = "AMOUNT_CONVERSION"),
         @JsonSubTypes.Type(value = HeadingAttribute.class, name = "HEADING"),
         @JsonSubTypes.Type(value = KeyValueAttribute.class, name = "KEY_VALUE"),
-        @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE")
+        @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE"),
+        @JsonSubTypes.Type(value = ImageAttribute.class, name = "IMAGE"),
+        @JsonSubTypes.Type(value = PartyAttribute.class, name = "PARTY_INFO"),
+        @JsonSubTypes.Type(value = AlertAttribute.class, name = "ALERT")
 })
 public class Attribute {
 
@@ -46,6 +52,11 @@ public class Attribute {
          * Amount attribute type - represents amount and currency.
          */
         AMOUNT,
+
+        /**
+         * Amount conversion attribute type - represents amount and currency conversion.
+         */
+        AMOUNT_CONVERSION,
 
         /**
          * Key-value attribute type - represents generic single-line key value.
@@ -63,9 +74,19 @@ public class Attribute {
         HEADING,
 
         /**
+         * Alert attribute type, represents an alert of success (green), info (blue), warning (orange), and error (red).
+         */
+        ALERT,
+
+        /**
          * Information about third-party subject.
          */
-        PARTY_INFO
+        PARTY_INFO,
+
+        /**
+         * Image attribute type - represents an image as a URL to the thumbnail and the higher resolution.
+         */
+        IMAGE
     }
 
     /**
@@ -85,4 +106,7 @@ public class Attribute {
      */
     protected String label;
 
+    public Attribute(Type type) {
+        this.type = type;
+    }
 }

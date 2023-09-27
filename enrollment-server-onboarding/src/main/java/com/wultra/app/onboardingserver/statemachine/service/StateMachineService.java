@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
@@ -42,7 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 

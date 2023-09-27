@@ -34,7 +34,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +48,8 @@ import static org.mockito.Mockito.when;
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
-@ActiveProfiles("test-onboarding")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test")
 @MockBean(IdentityVerificationOtpService.class)
 @MockBean(VerificationProcessResultAction.class)
 @Transactional

@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case onboarding provider fails.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.errorhandling;
  */
 public class OnboardingProviderException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 787256528155796393L;
 
     /**

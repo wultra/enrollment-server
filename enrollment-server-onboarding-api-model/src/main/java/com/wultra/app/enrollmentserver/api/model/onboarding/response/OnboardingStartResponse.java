@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import lombok.Data;
 
@@ -30,5 +31,6 @@ public class OnboardingStartResponse {
 
     private String processId;
     private OnboardingStatus onboardingStatus;
+    private ConfigurationDataDto config;
 
 }

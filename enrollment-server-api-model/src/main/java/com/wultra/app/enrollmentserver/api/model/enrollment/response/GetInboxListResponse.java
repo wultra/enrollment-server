@@ -18,11 +18,9 @@
 
 package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -35,13 +33,19 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class GetInboxListResponse extends ArrayList<GetInboxListResponse.InboxMessage> {
 
+    @Serial
+    private static final long serialVersionUID = -8864636740564266079L;
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     public static class InboxMessage {
 
         private String id;
+        private String type;
         private String subject;
+        @ToString.Exclude
+        private String summary;
         private boolean read;
         private Date timestampCreated;
 

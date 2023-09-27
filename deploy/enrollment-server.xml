@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+
+    <!-- Database Configuration - JDBC -->
+    <Parameter name="spring.datasource.url" value="${ENROLLMENT_SERVER_DATASOURCE_URL:jdbc:postgresql://host.docker.internal:5432/powerauth}"/>
+    <Parameter name="spring.datasource.username" value="${ENROLLMENT_SERVER_DATASOURCE_USERNAME:powerauth}"/>
+    <Parameter name="spring.datasource.password" value="${ENROLLMENT_SERVER_DATASOURCE_PASSWORD:}"/>
+
+    <!-- Configuration of Database Charset -->
+    <Parameter name="spring.jpa.properties.hibernate.connection.characterEncoding" value="${ENROLLMENT_SERVER_JPA_CHARACTER_ENCODING:utf8}"/>
+    <Parameter name="spring.jpa.properties.hibernate.connection.useUnicode" value="${ENROLLMENT_SERVER_JPA_USE_UNICODE:true}"/>
+
+    <!-- Database Lock Timeout Configuration -->
+    <Parameter name="spring.jpa.properties.jakarta.persistence.lock.timeout" value="${ENROLLMENT_SERVER_JPA_LOCK_TIMEOUT:10000}"/>
+
+    <!-- JMX Configuration -->
+    <Parameter name="spring.jmx.enabled" value="${ENROLLMENT_SERVER_SPRING_JMX_ENABLED:false}"/>
+    <Parameter name="spring.jmx.default-domain" value="${ENROLLMENT_SERVER_SPRING_JMX_DEFAULT_DOMAIN:enrollment-server}"/>
+
+    <!-- PowerAuth Service Configuration -->
+    <Parameter name="powerauth.service.url" value="${ENROLLMENT_SERVER_POWERAUTH_SERVICE_URL:http://localhost:8080/powerauth-java-server/rest}"/>
+    <Parameter name="powerauth.service.security.clientToken" value="${ENROLLMENT_SERVER_SECURITY_CLIENT_TOKEN:}"/>
+    <Parameter name="powerauth.service.security.clientSecret" value="${ENROLLMENT_SERVER_SECURITY_CLIENT_SECRET:}"/>
+
+    <!-- PowerAuth Push Service Configuration -->
+    <Parameter name="powerauth.push.service.url" value="${ENROLLMENT_SERVER_PUSH_SERVER_URL:}"/>
+
+    <!-- Enrollment Server Configuration -->
+    <Parameter name="enrollment-server.mtoken.enabled" value="${ENROLLMENT_SERVER_MTOKEN_ENABLED:true}"/>
+    <Parameter name="enrollment-server.inbox.enabled" value="${ENROLLMENT_SERVER_INBOX_ENABLED:true}"/>
+    <Parameter name="enrollment-server.activation-spawn.enabled" value="${ENROLLMENT_SERVER_ACTIVATION_SPAWN_ENABLED:false}"/>
+
+    <!--  User-info configuration  -->
+    <Parameter name="enrollment-server.user-info.provider" value="${ENROLLMENT_SERVER_USER_INFO_PROVIDER:}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.allowed-stages" value="${ENROLLMENT_SERVER_USER_INFO_REST_ALLOWED_STAGES:USER_INFO_ENDPOINT}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.baseUrl" value="${ENROLLMENT_SERVER_USER_INFO_REST_URL:}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthEnabled" value="${ENROLLMENT_SERVER_USER_INFO_REST_BASIC_ENABLED:false}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthUsername" value="${ENROLLMENT_SERVER_USER_INFO_REST_BASIC_USERNAME:}"/>
+    <Parameter name="enrollment-server.user-info.rest-provider.restClientConfig.httpBasicAuthPassword" value="${ENROLLMENT_SERVER_USER_INFO_REST_BASIC_PASSWORD:}"/>
+
+    <!--  Correlation HTTP Header Configuration  -->
+    <Parameter name="powerauth.service.correlation-header.enabled" value="${ENROLLMENT_SERVER_CORRELATION_HEADER_ENABLED:false}"/>
+    <Parameter name="powerauth.service.correlation-header.name" value="${ENROLLMENT_SERVER_CORRELATION_HEADER_NAME:X-Correlation-ID}"/>
+    <Parameter name="powerauth.service.correlation-header.value.validation-regexp" value="${ENROLLMENT_SERVER_CORRELATION_HEADER_VALUE_VALIDATION_REGEXP:[a-zA-Z0-9\\-]{8,1024}}"/>
+</Context>

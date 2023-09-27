@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.common.errorhandling;
 
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthActivationException;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case activation using OTP code fails completely (hard fail).
  *
@@ -26,6 +28,7 @@ import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthActivati
  */
 public class PowerAuthActivationOtpFailedException extends PowerAuthActivationException {
 
+    @Serial
     private static final long serialVersionUID = -7173917873802997723L;
 
 }

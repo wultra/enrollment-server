@@ -21,13 +21,13 @@ package com.wultra.app.onboardingserver.common.database;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.LockModeType;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -89,8 +89,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM OnboardingProcessEntity p WHERE p.status = :status " +
-            "AND p.activationId = :activationId " +
-            "ORDER BY p.timestampCreated DESC")
+            "AND p.activationId = :activationId")
     Optional<OnboardingProcessEntity> findByActivationIdAndStatusWithLock(String activationId, OnboardingStatus status);
 
     /**

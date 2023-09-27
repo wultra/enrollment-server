@@ -39,8 +39,14 @@ public class KeyValueAttribute extends Attribute {
      * Default constructor.
      */
     public KeyValueAttribute() {
-        super();
-        this.setType(Type.KEY_VALUE);
+        super(Type.KEY_VALUE);
+    }
+
+    /**
+     * Protected constructor for easier subclassing.
+     */
+    protected KeyValueAttribute(Type type) {
+        super(type);
     }
 
     /**

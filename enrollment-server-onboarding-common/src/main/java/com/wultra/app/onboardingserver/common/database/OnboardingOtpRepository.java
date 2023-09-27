@@ -18,9 +18,9 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -66,7 +66,7 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
             "o.status = com.wultra.app.enrollmentserver.model.enumeration.OtpStatus.FAILED, " +
             "o.timestampLastUpdated = :timestampExpired, " +
             "o.errorDetail = '" + OnboardingOtpEntity.ERROR_EXPIRED + "', " +
-            "o.errorOrigin = 'OTP_VERIFICATION', " +
+            "o.errorOrigin = com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.OTP_VERIFICATION, " +
             "o.timestampFailed = :timestampExpired " +
             "WHERE o.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired);
@@ -97,8 +97,5 @@ public interface OnboardingOtpRepository extends CrudRepository<OnboardingOtpEnt
 
     @Query("SELECT MAX(o.timestampCreated) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
     Date getNewestOtpCreatedTimestamp(String processId, OtpType type);
-
-    @Query("SELECT COUNT(o.id) FROM OnboardingOtpEntity o WHERE o.process.id = :processId AND o.type = :type")
-    int countByProcessIdAndType(String processId, OtpType type);
 
 }

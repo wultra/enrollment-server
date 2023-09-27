@@ -118,6 +118,7 @@ public class CommonOtpService implements OtpService {
             otp.setErrorOrigin(ErrorOrigin.OTP_VERIFICATION);
             otp.setTimestampLastUpdated(now);
             otp.setTimestampFailed(now);
+            otp.setTotalAttempts(otp.getTotalAttempts() + 1);
             onboardingOtpRepository.save(otp);
             auditService.audit(otp, "OTP expired for user: {}", process.getUserId());
         } else if (otp.getOtpCode().equals(otpCode)) {
@@ -125,10 +126,12 @@ public class CommonOtpService implements OtpService {
             otp.setStatus(OtpStatus.VERIFIED);
             otp.setTimestampVerified(now);
             otp.setTimestampLastUpdated(now);
+            otp.setTotalAttempts(otp.getTotalAttempts() + 1);
             onboardingOtpRepository.save(otp);
             logger.info("OTP {} verified, {}", otpType, ownerId);
             auditService.audit(otp, "OTP {} verified for user: {}", otpType, process.getUserId());
         } else {
+            auditService.audit(otp, "OTP {} verification failed for user: {}", otpType, process.getUserId());
             handleFailedOtpVerification(process, ownerId, otp, otpType);
         }
 
@@ -168,6 +171,7 @@ public class CommonOtpService implements OtpService {
         int failedAttempts = fetchFailedAttemptsCount(process, otpType);
         final int maxFailedAttempts = commonOnboardingConfig.getOtpMaxFailedAttempts();
         otp.setFailedAttempts(otp.getFailedAttempts() + 1);
+        otp.setTotalAttempts(otp.getTotalAttempts() + 1);
         otp.setTimestampLastUpdated(ownerId.getTimestamp());
         otp = onboardingOtpRepository.save(otp);
         failedAttempts++;

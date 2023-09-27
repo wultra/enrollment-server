@@ -19,9 +19,8 @@
 package com.wultra.app.onboardingserver.impl.service.validation;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingConsentApprovalRequest;
+import jakarta.validation.ValidationException;
 import org.apache.commons.lang3.StringUtils;
-
-import javax.validation.ValidationException;
 
 /**
  * OnboardingConsentApprovalRequestValidator for {@link OnboardingConsentApprovalRequest}.

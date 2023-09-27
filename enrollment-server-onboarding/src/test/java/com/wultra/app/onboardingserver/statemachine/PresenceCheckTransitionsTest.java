@@ -39,21 +39,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = {EnrollmentServerTestApplication.class})
-@ActiveProfiles("test-onboarding")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test")
 @Transactional
 class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
@@ -113,7 +110,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -145,7 +142,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         final Message<OnboardingEvent> presenceCheckSubmittedMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
@@ -181,7 +178,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
-        }).when(presenceCheckService).checkPresenceVerification(eq(OWNER_ID), eq(idVerification), any(SessionInfo.class));
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
         doAnswer(args -> {
             args.getArgument(0, StateContext.class)

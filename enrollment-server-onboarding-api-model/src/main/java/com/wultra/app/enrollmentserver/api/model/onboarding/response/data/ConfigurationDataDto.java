@@ -27,8 +27,20 @@ import lombok.Data;
 public class ConfigurationDataDto {
 
     /**
-     * OTP resend period (ISO 8601 format)
+     * OTP resend period (ISO 8601 format).
+     *
+     * @deprecated ISO 8601 format does not have native support on mobile platforms,
+     * leading to complexities in mobile client processing. Use {@link #otpResendPeriodSeconds}
+     * for a simpler representation in seconds. Scheduled for removal in future versions.
+     * See https://github.com/wultra/enrollment-server/issues/829 for more details.
+     * TODO (@jandusil, 2023-08-12, #829)
      */
+    @Deprecated
     private String otpResendPeriod;
+
+    /**
+     * OTP resend period in seconds for easier parsing on mobile platforms.
+     */
+    private long otpResendPeriodSeconds;
 
 }

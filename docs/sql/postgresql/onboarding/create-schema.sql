@@ -33,6 +33,7 @@ CREATE TABLE es_onboarding_process (
     error_origin VARCHAR(256),
     error_score INTEGER NOT NULL DEFAULT 0,
     custom_data VARCHAR(1024) NOT NULL,
+    fds_data TEXT,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_last_updated TIMESTAMP,
     timestamp_finished TIMESTAMP,
@@ -54,6 +55,7 @@ CREATE TABLE es_onboarding_otp (
     error_detail VARCHAR(256),
     error_origin VARCHAR(256),
     failed_attempts INTEGER,
+    total_attempts INTEGER DEFAULT 0,
     timestamp_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     timestamp_expiration TIMESTAMP NOT NULL,
     timestamp_last_updated TIMESTAMP,
@@ -160,6 +162,25 @@ CREATE TABLE es_document_result (
 -- PostgreSQL does not create indexes on foreign keys automatically
 CREATE INDEX document_verif_result ON es_document_result (document_verification_id);
 
+CREATE SEQUENCE es_sca_result_seq INCREMENT BY 50 START WITH 1;
+
+CREATE TABLE es_sca_result
+(
+    id                       BIGINT      NOT NULL PRIMARY KEY,
+    identity_verification_id VARCHAR(36) NOT NULL,
+    process_id               VARCHAR(36) NOT NULL,
+    presence_check_result    VARCHAR(32),
+    otp_verification_result  VARCHAR(32),
+    sca_result               VARCHAR(32),
+    timestamp_created        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    timestamp_last_updated   TIMESTAMP,
+    FOREIGN KEY (identity_verification_id) REFERENCES es_identity_verification (id),
+    FOREIGN KEY (process_id) REFERENCES es_onboarding_process (id)
+);
+
+CREATE INDEX identity_verification_id ON es_sca_result (identity_verification_id);
+CREATE INDEX process_id ON es_sca_result (process_id);
+
 -- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
 CREATE TABLE IF NOT EXISTS shedlock (
     name VARCHAR(64) NOT NULL,
@@ -186,7 +207,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     build_time         TIMESTAMP
 );
 
-CREATE TABLE audit_param (
+CREATE TABLE IF NOT EXISTS audit_param (
     audit_log_id       VARCHAR(36),
     timestamp_created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     param_key          VARCHAR(256),

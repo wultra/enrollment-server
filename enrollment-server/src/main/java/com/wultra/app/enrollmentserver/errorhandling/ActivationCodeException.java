@@ -17,11 +17,14 @@
  */
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case activation code cannot be fetched for any reason.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 public class ActivationCodeException extends Exception {
+    @Serial
     private static final long serialVersionUID = 368452747764248241L;
 }

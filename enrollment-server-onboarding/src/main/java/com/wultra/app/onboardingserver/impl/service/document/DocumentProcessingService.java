@@ -249,7 +249,7 @@ public class DocumentProcessingService {
         try {
             docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
             final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
-            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}", ownerId.getUserId());
+            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document ID: {}", ownerId.getUserId(), docVerification.getId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
@@ -357,8 +357,9 @@ public class DocumentProcessingService {
             OwnerId ownerId,
             DocumentSubmitRequest.DocumentMetadata docMetadata,
             List<Document> docs) throws DocumentSubmitException {
-        Image photo = new Image();
-        photo.setFilename(docMetadata.getFilename());
+        final Image photo = Image.builder()
+                .filename(docMetadata.getFilename())
+                .build();
 
         SubmittedDocument submittedDoc = new SubmittedDocument();
         submittedDoc.setDocumentId(docMetadata.getUploadId());
@@ -409,14 +410,14 @@ public class DocumentProcessingService {
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {}, failed: {}, {}",
                     docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
-            auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
+            auditService.audit(docVerification, "Document verification failed for user: {}, detail: {}", ownerId.getUserId(), docSubmitResult.getErrorDetail());
         } else if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
             docVerification.setStatus(DocumentStatus.REJECTED);
             docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
             logger.info("Document verification ID: {}, rejected: {}, {}",
-                    docVerification.getId(), docSubmitResult.getErrorDetail(), ownerId);
-            auditService.audit(docVerification, "Document verification rejected for user: {}", ownerId.getUserId());
+                    docVerification.getId(), docSubmitResult.getRejectReason(), ownerId);
+            auditService.audit(docVerification, "Document verification rejected for user: {}, reason: {}", ownerId.getUserId(), docSubmitResult.getRejectReason());
         } else {
             docVerification.setPhotoId(docsSubmitResults.getExtractedPhotoId());
             docVerification.setProviderName(identityVerificationConfig.getDocumentVerificationProvider());

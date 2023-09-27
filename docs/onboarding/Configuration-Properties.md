@@ -85,13 +85,15 @@ The Onboarding Server uses the following public configuration properties:
 
 ## Presence Check Provider Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server-onboarding.presence-check.enabled` | `true` | Whether presence check provider is enabled. |
-| `enrollment-server-onboarding.presence-check.provider` | `mock` | Presen check provider (`mock`, `iproov`). |
-| `enrollment-server-onboarding.presence-check.cleanupEnabled` | `false` | Whether cleanup of presence check data is enabled. |
+| Property                                                                       | Default | Note                                                                                   |
+|--------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.presence-check.enabled`                          | `true`  | Whether presence check provider is enabled.                                            |
+| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`).                                            |
+| `enrollment-server-onboarding.presence-check.cleanupEnabled`                   | `false` | Whether cleanup of presence check data is enabled.                                     |
 | `enrollment-server-onboarding.presence-check.verifySelfieWithDocumentsEnabled` | `false` | Whether verification of the presence check selfie photo with the documents is enabled. |
-| `enrollment-server-onboarding.presence-check.max-failed-attempts` | `5` | Maximum failed attempts for presence check and OTP verification. |
+| `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |
+| `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |
+| `enrollment-server-onboarding.presence-check.selfie.minimal-width`             | `400`   | Minimal width of selfie image (pixels) used to crosscheck presence.                    | 
 
 ## Zen ID Configuration
 
@@ -114,23 +116,24 @@ The Onboarding Server uses the following public configuration properties:
 
 ## iProov Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server-onboarding.presence-check.iproov.apiKey` |  | iProov REST API key. |
-| `enrollment-server-onboarding.presence-check.iproov.apiSecret` |  | iProov REST API secret. |
-| `enrollment-server-onboarding.presence-check.iproov.assuranceType` | `genuine_presence` | iProov assurance type. |
-| `enrollment-server-onboarding.presence-check.iproov.ensureUserIdValueEnabled` | `false` | Whether iProov user ID value should be validated and trimmed. |
-| `enrollment-server-onboarding.presence-check.iproov.riskProfile` |  | iProov risk profile. |
-| `enrollment-server-onboarding.presence-check.iproov.serviceBaseUrl` |  | Base REST service URL for iProov.  |
-| `enrollment-server-onboarding.presence-check.iproov.serviceHostname` |  | Hostname to be used for iProov REST service calls. |
-| `enrollment-server-onboarding.presence-check.iproov.serviceUserAgent` | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.acceptInvalidSslCertificate` | `false` | Whether invalid SSL certificate is accepted when calling Zen ID REST service.  |
-| `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize` | `10485760` | Maximum in memory size of HTTP requests when calling iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyEnabled` | `false` | Whether proxy server is enabled when calling iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyHost` | | Proxy host to be used when calling iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPort` | 0 | Proxy port to be used when calling iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyUsername` | | Proxy username to be used when calling iProov REST service. |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPassword` | | Proxy password to be used when calling iProov REST service. |
+| Property                                                                                          | Default                   | Note                                                                          |
+|---------------------------------------------------------------------------------------------------|---------------------------|-------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.presence-check.iproov.apiKey`                                       |                           | iProov REST API key.                                                          |
+| `enrollment-server-onboarding.presence-check.iproov.apiSecret`                                    |                           | iProov REST API secret.                                                       |
+| `enrollment-server-onboarding.presence-check.iproov.assuranceType`                                | `genuine_presence`        | iProov assurance type.                                                        |
+| `enrollment-server-onboarding.presence-check.iproov.ensureUserIdValueEnabled`                     | `false`                   | Whether iProov user ID value should be validated and trimmed.                 |
+| `enrollment-server-onboarding.presence-check.iproov.riskProfile`                                  |                           | iProov risk profile.                                                          |
+| `enrollment-server-onboarding.presence-check.iproov.serviceBaseUrl`                               |                           | Base REST service URL for iProov.                                             |
+| `enrollment-server-onboarding.presence-check.iproov.serviceUserAgent`                             | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to iProov REST service.              |
+| `enrollment-server-onboarding.presence-check.iproov.oAuthClientUsername`                          |                           | OAuth client username to iProov REST service.                                 |
+| `enrollment-server-onboarding.presence-check.iproov.oAuthClientPassword`                          |                           | OAuth client password to iProov REST service.                                 |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.acceptInvalidSslCertificate` | `false`                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service. |
+| `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize`       | `10485760`                | Maximum in memory size of HTTP requests when calling iProov REST service.     |
+| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyEnabled`          | `false`                   | Whether proxy server is enabled when calling iProov REST service.             |
+| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyHost`             |                           | Proxy host to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPort`             | 0                         | Proxy port to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyUsername`         |                           | Proxy username to be used when calling iProov REST service.                   |
+| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPassword`         |                           | Proxy password to be used when calling iProov REST service.                   |
 
 ## Correlation HTTP Header Configuration
 
@@ -139,5 +142,9 @@ The Onboarding Server uses the following public configuration properties:
 | `powerauth.service.correlation-header.enabled` | `false` | Whether correlation header is enabled |
 | `powerauth.service.correlation-header.name` | `X-Correlation-ID` | Correlation header name |
 | `powerauth.service.correlation-header.value.validation-regexp` | `[a-zA-Z0-9\\-]{8,1024}` | Regular expression for correlation header value validation |
-| `logging.pattern.console` | [See application.properties](https://github.com/wultra/enrollment-server/blob/develop/enrollment-server/src/main/resources/application.properties#L160) | Logging pattern for console which includes the correlation header value |
+| `logging.pattern.console` | `_disabled_` | Logging pattern for console which includes the correlation header value |
 
+Sample setting of logging pattern:
+```properties
+logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:%5p}) [%X{X-Correlation-ID}] %clr(%5p) %clr(${PID: }){magenta} %clr(---){faint}%clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}
+```

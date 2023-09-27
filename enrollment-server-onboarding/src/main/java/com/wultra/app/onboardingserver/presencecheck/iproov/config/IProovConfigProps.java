@@ -63,11 +63,6 @@ public class IProovConfigProps {
     private String serviceBaseUrl;
 
     /**
-     * Service hostname
-     */
-    private String serviceHostname;
-
-    /**
      * Identification of the application calling the REST services passed as the User-Agent header
      */
     private String serviceUserAgent;
@@ -76,6 +71,16 @@ public class IProovConfigProps {
      * Enabled/disabled ensuring of valid user id value before sending
      */
     private boolean ensureUserIdValueEnabled;
+
+    /**
+     * OAuth client username to iProov REST service.
+     */
+    private String oAuthClientUsername;
+
+    /**
+     * OAuth client password to iProov REST service.
+     */
+    private String oAuthClientPassword;
 
     /**
      * REST client configuration

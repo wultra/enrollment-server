@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.common.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case of an error during identity verification.
  *
@@ -24,6 +26,7 @@ package com.wultra.app.onboardingserver.common.errorhandling;
  */
 public class IdentityVerificationException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 678593206284581851L;
 
     public IdentityVerificationException() {

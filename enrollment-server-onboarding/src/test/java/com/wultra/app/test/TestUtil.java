@@ -40,18 +40,22 @@ public final class TestUtil {
      * @return Image with the photo data
      * @throws IOException when an error occurred
      */
-    public static Image loadPhoto(String path) throws IOException {
-        File file = new File(path);
+    public static Image loadPhoto(final String path) throws IOException {
+        final File file = new File(path);
 
-        Image photo = new Image();
-        photo.setFilename(file.getName());
+        return Image.builder()
+                .data(readImageData(path))
+                .filename(file.getName())
+                .build();
+    }
+
+    private static byte[] readImageData(final String path) throws IOException {
         try (InputStream stream = TestUtil.class.getResourceAsStream(path)) {
             if (stream == null) {
                 throw new IllegalStateException("Unable to get a stream for: " + path);
             }
-            photo.setData(stream.readAllBytes());
+            return stream.readAllBytes();
         }
-        return photo;
     }
 
 }

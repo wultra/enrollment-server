@@ -31,14 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -133,11 +132,10 @@ public class MobileTokenConverter {
         if (attributes != null) {
             final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
             if (operationTemplateParams != null) {
+                final List<Attribute> formDataAttributes = formData.getAttributes();
                 for (OperationTemplateParam templateParam : operationTemplateParams) {
-                    final Attribute attribute = buildAttribute(templateParam, parameters);
-                    if (attribute != null) {
-                        formData.getAttributes().add(attribute);
-                    }
+                    buildAttribute(templateParam, parameters)
+                            .ifPresent(formDataAttributes::add);
                 }
             }
         }
@@ -149,6 +147,7 @@ public class MobileTokenConverter {
             return null;
         } else {
             final Map<String, String> escapedParameters = parameters.entrySet().stream()
+                    .filter(entry -> entry.getValue() != null)
                     .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
             return new StringSubstitutor(escapedParameters);
         }
@@ -162,7 +161,7 @@ public class MobileTokenConverter {
         if (StringUtils.hasText(operationTemplate.getUi())) {
             final String uiJsonString = substitutor == null ? operationTemplate.getUi() : substitutor.replace(operationTemplate.getUi());
             logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
-            return objectMapper.readValue(uiJsonString, UiExtensions.class);
+            return deserializeUiExtensions(uiJsonString, operationDetail);
         } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {
             final String riskFlags = operationDetail.getRiskFlags();
             logger.debug("Converting riskFlags: '{}' of OperationDetail ID: {} to UiExtensions", riskFlags, operationDetail.getId());
@@ -176,6 +175,7 @@ public class MobileTokenConverter {
             if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
                 final PreApprovalScreen preApprovalScreen = new PreApprovalScreen();
                 preApprovalScreen.setType(PreApprovalScreen.ScreenType.WARNING);
+                preApprovalScreen.setApprovalType(PreApprovalScreen.ApprovalType.SLIDER);
                 ui.setPreApprovalScreen(preApprovalScreen);
             }
             return ui;
@@ -184,89 +184,228 @@ public class MobileTokenConverter {
         }
     }
 
-    private Attribute buildAttribute(OperationTemplateParam templateParam, Map<String, String> params) {
-        final String type = templateParam.getType();
-        final String id = templateParam.getId();
-        final String text = templateParam.getText();
-        switch (type) {
-            case "AMOUNT": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String amountKey = templateParams.get("amount");
-                final String currencyKey = templateParams.get("currency");
-                final String amount = params.get(amountKey);
-                final String currency = params.get(currencyKey);
-                try {
-                    final BigDecimal amountValue = new BigDecimal(amount);
-                    return new AmountAttribute(id, text, amountValue, currency, amount, currency);
-                } catch (NumberFormatException ex) {
-                    logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
-                    return null;
-                }
-            }
-            case "HEADING": {
-                return new HeadingAttribute(id, text);
-            }
-            case "NOTE": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String noteKey = templateParams.get("note");
-                final String note = params.get(noteKey);
-                if (note == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new NoteAttribute(id, text, note);
-            }
-            case "KEY_VALUE": {
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String valueKey = templateParams.get("value");
-                final String value = params.get(valueKey);
-                if (value == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new KeyValueAttribute(id, text, value);
-            }
-            default: { // attempt fallback to key-value type
-                logger.error("Invalid operation attribute type: {}", type);
-                final Map<String, String> templateParams = templateParam.getParams();
-                if (templateParams == null) {
-                    logger.warn("Params of OperationTemplateParam ID: {} is null", id);
-                    return null;
-                }
-                if (params == null) {
-                    logger.warn("Params of OperationDetailResponse is null");
-                    return null;
-                }
-                final String valueKey = templateParams.get("value");
-                final String value = params.get(valueKey);
-                if (value == null) { // invalid element, does not contain note at all
-                    return null;
-                }
-                return new KeyValueAttribute(id, text, value);
-            }
+    private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
+        final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
+        if (uiExtensions.getPreApprovalScreen() != null
+                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreen.ScreenType.QR_SCAN
+                && operationDetail.getProximityOtp() == null) {
+
+            logger.info("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());
+            uiExtensions.setPreApprovalScreen(null);
         }
+        return uiExtensions;
     }
 
+    private static Optional<Attribute> buildAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String type = templateParam.getType();
+        return switch (type) {
+            case "AMOUNT" ->
+                buildAmountAttribute(templateParam, params);
+            case "AMOUNT_CONVERSION" ->
+                buildAmountConversionAttribute(templateParam, params);
+            case "HEADING" ->
+                buildHeadingAttribute(templateParam, params);
+            case "NOTE" ->
+                buildNoteAttribute(templateParam, params);
+            case "KEY_VALUE" ->
+                buildKeyValueAttribute(templateParam, params);
+            case "ALERT" ->
+                buildAlertAttribute(templateParam, params);
+            case "IMAGE" ->
+                buildImageAttribute(templateParam, params);
+            case "PARTY_INFO" ->
+                buildPartyInfoAttribute(templateParam, params);
+            default -> { // attempt fallback to key-value type
+                logger.error("Invalid operation attribute type: {}", type);
+                yield buildKeyValueAttribute(templateParam, params);
+            }
+        };
+    }
+
+    private static Optional<Attribute> buildHeadingAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final int level = fetchTemplateParamValue(templateParam, params, "level")
+                .map(Integer::valueOf).orElse(0);
+        return Optional.of(new HeadingAttribute(id, text, level));
+    }
+
+    private static Optional<Attribute> buildKeyValueAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        return fetchTemplateParamValue(templateParam, params, "value")
+                .map(it -> new KeyValueAttribute(id, text, it));
+    }
+
+    private static Optional<Attribute> buildNoteAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        return fetchTemplateParamValue(templateParam, params, "note")
+                .map(it -> new NoteAttribute(id, text, it));
+    }
+
+    private static Optional<Attribute> buildAlertAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> alertTypeOptional = fetchTemplateParamValue(templateParam, params, "type");
+        final AlertAttribute.AlertType alertType = alertTypeOptional
+                .map(MobileTokenConverter::convertAlertType)
+                .orElse(AlertAttribute.AlertType.INFO);
+        final Optional<String> titleOptional = fetchTemplateParamValue(templateParam, params, "title");
+        final String title = titleOptional.orElse(null);
+        final Optional<String> messageOptional = fetchTemplateParamValue(templateParam, params, "message");
+        final String message = messageOptional.orElse(null);
+        return Optional.of(AlertAttribute.builder()
+                .id(id)
+                .alertType(alertType)
+                .label(text)
+                .title(title)
+                .message(message)
+                .build()
+        );
+    }
+
+    private static AlertAttribute.AlertType convertAlertType(String alertTypeValue) {
+        return switch (alertTypeValue.toUpperCase()) {
+            case "SUCCESS" -> AlertAttribute.AlertType.SUCCESS;
+            case "WARNING" -> AlertAttribute.AlertType.WARNING;
+            case "ERROR" -> AlertAttribute.AlertType.ERROR;
+            default -> AlertAttribute.AlertType.INFO;
+        };
+    }
+
+    private static Optional<Attribute> buildAmountAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> amount = fetchTemplateParamValue(templateParam, params, "amount");
+        if (amount.isEmpty()) {
+            return Optional.empty();
+        }
+        final Optional<String> currency = fetchTemplateParamValue(templateParam, params, "currency");
+        if (currency.isEmpty()) {
+            return Optional.empty();
+        }
+        final BigDecimal amountRaw;
+        try {
+            amountRaw = new BigDecimal(amount.get());
+        } catch (NumberFormatException ex) {
+            logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
+            return Optional.empty();
+        }
+        final Locale locale = LocaleContextHolder.getLocale();
+        final String currencyRaw = currency.get();
+        final String currencyFormatted = MonetaryConverter.formatCurrency(currencyRaw, locale);
+        final String amountFormatted = MonetaryConverter.formatAmount(amountRaw, currencyRaw, locale);
+        final String valueFormatted = MonetaryConverter.formatValue(amountRaw, currencyRaw, locale);
+        return Optional.of(AmountAttribute.builder()
+                .id(id)
+                .label(text)
+                .amount(amountRaw)
+                .amountFormatted(amountFormatted)
+                .currency(currencyRaw)
+                .currencyFormatted(currencyFormatted)
+                .valueFormatted(valueFormatted)
+                .build());
+    }
+
+    private static Optional<Attribute> buildAmountConversionAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> sourceAmount = fetchTemplateParamValue(templateParam, params, "sourceAmount");
+        final Optional<String> targetAmount = fetchTemplateParamValue(templateParam, params, "targetAmount");
+        if (sourceAmount.isEmpty() || targetAmount.isEmpty()) {
+            return Optional.empty();
+        }
+        final Optional<String> sourceCurrency = fetchTemplateParamValue(templateParam, params, "sourceCurrency");
+        final Optional<String> targetCurrency = fetchTemplateParamValue(templateParam, params, "targetCurrency");
+        if (sourceCurrency.isEmpty() || targetCurrency.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final boolean dynamic = fetchTemplateParamValue(templateParam, params, "dynamic")
+                .map(Boolean::parseBoolean)
+                .orElse(false);
+
+        final BigDecimal sourceAmountRaw;
+        final BigDecimal targetAmountRaw;
+        try {
+            sourceAmountRaw = new BigDecimal(sourceAmount.get());
+            targetAmountRaw = new BigDecimal(targetAmount.get());
+        } catch (NumberFormatException ex) {
+            logger.warn("Invalid number format: {}, skipping the AMOUNT_CONVERSION attribute!", sourceAmount);
+            return Optional.empty();
+        }
+
+        final Locale locale = LocaleContextHolder.getLocale();
+        final String sourceCurrencyRaw = sourceCurrency.get();
+        final String sourceCurrencyFormatted = MonetaryConverter.formatCurrency(sourceCurrencyRaw, locale);
+        final String sourceAmountFormatted = MonetaryConverter.formatAmount(sourceAmountRaw, sourceCurrencyRaw, locale);
+        final String sourceValueFormatted = MonetaryConverter.formatValue(sourceAmountRaw, sourceCurrencyRaw, locale);
+        final String targetCurrencyRaw = targetCurrency.get();
+        final String targetCurrencyFormatted = MonetaryConverter.formatCurrency(targetCurrencyRaw, locale);
+        final String targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
+        final String targetValueFormatted = MonetaryConverter.formatValue(targetAmountRaw, targetCurrencyRaw, locale);
+        return Optional.of(AmountConversionAttribute.builder()
+                .id(id)
+                .label(text)
+                .dynamic(dynamic)
+                .sourceAmount(sourceAmountRaw)
+                .sourceAmountFormatted(sourceAmountFormatted)
+                .sourceCurrency(sourceCurrencyRaw)
+                .sourceCurrencyFormatted(sourceCurrencyFormatted)
+                .sourceValueFormatted(sourceValueFormatted)
+                .targetAmount(targetAmountRaw)
+                .targetAmountFormatted(targetAmountFormatted)
+                .targetCurrency(targetCurrencyRaw)
+                .targetCurrencyFormatted(targetCurrencyFormatted)
+                .targetValueFormatted(targetValueFormatted)
+                .build());
+    }
+
+    private static Optional<Attribute> buildImageAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final Optional<String> thumbnailUrl = fetchTemplateParamValue(templateParam, params, "thumbnailUrl");
+        if (thumbnailUrl.isEmpty()) {
+            logger.warn("ThumbnailUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
+            return Optional.empty();
+        }
+        final Optional<String> originalUrl = fetchTemplateParamValue(templateParam, params, "originalUrl");
+        if (originalUrl.isEmpty()) {
+            logger.debug("OriginalUrl is not defined for OperationTemplateParam ID: {}", templateParam.getId());
+        }
+        return Optional.of(new ImageAttribute(id, text, thumbnailUrl.get(), originalUrl.orElse(null)));
+    }
+
+    private static Optional<Attribute> buildPartyInfoAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
+        final String id = templateParam.getId();
+        final String text = templateParam.getText();
+        final PartyInfo partyInfo = PartyInfo.builder()
+                .logoUrl(fetchTemplateParamValueNullable(templateParam, params, "logoUrl"))
+                .name(fetchTemplateParamValueNullable(templateParam, params, "name"))
+                .description(fetchTemplateParamValueNullable(templateParam, params, "description"))
+                .websiteUrl(fetchTemplateParamValueNullable(templateParam, params, "websiteUrl"))
+                .build();
+        return Optional.of(new PartyAttribute(id, text, partyInfo));
+    }
+
+    private static Optional<String> fetchTemplateParamValue(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
+        final String id = templateParam.getId();
+        final Map<String, String> templateParams = templateParam.getParams();
+        if (templateParams == null) {
+            logger.warn("Params of OperationTemplateParam ID: {} is null", id);
+            return Optional.empty();
+        }
+        if (params == null) {
+            logger.warn("Params of OperationDetailResponse is null");
+            return Optional.empty();
+        }
+        return Optional.ofNullable(templateParams.get(key))
+                .map(params::get);
+    }
+
+    private static String fetchTemplateParamValueNullable(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {
+        return fetchTemplateParamValue(templateParam, params, key)
+                .orElse(null);
+    }
 }

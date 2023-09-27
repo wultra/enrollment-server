@@ -36,6 +36,7 @@ import com.wultra.app.onboardingserver.docverify.zenid.service.ZenidRestApiServi
 import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
 import com.wultra.core.rest.client.base.RestClientException;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -259,10 +259,10 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
         String filename = getContentDispositionFilename(responseEntity.getHeaders());
 
-        Image image = new Image();
-        image.setData(responseEntity.getBody());
-        image.setFilename(filename);
-        return image;
+        return Image.builder()
+                .data(responseEntity.getBody())
+                .filename(filename)
+                .build();
     }
 
     @Override
@@ -319,7 +319,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         final List<String> errors = new ArrayList<>();
         if (validations != null) {
             validations.forEach(validation -> {
-                if (validation.isOk()) {
+                if (Boolean.TRUE.equals(validation.getOk())) {
                     return;
                 }
                 validation.getIssues().forEach(issue -> errors.add(issue.getIssueDescription()));
@@ -503,7 +503,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
                 // Find a first failed validation, use its description as the rejected reason for the document
                 Optional<ZenidWebInvestigationValidatorResponse> failedValidation = validations.stream()
-                        .filter(validation -> !validation.isOk())
+                        .filter(validation -> !Boolean.TRUE.equals(validation.getOk()))
                         // Sort the validations by difference between the actual score and the accepted score value
                         .max(Comparator.comparingInt((value -> value.getAcceptScore() - value.getScore())));
                 if (failedValidation.isPresent()) {
@@ -551,7 +551,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         result.setCode(value.getCode());
         result.setName(value.getName());
         result.setScore(value.getScore());
-        result.setOk(value.isOk());
+        result.setOk(value.getOk());
         return result;
     }
 
@@ -564,32 +564,21 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     private DocumentVerificationStatus toStatus(ZenidWebInvestigateResponse.StateEnum stateEnum) {
-        switch (stateEnum) {
-            case DONE:
-                return DocumentVerificationStatus.ACCEPTED;
-            case ERROR:
-                return DocumentVerificationStatus.FAILED;
-            case NOTDONE:
-            case OPERATOR:
-                return DocumentVerificationStatus.IN_PROGRESS;
-            case REJECTED:
-                return DocumentVerificationStatus.REJECTED;
-            default:
-                throw new IllegalStateException("Unknown investigation status in ZenID: " + stateEnum);
-        }
+        return switch (stateEnum) {
+            case DONE -> DocumentVerificationStatus.ACCEPTED;
+            case ERROR -> DocumentVerificationStatus.FAILED;
+            case NOTDONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
+            case REJECTED -> DocumentVerificationStatus.REJECTED;
+        };
     }
 
     private DocumentType toDocumentType(ZenidSharedMineAllResult.DocumentRoleEnum documentRoleEnum) {
-        switch (documentRoleEnum) {
-            case DRV:
-                return DocumentType.DRIVING_LICENSE;
-            case IDC:
-                return DocumentType.ID_CARD;
-            case PAS:
-                return DocumentType.PASSPORT;
-            default:
-                return DocumentType.UNKNOWN;
-        }
+        return switch (documentRoleEnum) {
+            case DRV -> DocumentType.DRIVING_LICENSE;
+            case IDC -> DocumentType.ID_CARD;
+            case PAS -> DocumentType.PASSPORT;
+            default -> DocumentType.UNKNOWN;
+        };
     }
 
     @Nullable
@@ -597,14 +586,10 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         if (pageCodeEnum == null) {
             return null;
         }
-        switch (pageCodeEnum) {
-            case F:
-                return CardSide.FRONT;
-            case B:
-                return CardSide.BACK;
-            default:
-                throw new IllegalStateException("Unexpected side page code value: " + pageCodeEnum);
-        }
+        return switch (pageCodeEnum) {
+            case F -> CardSide.FRONT;
+            case B -> CardSide.BACK;
+        };
     }
 
     private static void handleLicenceError(final Enum<?> errorCode, final String errorText) throws RemoteCommunicationException {

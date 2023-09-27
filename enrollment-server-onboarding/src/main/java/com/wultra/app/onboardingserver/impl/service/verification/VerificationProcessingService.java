@@ -165,23 +165,22 @@ public class VerificationProcessingService {
         docVerification.setTimestampVerified(ownerId.getTimestamp());
         docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
         switch (docVerificationResult.getStatus()) {
-            case ACCEPTED:
-                docVerification.setStatus(DocumentStatus.ACCEPTED);
-                break;
-            case FAILED:
+            case ACCEPTED ->
+                    docVerification.setStatus(DocumentStatus.ACCEPTED);
+            case FAILED -> {
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 logger.info("Document verification ID: {} failed: {}, {}", docVerification.getId(), docVerificationResult.getErrorDetail(), ownerId);
-                break;
-            case REJECTED:
+            }
+            case REJECTED -> {
                 docVerification.setStatus(DocumentStatus.REJECTED);
                 docVerification.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
                 docVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
                 logger.info("Document verification ID: {} rejected: {}, {}", docVerification.getId(), docVerificationResult.getRejectReason(), ownerId);
-                break;
-            default:
-                throw new IllegalStateException(
+            }
+            default ->
+                    throw new IllegalStateException(
                         String.format("Unexpected verification result status: %s, %s", docVerificationResult.getStatus(), ownerId));
         }
         audit(docVerification, ownerId);
@@ -204,13 +203,12 @@ public class VerificationProcessingService {
      * @param docResult Document result.
      * @param docVerificationResult Document verification result.
      */
-    private void updateDocumentResult(DocumentResultEntity docResult,
-                                      DocumentVerificationResult docVerificationResult) {
-        if (StringUtils.isNotBlank(docResult.getErrorDetail())) {
+    private void updateDocumentResult(DocumentResultEntity docResult, DocumentVerificationResult docVerificationResult) {
+        if (StringUtils.isNotBlank(docVerificationResult.getErrorDetail())) {
             logger.info("Document result ID: {} failed: {}", docResult.getId(), docVerificationResult.getErrorDetail());
             docResult.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
             docResult.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        } else if (StringUtils.isNotBlank(docResult.getRejectReason())) {
+        } else if (StringUtils.isNotBlank(docVerificationResult.getRejectReason())) {
             logger.info("Document result ID: {} rejected: {}", docResult.getId(), docVerificationResult.getRejectReason());
             docResult.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
             docResult.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);

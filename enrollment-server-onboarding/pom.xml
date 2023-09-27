@@ -29,7 +29,7 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.4.0</version>
+        <version>1.5.0</version>
     </parent>
 
     <dependencies>
@@ -48,16 +48,17 @@
 
         <!-- PowerAuth Dependencies -->
         <dependency>
-            <groupId>com.wultra.security</groupId>
-            <artifactId>mtoken-model</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-push-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.getlime.core</groupId>
             <artifactId>rest-client-base</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.getlime.core</groupId>
+            <artifactId>http-common</artifactId>
         </dependency>
 
         <!-- Bouncy Castle -->
@@ -83,16 +84,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.tomcat.embed</groupId>
-                    <artifactId>tomcat-embed-el</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -113,26 +113,22 @@
         <dependency>
             <groupId>net.javacrumbs.shedlock</groupId>
             <artifactId>shedlock-spring</artifactId>
-            <version>${shedlock-spring.version}</version>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.shedlock</groupId>
             <artifactId>shedlock-provider-jdbc-template</artifactId>
-            <version>${shedlock-spring.version}</version>
         </dependency>
 
-        <!-- In-Memory Database -->
+        <!-- Databases -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
         </dependency>
 
-        <!-- Other Dependencies -->
+        <!-- Logging -->
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -142,19 +138,22 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Documentation -->
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>${swagger-annotations.version}</version>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
 
         <!-- For run at Apple M1 architecture -->
@@ -194,16 +193,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>io.swagger.codegen.v3</groupId>
-                <artifactId>swagger-codegen-maven-plugin</artifactId>
-                <version>${maven-swagger-codegen-plugin.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.github.jknack</groupId>
-                        <artifactId>handlebars</artifactId>
-                        <version>${maven-swagger-codegen-handlebars.version}</version>
-                    </dependency>
-                </dependencies>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>swagger-definitions-iproov</id>
@@ -212,18 +204,19 @@
                         </goals>
                         <configuration>
                             <verbose>false</verbose>
-                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.yaml</inputSpec>
-                            <language>spring</language>
-                            <library>spring-boot</library>
+                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.json</inputSpec>
+                            <generatorName>java</generatorName>
                             <generateApis>false</generateApis>
+                            <generateModelDocumentation>false</generateModelDocumentation>
                             <generateModels>true</generateModels>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
+                            <skipValidateSpec>true</skipValidateSpec>
                             <configOptions>
-                                <dateLibrary>java8</dateLibrary>
+                                <library>native</library>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <modelPackage>com.wultra.app.onboardingserver.presencecheck.iproov.model.api</modelPackage>
-                                <useBeanValidation>false</useBeanValidation>
+                                <useJakartaEe>true</useJakartaEe>
                             </configOptions>
                         </configuration>
                     </execution>
@@ -235,17 +228,17 @@
                         <configuration>
                             <verbose>false</verbose>
                             <inputSpec>${basedir}/src/main/resources/api/api-zenid.yaml</inputSpec>
-                            <language>spring</language>
-                            <library>spring-boot</library>
+                            <generatorName>java</generatorName>
                             <generateApis>false</generateApis>
+                            <generateModelDocumentation>false</generateModelDocumentation>
                             <generateModels>true</generateModels>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>false</generateSupportingFiles>
                             <configOptions>
-                                <dateLibrary>java8</dateLibrary>
+                                <library>native</library>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <modelPackage>com.wultra.app.onboardingserver.docverify.zenid.model.api</modelPackage>
-                                <useBeanValidation>false</useBeanValidation>
+                                <useJakartaEe>true</useJakartaEe>
                             </configOptions>
                         </configuration>
                     </execution>
@@ -268,8 +261,15 @@
             <id>standalone</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>tomcat-embed-el</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
         </profile>
@@ -290,6 +290,43 @@
                         <configuration>
                             <skip>true</skip>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>liquibase</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.liquibase</groupId>
+                    <artifactId>liquibase-core</artifactId>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target/classes/db/changelog</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.parent.basedir}/docs/db/changelog/changesets/${project.artifactId}</directory>
+                                            <includes>
+                                                <include>**/*.*</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

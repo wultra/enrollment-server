@@ -18,8 +18,7 @@
 package com.wultra.app.enrollmentserver.api.model.onboarding.response.error;
 
 import io.getlime.core.rest.model.base.response.ErrorResponse;
-
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * Response class used when OTP code verification fails during activation (soft fail).

@@ -18,11 +18,14 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import java.io.Serial;
+
 /**
  * Exception thrown in case push server registration fails for any reason.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 public class PushRegistrationFailedException extends Exception {
+    @Serial
     private static final long serialVersionUID = 4749754972312518198L;
 }

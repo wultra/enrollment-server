@@ -18,13 +18,15 @@
 
 package com.wultra.app.onboardingserver.common.database.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
-import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -42,11 +44,12 @@ import java.util.Objects;
 @Table(name = "es_document_data")
 public class DocumentDataEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 7685715667785423079L;
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -72,8 +75,7 @@ public class DocumentDataEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DocumentDataEntity)) return false;
-        DocumentDataEntity that = (DocumentDataEntity) o;
+        if (!(o instanceof final DocumentDataEntity that)) return false;
         return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
     }
 

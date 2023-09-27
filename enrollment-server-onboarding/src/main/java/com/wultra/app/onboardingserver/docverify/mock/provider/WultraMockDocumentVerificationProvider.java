@@ -32,14 +32,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Mock implementation of the {@link DocumentVerificationProvider}
@@ -48,6 +49,8 @@ import static java.util.stream.Collectors.toList;
 @Component
 @Slf4j
 public class WultraMockDocumentVerificationProvider implements DocumentVerificationProvider {
+
+    private static final String SELFIE_PHOTO_PATH = "/images/specimen_photo.jpg";
 
     private static final List<DocumentType> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO =
             List.of(DocumentType.DRIVING_LICENSE, DocumentType.ID_CARD, DocumentType.PASSPORT);
@@ -104,7 +107,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
         final List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(this::toDocumentSubmitResult)
-                .collect(toList());
+                .toList();
 
         final DocumentsSubmitResult result = new DocumentsSubmitResult();
         if (documents.stream().anyMatch(doc -> DOCUMENT_TYPES_WITH_EXTRACTED_PHOTO.contains(doc.getType()))) {
@@ -159,7 +162,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
         final List<DocumentVerificationResult> verificationResults = uploadIds.stream()
                 .map(WultraMockDocumentVerificationProvider::createDocumentVerificationResult)
-                .collect(toList());
+                .toList();
 
         result.setResults(verificationResults);
         result.setStatus(DocumentVerificationStatus.ACCEPTED);
@@ -178,12 +181,22 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public Image getPhoto(String photoId) throws DocumentVerificationException {
-        Image photo = new Image();
-        photo.setData(new byte[]{});
-        photo.setFilename("id_photo.jpg");
+        final Image photo = Image.builder()
+                .data(readFile())
+                .filename("id_photo.jpg")
+                .build();
 
         logger.info("Mock - getting photoId={} from document verification", photoId);
         return photo;
+    }
+
+    private static byte[] readFile() throws DocumentVerificationException {
+        try (final InputStream inputStream = WultraMockDocumentVerificationProvider.class.getResourceAsStream(SELFIE_PHOTO_PATH)) {
+            Assert.state(inputStream != null, "Unable to read image");
+            return inputStream.readAllBytes();
+        } catch (IOException e) {
+            throw new DocumentVerificationException("Unable to read image", e);
+        }
     }
 
     @Override

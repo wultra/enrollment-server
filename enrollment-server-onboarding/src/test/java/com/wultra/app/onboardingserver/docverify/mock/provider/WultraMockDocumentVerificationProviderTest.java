@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("mock")
+@ActiveProfiles("test")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.mock"})
 @EnableConfigurationProperties
 class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
@@ -166,8 +166,9 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     private SubmittedDocument createSubmittedDocument() {
-        final Image photo = new Image();
-        photo.setFilename("test_id_card_front.jpg");
+        final Image photo = Image.builder()
+                .filename("test_id_card_front.jpg")
+                .build();
 
         final SubmittedDocument document = new SubmittedDocument();
         document.setDocumentId("documentId");

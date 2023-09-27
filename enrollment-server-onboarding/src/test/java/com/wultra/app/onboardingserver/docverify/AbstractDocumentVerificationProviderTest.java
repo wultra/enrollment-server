@@ -23,7 +23,6 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,17 +31,16 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AbstractDocumentVerificationProviderTest {
 
-    public void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) throws Exception {
+    public void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) {
         assertEquals(documents.size(), result.getResults().size(), "Different size of submitted documents than expected");
         assertNotNull(result.getExtractedPhotoId(), "Missing extracted photoId");
 
-        List<String> submittedDocsIds = result.getResults().stream()
+        final List<String> submittedDocsIds = result.getResults().stream()
                 .map(DocumentSubmitResult::getDocumentId)
-                .collect(Collectors.toList());
+                .toList();
         assertEquals(documents.size(), submittedDocsIds.size(), "Different size of unique submitted documents than expected");
-        documents.forEach(document -> {
-            assertTrue(submittedDocsIds.contains(document.getDocumentId()));
-        });
+        documents.forEach(document ->
+            assertTrue(submittedDocsIds.contains(document.getDocumentId())));
 
         result.getResults().forEach(submitResult -> {
             assertNull(submitResult.getErrorDetail());

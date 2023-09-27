@@ -22,13 +22,15 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
-import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
@@ -45,6 +47,7 @@ import java.util.*;
 @Table(name = "es_identity_verification")
 public class IdentityVerificationEntity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 6307591849271145826L;
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
@@ -58,8 +61,8 @@ public class IdentityVerificationEntity implements Serializable {
     public static final String CLIENT_EVALUATION_FAILED = "clientEvaluationFailed";
 
     @Id
-    @GeneratedValue(generator = "uuid")
-    @GenericGenerator(name = "uuid", strategy = "uuid2")
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -116,8 +119,7 @@ public class IdentityVerificationEntity implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof IdentityVerificationEntity)) return false;
-        IdentityVerificationEntity that = (IdentityVerificationEntity) o;
+        if (!(o instanceof final IdentityVerificationEntity that)) return false;
         return activationId.equals(that.activationId) && timestampCreated.equals(that.timestampCreated);
     }
 

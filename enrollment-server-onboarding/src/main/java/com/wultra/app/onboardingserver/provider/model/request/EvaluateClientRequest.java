@@ -18,8 +18,8 @@
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
-import com.wultra.app.onboardingserver.common.annotation.PublicApi;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
 /**

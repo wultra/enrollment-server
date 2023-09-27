@@ -31,4 +31,9 @@ public class OnboardingStartRequest {
 
     private Map<String, Object> identification;
 
+    /**
+     * Optional FDS data, structure is vendor specific.
+     */
+    private Map<String, Object> fdsData;
+
 }

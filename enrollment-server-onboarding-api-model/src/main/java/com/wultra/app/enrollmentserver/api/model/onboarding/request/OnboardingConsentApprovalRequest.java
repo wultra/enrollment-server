@@ -28,12 +28,12 @@ import lombok.Data;
 @Data
 public class OnboardingConsentApprovalRequest {
 
-    @Schema(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String processId;
 
-    @Schema(required = true, example = "GDPR")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "GDPR")
     private String consentType;
 
-    @Schema(required = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean approved;
 }

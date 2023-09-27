@@ -20,6 +20,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Class representing party information.
@@ -29,6 +30,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 public class PartyInfo {
 
     private String logoUrl;

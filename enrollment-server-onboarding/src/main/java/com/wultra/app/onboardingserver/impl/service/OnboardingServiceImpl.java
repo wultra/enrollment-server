@@ -27,6 +27,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -52,6 +53,7 @@ import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
+import com.wultra.core.http.common.request.RequestContext;
 import io.getlime.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +84,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private final OtpServiceImpl otpService;
 
     private final ActivationService activationService;
+
+    /**
+     * Configuration data for client integration
+     */
+    private final ConfigurationDataDto integrationConfigDto;
 
     // Special instance of ObjectMapper for normalized serialization of identification data
     private final ObjectMapper normalizedMapper = JsonMapper
@@ -120,6 +127,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
+        this.integrationConfigDto = new ConfigurationDataDto();
+        integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
+        integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
 
     /**
@@ -138,11 +148,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final Map<String, Object> identification = request.getIdentification();
         final String identificationData = parseIdentificationData(identification);
+        final Map<String, Object> fdsData = request.getFdsData();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
-                .map(it -> resumeExistingProcess(it, identification, requestContext))
-                .orElseGet(() -> createNewProcess(identification, identificationData, requestContext));
+                .map(it -> resumeExistingProcess(it, identification, fdsData, requestContext))
+                .orElseGet(() -> createNewProcess(identification, identificationData, fdsData, requestContext));
 
         // Check for brute force attacks
         final Calendar c = Calendar.getInstance();
@@ -173,6 +184,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         OnboardingStartResponse response = new OnboardingStartResponse();
         response.setProcessId(process.getId());
         response.setOnboardingStatus(process.getStatus());
+        response.setConfig(integrationConfigDto);
         return response;
     }
 
@@ -221,6 +233,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
 
         response.setOnboardingStatus(process.getStatus());
+        response.setConfig(integrationConfigDto);
         return response;
     }
 
@@ -356,8 +369,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         try {
             final ApproveConsentResponse response = onboardingProvider.approveConsent(providerRequest);
-            auditService.auditOnboardingProvider(process, "Approve consent text for user: {}", userId);
             logger.debug("Got {} for processId={}", response, request.getProcessId());
+            if (response.isErrorOccurred()) {
+                final String errorDetail = response.getErrorDetail();
+                auditService.auditOnboardingProvider(process, "Consent text approval failed for user: {}, error: {}", userId, errorDetail);
+                throw new OnboardingProcessException("Consent text approval failed for process: %s, user: %s, error: %s"
+                        .formatted(process.getId(), userId, errorDetail));
+            }
+            auditService.auditOnboardingProvider(process, "Approve consent text for user: {}", userId);
         } catch (OnboardingProviderException e) {
             throw new OnboardingProcessException("An error when approving consent.", e);
         }
@@ -418,8 +437,13 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
     }
 
-    private OnboardingProcessEntity createNewProcess(final Map<String, Object> identification, final String identificationData, final RequestContext requestContext) {
-        final OnboardingProcessEntity process = createNewProcess(identificationData, requestContext);
+    private OnboardingProcessEntity createNewProcess(
+            final Map<String, Object> identification,
+            final String identificationData,
+            final Map<String, Object> fdsData,
+            final RequestContext requestContext) {
+
+        final OnboardingProcessEntity process = createNewProcess(identificationData, fdsData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
         final String userId = lookupUser(process, identification);
         process.setUserId(userId);
@@ -427,31 +451,33 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return process;
     }
 
-    private OnboardingProcessEntity createNewProcess(final String identificationData, final RequestContext requestContext) {
+    private OnboardingProcessEntity createNewProcess(final String identificationData, final Map<String, Object> fdsData, final RequestContext requestContext) {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
-        setProcessCustomData(process, requestContext);
+        setProcessCustomData(process, fdsData, requestContext);
         return onboardingProcessRepository.save(process);
     }
 
-    private static void setProcessCustomData(final OnboardingProcessEntity process, final RequestContext requestContext) {
+    private static void setProcessCustomData(final OnboardingProcessEntity process, final Map<String, Object> fdsData, final RequestContext requestContext) {
         final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
         processWrapper.setLocale(LocaleContextHolder.getLocale());
         processWrapper.setIpAddress(requestContext.getIpAddress());
         processWrapper.setUserAgent(requestContext.getUserAgent());
+        processWrapper.setFdsData(fdsData);
     }
 
     @SneakyThrows(OnboardingProcessException.class)
     private OnboardingProcessEntity resumeExistingProcess(
             final OnboardingProcessEntity process,
             final Map<String, Object> identification,
+            final Map<String, Object> fdsData,
             final RequestContext requestContext) {
 
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
-        setProcessCustomData(process, requestContext);
+        setProcessCustomData(process, fdsData, requestContext);
         final String userId = lookupUser(process, identification);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(

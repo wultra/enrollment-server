@@ -117,13 +117,18 @@ public class IdentityVerificationFinishService {
                 .userId(identityVerification.getUserId())
                 .processId(process.getId())
                 .identityVerificationId(identityVerification.getId())
-                .eventData(createBroadcomFinishEventData(process))
+                .eventData(createFinishEventData(process))
                 .build();
 
         try {
             logger.info("Publishing finish event, {}", ownerId);
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
-            logger.info("Finish event published: {}, {}", response, ownerId);
+            logger.debug("Got {} for processId={}", response, request.getProcessId());
+            if (response.isErrorOccurred()) {
+                logger.info("Finish event failed to published: {}, {}", response.getErrorDetail(), ownerId);
+            } else {
+                logger.info("Finish event published, {}", ownerId);
+            }
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
             logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());
@@ -131,13 +136,14 @@ public class IdentityVerificationFinishService {
         }
     }
 
-    private static ProcessEventRequest.EventData createBroadcomFinishEventData(final OnboardingProcessEntity process) {
+    private static ProcessEventRequest.EventData createFinishEventData(final OnboardingProcessEntity process) {
         final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
         return ProcessEventRequest.DefaultFinishedEventData.builder()
                 .locale(processWrapper.getLocale())
                 .clientIPAddress(processWrapper.getIpAddress())
                 .httpUserAgent(processWrapper.getUserAgent())
                 .requestId(UUID.randomUUID().toString())
+                .fdsData(processWrapper.getFdsData())
                 .build();
     }
 }

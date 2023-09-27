@@ -17,17 +17,14 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -37,8 +34,8 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryExcept
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,66 +53,26 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 public class IdentityVerificationOtpService {
 
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final OnboardingOtpRepository onboardingOtpRepository;
     private final OtpServiceImpl otpService;
 
-    private OnboardingProvider onboardingProvider;
+    private final OnboardingProvider onboardingProvider;
 
     private final OnboardingProcessLimitService processLimitService;
 
     private final IdentityVerificationRepository identityVerificationRepository;
+
+    private final ScaResultRepository scaResultRepository;
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
     private final IdentityVerificationService identityVerificationService;
 
     private final AuditService auditService;
-
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    /**
-     * Service constructor.
-     *
-     * @param onboardingProcessRepository Onboarding process repository.
-     * @param onboardingOtpRepository Onboarding OTP repository.
-     * @param otpService OTP service.
-     * @param processLimitService Process limit service.
-     * @param identityVerificationRepository Identity verification repository.
-     * @param identityVerificationConfig Identity verification config.
-     * @param identityVerificationService Identity verification service.
-     * @param auditService Audit service.
-     */
-    public IdentityVerificationOtpService(
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final OnboardingOtpRepository onboardingOtpRepository,
-            final OtpServiceImpl otpService,
-            final OnboardingProcessLimitService processLimitService,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final IdentityVerificationConfig identityVerificationConfig,
-            final IdentityVerificationService identityVerificationService,
-            final AuditService auditService) {
-
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.otpService = otpService;
-        this.processLimitService = processLimitService;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.identityVerificationService = identityVerificationService;
-        this.auditService = auditService;
-    }
-
-    /**
-     * Set onboarding provider via setter injection.
-     * @param onboardingProvider Onboarding provider.
-     */
-    @Autowired(required = false)
-    public void setOnboardingProvider(OnboardingProvider onboardingProvider) {
-        this.onboardingProvider = onboardingProvider;
-    }
 
     /**
      * Resends an OTP code for a process during identity verification.
@@ -165,7 +122,10 @@ public class IdentityVerificationOtpService {
         }
         if (!response.isVerified()) {
             logger.info("SCA failed, wrong OTP code, process ID: {}", processId);
+            saveScaOtpResult(ScaResultEntity.Result.FAILED, process, ownerId);
             return response;
+        } else {
+            saveScaOtpResult(ScaResultEntity.Result.SUCCESS, process, ownerId);
         }
         return verifyPresenceCheck(process, response, ownerId);
     }
@@ -182,6 +142,16 @@ public class IdentityVerificationOtpService {
                 .isPresent();
     }
 
+    private void saveScaOtpResult(final ScaResultEntity.Result otpResult, final OnboardingProcessEntity process, final OwnerId ownerId) throws OnboardingProcessException {
+        final IdentityVerificationEntity identityVerification = getIdentityVerificationEntity(process);
+        logger.debug("Saving SCA otp verification result: {}, identity verification ID: {}, {}", otpResult, identityVerification.getId(), ownerId);
+        final ScaResultEntity scaResult = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification).orElseThrow(() ->
+                new OnboardingProcessException("No ScaResult found, process ID: %s, identity verification ID: %s".formatted(process.getId(), identityVerification.getId())));
+        scaResult.setOtpVerificationResult(otpResult);
+        scaResult.setTimestampLastUpdated(new Date());
+        scaResultRepository.save(scaResult);
+    }
+
     private OtpVerifyResponse verifyPresenceCheck(final OnboardingProcessEntity process, final OtpVerifyResponse response, final OwnerId ownerId) throws OnboardingProcessException {
         final String processId = process.getId();
         if (!identityVerificationConfig.isPresenceCheckEnabled()) {
@@ -193,17 +163,21 @@ public class IdentityVerificationOtpService {
 
         final IdentityVerificationEntity idVerification = getIdentityVerificationEntity(process);
         final String errorDetail = idVerification.getErrorDetail();
-        final ErrorOrigin errorOrigin = idVerification.getErrorOrigin();
         final String rejectReason = idVerification.getRejectReason();
-        final RejectOrigin rejectOrigin = idVerification.getRejectOrigin();
 
-        // TODO (racansky, 2022-10-18, #453) this is quite fragile condition, could be improved e.g. with data historization
-        if (errorOrigin == ErrorOrigin.PRESENCE_CHECK || rejectOrigin == RejectOrigin.PRESENCE_CHECK) {
+        final ScaResultEntity scaResult = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification).orElseThrow(() ->
+                new OnboardingProcessException("No ScaResult found, process ID: %s, identity verification ID: %s".formatted(process.getId(), idVerification.getId())));
+
+        if (scaResult.getPresenceCheckResult() != ScaResultEntity.Result.SUCCESS) {
             logger.info("SCA failed, identity verification ID: {}, {} contains errorDetail: {}, rejectReason: {} from previous step",
                     idVerification.getId(), ownerId, errorDetail, rejectReason);
+            scaResult.setScaResult(ScaResultEntity.Result.FAILED);
+            scaResult.setTimestampLastUpdated(new Date());
             return moveToPhasePresenceCheck(process, response, idVerification, ownerId);
         } else {
             logger.debug("PRESENCE_CHECK without error or reject origin, {}", ownerId);
+            scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
+            scaResult.setTimestampLastUpdated(new Date());
         }
         return response;
     }

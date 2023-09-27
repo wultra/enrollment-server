@@ -43,7 +43,6 @@ import java.util.List;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Document verification service providing {@link #executeFinalDocumentVerification(IdentityVerificationEntity, OwnerId)}.
@@ -98,7 +97,7 @@ public class DocumentVerificationService {
 
         final List<String> uploadIds = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getUploadId)
-                .collect(toList());
+                .toList();
 
         final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         final String verificationId = result.getVerificationId();
@@ -112,19 +111,11 @@ public class DocumentVerificationService {
         });
 
         switch (status) {
-            case ACCEPTED:
-                accept(identityVerification, documentVerifications, ownerId);
-                break;
-            case FAILED:
-                fail(identityVerification, result, documentVerifications, ownerId);
-                break;
-            case REJECTED:
-                reject(identityVerification, result, documentVerifications, ownerId);
-                break;
-            case IN_PROGRESS:
-                throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
-            default:
-                throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
+            case ACCEPTED -> accept(identityVerification, documentVerifications, ownerId);
+            case FAILED -> fail(identityVerification, result, documentVerifications, ownerId);
+            case REJECTED -> reject(identityVerification, result, documentVerifications, ownerId);
+            case IN_PROGRESS -> throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
+            default -> throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
         }
     }
 
@@ -199,6 +190,6 @@ public class DocumentVerificationService {
         return identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .collect(toList());
+                .toList();
     }
 }

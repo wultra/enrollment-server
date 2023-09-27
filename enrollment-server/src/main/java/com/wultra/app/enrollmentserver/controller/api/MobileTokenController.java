@@ -22,27 +22,33 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
-import com.wultra.app.enrollmentserver.impl.service.converter.RequestContextConverter;
-import com.wultra.app.enrollmentserver.impl.service.model.RequestContext;
+import com.wultra.app.enrollmentserver.impl.service.OperationApproveParameterObject;
+import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.response.MobileTokenResponse;
+import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
-import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -66,17 +72,14 @@ public class MobileTokenController {
     private static final List<String> DISALLOWED_FLAGS = List.of("VERIFICATION_PENDING", "VERIFICATION_IN_PROGRESS");
 
     private final MobileTokenService mobileTokenService;
-    private final RequestContextConverter requestContextConverter;
 
     /**
      * Default constructor with autowired dependencies.
      *
      * @param mobileTokenService Mobile token service.
-     * @param requestContextConverter Converter for request context.
      */
     @Autowired
-    public MobileTokenController(MobileTokenService mobileTokenService, RequestContextConverter requestContextConverter) {
-        this.requestContextConverter = requestContextConverter;
+    public MobileTokenController(MobileTokenService mobileTokenService) {
         this.mobileTokenService = mobileTokenService;
     }
 
@@ -104,7 +107,8 @@ public class MobileTokenController {
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 final String language = locale.getLanguage();
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, true);
-                return new ObjectResponse<>(listResponse);
+                final Date currentTimestamp = new Date();
+                return new MobileTokenResponse<>(listResponse, currentTimestamp);
             } else {
                 throw new MobileTokenAuthException();
             }
@@ -180,7 +184,7 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
-            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+            final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();
@@ -192,7 +196,19 @@ public class MobileTokenController {
                     logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
                     throw new MobileTokenAuthException();
                 }
-                return mobileTokenService.operationApprove(activationId, userId, applicationId, operationId, data, signatureFactors, requestContext, activationFlags);
+                final var serviceRequest = OperationApproveParameterObject.builder()
+                        .activationId(activationId)
+                        .userId(userId)
+                        .applicationId(applicationId)
+                        .operationId(operationId)
+                        .data(data)
+                        .signatureFactors(signatureFactors)
+                        .requestContext(requestContext)
+                        .activationFlags(activationFlags)
+                        .proximityCheckOtp(fetchProximityCheckOtp(requestObject))
+                        .build();
+
+                return mobileTokenService.operationApprove(serviceRequest);
             } else {
                 // make sure to fail operation as well, to increase the failed number
                 mobileTokenService.operationFailApprove(operationId, requestContext);
@@ -203,6 +219,15 @@ public class MobileTokenController {
             logger.error("Unable to call upstream service.", e);
             throw new MobileTokenAuthException();
         }
+    }
+
+    private static String fetchProximityCheckOtp(OperationApproveRequest requestObject) {
+        if (requestObject.getProximityCheck().isEmpty()) {
+            return null;
+        }
+        final var proximityCheck = requestObject.getProximityCheck().get();
+        logger.info("Operation ID: {} using proximity check OTP, timestampRequested: {}, timestampSigned: {}", requestObject.getId(), proximityCheck.getTimestampRequested(), proximityCheck.getTimestampSigned());
+        return proximityCheck.getOtp();
     }
 
     /**
@@ -229,7 +254,7 @@ public class MobileTokenController {
                 throw new MobileTokenAuthException();
             }
 
-            final RequestContext requestContext = requestContextConverter.convert(servletRequest);
+            final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
             if (auth != null && auth.getUserId() != null) {
                 final String activationId = auth.getActivationContext().getActivationId();

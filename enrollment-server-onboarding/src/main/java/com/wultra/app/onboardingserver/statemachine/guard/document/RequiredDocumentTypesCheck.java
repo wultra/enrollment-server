@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Validate presence of all required documents.
@@ -62,7 +61,7 @@ public class RequiredDocumentTypesCheck {
     public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
         final Collection<DocumentVerificationEntity> acceptedDocumentVerifications = documentVerifications.stream()
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .collect(toList());
+                .toList();
 
         if (!areDistinctDocumentsPresent(acceptedDocumentVerifications)) {
             logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);

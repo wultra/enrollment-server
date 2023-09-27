@@ -17,9 +17,9 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -42,7 +42,12 @@ public class PreApprovalScreen {
         /**
          * The purpose of the screen is to inform user about a some specific operation context.
          */
-        INFO
+        INFO,
+
+        /**
+         * The purpose of the screen is to inform user to scan QR code to perform proximity verification.
+         */
+        QR_SCAN
     }
 
     /**

@@ -18,9 +18,9 @@
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.Attribute;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
