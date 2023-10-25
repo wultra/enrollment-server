@@ -53,7 +53,10 @@ public class OperationTemplateService {
     public Optional<OperationTemplateEntity> findTemplate(@NotNull String operationType, @NotNull String language) {
         return operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType).or(() -> {
             logger.debug("Trying fallback to EN locale for operationType={}", operationType);
-            return operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
+            return operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType).or(() -> {
+                logger.debug("Trying fallback to any locale for operationType={}", operationType);
+                return operationTemplateRepository.findFirstByPlaceholder(operationType);
+            });
         });
     }
 
