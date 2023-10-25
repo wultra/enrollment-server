@@ -62,13 +62,13 @@ public class OperationTemplateService {
     private Optional<OperationTemplateEntity> findTemplateFallback(final String operationType, final String language) {
         if (!DEFAULT_LANGUAGE.equals(language)) {
             logger.debug("Trying fallback to EN locale for operationType={}", operationType);
-            return findEnglishTemplate(operationType);
+            return findDefaultTemplate(operationType);
         } else {
             return findAnyTemplate(operationType);
         }
     }
 
-    private Optional<OperationTemplateEntity> findEnglishTemplate(final String operationType) {
+    private Optional<OperationTemplateEntity> findDefaultTemplate(final String operationType) {
         return operationTemplateRepository.findFirstByLanguageAndPlaceholder(DEFAULT_LANGUAGE, operationType).or(() ->
                 findAnyTemplate(operationType));
     }
