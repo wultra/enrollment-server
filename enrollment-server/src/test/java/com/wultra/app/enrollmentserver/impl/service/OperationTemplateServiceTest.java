@@ -28,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Test for {@link OperationTemplateService}.
@@ -84,6 +84,22 @@ class OperationTemplateServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals(entity, result.get());
+    }
+
+    @Test
+    void testFindTemplate_fallbackToAnyLanguage_optimizationOfEnglishLocale() {
+        final OperationTemplateEntity entity = new OperationTemplateEntity();
+        when(dao.findFirstByLanguageAndPlaceholder("en", "myTemplate"))
+                .thenReturn(Optional.empty());
+        when(dao.findFirstByPlaceholder("myTemplate"))
+                .thenReturn(Optional.of(entity));
+
+        final Optional<OperationTemplateEntity> result = tested.findTemplate("myTemplate", "en");
+
+        assertTrue(result.isPresent());
+        assertEquals(entity, result.get());
+
+        verify(dao, times(1)).findFirstByLanguageAndPlaceholder("en", "myTemplate");
     }
 
     @Test
