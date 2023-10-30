@@ -111,13 +111,6 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
-        <!-- Other Dependencies -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
-        </dependency>
-
         <!-- Logging -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
