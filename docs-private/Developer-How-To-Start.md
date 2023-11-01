@@ -6,7 +6,6 @@
 
 ### Standalone Run
 
-- Enable maven profile `standalone`
 - Use IntelliJ Idea run configuration at `../.run/EnrollmentServerApplication.run.xml`
 - Open [http://localhost:8081/enrollment-server/actuator/health](http://localhost:8081/enrollment-server/actuator/health) and you should get `{"status":"UP"}`
 
@@ -59,7 +58,6 @@ docker run -p 80:8080 -e ENROLLMENT_SERVER_DATASOURCE_URL='jdbc:postgresql://hos
 
 ### Standalone Run
 
-- Enable maven profile `standalone`
 - Use IntelliJ Idea run configuration at `../.run/EnrollmentServerOnboardingApplication.run.xml`
 - Open [http://localhost:8083/enrollment-server-onboarding/actuator/health](http://localhost:8083/enrollment-server-onboarding/actuator/health) and you should get `{"status":"UP"}`
 
