@@ -164,12 +164,6 @@
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-restful-security-spring-annotation</artifactId>
                 <version>${powerauth-restful-integration.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-starter-tomcat</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -187,8 +181,13 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-el</artifactId>
-                <version>${tomcat.version}</version>
-                <scope>test</scope>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
