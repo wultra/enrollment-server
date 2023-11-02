@@ -263,7 +263,7 @@ public class MobileTokenService {
         } else {
             final OperationDetailResponse operation = rejectResponse.getOperation();
             handleStatus(operation);
-            throw new MobileTokenAuthException();
+            throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation rejection fails");
         }
     }
 
