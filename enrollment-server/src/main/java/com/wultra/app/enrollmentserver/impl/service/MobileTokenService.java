@@ -25,7 +25,6 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.client.PowerAuthClient;
-import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -35,6 +34,7 @@ import com.wultra.security.powerauth.client.model.request.OperationListForUserRe
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
+import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
@@ -181,8 +181,8 @@ public class MobileTokenService {
             return new Response();
         } else {
             final OperationDetailResponse operation = approveResponse.getOperation();
-            handleStatus(operation.getStatus());
-            throw new MobileTokenAuthException();
+            handleStatus(operation);
+            throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation approval fails");
         }
     }
 
@@ -208,7 +208,7 @@ public class MobileTokenService {
         );
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
-        handleStatus(operation.getStatus());
+        handleStatus(operation);
     }
 
     /**
@@ -262,8 +262,8 @@ public class MobileTokenService {
             return new Response();
         } else {
             final OperationDetailResponse operation = rejectResponse.getOperation();
-            handleStatus(operation.getStatus());
-            throw new MobileTokenAuthException();
+            handleStatus(operation);
+            throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation rejection fails");
         }
     }
 
@@ -285,7 +285,7 @@ public class MobileTokenService {
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()
         );
-        handleStatus(operationDetail.getStatus());
+        handleStatus(operationDetail);
         return operationDetail;
     }
 
@@ -297,22 +297,21 @@ public class MobileTokenService {
      *     <li>CANCELLED, APPROVED, REJECTED, or EXPIRED - throws exception with appropriate code and message.</li>
      * </ul>
      *
-     * @param status Operation status.
+     * @param operation Operation detail.
      * @throws MobileTokenException In case operation is in status that does not allow processing, the method throws appropriate exception.
      */
-    private void handleStatus(OperationStatus status) throws MobileTokenException {
-        switch (status) {
-            case PENDING -> {
-                // OK, this operation is still pending
-            }
+    private static void handleStatus(final OperationDetailResponse operation) throws MobileTokenException {
+        switch (operation.getStatus()) {
+            case PENDING ->
+                    logger.debug("OK, operation ID: {} is still pending", operation.getId());
             case CANCELED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already canceled");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_CANCELED, "Operation was already canceled");
             case APPROVED, REJECTED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_FINISHED", "Operation was already completed");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_FINISHED, "Operation was already completed");
             case FAILED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_FAILED", "Operation already failed");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_FAILED, "Operation already failed");
             default ->
-                    throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
+                    throw new MobileTokenException(ErrorCode.OPERATION_EXPIRED, "Operation already expired");
         }
     }
 

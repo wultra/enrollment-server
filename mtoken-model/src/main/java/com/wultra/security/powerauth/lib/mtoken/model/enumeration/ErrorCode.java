@@ -37,16 +37,6 @@ public class ErrorCode {
     public static final String INVALID_REQUEST              = "INVALID_REQUEST";
 
     /**
-     * Error code for situation when an activation is not active.
-     */
-    public static final String ACTIVATION_NOT_ACTIVE        = "ACTIVATION_NOT_ACTIVE";
-
-    /**
-     * Error code for situation when an activation is not configured.
-     */
-    public static final String ACTIVATION_NOT_CONFIGURED    = "ACTIVATION_NOT_CONFIGURED";
-
-    /**
      * Error code for situation when an invalid activation / device is
      * attempted for operation manipulation.
      */
@@ -74,6 +64,11 @@ public class ErrorCode {
      * action other than cancellation was requested with that operation.
      */
     public static final String OPERATION_ALREADY_CANCELED   = "OPERATION_ALREADY_CANCELED";
+
+    /**
+     * Error code for situation when PowerAuth server operation approval fails.
+     */
+    public static final String OPERATION_FAILED = "OPERATION_FAILED";
 
     /**
      * Error code for situation when an operation expired and yet, some further
