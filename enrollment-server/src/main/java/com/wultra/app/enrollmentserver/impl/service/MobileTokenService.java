@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
+import com.wultra.core.http.common.headers.UserAgent;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
@@ -64,7 +65,7 @@ public class MobileTokenService {
     private static final String ATTR_AUTH_FACTOR = "authFactor";
     private static final String ATTR_REJECT_REASON = "rejectReason";
     private static final String PROXIMITY_OTP = "proximity_otp";
-
+    private static final String DEVICE = "device";
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
     private final OperationTemplateService operationTemplateService;
@@ -165,6 +166,10 @@ public class MobileTokenService {
         approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, request.getRequestContext().getIpAddress());
         approveRequest.getAdditionalData().put(ATTR_USER_AGENT, request.getRequestContext().getUserAgent());
         approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, request.getSignatureFactors().toString());
+        final UserAgent.Device device = UserAgent.parse(request.getRequestContext().getUserAgent());
+        if (device != null) {
+            approveRequest.getAdditionalData().put(DEVICE, device);
+        }
 
         if (request.getProximityCheckOtp() != null) {
             approveRequest.getAdditionalData().put(PROXIMITY_OTP, request.getProximityCheckOtp());
@@ -200,6 +205,10 @@ public class MobileTokenService {
         // Prepare additional data
         request.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         request.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
+        final UserAgent.Device device = UserAgent.parse(requestContext.getUserAgent());
+        if (device != null) {
+            request.getAdditionalData().put(DEVICE, device);
+        }
 
         final OperationUserActionResponse failApprovalResponse = powerAuthClient.failApprovalOperation(
                 request,
@@ -250,6 +259,10 @@ public class MobileTokenService {
         rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
         rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
         rejectRequest.getAdditionalData().put(ATTR_REJECT_REASON, rejectReason);
+        final UserAgent.Device device = UserAgent.parse(requestContext.getUserAgent());
+        if (device != null) {
+            rejectRequest.getAdditionalData().put(DEVICE, device);
+        }
 
         final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(
                 rejectRequest,
