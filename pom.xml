@@ -93,6 +93,7 @@
         <moneta.version>1.4.2</moneta.version>
 
         <wultra-core.version>1.7.0</wultra-core.version>
+        <powerauth.version>1.5.2</powerauth.version>
         <powerauth-crypto.version>1.5.1</powerauth-crypto.version>
         <powerauth-restful-integration.version>1.5.0</powerauth-restful-integration.version>
         <powerauth-push.version>1.5.0</powerauth-push.version>
@@ -119,6 +120,18 @@
                 <groupId>com.wultra.security</groupId>
                 <artifactId>mtoken-model</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-client-model</artifactId>
+                <version>${powerauth.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getlime.security</groupId>
+                <artifactId>powerauth-rest-client-spring</artifactId>
+                <version>${powerauth.version}</version>
             </dependency>
 
             <dependency>

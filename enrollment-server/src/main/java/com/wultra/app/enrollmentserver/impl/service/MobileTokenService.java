@@ -109,15 +109,17 @@ public class MobileTokenService {
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
         request.setApplications(List.of(applicationId));
+        request.setPageNumber(0);
+        request.setPageSize(OPERATION_LIST_LIMIT);
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =
+        final com.wultra.security.powerauth.client.model.response.OperationListResponse operations =
                 pendingOnly ?
                 powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
                 powerAuthClient.operationList(request, queryParams, httpHeaders);
 
         final OperationListResponse responseObject = new OperationListResponse();
-        for (OperationDetailResponse operationDetail: pendingList) {
+        for (OperationDetailResponse operationDetail: operations) {
             final String activationFlag = operationDetail.getActivationFlag();
             if (activationFlag == null || activationFlags.contains(activationFlag)) { // only return data if there is no flag, or if flag matches flags of activation
                 final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
@@ -127,10 +129,6 @@ public class MobileTokenService {
                 }
                 final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
                 responseObject.add(operation);
-                if (responseObject.size() >= OPERATION_LIST_LIMIT) {
-                    logger.info("Reached the limit of operation list ({}) for user ID: {}", OPERATION_LIST_LIMIT, userId);
-                    break;
-                }
             }
         }
         return responseObject;
