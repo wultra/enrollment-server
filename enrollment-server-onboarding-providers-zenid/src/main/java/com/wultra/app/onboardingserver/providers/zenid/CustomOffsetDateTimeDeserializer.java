@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.model.deserializer;
+package com.wultra.app.onboardingserver.providers.zenid;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter;
  *     The ZenID returns simple ISO data on some date elements which are expected to be date-time (e.g. BirthDate)
  * </p>
  */
-public class CustomOffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
+class CustomOffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
 
     @Override
     public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {

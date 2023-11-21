@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.provider;
+package com.wultra.app.onboardingserver.providers.zenid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -29,10 +29,7 @@ import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
-import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
-import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
-import com.wultra.app.onboardingserver.docverify.zenid.service.ZenidRestApiService;
+import com.wultra.app.onboardingserver.providers.zenid.model.api.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.core.rest.client.base.RestClientException;

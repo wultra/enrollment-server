@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2021 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,23 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid;
+package com.wultra.app.onboardingserver.providers.zenid;
+
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Constants for ZenID purposes
- *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class ZenidConst {
-
-    /**
-     * Verification SDK initialization response
-     */
-    public static final String SDK_INIT_RESPONSE = "zenid-sdk-init-response";
-
-    /**
-     * Verification SDK initialization token
-     */
-    public static final String SDK_INIT_TOKEN = "sdk-init-token";
+@SpringBootApplication
+class EnrollmentServerTestApplication {
 
 }

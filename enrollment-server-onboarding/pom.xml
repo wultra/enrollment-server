@@ -53,7 +53,7 @@
 
         <dependency>
             <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-onboarding-providers-zeind</artifactId>
+            <artifactId>enrollment-server-onboarding-providers-zenid</artifactId>
         </dependency>
 
         <!-- PowerAuth Dependencies -->
@@ -201,35 +201,6 @@
                         </exclude>
                     </excludes>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapi-generator-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>swagger-definitions-zenid</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <verbose>false</verbose>
-                            <inputSpec>${basedir}/src/main/resources/api/api-zenid.yaml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <generateApis>false</generateApis>
-                            <generateModelDocumentation>false</generateModelDocumentation>
-                            <generateModels>true</generateModels>
-                            <generateModelTests>false</generateModelTests>
-                            <generateSupportingFiles>false</generateSupportingFiles>
-                            <configOptions>
-                                <library>native</library>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <modelPackage>com.wultra.app.onboardingserver.docverify.zenid.model.api</modelPackage>
-                                <useJakartaEe>true</useJakartaEe>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

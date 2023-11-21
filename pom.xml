@@ -83,7 +83,7 @@
         <module>enrollment-server-onboarding-common</module>
         <module>enrollment-server-onboarding-domain-model</module>
         <module>enrollment-server-onboarding-providers-iproov</module>
-        <module>enrollment-server-onboarding-providers-zeind</module>
+        <module>enrollment-server-onboarding-providers-zenid</module>
     </modules>
 
     <properties>
@@ -135,7 +135,7 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-onboarding-providers-zeind</artifactId>
+                <artifactId>enrollment-server-onboarding-providers-zenid</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

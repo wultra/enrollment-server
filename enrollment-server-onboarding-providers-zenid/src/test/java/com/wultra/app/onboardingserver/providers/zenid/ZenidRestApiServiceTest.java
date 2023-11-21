@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.service;
+package com.wultra.app.onboardingserver.providers.zenid;
 
-import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.docverify.zenid.model.api.ZenidWebInvestigateResponse;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.providers.zenid.model.api.ZenidWebInvestigateResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -51,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
         })
 @ActiveProfiles("test")
 @Slf4j
+@MockBean(DocumentVerificationRepository.class)
 class ZenidRestApiServiceTest {
 
     // TODO (racansky, 2023-05-18) find the way how to set the same random port for mock server and property

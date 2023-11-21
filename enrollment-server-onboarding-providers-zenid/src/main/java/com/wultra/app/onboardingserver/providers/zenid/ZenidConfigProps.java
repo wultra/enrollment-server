@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.config;
+package com.wultra.app.onboardingserver.providers.zenid;
 
-import com.wultra.app.onboardingserver.docverify.zenid.model.api.ZenidSharedMineAllResult;
+import com.wultra.app.onboardingserver.providers.zenid.model.api.ZenidSharedMineAllResult;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,7 +38,7 @@ import java.util.Optional;
 @Configuration
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.zenid")
 @Getter @Setter
-public class ZenidConfigProps {
+class ZenidConfigProps {
 
     /**
      * // TODO consider removing this config option

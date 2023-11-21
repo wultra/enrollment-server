@@ -15,15 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.service;
+package com.wultra.app.onboardingserver.providers.zenid;
 
 import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
-import com.wultra.app.onboardingserver.docverify.zenid.config.ZenidConfigProps;
-import com.wultra.app.onboardingserver.docverify.zenid.model.api.*;
+import com.wultra.app.onboardingserver.providers.zenid.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import jakarta.annotation.Nullable;
@@ -51,7 +50,7 @@ import java.util.List;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
 @Service
 @Slf4j
-public class ZenidRestApiService {
+class ZenidRestApiService {
 
     private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
 

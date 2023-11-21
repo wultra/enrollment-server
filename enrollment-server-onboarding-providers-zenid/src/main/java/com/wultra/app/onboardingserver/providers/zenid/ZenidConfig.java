@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.config;
+package com.wultra.app.onboardingserver.providers.zenid;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.wultra.app.onboardingserver.docverify.zenid.model.deserializer.CustomOffsetDateTimeDeserializer;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -40,9 +39,9 @@ import java.time.OffsetDateTime;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify"})
+@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.providers.zenid"})
 @Configuration
-public class ZenidConfig {
+class ZenidConfig {
 
     /**
      * @param configProps Configuration properties

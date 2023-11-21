@@ -15,18 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.docverify.zenid.provider;
+package com.wultra.app.onboardingserver.providers.zenid;
 
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
-import com.wultra.app.onboardingserver.docverify.zenid.ZenidConst;
-import com.wultra.app.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -41,14 +37,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -58,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.zenid"})
 @EnableConfigurationProperties
 @Tag("external-service")
-class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
+class ZenidDocumentVerificationProviderTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProviderTest.class);
 
@@ -189,7 +187,7 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
     }
 
     private void cleanupDocuments(OwnerId ownerId) throws Exception {
-        if (uploadIds.size() > 0) {
+        if (!uploadIds.isEmpty()) {
             provider.cleanupDocuments(ownerId, uploadIds);
         }
     }
@@ -215,7 +213,7 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
     private SubmittedDocument createIdCardFrontDocument() throws IOException {
         SubmittedDocument idCardFront = new SubmittedDocument();
         idCardFront.setDocumentId(DOC_ID_CARD_FRONT);
-        Image idCardFrontPhoto = TestUtil.loadPhoto("/images/specimen_id_front.jpg");
+        Image idCardFrontPhoto = loadPhoto("/images/specimen_id_front.jpg");
         idCardFront.setPhoto(idCardFrontPhoto);
         idCardFront.setSide(CardSide.FRONT);
         idCardFront.setType(DocumentType.ID_CARD);
@@ -226,7 +224,7 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
     private SubmittedDocument createIdCardBackDocument() throws IOException {
         SubmittedDocument idCardBack = new SubmittedDocument();
         idCardBack.setDocumentId(DOC_ID_CARD_BACK);
-        Image idCardBackPhoto = TestUtil.loadPhoto("/images/specimen_id_back.jpg");
+        Image idCardBackPhoto = loadPhoto("/images/specimen_id_back.jpg");
         idCardBack.setPhoto(idCardBackPhoto);
         idCardBack.setSide(CardSide.BACK);
         idCardBack.setType(DocumentType.ID_CARD);
@@ -239,6 +237,43 @@ class ZenidDocumentVerificationProviderTest extends AbstractDocumentVerification
         ownerId.setActivationId("integration-test-" + UUID.randomUUID());
         ownerId.setUserId("integration-test-user-id");
         return ownerId;
+    }
+
+    private static Image loadPhoto(final String path) throws IOException {
+        final File file = new File(path);
+
+        return Image.builder()
+                .data(readImageData(path))
+                .filename(file.getName())
+                .build();
+    }
+
+    private static byte[] readImageData(final String path) throws IOException {
+        try (InputStream stream = ZenidDocumentVerificationProviderTest.class.getResourceAsStream(path)) {
+            if (stream == null) {
+                throw new IllegalStateException("Unable to get a stream for: " + path);
+            }
+            return stream.readAllBytes();
+        }
+    }
+
+    private static void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) {
+        assertEquals(documents.size(), result.getResults().size(), "Different size of submitted documents than expected");
+        assertNotNull(result.getExtractedPhotoId(), "Missing extracted photoId");
+
+        final List<String> submittedDocsIds = result.getResults().stream()
+                .map(DocumentSubmitResult::getDocumentId)
+                .toList();
+        assertEquals(documents.size(), submittedDocsIds.size(), "Different size of unique submitted documents than expected");
+        documents.forEach(document ->
+                assertTrue(submittedDocsIds.contains(document.getDocumentId())));
+
+        result.getResults().forEach(submitResult -> {
+            assertNull(submitResult.getErrorDetail());
+            assertNull(submitResult.getRejectReason());
+
+            assertNotNull(submitResult.getUploadId());
+        });
     }
 
 }
