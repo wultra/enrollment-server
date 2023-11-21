@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.provider;
+package com.wultra.app.onboardingserver.providers.iproov;
 
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -33,6 +31,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,8 +129,26 @@ class IProovPresenceCheckProviderTest {
     }
 
     private void initPresenceCheck(OwnerId ownerId) throws Exception {
-        Image photo = TestUtil.loadPhoto("/images/specimen_photo.jpg");
+        final Image photo = loadPhoto("/images/specimen_photo.jpg");
         provider.initPresenceCheck(ownerId, photo);
+    }
+
+    private static Image loadPhoto(final String path) throws IOException {
+        final File file = new File(path);
+
+        return Image.builder()
+                .data(readImageData(path))
+                .filename(file.getName())
+                .build();
+    }
+
+    private static byte[] readImageData(final String path) throws IOException {
+        try (InputStream stream = IProovPresenceCheckProviderTest.class.getResourceAsStream(path)) {
+            if (stream == null) {
+                throw new IllegalStateException("Unable to get a stream for: " + path);
+            }
+            return stream.readAllBytes();
+        }
     }
 
 }

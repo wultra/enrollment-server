@@ -15,13 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.service;
+package com.wultra.app.onboardingserver.providers.iproov;
 
-import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("test")
 class IProovRestApiServiceTest {
 
     @Test

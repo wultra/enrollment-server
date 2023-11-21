@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.config;
+package com.wultra.app.onboardingserver.providers.iproov;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.AuthTokenResponse;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.AuthTokenResponse;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -68,10 +68,10 @@ import java.util.Objects;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck"})
+@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.providers.iproov"})
 @Configuration
 @Slf4j
-public class IProovConfig {
+class IProovConfig {
 
     private static final String OAUTH_REGISTRATION_ID = "iproov";
 

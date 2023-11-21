@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.provider;
+package com.wultra.app.onboardingserver.providers.iproov;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,14 +25,13 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimResponse;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateResponse;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClientErrorResponse;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.EnrolResponse;
-import com.wultra.app.onboardingserver.presencecheck.iproov.service.IProovRestApiService;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ClaimResponse;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ClaimValidateResponse;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ClientErrorResponse;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.EnrolResponse;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +51,7 @@ import java.util.Base64;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Component
 @Slf4j
-public class IProovPresenceCheckProvider implements PresenceCheckProvider {
+class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
     /**
      * Session parameter name of the verification token

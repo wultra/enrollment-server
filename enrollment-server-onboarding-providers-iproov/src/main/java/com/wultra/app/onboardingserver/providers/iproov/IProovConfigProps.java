@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.config;
+package com.wultra.app.onboardingserver.providers.iproov;
 
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.presence-check.iproov")
 @Getter @Setter
-public class IProovConfigProps {
+class IProovConfigProps {
 
     /**
      * API key

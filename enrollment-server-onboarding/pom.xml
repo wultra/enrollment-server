@@ -95,10 +95,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-client</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -219,29 +215,6 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
-                    <execution>
-                        <id>swagger-definitions-iproov</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <verbose>false</verbose>
-                            <inputSpec>${basedir}/src/main/resources/api/api-iproov.json</inputSpec>
-                            <generatorName>java</generatorName>
-                            <generateApis>false</generateApis>
-                            <generateModelDocumentation>false</generateModelDocumentation>
-                            <generateModels>true</generateModels>
-                            <generateModelTests>false</generateModelTests>
-                            <generateSupportingFiles>false</generateSupportingFiles>
-                            <skipValidateSpec>true</skipValidateSpec>
-                            <configOptions>
-                                <library>native</library>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <modelPackage>com.wultra.app.onboardingserver.presencecheck.iproov.model.api</modelPackage>
-                                <useJakartaEe>true</useJakartaEe>
-                            </configOptions>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>swagger-definitions-zenid</id>
                         <goals>

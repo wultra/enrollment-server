@@ -15,15 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.presencecheck.iproov.service;
+package com.wultra.app.onboardingserver.providers.iproov;
 
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.presencecheck.iproov.config.IProovConfigProps;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClaimValidateRequest;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ClientErrorResponse;
-import com.wultra.app.onboardingserver.presencecheck.iproov.model.api.ServerClaimRequest;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ClaimValidateRequest;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ClientErrorResponse;
+import com.wultra.app.onboardingserver.providers.iproov.model.api.ServerClaimRequest;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +60,7 @@ import java.util.regex.Pattern;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @Service
 @Slf4j
-public class IProovRestApiService {
+class IProovRestApiService {
 
     private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
