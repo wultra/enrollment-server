@@ -31,12 +31,12 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLim
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
+import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

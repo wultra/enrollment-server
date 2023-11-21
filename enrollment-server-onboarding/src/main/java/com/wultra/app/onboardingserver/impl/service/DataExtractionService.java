@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

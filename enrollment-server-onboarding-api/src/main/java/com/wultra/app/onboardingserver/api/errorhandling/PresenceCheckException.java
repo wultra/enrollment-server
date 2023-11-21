@@ -15,28 +15,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.errorhandling;
+package com.wultra.app.onboardingserver.api.errorhandling;
 
 import java.io.Serial;
 
 /**
- * Exception thrown in case of an error during document verification.
+ * Exception thrown in case presence check fails.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-public class DocumentVerificationException extends Exception {
+public class PresenceCheckException extends Exception {
 
     @Serial
-    private static final long serialVersionUID = -5868335942741210351L;
+    private static final long serialVersionUID = 3977949988982066411L;
 
-    public DocumentVerificationException() {
+    public PresenceCheckException() {
     }
 
-    public DocumentVerificationException(String message) {
+    public PresenceCheckException(String message) {
         super(message);
     }
 
-    public DocumentVerificationException(final String message, final Throwable cause) {
+    public PresenceCheckException(final String message, final Throwable cause) {
         super(message, cause);
     }
+
 }

@@ -15,20 +15,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.api.provider;
 
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.core.annotations.PublicSpi;
 
 /**
  * Provider which allows customization of the presence check.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+@PublicSpi
 public interface PresenceCheckProvider {
 
     /**

@@ -31,5 +31,10 @@
     <groupId>com.wultra.security</groupId>
     <artifactId>enrollment-server-onboarding-api</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding-common</artifactId>
+        </dependency>
+    </dependencies>
 </project>

@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider;
+package com.wultra.app.onboardingserver.api.provider;
 
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.core.annotations.PublicSpi;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.Map;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+@PublicSpi
 public interface DocumentVerificationProvider {
 
     /**

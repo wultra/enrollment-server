@@ -30,9 +30,9 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
