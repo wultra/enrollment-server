@@ -77,10 +77,13 @@
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
         <module>enrollment-server-onboarding</module>
-        <module>enrollment-server-onboarding-adapter-mock</module>
-        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-api</module>
         <module>enrollment-server-onboarding-api-model</module>
+        <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
+        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-providers-iproov</module>
+        <module>enrollment-server-onboarding-providers-zeind</module>
     </modules>
 
     <properties>
@@ -114,7 +117,25 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-common</artifactId>
+                <artifactId>enrollment-server-onboarding-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-providers-iproov</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-providers-zeind</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

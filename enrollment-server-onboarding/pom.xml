@@ -40,10 +40,20 @@
             <artifactId>enrollment-server-onboarding-domain-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>enrollment-server-onboarding-common</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding-providers-iproov</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding-providers-zeind</artifactId>
         </dependency>
 
         <!-- PowerAuth Dependencies -->
