@@ -181,9 +181,9 @@ class ZenidDocumentVerificationProviderTest {
 
     @Test
     void initVerificationSdkTest() throws Exception {
-        Map<String, String> attributes = Map.of(ZenidConst.SDK_INIT_TOKEN, "sdk-init-token");
+        Map<String, String> attributes = Map.of("sdk-init-token", UUID.randomUUID().toString());
         VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
-        assertNotNull(verificationSdkInfo.getAttributes().get(ZenidConst.SDK_INIT_RESPONSE), "Missing SDK init response");
+        assertNotNull(verificationSdkInfo.getAttributes().get("zenid-sdk-init-response"), "Missing SDK init response");
     }
 
     private void cleanupDocuments(OwnerId ownerId) throws Exception {

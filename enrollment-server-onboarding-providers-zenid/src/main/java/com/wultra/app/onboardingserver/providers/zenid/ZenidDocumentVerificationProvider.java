@@ -56,6 +56,9 @@ import java.util.*;
 @Slf4j
 public class ZenidDocumentVerificationProvider implements DocumentVerificationProvider {
 
+    private static final String SDK_INIT_RESPONSE = "zenid-sdk-init-response";
+    private static final String SDK_INIT_TOKEN = "sdk-init-token";
+
     private static final String INTERNAL_SERVER_ERROR = "InternalServerError";
     private static final String LICENSE_INVALID = "License invalid";
 
@@ -328,8 +331,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     @Override
     public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws RemoteCommunicationException, DocumentVerificationException {
-        Preconditions.checkArgument(initAttributes.containsKey(ZenidConst.SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
-        String token = initAttributes.get(ZenidConst.SDK_INIT_TOKEN);
+        Preconditions.checkArgument(initAttributes.containsKey(SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
+        String token = initAttributes.get(SDK_INIT_TOKEN);
 
         ResponseEntity<ZenidWebInitSdkResponse> responseEntity;
         try {
@@ -354,7 +357,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         }
 
         VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
-        verificationSdkInfo.getAttributes().put(ZenidConst.SDK_INIT_RESPONSE, response.getResponse());
+        verificationSdkInfo.getAttributes().put(SDK_INIT_RESPONSE, response.getResponse());
         return verificationSdkInfo;
     }
 
