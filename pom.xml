@@ -82,9 +82,9 @@
         <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
         <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-provider-innovatrics</module>
         <module>enrollment-server-onboarding-provider-iproov</module>
         <module>enrollment-server-onboarding-provider-zenid</module>
-        <module>enrollment-server-onboarding-provider-innovatrics</module>
     </modules>
 
     <properties>
@@ -125,6 +125,12 @@
             <dependency>
                 <groupId>com.wultra.security</groupId>
                 <artifactId>enrollment-server-onboarding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

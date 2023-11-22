@@ -48,6 +48,11 @@
 
         <dependency>
             <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.wultra.security</groupId>
             <artifactId>enrollment-server-onboarding-provider-iproov</artifactId>
         </dependency>
 

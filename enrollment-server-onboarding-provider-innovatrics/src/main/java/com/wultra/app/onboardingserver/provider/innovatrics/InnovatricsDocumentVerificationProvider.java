@@ -29,9 +29,14 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implementation of the {@link DocumentVerificationProvider} with <a href="https://www.innovatrics.com/">Innovatrics</a>.
+ *
+ * @author Jan Pesek, jan.pesek@wultra.com
+ */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "innovatrics")
 @Component
-public class InnovatricsDocumentVerificationProvider implements DocumentVerificationProvider {
+class InnovatricsDocumentVerificationProvider implements DocumentVerificationProvider {
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {

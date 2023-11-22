@@ -27,9 +27,14 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implementation of the {@link PresenceCheckProvider} with <a href="https://www.innovatrics.com/">Innovatrics</a>.
+ *
+ * @author Jan Pesek, jan.pesek@wultra.com
+ */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
 @Component
-public class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
+class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException, RemoteCommunicationException {
