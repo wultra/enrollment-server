@@ -77,10 +77,13 @@
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
         <module>enrollment-server-onboarding</module>
-        <module>enrollment-server-onboarding-adapter-mock</module>
-        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-api</module>
         <module>enrollment-server-onboarding-api-model</module>
+        <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
+        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-provider-iproov</module>
+        <module>enrollment-server-onboarding-provider-zenid</module>
     </modules>
 
     <properties>
@@ -114,7 +117,25 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-common</artifactId>
+                <artifactId>enrollment-server-onboarding-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-iproov</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -244,6 +265,14 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludedGroups>external-service</excludedGroups>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

@@ -18,6 +18,8 @@
 
 package com.wultra.app.onboardingserver.errorhandling;
 
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
