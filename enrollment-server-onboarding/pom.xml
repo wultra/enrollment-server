@@ -48,12 +48,12 @@
 
         <dependency>
             <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-onboarding-providers-iproov</artifactId>
+            <artifactId>enrollment-server-onboarding-provider-iproov</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.wultra.security</groupId>
-            <artifactId>enrollment-server-onboarding-providers-zenid</artifactId>
+            <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
         </dependency>
 
         <!-- PowerAuth Dependencies -->

@@ -82,8 +82,8 @@
         <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
         <module>enrollment-server-onboarding-domain-model</module>
-        <module>enrollment-server-onboarding-providers-iproov</module>
-        <module>enrollment-server-onboarding-providers-zenid</module>
+        <module>enrollment-server-onboarding-provider-iproov</module>
+        <module>enrollment-server-onboarding-provider-zenid</module>
     </modules>
 
     <properties>
@@ -129,13 +129,13 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-onboarding-providers-iproov</artifactId>
+                <artifactId>enrollment-server-onboarding-provider-iproov</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-onboarding-providers-zenid</artifactId>
+                <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
