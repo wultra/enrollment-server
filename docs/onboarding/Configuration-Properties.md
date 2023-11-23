@@ -74,7 +74,7 @@ The Onboarding Server uses the following public configuration properties:
 
 | Property | Default | Note |
 |---|---|---|
-| `enrollment-server-onboarding.document-verification.provider` | `mock` | Document verification provider (`mock`, `zenid`). |
+| `enrollment-server-onboarding.document-verification.provider` | `mock` | Document verification provider (`mock`, `zenid`, `innovatrics`). |
 | `enrollment-server-onboarding.document-verification.cleanupEnabled` | `false` | Whether document cleanup is enabled for the provider. |
 | `enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits` | `0/5 * * * * *` | Cron scheduler for checking status of submitted documents. |
 | `enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron` | `0/5 * * * * *` | Cron scheduler for checking pending document verifications. |
@@ -87,7 +87,7 @@ The Onboarding Server uses the following public configuration properties:
 | Property                                                                       | Default | Note                                                                                   |
 |--------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------|
 | `enrollment-server-onboarding.presence-check.enabled`                          | `true`  | Whether presence check provider is enabled.                                            |
-| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`).                                            |
+| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`, `innovatrics`).                             |
 | `enrollment-server-onboarding.presence-check.cleanupEnabled`                   | `false` | Whether cleanup of presence check data is enabled.                                     |
 | `enrollment-server-onboarding.presence-check.verifySelfieWithDocumentsEnabled` | `false` | Whether verification of the presence check selfie photo with the documents is enabled. |
 | `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |

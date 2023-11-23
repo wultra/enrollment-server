@@ -82,12 +82,13 @@
         <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
         <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-provider-innovatrics</module>
         <module>enrollment-server-onboarding-provider-iproov</module>
         <module>enrollment-server-onboarding-provider-zenid</module>
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>6.5.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.0.0</openapi-generator-maven-plugin.version>
 
         <shedlock.version>5.10.0</shedlock.version>
         <spring-statemachine.version>3.2.1</spring-statemachine.version>
@@ -124,6 +125,12 @@
             <dependency>
                 <groupId>com.wultra.security</groupId>
                 <artifactId>enrollment-server-onboarding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
