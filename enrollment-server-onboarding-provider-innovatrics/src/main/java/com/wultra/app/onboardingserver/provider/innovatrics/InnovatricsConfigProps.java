@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
         '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and '${enrollment-server-onboarding.document-verification.provider}' == 'innovatrics'
         """)
 @Configuration
-@ConfigurationProperties(prefix = "enrollment-server-onboarding.innovatrics")
+@ConfigurationProperties(prefix = "enrollment-server-onboarding.provider.innovatrics")
 @Getter @Setter
 class InnovatricsConfigProps {
 
