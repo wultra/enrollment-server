@@ -134,6 +134,23 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyUsername`               |                           | Proxy username to be used when calling iProov REST service.                   |
 | `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyPassword`               |                           | Proxy password to be used when calling iProov REST service.                   |
 
+
+## Innovatrics Configuration
+
+| Property                                                                                         | Default                   | Note                                                                           |
+|--------------------------------------------------------------------------------------------------|---------------------------|--------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.provider.innovatrics.serviceBaseUrl`                               |                           | Base REST service URL for Innovatrics.                                         |
+| `enrollment-server-onboarding.provider.innovatrics.serviceToken`                                 |                           | Authentication token for Innovatrics.                                          |
+| `enrollment-server-onboarding.provider.innovatrics.serviceUserAgent`                             | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to Innovatrics REST service.          |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.acceptInvalidSslCertificate` | `false`                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service.  |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.maxInMemorySize`             | `10485760`                | Maximum in memory size of HTTP requests when calling Innovatrics REST service. |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyEnabled`                | `false`                   | Whether proxy server is enabled when calling Innovatrics REST service.         |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyHost`                   |                           | Proxy host to be used when calling Innovatrics REST service.                   |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyPort`                   | 0                         | Proxy port to be used when calling Innovatrics REST service.                   |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyUsername`               |                           | Proxy username to be used when calling Innovatrics REST service.               |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyPassword`               |                           | Proxy password to be used when calling Innovatrics REST service.               |
+
+
 ## Correlation HTTP Header Configuration
 
 | Property | Default | Note |
