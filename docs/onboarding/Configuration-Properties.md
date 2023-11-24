@@ -127,12 +127,12 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.presence-check.iproov.oAuthClientUsername`                          |                           | OAuth client username to iProov REST service.                                 |
 | `enrollment-server-onboarding.presence-check.iproov.oAuthClientPassword`                          |                           | OAuth client password to iProov REST service.                                 |
 | `enrollment-server-onboarding.presence-check.iproov.restClientConfig.acceptInvalidSslCertificate` | `false`                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service. |
-| `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize`       | `10485760`                | Maximum in memory size of HTTP requests when calling iProov REST service.     |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyEnabled`          | `false`                   | Whether proxy server is enabled when calling iProov REST service.             |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyHost`             |                           | Proxy host to be used when calling iProov REST service.                       |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPort`             | 0                         | Proxy port to be used when calling iProov REST service.                       |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyUsername`         |                           | Proxy username to be used when calling iProov REST service.                   |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPassword`         |                           | Proxy password to be used when calling iProov REST service.                   |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.maxInMemorySize`             | `10485760`                | Maximum in memory size of HTTP requests when calling iProov REST service.     |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyEnabled`                | `false`                   | Whether proxy server is enabled when calling iProov REST service.             |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyHost`                   |                           | Proxy host to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyPort`                   | 0                         | Proxy port to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyUsername`               |                           | Proxy username to be used when calling iProov REST service.                   |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyPassword`               |                           | Proxy password to be used when calling iProov REST service.                   |
 
 ## Correlation HTTP Header Configuration
 
