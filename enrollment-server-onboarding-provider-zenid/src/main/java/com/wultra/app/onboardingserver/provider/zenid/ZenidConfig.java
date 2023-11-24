@@ -23,6 +23,7 @@ import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -41,6 +42,7 @@ import java.time.OffsetDateTime;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.zenid"})
 @Configuration
+@Slf4j
 class ZenidConfig {
 
     /**
@@ -74,13 +76,16 @@ class ZenidConfig {
      */
     @Bean("restClientZenid")
     public RestClient restClientZenid(final ZenidConfigProps configProps) throws RestClientException {
+        final String serviceBaseUrl = configProps.getServiceBaseUrl();
+        logger.info("Registering restClientZenid: {}", serviceBaseUrl);
+
         final HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
         final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
-        restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
+        restClientConfiguration.setBaseUrl(serviceBaseUrl);
         restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration, createJavaTimeModule());
     }

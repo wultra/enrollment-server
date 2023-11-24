@@ -93,11 +93,14 @@ class IProovConfig {
      */
     @Bean("restClientIProov")
     public RestClient restClientIProov(IProovConfigProps configProps) throws RestClientException {
-        HttpHeaders headers = new HttpHeaders();
+        final String serviceBaseUrl = configProps.getServiceBaseUrl();
+        logger.info("Registering restClientIProov: {}", serviceBaseUrl);
+
+        final HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
-        restClientConfiguration.setBaseUrl(configProps.getServiceBaseUrl());
+        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        restClientConfiguration.setBaseUrl(serviceBaseUrl);
         restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration);
     }
