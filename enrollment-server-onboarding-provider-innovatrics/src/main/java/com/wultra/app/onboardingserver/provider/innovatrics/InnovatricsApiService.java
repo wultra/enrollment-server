@@ -30,6 +30,9 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the REST service to<a href="https://www.innovatrics.com/">Innovatrics</a>.
+ * <p>
+ * It is not possible to combine Innovatrics with other providers such as iProov or ZenID.
+ * Both providers, document verifier and presence check, must be configured to {@code innovatrics}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
