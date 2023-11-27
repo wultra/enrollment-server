@@ -229,7 +229,7 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
+    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                       @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
