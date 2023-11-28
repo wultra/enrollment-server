@@ -49,6 +49,11 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
+    public TrustedPhotoSource trustedPhotoSource() {
+        return TrustedPhotoSource.AUTO;
+    }
+
+    @Override
     public SessionInfo startPresenceCheck(final OwnerId id) {
         logger.debug("#startPresenceCheck does nothing for Innovatrics, {}", id);
         return new SessionInfo();

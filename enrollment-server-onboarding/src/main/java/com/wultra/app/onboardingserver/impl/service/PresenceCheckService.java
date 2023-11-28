@@ -139,7 +139,9 @@ public class PresenceCheckService {
             logger.debug("Processing a result of an accepted presence check, {}", ownerId);
         }
 
-        if (result.getPhoto() == null) {
+        if (!documentProcessingService.shouldDocumentProviderStoreSelfie()) {
+            logger.debug("Selfie will not be submitted to document provider, {}", ownerId);
+        } else if (result.getPhoto() == null) {
             logger.warn("Missing person photo from presence verification, {}", ownerId);
         } else {
             logger.debug("Obtained a person photo from the presence verification, {}", ownerId);
@@ -213,13 +215,23 @@ public class PresenceCheckService {
                 return;
             }
 
-            final Image photo = selectPhotoForPresenceCheck(ownerId, idVerification);
-            final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
-            presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
+            final Optional<Image> photo = fetchTrustedPhoto(ownerId, idVerification);
+            presenceCheckProvider.initPresenceCheck(ownerId, photo.orElse(null));
             logger.info("Presence check initialized, {}", ownerId);
             updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
             auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
         }
+    }
+
+    private Optional<Image> fetchTrustedPhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, RemoteCommunicationException, PresenceCheckException {
+        return switch (presenceCheckProvider.trustedPhotoSource()) {
+            case DOCUMENT_VERIFICATION_PROVIDER -> {
+                final Image photo = fetchTrustedPhotoFromDocumentVerifier(ownerId, idVerification);
+                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+                yield Optional.of(upscaledPhoto);
+            }
+            case AUTO -> Optional.empty();
+        };
     }
 
     /**
@@ -250,7 +262,7 @@ public class PresenceCheckService {
      * @throws RemoteCommunicationException In case of remote communication error.
      * @throws DocumentVerificationException In case of business logic error.
      */
-    protected Image selectPhotoForPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+    protected Image fetchTrustedPhotoFromDocumentVerifier(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
             throws DocumentVerificationException, RemoteCommunicationException {
 
         final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);

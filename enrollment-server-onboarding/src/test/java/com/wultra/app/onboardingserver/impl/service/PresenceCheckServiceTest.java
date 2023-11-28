@@ -51,7 +51,7 @@ class PresenceCheckServiceTest {
     private PresenceCheckService tested;
 
     @Test
-    void testSelectPhotoForPresenceCheck_reverseOrder() throws Exception {
+    void fetchTrustedPhotoFromDocumentVerifier_reverseOrder() throws Exception {
         final OwnerId ownerId = new OwnerId();
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
@@ -70,13 +70,13 @@ class PresenceCheckServiceTest {
         when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId))
                 .thenReturn(Image.builder().build());
 
-        tested.selectPhotoForPresenceCheck(ownerId, identityVerification);
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
 
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoIdCard.getPhotoId(), ownerId);
     }
 
     @Test
-    void testSelectPhotoForPresenceCheck_unknownDocument() throws Exception {
+    void fetchTrustedPhotoFromDocumentVerifier_unknownDocument() throws Exception {
         final OwnerId ownerId = new OwnerId();
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
@@ -89,7 +89,7 @@ class PresenceCheckServiceTest {
         when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId))
                 .thenReturn(Image.builder().build());
 
-        tested.selectPhotoForPresenceCheck(ownerId, identityVerification);
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
 
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoUnknown.getPhotoId(), ownerId);
     }

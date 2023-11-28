@@ -62,6 +62,11 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
+    public TrustedPhotoSource trustedPhotoSource() {
+        return TrustedPhotoSource.DOCUMENT_VERIFICATION_PROVIDER;
+    }
+
+    @Override
     public SessionInfo startPresenceCheck(OwnerId id) {
         String token = UUID.randomUUID().toString();
 

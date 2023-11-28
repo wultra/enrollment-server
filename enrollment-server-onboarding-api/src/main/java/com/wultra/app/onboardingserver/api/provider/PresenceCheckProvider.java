@@ -44,6 +44,15 @@ public interface PresenceCheckProvider {
     void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
+     * Configuration flag from where the trusted photo of the user to be used for {@link #initPresenceCheck(OwnerId, Image)} should be taken.
+     * <p>
+     * Some implementation may require specific source to be called by Onboarding server, some providers may handle it internally.
+     *
+     * @return the source of the trusted photo
+     */
+    TrustedPhotoSource trustedPhotoSource();
+
+    /**
      * Starts the presence check process. The process has to be initialized before this call.
      *
      * @param id Owner identification.
@@ -72,4 +81,18 @@ public interface PresenceCheckProvider {
      */
     void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException;
 
+    /**
+     * Return type for {@link #trustedPhotoSource()}.
+     */
+    enum TrustedPhotoSource {
+        /**
+         * If the photo should be taken from {@link DocumentVerificationProvider}.
+         */
+        DOCUMENT_VERIFICATION_PROVIDER,
+
+        /**
+         * If the presence check provider get the photo itself and the Onboarding need not handle it.
+         */
+        AUTO
+    }
 }

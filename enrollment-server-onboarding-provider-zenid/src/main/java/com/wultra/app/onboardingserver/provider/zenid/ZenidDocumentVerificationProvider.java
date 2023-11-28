@@ -179,6 +179,11 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     }
 
     @Override
+    public boolean shouldStoreSelfie() {
+        return true;
+    }
+
+    @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         ResponseEntity<ZenidWebInvestigateResponse> responseEntity;
         try {

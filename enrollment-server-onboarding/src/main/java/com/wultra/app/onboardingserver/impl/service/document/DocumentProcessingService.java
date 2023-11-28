@@ -263,6 +263,10 @@ public class DocumentProcessingService {
         return docSubmitResult;
     }
 
+    public boolean shouldDocumentProviderStoreSelfie() {
+        return documentVerificationProvider.shouldStoreSelfie();
+    }
+
     /**
      * Upload a single document related to identity verification.
      * @param idVerification Identity verification entity.
