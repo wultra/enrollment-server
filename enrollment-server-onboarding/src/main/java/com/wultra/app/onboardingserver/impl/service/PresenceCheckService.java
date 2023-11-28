@@ -224,14 +224,13 @@ public class PresenceCheckService {
     }
 
     private Optional<Image> fetchTrustedPhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, RemoteCommunicationException, PresenceCheckException {
-        return switch (presenceCheckProvider.trustedPhotoSource()) {
-            case DOCUMENT_VERIFICATION_PROVIDER -> {
-                final Image photo = fetchTrustedPhotoFromDocumentVerifier(ownerId, idVerification);
-                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
-                yield Optional.of(upscaledPhoto);
-            }
-            case AUTO -> Optional.empty();
-        };
+        if (presenceCheckProvider.shouldProvideTrustedPhoto()) {
+            final Image photo = fetchTrustedPhotoFromDocumentVerifier(ownerId, idVerification);
+            final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+            return Optional.of(upscaledPhoto);
+        } else {
+           return Optional.empty();
+        }
     }
 
     /**

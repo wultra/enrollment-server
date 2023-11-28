@@ -49,8 +49,8 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public TrustedPhotoSource trustedPhotoSource() {
-        return TrustedPhotoSource.AUTO;
+    public boolean shouldProvideTrustedPhoto() {
+        return false;
     }
 
     @Override
