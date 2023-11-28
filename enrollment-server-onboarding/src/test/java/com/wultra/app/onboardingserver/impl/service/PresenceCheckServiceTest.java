@@ -51,7 +51,7 @@ class PresenceCheckServiceTest {
     private PresenceCheckService tested;
 
     @Test
-    void fetchTrustedPhotoFromDocumentVerifier_reverseOrder() throws Exception {
+    void testFetchTrustedPhotoFromDocumentVerifier_reverseOrder() throws Exception {
         final OwnerId ownerId = new OwnerId();
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
@@ -76,7 +76,7 @@ class PresenceCheckServiceTest {
     }
 
     @Test
-    void fetchTrustedPhotoFromDocumentVerifier_unknownDocument() throws Exception {
+    void testFetchTrustedPhotoFromDocumentVerifier_unknownDocument() throws Exception {
         final OwnerId ownerId = new OwnerId();
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
