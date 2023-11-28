@@ -21,6 +21,9 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
@@ -31,16 +34,12 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLim
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
-import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -60,9 +59,8 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  */
 @Service
 @AllArgsConstructor
+@Slf4j
 public class PresenceCheckService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PresenceCheckService.class);
 
     private static final String SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
     private static final String SESSION_ATTRIBUTE_IMAGE_UPLOADED = "imageUploaded";
@@ -141,13 +139,18 @@ public class PresenceCheckService {
             logger.debug("Processing a result of an accepted presence check, {}", ownerId);
         }
 
-        // Process the photo irrespective of the result status
-        final Image photo = result.getPhoto();
-        if (photo == null) {
-            evaluatePresenceCheckResult(ownerId, idVerification, result);
-            throw new PresenceCheckException("Missing person photo from presence verification, " + ownerId);
+        if (result.getPhoto() == null) {
+            logger.warn("Missing person photo from presence verification, {}", ownerId);
+        } else {
+            logger.debug("Obtained a person photo from the presence verification, {}", ownerId);
+            submitSelfiePhoto(ownerId, idVerification, result);
         }
-        logger.debug("Obtained a photo from the result, {}", ownerId);
+
+        evaluatePresenceCheckResult(ownerId, idVerification, result);
+    }
+
+    private void submitSelfiePhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
+        final Image photo = result.getPhoto();
 
         final SubmittedDocument submittedDoc = new SubmittedDocument();
         // TODO use different random id approach
@@ -157,22 +160,20 @@ public class PresenceCheckService {
         submittedDoc.setPhoto(photo);
         submittedDoc.setType(DocumentType.SELFIE_PHOTO);
 
-        DocumentVerificationEntity docVerificationEntity = new DocumentVerificationEntity();
+        final DocumentVerificationEntity docVerificationEntity = new DocumentVerificationEntity();
         docVerificationEntity.setActivationId(ownerId.getActivationId());
         docVerificationEntity.setIdentityVerification(idVerification);
-        docVerificationEntity.setFilename(result.getPhoto().getFilename());
+        docVerificationEntity.setFilename(photo.getFilename());
         docVerificationEntity.setTimestampCreated(ownerId.getTimestamp());
         docVerificationEntity.setType(DocumentType.SELFIE_PHOTO);
         docVerificationEntity.setUsedForVerification(identityVerificationConfig.isVerifySelfieWithDocumentsEnabled());
 
-        DocumentSubmitResult documentSubmitResult =
+        final DocumentSubmitResult documentSubmitResult =
                 documentProcessingService.submitDocumentToProvider(ownerId, docVerificationEntity, submittedDoc);
         docVerificationEntity.setTimestampUploaded(ownerId.getTimestamp());
         docVerificationEntity.setUploadId(documentSubmitResult.getUploadId());
 
         documentVerificationRepository.save(docVerificationEntity);
-
-        evaluatePresenceCheckResult(ownerId, idVerification, result);
     }
 
     /**
@@ -198,7 +199,7 @@ public class PresenceCheckService {
      *
      * @param ownerId Owner identification.
      * @param idVerification Verification identity.
-     * @throws DocumentVerificationException When not able to find documet image.
+     * @throws DocumentVerificationException When not able to find document image.
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
@@ -212,17 +213,12 @@ public class PresenceCheckService {
                 return;
             }
 
-            final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
-            if (docsWithPhoto.isEmpty()) {
-                throw new PresenceCheckException("Unable to initialize presence check - missing person photo, " + ownerId);
-            } else {
-                final Image photo = selectPhotoForPresenceCheck(ownerId, docsWithPhoto);
-                final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
-                presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
-                logger.info("Presence check initialized, {}", ownerId);
-                updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
-                auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
-            }
+            final Image photo = selectPhotoForPresenceCheck(ownerId, idVerification);
+            final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
+            presenceCheckProvider.initPresenceCheck(ownerId, upscaledPhoto);
+            logger.info("Presence check initialized, {}", ownerId);
+            updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
+            auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
         }
     }
 
@@ -249,12 +245,19 @@ public class PresenceCheckService {
     /**
      * Selects person photo for the presence check process
      * @param ownerId Owner identification.
-     * @param docsWithPhoto Documents with a mined person photography.
+     * @param idVerification Verification identity.
      * @return Image with a person photography
      * @throws RemoteCommunicationException In case of remote communication error.
      * @throws DocumentVerificationException In case of business logic error.
      */
-    protected Image selectPhotoForPresenceCheck(OwnerId ownerId, List<DocumentVerificationEntity> docsWithPhoto) throws DocumentVerificationException, RemoteCommunicationException {
+    protected Image selectPhotoForPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+            throws DocumentVerificationException, RemoteCommunicationException {
+
+        final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
+        if (docsWithPhoto.isEmpty()) {
+            throw new DocumentVerificationException("Unable to initialize presence check - missing person photo, " + ownerId);
+        }
+
         docsWithPhoto.forEach(docWithPhoto ->
                 Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
         );
@@ -262,7 +265,7 @@ public class PresenceCheckService {
         DocumentVerificationEntity preferredDocWithPhoto = null;
         for (DocumentType documentType : DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO) {
             Optional<DocumentVerificationEntity> docEntity = docsWithPhoto.stream()
-                    .filter(value -> documentType.equals(value.getType()))
+                    .filter(value -> value.getType() == documentType)
                     .findFirst();
             if (docEntity.isPresent()) {
                 preferredDocWithPhoto = docEntity.get();
