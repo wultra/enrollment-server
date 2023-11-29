@@ -87,7 +87,6 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
             result.setStatus(PresenceCheckStatus.ACCEPTED);
         }
 
-
         return result;
     }
 
