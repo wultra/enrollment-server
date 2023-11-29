@@ -69,7 +69,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     @Override
     public PresenceCheckResult getResult(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         final String customerId = fetchCustomerId(id, sessionInfo);
-        final EvaluateCustomerLivenessResponse response = innovatricsApiService.evaluateLiveness(customerId);
+        final EvaluateCustomerLivenessResponse response = innovatricsApiService.evaluateLiveness(customerId, id);
         final PresenceCheckResult result = new PresenceCheckResult();
 
         final Double score = response.getScore();
