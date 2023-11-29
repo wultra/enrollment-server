@@ -17,6 +17,10 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessRequest;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessResponse;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import jakarta.annotation.PostConstruct;
@@ -27,6 +31,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 /**
  * Implementation of the REST service to<a href="https://www.innovatrics.com/">Innovatrics</a>.
@@ -42,6 +48,10 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 class InnovatricsApiService {
+
+    private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
+
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
     private static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
 
@@ -66,5 +76,27 @@ class InnovatricsApiService {
         logger.info("Trying a test call");
         final ResponseEntity<String> response = restClient.get("/api/v1/metadata", STRING_TYPE_REFERENCE);
         logger.info("Result of test call: {}", response.getBody());
+    }
+
+    public EvaluateCustomerLivenessResponse evaluateLiveness(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final EvaluateCustomerLivenessRequest request = new EvaluateCustomerLivenessRequest();
+        request.setType(EvaluateCustomerLivenessRequest.TypeEnum.MAGNIFEYE_LIVENESS);
+
+        final String apiPath = "/api/v1/customers/%s/liveness/evaluation".formatted(customerId);
+
+        try {
+            logger.info("Calling liveness/evaluation, {}", ownerId);
+            logger.debug("Calling {}, {}", apiPath, request);
+            final ResponseEntity<EvaluateCustomerLivenessResponse> response = restClient.post(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for liveness/evaluation, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to evaluate liveness for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when evaluating liveness for customerId=" + customerId, e);
+        }
     }
 }

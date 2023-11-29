@@ -142,6 +142,7 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.provider.innovatrics.serviceBaseUrl`                               |                           | Base REST service URL for Innovatrics.                                         |
 | `enrollment-server-onboarding.provider.innovatrics.serviceToken`                                 |                           | Authentication token for Innovatrics.                                          |
 | `enrollment-server-onboarding.provider.innovatrics.serviceUserAgent`                             | `Wultra/OnboardingServer` | User agent to use when making HTTP calls to Innovatrics REST service.          |
+| `enrollment-server-onboarding.provider.innovatrics.presenceCheck.score`                          | 0.875                     | Presence check minimal score threshold.                                        |
 | `enrollment-server-onboarding.provider.innovatrics.restClientConfig.acceptInvalidSslCertificate` | `false`                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service.  |
 | `enrollment-server-onboarding.provider.innovatrics.restClientConfig.maxInMemorySize`             | `10485760`                | Maximum in memory size of HTTP requests when calling Innovatrics REST service. |
 | `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyEnabled`                | `false`                   | Whether proxy server is enabled when calling Innovatrics REST service.         |
@@ -150,6 +151,7 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyUsername`               |                           | Proxy username to be used when calling Innovatrics REST service.               |
 | `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyPassword`               |                           | Proxy password to be used when calling Innovatrics REST service.               |
 
+See [Innovatrics documentation](https://developers.innovatrics.com/digital-onboarding/docs/functionalities/face/active-liveness-check/#magnifeye-liveness) for details how the score affects false acceptances (FAR) and false rejections (FRR).
 
 ## Correlation HTTP Header Configuration
 
