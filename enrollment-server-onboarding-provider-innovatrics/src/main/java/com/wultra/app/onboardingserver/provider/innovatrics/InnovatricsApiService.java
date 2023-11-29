@@ -19,6 +19,11 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CustomerInspectResponse;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessRequest;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -29,10 +34,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Implementation of the REST service to<a href="https://www.innovatrics.com/">Innovatrics</a>.
@@ -59,13 +68,20 @@ class InnovatricsApiService {
     private final RestClient restClient;
 
     /**
+     * Configuration properties.
+     */
+    private final InnovatricsConfigProps configProps;
+
+    /**
      * Service constructor.
      *
      * @param restClient REST template for Innovatrics calls.
      */
     @Autowired
-    public InnovatricsApiService(@Qualifier("restClientInnovatrics") final RestClient restClient) {
+    public InnovatricsApiService(@Qualifier("restClientInnovatrics") final RestClient restClient,
+                                 InnovatricsConfigProps configProps) {
         this.restClient = restClient;
+        this.configProps = configProps;
     }
 
     public EvaluateCustomerLivenessResponse evaluateLiveness(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
@@ -204,6 +220,203 @@ class InnovatricsApiService {
         } catch (Exception e) {
             throw new RemoteCommunicationException("Unexpected error when creating selfie for customerId=" + customerId, e);
         }
+    }
+
+    // TODO remove - temporal test call
+//    @PostConstruct
+//    public void testCall() throws RestClientException {
+//        logger.info("Trying a test call");
+//        final ResponseEntity<String> response = restClient.get("/api/v1/metadata", STRING_TYPE_REFERENCE);
+//        logger.info("Result of test call: {}", response.getBody());
+//    }
+
+    /**
+     * Create a new customer resource.
+     * @return optional of CreateCustomerResponse with a customerId.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public Optional<CreateCustomerResponse> createCustomer() throws RemoteCommunicationException {
+        final String apiPath = "/customers";
+        logger.info("Creating new customer");
+
+        try {
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when creating a new customer resource, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Create a new document resource assigned to a customer. This resource is used for documents only, not for selfies.
+     * @param customerId id of the customer to assign the resource to.
+     * @param documentType type of document that will be uploaded later.
+     * @return optional of CreateDocumentResponse. Does not contain important details.
+     * @throws RestClientException in case of 4xx or 5xx response status code.
+     */
+    public Optional<CreateDocumentResponse> createDocument(String customerId, DocumentType documentType) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s/document".formatted(customerId);
+        logger.info("Creating new document of type {} for customer {}", documentType, customerId);
+
+        final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
+        classificationAdvice.setTypes(List.of(convertType(documentType)));
+        classificationAdvice.setCountries(configProps.getDocumentCountries());
+        final DocumentAdvice advice = new DocumentAdvice();
+        advice.setClassification(classificationAdvice);
+        final CreateDocumentRequest request = new CreateDocumentRequest();
+        request.setAdvice(advice);
+
+        try {
+            logger.debug("Calling {}, {}", apiPath, request);
+            final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when creating a new document resource, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Provide photo of a document page. A document resource must be already assigned to the customer.
+     * @param customerId id of the customer to whom the document should be provided.
+     * @param side specifies side of the document.
+     * @param data image of the page encoded in base64.
+     * @return optional of CreateDocumentPageResponse with details extracted from the page.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public Optional<CreateDocumentPageResponse> provideDocumentPage(String customerId, CardSide side, byte[] data) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s/document/pages".formatted(customerId);
+        logger.info("Providing {} side document page for customer {}", convertSide(side), customerId);
+
+        final DocumentPageClassificationAdvice classificationAdvice = new DocumentPageClassificationAdvice();
+        classificationAdvice.setPageTypes(List.of(convertSide(side)));
+        final DocumentPageAdvice advice = new DocumentPageAdvice();
+        advice.setClassification(classificationAdvice);
+
+        final Image image = new Image();
+        image.setData(data);
+
+        final CreateDocumentPageRequest request = new CreateDocumentPageRequest();
+        request.setAdvice(advice);
+        request.setImage(image);
+
+        try {
+            logger.debug("Calling {}, {}", apiPath, request);
+            final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when providing a document page, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Get details gathered about the customer.
+     * @param customerId id of the customer.
+     * @return optional of GetCustomerResponse with details about the customer.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public Optional<GetCustomerResponse> getCustomer(String customerId) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s".formatted(customerId);
+        logger.info("Getting details about customer {}", customerId);
+
+        try {
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<GetCustomerResponse> response = restClient.get(apiPath, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when getting customer details, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Get document portrait of the customer.
+     * @param customerId id of the customer.
+     * @return successful Response contains a base64 in the JPG format.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public Optional<ImageCrop> getDocumentPortrait(String customerId) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s/document/portrait".formatted(customerId);
+        logger.info("Getting document portrait of customer {}", customerId);
+
+        try {
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<ImageCrop> response = restClient.get(apiPath, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+                // API returns 404 in case of missing portrait photo.
+                return Optional.empty();
+            }
+            throw new RemoteCommunicationException("REST API call failed when getting customer portrait, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Inspect consistency of data of the submitted document provided for a customer.
+     * @param customerId id of the customer whose document to inspect.
+     * @return optional of DocumentInspectResponse with details about consistency of the document.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public Optional<DocumentInspectResponse> inspectDocument(String customerId) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s/document/inspect".formatted(customerId);
+        logger.info("Getting document inspect of customer {}", customerId);
+
+        try {
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            logger.trace("{} response: {}", apiPath, response);
+            return Optional.ofNullable(response.getBody());
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed while getting document inspection, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Delete customer.
+     * @param customerId id of the customer.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public void deleteCustomer(String customerId) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s".formatted(customerId);
+        logger.info("Deleting customer {}", customerId);
+
+        try {
+            logger.debug("Calling {}", apiPath);
+            restClient.delete(apiPath, null);
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when deleting customer, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Converts internal DocumentType enum to string value used by Innovatrics.
+     * @param type represents type of document.
+     * @return document type as a string value.
+     */
+    public static String convertType(DocumentType type) {
+        return switch (type) {
+            case ID_CARD -> "identity-card";
+            case PASSPORT -> "passport";
+            case DRIVING_LICENSE -> "drivers-licence";
+            default -> throw new IllegalStateException("Unsupported documentType " + type);
+        };
+    }
+
+    /**
+     * Converts internal CardSide enum to string value used by Innovatrics.
+     * @param side represents side of a card.
+     * @return side of a card as a string value.
+     */
+    public static String convertSide(CardSide side) {
+        return switch (side) {
+            case FRONT -> "front";
+            case BACK -> "back";
+        };
     }
 
 }

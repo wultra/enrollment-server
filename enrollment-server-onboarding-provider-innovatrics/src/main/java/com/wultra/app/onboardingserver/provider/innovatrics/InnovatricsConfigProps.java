@@ -24,6 +24,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 /**
  * Innovatrics configuration properties.
  * <p>
@@ -69,5 +71,10 @@ class InnovatricsConfigProps {
          */
         private double score = 0.875;
     }
+
+    /**
+     * Identifies expected document countries
+     */
+    private List<String> documentCountries;
 
 }
