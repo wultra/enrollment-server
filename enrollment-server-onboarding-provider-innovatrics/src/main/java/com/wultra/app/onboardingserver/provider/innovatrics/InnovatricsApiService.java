@@ -53,8 +53,6 @@ class InnovatricsApiService {
 
     private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
-    private static final ParameterizedTypeReference<String> STRING_TYPE_REFERENCE = new ParameterizedTypeReference<>() { };
-
     /**
      * REST client for Innovatrics calls.
      */
