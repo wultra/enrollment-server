@@ -398,7 +398,7 @@ class InnovatricsApiService {
      * @param type represents type of document.
      * @return document type as a string value.
      */
-    public static String convertType(DocumentType type) {
+    private static String convertType(DocumentType type) {
         return switch (type) {
             case ID_CARD -> "identity-card";
             case PASSPORT -> "passport";
@@ -412,7 +412,7 @@ class InnovatricsApiService {
      * @param side represents side of a card.
      * @return side of a card as a string value.
      */
-    public static String convertSide(CardSide side) {
+     private static String convertSide(CardSide side) {
         return switch (side) {
             case FRONT -> "front";
             case BACK -> "back";

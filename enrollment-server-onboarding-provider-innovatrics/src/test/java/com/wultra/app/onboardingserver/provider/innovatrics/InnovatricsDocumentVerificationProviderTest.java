@@ -17,8 +17,12 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
@@ -29,11 +33,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -178,16 +185,39 @@ class InnovatricsDocumentVerificationProviderTest {
 
     @Test
     void testParseRejectionReason() throws Exception {
-        final DocumentResultEntity noReason = new DocumentResultEntity();
-        assertTrue(tested.parseRejectionReasons(noReason).isEmpty());
+        final DocumentResultEntity entity = new DocumentResultEntity();
+        entity.setRejectReason(new ObjectMapper().writeValueAsString(List.of("Reason1", "Reason2")));
+        assertEquals(List.of("Reason1", "Reason2"), tested.parseRejectionReasons(entity));
+    }
 
-        final DocumentResultEntity singleReason = new DocumentResultEntity();
-        singleReason.setRejectReason("Reason1.");
-        assertEquals(List.of("Reason1."), tested.parseRejectionReasons(singleReason));
+    @Test
+    void testParseEmptyRejectionReason() throws Exception {
+        final DocumentResultEntity entity = new DocumentResultEntity();
+        assertTrue(tested.parseRejectionReasons(entity).isEmpty());
+    }
 
-        final DocumentResultEntity moreReasons = new DocumentResultEntity();
-        moreReasons.setRejectReason("Reason1.#Reason2.#Reason3.");
-        assertEquals(List.of("Reason1.", "Reason2.", "Reason3."), tested.parseRejectionReasons(moreReasons));
+    @Test
+    void testVerifyDocuments() throws Exception {
+        final DocumentInspectResponse response = new DocumentInspectResponse();
+        when(apiService.inspectDocument("c123")).thenReturn(Optional.of(response));
+
+        final DocumentsVerificationResult result = tested.verifyDocuments(new OwnerId(), List.of("c123"));
+        assertTrue(result.isAccepted());
+        assertEquals("c123", result.getResults().get(0).getUploadId());
+        assertNotNull(result.getVerificationId());
+        assertNotNull(result.getResults().get(0).getVerificationResult());
+    }
+
+    @Test
+    void testVerifyDocuments_expired() throws Exception {
+        final DocumentInspectResponse response = new DocumentInspectResponse(true, null);
+        when(apiService.inspectDocument("c123")).thenReturn(Optional.of(response));
+
+        final DocumentsVerificationResult result = tested.verifyDocuments(new OwnerId(), List.of("c123"));
+        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
+        assertEquals(List.of("Document expired."), new ObjectMapper().readValue(result.getRejectReason(), new TypeReference<List<String>>() {}));
+        assertEquals("c123", result.getResults().get(0).getUploadId());
+        assertNotNull(result.getVerificationId());
     }
 
 }

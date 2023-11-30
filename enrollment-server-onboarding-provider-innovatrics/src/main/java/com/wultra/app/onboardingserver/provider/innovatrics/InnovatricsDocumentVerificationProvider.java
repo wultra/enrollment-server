@@ -18,8 +18,10 @@
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -38,7 +40,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Implementation of the {@link DocumentVerificationProvider} with <a href="https://www.innovatrics.com/">Innovatrics</a>.
@@ -55,7 +56,6 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     private final InnovatricsApiService innovatricsApiService;
     private final ObjectMapper objectMapper;
-    private static final String REJECTION_REASON_DELIMITER = "#";
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {
@@ -108,13 +108,25 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         final DocumentsVerificationResult results = new DocumentsVerificationResult();
-        // TODO - verificationId, status
+        results.setResults(new ArrayList<>());
 
         for (String customerId : uploadIds) {
-            final DocumentVerificationResult result = verifyDocument(customerId);
+            final DocumentInspectResponse response = getDocumentInspection(customerId);
+            final DocumentVerificationResult result = createVerificationResult(customerId, response);
             results.getResults().add(result);
         }
 
+        final String rejectReasons = results.getResults().stream()
+                .map(DocumentVerificationResult::getRejectReason)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.joining(";"));
+        if (StringUtils.hasText(rejectReasons)) {
+            results.setStatus(DocumentVerificationStatus.REJECTED);
+            results.setRejectReason(rejectReasons);
+        } else {
+            results.setStatus(DocumentVerificationStatus.ACCEPTED);
+        }
+        results.setVerificationId(UUID.randomUUID().toString());
         return results;
     }
 
@@ -129,7 +141,6 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
                 .data(innovatricsApiService.getDocumentPortrait(photoId)
                         .map(ImageCrop::getData)
                         .orElseThrow(() -> new RemoteCommunicationException("Document portrait not available for customer %s".formatted(photoId))))
-                .filename("document_portrait_%s.jpg".formatted(photoId))
                 .build();
     }
 
@@ -142,12 +153,12 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     @Override
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
-        final String reasons = docResult.getRejectReason();
-        if (!StringUtils.hasText(reasons)) {
-            return new ArrayList<>();
+        final String rejectionReasons = docResult.getRejectReason();
+        if (!StringUtils.hasText(rejectionReasons)) {
+            return Collections.emptyList();
         }
 
-        return Arrays.asList(docResult.getRejectReason().split(REJECTION_REASON_DELIMITER));
+        return deserializeFromString(rejectionReasons);
     }
 
     @Override
@@ -208,26 +219,31 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param response returned from provider.
      * @return DocumentSubmitResult with error or reject reason.
      */
-    private static DocumentSubmitResult createErrorSubmitResult(String uploadId, CreateDocumentPageResponse response) {
+    private DocumentSubmitResult createErrorSubmitResult(String uploadId, CreateDocumentPageResponse response) throws DocumentVerificationException {
         final DocumentSubmitResult result = new DocumentSubmitResult();
         result.setUploadId(uploadId);
         result.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
 
+        final List<String> rejectionReasons = new ArrayList<>();
         if (response.getErrorCode() != null) {
             switch (response.getErrorCode()) {
-                case NO_CARD_CORNERS_DETECTED -> result.setRejectReason("Document page was not detected in the photo.");
-                case PAGE_DOESNT_MATCH_DOCUMENT_TYPE_OF_PREVIOUS_PAGE -> result.setRejectReason("Mismatched document pages types.");
-                default -> result.setRejectReason("Unknown error: %s".formatted(response.getErrorCode().getValue()));
+                case NO_CARD_CORNERS_DETECTED -> rejectionReasons.add("Document page was not detected in the photo.");
+                case PAGE_DOESNT_MATCH_DOCUMENT_TYPE_OF_PREVIOUS_PAGE -> rejectionReasons.add("Mismatched document pages types.");
+                default -> rejectionReasons.add("Unknown error: %s".formatted(response.getErrorCode().getValue()));
             }
         }
 
         if (!CollectionUtils.isEmpty(response.getWarnings())) {
             for (CreateDocumentPageResponse.WarningsEnum w : response.getWarnings()) {
                 switch (w) {
-                    case DOCUMENT_TYPE_NOT_RECOGNIZED -> result.setRejectReason(concat(result.getRejectReason(), "Document type not recognized."));
-                    default -> result.setRejectReason(concat(result.getRejectReason(), "Unknown warning: %s".formatted(w.getValue())));
+                    case DOCUMENT_TYPE_NOT_RECOGNIZED -> rejectionReasons.add("Document type not recognized.");
+                    default -> rejectionReasons.add("Unknown warning: %s".formatted(w.getValue()));
                 }
             }
+        }
+
+        if (!rejectionReasons.isEmpty()) {
+            result.setRejectReason(serializeToString(rejectionReasons));
         }
 
         return result;
@@ -243,11 +259,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     private String getExtractedData(String customerId) throws RemoteCommunicationException, DocumentVerificationException {
         final GetCustomerResponse response = innovatricsApiService.getCustomer(customerId)
                     .orElseThrow(() -> new RemoteCommunicationException("Customer data could not be obtained for customer %s".formatted(customerId)));
-        try {
-            return toJson(response);
-        } catch (JsonProcessingException e) {
-            throw new DocumentVerificationException("Unexpected error when serializing extracted data of customer %s".formatted(customerId), e);
-        }
+        return serializeToString(response);
     }
 
     /**
@@ -274,63 +286,63 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     }
 
     /**
-     * Verify document uploaded to the customer.
+     * Inspect document of a customer.
      * @param customerId id of the customer.
      * @return DocumentVerificationResult with rejection or error reason if any.
      * @throws RemoteCommunicationException in case the verification data could not be obtained.
      */
-    private DocumentVerificationResult verifyDocument(String customerId) throws RemoteCommunicationException {
-        return innovatricsApiService.inspectDocument(customerId)
-                .map(r -> createVerificationResult(customerId, r))
+    private DocumentInspectResponse getDocumentInspection(String customerId) throws RemoteCommunicationException, DocumentVerificationException {
+         return innovatricsApiService.inspectDocument(customerId)
                 .orElseThrow(() -> new RemoteCommunicationException("Document inspection result could not be obtained for customer %s".formatted(customerId)));
     }
 
     /**
-     * Parses DocumentInspectResponse into error or rejection details.
+     * Creates DocumentVerificationResult by parsing DocumentInspectResponse.
      * @param customerId id of the customer the document belongs to.
      * @param response inspection details.
      * @return DocumentVerificationResult
      */
-    private DocumentVerificationResult createVerificationResult(String customerId, DocumentInspectResponse response) {
+    private DocumentVerificationResult createVerificationResult(String customerId, DocumentInspectResponse response) throws DocumentVerificationException {
         final DocumentVerificationResult result = new DocumentVerificationResult();
 
+        final List<String> rejectionReasons = new ArrayList<>();
         if (Boolean.TRUE.equals(response.getExpired())) {
-            result.setRejectReason(concat(result.getRejectReason(), "Document expired."));
+            rejectionReasons.add("Document expired.");
         }
 
         if (response.getMrzInspection() != null && Boolean.FALSE.equals(response.getMrzInspection().getValid())) {
-            result.setRejectReason(concat(result.getRejectReason(), "MRZ does not conform the ICAO specification."));
+            rejectionReasons.add("MRZ does not conform the ICAO specification.");
         }
-
-        // Portrait inspection checks if the ESTIMATED age and gender from a document portrait is consistent
-        // with extracted data (MRZ or text).
 
         final VisualZoneInspection viz = response.getVisualZoneInspection();
         if (viz != null) {
             if (!CollectionUtils.isEmpty(viz.getOcrConfidence().getLowOcrConfidenceTexts())) {
-                result.setErrorDetail(concat(result.getErrorDetail(), "Low OCR confidence of text."));
+                rejectionReasons.add("Low OCR confidence of text.");
             }
             if (viz.getTextConsistency() != null && Boolean.FALSE.equals(viz.getTextConsistency().getConsistent())) {
-                result.setRejectReason(concat(result.getRejectReason(), "Inconsistent text field."));
+                rejectionReasons.add("Inconsistent text field.");
             }
         }
 
         if (response.getPageTampering() != null) {
             response.getPageTampering().forEach((k, v) -> {
                 if (Boolean.TRUE.equals(v.getColorProfileChangeDetected())) {
-                    result.setRejectReason(concat(result.getRejectReason(), "Colors on the document %s does not corresponds to the expected color profile.".formatted(k)));
+                    rejectionReasons.add("Colors on the document %s does not corresponds to the expected color profile.".formatted(k));
                 }
                 if (Boolean.TRUE.equals(v.getLooksLikeScreenshot())) {
-                    result.setRejectReason(concat(result.getRejectReason(), "Provided image of the document %s was taken from a screen of another device.".formatted(k)));
+                    rejectionReasons.add("Provided image of the document %s was taken from a screen of another device.".formatted(k));
                 }
                 if (Boolean.TRUE.equals(v.getTamperedTexts())) {
-                    result.setRejectReason(concat(result.getRejectReason(), "Text of the document %s is tampered.".formatted(k)));
+                    rejectionReasons.add("Text of the document %s is tampered.".formatted(k));
                 }
             });
         }
 
         result.setUploadId(customerId);
-        // extractedData or verificationResult are not used
+        result.setVerificationResult(serializeToString(response));
+        if (!rejectionReasons.isEmpty()) {
+            result.setRejectReason(serializeToString(rejectionReasons));
+        }
         return result;
     }
 
@@ -347,12 +359,20 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
                 .orElseThrow(() -> new RemoteCommunicationException("A document could not be obtained for customer %s".formatted(customerId)));
     }
 
-    private static String concat(String... values) {
-        return Stream.of(values).filter(Objects::nonNull).collect(Collectors.joining(REJECTION_REASON_DELIMITER));
+    private <T> String serializeToString(T src) throws DocumentVerificationException {
+        try {
+            return objectMapper.writeValueAsString(src);
+        } catch (JsonProcessingException e) {
+            throw new DocumentVerificationException("Unexpected error when serializing data");
+        }
     }
 
-    private <T> String toJson(T src) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(src);
+    private <T> T deserializeFromString(String src) throws DocumentVerificationException {
+        try {
+            return objectMapper.readValue(src, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            throw new DocumentVerificationException("Unexpected error when deserializing data");
+        }
     }
 
 }
