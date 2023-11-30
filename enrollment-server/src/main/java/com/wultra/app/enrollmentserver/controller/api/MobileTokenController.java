@@ -26,7 +26,9 @@ import com.wultra.app.enrollmentserver.impl.service.OperationApproveParameterObj
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationApproveRequest;
+import com.wultra.security.powerauth.lib.mtoken.model.request.OperationDetailRequest;
 import com.wultra.security.powerauth.lib.mtoken.model.request.OperationRejectRequest;
 import com.wultra.security.powerauth.lib.mtoken.model.response.MobileTokenResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
@@ -109,6 +111,78 @@ public class MobileTokenController {
                 final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, true);
                 final Date currentTimestamp = new Date();
                 return new MobileTokenResponse<>(listResponse, currentTimestamp);
+            } else {
+                throw new MobileTokenAuthException();
+            }
+        } catch (PowerAuthClientException e) {
+            logger.error("Unable to call upstream service.", e);
+            throw new MobileTokenAuthException();
+        }
+    }
+
+    /**
+     * Get the detail of an operation.
+     *
+     * @param auth Authentication object.
+     * @param locale Locale.
+     * @return List of pending operations.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     */
+    @PostMapping("/operation/detail")
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    })
+    public ObjectResponse<Operation> getOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
+                                                        @Parameter(hidden = true) PowerAuthApiAuthentication auth,
+                                                        @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
+        try {
+            if (auth != null) {
+                final String operationId = request.getRequestObject().getId();
+                final String language = locale.getLanguage();
+                final String userId = auth.getUserId();
+                final Operation response = mobileTokenService.getOperationDetail(operationId, language, userId);
+                final Date currentTimestamp = new Date();
+                return new MobileTokenResponse<>(response, currentTimestamp);
+            } else {
+                throw new MobileTokenAuthException();
+            }
+        } catch (PowerAuthClientException e) {
+            logger.error("Unable to call upstream service.", e);
+            throw new MobileTokenAuthException();
+        }
+    }
+
+    /**
+     * Claim operation for a user.
+     *
+     * @param auth Authentication object.
+     * @param locale Locale.
+     * @return List of pending operations.
+     * @throws MobileTokenException In the case error mobile token service occurs.
+     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     */
+    @PostMapping("/operation/detail/claim")
+    @PowerAuthToken(signatureType = {
+            PowerAuthSignatureTypes.POSSESSION,
+            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
+            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    })
+    public ObjectResponse<Operation> claimOperation(@RequestBody ObjectRequest<OperationDetailRequest> request,
+                                                    @Parameter(hidden = true) PowerAuthApiAuthentication auth,
+                                                    @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException {
+        try {
+            if (auth != null) {
+                final String operationId = request.getRequestObject().getId();
+                final String language = locale.getLanguage();
+                final String userId = auth.getUserId();
+                final Operation response = mobileTokenService.claimOperation(operationId, language, userId);
+                final Date currentTimestamp = new Date();
+                return new MobileTokenResponse<>(response, currentTimestamp);
             } else {
                 throw new MobileTokenAuthException();
             }
