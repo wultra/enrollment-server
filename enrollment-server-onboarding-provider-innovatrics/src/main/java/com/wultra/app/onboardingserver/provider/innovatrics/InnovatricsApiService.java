@@ -120,4 +120,40 @@ class InnovatricsApiService {
         }
     }
 
+    public void deleteLiveness(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/api/v1/customers/%s/liveness".formatted(customerId);
+
+        try {
+            logger.info("Deleting liveness, {}", ownerId);
+            logger.debug("Deleting {}", apiPath);
+            final ResponseEntity<Void> response = restClient.delete(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for liveness delete, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to delete liveness for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when deleting liveness for customerId=" + customerId, e);
+        }
+    }
+
+    public void deleteSelfie(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/api/v1/customers/%s/selfie".formatted(customerId);
+
+        try {
+            logger.info("Deleting selfie, {}", ownerId);
+            logger.debug("Deleting {}", apiPath);
+            final ResponseEntity<Void> response = restClient.delete(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for selfie delete, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to delete selfie for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when deleting selfie for customerId=" + customerId, e);
+        }
+    }
+
 }

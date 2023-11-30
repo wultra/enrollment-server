@@ -162,7 +162,14 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
-        // TODO (racansky, 2023-11-28)
+        logger.info("Invoked cleanupIdentityData, {}", id);
+        final String customerId = fetchCustomerId(id, sessionInfo);
+
+        innovatricsApiService.deleteLiveness(customerId, id);
+        logger.debug("Deleted liveness, {}", id);
+
+        innovatricsApiService.deleteSelfie(customerId, id);
+        logger.debug("Deleted selfie, {}", id);
     }
 
     record PresenceCheckError(PresenceCheckStatus status, String rejectReason, String errorDetail){}
