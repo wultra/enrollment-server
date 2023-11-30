@@ -76,9 +76,10 @@ public interface PresenceCheckProvider {
      * Cleans up all presence check data related to the identity.
      *
      * @param id Owner identification.
+     * @param sessionInfo Session info with presence check relevant data.
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
-    void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException;
+    void cleanupIdentityData(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException;
 
 }

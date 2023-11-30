@@ -187,9 +187,9 @@ public class PresenceCheckService {
      */
     public void cleanup(OwnerId ownerId) throws PresenceCheckException, RemoteCommunicationException {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
-            presenceCheckProvider.cleanupIdentityData(ownerId);
             final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
                     new PresenceCheckException("Unable to find identity verification for " + ownerId));
+            presenceCheckProvider.cleanupIdentityData(ownerId, deserializeSessionInfo(identityVerification, ownerId));
             auditService.auditPresenceCheckProvider(identityVerification, "Clean up presence check data for user: {}", ownerId.getUserId());
         } else {
             logger.debug("Skipped cleanup of presence check data at the provider (not enabled), {}", ownerId);
@@ -366,13 +366,18 @@ public class PresenceCheckService {
     }
 
     private SessionInfo updateSessionInfo(final OwnerId ownerId, final IdentityVerificationEntity identityVerification, final Map<String, Object> sessionAttributes) throws PresenceCheckException {
+        final SessionInfo sessionInfo = deserializeSessionInfo(identityVerification, ownerId);
+        sessionInfo.getSessionAttributes().putAll(sessionAttributes);
+        identityVerification.setSessionInfo(jsonSerializationService.serialize(sessionInfo));
+        return sessionInfo;
+    }
+
+    private SessionInfo deserializeSessionInfo(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) throws PresenceCheckException {
         final String sessionInfoString = StringUtils.defaultIfEmpty(identityVerification.getSessionInfo(), "{}");
         final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
         if (sessionInfo == null) {
             throw new PresenceCheckException("Unable to parse SessionInfo, identity verification ID: %s, %s".formatted(identityVerification.getId(), ownerId));
         }
-        sessionInfo.getSessionAttributes().putAll(sessionAttributes);
-        identityVerification.setSessionInfo(jsonSerializationService.serialize(sessionInfo));
         return sessionInfo;
     }
 

@@ -86,7 +86,7 @@ class WultraMockPresenceCheckProviderTest {
 
     @Test
     void cleanupIdentityDataTest() {
-        provider.cleanupIdentityData(ownerId);
+        provider.cleanupIdentityData(ownerId, new SessionInfo());
     }
 
     private OwnerId createOwnerId() {

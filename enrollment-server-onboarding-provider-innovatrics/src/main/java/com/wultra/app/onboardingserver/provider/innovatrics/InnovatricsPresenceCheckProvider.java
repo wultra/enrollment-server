@@ -161,7 +161,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException {
+    public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         // TODO (racansky, 2023-11-28)
     }
 

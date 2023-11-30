@@ -217,7 +217,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(final OwnerId id) {
+    public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) {
         // https://docs.iproov.com/docs/Content/ImplementationGuide/security/data-retention.htm
         logger.info("No data deleted, retention policy left to iProov server, {}", id);
     }

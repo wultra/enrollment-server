@@ -106,7 +106,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(OwnerId id) {
+    public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) {
         logger.info("Mock - cleaned up identity data, {}", id);
     }
 
