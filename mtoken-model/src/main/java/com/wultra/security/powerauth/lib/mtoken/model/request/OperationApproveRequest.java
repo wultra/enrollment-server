@@ -19,6 +19,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.request;
 
 import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -33,7 +34,7 @@ import java.util.Optional;
 @Data
 public class OperationApproveRequest {
 
-    @NotNull
+    @NotEmpty
     private String id;
     @NotNull
     private String data;

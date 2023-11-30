@@ -1,6 +1,6 @@
 /*
  * PowerAuth Mobile Token Model
- * Copyright (C) 2017 Wultra s.r.o.
+ * Copyright (C) 2023 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -21,16 +21,14 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 /**
- * Request to register for sending push messages.
+ * Request for an operation detail.
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
-public class PushRegisterRequest {
+public class OperationDetailRequest {
 
     @NotEmpty
-    private String platform;
-    @NotEmpty
-    private String token;
+    private String id;
 
 }

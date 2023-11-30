@@ -144,7 +144,7 @@ public class MobileTokenService {
      */
     public Response operationApprove(@NotNull final OperationApproveParameterObject request) throws MobileTokenException, PowerAuthClientException {
 
-        final OperationDetailResponse operationDetail = getOperationDetail(request.getOperationId());
+        final OperationDetailResponse operationDetail = claimOperationInternal(request.getOperationId(), null);
 
         final String activationFlag = operationDetail.getActivationFlag();
         if (activationFlag != null && !request.getActivationFlags().contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
@@ -231,7 +231,7 @@ public class MobileTokenService {
             @NotNull RequestContext requestContext,
             List<String> activationFlags,
             String rejectReason) throws MobileTokenException, PowerAuthClientException {
-        final OperationDetailResponse operationDetail = getOperationDetail(operationId);
+        final OperationDetailResponse operationDetail = getOperationDetailInternal(operationId);
 
         final String activationFlag = operationDetail.getActivationFlag();
         if (activationFlag != null && !activationFlags.contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
@@ -265,6 +265,42 @@ public class MobileTokenService {
         }
     }
 
+    /**
+     * Get operation detail.
+     *
+     * @param operationId Operation ID.
+     * @param language Language.
+     * @param userId User identifier.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    public Operation getOperationDetail(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
+        final OperationDetailResponse operationDetail = getOperationDetailInternal(operationId);
+        if (!userId.equals(operationDetail.getUserId())) {
+            logger.warn("User ID from operation does not match authenticated user ID.");
+            throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Invalid request");
+        }
+        return convertOperation(language, operationDetail);
+    }
+
+    /**
+     * Claim operation.
+     *
+     * @param operationId Operation ID.
+     * @param language Language.
+     * @param userId User identifier.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    public Operation claimOperation(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
+        final OperationDetailResponse operationDetail = claimOperationInternal(operationId, userId);
+        return convertOperation(language, operationDetail);
+    }
+
     // Private methods
 
     /**
@@ -275,7 +311,7 @@ public class MobileTokenService {
      * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
      * @throws MobileTokenException When the operation is in incorrect state.
      */
-    private OperationDetailResponse getOperationDetail(String operationId) throws PowerAuthClientException, MobileTokenException {
+    private OperationDetailResponse getOperationDetailInternal(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
@@ -285,6 +321,46 @@ public class MobileTokenService {
         );
         handleStatus(operationDetail);
         return operationDetail;
+    }
+
+    /**
+     * Get operation detail by calling PowerAuth Server.
+     *
+     * @param operationId Operation ID.
+     * @param userId Optional user ID for operation claim.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException When the operation is in incorrect state.
+     */
+    private OperationDetailResponse claimOperationInternal(String operationId, String userId) throws PowerAuthClientException, MobileTokenException {
+        final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
+        operationDetailRequest.setOperationId(operationId);
+        operationDetailRequest.setUserId(userId);
+        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
+                operationDetailRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
+        handleStatus(operationDetail);
+        return operationDetail;
+    }
+
+    /**
+     * Find operation template and convert the operation.
+     *
+     * @param language Language.
+     * @param operationDetail Operation detail.
+     * @return Converted operation.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    private Operation convertOperation(String language, OperationDetailResponse operationDetail) throws MobileTokenException, MobileTokenConfigurationException {
+        final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
+        if (operationTemplate.isEmpty()) {
+            logger.warn("Template not found for operationType={}.", operationDetail.getOperationType());
+            throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Template not found");
+        }
+        return mobileTokenConverter.convert(operationDetail, operationTemplate.get());
     }
 
     /**
