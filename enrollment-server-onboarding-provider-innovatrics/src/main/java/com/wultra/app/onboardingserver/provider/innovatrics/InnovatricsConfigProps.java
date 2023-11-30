@@ -63,7 +63,7 @@ class InnovatricsConfigProps {
     private PresenceCheckConfiguration presenceCheckConfiguration;
 
     @Getter @Setter
-    public class PresenceCheckConfiguration {
+    public static class PresenceCheckConfiguration {
         /**
          * Presence check minimal score threshold.
          */

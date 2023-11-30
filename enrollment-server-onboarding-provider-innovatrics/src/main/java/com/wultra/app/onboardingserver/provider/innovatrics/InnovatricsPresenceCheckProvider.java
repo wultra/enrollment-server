@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -74,7 +75,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     public PresenceCheckResult getResult(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         final String customerId = fetchCustomerId(id, sessionInfo);
 
-        final Optional<PresenceCheckError> evaluateLivenessError =  evaluateLiveness(customerId, id);
+        final Optional<PresenceCheckError> evaluateLivenessError = evaluateLiveness(customerId, id);
         if (evaluateLivenessError.isPresent()) {
             return convert(evaluateLivenessError.get());
         }
@@ -87,6 +88,10 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
         }
         logger.debug("Customer inspection passed, {}", id);
 
+        return accepted();
+    }
+
+    private static PresenceCheckResult accepted() {
         final PresenceCheckResult result = new PresenceCheckResult();
         result.setStatus(PresenceCheckStatus.ACCEPTED);
         return result;
@@ -100,7 +105,6 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
         return target;
     }
 
-
     private Optional<PresenceCheckError> evaluateLiveness(final String customerId, final OwnerId id) throws RemoteCommunicationException {
         final EvaluateCustomerLivenessResponse livenessResponse = innovatricsApiService.evaluateLiveness(customerId, id);
         final Double score = livenessResponse.getScore();
@@ -111,10 +115,10 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
         if (score == null) {
             return fail(errorCode == null ? "Score is null" : errorCode.getValue());
         } else if (score < scoreThreshold) {
-            return reject("Score %f is bellow the threshold %f".formatted(score, scoreThreshold));
+            return reject(String.format(Locale.ENGLISH, "Score %.2f is bellow the threshold %.2f", score, scoreThreshold));
+        } else {
+            return success();
         }
-
-        return success();
     }
 
     private Optional<PresenceCheckError> inspectCustomer(final String customerId, final OwnerId id) throws RemoteCommunicationException{
@@ -128,13 +132,11 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
 
         if (!Boolean.TRUE.equals(similarityWith.getLivenessSelfies())) {
             return reject("The person in the selfie does not match a person in each liveness selfie");
-        }
-
-        if (!Boolean.TRUE.equals(similarityWith.getDocumentPortrait())) {
+        } else if (!Boolean.TRUE.equals(similarityWith.getDocumentPortrait())) {
             return reject("The person in the selfie does not match a person in the document portrait");
+        } else {
+            return success();
         }
-
-        return success();
     }
 
     private static Optional<PresenceCheckError> success() {
