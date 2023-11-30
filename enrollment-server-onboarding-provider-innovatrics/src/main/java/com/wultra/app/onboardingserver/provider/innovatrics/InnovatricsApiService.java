@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CustomerInspectResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessRequest;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessResponse;
 import com.wultra.core.rest.client.base.RestClient;
@@ -99,4 +100,24 @@ class InnovatricsApiService {
             throw new RemoteCommunicationException("Unexpected error when evaluating liveness for customerId=" + customerId, e);
         }
     }
+
+    public CustomerInspectResponse inspectCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/api/v1/customers/%s/inspect".formatted(customerId);
+
+        try {
+            logger.info("Calling /inspect, {}", ownerId);
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<CustomerInspectResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for /inspect, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to evaluate inspect for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when evaluating inspect for customerId=" + customerId, e);
+        }
+    }
+
 }
