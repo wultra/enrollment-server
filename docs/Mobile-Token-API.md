@@ -17,6 +17,8 @@ Following endpoints are published in Enrollment Server RESTful API:
 ### Operations API
 
 - `POST` [/api/auth/token/app/operation/list](#get-pending-operations) - List pending Mobile Token operations
+- `POST` [/api/auth/token/app/operation/detail](#get-operation-detail) - Get detail of a Mobile Token operation
+- `POST` [/api/auth/token/app/operation/detail/claim](#claim-operation) - Claim a Mobile Token operation for a user
 - `POST` [/api/auth/token/app/operation/history](#get-history-of-operations) - Get history of Mobile Token operations
 - `POST` [/api/auth/token/app/operation/authorize](#confirm-operation) - Confirm a Mobile Token operation
 - `POST` [/api/auth/token/app/operation/cancel](#reject-operation) - Reject a Mobile Token operation
@@ -222,6 +224,283 @@ Get the list with all operations that are pending confirmation.
       }
     }
   ]
+}
+```
+<!-- end -->
+
+<!-- begin api POST /api/auth/token/app/operation/detail -->
+### Get Operation Detail
+
+Get an operation detail. 
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/auth/token/app/operation/detail</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `Accept-Language: en-US`
+  - `X-PowerAuth-Authorization: ...`
+
+```json
+{
+  "requestObject": {
+    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa"
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK",
+  "responseObject": {
+    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa",
+    "name": "authorize_payment",
+    "data": "A1*A100CZK*Q238400856/0300**D20190629*NUtility Bill Payment - 05/2019",
+    "status": "PENDING",
+    "operationCreated": "2018-07-02T14:43:13+0000",
+    "operationExpires": "2018-07-02T14:48:17+0000",
+    "allowedSignatureType": {
+      "type": "2FA",
+      "variants": [
+        "possession_knowledge",
+        "possession_biometry"
+      ]
+    },
+    "formData": {
+      "title": "Confirm Payment",
+      "message": "Hello,\nplease confirm following payment:",
+      "attributes": [
+        {
+          "type": "ALERT",
+          "alertType": "WARNING",
+          "id": "operation.warning",
+          "label": "Balance alert",
+          "title": "Insufficient Balance",
+          "message": "You have only $1.00 on your account with number 238400856/0300."
+        },
+        {
+          "type": "HEADING",
+          "id": "operation.heading",
+          "label": "Utility Payment"
+        },
+        {
+          "type": "AMOUNT",
+          "id": "operation.amount",
+          "label": "Amount",
+          "amount": 2199.40,
+          "currency": "CZK",
+          "amountFormatted": "2199,40",
+          "currencyFormatted": "Kč"
+        },
+        {
+          "type": "AMOUNT_CONVERSION",
+          "id": "operation.conversion",
+          "label": "Conversion Rate",
+          "dynamic": false,
+          "sourceAmount": 100.00,
+          "sourceCurrency": "USD",
+          "sourceAmountFormatted": "100.00",
+          "sourceCurrencyFormatted": "$",
+          "sourceValueFormatted": "$100.00",
+          "targetAmount": 2199.40,
+          "targetCurrency": "CZK",
+          "targetAmountFormatted": "2199,40",
+          "targetCurrencyFormatted": "Kč",
+          "targetValueFormatted": "2199,40 Kč"
+        },
+        {
+          "type": "KEY_VALUE",
+          "id": "operation.account",
+          "label": "To Account",
+          "value": "238400856/0300"
+        },
+        {
+          "type": "KEY_VALUE",
+          "id": "operation.dueDate",
+          "label": "Due Date",
+          "value": "Jun 29, 2019"
+        },
+        {
+          "type": "NOTE",
+          "id": "operation.note",
+          "label": "Note",
+          "note": "Utility Bill Payment - 05/2019"
+        },
+        {
+          "type": "IMAGE",
+          "id": "operation.image",
+          "label": "Payment Check Preview",
+          "thumbnailUrl": "https://example.com/thumbnail.png",
+          "originalUrl": "https://example.com/image.png"
+        },
+        {
+          "type": "PARTY_INFO",
+          "id": "operation.partyInfo",
+          "label": "Application",
+          "partyInfo": {
+            "logoUrl": "https://itesco.cz/img/logo/logo.svg",
+            "name": "Tesco",
+            "description": "Find out more about Tesco...",
+            "websiteUrl": "https://itesco.cz/hello"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+<!-- end -->
+
+<!-- begin api POST /api/auth/token/app/operation/detail/claim -->
+### Claim Operation
+
+Claim an operation for a user.
+
+<!-- begin remove -->
+
+<table>
+    <tr>
+        <td>Method</td>
+        <td><code>POST</code></td>
+    </tr>
+    <tr>
+        <td>Resource URI</td>
+        <td><code>/api/auth/token/app/operation/detail/claim</code></td>
+    </tr>
+</table>
+<!-- end -->
+
+#### Request
+
+- Headers:
+  - `Content-Type: application/json`
+  - `Accept-Language: en-US`
+  - `X-PowerAuth-Authorization: ...`
+
+```json
+{
+  "requestObject": {
+    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa",
+    "userId": "user12345"
+  }
+}
+```
+
+#### Response 200
+
+```json
+{
+  "status": "OK",
+  "responseObject": {
+    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa",
+    "name": "authorize_payment",
+    "data": "A1*A100CZK*Q238400856/0300**D20190629*NUtility Bill Payment - 05/2019",
+    "status": "PENDING",
+    "operationCreated": "2018-07-02T14:43:13+0000",
+    "operationExpires": "2018-07-02T14:48:17+0000",
+    "allowedSignatureType": {
+      "type": "2FA",
+      "variants": [
+        "possession_knowledge",
+        "possession_biometry"
+      ]
+    },
+    "formData": {
+      "title": "Confirm Payment",
+      "message": "Hello,\nplease confirm following payment:",
+      "attributes": [
+        {
+          "type": "ALERT",
+          "alertType": "WARNING",
+          "id": "operation.warning",
+          "label": "Balance alert",
+          "title": "Insufficient Balance",
+          "message": "You have only $1.00 on your account with number 238400856/0300."
+        },
+        {
+          "type": "HEADING",
+          "id": "operation.heading",
+          "label": "Utility Payment"
+        },
+        {
+          "type": "AMOUNT",
+          "id": "operation.amount",
+          "label": "Amount",
+          "amount": 2199.40,
+          "currency": "CZK",
+          "amountFormatted": "2199,40",
+          "currencyFormatted": "Kč"
+        },
+        {
+          "type": "AMOUNT_CONVERSION",
+          "id": "operation.conversion",
+          "label": "Conversion Rate",
+          "dynamic": false,
+          "sourceAmount": 100.00,
+          "sourceCurrency": "USD",
+          "sourceAmountFormatted": "100.00",
+          "sourceCurrencyFormatted": "$",
+          "sourceValueFormatted": "$100.00",
+          "targetAmount": 2199.40,
+          "targetCurrency": "CZK",
+          "targetAmountFormatted": "2199,40",
+          "targetCurrencyFormatted": "Kč",
+          "targetValueFormatted": "2199,40 Kč"
+        },
+        {
+          "type": "KEY_VALUE",
+          "id": "operation.account",
+          "label": "To Account",
+          "value": "238400856/0300"
+        },
+        {
+          "type": "KEY_VALUE",
+          "id": "operation.dueDate",
+          "label": "Due Date",
+          "value": "Jun 29, 2019"
+        },
+        {
+          "type": "NOTE",
+          "id": "operation.note",
+          "label": "Note",
+          "note": "Utility Bill Payment - 05/2019"
+        },
+        {
+          "type": "IMAGE",
+          "id": "operation.image",
+          "label": "Payment Check Preview",
+          "thumbnailUrl": "https://example.com/thumbnail.png",
+          "originalUrl": "https://example.com/image.png"
+        },
+        {
+          "type": "PARTY_INFO",
+          "id": "operation.partyInfo",
+          "label": "Application",
+          "partyInfo": {
+            "logoUrl": "https://itesco.cz/img/logo/logo.svg",
+            "name": "Tesco",
+            "description": "Find out more about Tesco...",
+            "websiteUrl": "https://itesco.cz/hello"
+          }
+        }
+      ]
+    }
+  }
 }
 ```
 <!-- end -->
