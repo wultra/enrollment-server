@@ -81,18 +81,4 @@ public interface PresenceCheckProvider {
      */
     void cleanupIdentityData(OwnerId id) throws PresenceCheckException, RemoteCommunicationException;
 
-    /**
-     * Return type for {@link #trustedPhotoSource()}.
-     */
-    enum TrustedPhotoSource {
-        /**
-         * If the photo should be taken from {@link DocumentVerificationProvider}.
-         */
-        DOCUMENT_VERIFICATION_PROVIDER,
-
-        /**
-         * If the presence check provider get the photo itself and the Onboarding need not handle it.
-         */
-        AUTO
-    }
 }
