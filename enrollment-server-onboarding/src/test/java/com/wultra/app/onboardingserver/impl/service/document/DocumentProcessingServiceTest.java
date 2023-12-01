@@ -17,58 +17,113 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.model.Document;
+import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import org.junit.jupiter.api.BeforeEach;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Jan Pesek, jan.pesek@wultra.com
  */
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test")
 class DocumentProcessingServiceTest {
 
-    @InjectMocks
-    DocumentProcessingService service;
+    @MockBean
+    DataExtractionService dataExtractionService;
 
-    @Mock
+    @Autowired
+    DocumentProcessingService tested;
+
+    @Autowired
     DocumentVerificationRepository documentVerificationRepository;
 
-    @BeforeEach
-    public void init() {
-        MockitoAnnotations.openMocks(this);
+    @Autowired
+    IdentityVerificationRepository identityVerificationRepository;
+
+    @Test
+    @Sql
+    void testPairTwoSidedDocuments() {
+        tested.pairTwoSidedDocuments(documentVerificationRepository.findAll());
+        assertEquals("2", documentVerificationRepository.findById("1").map(DocumentVerificationEntity::getOtherSideId).get());
+        assertEquals("1", documentVerificationRepository.findById("2").map(DocumentVerificationEntity::getOtherSideId).get());
     }
 
     @Test
-    void pairTwoSidedDocumentsTest() {
-        DocumentVerificationEntity docIdCardFront = new DocumentVerificationEntity();
-        docIdCardFront.setId("1");
-        docIdCardFront.setType(DocumentType.ID_CARD);
-        docIdCardFront.setSide(CardSide.FRONT);
+    @Sql
+    void testSubmitDocuments() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
 
-        DocumentVerificationEntity docIdCardBack = new DocumentVerificationEntity();
-        docIdCardBack.setId("2");
-        docIdCardBack.setType(DocumentType.ID_CARD);
-        docIdCardBack.setSide(CardSide.BACK);
+        final DocumentSubmitRequest.DocumentMetadata page1 = new DocumentSubmitRequest.DocumentMetadata();
+        page1.setFilename("id_card_front.png");
+        page1.setType(DocumentType.ID_CARD);
+        page1.setSide(CardSide.FRONT);
 
-        List<DocumentVerificationEntity> documents = List.of(docIdCardFront, docIdCardBack);
+        final DocumentSubmitRequest.DocumentMetadata page2 = new DocumentSubmitRequest.DocumentMetadata();
+        page2.setFilename("id_card_back.png");
+        page2.setType(DocumentType.ID_CARD);
+        page2.setSide(CardSide.BACK);
 
-        service.pairTwoSidedDocuments(documents);
-        when(documentVerificationRepository.setOtherDocumentSide("1", "2")).thenReturn(1);
-        verify(documentVerificationRepository, times(1)).setOtherDocumentSide("1", "2");
-        when(documentVerificationRepository.setOtherDocumentSide("2", "1")).thenReturn(1);
-        verify(documentVerificationRepository, times(1)).setOtherDocumentSide("2", "1");
-        assertEquals(docIdCardBack.getId(), docIdCardFront.getOtherSideId());
-        assertEquals(docIdCardFront.getId(), docIdCardBack.getOtherSideId());
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(false);
+        request.setData("files".getBytes());
+        request.setDocuments(List.of(page1, page2));
+
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId("a1");
+        ownerId.setUserId("u1");
+
+        final Document documentPage1 = new Document();
+        documentPage1.setData("img1".getBytes());
+        documentPage1.setFilename("id_card_front.png");
+
+        final Document documentPage2 = new Document();
+        documentPage2.setData("img2".getBytes());
+        documentPage2.setFilename("id_card_back.png");
+
+
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(List.of(documentPage1, documentPage2));
+
+        final SubmittedDocument submittedPage1 = new SubmittedDocument();
+        submittedPage1.setDocumentId(page1.getUploadId());
+        submittedPage1.setSide(page1.getSide());
+        submittedPage1.setType(page1.getType());
+        submittedPage1.setPhoto(Image.builder().filename("id_card_front.png").data("img1".getBytes()).build());
+
+        final SubmittedDocument submittedPage2 = new SubmittedDocument();
+        submittedPage2.setDocumentId(page2.getUploadId());
+        submittedPage2.setSide(page2.getSide());
+        submittedPage2.setType(page2.getType());
+        submittedPage2.setPhoto(Image.builder().filename("id_card_back.png").data("back".getBytes()).build());
+
+        tested.submitDocuments(identityVerification, request, ownerId);
+
+        List<DocumentVerificationEntity> documents = documentVerificationRepository.findAll();
+        assertEquals(2, documents.size());
+        assertEquals(2, documents.stream().map(DocumentVerificationEntity::getSide).distinct().toList().size());
+
     }
 
 }
