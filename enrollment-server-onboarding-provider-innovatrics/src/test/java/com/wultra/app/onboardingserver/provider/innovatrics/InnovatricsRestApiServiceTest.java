@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateCustomerResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateDocumentPageResponse;
@@ -71,6 +72,7 @@ class InnovatricsRestApiServiceTest {
 
     @Test
     void testCreateCustomer() throws Exception {
+        final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON)
                 // Real response to POST /api/v1/customers
@@ -84,13 +86,14 @@ class InnovatricsRestApiServiceTest {
                         """)
                 .setResponseCode(HttpStatus.OK.value()));
 
-        final CreateCustomerResponse response = tested.createCustomer().get();
+        final CreateCustomerResponse response = tested.createCustomer(ownerId).get();
         assertEquals("c2e91b1f-0ccb-4ba0-93ae-d255a2a443af", response.getId());
         assertEquals("/api/v1/customers/c2e91b1f-0ccb-4ba0-93ae-d255a2a443af", response.getLinks().getSelf());
     }
 
     @Test
     void testErrorResponse() {
+        final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON)
                 // Real response to uploading a page without previous document resource creation
@@ -102,11 +105,12 @@ class InnovatricsRestApiServiceTest {
                         """)
                 .setResponseCode(500));
 
-        assertThrows(RemoteCommunicationException.class, () -> tested.createCustomer());
+        assertThrows(RemoteCommunicationException.class, () -> tested.createCustomer(ownerId));
     }
 
     @Test
     void testNonMatchingPageType() throws Exception {
+        final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
                 .setHeader("Content-Type", MediaType.APPLICATION_JSON)
                 // Real response to uploading a second page that is different from the first one
@@ -117,13 +121,20 @@ class InnovatricsRestApiServiceTest {
                         """)
                 .setResponseCode(HttpStatus.OK.value()));
 
-        final Optional<CreateDocumentPageResponse> response = tested.provideDocumentPage("123", CardSide.FRONT, "data".getBytes());
+        final Optional<CreateDocumentPageResponse> response = tested.provideDocumentPage("123", CardSide.FRONT, "data".getBytes(), ownerId);
         assertTrue(response.isPresent());
         assertNotNull(response.get().getErrorCode());
 
         final RecordedRequest recordedRequest = mockWebServer.takeRequest(1L, TimeUnit.SECONDS);
         assertNotNull(recordedRequest);
         assertEquals("PUT /customers/123/document/pages HTTP/1.1", recordedRequest.getRequestLine());
+    }
+
+    private OwnerId createOwnerId() {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setUserId("joe");
+        ownerId.setActivationId("a123");
+        return ownerId;
     }
 
 }

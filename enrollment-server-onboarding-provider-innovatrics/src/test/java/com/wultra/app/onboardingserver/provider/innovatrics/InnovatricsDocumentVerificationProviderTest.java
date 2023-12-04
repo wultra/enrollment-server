@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
@@ -33,14 +32,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -62,15 +58,16 @@ class InnovatricsDocumentVerificationProviderTest {
 
     @Test
     void testSubmitDocuments() throws Exception {
-        when(apiService.createCustomer()).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
+        final OwnerId ownerId = createOwnerId();
+        when(apiService.createCustomer(ownerId)).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
 
         final Links docLink = new Links("docResource");
         final CreateDocumentResponse documentResponse = new CreateDocumentResponse();
         documentResponse.setLinks(docLink);
-        when(apiService.createDocument("c123", DocumentType.PASSPORT)).thenReturn(Optional.of(documentResponse));
+        when(apiService.createDocument("c123", DocumentType.PASSPORT, ownerId)).thenReturn(Optional.of(documentResponse));
 
         final CreateDocumentPageResponse pageResponse = new CreateDocumentPageResponse();
-        when(apiService.provideDocumentPage("c123", CardSide.FRONT, "img".getBytes()))
+        when(apiService.provideDocumentPage("c123", CardSide.FRONT, "img".getBytes(), ownerId))
                 .thenReturn(Optional.of(pageResponse));
 
         final BiometricMultiValueAttribute ageAttr = new BiometricMultiValueAttribute("42", null, null, null, "40");
@@ -79,18 +76,15 @@ class InnovatricsDocumentVerificationProviderTest {
         customer.age(ageAttr).setSurname(surnameAttr);
         final GetCustomerResponse customerResponse = new GetCustomerResponse();
         customerResponse.customer(customer);
-        when(apiService.getCustomer("c123")).thenReturn(Optional.of(customerResponse));
+        when(apiService.getCustomer("c123", ownerId)).thenReturn(Optional.of(customerResponse));
 
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setUserId("joe");
-        ownerId.setActivationId("a123");
         final SubmittedDocument doc = new SubmittedDocument();
         doc.setType(DocumentType.PASSPORT);
         doc.setSide(CardSide.FRONT);
         doc.setPhoto(Image.builder().data("img".getBytes()).build());
 
         final DocumentsSubmitResult results = tested.submitDocuments(ownerId, List.of(doc));
-        verify(apiService).getCustomer("c123");
+        verify(apiService).getCustomer("c123", ownerId);
         assertEquals(1, results.getResults().size());
 
         final DocumentSubmitResult result = results.getResults().get(0);
@@ -107,80 +101,59 @@ class InnovatricsDocumentVerificationProviderTest {
 
     @Test
     void testSubmitDocument_handleCreateCustomerError() throws Exception {
-        when(apiService.createCustomer()).thenReturn(Optional.of(new CreateCustomerResponse()));
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setUserId("joe");
-        ownerId.setActivationId("a123");
+        final OwnerId ownerId = createOwnerId();
+        when(apiService.createCustomer(ownerId)).thenReturn(Optional.of(new CreateCustomerResponse()));
 
         final SubmittedDocument doc = new SubmittedDocument();
         doc.setType(DocumentType.PASSPORT);
 
         assertThrows(RemoteCommunicationException.class, () -> tested.submitDocuments(ownerId, List.of(doc)));
-        verify(apiService).createCustomer();
+        verify(apiService).createCustomer(ownerId);
     }
 
     @Test
     void testSubmitDocument_handleCreateDocumentError() throws Exception {
-        when(apiService.createCustomer()).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
-        when(apiService.createDocument("c123", DocumentType.PASSPORT)).thenReturn(Optional.empty());
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setUserId("joe");
-        ownerId.setActivationId("a123");
+        final OwnerId ownerId = createOwnerId();
+        when(apiService.createCustomer(ownerId)).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
+        when(apiService.createDocument("c123", DocumentType.PASSPORT, ownerId)).thenReturn(Optional.empty());
 
         final SubmittedDocument doc = new SubmittedDocument();
         doc.setDocumentId("doc1");
         doc.setType(DocumentType.PASSPORT);
 
         assertThrows(RemoteCommunicationException.class, () -> tested.submitDocuments(ownerId, List.of(doc)));
-        verify(apiService).createDocument("c123", DocumentType.PASSPORT);
+        verify(apiService).createDocument("c123", DocumentType.PASSPORT, ownerId);
     }
 
     @Test
     void testSubmitDocument_handleProvideDocumentPageError() throws Exception {
-        when(apiService.createCustomer()).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
+        final OwnerId ownerId = createOwnerId();
+        when(apiService.createCustomer(ownerId)).thenReturn(Optional.of(new CreateCustomerResponse("c123")));
 
         final Links docLink = new Links("docResource");
         final CreateDocumentResponse documentResponse = new CreateDocumentResponse();
         documentResponse.setLinks(docLink);
-        when(apiService.createDocument("c123", DocumentType.PASSPORT)).thenReturn(Optional.of(documentResponse));
+        when(apiService.createDocument("c123", DocumentType.PASSPORT, ownerId)).thenReturn(Optional.of(documentResponse));
 
         final CreateDocumentPageResponse pageResponse = new CreateDocumentPageResponse(
                 "front",
                 CreateDocumentPageResponse.ErrorCodeEnum.NO_CARD_CORNERS_DETECTED,
                 List.of(CreateDocumentPageResponse.WarningsEnum.DOCUMENT_TYPE_NOT_RECOGNIZED));
-        when(apiService.provideDocumentPage("c123", CardSide.FRONT, "img".getBytes()))
+        when(apiService.provideDocumentPage("c123", CardSide.FRONT, "img".getBytes(), ownerId))
                 .thenReturn(Optional.of(pageResponse));
 
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setUserId("joe");
-        ownerId.setActivationId("a123");
         final SubmittedDocument doc = new SubmittedDocument();
         doc.setType(DocumentType.PASSPORT);
         doc.setSide(CardSide.FRONT);
         doc.setPhoto(Image.builder().data("img".getBytes()).build());
 
         final DocumentsSubmitResult results = tested.submitDocuments(ownerId, List.of(doc));
-        verify(apiService).provideDocumentPage("c123", CardSide.FRONT, "img".getBytes());
+        verify(apiService).provideDocumentPage("c123", CardSide.FRONT, "img".getBytes(), ownerId);
         assertEquals(1, results.getResults().size());
 
         final DocumentSubmitResult result = results.getResults().get(0);
         assertEquals("c123", result.getUploadId());
         assertTrue(StringUtils.hasText(result.getRejectReason()));
-    }
-
-    @Test
-    void testGetPhoto() throws Exception {
-        when(apiService.getDocumentPortrait("c123")).thenReturn(Optional.of(new ImageCrop("img".getBytes())));
-
-        final Image image = tested.getPhoto("c123");
-        verify(apiService).getDocumentPortrait("c123");
-        assertArrayEquals("img".getBytes(), image.getData());
-    }
-
-    @Test
-    void testGetPhoto_notExists() throws Exception {
-        when(apiService.getDocumentPortrait("c123")).thenReturn(Optional.empty());
-        assertThrows(RemoteCommunicationException.class, () -> tested.getPhoto("c123"));
     }
 
     @Test
@@ -198,10 +171,11 @@ class InnovatricsDocumentVerificationProviderTest {
 
     @Test
     void testVerifyDocuments() throws Exception {
+        final OwnerId ownerId = createOwnerId();
         final DocumentInspectResponse response = new DocumentInspectResponse();
-        when(apiService.inspectDocument("c123")).thenReturn(Optional.of(response));
+        when(apiService.inspectDocument("c123", ownerId)).thenReturn(Optional.of(response));
 
-        final DocumentsVerificationResult result = tested.verifyDocuments(new OwnerId(), List.of("c123"));
+        final DocumentsVerificationResult result = tested.verifyDocuments(ownerId, List.of("c123"));
         assertTrue(result.isAccepted());
         assertEquals("c123", result.getResults().get(0).getUploadId());
         assertNotNull(result.getVerificationId());
@@ -210,14 +184,22 @@ class InnovatricsDocumentVerificationProviderTest {
 
     @Test
     void testVerifyDocuments_expired() throws Exception {
+        final OwnerId ownerId = createOwnerId();
         final DocumentInspectResponse response = new DocumentInspectResponse(true, null);
-        when(apiService.inspectDocument("c123")).thenReturn(Optional.of(response));
+        when(apiService.inspectDocument("c123", ownerId)).thenReturn(Optional.of(response));
 
-        final DocumentsVerificationResult result = tested.verifyDocuments(new OwnerId(), List.of("c123"));
+        final DocumentsVerificationResult result = tested.verifyDocuments(ownerId, List.of("c123"));
         assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
         assertEquals(List.of("Document expired."), new ObjectMapper().readValue(result.getRejectReason(), new TypeReference<List<String>>() {}));
         assertEquals("c123", result.getResults().get(0).getUploadId());
         assertNotNull(result.getVerificationId());
+    }
+
+    private OwnerId createOwnerId() {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setUserId("joe");
+        ownerId.setActivationId("a123");
+        return ownerId;
     }
 
 }

@@ -232,16 +232,19 @@ class InnovatricsApiService {
 
     /**
      * Create a new customer resource.
+     * @param ownerId owner identification.
      * @return optional of CreateCustomerResponse with a customerId.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateCustomerResponse> createCustomer() throws RemoteCommunicationException {
+    public Optional<CreateCustomerResponse> createCustomer(final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers";
-        logger.info("Creating new customer");
 
         try {
+            logger.info("Creating customer, {}", ownerId);
             logger.debug("Calling {}", apiPath);
             final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for creating customer, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -253,12 +256,12 @@ class InnovatricsApiService {
      * Create a new document resource assigned to a customer. This resource is used for documents only, not for selfies.
      * @param customerId id of the customer to assign the resource to.
      * @param documentType type of document that will be uploaded later.
+     * @param ownerId owner identification.
      * @return optional of CreateDocumentResponse. Does not contain important details.
-     * @throws RestClientException in case of 4xx or 5xx response status code.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateDocumentResponse> createDocument(String customerId, DocumentType documentType) throws RemoteCommunicationException {
+    public Optional<CreateDocumentResponse> createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s/document".formatted(customerId);
-        logger.info("Creating new document of type {} for customer {}", documentType, customerId);
 
         final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
         classificationAdvice.setTypes(List.of(convertType(documentType)));
@@ -269,8 +272,11 @@ class InnovatricsApiService {
         request.setAdvice(advice);
 
         try {
+            logger.info("Creating new document of type {} for customer {}, {}", documentType, customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
             final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for creating document, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -283,12 +289,12 @@ class InnovatricsApiService {
      * @param customerId id of the customer to whom the document should be provided.
      * @param side specifies side of the document.
      * @param data image of the page encoded in base64.
+     * @param ownerId owner identification.
      * @return optional of CreateDocumentPageResponse with details extracted from the page.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateDocumentPageResponse> provideDocumentPage(String customerId, CardSide side, byte[] data) throws RemoteCommunicationException {
+    public Optional<CreateDocumentPageResponse> provideDocumentPage(final String customerId, final CardSide side, final byte[] data, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s/document/pages".formatted(customerId);
-        logger.info("Providing {} side document page for customer {}", convertSide(side), customerId);
 
         final DocumentPageClassificationAdvice classificationAdvice = new DocumentPageClassificationAdvice();
         classificationAdvice.setPageTypes(List.of(convertSide(side)));
@@ -303,8 +309,11 @@ class InnovatricsApiService {
         request.setImage(image);
 
         try {
+            logger.info("Providing {} side document page for customer {}, {}", convertSide(side), customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
             final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for providing document page, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -315,16 +324,19 @@ class InnovatricsApiService {
     /**
      * Get details gathered about the customer.
      * @param customerId id of the customer.
+     * @param ownerId owner identification.
      * @return optional of GetCustomerResponse with details about the customer.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<GetCustomerResponse> getCustomer(String customerId) throws RemoteCommunicationException {
+    public Optional<GetCustomerResponse> getCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s".formatted(customerId);
-        logger.info("Getting details about customer {}", customerId);
 
         try {
+            logger.info("Getting details about customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
             final ResponseEntity<GetCustomerResponse> response = restClient.get(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for getting details about customer, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -335,16 +347,19 @@ class InnovatricsApiService {
     /**
      * Get document portrait of the customer.
      * @param customerId id of the customer.
+     * @param ownerId owner identification.
      * @return successful Response contains a base64 in the JPG format.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<ImageCrop> getDocumentPortrait(String customerId) throws RemoteCommunicationException {
+    public Optional<ImageCrop> getDocumentPortrait(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s/document/portrait".formatted(customerId);
-        logger.info("Getting document portrait of customer {}", customerId);
 
         try {
+            logger.info("Getting document portrait of customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
             final ResponseEntity<ImageCrop> response = restClient.get(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for getting document portrait, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -359,16 +374,19 @@ class InnovatricsApiService {
     /**
      * Inspect consistency of data of the submitted document provided for a customer.
      * @param customerId id of the customer whose document to inspect.
+     * @param ownerId owner identification.
      * @return optional of DocumentInspectResponse with details about consistency of the document.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<DocumentInspectResponse> inspectDocument(String customerId) throws RemoteCommunicationException {
+    public Optional<DocumentInspectResponse> inspectDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s/document/inspect".formatted(customerId);
-        logger.info("Getting document inspect of customer {}", customerId);
 
         try {
+            logger.info("Getting document inspect of customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
             final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for getting document inspect, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
@@ -379,17 +397,42 @@ class InnovatricsApiService {
     /**
      * Delete customer.
      * @param customerId id of the customer.
+     * @param ownerId owner identification.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public void deleteCustomer(String customerId) throws RemoteCommunicationException {
+    public void deleteCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/customers/%s".formatted(customerId);
-        logger.info("Deleting customer {}", customerId);
 
         try {
+            logger.info("Deleting customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
-            restClient.delete(apiPath, null);
+            final ResponseEntity<Void> response = restClient.delete(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for deleting customer, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
         } catch (RestClientException e) {
             throw new RemoteCommunicationException("REST API call failed when deleting customer, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Delete customer's document.
+     * @param customerId id of the customer.
+     * @param ownerId owner identification.
+     * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
+     */
+    public void deleteDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/customers/%s/document".formatted(customerId);
+
+        try {
+            logger.info("Deleting document of customer {}, {}", customerId, ownerId);
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<Void> response = restClient.delete(apiPath, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for deleting customer's document, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException("REST API call failed when deleting customer's document, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
         }
     }
 
