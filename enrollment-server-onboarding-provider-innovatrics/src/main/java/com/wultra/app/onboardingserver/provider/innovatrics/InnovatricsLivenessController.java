@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "api/identity")
 @AllArgsConstructor
 @Slf4j
-public class InnovatricsLivenessController {
+class InnovatricsLivenessController {
 
     private InnovatricsLivenessService innovatricsLivenessService;
 

@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @AllArgsConstructor
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
-public class InnovatricsLivenessService {
+class InnovatricsLivenessService {
 
     private static final String INNOVATRICS_CUSTOMER_ID = "InnovatricsCustomerId";
 
