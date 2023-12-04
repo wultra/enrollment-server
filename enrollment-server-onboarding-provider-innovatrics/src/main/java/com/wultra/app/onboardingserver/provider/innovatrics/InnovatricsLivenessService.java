@@ -60,15 +60,15 @@ class InnovatricsLivenessService {
         final OwnerId ownerId = extractOwnerId(identityVerification);
         final String customerId = fetchCustomerId(ownerId, identityVerification);
 
-        innovatricsApiService.createLiveness(customerId, ownerId);
-        logger.debug("Liveness created, {}", ownerId);
+        createLiveness(customerId, ownerId);
+        final CreateCustomerLivenessRecordResponse livenessRecordResponse = createLivenessRecord(requestData, customerId, ownerId);
+        createSelfie(livenessRecordResponse, customerId, ownerId);
 
-        final CreateCustomerLivenessRecordResponse livenessRecordResponse = innovatricsApiService.createLivenessRecord(customerId, requestData, ownerId);
-        if (livenessRecordResponse.getErrorCode() != null) {
-            throw new IdentityVerificationException("Unable to create liveness record: " + livenessRecordResponse.getErrorCode());
-        }
-        logger.debug("Liveness record created, {}", ownerId);
+        // TODO audit
+        logger.info("Liveness record successfully uploaded, {}", ownerId);
+    }
 
+    private void createSelfie(final CreateCustomerLivenessRecordResponse livenessRecordResponse, final String customerId, final OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         final String livenessSelfieLink = fetchSelfieLink(livenessRecordResponse);
         final CreateSelfieResponse createSelfieResponse = innovatricsApiService.createSelfie(customerId, livenessSelfieLink, ownerId);
         if (createSelfieResponse.getErrorCode() != null) {
@@ -80,9 +80,20 @@ class InnovatricsLivenessService {
             }
         }
         logger.debug("Selfie created, {}", ownerId);
+    }
 
-        // TODO audit
-        logger.info("Liveness record successfully uploaded, {}", ownerId);
+    private CreateCustomerLivenessRecordResponse createLivenessRecord(final byte[] requestData, final String customerId, final OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
+        final CreateCustomerLivenessRecordResponse livenessRecordResponse = innovatricsApiService.createLivenessRecord(customerId, requestData, ownerId);
+        if (livenessRecordResponse.getErrorCode() != null) {
+            throw new IdentityVerificationException("Unable to create liveness record: " + livenessRecordResponse.getErrorCode());
+        }
+        logger.debug("Liveness record created, {}", ownerId);
+        return livenessRecordResponse;
+    }
+
+    private void createLiveness(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        innovatricsApiService.createLiveness(customerId, ownerId);
+        logger.debug("Liveness created, {}", ownerId);
     }
 
     private static String fetchSelfieLink(final CreateCustomerLivenessRecordResponse livenessRecordResponse) throws IdentityVerificationException {
