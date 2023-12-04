@@ -115,7 +115,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
         if (score == null) {
             return fail(errorCode == null ? "Score is null" : errorCode.getValue());
         } else if (score < scoreThreshold) {
-            return reject(String.format(Locale.ENGLISH, "Score %.2f is bellow the threshold %.2f", score, scoreThreshold));
+            return reject(String.format(Locale.ENGLISH, "Score %.3f is bellow the threshold %.3f", score, scoreThreshold));
         } else {
             return success();
         }

@@ -99,13 +99,13 @@ class InnovatricsPresenceCheckProviderTest {
         when(innovatricsApiService.evaluateLiveness(CUSTOMER_ID, id))
                 .thenReturn(new EvaluateCustomerLivenessResponse(0.70, null));
         when(innovatricsConfigProps.getPresenceCheckConfiguration().getScore())
-                .thenReturn(0.80);
+                .thenReturn(0.875);
 
         final PresenceCheckResult result = tested.getResult(id, sessionInfo);
 
         assertEquals(PresenceCheckStatus.REJECTED, result.getStatus());
         assertNull(result.getErrorDetail());
-        assertEquals("Score 0.70 is bellow the threshold 0.80", result.getRejectReason());
+        assertEquals("Score 0.700 is bellow the threshold 0.875", result.getRejectReason());
     }
 
     @Test
