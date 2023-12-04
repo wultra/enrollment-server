@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateCustomerLivenessRecordResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateSelfieResponse;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
@@ -52,6 +53,8 @@ class InnovatricsLivenessService {
 
     private final IdentityVerificationRepository identityVerificationRepository;
 
+    private AuditService auditService;
+
     public void upload(final byte[] requestData, final EncryptionContext encryptionContext) throws IdentityVerificationException, RemoteCommunicationException {
         final String activationId = encryptionContext.getActivationId();
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId).orElseThrow(() ->
@@ -64,7 +67,7 @@ class InnovatricsLivenessService {
         final CreateCustomerLivenessRecordResponse livenessRecordResponse = createLivenessRecord(requestData, customerId, ownerId);
         createSelfie(livenessRecordResponse, customerId, ownerId);
 
-        // TODO audit
+        auditService.auditPresenceCheckProvider(identityVerification, "Uploaded presence check data for user: {}", ownerId.getUserId());
         logger.info("Liveness record successfully uploaded, {}", ownerId);
     }
 
