@@ -59,7 +59,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {
-        logger.info("Unexpected state of document {}, {}", document, id);
+        logger.warn("Unexpected state of document {}, {}", document, id);
         throw new NotImplementedException("Method checkDocumentUpload is not supported by Innovatrics provider.");
     }
 
@@ -137,13 +137,13 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     @Override
     public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws RemoteCommunicationException, DocumentVerificationException {
-        logger.info("Unexpected state of documents with verificationId={}, {}", verificationId, id);
+        logger.warn("Unexpected state of documents with verificationId={}, {}", verificationId, id);
         throw new NotImplementedException("Method getVerificationResult is not supported by Innovatrics provider.");
     }
 
     @Override
     public Image getPhoto(String photoId) throws RemoteCommunicationException, DocumentVerificationException {
-        logger.info("Unexpected document portrait query for customerId={}", photoId);
+        logger.warn("Unexpected document portrait query for customerId={}", photoId);
         throw new NotImplementedException("Method getPhoto is not implemented by Innovatrics provider.");
     }
 
@@ -323,7 +323,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             rejectionReasons.add("Document expired.");
         }
 
-        if (response.getMrzInspection() != null && Boolean.FALSE.equals(response.getMrzInspection().getValid())) {
+        if (response.getMrzInspection() != null && !Boolean.TRUE.equals(response.getMrzInspection().getValid())) {
             rejectionReasons.add("MRZ does not conform the ICAO specification.");
         }
 
@@ -332,7 +332,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             if (!CollectionUtils.isEmpty(viz.getOcrConfidence().getLowOcrConfidenceTexts())) {
                 rejectionReasons.add("Low OCR confidence of text.");
             }
-            if (viz.getTextConsistency() != null && Boolean.FALSE.equals(viz.getTextConsistency().getConsistent())) {
+            if (viz.getTextConsistency() != null && !Boolean.TRUE.equals(viz.getTextConsistency().getConsistent())) {
                 rejectionReasons.add("Inconsistent text field.");
             }
         }
