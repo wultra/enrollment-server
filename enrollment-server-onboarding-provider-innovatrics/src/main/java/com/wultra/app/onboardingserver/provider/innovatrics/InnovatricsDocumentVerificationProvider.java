@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -90,13 +91,22 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             final CreateDocumentPageResponse createDocumentPageResponse = provideDocumentPage(customerId, page, id);
             if (containsError(createDocumentPageResponse)) {
                 logger.debug("Page upload was not successful, {}", id);
-                results.getResults().add(createErrorSubmitResult(customerId, createDocumentPageResponse));
+                results.getResults().add(createErrorSubmitResult(customerId, createDocumentPageResponse, page));
             } else {
                 logger.debug("Document page was read successfully by provider, {}", id);
-                results.getResults().add(createSubmitResult(customerId, id));
-                if (!StringUtils.hasText(results.getExtractedPhotoId()) && hasDocumentPortrait(customerId, id)) {
-                    results.setExtractedPhotoId(customerId);
-                }
+                results.getResults().add(createSubmitResult(customerId, page));
+            }
+        }
+
+        final Optional<DocumentSubmitResult> primaryPage = results.getResults().stream()
+                .filter(result -> Strings.isNullOrEmpty(result.getRejectReason()) && Strings.isNullOrEmpty(result.getErrorDetail()))
+                .findFirst();
+
+        if (primaryPage.isPresent()) {
+            // Only first found successfully submitted page has extracted data, others has empty JSON
+            primaryPage.get().setExtractedData(getExtractedData(customerId, id));
+            if (hasDocumentPortrait(customerId, id)) {
+                results.setExtractedPhotoId(customerId);
             }
         }
 
@@ -228,10 +238,10 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param response returned from provider.
      * @return DocumentSubmitResult with error or reject reason.
      */
-    private DocumentSubmitResult createErrorSubmitResult(String uploadId, CreateDocumentPageResponse response) throws DocumentVerificationException {
+    private DocumentSubmitResult createErrorSubmitResult(String uploadId, CreateDocumentPageResponse response, SubmittedDocument submitted) throws DocumentVerificationException {
         final DocumentSubmitResult result = new DocumentSubmitResult();
         result.setUploadId(uploadId);
-        result.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
+        result.setDocumentId(submitted.getDocumentId());
 
         final List<String> rejectionReasons = new ArrayList<>();
         if (response.getErrorCode() != null) {
@@ -285,15 +295,13 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     /**
      * Creates DocumentSubmitResult containing extracted data.
      * @param customerId id of the customer to get data from.
-     * @param ownerId owner identification.
      * @return DocumentSubmitResult containing extracted data.
-     * @throws RemoteCommunicationException in case of the remote service error.
-     * @throws DocumentVerificationException if the extracted data could not be provided.
      */
-    private DocumentSubmitResult createSubmitResult(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException, DocumentVerificationException {
+    private DocumentSubmitResult createSubmitResult(final String customerId, final SubmittedDocument submitted) {
         final DocumentSubmitResult result = new DocumentSubmitResult();
         result.setUploadId(customerId);
-        result.setExtractedData(getExtractedData(customerId, ownerId));
+        result.setDocumentId(submitted.getDocumentId());
+        result.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
         return result;
     }
 
