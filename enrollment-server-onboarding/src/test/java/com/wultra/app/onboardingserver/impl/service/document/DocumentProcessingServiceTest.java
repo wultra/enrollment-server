@@ -19,26 +19,34 @@ package com.wultra.app.onboardingserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -46,6 +54,7 @@ import static org.mockito.Mockito.*;
  * @author Jan Pesek, jan.pesek@wultra.com
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
 class DocumentProcessingServiceTest {
 
@@ -61,20 +70,18 @@ class DocumentProcessingServiceTest {
     @Autowired
     IdentityVerificationRepository identityVerificationRepository;
 
+    @Autowired
+    DocumentResultRepository documentResultRepository;
+
     @Test
-    @Sql
+    @Sql(scripts = "DocumentProcessingServiceTest.testPairTwoSidedDocuments.sql")
     void testPairTwoSidedDocuments() {
         tested.pairTwoSidedDocuments(documentVerificationRepository.findAll());
         assertEquals("2", documentVerificationRepository.findById("1").map(DocumentVerificationEntity::getOtherSideId).get());
         assertEquals("1", documentVerificationRepository.findById("2").map(DocumentVerificationEntity::getOtherSideId).get());
     }
 
-    @Test
-    @Sql
-    void testSubmitDocuments() throws Exception {
-        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
-        assertNotNull(identityVerification);
-
+    private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {
         final DocumentSubmitRequest.DocumentMetadata page1 = new DocumentSubmitRequest.DocumentMetadata();
         page1.setFilename("id_card_front.png");
         page1.setType(DocumentType.ID_CARD);
@@ -85,16 +92,10 @@ class DocumentProcessingServiceTest {
         page2.setType(DocumentType.ID_CARD);
         page2.setSide(CardSide.BACK);
 
-        final DocumentSubmitRequest request = new DocumentSubmitRequest();
-        request.setProcessId("p1");
-        request.setResubmit(false);
-        request.setData("files".getBytes());
-        request.setDocuments(List.of(page1, page2));
+        return List.of(page1, page2);
+    }
 
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId("a1");
-        ownerId.setUserId("u1");
-
+    private List<Document> createIdCardData() {
         final Document documentPage1 = new Document();
         documentPage1.setData("img1".getBytes());
         documentPage1.setFilename("id_card_front.png");
@@ -103,27 +104,149 @@ class DocumentProcessingServiceTest {
         documentPage2.setData("img2".getBytes());
         documentPage2.setFilename("id_card_back.png");
 
+        return List.of(documentPage1, documentPage2);
+    }
 
-        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(List.of(documentPage1, documentPage2));
+    private OwnerId createOwnerId() {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId("a1");
+        ownerId.setUserId("u1");
+        return ownerId;
+    }
 
-        final SubmittedDocument submittedPage1 = new SubmittedDocument();
-        submittedPage1.setDocumentId(page1.getUploadId());
-        submittedPage1.setSide(page1.getSide());
-        submittedPage1.setType(page1.getType());
-        submittedPage1.setPhoto(Image.builder().filename("id_card_front.png").data("img1".getBytes()).build());
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
+    void testSubmitDocuments() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
 
-        final SubmittedDocument submittedPage2 = new SubmittedDocument();
-        submittedPage2.setDocumentId(page2.getUploadId());
-        submittedPage2.setSide(page2.getSide());
-        submittedPage2.setType(page2.getType());
-        submittedPage2.setPhoto(Image.builder().filename("id_card_back.png").data("back".getBytes()).build());
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        final List<Document> data = createIdCardData();
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(false);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
+
+        tested.submitDocuments(identityVerification, request, ownerId);
+
+        final List<DocumentVerificationEntity> documents = documentVerificationRepository.findAll();
+        assertEquals(2, documents.size());
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getSide)
+                .containsExactlyInAnyOrder(CardSide.FRONT, CardSide.BACK);
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getStatus)
+                .containsOnly(DocumentStatus.VERIFICATION_PENDING);
+
+        final List<DocumentResultEntity> results = new ArrayList<>();
+        documentResultRepository.findAll().forEach(results::add);
+        assertEquals(2, results.size());
+        assertThat(results)
+                .extracting(DocumentResultEntity::getDocumentVerification)
+                .extracting(DocumentVerificationEntity::getId)
+                .containsExactlyInAnyOrder(documents.stream().map(DocumentVerificationEntity::getId).toArray(String[]::new));
+        assertThat(results)
+                .extracting(DocumentResultEntity::getPhase)
+                .containsOnly(DocumentProcessingPhase.UPLOAD);
+    }
+
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
+    void testSubmitDocuments_missingData() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        final List<Document> data = Collections.emptyList();
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(false);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
 
         tested.submitDocuments(identityVerification, request, ownerId);
 
         List<DocumentVerificationEntity> documents = documentVerificationRepository.findAll();
-        assertEquals(2, documents.size());
-        assertEquals(2, documents.stream().map(DocumentVerificationEntity::getSide).distinct().toList().size());
+        assertEquals(1, documents.size());
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getStatus)
+                .containsExactlyInAnyOrder(DocumentStatus.FAILED);
+    }
 
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
+    void testResubmitDocuments() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        metadata.get(0).setOriginalDocumentId("original1");
+        metadata.get(1).setOriginalDocumentId("original2");
+        final List<Document> data = createIdCardData();
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(true);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
+
+        tested.submitDocuments(identityVerification, request, ownerId);
+        List<DocumentVerificationEntity> documents = documentVerificationRepository.findAll();
+        assertEquals(4, documents.size());
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getStatus)
+                .containsOnly(DocumentStatus.VERIFICATION_PENDING, DocumentStatus.DISPOSED);
+    }
+
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
+    void testResubmitDocuments_missingOriginalDocumentId() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        final List<Document> data = createIdCardData();
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(true);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
+
+        assertThrows(DocumentSubmitException.class, () -> tested.submitDocuments(identityVerification, request, ownerId));
+    }
+
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
+    void testResubmitDocuments_missingResubmitFlag() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        metadata.get(0).setOriginalDocumentId("original1");
+        metadata.get(1).setOriginalDocumentId("original2");
+        final List<Document> data = createIdCardData();
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(false);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
+
+        assertThrows(DocumentSubmitException.class, () -> tested.submitDocuments(identityVerification, request, ownerId));
     }
 
 }
