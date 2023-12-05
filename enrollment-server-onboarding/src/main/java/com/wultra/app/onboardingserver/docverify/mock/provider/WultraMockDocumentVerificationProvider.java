@@ -123,6 +123,11 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
+    public boolean shouldStoreSelfie() {
+        return true;
+    }
+
+    @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) {
         final String verificationId = UUID.randomUUID().toString();
 

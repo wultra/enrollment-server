@@ -49,6 +49,11 @@ class InnovatricsDocumentVerificationProvider implements DocumentVerificationPro
     }
 
     @Override
+    public boolean shouldStoreSelfie() {
+        return false;
+    }
+
+    @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         return null;
     }

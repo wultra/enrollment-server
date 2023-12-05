@@ -59,6 +59,15 @@ public interface DocumentVerificationProvider {
     DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws RemoteCommunicationException, DocumentVerificationException;
 
     /**
+     * A feature flag whether the selfie result gained by {@link PresenceCheckProvider} should be stored by {@link #submitDocuments(OwnerId, List)}.
+     * <p>
+     * Some implementation may require this cross-sending between providers by the Onboarding server, some providers may handle it internally.
+     *
+     * @return {@code true} if cross-sending between providers should be handled by Onboarding server, {@code false} otherwise.
+     */
+    boolean shouldStoreSelfie();
+
+    /**
      * Analyze previously submitted documents, detect frauds, return binary result
      *
      * @param id Owner identification.
