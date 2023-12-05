@@ -104,7 +104,11 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
+    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
+        if (documents.stream().anyMatch(doc -> "throw.exception".equals(doc.getPhoto().getFilename()))) {
+            throw new DocumentVerificationException("Filename to throw an exception is present in documents.");
+        }
+
         final List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(this::toDocumentSubmitResult)
                 .toList();

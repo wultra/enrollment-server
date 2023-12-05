@@ -65,7 +65,7 @@ class WultraMockDocumentVerificationProviderTest {
     }
 
     @Test
-    void checkDocumentUploadTest() {
+    void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
 

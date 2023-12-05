@@ -19,8 +19,7 @@ package com.wultra.app.onboardingserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentProcessingPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
@@ -28,8 +27,6 @@ import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepos
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
@@ -152,6 +149,47 @@ class DocumentProcessingServiceTest {
         assertThat(results)
                 .extracting(DocumentResultEntity::getPhase)
                 .containsOnly(DocumentProcessingPhase.UPLOAD);
+    }
+
+    @Test
+    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
+    void testSubmitDocuments_providerThrows() throws Exception {
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final List<DocumentSubmitRequest.DocumentMetadata> metadata = createIdCardMetadata();
+        metadata.get(1).setFilename("throw.exception");
+        final List<Document> data = createIdCardData();
+        data.get(1).setFilename("throw.exception");
+        final OwnerId ownerId = createOwnerId();
+
+        final DocumentSubmitRequest request = new DocumentSubmitRequest();
+        request.setProcessId("p1");
+        request.setResubmit(false);
+        request.setData("files".getBytes());
+        request.setDocuments(metadata);
+        when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
+
+        tested.submitDocuments(identityVerification, request, ownerId);
+
+        final List<DocumentVerificationEntity> documents = documentVerificationRepository.findAll();
+        assertEquals(2, documents.size());
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getSide)
+                .containsExactlyInAnyOrder(CardSide.FRONT, CardSide.BACK);
+        assertThat(documents)
+                .extracting(DocumentVerificationEntity::getStatus)
+                .containsOnly(DocumentStatus.FAILED);
+
+        final List<DocumentResultEntity> results = new ArrayList<>();
+        documentResultRepository.findAll().forEach(results::add);
+        assertEquals(2, results.size());
+        assertThat(results)
+                .extracting(DocumentResultEntity::getErrorDetail)
+                .containsOnly("documentVerificationFailed");
+        assertThat(results)
+                .extracting(DocumentResultEntity::getErrorOrigin)
+                .containsOnly(ErrorOrigin.DOCUMENT_VERIFICATION);
     }
 
     @Test
