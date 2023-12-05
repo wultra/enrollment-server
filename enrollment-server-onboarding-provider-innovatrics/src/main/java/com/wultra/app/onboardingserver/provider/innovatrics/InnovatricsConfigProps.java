@@ -67,7 +67,7 @@ class InnovatricsConfigProps {
         /**
          * Presence check minimal score threshold.
          */
-        private double score;
+        private double score = 0.875;
     }
 
 }
