@@ -127,7 +127,7 @@ class InnovatricsRestApiServiceTest {
 
         final RecordedRequest recordedRequest = mockWebServer.takeRequest(1L, TimeUnit.SECONDS);
         assertNotNull(recordedRequest);
-        assertEquals("PUT /customers/123/document/pages HTTP/1.1", recordedRequest.getRequestLine());
+        assertEquals("PUT /api/v1/customers/123/document/pages HTTP/1.1", recordedRequest.getRequestLine());
     }
 
     private OwnerId createOwnerId() {

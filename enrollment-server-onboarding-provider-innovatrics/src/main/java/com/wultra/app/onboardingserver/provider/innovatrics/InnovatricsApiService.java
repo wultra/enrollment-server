@@ -237,7 +237,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<CreateCustomerResponse> createCustomer(final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers";
+        final String apiPath = "/api/v1/customers";
 
         try {
             logger.info("Creating customer, {}", ownerId);
@@ -261,7 +261,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<CreateDocumentResponse> createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s/document".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s/document".formatted(customerId);
 
         final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
         classificationAdvice.setTypes(List.of(convertType(documentType)));
@@ -294,7 +294,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<CreateDocumentPageResponse> provideDocumentPage(final String customerId, final CardSide side, final byte[] data, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s/document/pages".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s/document/pages".formatted(customerId);
 
         final DocumentPageClassificationAdvice classificationAdvice = new DocumentPageClassificationAdvice();
         classificationAdvice.setPageTypes(List.of(convertSide(side)));
@@ -329,7 +329,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<GetCustomerResponse> getCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s".formatted(customerId);
 
         try {
             logger.info("Getting details about customer {}, {}", customerId, ownerId);
@@ -352,7 +352,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<ImageCrop> getDocumentPortrait(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s/document/portrait".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s/document/portrait".formatted(customerId);
 
         try {
             logger.info("Getting document portrait of customer {}, {}", customerId, ownerId);
@@ -379,7 +379,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public Optional<DocumentInspectResponse> inspectDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s/document/inspect".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s/document/inspect".formatted(customerId);
 
         try {
             logger.info("Getting document inspect of customer {}, {}", customerId, ownerId);
@@ -401,7 +401,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public void deleteCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s".formatted(customerId);
 
         try {
             logger.info("Deleting customer {}, {}", customerId, ownerId);
@@ -422,7 +422,7 @@ class InnovatricsApiService {
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
     public void deleteDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
-        final String apiPath = "/customers/%s/document".formatted(customerId);
+        final String apiPath = "/api/v1/customers/%s/document".formatted(customerId);
 
         try {
             logger.info("Deleting document of customer {}, {}", customerId, ownerId);
