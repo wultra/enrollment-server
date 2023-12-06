@@ -157,9 +157,9 @@ class InnovatricsApiService {
             logger.trace("{} response: {}", apiPath, response);
         } catch (RestClientException e) {
             throw new RemoteCommunicationException(
-                    String.format("Failed REST call to delete selfie for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+                    String.format("Failed REST call to liveness creation for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
         } catch (Exception e) {
-            throw new RemoteCommunicationException("Unexpected error when deleting selfie for customerId=" + customerId, e);
+            throw new RemoteCommunicationException("Unexpected error when creating liveness for customerId=" + customerId, e);
         }
     }
 
