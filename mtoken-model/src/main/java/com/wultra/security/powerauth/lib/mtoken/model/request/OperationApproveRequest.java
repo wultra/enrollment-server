@@ -60,16 +60,16 @@ public class OperationApproveRequest {
         private Type type;
 
         /**
-         * When OTP obtained by the client. An optional hint for possible better estimation of the time shift correction.
+         * When OTP received by the client. An optional hint for possible better estimation of the time shift correction.
          */
         @Schema(description = "When OTP requested by the client. An optional hint for possible better estimation of the time shift correction.")
-        private Instant timestampRequested;
+        private Instant timestampReceived;
 
         /**
-         * When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.
+         * When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.
          */
         @Schema(description = "When OTP signed by the client. An optional hint for possible better estimation of the time shift correction.")
-        private Instant timestampSigned;
+        private Instant timestampSent;
 
         public enum Type {
             QR_CODE,
