@@ -64,6 +64,8 @@ class InnovatricsConfigProps {
 
     private PresenceCheckConfiguration presenceCheckConfiguration;
 
+    private DocumentVerificationConfiguration documentVerificationConfiguration;
+
     @Getter @Setter
     public static class PresenceCheckConfiguration {
         /**
@@ -72,9 +74,12 @@ class InnovatricsConfigProps {
         private double score = 0.875;
     }
 
-    /**
-     * Identifies expected document countries
-     */
-    private List<String> documentCountries;
+    @Getter @Setter
+    public static class DocumentVerificationConfiguration {
+        /**
+         * Identifies expected document countries of issue
+         */
+        private List<String> documentCountries;
+    }
 
 }

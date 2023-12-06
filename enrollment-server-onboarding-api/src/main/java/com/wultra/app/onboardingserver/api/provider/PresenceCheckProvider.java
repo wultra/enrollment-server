@@ -44,13 +44,13 @@ public interface PresenceCheckProvider {
     void initPresenceCheck(OwnerId id, Image photo) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
-     * A feature flag whether the trusted photo of the user should be passed to {@link #initPresenceCheck(OwnerId, Image)}.
+     * Configuration flag setting where the provider implementation expects the trusted photo of the user.
      * <p>
      * Some implementation may require specific source to be called by Onboarding server, some providers may handle it internally.
      *
-     * @return {@code true} if the trusted photo should be provided, {@code false} otherwise.
+     * @return Source where the trusted photo is expected.
      */
-    boolean shouldProvideTrustedPhoto();
+    TrustedPhotoSource trustedPhotoSource();
 
     /**
      * Starts the presence check process. The process has to be initialized before this call.
@@ -82,4 +82,18 @@ public interface PresenceCheckProvider {
      */
     void cleanupIdentityData(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException;
 
+    /**
+     * Return type for {@link #trustedPhotoSource()}.
+     */
+    enum TrustedPhotoSource {
+        /**
+         * If the trusted photo should be passed in {@link #initPresenceCheck}
+         */
+        IMAGE,
+
+        /**
+         * If the trusted photo is passed via reference in {@link SessionInfo}
+         */
+        REFERENCE
+    }
 }

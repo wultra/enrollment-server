@@ -44,10 +44,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
@@ -64,6 +61,8 @@ public class PresenceCheckService {
 
     private static final String SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
     private static final String SESSION_ATTRIBUTE_IMAGE_UPLOADED = "imageUploaded";
+    private static final String SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE = "primaryDocumentReference";
+    private static final String SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES = "otherDocumentsReferences";
 
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -205,7 +204,7 @@ public class PresenceCheckService {
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
-    private void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+     protected void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
             throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
 
         if (!idVerification.isPresenceCheckInitialized()) {
@@ -216,21 +215,39 @@ public class PresenceCheckService {
             }
 
             final Optional<Image> photo = fetchTrustedPhoto(ownerId, idVerification);
+            setIdentityDocumentReferences(ownerId, idVerification);
             presenceCheckProvider.initPresenceCheck(ownerId, photo.orElse(null));
             logger.info("Presence check initialized, {}", ownerId);
             updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
             auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
+        } else {
+            System.out.println("NOT INIT");
         }
     }
 
     private Optional<Image> fetchTrustedPhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, RemoteCommunicationException, PresenceCheckException {
-        if (presenceCheckProvider.shouldProvideTrustedPhoto()) {
+        if (PresenceCheckProvider.TrustedPhotoSource.IMAGE.equals(presenceCheckProvider.trustedPhotoSource())) {
             final Image photo = fetchTrustedPhotoFromDocumentVerifier(ownerId, idVerification);
             final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
             return Optional.of(upscaledPhoto);
         } else {
            return Optional.empty();
         }
+    }
+
+    private void setIdentityDocumentReferences(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, PresenceCheckException {
+        if (!PresenceCheckProvider.TrustedPhotoSource.REFERENCE.equals(presenceCheckProvider.trustedPhotoSource())) {
+            return;
+        }
+
+        final List<DocumentVerificationEntity> docsWithPhoto = getDocsWithPhoto(idVerification, ownerId);
+        final String primaryDocReference = getPreferredDocWithPhoto(docsWithPhoto, ownerId).getPhotoId();
+        final List<String> otherDocsReferences = docsWithPhoto.stream()
+                .map(DocumentVerificationEntity::getPhotoId)
+                .filter(id -> !Objects.equals(id, primaryDocReference))
+                .toList();
+        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference));
+        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
     }
 
     /**
@@ -264,6 +281,15 @@ public class PresenceCheckService {
     protected Image fetchTrustedPhotoFromDocumentVerifier(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
             throws DocumentVerificationException, RemoteCommunicationException {
 
+        final List<DocumentVerificationEntity> docsWithPhoto = getDocsWithPhoto(idVerification, ownerId);
+        final DocumentVerificationEntity preferredDocWithPhoto = getPreferredDocWithPhoto(docsWithPhoto, ownerId);
+        logger.info("Selected {} as the source of person photo, {}", preferredDocWithPhoto, ownerId);
+        String photoId = preferredDocWithPhoto.getPhotoId();
+        return identityVerificationService.getPhotoById(photoId, ownerId);
+    }
+
+    private List<DocumentVerificationEntity> getDocsWithPhoto(final IdentityVerificationEntity idVerification,
+                                                                final OwnerId ownerId) throws DocumentVerificationException {
         final List<DocumentVerificationEntity> docsWithPhoto = documentVerificationRepository.findAllWithPhoto(idVerification);
         if (docsWithPhoto.isEmpty()) {
             throw new DocumentVerificationException("Unable to initialize presence check - missing person photo, " + ownerId);
@@ -273,23 +299,23 @@ public class PresenceCheckService {
                 Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
         );
 
-        DocumentVerificationEntity preferredDocWithPhoto = null;
+        return docsWithPhoto;
+    }
+
+    private DocumentVerificationEntity getPreferredDocWithPhoto(final List<DocumentVerificationEntity> docsWithPhoto,
+                                                                final OwnerId ownerId) {
+
         for (DocumentType documentType : DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO) {
             Optional<DocumentVerificationEntity> docEntity = docsWithPhoto.stream()
                     .filter(value -> value.getType() == documentType)
                     .findFirst();
             if (docEntity.isPresent()) {
-                preferredDocWithPhoto = docEntity.get();
-                break;
+                return docEntity.get();
             }
         }
-        if (preferredDocWithPhoto == null) {
-            logger.warn("Unable to select a source of person photo to initialize presence check, {}", ownerId);
-            preferredDocWithPhoto = docsWithPhoto.get(0);
-        }
-        logger.info("Selected {} as the source of person photo, {}", preferredDocWithPhoto, ownerId);
-        String photoId = preferredDocWithPhoto.getPhotoId();
-        return identityVerificationService.getPhotoById(photoId, ownerId);
+
+        logger.warn("Unable to select a source of person photo to initialize presence check, {}", ownerId);
+        return docsWithPhoto.get(0);
     }
 
     private void evaluatePresenceCheckResult(OwnerId ownerId,

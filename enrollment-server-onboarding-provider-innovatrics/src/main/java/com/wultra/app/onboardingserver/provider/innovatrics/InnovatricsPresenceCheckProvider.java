@@ -49,7 +49,8 @@ import java.util.Optional;
 @AllArgsConstructor
 class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
 
-    private static final String INNOVATRICS_CUSTOMER_ID = "InnovatricsCustomerId";
+    private static final String PRIMARY_CUSTOMER_ID = "primaryDocumentReference";
+    private static final String OTHER_CUSTOMER_IDS = "otherDocumentsReferences";
 
     private final InnovatricsApiService innovatricsApiService;
 
@@ -61,8 +62,8 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public boolean shouldProvideTrustedPhoto() {
-        return false;
+    public TrustedPhotoSource trustedPhotoSource() {
+        return TrustedPhotoSource.REFERENCE;
     }
 
     @Override
@@ -152,8 +153,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     private static String fetchCustomerId(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException {
-        // TODO (racansky, 2023-11-28) discuss the format with Jan Pesek
-        final String customerId = (String) sessionInfo.getSessionAttributes().get(INNOVATRICS_CUSTOMER_ID);
+        final String customerId = (String) sessionInfo.getSessionAttributes().get(PRIMARY_CUSTOMER_ID);
         if (Strings.isNullOrEmpty(customerId)) {
             throw new PresenceCheckException("Missing a customer ID value for calling Innovatrics, " + id);
         }

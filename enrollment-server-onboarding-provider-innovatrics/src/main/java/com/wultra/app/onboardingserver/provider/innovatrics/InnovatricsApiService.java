@@ -50,6 +50,7 @@ import java.util.Optional;
  * Both providers, document verifier and presence check, must be configured to {@code innovatrics}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
+ * @author Jan Pesek, jan.pesek@wultra.com
  */
 @ConditionalOnExpression("""
         '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and '${enrollment-server-onboarding.document-verification.provider}' == 'innovatrics'
@@ -242,7 +243,7 @@ class InnovatricsApiService {
         try {
             logger.info("Creating customer, {}", ownerId);
             logger.debug("Calling {}", apiPath);
-            final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for creating customer, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -265,7 +266,7 @@ class InnovatricsApiService {
 
         final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
         classificationAdvice.setTypes(List.of(convertType(documentType)));
-        classificationAdvice.setCountries(configProps.getDocumentCountries());
+        classificationAdvice.setCountries(configProps.getDocumentVerificationConfiguration().getDocumentCountries());
         final DocumentAdvice advice = new DocumentAdvice();
         advice.setClassification(classificationAdvice);
         final CreateDocumentRequest request = new CreateDocumentRequest();
@@ -274,7 +275,7 @@ class InnovatricsApiService {
         try {
             logger.info("Creating new document of type {} for customer {}, {}", documentType, customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
-            final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for creating document, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -311,7 +312,7 @@ class InnovatricsApiService {
         try {
             logger.info("Providing {} side document page for customer {}, {}", convertSide(side), customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
-            final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for providing document page, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -384,7 +385,7 @@ class InnovatricsApiService {
         try {
             logger.info("Getting document inspect of customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
-            final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for getting document inspect, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
