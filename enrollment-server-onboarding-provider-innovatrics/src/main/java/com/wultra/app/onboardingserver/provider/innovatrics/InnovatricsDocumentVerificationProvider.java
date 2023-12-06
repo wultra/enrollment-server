@@ -123,7 +123,9 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         final DocumentsVerificationResult results = new DocumentsVerificationResult();
         results.setResults(new ArrayList<>());
 
-        for (String customerId : uploadIds) {
+        // Pages of the same document have same uploadId (= customerId), no reason to generate verification for each one.
+        final List<String> distinctUploadIds = uploadIds.stream().distinct().toList();
+        for (String customerId : distinctUploadIds) {
             final DocumentInspectResponse response = getDocumentInspection(customerId, id);
             final DocumentVerificationResult result = createVerificationResult(customerId, response);
             results.getResults().add(result);
@@ -159,9 +161,11 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     @Override
     public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
+        // Pages of the same document have same uploadId (= customerId), no reason to call delete for each one.
+        final List<String> distinctUploadIds = uploadIds.stream().distinct().toList();
         logger.info("Invoked cleanupDocuments, {}", id);
-        for (String customerId : uploadIds) {
-            innovatricsApiService.deleteDocument(customerId, id);
+        for (String customerId : distinctUploadIds) {
+            innovatricsApiService.deleteCustomer(customerId, id);
         }
     }
 

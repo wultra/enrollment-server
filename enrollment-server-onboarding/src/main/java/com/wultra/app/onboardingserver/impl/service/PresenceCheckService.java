@@ -220,8 +220,6 @@ public class PresenceCheckService {
             logger.info("Presence check initialized, {}", ownerId);
             updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
             auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
-        } else {
-            System.out.println("NOT INIT");
         }
     }
 
@@ -245,7 +243,7 @@ public class PresenceCheckService {
         final List<String> otherDocsReferences = docsWithPhoto.stream()
                 .map(DocumentVerificationEntity::getPhotoId)
                 .filter(id -> !Objects.equals(id, primaryDocReference))
-                .toList();
+                .distinct().toList();
         updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference));
         updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
     }
