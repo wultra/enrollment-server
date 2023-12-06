@@ -395,8 +395,7 @@ Claim an operation for a user.
 ```json
 {
   "requestObject": {
-    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa",
-    "userId": "user12345"
+    "id": "7e0ba60f-bf22-4ff5-b999-2733784e5eaa"
   }
 }
 ```
