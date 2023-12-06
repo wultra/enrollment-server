@@ -40,6 +40,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.util.Base64;
 
@@ -80,6 +81,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
 
     @Override
     public void initPresenceCheck(final OwnerId id, final Image photo) throws PresenceCheckException, RemoteCommunicationException {
+        Assert.notNull(photo, "iProov presence check requires trusted photo");
         iProovRestApiService.deleteUserIfAlreadyExists(id);
 
         final ResponseEntity<String> responseEntityToken = callGenerateEnrolToken(id);
@@ -122,6 +124,11 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
         if (!enrolResponse.getSuccess()) {
             throw new PresenceCheckException("Not successful enrol of a user image to iProov, " + id);
         }
+    }
+
+    @Override
+    public boolean shouldProvideTrustedPhoto() {
+        return true;
     }
 
     @Override
@@ -210,7 +217,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(final OwnerId id) {
+    public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) {
         // https://docs.iproov.com/docs/Content/ImplementationGuide/security/data-retention.htm
         logger.info("No data deleted, retention policy left to iProov server, {}", id);
     }

@@ -60,4 +60,14 @@ class InnovatricsConfigProps {
      */
     private RestClientConfiguration restClientConfig;
 
+    private PresenceCheckConfiguration presenceCheckConfiguration;
+
+    @Getter @Setter
+    public static class PresenceCheckConfiguration {
+        /**
+         * Presence check minimal score threshold.
+         */
+        private double score = 0.875;
+    }
+
 }

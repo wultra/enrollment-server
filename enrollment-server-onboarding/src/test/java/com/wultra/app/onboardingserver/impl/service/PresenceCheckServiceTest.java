@@ -16,64 +16,81 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import org.junit.jupiter.api.BeforeEach;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.mockito.Mockito.*;
 
 /**
+ * Test for {@link PresenceCheckService}.
+ *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@ExtendWith(MockitoExtension.class)
 class PresenceCheckServiceTest {
 
     @Mock
     private IdentityVerificationService identityVerificationService;
 
-    @InjectMocks
-    private PresenceCheckService service;
+    @Mock
+    private DocumentVerificationRepository documentVerificationRepository;
 
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @InjectMocks
+    private PresenceCheckService tested;
 
     @Test
-    void selectPhotoForPresenceCheckTest() throws Exception {
-        OwnerId ownerId = new OwnerId();
+    void testFetchTrustedPhotoFromDocumentVerifier_reverseOrder() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
-        // Two documents with person photo in reversed order of preference
-        DocumentVerificationEntity docPhotoDrivingLicense = new DocumentVerificationEntity();
+        final DocumentVerificationEntity docPhotoDrivingLicense = new DocumentVerificationEntity();
         docPhotoDrivingLicense.setPhotoId("drivingLicensePhotoId");
         docPhotoDrivingLicense.setType(DocumentType.DRIVING_LICENSE);
 
-        DocumentVerificationEntity docPhotoIdCard = new DocumentVerificationEntity();
+        final DocumentVerificationEntity docPhotoIdCard = new DocumentVerificationEntity();
         docPhotoIdCard.setPhotoId("idCardPhotoId");
         docPhotoIdCard.setType(DocumentType.ID_CARD);
 
-        List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
+        final List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
 
-        service.selectPhotoForPresenceCheck(ownerId, documentsReversedOrder);
-        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId)).thenReturn(Image.builder().build());
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification))
+                .thenReturn(documentsReversedOrder);
+        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId))
+                .thenReturn(Image.builder().build());
+
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
+
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoIdCard.getPhotoId(), ownerId);
+    }
 
-        // Unknown document with a person photo
-        DocumentVerificationEntity docPhotoUnknown = new DocumentVerificationEntity();
+    @Test
+    void testFetchTrustedPhotoFromDocumentVerifier_unknownDocument() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+
+        final DocumentVerificationEntity docPhotoUnknown = new DocumentVerificationEntity();
         docPhotoUnknown.setPhotoId("unknownPhotoId");
         docPhotoUnknown.setType(DocumentType.UNKNOWN);
 
-        List<DocumentVerificationEntity> documentUnknown = List.of(docPhotoUnknown);
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification))
+                .thenReturn(List.of(docPhotoUnknown));
+        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId))
+                .thenReturn(Image.builder().build());
 
-        service.selectPhotoForPresenceCheck(ownerId, documentUnknown);
-        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId)).thenReturn(Image.builder().build());
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
+
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoUnknown.getPhotoId(), ownerId);
     }
 
