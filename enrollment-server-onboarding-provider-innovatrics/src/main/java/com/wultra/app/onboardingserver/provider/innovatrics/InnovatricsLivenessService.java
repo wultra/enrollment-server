@@ -38,6 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
+ * Service providing Innovatrics business features beyond {@link InnovatricsPresenceCheckProvider}.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
