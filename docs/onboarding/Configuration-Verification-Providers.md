@@ -6,6 +6,7 @@ This document describes configuration of providers for personal identity documen
 
 The document verification process is currently supported for following providers:
 - [ZenID](https://zenid.trask.cz/) - use value `zenid` in configuration
+- [Innovatrics](https://www.innovatrics.com/) - use value `innovatrics` in configuration
 - Mock - useful for simple testing and local runs - use value `mock` in configuration
 
 ### ZenID
@@ -35,6 +36,7 @@ When calling `document-verification/init-sdk` following implementation fields ar
 
 The document verification process is currently supported for following providers:
 - [iProov](https://www.iproov.com/) - use value `iproov` in configuration
+- [Innovatrics](https://www.innovatrics.com/) - use value `innovatrics` in configuration
 - Mock - useful for simple testing and local runs - use value `mock` in configuration
 
 #### Configuration
