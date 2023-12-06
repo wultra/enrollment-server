@@ -278,7 +278,7 @@ public class MobileTokenService {
      */
     public Operation getOperationDetail(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
         final OperationDetailResponse operationDetail = getOperationDetailInternal(operationId);
-        if (!userId.equals(operationDetail.getUserId())) {
+        if (userId != null && !userId.equals(operationDetail.getUserId())) {
             logger.warn("User ID from operation does not match authenticated user ID.");
             throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Invalid request");
         }
