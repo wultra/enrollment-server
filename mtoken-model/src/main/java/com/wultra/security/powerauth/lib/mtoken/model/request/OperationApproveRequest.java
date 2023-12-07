@@ -66,9 +66,9 @@ public class OperationApproveRequest {
         private Instant timestampReceived;
 
         /**
-         * When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.
+         * When OTP is used by the client as part of a signed message. An optional hint for possible better estimation of the time shift correction.
          */
-        @Schema(description = "When OTP sent by the client. An optional hint for possible better estimation of the time shift correction.")
+        @Schema(description = "When OTP is used by the client as part of a signed message. An optional hint for possible better estimation of the time shift correction.")
         private Instant timestampSent;
 
         public enum Type {
