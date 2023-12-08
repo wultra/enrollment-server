@@ -124,9 +124,11 @@ public class DocumentProcessingService {
         final var documentsByType = request.getDocuments().stream()
                 .collect(groupingBy(DocumentSubmitRequest.DocumentMetadata::getType));
 
-        return documentsByType.values().stream()
-                .map(v -> submitDocument(v, documents, idVerification, ownerId))
-                .flatMap(List::stream).toList();
+        final List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
+        for (var docMetadataList : documentsByType.values()) {
+            docVerifications.addAll(submitDocument(docMetadataList, documents, idVerification, ownerId));
+        }
+        return docVerifications;
     }
 
     /**
