@@ -204,9 +204,9 @@ public class DocumentProcessingService {
             docResult.setDocumentVerification(docVerification);
         }
 
-        documentVerificationRepository.saveAll(docVerificationsMap.values().stream().toList());
+        documentVerificationRepository.saveAll(docVerificationsMap.values());
         documentResultRepository.saveAll(docResults);
-        logger.debug("Processed submit result of documents {}, {}", docVerificationsMap.values().stream().toList(), ownerId);
+        logger.debug("Processed submit result of documents {}, {}", docVerificationsMap.values(), ownerId);
     }
 
     /**
