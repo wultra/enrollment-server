@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
 /**
  * Innovatrics configuration.
@@ -59,7 +58,6 @@ class InnovatricsConfig {
         final HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + configProps.getServiceToken());
-        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
         final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
         restClientConfiguration.setBaseUrl(serviceBaseUrl);

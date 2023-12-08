@@ -37,8 +37,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Optional;
@@ -58,10 +56,6 @@ import java.util.Optional;
 @Service
 @Slf4j
 class InnovatricsApiService {
-
-    private static final MultiValueMap<String, String> EMPTY_ADDITIONAL_HEADERS = new LinkedMultiValueMap<>();
-
-    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
     /**
      * REST client for Innovatrics calls.
@@ -94,7 +88,7 @@ class InnovatricsApiService {
         try {
             logger.info("Calling liveness/evaluation, {}", ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
-            final ResponseEntity<EvaluateCustomerLivenessResponse> response = restClient.post(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<EvaluateCustomerLivenessResponse> response = restClient.post(apiPath, request, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for liveness/evaluation, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -113,7 +107,7 @@ class InnovatricsApiService {
         try {
             logger.info("Calling /inspect, {}", ownerId);
             logger.debug("Calling {}", apiPath);
-            final ResponseEntity<CustomerInspectResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CustomerInspectResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for /inspect, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -243,7 +237,7 @@ class InnovatricsApiService {
         try {
             logger.info("Creating customer, {}", ownerId);
             logger.debug("Calling {}", apiPath);
-            final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateCustomerResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for creating customer, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -275,7 +269,7 @@ class InnovatricsApiService {
         try {
             logger.info("Creating new document of type {} for customer {}, {}", documentType, customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
-            final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateDocumentResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for creating document, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -312,7 +306,7 @@ class InnovatricsApiService {
         try {
             logger.info("Providing {} side document page for customer {}, {}", convertSide(side), customerId, ownerId);
             logger.debug("Calling {}, {}", apiPath, request);
-            final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<CreateDocumentPageResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for providing document page, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
@@ -385,7 +379,7 @@ class InnovatricsApiService {
         try {
             logger.info("Getting document inspect of customer {}, {}", customerId, ownerId);
             logger.debug("Calling {}", apiPath);
-            final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, EMPTY_QUERY_PARAMS, EMPTY_ADDITIONAL_HEADERS, new ParameterizedTypeReference<>() {});
+            final ResponseEntity<DocumentInspectResponse> response = restClient.post(apiPath, null, new ParameterizedTypeReference<>() {});
             logger.info("Got {} for getting document inspect, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
