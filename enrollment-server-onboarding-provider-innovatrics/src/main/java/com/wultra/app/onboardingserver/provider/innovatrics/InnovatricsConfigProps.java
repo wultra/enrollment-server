@@ -77,7 +77,7 @@ class InnovatricsConfigProps {
     @Getter @Setter
     public static class DocumentVerificationConfiguration {
         /**
-         * Identifies expected document countries of issue
+         * Identifies expected document countries of issue in ISO 3166-1 alpha-3 format
          */
         private List<String> documentCountries;
     }
