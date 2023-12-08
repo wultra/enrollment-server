@@ -61,24 +61,24 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {
         logger.warn("Unexpected state of document {}, {}", document, id);
-        throw new NotImplementedException("Method checkDocumentUpload is not supported by Innovatrics provider.");
+        throw new UnsupportedOperationException("Method checkDocumentUpload is not supported by Innovatrics provider.");
     }
 
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws RemoteCommunicationException, DocumentVerificationException {
         if (CollectionUtils.isEmpty(documents)) {
-            logger.info("Empty documents list passed to document provider.");
+            logger.info("Empty documents list passed to document provider, {}", id);
             return new DocumentsSubmitResult();
         }
 
         final DocumentType documentType = documents.get(0).getType();
         if (DocumentType.SELFIE_PHOTO.equals(documentType)) {
-            logger.info("Selfie photo passed as a document, {}", id);
+            logger.debug("Selfie photo passed as a document, {}", id);
             throw new DocumentVerificationException("Selfie photo cannot be submitted as a document");
         }
 
         if (DocumentType.SELFIE_VIDEO.equals(documentType)) {
-            logger.info("Selfie video passed as a document, {}", id);
+            logger.debug("Selfie video passed as a document, {}", id);
             throw new DocumentVerificationException("Selfie video cannot be submitted as a document");
         }
 
@@ -150,13 +150,13 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     @Override
     public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) throws RemoteCommunicationException, DocumentVerificationException {
         logger.warn("Unexpected state of documents with verificationId={}, {}", verificationId, id);
-        throw new NotImplementedException("Method getVerificationResult is not supported by Innovatrics provider.");
+        throw new UnsupportedOperationException("Method getVerificationResult is not supported by Innovatrics provider.");
     }
 
     @Override
     public Image getPhoto(String photoId) throws RemoteCommunicationException, DocumentVerificationException {
         logger.warn("Unexpected document portrait query for customerId={}", photoId);
-        throw new NotImplementedException("Method getPhoto is not implemented by Innovatrics provider.");
+        throw new UnsupportedOperationException("Method getPhoto is not implemented by Innovatrics provider.");
     }
 
     @Override
@@ -375,7 +375,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         try {
             return objectMapper.writeValueAsString(src);
         } catch (JsonProcessingException e) {
-            throw new DocumentVerificationException("Unexpected error when serializing data");
+            throw new DocumentVerificationException("Unexpected error when serializing data", e);
         }
     }
 
@@ -383,7 +383,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         try {
             return objectMapper.readValue(src, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
-            throw new DocumentVerificationException("Unexpected error when deserializing data");
+            throw new DocumentVerificationException("Unexpected error when deserializing data", e);
         }
     }
 

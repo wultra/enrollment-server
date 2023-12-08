@@ -360,6 +360,7 @@ class InnovatricsApiService {
         } catch (RestClientException e) {
             if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
                 // API returns 404 in case of missing portrait photo.
+                logger.debug("Missing portrait photo for customer {}, {}", customerId, ownerId);
                 return Optional.empty();
             }
             throw new RemoteCommunicationException("REST API call failed when getting customer portrait, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);

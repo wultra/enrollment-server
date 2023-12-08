@@ -237,6 +237,7 @@ public class DocumentProcessingService {
      */
     private void handleResubmit(final OwnerId ownerId, final String originalDocumentId, final DocumentVerificationEntity docVerification) {
         if (Strings.isNullOrEmpty(originalDocumentId)) {
+            logger.debug("Document {} is not a resubmit {}", docVerification, ownerId);
             return;
         }
 
