@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -27,7 +28,6 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -93,10 +93,9 @@ class InnovatricsDocumentVerificationProviderTest {
         assertFalse(StringUtils.hasText(result.getRejectReason()));
         assertNotNull(result.getExtractedData());
 
-        JSONObject json = new JSONObject(result.getExtractedData());
-        assertEquals("42", json.getJSONObject("customer").getJSONObject("age").getString("visualZone"));
-        assertEquals("40", json.getJSONObject("customer").getJSONObject("age").getString("documentPortrait"));
-        assertEquals("SPECIMEN", json.getJSONObject("customer").getJSONObject("surname").getString("visualZone"));
+        assertEquals("42", JsonPath.read(result.getExtractedData(), "$.customer.age.visualZone"));
+        assertEquals("40", JsonPath.read(result.getExtractedData(), "$.customer.age.documentPortrait"));
+        assertEquals("SPECIMEN", JsonPath.read(result.getExtractedData(), "$.customer.surname.visualZone"));
     }
 
     @Test

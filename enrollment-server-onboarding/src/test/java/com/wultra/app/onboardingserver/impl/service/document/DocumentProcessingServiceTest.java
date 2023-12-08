@@ -53,6 +53,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ActiveProfiles("test")
+@Sql
 class DocumentProcessingServiceTest {
 
     @MockBean
@@ -71,48 +72,14 @@ class DocumentProcessingServiceTest {
     DocumentResultRepository documentResultRepository;
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testPairTwoSidedDocuments.sql")
+    @Sql
     void testPairTwoSidedDocuments() {
         tested.pairTwoSidedDocuments(documentVerificationRepository.findAll());
         assertEquals("2", documentVerificationRepository.findById("1").map(DocumentVerificationEntity::getOtherSideId).get());
         assertEquals("1", documentVerificationRepository.findById("2").map(DocumentVerificationEntity::getOtherSideId).get());
     }
 
-    private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {
-        final DocumentSubmitRequest.DocumentMetadata page1 = new DocumentSubmitRequest.DocumentMetadata();
-        page1.setFilename("id_card_front.png");
-        page1.setType(DocumentType.ID_CARD);
-        page1.setSide(CardSide.FRONT);
-
-        final DocumentSubmitRequest.DocumentMetadata page2 = new DocumentSubmitRequest.DocumentMetadata();
-        page2.setFilename("id_card_back.png");
-        page2.setType(DocumentType.ID_CARD);
-        page2.setSide(CardSide.BACK);
-
-        return List.of(page1, page2);
-    }
-
-    private List<Document> createIdCardData() {
-        final Document documentPage1 = new Document();
-        documentPage1.setData("img1".getBytes());
-        documentPage1.setFilename("id_card_front.png");
-
-        final Document documentPage2 = new Document();
-        documentPage2.setData("img2".getBytes());
-        documentPage2.setFilename("id_card_back.png");
-
-        return List.of(documentPage1, documentPage2);
-    }
-
-    private OwnerId createOwnerId() {
-        final OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId("a1");
-        ownerId.setUserId("u1");
-        return ownerId;
-    }
-
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
     void testSubmitDocuments() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -152,7 +119,6 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
     void testSubmitDocuments_providerThrows() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -193,7 +159,6 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testSubmitDocuments.sql")
     void testSubmitDocuments_missingData() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -219,7 +184,7 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
+    @Sql
     void testResubmitDocuments() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -246,7 +211,6 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
     void testResubmitDocuments_missingOriginalDocumentId() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -262,11 +226,12 @@ class DocumentProcessingServiceTest {
         request.setDocuments(metadata);
         when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
 
-        assertThrows(DocumentSubmitException.class, () -> tested.submitDocuments(identityVerification, request, ownerId));
+        final DocumentSubmitException exception = assertThrows(DocumentSubmitException.class,
+                () -> tested.submitDocuments(identityVerification, request, ownerId));
+        assertEquals("Detected a resubmit request without specified originalDocumentId, %s".formatted(ownerId), exception.getMessage());
     }
 
     @Test
-    @Sql(scripts = "DocumentProcessingServiceTest.testResubmitDocuments.sql")
     void testResubmitDocuments_missingResubmitFlag() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);
@@ -284,7 +249,42 @@ class DocumentProcessingServiceTest {
         request.setDocuments(metadata);
         when(dataExtractionService.extractDocuments(request.getData())).thenReturn(data);
 
-        assertThrows(DocumentSubmitException.class, () -> tested.submitDocuments(identityVerification, request, ownerId));
+        final DocumentSubmitException exception = assertThrows(DocumentSubmitException.class,
+                () -> tested.submitDocuments(identityVerification, request, ownerId));
+        assertEquals("Detected a submit request with specified originalDocumentId=original1, %s".formatted(ownerId), exception.getMessage());
+    }
+
+    private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {
+        final DocumentSubmitRequest.DocumentMetadata page1 = new DocumentSubmitRequest.DocumentMetadata();
+        page1.setFilename("id_card_front.png");
+        page1.setType(DocumentType.ID_CARD);
+        page1.setSide(CardSide.FRONT);
+
+        final DocumentSubmitRequest.DocumentMetadata page2 = new DocumentSubmitRequest.DocumentMetadata();
+        page2.setFilename("id_card_back.png");
+        page2.setType(DocumentType.ID_CARD);
+        page2.setSide(CardSide.BACK);
+
+        return List.of(page1, page2);
+    }
+
+    private List<Document> createIdCardData() {
+        final Document documentPage1 = new Document();
+        documentPage1.setData("img1".getBytes());
+        documentPage1.setFilename("id_card_front.png");
+
+        final Document documentPage2 = new Document();
+        documentPage2.setData("img2".getBytes());
+        documentPage2.setFilename("id_card_back.png");
+
+        return List.of(documentPage1, documentPage2);
+    }
+
+    private OwnerId createOwnerId() {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId("a1");
+        ownerId.setUserId("u1");
+        return ownerId;
     }
 
 }
