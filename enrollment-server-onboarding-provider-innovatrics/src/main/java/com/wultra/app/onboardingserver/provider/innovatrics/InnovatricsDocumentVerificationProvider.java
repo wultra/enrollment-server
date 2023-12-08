@@ -72,12 +72,12 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         }
 
         final DocumentType documentType = documents.get(0).getType();
-        if (DocumentType.SELFIE_PHOTO.equals(documentType)) {
+        if (DocumentType.SELFIE_PHOTO == documentType) {
             logger.debug("Selfie photo passed as a document, {}", id);
             throw new DocumentVerificationException("Selfie photo cannot be submitted as a document");
         }
 
-        if (DocumentType.SELFIE_VIDEO.equals(documentType)) {
+        if (DocumentType.SELFIE_VIDEO == documentType) {
             logger.debug("Selfie video passed as a document, {}", id);
             throw new DocumentVerificationException("Selfie video cannot be submitted as a document");
         }

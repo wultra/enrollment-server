@@ -224,7 +224,7 @@ public class PresenceCheckService {
     }
 
     private Optional<Image> fetchTrustedPhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, RemoteCommunicationException, PresenceCheckException {
-        if (PresenceCheckProvider.TrustedPhotoSource.IMAGE.equals(presenceCheckProvider.trustedPhotoSource())) {
+        if (PresenceCheckProvider.TrustedPhotoSource.IMAGE == presenceCheckProvider.trustedPhotoSource()) {
             final Image photo = fetchTrustedPhotoFromDocumentVerifier(ownerId, idVerification);
             final Image upscaledPhoto = imageProcessor.upscaleImage(ownerId, photo, identityVerificationConfig.getMinimalSelfieWidth());
             return Optional.of(upscaledPhoto);
@@ -234,7 +234,7 @@ public class PresenceCheckService {
     }
 
     private void setIdentityDocumentReferences(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, PresenceCheckException {
-        if (!PresenceCheckProvider.TrustedPhotoSource.REFERENCE.equals(presenceCheckProvider.trustedPhotoSource())) {
+        if (PresenceCheckProvider.TrustedPhotoSource.REFERENCE != presenceCheckProvider.trustedPhotoSource()) {
             return;
         }
 

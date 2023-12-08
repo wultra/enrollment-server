@@ -358,7 +358,7 @@ class InnovatricsApiService {
             logger.trace("{} response: {}", apiPath, response);
             return Optional.ofNullable(response.getBody());
         } catch (RestClientException e) {
-            if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())) {
+            if (HttpStatus.NOT_FOUND == e.getStatusCode()) {
                 // API returns 404 in case of missing portrait photo.
                 logger.debug("Missing portrait photo for customer {}, {}", customerId, ownerId);
                 return Optional.empty();

@@ -385,8 +385,8 @@ public class DocumentProcessingService {
                 continue;
             }
             documents.stream()
-                    .filter(item -> item.getType().equals(document.getType()))
-                    .filter(item -> !item.getSide().equals(document.getSide()))
+                    .filter(item -> item.getType() == document.getType())
+                    .filter(item -> item.getSide() != document.getSide())
                     .forEach(item -> {
                         logger.debug("Found other side {} for {}", item, document);
                         item.setOtherSideId(document.getId());
