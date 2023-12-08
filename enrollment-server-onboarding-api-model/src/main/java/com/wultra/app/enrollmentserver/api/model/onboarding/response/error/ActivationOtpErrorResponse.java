@@ -19,21 +19,23 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.response.error;
 
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import jakarta.validation.constraints.NotBlank;
+import lombok.EqualsAndHashCode;
 
 /**
  * Response class used when OTP code verification fails during activation (soft fail).
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+@EqualsAndHashCode(callSuper = true)
 public class ActivationOtpErrorResponse extends ErrorResponse {
 
-    private Integer remainingAttempts;
+    private final Integer remainingAttempts;
 
     /**
      * Default constructor.
      */
     public ActivationOtpErrorResponse() {
-        super();
+        remainingAttempts = null;
     }
 
     /**
@@ -53,14 +55,6 @@ public class ActivationOtpErrorResponse extends ErrorResponse {
      */
     public Integer getRemainingAttempts() {
         return remainingAttempts;
-    }
-
-    /**
-     * Set remaining attempts for OTP verification during activation.
-     * @param remainingAttempts Remaining attempts for OTP verification during activation.
-     */
-    public void setRemainingAttempts(Integer remainingAttempts) {
-        this.remainingAttempts = remainingAttempts;
     }
 
 }
