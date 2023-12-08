@@ -257,10 +257,10 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         }
 
         if (!CollectionUtils.isEmpty(response.getWarnings())) {
-            for (CreateDocumentPageResponse.WarningsEnum w : response.getWarnings()) {
-                switch (w) {
+            for (CreateDocumentPageResponse.WarningsEnum warning : response.getWarnings()) {
+                switch (warning) {
                     case DOCUMENT_TYPE_NOT_RECOGNIZED -> rejectionReasons.add("Document type not recognized.");
-                    default -> rejectionReasons.add("Unknown warning: %s".formatted(w.getValue()));
+                    default -> rejectionReasons.add("Unknown warning: %s".formatted(warning.getValue()));
                 }
             }
         }
