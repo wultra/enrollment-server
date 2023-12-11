@@ -86,7 +86,7 @@ class InnovatricsRestApiServiceTest {
                         """)
                 .setResponseCode(HttpStatus.OK.value()));
 
-        final CreateCustomerResponse response = tested.createCustomer(ownerId).get();
+        final CreateCustomerResponse response = tested.createCustomer(ownerId);
         assertEquals("c2e91b1f-0ccb-4ba0-93ae-d255a2a443af", response.getId());
         assertEquals("/api/v1/customers/c2e91b1f-0ccb-4ba0-93ae-d255a2a443af", response.getLinks().getSelf());
     }
@@ -121,9 +121,8 @@ class InnovatricsRestApiServiceTest {
                         """)
                 .setResponseCode(HttpStatus.OK.value()));
 
-        final Optional<CreateDocumentPageResponse> response = tested.provideDocumentPage("123", CardSide.FRONT, "data".getBytes(), ownerId);
-        assertTrue(response.isPresent());
-        assertNotNull(response.get().getErrorCode());
+        final CreateDocumentPageResponse response = tested.provideDocumentPage("123", CardSide.FRONT, "data".getBytes(), ownerId);
+        assertNotNull(response.getErrorCode());
 
         final RecordedRequest recordedRequest = mockWebServer.takeRequest(1L, TimeUnit.SECONDS);
         assertNotNull(recordedRequest);

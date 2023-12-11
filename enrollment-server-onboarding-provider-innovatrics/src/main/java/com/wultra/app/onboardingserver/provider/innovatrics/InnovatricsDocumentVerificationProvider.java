@@ -33,7 +33,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -126,8 +125,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         // Pages of the same document have same uploadId (= customerId), no reason to generate verification for each one.
         final List<String> distinctUploadIds = uploadIds.stream().distinct().toList();
         for (String customerId : distinctUploadIds) {
-            final DocumentInspectResponse response = getDocumentInspection(customerId, id);
-            final DocumentVerificationResult result = createVerificationResult(customerId, response);
+            final DocumentVerificationResult result = createVerificationResult(customerId, id);
             results.getResults().add(result);
         }
 
@@ -193,10 +191,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @throws RemoteCommunicationException if the resource was not created properly.
      */
     private String createCustomer(final OwnerId ownerId) throws RemoteCommunicationException {
-        return innovatricsApiService.createCustomer(ownerId)
-                .map(CreateCustomerResponse::getId)
-                .filter(StringUtils::hasText)
-                .orElseThrow(() -> new RemoteCommunicationException("A customer resource could not be created, %s".formatted(ownerId)));
+        return innovatricsApiService.createCustomer(ownerId).getId();
     }
 
     /**
@@ -207,11 +202,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @throws RemoteCommunicationException if the resource was not created properly.
      */
     private void createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
-            innovatricsApiService.createDocument(customerId, documentType, ownerId)
-                    .map(CreateDocumentResponse::getLinks)
-                    .map(Links::getSelf)
-                    .filter(StringUtils::hasText)
-                    .orElseThrow(() -> new RemoteCommunicationException("A document resource could not be created for customer %s, %s".formatted(customerId, ownerId)));
+            innovatricsApiService.createDocument(customerId, documentType, ownerId);
     }
 
     /**
@@ -223,8 +214,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @throws RemoteCommunicationException if the document page was not uploaded properly.
      */
     private CreateDocumentPageResponse provideDocumentPage(final String customerId, final SubmittedDocument page, final OwnerId ownerId) throws RemoteCommunicationException {
-            return innovatricsApiService.provideDocumentPage(customerId, page.getSide(), page.getPhoto().getData(), ownerId)
-                    .orElseThrow(() -> new RemoteCommunicationException("Document page was not uploaded for customer %s, %s".formatted(customerId, ownerId)));
+            return innovatricsApiService.provideDocumentPage(customerId, page.getSide(), page.getPhoto().getData(), ownerId);
     }
 
     /**
@@ -241,6 +231,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param uploadId external id of the document.
      * @param response returned from provider.
      * @return DocumentSubmitResult with error or reject reason.
+     * @throws DocumentVerificationException in case of rejection reason serialization error.
      */
     private DocumentSubmitResult createErrorSubmitResult(String uploadId, CreateDocumentPageResponse response, SubmittedDocument submitted) throws DocumentVerificationException {
         final DocumentSubmitResult result = new DocumentSubmitResult();
@@ -281,9 +272,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @throws DocumentVerificationException if the returned data could not be provided.
      */
     private String getExtractedData(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException, DocumentVerificationException {
-        final GetCustomerResponse response = innovatricsApiService.getCustomer(customerId, ownerId)
-                    .orElseThrow(() -> new RemoteCommunicationException("Customer data could not be obtained for customer %s, %s".formatted(customerId, ownerId)));
-        return serializeToString(response);
+        return serializeToString(innovatricsApiService.getCustomer(customerId, ownerId));
     }
 
     /**
@@ -301,7 +290,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param customerId id of the customer to get data from.
      * @return DocumentSubmitResult containing extracted data.
      */
-    private DocumentSubmitResult createSubmitResult(final String customerId, final SubmittedDocument submitted) {
+    private static DocumentSubmitResult createSubmitResult(final String customerId, final SubmittedDocument submitted) {
         final DocumentSubmitResult result = new DocumentSubmitResult();
         result.setUploadId(customerId);
         result.setDocumentId(submitted.getDocumentId());
@@ -310,25 +299,13 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     }
 
     /**
-     * Inspect document of a customer.
-     * @param customerId id of the customer.
-     * @param ownerId owner identification.
-     * @return DocumentVerificationResult with rejection or error reason if any.
-     * @throws RemoteCommunicationException in case the verification data could not be obtained.
-     */
-    private DocumentInspectResponse getDocumentInspection(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException, DocumentVerificationException {
-         return innovatricsApiService.inspectDocument(customerId, ownerId)
-                .orElseThrow(() -> new RemoteCommunicationException("Document inspection result could not be obtained for customer %s, %s".formatted(customerId, ownerId)));
-    }
-
-    /**
-     * Creates DocumentVerificationResult by parsing DocumentInspectResponse.
+     *
      * @param customerId id of the customer the document belongs to.
-     * @param response inspection details.
+     * @param ownerId owner identification.
      * @return DocumentVerificationResult
      */
-    private DocumentVerificationResult createVerificationResult(String customerId, DocumentInspectResponse response) throws DocumentVerificationException {
-        final DocumentVerificationResult result = new DocumentVerificationResult();
+    private DocumentVerificationResult createVerificationResult(String customerId, OwnerId ownerId) throws DocumentVerificationException, RemoteCommunicationException {
+        final DocumentInspectResponse response = innovatricsApiService.inspectDocument(customerId, ownerId);
 
         final List<String> rejectionReasons = new ArrayList<>();
         if (Boolean.TRUE.equals(response.getExpired())) {
@@ -363,6 +340,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             });
         }
 
+        final DocumentVerificationResult result = new DocumentVerificationResult();
         result.setUploadId(customerId);
         result.setVerificationResult(serializeToString(response));
         if (!rejectionReasons.isEmpty()) {

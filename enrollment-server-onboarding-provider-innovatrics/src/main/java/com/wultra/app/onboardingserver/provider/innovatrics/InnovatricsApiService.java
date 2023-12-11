@@ -231,7 +231,7 @@ class InnovatricsApiService {
      * @return optional of CreateCustomerResponse with a customerId.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateCustomerResponse> createCustomer(final OwnerId ownerId) throws RemoteCommunicationException {
+    public CreateCustomerResponse createCustomer(final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers";
 
         try {
@@ -241,9 +241,11 @@ class InnovatricsApiService {
             logger.info("Got {} for creating customer, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
-            return Optional.ofNullable(response.getBody());
+            return response.getBody();
         } catch (RestClientException e) {
             throw new RemoteCommunicationException("REST API call failed when creating a new customer resource, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when creating a new customer resource", e);
         }
     }
 
@@ -255,7 +257,7 @@ class InnovatricsApiService {
      * @return optional of CreateDocumentResponse. Does not contain important details.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateDocumentResponse> createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
+    public CreateDocumentResponse createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers/%s/document".formatted(customerId);
 
         final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
@@ -273,9 +275,11 @@ class InnovatricsApiService {
             logger.info("Got {} for creating document, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
-            return Optional.ofNullable(response.getBody());
+            return response.getBody();
         } catch (RestClientException e) {
-            throw new RemoteCommunicationException("REST API call failed when creating a new document resource, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+            throw new RemoteCommunicationException("REST API call failed when creating a new document resource for customerId=%s, statusCode=%s, responseBody='%s'".formatted(customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when creating a new document resource for customerId=%s".formatted(customerId), e);
         }
     }
 
@@ -288,7 +292,7 @@ class InnovatricsApiService {
      * @return optional of CreateDocumentPageResponse with details extracted from the page.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<CreateDocumentPageResponse> provideDocumentPage(final String customerId, final CardSide side, final byte[] data, final OwnerId ownerId) throws RemoteCommunicationException {
+    public CreateDocumentPageResponse provideDocumentPage(final String customerId, final CardSide side, final byte[] data, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers/%s/document/pages".formatted(customerId);
 
         final DocumentPageClassificationAdvice classificationAdvice = new DocumentPageClassificationAdvice();
@@ -310,9 +314,11 @@ class InnovatricsApiService {
             logger.info("Got {} for providing document page, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
-            return Optional.ofNullable(response.getBody());
+            return response.getBody();
         } catch (RestClientException e) {
-            throw new RemoteCommunicationException("REST API call failed when providing a document page, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+            throw new RemoteCommunicationException("REST API call failed when providing a document page for customerId=%s, statusCode=%s, responseBody='%s'".formatted(customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when providing a document page for customerId=%s".formatted(customerId), e);
         }
     }
 
@@ -323,7 +329,7 @@ class InnovatricsApiService {
      * @return optional of GetCustomerResponse with details about the customer.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<GetCustomerResponse> getCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+    public GetCustomerResponse getCustomer(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers/%s".formatted(customerId);
 
         try {
@@ -333,9 +339,11 @@ class InnovatricsApiService {
             logger.info("Got {} for getting details about customer, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
-            return Optional.ofNullable(response.getBody());
+            return response.getBody();
         } catch (RestClientException e) {
-            throw new RemoteCommunicationException("REST API call failed when getting customer details, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+            throw new RemoteCommunicationException("REST API call failed when getting details of customerId=%s, statusCode=%s, responseBody='%s'".formatted(customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when getting details of customerId=%s".formatted(customerId), e);
         }
     }
 
@@ -374,7 +382,7 @@ class InnovatricsApiService {
      * @return optional of DocumentInspectResponse with details about consistency of the document.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public Optional<DocumentInspectResponse> inspectDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+    public DocumentInspectResponse inspectDocument(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers/%s/document/inspect".formatted(customerId);
 
         try {
@@ -384,9 +392,11 @@ class InnovatricsApiService {
             logger.info("Got {} for getting document inspect, {}", response.getStatusCode(), ownerId);
             logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
             logger.trace("{} response: {}", apiPath, response);
-            return Optional.ofNullable(response.getBody());
+            return response.getBody();
         } catch (RestClientException e) {
-            throw new RemoteCommunicationException("REST API call failed while getting document inspection, statusCode=%s, responseBody='%s'".formatted(e.getStatusCode(), e.getResponse()), e);
+            throw new RemoteCommunicationException("REST API call failed while getting document inspection for customerId=%s, statusCode=%s, responseBody='%s'".formatted(customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when getting document inspection for customerId=%s".formatted(customerId), e);
         }
     }
 
