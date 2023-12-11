@@ -202,8 +202,9 @@ public class DocumentProcessingService {
 
             final DocumentResultEntity docResult = createDocumentResult(docVerification, result);
             docResult.setTimestampCreated(ownerId.getTimestamp());
-            docResults.add(docResult);
             docResult.setDocumentVerification(docVerification);
+
+            docResults.add(docResult);
         }
 
         documentVerificationRepository.saveAll(docVerificationsMap.values());
