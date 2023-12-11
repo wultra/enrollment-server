@@ -204,7 +204,7 @@ public class PresenceCheckService {
      * @throws PresenceCheckException In case of business logic error.
      * @throws RemoteCommunicationException In case of remote communication error.
      */
-     protected void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
+    private void initPresentCheckWithImage(final OwnerId ownerId, final IdentityVerificationEntity idVerification)
             throws PresenceCheckException, DocumentVerificationException, RemoteCommunicationException {
 
         if (!idVerification.isPresenceCheckInitialized()) {

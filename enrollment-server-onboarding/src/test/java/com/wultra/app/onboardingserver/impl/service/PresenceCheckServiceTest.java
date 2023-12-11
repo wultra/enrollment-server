@@ -22,9 +22,12 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationService;
@@ -40,7 +43,11 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.Optional;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -59,6 +66,9 @@ class PresenceCheckServiceTest {
 
     @MockBean
     private DocumentVerificationRepository documentVerificationRepository;
+
+    @MockBean
+    private PresenceCheckLimitService presenceCheckLimitService;
 
     @MockBean
     private PresenceCheckProvider presenceCheckProvider;
@@ -113,7 +123,7 @@ class PresenceCheckServiceTest {
     @Test
     void initPresentCheckWithImage_withDocumentReferences() throws Exception {
         final OwnerId ownerId = new OwnerId();
-        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        ownerId.setActivationId("a1");
 
         final DocumentVerificationEntity page1 = new DocumentVerificationEntity();
         page1.setId("1");
@@ -123,8 +133,8 @@ class PresenceCheckServiceTest {
 
         final DocumentVerificationEntity page2 = new DocumentVerificationEntity();
         page2.setId("2");
-        page1.setType(DocumentType.ID_CARD);
-        page1.setSide(CardSide.BACK);
+        page2.setType(DocumentType.ID_CARD);
+        page2.setSide(CardSide.BACK);
         page2.setPhotoId("id_card_portrait");
 
         final DocumentVerificationEntity page3 = new DocumentVerificationEntity();
@@ -134,13 +144,19 @@ class PresenceCheckServiceTest {
         page3.setPhotoId("driving_licence_portrait");
 
         when(presenceCheckProvider.trustedPhotoSource()).thenReturn(PresenceCheckProvider.TrustedPhotoSource.REFERENCE);
-        when(documentVerificationRepository.findAllWithPhoto(identityVerification)).thenReturn(List.of(page1, page2, page3));
 
-        tested.initPresentCheckWithImage(ownerId, identityVerification);
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(PRESENCE_CHECK);
+        identityVerification.setStatus(NOT_INITIALIZED);
+
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification)).thenReturn(List.of(page1, page2, page3));
+        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(identityVerification));
+        when(presenceCheckProvider.startPresenceCheck(ownerId)).thenReturn(new SessionInfo());
+
+        tested.init(ownerId, "p1");
 
         assertTrue(identityVerification.getSessionInfo().contains("\"primaryDocumentReference\":\"id_card_portrait\""));
         assertTrue(identityVerification.getSessionInfo().contains("\"otherDocumentsReferences\":[\"driving_licence_portrait\"]"));
-
         verify(presenceCheckProvider).initPresenceCheck(ownerId, null);
     }
 
