@@ -244,8 +244,9 @@ public class PresenceCheckService {
                 .map(DocumentVerificationEntity::getPhotoId)
                 .filter(id -> !Objects.equals(id, primaryDocReference))
                 .distinct().toList();
-        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference));
-        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
+
+        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference,
+                                                          SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
     }
 
     /**
