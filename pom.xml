@@ -93,7 +93,7 @@
         <shedlock.version>5.10.2</shedlock.version>
         <spring-statemachine.version>3.2.1</spring-statemachine.version>
         <swagger-annotations-jakarta.version>2.2.19</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.2.0</springdoc-openapi-starter-webmvc-ui.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
         <!--  TODO (racansky, 2023-10-31) temporarily override spring boot version to make commons-text 1.11.0 working  -->
