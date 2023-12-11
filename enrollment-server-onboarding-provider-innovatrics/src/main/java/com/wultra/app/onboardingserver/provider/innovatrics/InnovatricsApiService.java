@@ -37,6 +37,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +58,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 class InnovatricsApiService {
+
+    private static final MultiValueMap<String, String> EMPTY_QUERY_PARAMS = new LinkedMultiValueMap<>();
 
     /**
      * REST client for Innovatrics calls.
