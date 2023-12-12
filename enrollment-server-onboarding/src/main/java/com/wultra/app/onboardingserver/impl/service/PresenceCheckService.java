@@ -283,7 +283,7 @@ public class PresenceCheckService {
         final List<DocumentVerificationEntity> docsWithPhoto = getDocsWithPhoto(idVerification, ownerId);
         final DocumentVerificationEntity preferredDocWithPhoto = getPreferredDocWithPhoto(docsWithPhoto, ownerId);
         logger.info("Selected {} as the source of person photo, {}", preferredDocWithPhoto, ownerId);
-        String photoId = preferredDocWithPhoto.getPhotoId();
+        final String photoId = preferredDocWithPhoto.getPhotoId();
         return identityVerificationService.getPhotoById(photoId, ownerId);
     }
 
