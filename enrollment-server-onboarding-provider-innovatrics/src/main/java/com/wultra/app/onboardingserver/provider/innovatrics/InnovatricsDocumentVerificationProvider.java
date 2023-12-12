@@ -319,23 +319,30 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         final VisualZoneInspection viz = response.getVisualZoneInspection();
         if (viz != null) {
             if (!CollectionUtils.isEmpty(viz.getOcrConfidence().getLowOcrConfidenceTexts())) {
-                rejectionReasons.add("Low OCR confidence of text.");
+                rejectionReasons.add("Low OCR confidence of texts: " + viz.getOcrConfidence().getLowOcrConfidenceTexts());
             }
-            if (viz.getTextConsistency() != null && !Boolean.TRUE.equals(viz.getTextConsistency().getConsistent())) {
-                rejectionReasons.add("Inconsistent text field.");
+            if (viz.getTextConsistency() != null && !Boolean.TRUE.equals(viz.getTextConsistency().getConsistent()) && viz.getTextConsistency().getConsistencyWith() != null) {
+                final MrzConsistency mrzConsistency = viz.getTextConsistency().getConsistencyWith().getMrz();
+                final BarcodesConsistency barcodesConsistency = viz.getTextConsistency().getConsistencyWith().getBarcodes();
+                if (mrzConsistency != null) {
+                    rejectionReasons.add("Inconsistent text fields with MRZ: " + mrzConsistency.getInconsistentTexts());
+                }
+                if (barcodesConsistency != null) {
+                    rejectionReasons.add("Inconsistent text fields with barcode: " + barcodesConsistency.getInconsistentTexts());
+                }
             }
         }
 
         if (response.getPageTampering() != null) {
-            response.getPageTampering().forEach((k, v) -> {
-                if (Boolean.TRUE.equals(v.getColorProfileChangeDetected())) {
-                    rejectionReasons.add("Colors on the document %s does not corresponds to the expected color profile.".formatted(k));
+            response.getPageTampering().forEach((side, inspection) -> {
+                if (Boolean.TRUE.equals(inspection.getColorProfileChangeDetected())) {
+                    rejectionReasons.add("Colors on the document %s does not corresponds to the expected color profile.".formatted(side));
                 }
-                if (Boolean.TRUE.equals(v.getLooksLikeScreenshot())) {
-                    rejectionReasons.add("Provided image of the document %s was taken from a screen of another device.".formatted(k));
+                if (Boolean.TRUE.equals(inspection.getLooksLikeScreenshot())) {
+                    rejectionReasons.add("Provided image of the document %s was taken from a screen of another device.".formatted(side));
                 }
-                if (Boolean.TRUE.equals(v.getTamperedTexts())) {
-                    rejectionReasons.add("Text of the document %s is tampered.".formatted(k));
+                if (Boolean.TRUE.equals(inspection.getTamperedTexts())) {
+                    rejectionReasons.add("Text of the document %s is tampered.".formatted(side));
                 }
             });
         }
