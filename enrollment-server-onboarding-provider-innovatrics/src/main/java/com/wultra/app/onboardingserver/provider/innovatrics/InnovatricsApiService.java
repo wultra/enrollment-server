@@ -19,9 +19,7 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CustomerInspectResponse;
-import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessRequest;
-import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessResponse;
+import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -142,6 +142,67 @@ class InnovatricsApiService {
                     String.format("Failed REST call to delete selfie for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
         } catch (Exception e) {
             throw new RemoteCommunicationException("Unexpected error when deleting selfie for customerId=" + customerId, e);
+        }
+    }
+
+    public void createLiveness(final String customerId, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/api/v1/customers/%s/liveness".formatted(customerId);
+
+        try {
+            logger.info("Calling liveness creation, {}", ownerId);
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<CreateCustomerLivenessResponse> response = restClient.put(apiPath, null, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for liveness creation, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to liveness creation for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when creating liveness for customerId=" + customerId, e);
+        }
+    }
+
+    public CreateCustomerLivenessRecordResponse createLivenessRecord(final String customerId, final byte[] requestData, final OwnerId ownerId) throws RemoteCommunicationException{
+        final String apiPath = "/api/v1/customers/%s/liveness/records".formatted(customerId);
+
+        final HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+
+        try {
+            logger.info("Calling liveness record creation, {}", ownerId);
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<CreateCustomerLivenessRecordResponse> response = restClient.post(apiPath, requestData, EMPTY_QUERY_PARAMS, httpHeaders, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for liveness record creation, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to liveness record creation for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when creating liveness record for customerId=" + customerId, e);
+        }
+    }
+
+    public CreateSelfieResponse createSelfie(final String customerId, final String livenessSelfieLink, final OwnerId ownerId) throws RemoteCommunicationException {
+        final String apiPath = "/api/v1/customers/%s/selfie".formatted(customerId);
+
+        final CreateSelfieRequest request = new CreateSelfieRequest().selfieOrigin(new LivenessSelfieOrigin().link(livenessSelfieLink));
+
+        try {
+            logger.info("Calling selfie creation, {}", ownerId);
+            logger.debug("Calling {}", apiPath);
+            final ResponseEntity<CreateSelfieResponse> response = restClient.put(apiPath, request, new ParameterizedTypeReference<>() {});
+            logger.info("Got {} for selfie creation, {}", response.getStatusCode(), ownerId);
+            logger.debug("{} response status code: {}", apiPath, response.getStatusCode());
+            logger.trace("{} response: {}", apiPath, response);
+            return response.getBody();
+        } catch (RestClientException e) {
+            throw new RemoteCommunicationException(
+                    String.format("Failed REST call to selfie creation for customerId=%s, statusCode=%s, responseBody='%s'", customerId, e.getStatusCode(), e.getResponse()), e);
+        } catch (Exception e) {
+            throw new RemoteCommunicationException("Unexpected error when creating selfie for customerId=" + customerId, e);
         }
     }
 
