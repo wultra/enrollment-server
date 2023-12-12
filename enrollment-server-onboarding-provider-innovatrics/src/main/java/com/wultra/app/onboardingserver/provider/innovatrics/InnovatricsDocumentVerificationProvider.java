@@ -201,7 +201,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param ownerId owner identification.
      * @throws RemoteCommunicationException if the resource was not created properly.
      */
-    private void createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
+    private void createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException, DocumentVerificationException {
             innovatricsApiService.createDocument(customerId, documentType, ownerId);
     }
 

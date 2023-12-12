@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CustomerInspectResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCustomerLivenessRequest;
@@ -261,7 +262,7 @@ class InnovatricsApiService {
      * @return optional of CreateDocumentResponse. Does not contain important details.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public CreateDocumentResponse createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException {
+    public CreateDocumentResponse createDocument(final String customerId, final DocumentType documentType, final OwnerId ownerId) throws RemoteCommunicationException, DocumentVerificationException {
         final String apiPath = "/api/v1/customers/%s/document".formatted(customerId);
 
         final DocumentClassificationAdvice classificationAdvice = new DocumentClassificationAdvice();
@@ -451,12 +452,12 @@ class InnovatricsApiService {
      * @param type represents type of document.
      * @return document type as a string value.
      */
-    private static String convertType(DocumentType type) {
+    private static String convertType(DocumentType type) throws DocumentVerificationException {
         return switch (type) {
             case ID_CARD -> "identity-card";
             case PASSPORT -> "passport";
             case DRIVING_LICENSE -> "drivers-licence";
-            default -> throw new IllegalStateException("Unsupported documentType " + type);
+            default -> throw new DocumentVerificationException("Unsupported documentType " + type);
         };
     }
 
