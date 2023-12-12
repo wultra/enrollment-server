@@ -291,12 +291,12 @@ class InnovatricsApiService {
      * Provide photo of a document page. A document resource must be already assigned to the customer.
      * @param customerId id of the customer to whom the document should be provided.
      * @param side specifies side of the document.
-     * @param data image of the page encoded in base64.
+     * @param imageBytes image of the page encoded in base64.
      * @param ownerId owner identification.
      * @return optional of CreateDocumentPageResponse with details extracted from the page.
      * @throws RemoteCommunicationException in case of 4xx or 5xx response status code.
      */
-    public CreateDocumentPageResponse provideDocumentPage(final String customerId, final CardSide side, final byte[] data, final OwnerId ownerId) throws RemoteCommunicationException {
+    public CreateDocumentPageResponse provideDocumentPage(final String customerId, final CardSide side, final byte[] imageBytes, final OwnerId ownerId) throws RemoteCommunicationException {
         final String apiPath = "/api/v1/customers/%s/document/pages".formatted(customerId);
 
         final DocumentPageClassificationAdvice classificationAdvice = new DocumentPageClassificationAdvice();
@@ -305,7 +305,7 @@ class InnovatricsApiService {
         advice.setClassification(classificationAdvice);
 
         final Image image = new Image();
-        image.setData(data);
+        image.setData(imageBytes);
 
         final CreateDocumentPageRequest request = new CreateDocumentPageRequest();
         request.setAdvice(advice);
