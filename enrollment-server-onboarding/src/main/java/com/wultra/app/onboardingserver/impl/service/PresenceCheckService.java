@@ -59,11 +59,6 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @Slf4j
 public class PresenceCheckService {
 
-    private static final String SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
-    private static final String SESSION_ATTRIBUTE_IMAGE_UPLOADED = "imageUploaded";
-    private static final String SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE = "primaryDocumentReference";
-    private static final String SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES = "otherDocumentsReferences";
-
     private final IdentityVerificationConfig identityVerificationConfig;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final DocumentProcessingService documentProcessingService;
@@ -127,7 +122,7 @@ public class PresenceCheckService {
             final OwnerId ownerId,
             final IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
 
-        final SessionInfo sessionInfo = updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_TIMESTAMP_LAST_USED, ownerId.getTimestamp()));
+        final SessionInfo sessionInfo = updateSessionInfo(ownerId, idVerification, Map.of(SessionInfo.ATTRIBUTE_TIMESTAMP_LAST_USED, ownerId.getTimestamp()));
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
         auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {} for user: {}", result.getStatus(), ownerId.getUserId());
 
@@ -218,7 +213,7 @@ public class PresenceCheckService {
             setIdentityDocumentReferences(ownerId, idVerification);
             presenceCheckProvider.initPresenceCheck(ownerId, photo.orElse(null));
             logger.info("Presence check initialized, {}", ownerId);
-            updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_IMAGE_UPLOADED, true));
+            updateSessionInfo(ownerId, idVerification, Map.of(SessionInfo.ATTRIBUTE_IMAGE_UPLOADED, true));
             auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
         }
     }
@@ -245,8 +240,8 @@ public class PresenceCheckService {
                 .filter(id -> !Objects.equals(id, primaryDocReference))
                 .distinct().toList();
 
-        updateSessionInfo(ownerId, idVerification, Map.of(SESSION_ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference,
-                                                          SESSION_ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
+        updateSessionInfo(ownerId, idVerification, Map.of(SessionInfo.ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE, primaryDocReference,
+                                                          SessionInfo.ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES, otherDocsReferences));
     }
 
     /**
@@ -414,6 +409,6 @@ public class PresenceCheckService {
         final SessionInfo sessionInfo = jsonSerializationService.deserialize(sessionInfoString, SessionInfo.class);
         return sessionInfo != null
                 && !CollectionUtils.isEmpty(sessionInfo.getSessionAttributes())
-                && Boolean.TRUE.equals(sessionInfo.getSessionAttributes().get(SESSION_ATTRIBUTE_IMAGE_UPLOADED));
+                && Boolean.TRUE.equals(sessionInfo.getSessionAttributes().get(SessionInfo.ATTRIBUTE_IMAGE_UPLOADED));
     }
 }

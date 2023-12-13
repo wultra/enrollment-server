@@ -49,8 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
 class InnovatricsLivenessService {
 
-    private static final String INNOVATRICS_CUSTOMER_ID = "InnovatricsCustomerId";
-
     private final InnovatricsApiService innovatricsApiService;
 
     private final IdentityVerificationRepository identityVerificationRepository;
@@ -124,8 +122,7 @@ class InnovatricsLivenessService {
             throw new IdentityVerificationException("Unable to deserialize session info", e);
         }
 
-        // TODO (racansky, 2023-11-28) discuss the format with Jan Pesek, extract to common logic
-        final String customerId = (String) sessionInfo.getSessionAttributes().get(INNOVATRICS_CUSTOMER_ID);
+        final String customerId = (String) sessionInfo.getSessionAttributes().get(SessionInfo.ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE);
         if (Strings.isNullOrEmpty(customerId)) {
             throw new IdentityVerificationException("Missing a customer ID value for calling Innovatrics, " + id);
         }
