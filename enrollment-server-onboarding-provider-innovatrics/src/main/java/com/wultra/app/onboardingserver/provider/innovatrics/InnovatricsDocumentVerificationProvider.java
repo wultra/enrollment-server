@@ -54,6 +54,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InnovatricsDocumentVerificationProvider implements DocumentVerificationProvider {
 
+    private static final Set<String> CRUCIAL_ATTRIBUTES = Set.of("documentNumber", "dateOfIssue", "dateOfExpiry", "surname", "dateOfBirth", "personalNumber", "givenNames");
+
     private final InnovatricsApiService innovatricsApiService;
     private final ObjectMapper objectMapper;
 
@@ -299,7 +301,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     }
 
     /**
-     *
+     * Gets document inspection from Innovatrics and parses it to the verification result.
      * @param customerId id of the customer the document belongs to.
      * @param ownerId owner identification.
      * @return DocumentVerificationResult
@@ -317,21 +319,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         }
 
         final VisualZoneInspection viz = response.getVisualZoneInspection();
-        if (viz != null) {
-            if (!CollectionUtils.isEmpty(viz.getOcrConfidence().getLowOcrConfidenceTexts())) {
-                rejectionReasons.add("Low OCR confidence of texts: " + viz.getOcrConfidence().getLowOcrConfidenceTexts());
-            }
-            if (viz.getTextConsistency() != null && !Boolean.TRUE.equals(viz.getTextConsistency().getConsistent()) && viz.getTextConsistency().getConsistencyWith() != null) {
-                final MrzConsistency mrzConsistency = viz.getTextConsistency().getConsistencyWith().getMrz();
-                final BarcodesConsistency barcodesConsistency = viz.getTextConsistency().getConsistencyWith().getBarcodes();
-                if (mrzConsistency != null) {
-                    rejectionReasons.add("Inconsistent text fields with MRZ: " + mrzConsistency.getInconsistentTexts());
-                }
-                if (barcodesConsistency != null) {
-                    rejectionReasons.add("Inconsistent text fields with barcode: " + barcodesConsistency.getInconsistentTexts());
-                }
-            }
-        }
+        rejectionReasons.addAll(parseVisualZoneInspection(viz));
 
         if (response.getPageTampering() != null) {
             response.getPageTampering().forEach((side, inspection) -> {
@@ -354,6 +342,64 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             result.setRejectReason(serializeToString(rejectionReasons));
         }
         return result;
+    }
+
+    /**
+     * Parse VisualZoneInspection of a document provided by Innovatrics.
+     * @param visualZoneInspection inspection of a document by Innovatrics.
+     * @return List of reasons to reject the document.
+     */
+    private static List<String> parseVisualZoneInspection(final VisualZoneInspection visualZoneInspection) {
+        final List<String> rejectionReasons = new ArrayList<>();
+        if (visualZoneInspection == null) {
+            return rejectionReasons;
+        }
+
+        // Contains fields with a ocr confidence lower than ocr-text-field-threshold settings.
+        final List<String> lowOcrConfidenceAttributes = visualZoneInspection.getOcrConfidence().getLowOcrConfidenceTexts();
+        if (!CollectionUtils.isEmpty(lowOcrConfidenceAttributes)) {
+            rejectionReasons.add("Low OCR confidence of attributes: %s".formatted(lowOcrConfidenceAttributes));
+        }
+
+        final TextConsistency textConsistency = visualZoneInspection.getTextConsistency();
+        if (textConsistency == null) {
+            return rejectionReasons;
+        }
+
+        final TextConsistentWith textConsistentWith = textConsistency.getConsistencyWith();
+        if (textConsistentWith == null) {
+            return rejectionReasons;
+        }
+
+        final MrzConsistency mrzConsistency = textConsistentWith.getMrz();
+        if (mrzConsistency != null) {
+            final List<String> inconsistentAttributes = getCrucial(mrzConsistency.getInconsistentTexts());
+            if (!inconsistentAttributes.isEmpty()) {
+                rejectionReasons.add("Inconsistent crucial attributes with MRZ: %s".formatted(inconsistentAttributes));
+            }
+        }
+
+        final BarcodesConsistency barcodesConsistency = textConsistentWith.getBarcodes();
+        if (barcodesConsistency != null) {
+            final List<String> inconsistentAttributes = getCrucial(barcodesConsistency.getInconsistentTexts());
+            if (!inconsistentAttributes.isEmpty()) {
+                rejectionReasons.add("Inconsistent crucial attributes with barcode: %s".formatted(inconsistentAttributes));
+            }
+        }
+
+        return rejectionReasons;
+    }
+
+    /**
+     * Intersects list of attributes with CRUCIAL_ATTRIBUTES.
+     * @param attributes Attributes to do the intersection on.
+     * @return Attributes intersection.
+     */
+    private static List<String> getCrucial(final List<String> attributes) {
+        if (attributes == null) {
+            return new ArrayList<>();
+        }
+        return attributes.stream().filter(CRUCIAL_ATTRIBUTES::contains).toList();
     }
 
     private <T> String serializeToString(T src) throws DocumentVerificationException {
