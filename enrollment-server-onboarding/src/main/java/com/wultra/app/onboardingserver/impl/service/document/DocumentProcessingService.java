@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
+import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
@@ -43,10 +44,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * Service implementing document processing features.
@@ -119,22 +119,44 @@ public class DocumentProcessingService {
             DocumentSubmitRequest request,
             OwnerId ownerId) throws DocumentSubmitException {
 
-        List<Document> documents = getDocuments(ownerId, request);
+        checkDocumentResubmit(ownerId, request);
+        final List<Document> documents = getDocuments(ownerId, request);
+        final var documentsByType = request.getDocuments().stream()
+                .collect(groupingBy(DocumentSubmitRequest.DocumentMetadata::getType));
 
-        List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
-        List<DocumentResultEntity> docResults = new ArrayList<>();
+        final List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
+        for (var docMetadataList : documentsByType.values()) {
+            docVerifications.addAll(submitDocument(docMetadataList, documents, idVerification, ownerId));
+        }
+        return docVerifications;
+    }
 
-        List<DocumentSubmitRequest.DocumentMetadata> docsMetadata = request.getDocuments();
-        for (DocumentSubmitRequest.DocumentMetadata docMetadata : docsMetadata) {
-            DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, docMetadata);
-            docVerification.setIdentityVerification(idVerification);
-            docVerifications.add(docVerification);
+    /**
+     * Submit pages of a document to document verify provider.
+     * @param pagesMetadata Pages metadata from request.
+     * @param pagesData Pages data.
+     * @param idVerification Identity verification entity.
+     * @param ownerId Owner identification.
+     * @return
+     */
+    private List<DocumentVerificationEntity> submitDocument(final List<DocumentSubmitRequest.DocumentMetadata> pagesMetadata,
+                                                            final List<Document> pagesData,
+                                                            final IdentityVerificationEntity idVerification,
+                                                            final OwnerId ownerId) {
 
-            checkDocumentResubmit(ownerId, request, docVerification);
+        // Maps are used to associate DocumentsSubmitResult - DocumentVerificationEntities - DocumentMetadata
+        final Map<String, DocumentVerificationEntity> docVerifications = new HashMap<>();
+        final Map<String, DocumentSubmitRequest.DocumentMetadata> docMetadataMap = new HashMap<>();
 
-            SubmittedDocument submittedDoc;
+        final List<SubmittedDocument> submittedDocuments = new ArrayList<>();
+        for (var metadata : pagesMetadata) {
+            final DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, metadata);
+            docVerifications.put(docVerification.getId(), docVerification);
+            docMetadataMap.put(docVerification.getId(), metadata);
+            handleResubmit(ownerId, metadata.getOriginalDocumentId(), docVerification);
+
             try {
-                submittedDoc = createSubmittedDocument(ownerId, docMetadata, documents);
+                submittedDocuments.add(createSubmittedDocument(ownerId, metadata, pagesData, docVerification));
             } catch (DocumentSubmitException e) {
                 logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
                 logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
@@ -142,60 +164,98 @@ public class DocumentProcessingService {
                 docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
-                return docVerifications;
-            }
-
-            DocumentSubmitResult docSubmitResult = submitDocumentToProvider(ownerId, docVerification, submittedDoc);
-
-            // TODO - after synchronous submission to document verification provider the document state should be
-            // set to VERIFICATION_PENDING, for asynchronous processing the UPLOAD_IN_PROGRESS state should remain
-
-            DocumentResultEntity docResult = createDocumentResult(docVerification, docSubmitResult);
-            docResult.setTimestampCreated(ownerId.getTimestamp());
-
-            docResults.add(docResult);
-
-            // Delete previously persisted document after a successful upload to the provider
-            if (docVerification.getUploadId() != null && docMetadata.getUploadId() != null) {
-                documentDataRepository.deleteById(docMetadata.getUploadId());
+                return docVerifications.values().stream().toList();
             }
         }
 
-        documentVerificationRepository.saveAll(docVerifications);
+        final List<DocumentVerificationEntity> docVerificationsList = docVerifications.values().stream().toList();
+        final DocumentsSubmitResult results = submitDocumentToProvider(submittedDocuments, docVerificationsList, idVerification, ownerId);
+        processSubmitResults(results, docVerifications, ownerId);
 
-        for (int i = 0; i < docVerifications.size(); i++) {
-            DocumentVerificationEntity docVerificationEntity = docVerifications.get(i);
-            docResults.get(i).setDocumentVerification(docVerificationEntity);
-        }
-        documentResultRepository.saveAll(docResults);
+        docVerificationsList.stream()
+                .filter(doc -> StringUtils.isNotBlank(doc.getUploadId()))
+                .map(doc -> docMetadataMap.get(doc.getId()).getUploadId())
+                .filter(StringUtils::isNotBlank)
+                .forEach(fileUploadId -> {
+                    documentDataRepository.deleteById(fileUploadId);
+                    logger.info("Deleted stored document data with id={}, {}", fileUploadId, ownerId);
+                });
 
-        return docVerifications;
+        return docVerificationsList;
     }
 
-    public void checkDocumentResubmit(OwnerId ownerId,
-                                      DocumentSubmitRequest request,
-                                      DocumentVerificationEntity docVerification) throws DocumentSubmitException {
-        if (request.isResubmit() && docVerification.getOriginalDocumentId() == null) {
-            throw new DocumentSubmitException(
-                    String.format("Detected a resubmit request without specified originalDocumentId for %s, %s", docVerification, ownerId));
-        } else if (request.isResubmit()) {
-            Optional<DocumentVerificationEntity> originalDocOptional =
-                    documentVerificationRepository.findById(docVerification.getOriginalDocumentId());
-            if (originalDocOptional.isEmpty()) {
-                logger.warn("Missing previous DocumentVerificationEntity(originalDocumentId={}), {}",
-                        docVerification.getOriginalDocumentId(), ownerId);
-            } else {
-                DocumentVerificationEntity originalDoc = originalDocOptional.get();
-                originalDoc.setStatus(DocumentStatus.DISPOSED);
-                originalDoc.setUsedForVerification(false);
-                originalDoc.setTimestampDisposed(ownerId.getTimestamp());
-                originalDoc.setTimestampLastUpdated(ownerId.getTimestamp());
-                logger.info("Replaced previous {} with new {}, {}", originalDocOptional, docVerification, ownerId);
-                auditService.audit(docVerification, "Document replaced with new one for user: {}", ownerId.getUserId());
+    /**
+     * Process submit results.
+     * @param results Document submit result from provider.
+     * @param docVerificationsMap To pair results with corresponding DocumentVerificationEntity.
+     * @param ownerId Owner identification.
+     */
+    private void processSubmitResults(final DocumentsSubmitResult results,
+                                      final Map<String, DocumentVerificationEntity> docVerificationsMap,
+                                      final OwnerId ownerId) {
+
+        final List<DocumentResultEntity> docResults = new ArrayList<>();
+
+        for (final DocumentSubmitResult result : results.getResults()) {
+            final DocumentVerificationEntity docVerification = docVerificationsMap.get(result.getDocumentId());
+            processDocsSubmitResults(ownerId, docVerification, results, result);
+
+            final DocumentResultEntity docResult = createDocumentResult(docVerification, result);
+            docResult.setTimestampCreated(ownerId.getTimestamp());
+            docResult.setDocumentVerification(docVerification);
+
+            docResults.add(docResult);
+        }
+
+        documentVerificationRepository.saveAll(docVerificationsMap.values());
+        documentResultRepository.saveAll(docResults);
+        logger.debug("Processed submit result of documents {}, {}", docVerificationsMap.values(), ownerId);
+    }
+
+    /**
+     * Validates resubmit parameters of DocumentSubmitRequest.
+     * @param ownerId Owner identification.
+     * @param request Request body.
+     * @throws DocumentSubmitException If request is resubmit without original document ID, or is not resubmit with original document ID
+     */
+    private void checkDocumentResubmit(final OwnerId ownerId, final DocumentSubmitRequest request) throws DocumentSubmitException {
+        final boolean isResubmit = request.isResubmit();
+        for (var metadata : request.getDocuments()) {
+            final String originalDocumentId = metadata.getOriginalDocumentId();
+            if (isResubmit && StringUtils.isBlank(originalDocumentId)) {
+                logger.debug("Request has resubmit flag but misses originalDocumentId {}, {}", metadata, ownerId);
+                throw new DocumentSubmitException("Detected a resubmit request without specified originalDocumentId, %s".formatted(ownerId));
+            } else if (!isResubmit && StringUtils.isNotBlank(originalDocumentId)) {
+                logger.debug("Request has originalDocumentId but is not flagged as resubmit {}, {}", metadata, ownerId);
+                throw new DocumentSubmitException("Detected a submit request with specified originalDocumentId=%s, %s".formatted(originalDocumentId, ownerId));
             }
-        } else if (!request.isResubmit() && docVerification.getOriginalDocumentId() != null) {
-            throw new DocumentSubmitException(
-                    String.format("Detected a submit request with specified originalDocumentId=%s for %s, %s", docVerification.getOriginalDocumentId(), docVerification, ownerId));
+        }
+    }
+
+    /**
+     * Sets document with originalDocumentId as disposed. If passed originalDocumentId does not exist, no further action is taken.
+     * @param ownerId Owner identification.
+     * @param originalDocumentId Id of the original document.
+     * @param docVerification Resubmitted document.
+     */
+    private void handleResubmit(final OwnerId ownerId, final String originalDocumentId, final DocumentVerificationEntity docVerification) {
+        if (Strings.isNullOrEmpty(originalDocumentId)) {
+            logger.debug("Document {} is not a resubmit {}", docVerification, ownerId);
+            return;
+        }
+
+        logger.debug("Document {} is a resubmit, {}", docVerification, ownerId);
+        final Optional<DocumentVerificationEntity> originalDocOptional = documentVerificationRepository.findById(originalDocumentId);
+        if (originalDocOptional.isEmpty()) {
+            logger.warn("Missing previous DocumentVerificationEntity(originalDocumentId={}), {}", originalDocumentId, ownerId);
+        } else {
+            final DocumentVerificationEntity originalDoc = originalDocOptional.get();
+            originalDoc.setStatus(DocumentStatus.DISPOSED);
+            originalDoc.setUsedForVerification(false);
+            originalDoc.setTimestampDisposed(ownerId.getTimestamp());
+            originalDoc.setTimestampLastUpdated(ownerId.getTimestamp());
+            logger.info("Replaced previous {} with new {}, {}", originalDoc, docVerification, ownerId);
+            auditService.audit(docVerification, "Document replaced with new one for user: {}", ownerId.getUserId());
         }
     }
 
@@ -241,6 +301,41 @@ public class DocumentProcessingService {
 
         documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
         processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
+    }
+
+    /**
+     * Pass all pages of a document to document verification provider at a single call.
+     * @param submittedDocs Document pages to submit.
+     * @param docVerifications Entities associated with the document pages to submit.
+     * @param identityVerification Identity verification entity.
+     * @param ownerId Owner identification.
+     * @return document submit result
+     */
+    private DocumentsSubmitResult submitDocumentToProvider(final List<SubmittedDocument> submittedDocs,
+                                                           final List<DocumentVerificationEntity> docVerifications,
+                                                           final IdentityVerificationEntity identityVerification,
+                                                           final OwnerId ownerId) {
+
+        final List<String> docVerificationIds = docVerifications.stream().map(DocumentVerificationEntity::getId).toList();
+
+        try {
+            final DocumentsSubmitResult results = documentVerificationProvider.submitDocuments(ownerId, submittedDocs);
+            logger.debug("Documents {} submitted to provider, {}", docVerifications, ownerId);
+            auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document IDs: {}", ownerId.getUserId(), docVerificationIds);
+            return results;
+        } catch (DocumentVerificationException | RemoteCommunicationException e) {
+            logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage());
+            logger.debug("Document verification ID: {}, failed", docVerificationIds, e);
+            final DocumentsSubmitResult results = new DocumentsSubmitResult();
+            submittedDocs.forEach(doc -> {
+                final DocumentSubmitResult result = new DocumentSubmitResult();
+                result.setDocumentId(doc.getDocumentId());
+                result.setErrorDetail(e.getMessage());
+                results.getResults().add(result);
+            });
+            return results;
+        }
+
     }
 
     public DocumentSubmitResult submitDocumentToProvider(OwnerId ownerId, DocumentVerificationEntity docVerification, SubmittedDocument submittedDoc) {
@@ -293,8 +388,8 @@ public class DocumentProcessingService {
                 continue;
             }
             documents.stream()
-                    .filter(item -> item.getType().equals(document.getType()))
-                    .filter(item -> !item.getSide().equals(document.getSide()))
+                    .filter(item -> item.getType() == document.getType())
+                    .filter(item -> item.getSide() != document.getSide())
                     .forEach(item -> {
                         logger.debug("Found other side {} for {}", item, document);
                         item.setOtherSideId(document.getId());
@@ -353,6 +448,7 @@ public class DocumentProcessingService {
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);
         final DocumentVerificationEntity saveEntity = documentVerificationRepository.save(entity);
+        logger.debug("Created {} for {}", saveEntity, ownerId);
         auditService.auditDebug(entity, "Document created for user: {}", ownerId.getUserId());
         return saveEntity;
     }
@@ -360,13 +456,14 @@ public class DocumentProcessingService {
     private SubmittedDocument createSubmittedDocument(
             OwnerId ownerId,
             DocumentSubmitRequest.DocumentMetadata docMetadata,
-            List<Document> docs) throws DocumentSubmitException {
+            List<Document> docs,
+            DocumentVerificationEntity docVerification) throws DocumentSubmitException {
         final Image photo = Image.builder()
                 .filename(docMetadata.getFilename())
                 .build();
 
         SubmittedDocument submittedDoc = new SubmittedDocument();
-        submittedDoc.setDocumentId(docMetadata.getUploadId());
+        submittedDoc.setDocumentId(docVerification.getId());
         submittedDoc.setPhoto(photo);
         submittedDoc.setSide(docMetadata.getSide());
         submittedDoc.setType(docMetadata.getType());

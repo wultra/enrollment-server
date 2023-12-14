@@ -33,7 +33,7 @@ import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContex
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +46,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
+@ConditionalOnExpression("""
+        '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and ${enrollment-server-onboarding.onboarding-process.enabled} == true
+        """)
 class InnovatricsLivenessService {
-
-    private static final String INNOVATRICS_CUSTOMER_ID = "InnovatricsCustomerId";
 
     private final InnovatricsApiService innovatricsApiService;
 
@@ -124,8 +124,7 @@ class InnovatricsLivenessService {
             throw new IdentityVerificationException("Unable to deserialize session info", e);
         }
 
-        // TODO (racansky, 2023-11-28) discuss the format with Jan Pesek, extract to common logic
-        final String customerId = (String) sessionInfo.getSessionAttributes().get(INNOVATRICS_CUSTOMER_ID);
+        final String customerId = (String) sessionInfo.getSessionAttributes().get(SessionInfo.ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE);
         if (Strings.isNullOrEmpty(customerId)) {
             throw new IdentityVerificationException("Missing a customer ID value for calling Innovatrics, " + id);
         }

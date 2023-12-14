@@ -24,6 +24,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * Innovatrics configuration properties.
  * <p>
@@ -62,12 +65,27 @@ class InnovatricsConfigProps {
 
     private PresenceCheckConfiguration presenceCheckConfiguration;
 
+    private DocumentVerificationConfiguration documentVerificationConfiguration;
+
     @Getter @Setter
     public static class PresenceCheckConfiguration {
         /**
          * Presence check minimal score threshold.
          */
         private double score = 0.875;
+    }
+
+    @Getter @Setter
+    public static class DocumentVerificationConfiguration {
+        /**
+         * Identifies expected document countries of issue in ISO 3166-1 alpha-3 format.
+         */
+        private List<String> documentCountries;
+
+        /**
+         * Set of fields in camelCase that are cross-validated between the machine-readable zone and visual zone, if extracted.
+         */
+        private Set<String> crucialFields;
     }
 
 }

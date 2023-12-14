@@ -127,8 +127,8 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public boolean shouldProvideTrustedPhoto() {
-        return true;
+    public TrustedPhotoSource trustedPhotoSource() {
+        return TrustedPhotoSource.IMAGE;
     }
 
     @Override

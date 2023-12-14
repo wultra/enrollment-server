@@ -148,7 +148,7 @@ class InnovatricsPresenceCheckProviderTest {
 
     private static SessionInfo createSessionInfo() {
         final SessionInfo sessionInfo = new SessionInfo();
-        sessionInfo.setSessionAttributes(Map.of("InnovatricsCustomerId", CUSTOMER_ID));
+        sessionInfo.setSessionAttributes(Map.of("primaryDocumentReference", CUSTOMER_ID));
         return sessionInfo;
     }
 
