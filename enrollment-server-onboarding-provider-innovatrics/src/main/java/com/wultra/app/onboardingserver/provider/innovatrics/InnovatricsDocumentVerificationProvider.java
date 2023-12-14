@@ -397,7 +397,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      */
     private static List<String> getCrucial(final List<String> attributes) {
         if (attributes == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
         return attributes.stream().filter(CRUCIAL_ATTRIBUTES::contains).toList();
     }
