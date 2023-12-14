@@ -54,10 +54,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InnovatricsDocumentVerificationProvider implements DocumentVerificationProvider {
 
-    private static final Set<String> CRUCIAL_ATTRIBUTES = Set.of("documentNumber", "dateOfIssue", "dateOfExpiry", "surname", "dateOfBirth", "personalNumber", "givenNames");
-
     private final InnovatricsApiService innovatricsApiService;
     private final ObjectMapper objectMapper;
+    private final InnovatricsConfigProps configuration;
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId id, DocumentVerificationEntity document) throws RemoteCommunicationException, DocumentVerificationException {
@@ -349,7 +348,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param visualZoneInspection inspection of a document by Innovatrics.
      * @return List of reasons to reject the document.
      */
-    private static List<String> parseVisualZoneInspection(final VisualZoneInspection visualZoneInspection) {
+    private List<String> parseVisualZoneInspection(final VisualZoneInspection visualZoneInspection) {
         final List<String> rejectionReasons = new ArrayList<>();
         if (visualZoneInspection == null) {
             return rejectionReasons;
@@ -395,11 +394,13 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
      * @param attributes Attributes to do the intersection on.
      * @return Attributes intersection.
      */
-    private static List<String> getCrucial(final List<String> attributes) {
+    private List<String> getCrucial(final List<String> attributes) {
         if (attributes == null) {
             return Collections.emptyList();
         }
-        return attributes.stream().filter(CRUCIAL_ATTRIBUTES::contains).toList();
+
+        final Set<String> crucialFields = configuration.getDocumentVerificationConfiguration().getCrucialFields();
+        return attributes.stream().filter(crucialFields::contains).toList();
     }
 
     private <T> String serializeToString(T src) throws DocumentVerificationException {
