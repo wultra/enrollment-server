@@ -31,6 +31,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import org.slf4j.Logger;
@@ -67,6 +68,8 @@ public class VerificationProcessingBatchService {
 
     private final CommonOnboardingService commonOnboardingService;
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
@@ -76,6 +79,7 @@ public class VerificationProcessingBatchService {
      * @param verificationProcessingService Verification processing service.
      * @param auditService Audit service.
      * @param commonOnboardingService Onboarding process service (common).
+     * @param identityVerificationConfig Configuration properties.
      */
     @Autowired
     public VerificationProcessingBatchService(
@@ -85,7 +89,8 @@ public class VerificationProcessingBatchService {
             final IdentityVerificationService identityVerificationService,
             final VerificationProcessingService verificationProcessingService,
             final AuditService auditService,
-            final CommonOnboardingService commonOnboardingService) {
+            final CommonOnboardingService commonOnboardingService,
+            final IdentityVerificationConfig identityVerificationConfig) {
 
         this.documentResultRepository = documentResultRepository;
         this.identityVerificationRepository = identityVerificationRepository;
@@ -94,6 +99,7 @@ public class VerificationProcessingBatchService {
         this.verificationProcessingService = verificationProcessingService;
         this.auditService = auditService;
         this.commonOnboardingService = commonOnboardingService;
+        this.identityVerificationConfig = identityVerificationConfig;
     }
 
     /**
@@ -102,7 +108,7 @@ public class VerificationProcessingBatchService {
     @Transactional
     public void checkDocumentSubmitVerifications() {
         AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmitVerifications()) {
+        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmitVerifications(identityVerificationConfig.getDocumentVerificationProvider())) {
             stream.forEach(docResult -> {
                 DocumentVerificationEntity docVerification = docResult.getDocumentVerification();
 

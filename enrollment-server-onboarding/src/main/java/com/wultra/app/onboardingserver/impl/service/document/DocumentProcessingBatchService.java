@@ -22,6 +22,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,17 +46,22 @@ public class DocumentProcessingBatchService {
 
     private final DocumentProcessingService documentProcessingService;
 
+    private final IdentityVerificationConfig identityVerificationConfig;
+
     /**
      * Service constructor.
      * @param documentResultRepository Document verification result repository.
      * @param documentProcessingService Document processing service.
+     * @param identityVerificationConfig Configuration properties.
      */
     @Autowired
     public DocumentProcessingBatchService(
             DocumentResultRepository documentResultRepository,
-            DocumentProcessingService documentProcessingService) {
+            DocumentProcessingService documentProcessingService,
+            IdentityVerificationConfig identityVerificationConfig) {
         this.documentResultRepository = documentResultRepository;
         this.documentProcessingService = documentProcessingService;
+        this.identityVerificationConfig = identityVerificationConfig;
     }
 
     /**
@@ -64,7 +70,7 @@ public class DocumentProcessingBatchService {
     @Transactional
     public void checkInProgressDocumentSubmits() {
         AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmits()) {
+        try (Stream<DocumentResultEntity> stream = documentResultRepository.streamAllInProgressDocumentSubmits(identityVerificationConfig.getDocumentVerificationProvider())) {
             stream.forEach(docResult -> {
                 DocumentVerificationEntity docVerification = docResult.getDocumentVerification();
                 final OwnerId ownerId = new OwnerId();

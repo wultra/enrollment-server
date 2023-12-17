@@ -18,13 +18,12 @@
 package com.wultra.app.onboardingserver.common.database;
 
 
-import com.wultra.app.onboardingserver.common.configuration.ProvidersEvaluationContextExtension;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -36,20 +35,31 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jan Pesek, jan.pesek@wultra.com
  */
 @DataJpaTest
-@Import(ProvidersEvaluationContextExtension.class)
 @ActiveProfiles("test")
-@Sql
+@Transactional
 class DocumentResultRepositoryTest {
 
     @Autowired
     DocumentResultRepository tested;
 
     @Test
-    void testProviderNameImplicitlyApplied() {
-        assertThat(tested.streamAllInProgressDocumentSubmits())
+    @Sql
+    void testStreamAllInProgressDocumentSubmits() {
+        assertThat(tested.streamAllInProgressDocumentSubmits("mock"))
                 .extracting(DocumentResultEntity::getDocumentVerification)
                 .extracting(DocumentVerificationEntity::getProviderName)
-                .containsOnly("innovatrics");
+                .containsOnly("mock")
+                .hasSize(1);
+    }
+
+    @Test
+    @Sql
+    void testStreamAllInProgressDocumentSubmitVerifications() {
+        assertThat(tested.streamAllInProgressDocumentSubmitVerifications("mock"))
+                .extracting(DocumentResultEntity::getDocumentVerification)
+                .extracting(DocumentVerificationEntity::getProviderName)
+                .containsOnly("mock")
+                .hasSize(1);
     }
 
 }
