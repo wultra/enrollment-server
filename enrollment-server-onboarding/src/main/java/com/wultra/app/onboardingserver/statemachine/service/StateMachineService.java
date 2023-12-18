@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.statemachine.service;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -27,6 +28,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
 import jakarta.annotation.Nullable;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
@@ -53,6 +55,7 @@ import java.util.stream.Stream;
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 @ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
 public class StateMachineService {
 
@@ -66,27 +69,7 @@ public class StateMachineService {
 
     private final TransactionTemplate transactionTemplate;
 
-    /**
-     * Constructor.
-     *
-     * @param enrollmentStateProvider     Enrollment state provider.
-     * @param stateMachineFactory         State machine factory.
-     * @param stateMachineInterceptor     State machine interceptor.
-     * @param identityVerificationService Identity verification service.
-     */
-    public StateMachineService(
-            final EnrollmentStateProvider enrollmentStateProvider,
-            final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory,
-            final CustomStateMachineInterceptor stateMachineInterceptor,
-            final IdentityVerificationService identityVerificationService,
-            final TransactionTemplate transactionTemplate
-    ) {
-        this.enrollmentStateProvider = enrollmentStateProvider;
-        this.stateMachineFactory = stateMachineFactory;
-        this.stateMachineInterceptor = stateMachineInterceptor;
-        this.identityVerificationService = identityVerificationService;
-        this.transactionTemplate = transactionTemplate;
-    }
+    private final IdentityVerificationConfig identityVerificationConfig;
 
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
@@ -144,23 +127,25 @@ public class StateMachineService {
     public void changeMachineStatesInBatch() {
         final AtomicInteger countFinished = new AtomicInteger(0);
         try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
-            stream.forEach(identityVerification -> {
-                final String processId = identityVerification.getProcessId();
-                final OwnerId ownerId = new OwnerId();
-                ownerId.setActivationId(identityVerification.getActivationId());
-                ownerId.setUserId(identityVerification.getUserId());
-                logger.debug("Changing state of machine for process ID: {}", processId);
+              stream.filter(identityVerification -> identityVerification.getDocumentVerifications().stream()
+                            .anyMatch(doc -> identityVerificationConfig.getDocumentVerificationProvider().equals(doc.getProviderName())))
+                    .forEach(identityVerification -> {
+                        final String processId = identityVerification.getProcessId();
+                        final OwnerId ownerId = new OwnerId();
+                        ownerId.setActivationId(identityVerification.getActivationId());
+                        ownerId.setUserId(identityVerification.getUserId());
+                        logger.debug("Changing state of machine for process ID: {}", processId);
 
-                transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                transactionTemplate.executeWithoutResult(status -> {
-                    try {
-                        processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-                        countFinished.incrementAndGet();
-                    } catch (IdentityVerificationException e) {
-                        logger.warn("Unable to change state for process ID: {}", processId, e);
-                    }
-                });
-            });
+                        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                        transactionTemplate.executeWithoutResult(status -> {
+                            try {
+                                processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+                                countFinished.incrementAndGet();
+                            } catch (IdentityVerificationException e) {
+                                logger.warn("Unable to change state for process ID: {}", processId, e);
+                            }
+                        });
+                    });
         }
         if (countFinished.get() > 0) {
             logger.debug("Changed state of {} identity verifications", countFinished.get());

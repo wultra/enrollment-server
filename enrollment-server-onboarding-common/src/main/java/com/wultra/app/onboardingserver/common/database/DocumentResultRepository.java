@@ -40,18 +40,20 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
      */
     @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
             " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
+            " AND doc.documentVerification.providerName = :providerName " +
             " AND doc.extractedData IS NULL " +
             " ORDER BY doc.timestampCreated ASC")
-    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmits();
+    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmits(String providerName);
 
     /**
      * @return All not finished document submit verifications (upload is in progress and verification id exists)
      */
     @Query("SELECT doc FROM DocumentResultEntity doc WHERE" +
             " doc.documentVerification.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.UPLOAD_IN_PROGRESS" +
+            " AND doc.documentVerification.providerName = :providerName " +
             " AND doc.documentVerification.verificationId IS NOT NULL" +
             " ORDER BY doc.timestampCreated ASC")
-    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmitVerifications();
+    Stream<DocumentResultEntity> streamAllInProgressDocumentSubmitVerifications(String providerName);
 
     /**
      * @return All document results for the specified document verification and processing phase
