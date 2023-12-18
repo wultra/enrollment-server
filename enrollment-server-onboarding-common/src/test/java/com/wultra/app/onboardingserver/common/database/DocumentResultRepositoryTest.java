@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentResultRepositoryTest {
 
     @Autowired
-    DocumentResultRepository tested;
+    private DocumentResultRepository tested;
 
     @Test
     @Sql
