@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import java.util.stream.Stream;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@AllArgsConstructor
 public class DocumentProcessingBatchService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentProcessingBatchService.class);
@@ -47,22 +49,6 @@ public class DocumentProcessingBatchService {
     private final DocumentProcessingService documentProcessingService;
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
-    /**
-     * Service constructor.
-     * @param documentResultRepository Document verification result repository.
-     * @param documentProcessingService Document processing service.
-     * @param identityVerificationConfig Configuration properties.
-     */
-    @Autowired
-    public DocumentProcessingBatchService(
-            DocumentResultRepository documentResultRepository,
-            DocumentProcessingService documentProcessingService,
-            IdentityVerificationConfig identityVerificationConfig) {
-        this.documentResultRepository = documentResultRepository;
-        this.documentProcessingService = documentProcessingService;
-        this.identityVerificationConfig = identityVerificationConfig;
-    }
 
     /**
      * Checks in progress document submits on current provider status and data result

@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationExc
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,7 @@ import java.util.stream.Stream;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@AllArgsConstructor
 public class VerificationProcessingBatchService {
 
     private static final Logger logger = LoggerFactory.getLogger(VerificationProcessingBatchService.class);
@@ -69,38 +71,6 @@ public class VerificationProcessingBatchService {
     private final CommonOnboardingService commonOnboardingService;
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
-    /**
-     * Service constructor.
-     * @param documentResultRepository Document verification result repository.
-     * @param documentVerificationProvider Document verification provider.
-     * @param identityVerificationRepository Identity verification repository.
-     * @param identityVerificationService Identity verification service.
-     * @param verificationProcessingService Verification processing service.
-     * @param auditService Audit service.
-     * @param commonOnboardingService Onboarding process service (common).
-     * @param identityVerificationConfig Configuration properties.
-     */
-    @Autowired
-    public VerificationProcessingBatchService(
-            final DocumentResultRepository documentResultRepository,
-            final DocumentVerificationProvider documentVerificationProvider,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final IdentityVerificationService identityVerificationService,
-            final VerificationProcessingService verificationProcessingService,
-            final AuditService auditService,
-            final CommonOnboardingService commonOnboardingService,
-            final IdentityVerificationConfig identityVerificationConfig) {
-
-        this.documentResultRepository = documentResultRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.documentVerificationProvider = documentVerificationProvider;
-        this.identityVerificationService = identityVerificationService;
-        this.verificationProcessingService = verificationProcessingService;
-        this.auditService = auditService;
-        this.commonOnboardingService = commonOnboardingService;
-        this.identityVerificationConfig = identityVerificationConfig;
-    }
 
     /**
      * Checks document submit verifications

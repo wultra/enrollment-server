@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachineInterceptor;
 import jakarta.annotation.Nullable;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
@@ -54,6 +55,7 @@ import java.util.stream.Stream;
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 @ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
 public class StateMachineService {
 
@@ -68,30 +70,6 @@ public class StateMachineService {
     private final TransactionTemplate transactionTemplate;
 
     private final IdentityVerificationConfig identityVerificationConfig;
-
-    /**
-     * Constructor.
-     *
-     * @param enrollmentStateProvider     Enrollment state provider.
-     * @param stateMachineFactory         State machine factory.
-     * @param stateMachineInterceptor     State machine interceptor.
-     * @param identityVerificationService Identity verification service.
-     * @param identityVerificationConfig  Configuration properties.
-     */
-    public StateMachineService(
-            final EnrollmentStateProvider enrollmentStateProvider,
-            final StateMachineFactory<OnboardingState, OnboardingEvent> stateMachineFactory,
-            final CustomStateMachineInterceptor stateMachineInterceptor,
-            final IdentityVerificationService identityVerificationService,
-            final TransactionTemplate transactionTemplate,
-            final IdentityVerificationConfig identityVerificationConfig) {
-        this.enrollmentStateProvider = enrollmentStateProvider;
-        this.stateMachineFactory = stateMachineFactory;
-        this.stateMachineInterceptor = stateMachineInterceptor;
-        this.identityVerificationService = identityVerificationService;
-        this.transactionTemplate = transactionTemplate;
-        this.identityVerificationConfig = identityVerificationConfig;
-    }
 
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
