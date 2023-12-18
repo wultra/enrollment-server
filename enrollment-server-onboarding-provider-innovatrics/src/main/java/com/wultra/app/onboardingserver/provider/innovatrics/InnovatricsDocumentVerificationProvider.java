@@ -372,35 +372,21 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
         final MrzConsistency mrzConsistency = textConsistentWith.getMrz();
         if (mrzConsistency != null) {
-            final List<String> inconsistentAttributes = getCrucial(mrzConsistency.getInconsistentTexts());
+            final List<String> inconsistentAttributes = mrzConsistency.getInconsistentTexts();
             if (!inconsistentAttributes.isEmpty()) {
-                rejectionReasons.add("Inconsistent crucial attributes with MRZ: %s".formatted(inconsistentAttributes));
+                rejectionReasons.add("Inconsistent attributes with MRZ: %s".formatted(inconsistentAttributes));
             }
         }
 
         final BarcodesConsistency barcodesConsistency = textConsistentWith.getBarcodes();
         if (barcodesConsistency != null) {
-            final List<String> inconsistentAttributes = getCrucial(barcodesConsistency.getInconsistentTexts());
+            final List<String> inconsistentAttributes = barcodesConsistency.getInconsistentTexts();
             if (!inconsistentAttributes.isEmpty()) {
-                rejectionReasons.add("Inconsistent crucial attributes with barcode: %s".formatted(inconsistentAttributes));
+                rejectionReasons.add("Inconsistent attributes with barcode: %s".formatted(inconsistentAttributes));
             }
         }
 
         return rejectionReasons;
-    }
-
-    /**
-     * Intersects list of attributes with CRUCIAL_ATTRIBUTES.
-     * @param attributes Attributes to do the intersection on.
-     * @return Attributes intersection.
-     */
-    private List<String> getCrucial(final List<String> attributes) {
-        if (attributes == null) {
-            return Collections.emptyList();
-        }
-
-        final Set<String> crucialFields = configuration.getDocumentVerificationConfiguration().getCrucialFields();
-        return attributes.stream().filter(crucialFields::contains).toList();
     }
 
     private <T> String serializeToString(T src) throws DocumentVerificationException {

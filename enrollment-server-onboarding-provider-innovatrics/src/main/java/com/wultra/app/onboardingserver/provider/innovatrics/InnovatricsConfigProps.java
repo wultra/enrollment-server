@@ -81,11 +81,6 @@ class InnovatricsConfigProps {
          * Identifies expected document countries of issue in ISO 3166-1 alpha-3 format.
          */
         private List<String> documentCountries;
-
-        /**
-         * Set of fields in camelCase that are cross-validated between the machine-readable zone and visual zone, if extracted.
-         */
-        private Set<String> crucialFields;
     }
 
 }
