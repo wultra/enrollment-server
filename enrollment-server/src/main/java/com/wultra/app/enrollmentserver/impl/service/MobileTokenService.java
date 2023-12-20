@@ -87,23 +87,25 @@ public class MobileTokenService {
     }
 
     /**
-     * Get the operation list with operations of a given users. The service either returns only pending
-     * operations or all operations, depending on the provided flag.
+     * Retrieves a list of operations for a specified user. This method can return
+     * either all operations or only those that are pending, based on the 'pendingOnly' flag.
+     * It processes each operation detail, converts them into a consistent format, and
+     * filters out operations without a corresponding template.
      *
-     * @param userId User ID.
-     * @param applicationId Application ID.
-     * @param language Language.
-     * @param activationFlags Activation flags to condition the operation against.
-     * @param pendingOnly Flag indicating if only pending or all operation should be returned.
-     * @return Response with pending or all operations, depending on the "pendingOnly" flag.
-     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
-     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     * @param userId User ID for which the operation list is requested.
+     * @param applicationId Application ID associated with the operations.
+     * @param language Language for operation template localization.
+     * @param activationId Optional activation ID to filter operations.
+     * @param pendingOnly Flag indicating whether to fetch only pending operations or all.
+     * @return A consolidated list of operations formatted as 'OperationListResponse'.
+     * @throws PowerAuthClientException If there's an issue with the PowerAuth service call.
+     * @throws MobileTokenConfigurationException For any system configuration issues.
      */
     public OperationListResponse operationListForUser(
             @NotNull String userId,
             @NotNull String applicationId,
             @NotNull String language,
-            List<String> activationFlags,
+            String activationId,
             boolean pendingOnly) throws PowerAuthClientException, MobileTokenConfigurationException {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
@@ -111,6 +113,7 @@ public class MobileTokenService {
         request.setApplications(List.of(applicationId));
         request.setPageNumber(0);
         request.setPageSize(OPERATION_LIST_LIMIT);
+        request.setActivationId(activationId);
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
         final com.wultra.security.powerauth.client.model.response.OperationListResponse operations =
@@ -120,16 +123,13 @@ public class MobileTokenService {
 
         final OperationListResponse responseObject = new OperationListResponse();
         for (OperationDetailResponse operationDetail: operations) {
-            final String activationFlag = operationDetail.getActivationFlag();
-            if (activationFlag == null || activationFlags.contains(activationFlag)) { // only return data if there is no flag, or if flag matches flags of activation
-                final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
-                if (operationTemplate.isEmpty()) {
-                    logger.warn("No template found for operationType={}, skipping the entry.", operationDetail.getOperationType());
-                    continue;
-                }
-                final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
-                responseObject.add(operation);
+            final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
+            if (operationTemplate.isEmpty()) {
+                logger.warn("No template found for operationType={}, skipping the entry.", operationDetail.getOperationType());
+                continue;
             }
+            final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
+            responseObject.add(operation);
         }
         return responseObject;
     }

@@ -106,9 +106,9 @@ public class MobileTokenController {
             if (auth != null) {
                 final String userId = auth.getUserId();
                 final String applicationId = auth.getApplicationId();
-                final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
+                final String activationId = auth.getActivationContext().getActivationId();
                 final String language = locale.getLanguage();
-                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, true);
+                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, true);
                 final Date currentTimestamp = new Date();
                 return new MobileTokenResponse<>(listResponse, currentTimestamp);
             } else {
@@ -211,9 +211,9 @@ public class MobileTokenController {
             if (auth != null) {
                 final String userId = auth.getUserId();
                 final String applicationId = auth.getApplicationId();
-                final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
+                final String activationId = auth.getActivationContext().getActivationId();
                 final String language = locale.getLanguage();
-                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationFlags, false);
+                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, false);
                 return new ObjectResponse<>(listResponse);
             } else {
                 throw new MobileTokenAuthException();
