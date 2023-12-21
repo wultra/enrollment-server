@@ -47,7 +47,8 @@ class MonetaryConverterTest {
             "NZD, en, NZ$",
             "NZD, cs, NZ$",
             "NZD, nz, NZ$",
-            "BTC, cs, BTC"
+            "BTC, cs, BTC",
+            "..., cs, ..."
     })
     void testFormatCurrency(final String source, final String locale, final String expected) {
         final String result = MonetaryConverter.formatCurrency(source, new Locale(locale));
@@ -68,7 +69,8 @@ class MonetaryConverterTest {
             "1,                       BTC, en, '1'",
             "1.1,                     BTC, en, '1.1'",
             "0.123456789,             BTC, en, '0.123456789'",
-            "0.567567567567567567567, BTC, en, '0.567567567567567567'"
+            "0.567567567567567567567, BTC, en, '0.567567567567567567'",
+            "1,                       ..., en, '1'"
     })
     void testFormatAmount(final String amount, final String code, final String locale, final String expected) {
         final String result = MonetaryConverter.formatAmount(new BigDecimal(amount), code, new Locale(locale));
@@ -92,7 +94,8 @@ class MonetaryConverterTest {
             "1,                       BTC, en, '1 BTC'",
             "1.1,                     BTC, en, '1.1 BTC'",
             "0.123456789,             BTC, en, '0.123456789 BTC'",
-            "0.567567567567567567567, BTC, en, '0.567567567567567567 BTC'"
+            "0.567567567567567567567, BTC, en, '0.567567567567567567 BTC'",
+            "1,                       ..., en, '1 ...'"
     })
     void testFormatValue(final String amount, final String code, final String locale, final String expected) {
         final String result = MonetaryConverter.formatValue(new BigDecimal(amount), code, new Locale(locale));
