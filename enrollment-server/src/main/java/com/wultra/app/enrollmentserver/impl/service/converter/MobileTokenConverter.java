@@ -335,32 +335,40 @@ public class MobileTokenConverter {
                 .map(Boolean::parseBoolean)
                 .orElse(false);
 
-        BigDecimal sourceAmountRaw;
-        BigDecimal targetAmountRaw;
-        String sourceAmountFormatted;
-        String targetAmountFormatted;
-        String sourceValueFormatted;
-        String targetValueFormatted;
         final Locale locale = LocaleContextHolder.getLocale();
+        BigDecimal sourceAmountRaw;
+        String sourceAmountFormatted;
+        String sourceValueFormatted;
         final String sourceCurrencyRaw = sourceCurrency.get();
-        final String targetCurrencyRaw = targetCurrency.get();
 
         try {
             sourceAmountRaw = new BigDecimal(sourceAmount.get());
-            targetAmountRaw = new BigDecimal(targetAmount.get());
             sourceAmountFormatted = MonetaryConverter.formatAmount(sourceAmountRaw, sourceCurrencyRaw, locale);
-            targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
             sourceValueFormatted = MonetaryConverter.formatValue(sourceAmountRaw, sourceCurrencyRaw, locale);
-            targetValueFormatted = MonetaryConverter.formatValue(targetAmountRaw, targetCurrencyRaw, locale);
         } catch (NumberFormatException e) {
-            logger.warn("Invalid number format: {}, the raw value is not filled in into AMOUNT_CONVERSION attribute!", sourceAmount);
-            logger.trace("Invalid number format: {}, the raw value is not filled in into AMOUNT_CONVERSION attribute!", sourceAmount, e);
+            logger.warn("Invalid number format: {}, the raw value is not filled in into source AMOUNT_CONVERSION attribute!", sourceAmount);
+            logger.trace("Invalid number format: {}, the raw value is not filled in into source AMOUNT_CONVERSION attribute!", sourceAmount, e);
             sourceAmountRaw = null;
-            targetAmountRaw = null;
             // fallback - pass 'not a number' directly to the formatted field
             sourceAmountFormatted = sourceAmount.get();
-            targetAmountFormatted = targetAmount.get();
             sourceValueFormatted = sourceAmountFormatted + " " + sourceCurrencyRaw;
+        }
+
+        BigDecimal targetAmountRaw;
+        String targetAmountFormatted;
+        String targetValueFormatted;
+        final String targetCurrencyRaw = targetCurrency.get();
+
+        try {
+            targetAmountRaw = new BigDecimal(targetAmount.get());
+            targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
+            targetValueFormatted = MonetaryConverter.formatValue(targetAmountRaw, targetCurrencyRaw, locale);
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid number format: {}, the raw value is not filled in into target AMOUNT_CONVERSION attribute!", sourceAmount);
+            logger.trace("Invalid number format: {}, the raw value is not filled in into target AMOUNT_CONVERSION attribute!", sourceAmount, e);
+            targetAmountRaw = null;
+            // fallback - pass 'not a number' directly to the formatted field
+            targetAmountFormatted = targetAmount.get();
             targetValueFormatted = targetAmountFormatted + " " + targetCurrencyRaw;
         }
 

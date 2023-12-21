@@ -556,12 +556,12 @@ class MobileTokenConverterTest {
     }
 
     @Test
-    void testConvertAmountConversion_notANumber() throws Exception {
+    void testConvertAmountConversion_sourceNotANumber() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setParameters(ImmutableMap.<String, String>builder()
                 .put("sourceAmount", "source not a number")
-                .put("sourceCurrency", "ETH")
-                .put("targetAmount", "target not a number")
+                .put("sourceCurrency", "EUR")
+                .put("targetAmount", "1710.98")
                 .put("targetCurrency", "USD")
                 .put("dynamic", "true")
                 .build());
@@ -596,14 +596,66 @@ class MobileTokenConverterTest {
                 .dynamic(true)
                 .sourceAmount(null)
                 .sourceAmountFormatted("source not a number")
-                .sourceCurrency("ETH")
-                .sourceCurrencyFormatted("ETH")
-                .sourceValueFormatted("source not a number ETH")
-                .targetAmount(null)
-                .targetAmountFormatted("target not a number")
+                .sourceCurrency("EUR")
+                .sourceCurrencyFormatted("€")
+                .sourceValueFormatted("source not a number EUR")
+                .targetAmount(new BigDecimal("1710.98"))
+                .targetAmountFormatted("1,710.98")
                 .targetCurrency("USD")
                 .targetCurrencyFormatted("$")
-                .targetValueFormatted("target not a number USD")
+                .targetValueFormatted("$1,710.98")
+                .build(), atributesIterator.next());
+    }
+
+    @Test
+    void testConvertAmountConversion_targetNotANumber() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(ImmutableMap.<String, String>builder()
+                .put("sourceAmount", "1710.98")
+                .put("sourceCurrency", "USD")
+                .put("targetAmount", "target not a number")
+                .put("targetCurrency", "EUR")
+                .put("dynamic", "true")
+                .build());
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.amountConversion",
+                    "type": "AMOUNT_CONVERSION",
+                    "text": "Amount Conversion",
+                    "params": {
+                      "dynamic": "dynamic",
+                      "sourceAmount": "sourceAmount",
+                      "sourceCurrency": "sourceCurrency",
+                      "targetAmount": "targetAmount",
+                      "targetCurrency": "targetCurrency"
+                    }
+                  }
+                ]""");
+
+        LocaleContextHolder.setLocale(new Locale("en"));
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<Attribute> attributes = result.getFormData().getAttributes();
+
+        assertEquals(1, attributes.size());
+        final var atributesIterator = attributes.iterator();
+        assertEquals(AmountConversionAttribute.builder()
+                .id("operation.amountConversion")
+                .label("Amount Conversion")
+                .dynamic(true)
+                .sourceAmount(new BigDecimal("1710.98"))
+                .sourceAmountFormatted("1,710.98")
+                .sourceCurrency("USD")
+                .sourceCurrencyFormatted("$")
+                .sourceValueFormatted("$1,710.98")
+                .targetAmount(null)
+                .targetAmountFormatted("target not a number")
+                .targetCurrency("EUR")
+                .targetCurrencyFormatted("€")
+                .targetValueFormatted("target not a number EUR")
                 .build(), atributesIterator.next());
     }
 
