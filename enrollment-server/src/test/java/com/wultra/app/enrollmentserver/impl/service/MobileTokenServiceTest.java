@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -96,9 +97,9 @@ class MobileTokenServiceTest {
         final OperationListResponse operationListResponse = tested.operationListForUser(userId, applicationId, language, activationId, false);
 
         assertNotNull(operationListResponse);
-        assertEquals(1,operationListResponse.size());
+        assertEquals(1, operationListResponse.size());
         assertNotNull(operationListResponse.get(0));
-        assertEquals(operationType,operationListResponse.get(0).getName());
+        assertEquals(operationType, operationListResponse.get(0).getName());
     }
 
 }
