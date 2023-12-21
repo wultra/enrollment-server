@@ -516,6 +516,98 @@ class MobileTokenConverterTest {
     }
 
     @Test
+    void testConvertAmount_notANumber() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(ImmutableMap.<String, String>builder()
+                .put("amount", "not a number")
+                .put("currency", "CZK")
+                .build());
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.amount",
+                    "type": "AMOUNT",
+                    "text": "Amount",
+                    "params": {
+                      "amount": "amount",
+                      "currency": "currency"
+                    }
+                  }
+                ]""");
+
+        LocaleContextHolder.setLocale(new Locale("en"));
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<Attribute> attributes = result.getFormData().getAttributes();
+
+        assertEquals(1, attributes.size());
+        final var atributesIterator = attributes.iterator();
+        assertEquals(AmountAttribute.builder()
+                .id("operation.amount")
+                .label("Amount")
+                .amount(null)
+                .amountFormatted("not a number")
+                .currency("CZK")
+                .currencyFormatted("CZK")
+                .valueFormatted("not a number CZK")
+                .build(), atributesIterator.next());
+    }
+
+    @Test
+    void testConvertAmountConversion_notANumber() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(ImmutableMap.<String, String>builder()
+                .put("sourceAmount", "source not a number")
+                .put("sourceCurrency", "ETH")
+                .put("targetAmount", "target not a number")
+                .put("targetCurrency", "USD")
+                .put("dynamic", "true")
+                .build());
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setAttributes("""
+                [
+                  {
+                    "id": "operation.amountConversion",
+                    "type": "AMOUNT_CONVERSION",
+                    "text": "Amount Conversion",
+                    "params": {
+                      "dynamic": "dynamic",
+                      "sourceAmount": "sourceAmount",
+                      "sourceCurrency": "sourceCurrency",
+                      "targetAmount": "targetAmount",
+                      "targetCurrency": "targetCurrency"
+                    }
+                  }
+                ]""");
+
+        LocaleContextHolder.setLocale(new Locale("en"));
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final List<Attribute> attributes = result.getFormData().getAttributes();
+
+        assertEquals(1, attributes.size());
+        final var atributesIterator = attributes.iterator();
+        assertEquals(AmountConversionAttribute.builder()
+                .id("operation.amountConversion")
+                .label("Amount Conversion")
+                .dynamic(true)
+                .sourceAmount(null)
+                .sourceAmountFormatted("source not a number")
+                .sourceCurrency("ETH")
+                .sourceCurrencyFormatted("ETH")
+                .sourceValueFormatted("source not a number ETH")
+                .targetAmount(null)
+                .targetAmountFormatted("target not a number")
+                .targetCurrency("USD")
+                .targetCurrencyFormatted("$")
+                .targetValueFormatted("target not a number USD")
+                .build(), atributesIterator.next());
+    }
+
+    @Test
     void testConvertImageAttributeWithoutOriginalUrl() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
         operationDetail.setParameters(Map.of("thumbnailUrl", "https://example.com/123_thumb.jpeg"));
