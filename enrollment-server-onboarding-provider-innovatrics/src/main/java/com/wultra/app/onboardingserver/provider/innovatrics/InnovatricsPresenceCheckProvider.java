@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -31,6 +30,7 @@ import com.wultra.app.onboardingserver.provider.innovatrics.model.api.EvaluateCu
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.SelfieSimilarityWith;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -151,7 +151,7 @@ class InnovatricsPresenceCheckProvider implements PresenceCheckProvider {
 
     private static String fetchCustomerId(final OwnerId id, final SessionInfo sessionInfo) throws PresenceCheckException {
         final String customerId = (String) sessionInfo.getSessionAttributes().get(SessionInfo.ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE);
-        if (Strings.isNullOrEmpty(customerId)) {
+        if (StringUtils.isBlank(customerId)) {
             throw new PresenceCheckException("Missing a customer ID value for calling Innovatrics, " + id);
         }
         return customerId;

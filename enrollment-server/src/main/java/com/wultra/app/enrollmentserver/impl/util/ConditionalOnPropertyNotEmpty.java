@@ -18,7 +18,7 @@
 
 package com.wultra.app.enrollmentserver.impl.util;
 
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -52,7 +52,7 @@ public @interface ConditionalOnPropertyNotEmpty {
             Map<String, Object> attrs = metadata.getAnnotationAttributes(ConditionalOnPropertyNotEmpty.class.getName());
             String propertyName = (String) Objects.requireNonNull(attrs).get("value");
             String val = context.getEnvironment().getProperty(propertyName);
-            return !Strings.nullToEmpty(val).trim().isEmpty();
+            return StringUtils.isNotBlank(val);
         }
     }
 
