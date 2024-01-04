@@ -22,6 +22,8 @@ import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
+import java.util.List;
+
 /**
  * Request object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
  *
@@ -29,6 +31,7 @@ import lombok.*;
  */
 @Builder
 @Getter
+@Setter
 @ToString
 @PublicApi
 @EqualsAndHashCode
@@ -45,4 +48,11 @@ public final class EvaluateClientRequest {
 
     @NonNull
     private String verificationId;
+
+    private String provider;
+
+    /**
+     * Data extracted from each document/page. Format is defined by the document verification provider used.
+     */
+    private List<String> extractedData;
 }

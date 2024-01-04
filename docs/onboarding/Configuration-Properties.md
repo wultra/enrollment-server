@@ -46,7 +46,6 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.identity-verification.otp.enabled` | `true` | Whether OTP verification is enabled during identity verification. |
 | `enrollment-server-onboarding.identity-verification.max-failed-attempts` | `5` | Maximum failed attempts for identity verification. |
 | `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5` | Maximum failed attempts for document upload. |
-| `enrollment-server-onboarding.client-evaluation.max-failed-attempts` | `5` | Maximum failed attempts for client evaluation. |
 
 ## Digital Onboarding Adapter Configuration
 
@@ -69,6 +68,7 @@ The Onboarding Server uses the following public configuration properties:
 | Property | Default | Note |
 |---|---|---|
 | `enrollment-server-onboarding.client-evaluation.max-failed-attempts` | 5 | Number of maximum failed attempts for client evaluation. |
+| `enrollment-server-onboarding.client-evaluation.include-extracted-data` | `false` | Include extracted data to the evaluate client request. The format of extracted data is defined by the provider of document verification. |
 
 ## Document Verification Provider Configuration
 

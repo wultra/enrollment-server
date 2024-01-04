@@ -79,6 +79,9 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:5}")
     private int clientEvaluationMaxFailedAttempts;
 
+    @Value("${enrollment-server-onboarding.client-evaluation.include-extracted-data:false}")
+    private boolean sendingExtractedDataEnabled;
+
     @PostConstruct
     void validate() {
         // Once in the future, we may replace OTP in SCA by NFC document reading
