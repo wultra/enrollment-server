@@ -251,7 +251,7 @@ class CleaningService {
                         auditService.audit(document, "Expired Document verification for user: {}, {}", document.getIdentityVerification().getUserId(), errorDetail)));
     }
 
-    static final class ListUtils {
+    protected static final class ListUtils {
 
         private ListUtils() {
             throw new IllegalStateException("Utility class");
