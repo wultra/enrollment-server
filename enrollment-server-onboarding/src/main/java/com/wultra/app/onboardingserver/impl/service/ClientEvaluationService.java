@@ -89,11 +89,11 @@ public class ClientEvaluationService {
     public void processClientEvaluation(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         logger.debug("Client evaluation started for {}", identityVerification);
 
-        final Set<DocumentVerificationEntity> acceptedDocuments = getAcceptedDocuments(identityVerification);
+        final Set<DocumentVerificationEntity> acceptedDocuments = selectAcceptedDocuments(identityVerification);
 
         final String verificationId;
         try {
-            verificationId = getVerificationId(identityVerification, acceptedDocuments);
+            verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
         } catch (Exception e) {
             processVerificationIdError(identityVerification, ownerId, e);
             return;
@@ -107,7 +107,7 @@ public class ClientEvaluationService {
                 .provider(config.getDocumentVerificationProvider());
 
         if (config.isSendingExtractedDataEnabled()) {
-            requestBuilder.extractedData(getExtractedData(acceptedDocuments, identityVerification));
+            requestBuilder.extractedData(fetchDocumentsExtractedData(acceptedDocuments, identityVerification));
         }
 
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
@@ -126,28 +126,28 @@ public class ClientEvaluationService {
         processTooManyEvaluationError(identityVerification, ownerId);
     }
 
-    private static Set<DocumentVerificationEntity> getAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
+    private static Set<DocumentVerificationEntity> selectAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
         return identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .collect(toSet());
     }
 
-    private static List<String> getExtractedData(final Set<DocumentVerificationEntity> documents, final IdentityVerificationEntity identityVerification) {
+    private static List<String> fetchDocumentsExtractedData(final Set<DocumentVerificationEntity> documents, final IdentityVerificationEntity identityVerification) {
         return documents.stream()
-                .map(doc -> getLatestDocumentResult(doc, identityVerification))
+                .map(doc -> selectLatestDocumentResult(doc, identityVerification))
                 .map(DocumentResultEntity::getExtractedData)
                 .filter(data -> !DocumentSubmitResult.NO_DATA_EXTRACTED.equals(data))
                 .toList();
     }
 
-    private static DocumentResultEntity getLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity, final IdentityVerificationEntity identityVerification) {
+    private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity, final IdentityVerificationEntity identityVerification) {
         return documentVerificationEntity.getResults().stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Missing document result for %s of %s".formatted(documentVerificationEntity, identityVerification)));
     }
 
-    private static String getVerificationId(final IdentityVerificationEntity identityVerification, final Set<DocumentVerificationEntity> documents) {
+    private static String fetchVerificationId(final IdentityVerificationEntity identityVerification, final Set<DocumentVerificationEntity> documents) {
         final Set<String> verificationIds = documents.stream()
                 .map(DocumentVerificationEntity::getVerificationId)
                 .collect(toSet());
