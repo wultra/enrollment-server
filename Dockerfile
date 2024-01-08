@@ -1,4 +1,4 @@
-FROM ibm-semeru-runtimes:open-17.0.8_7-jre
+FROM ibm-semeru-runtimes:open-17.0.9_9-jre
 LABEL maintainer="petr@wultra.com"
 
 # Prepare environment variables
@@ -8,7 +8,7 @@ ENV JAVA_HOME=/opt/java/openjdk \
     PKG_RELEASE=1~jammy \
     TOMCAT_HOME=/usr/local/tomcat \
     TOMCAT_MAJOR=10 \
-    TOMCAT_VERSION=10.1.13 \
+    TOMCAT_VERSION=10.1.17 \
     TZ=UTC
 
 ENV PATH=$PATH:$LB_HOME:$TOMCAT_HOME/bin
@@ -20,7 +20,7 @@ RUN apt-get -y update  \
 
 # Install tomcat
 RUN curl -jkSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
-    && [ "406c0c367ac6ad95bb724ecc3a3c340ad7ded8c62287d657811eeec496eaaca1f5add52d2f46111da1426ae67090c543f6deccfeb5fdf4bdae32f9b39e773265  /tmp/apache-tomcat.tar.gz" = "$(sha512sum /tmp/apache-tomcat.tar.gz)" ] \
+    && [ "ff9670f9cd49a604e47edfbcfb5855fe59342048c3278ea8736276b51327adf2d076973f3ad1b8aa7870ef26c28cf7111527be810b445c9927f2a457795f5cb6  /tmp/apache-tomcat.tar.gz" = "$(sha512sum /tmp/apache-tomcat.tar.gz)" ] \
     && gunzip /tmp/apache-tomcat.tar.gz \
     && tar -C /opt -xf /tmp/apache-tomcat.tar \
     && ln -s /opt/apache-tomcat-$TOMCAT_VERSION $TOMCAT_HOME
