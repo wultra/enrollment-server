@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -96,9 +96,6 @@
         <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
-        <!--  TODO (racansky, 2023-10-31) temporarily override spring boot version to make commons-text 1.11.0 working  -->
-        <commons-lang3.version>3.13.0</commons-lang3.version>
-
         <wultra-core.version>1.9.0-SNAPSHOT</wultra-core.version>
         <powerauth-crypto.version>1.7.0-SNAPSHOT</powerauth-crypto.version>
         <powerauth-restful-integration.version>1.7.0-SNAPSHOT</powerauth-restful-integration.version>
@@ -106,8 +103,6 @@
 
         <bcprov-jdk18on.version>1.77</bcprov-jdk18on.version>
         <logstash.version>7.4</logstash.version>
-        <!--  TODO (racansky, 2023-12-08) temporarily override the version 1.4.11 from spring boot version because of CVE  -->
-        <logback.version>1.4.14</logback.version>
     </properties>
 
     <dependencyManagement>
