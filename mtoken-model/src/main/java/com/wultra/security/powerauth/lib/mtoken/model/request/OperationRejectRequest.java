@@ -17,7 +17,7 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 /**
@@ -28,7 +28,7 @@ import lombok.Data;
 @Data
 public class OperationRejectRequest {
 
-    @NotNull
+    @NotEmpty
     private String id;
     private String reason;
 

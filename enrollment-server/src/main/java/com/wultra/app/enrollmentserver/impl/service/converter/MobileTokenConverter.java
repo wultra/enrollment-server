@@ -285,27 +285,37 @@ public class MobileTokenConverter {
         if (currency.isEmpty()) {
             return Optional.empty();
         }
-        final BigDecimal amountRaw;
-        try {
-            amountRaw = new BigDecimal(amount.get());
-        } catch (NumberFormatException ex) {
-            logger.warn("Invalid number format: {}, skipping the AMOUNT attribute!", amount);
-            return Optional.empty();
-        }
+
         final Locale locale = LocaleContextHolder.getLocale();
         final String currencyRaw = currency.get();
         final String currencyFormatted = MonetaryConverter.formatCurrency(currencyRaw, locale);
-        final String amountFormatted = MonetaryConverter.formatAmount(amountRaw, currencyRaw, locale);
-        final String valueFormatted = MonetaryConverter.formatValue(amountRaw, currencyRaw, locale);
+        final AmountFormatted amountFormatted = createAmountFormatted(amount.get(), currencyRaw, "AMOUNT");
         return Optional.of(AmountAttribute.builder()
                 .id(id)
                 .label(text)
-                .amount(amountRaw)
-                .amountFormatted(amountFormatted)
+                .amount(amountFormatted.amountRaw())
+                .amountFormatted(amountFormatted.amountFormatted())
                 .currency(currencyRaw)
                 .currencyFormatted(currencyFormatted)
-                .valueFormatted(valueFormatted)
+                .valueFormatted(amountFormatted.valueFormatted())
                 .build());
+    }
+
+    private static AmountFormatted createAmountFormatted(final String amount, final String currencyRaw, final String attribute) {
+        final Locale locale = LocaleContextHolder.getLocale();
+
+        try {
+            final BigDecimal amountRaw = new BigDecimal(amount);
+            final String amountFormatted = MonetaryConverter.formatAmount(amountRaw, currencyRaw, locale);
+            final String valueFormatted = MonetaryConverter.formatValue(amountRaw, currencyRaw, locale);
+            return new AmountFormatted(amountRaw, amountFormatted, valueFormatted);
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid number format: {}, the raw value is not filled in into {} attribute!", amount, attribute);
+            logger.trace("Invalid number format: {}, the raw value is not filled in into {} attribute!", amount, attribute, e);
+            // fallback - pass 'not a number' directly to the formatted field
+            final String valueFormatted = amount + " " + currencyRaw;
+            return new AmountFormatted(null, amount, valueFormatted);
+        }
     }
 
     private static Optional<Attribute> buildAmountConversionAttribute(final OperationTemplateParam templateParam, final Map<String, String> params) {
@@ -326,39 +336,29 @@ public class MobileTokenConverter {
                 .map(Boolean::parseBoolean)
                 .orElse(false);
 
-        final BigDecimal sourceAmountRaw;
-        final BigDecimal targetAmountRaw;
-        try {
-            sourceAmountRaw = new BigDecimal(sourceAmount.get());
-            targetAmountRaw = new BigDecimal(targetAmount.get());
-        } catch (NumberFormatException ex) {
-            logger.warn("Invalid number format: {}, skipping the AMOUNT_CONVERSION attribute!", sourceAmount);
-            return Optional.empty();
-        }
-
         final Locale locale = LocaleContextHolder.getLocale();
         final String sourceCurrencyRaw = sourceCurrency.get();
-        final String sourceCurrencyFormatted = MonetaryConverter.formatCurrency(sourceCurrencyRaw, locale);
-        final String sourceAmountFormatted = MonetaryConverter.formatAmount(sourceAmountRaw, sourceCurrencyRaw, locale);
-        final String sourceValueFormatted = MonetaryConverter.formatValue(sourceAmountRaw, sourceCurrencyRaw, locale);
+        final AmountFormatted sourceAmountFormatted = createAmountFormatted(sourceAmount.get(), sourceCurrencyRaw, "AMOUNT_CONVERSION");
+
         final String targetCurrencyRaw = targetCurrency.get();
+        final AmountFormatted targetAmountFormatted = createAmountFormatted(targetAmount.get(), targetCurrencyRaw, "AMOUNT_CONVERSION");
+
+        final String sourceCurrencyFormatted = MonetaryConverter.formatCurrency(sourceCurrencyRaw, locale);
         final String targetCurrencyFormatted = MonetaryConverter.formatCurrency(targetCurrencyRaw, locale);
-        final String targetAmountFormatted = MonetaryConverter.formatAmount(targetAmountRaw, targetCurrencyRaw, locale);
-        final String targetValueFormatted = MonetaryConverter.formatValue(targetAmountRaw, targetCurrencyRaw, locale);
         return Optional.of(AmountConversionAttribute.builder()
                 .id(id)
                 .label(text)
                 .dynamic(dynamic)
-                .sourceAmount(sourceAmountRaw)
-                .sourceAmountFormatted(sourceAmountFormatted)
+                .sourceAmount(sourceAmountFormatted.amountRaw())
+                .sourceAmountFormatted(sourceAmountFormatted.amountFormatted())
                 .sourceCurrency(sourceCurrencyRaw)
                 .sourceCurrencyFormatted(sourceCurrencyFormatted)
-                .sourceValueFormatted(sourceValueFormatted)
-                .targetAmount(targetAmountRaw)
-                .targetAmountFormatted(targetAmountFormatted)
+                .sourceValueFormatted(sourceAmountFormatted.valueFormatted())
+                .targetAmount(targetAmountFormatted.amountRaw())
+                .targetAmountFormatted(targetAmountFormatted.amountFormatted())
                 .targetCurrency(targetCurrencyRaw)
                 .targetCurrencyFormatted(targetCurrencyFormatted)
-                .targetValueFormatted(targetValueFormatted)
+                .targetValueFormatted(targetAmountFormatted.valueFormatted())
                 .build());
     }
 
@@ -397,7 +397,7 @@ public class MobileTokenConverter {
             return Optional.empty();
         }
         if (params == null) {
-            logger.warn("Params of OperationDetailResponse is null");
+            logger.warn("Params of OperationTemplateParam is null");
             return Optional.empty();
         }
         return Optional.ofNullable(templateParams.get(key))
@@ -408,4 +408,6 @@ public class MobileTokenConverter {
         return fetchTemplateParamValue(templateParam, params, key)
                 .orElse(null);
     }
+
+    private record AmountFormatted(BigDecimal amountRaw, String amountFormatted, String valueFormatted) {}
 }

@@ -30,7 +30,7 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.5.0</version>
+        <version>1.6.0</version>
     </parent>
 
     <dependencies>
@@ -111,17 +111,16 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
-        <!-- Other Dependencies -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
-        </dependency>
-
         <!-- Logging -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
+
+        <!-- Monitoring -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -176,13 +175,30 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>jakarta.servlet</groupId>
+                            <artifactId>jakarta.servlet-api</artifactId>
+                        </exclude>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
+                <artifactId>maven-war-plugin</artifactId>
                 <configuration>
-                    <excludedGroups>external-service</excludedGroups>
+                    <webResources>
+                        <webResource>
+                            <directory>src/main/webapp/WEB-INF</directory>
+                            <targetPath>WEB-INF</targetPath>
+                            <filtering>true</filtering>
+                        </webResource>
+                    </webResources>
                 </configuration>
             </plugin>
         </plugins>
@@ -197,22 +213,6 @@
             <properties>
                 <additionalparam>-Xdoclint:none</additionalparam>
             </properties>
-        </profile>
-        <profile>
-            <id>standalone</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.tomcat.embed</groupId>
-                    <artifactId>tomcat-embed-el</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
         </profile>
         <profile>
             <id>public-repository</id>

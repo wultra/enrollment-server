@@ -21,8 +21,8 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
@@ -229,7 +229,7 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
             PowerAuthSignatureTypes.POSSESSION
     })
-    public ResponseEntity<Response> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
+    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
                                                       @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                       @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {

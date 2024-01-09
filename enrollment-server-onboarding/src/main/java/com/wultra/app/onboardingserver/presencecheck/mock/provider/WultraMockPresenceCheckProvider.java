@@ -22,7 +22,7 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
-import com.wultra.app.onboardingserver.provider.PresenceCheckProvider;
+import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -59,6 +59,11 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
     @Override
     public void initPresenceCheck(OwnerId id, Image photo) {
         logger.info("Mock - initialized presence check with a photo, {}", id);
+    }
+
+    @Override
+    public TrustedPhotoSource trustedPhotoSource() {
+        return TrustedPhotoSource.IMAGE;
     }
 
     @Override
@@ -101,7 +106,7 @@ public class WultraMockPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
-    public void cleanupIdentityData(OwnerId id) {
+    public void cleanupIdentityData(final OwnerId id, final SessionInfo sessionInfo) {
         logger.info("Mock - cleaned up identity data, {}", id);
     }
 

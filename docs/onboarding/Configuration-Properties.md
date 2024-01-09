@@ -10,7 +10,6 @@ The Onboarding Server uses the following public configuration properties:
 | `spring.datasource.username` | `powerauth` | Database JDBC username |
 | `spring.datasource.password` | `_empty_` | Database JDBC password |
 | `spring.datasource.driver-class-name` | `org.postgresql.Driver` | Datasource JDBC class name | 
-| `spring.jpa.database-platform` | `org.hibernate.dialect.PostgreSQLDialect` | Database dialect | 
 | `spring.jpa.hibernate.ddl-auto` | `none` | Configuration of automatic database schema creation | 
 | `spring.jpa.properties.hibernate.connection.characterEncoding` | `utf8` | Character encoding |
 | `spring.jpa.properties.hibernate.connection.useUnicode` | `true` | Character encoding - Unicode support |
@@ -75,7 +74,7 @@ The Onboarding Server uses the following public configuration properties:
 
 | Property | Default | Note |
 |---|---|---|
-| `enrollment-server-onboarding.document-verification.provider` | `mock` | Document verification provider (`mock`, `zenid`). |
+| `enrollment-server-onboarding.document-verification.provider` | `mock` | Document verification provider (`mock`, `zenid`, `innovatrics`). |
 | `enrollment-server-onboarding.document-verification.cleanupEnabled` | `false` | Whether document cleanup is enabled for the provider. |
 | `enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits` | `0/5 * * * * *` | Cron scheduler for checking status of submitted documents. |
 | `enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron` | `0/5 * * * * *` | Cron scheduler for checking pending document verifications. |
@@ -88,7 +87,7 @@ The Onboarding Server uses the following public configuration properties:
 | Property                                                                       | Default | Note                                                                                   |
 |--------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------|
 | `enrollment-server-onboarding.presence-check.enabled`                          | `true`  | Whether presence check provider is enabled.                                            |
-| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`).                                            |
+| `enrollment-server-onboarding.presence-check.provider`                         | `mock`  | Presence check provider (`mock`, `iproov`, `innovatrics`).                             |
 | `enrollment-server-onboarding.presence-check.cleanupEnabled`                   | `false` | Whether cleanup of presence check data is enabled.                                     |
 | `enrollment-server-onboarding.presence-check.verifySelfieWithDocumentsEnabled` | `false` | Whether verification of the presence check selfie photo with the documents is enabled. |
 | `enrollment-server-onboarding.presence-check.max-failed-attempts`              | `5`     | Maximum failed attempts for presence check and OTP verification.                       |
@@ -128,12 +127,32 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.presence-check.iproov.oAuthClientUsername`                          |                           | OAuth client username to iProov REST service.                                 |
 | `enrollment-server-onboarding.presence-check.iproov.oAuthClientPassword`                          |                           | OAuth client password to iProov REST service.                                 |
 | `enrollment-server-onboarding.presence-check.iproov.restClientConfig.acceptInvalidSslCertificate` | `false`                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service. |
-| `enrollment-server-onboarding.document-verification.zenid.restClientConfig.maxInMemorySize`       | `10485760`                | Maximum in memory size of HTTP requests when calling iProov REST service.     |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyEnabled`          | `false`                   | Whether proxy server is enabled when calling iProov REST service.             |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyHost`             |                           | Proxy host to be used when calling iProov REST service.                       |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPort`             | 0                         | Proxy port to be used when calling iProov REST service.                       |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyUsername`         |                           | Proxy username to be used when calling iProov REST service.                   |
-| `enrollment-server-onboarding.presence-check.iproov.zenid.restClientConfig.proxyPassword`         |                           | Proxy password to be used when calling iProov REST service.                   |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.maxInMemorySize`             | `10485760`                | Maximum in memory size of HTTP requests when calling iProov REST service.     |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyEnabled`                | `false`                   | Whether proxy server is enabled when calling iProov REST service.             |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyHost`                   |                           | Proxy host to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyPort`                   | 0                         | Proxy port to be used when calling iProov REST service.                       |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyUsername`               |                           | Proxy username to be used when calling iProov REST service.                   |
+| `enrollment-server-onboarding.presence-check.iproov.restClientConfig.proxyPassword`               |                           | Proxy password to be used when calling iProov REST service.                   |
+
+
+## Innovatrics Configuration
+
+| Property                                                                                                | Default                                                                                                   | Note                                                                                                                                                                                                                                                               |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.provider.innovatrics.serviceBaseUrl`                                      |                                                                                                           | Base REST service URL for Innovatrics.                                                                                                                                                                                                                             |
+| `enrollment-server-onboarding.provider.innovatrics.serviceToken`                                        |                                                                                                           | Authentication token for Innovatrics.                                                                                                                                                                                                                              |
+| `enrollment-server-onboarding.provider.innovatrics.serviceUserAgent`                                    | `Wultra/OnboardingServer`                                                                                 | User agent to use when making HTTP calls to Innovatrics REST service.                                                                                                                                                                                              |
+| `enrollment-server-onboarding.provider.innovatrics.presenceCheckConfiguration.score`                    | 0.875                                                                                                     | Presence check minimal score threshold.                                                                                                                                                                                                                            |
+| `enrollment-server-onboarding.provider.innovatrics.documentVerificationConfiguration.documentCountries` | `CZE`                                                                                                     | List of expected countries of issue of identification documents as three-letter country codes, i.e. ISO 3166-1 alpha-3. If empty, all countries of issue known to Innovatrics are considered during classification, which may have negative impact on performance. |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.acceptInvalidSslCertificate`        | `false`                                                                                                   | Whether invalid SSL certificate is accepted when calling Zen ID REST service.                                                                                                                                                                                      |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.maxInMemorySize`                    | `10485760`                                                                                                | Maximum in memory size of HTTP requests when calling Innovatrics REST service.                                                                                                                                                                                     |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyEnabled`                       | `false`                                                                                                   | Whether proxy server is enabled when calling Innovatrics REST service.                                                                                                                                                                                             |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyHost`                          |                                                                                                           | Proxy host to be used when calling Innovatrics REST service.                                                                                                                                                                                                       |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyPort`                          | 0                                                                                                         | Proxy port to be used when calling Innovatrics REST service.                                                                                                                                                                                                       |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyUsername`                      |                                                                                                           | Proxy username to be used when calling Innovatrics REST service.                                                                                                                                                                                                   |
+| `enrollment-server-onboarding.provider.innovatrics.restClientConfig.proxyPassword`                      |                                                                                                           | Proxy password to be used when calling Innovatrics REST service.                                                                                                                                                                                                   |
+
+See [Innovatrics documentation](https://developers.innovatrics.com/digital-onboarding/docs/functionalities/face/active-liveness-check/#magnifeye-liveness) for details how the score affects false acceptances (FAR) and false rejections (FRR).
 
 ## Correlation HTTP Header Configuration
 
@@ -148,3 +167,9 @@ Sample setting of logging pattern:
 ```properties
 logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:%5p}) [%X{X-Correlation-ID}] %clr(%5p) %clr(${PID: }){magenta} %clr(---){faint}%clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}
 ```
+
+
+## Monitoring and Observability
+
+The WAR file includes the `micrometer-registry-prometheus` dependency.
+Discuss its configuration with the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).

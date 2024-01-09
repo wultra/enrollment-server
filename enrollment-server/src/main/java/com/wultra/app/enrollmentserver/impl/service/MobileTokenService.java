@@ -25,7 +25,6 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.client.PowerAuthClient;
-import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -35,6 +34,7 @@ import com.wultra.security.powerauth.client.model.request.OperationListForUserRe
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
+import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
@@ -87,51 +87,49 @@ public class MobileTokenService {
     }
 
     /**
-     * Get the operation list with operations of a given users. The service either returns only pending
-     * operations or all operations, depending on the provided flag.
+     * Retrieves a list of operations for a specified user. This method can return
+     * either all operations or only those that are pending, based on the 'pendingOnly' flag.
+     * It processes each operation detail, converts them into a consistent format, and
+     * filters out operations without a corresponding template.
      *
-     * @param userId User ID.
-     * @param applicationId Application ID.
-     * @param language Language.
-     * @param activationFlags Activation flags to condition the operation against.
-     * @param pendingOnly Flag indicating if only pending or all operation should be returned.
-     * @return Response with pending or all operations, depending on the "pendingOnly" flag.
-     * @throws PowerAuthClientException In the case that PowerAuth service call fails.
-     * @throws MobileTokenConfigurationException In the case of system misconfiguration.
+     * @param userId User ID for which the operation list is requested.
+     * @param applicationId Application ID associated with the operations.
+     * @param language Language for operation template localization.
+     * @param activationId Optional activation ID to filter operations.
+     * @param pendingOnly Flag indicating whether to fetch only pending operations or all.
+     * @return A consolidated list of operations formatted as 'OperationListResponse'.
+     * @throws PowerAuthClientException If there's an issue with the PowerAuth service call.
+     * @throws MobileTokenConfigurationException For any system configuration issues.
      */
     public OperationListResponse operationListForUser(
             @NotNull String userId,
             @NotNull String applicationId,
             @NotNull String language,
-            List<String> activationFlags,
+            String activationId,
             boolean pendingOnly) throws PowerAuthClientException, MobileTokenConfigurationException {
 
         final OperationListForUserRequest request = new OperationListForUserRequest();
         request.setUserId(userId);
         request.setApplications(List.of(applicationId));
+        request.setPageNumber(0);
+        request.setPageSize(OPERATION_LIST_LIMIT);
+        request.setActivationId(activationId);
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse pendingList =
+        final com.wultra.security.powerauth.client.model.response.OperationListResponse operations =
                 pendingOnly ?
                 powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
                 powerAuthClient.operationList(request, queryParams, httpHeaders);
 
         final OperationListResponse responseObject = new OperationListResponse();
-        for (OperationDetailResponse operationDetail: pendingList) {
-            final String activationFlag = operationDetail.getActivationFlag();
-            if (activationFlag == null || activationFlags.contains(activationFlag)) { // only return data if there is no flag, or if flag matches flags of activation
-                final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
-                if (operationTemplate.isEmpty()) {
-                    logger.warn("No template found for operationType={}, skipping the entry.", operationDetail.getOperationType());
-                    continue;
-                }
-                final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
-                responseObject.add(operation);
-                if (responseObject.size() >= OPERATION_LIST_LIMIT) {
-                    logger.info("Reached the limit of operation list ({}) for user ID: {}", OPERATION_LIST_LIMIT, userId);
-                    break;
-                }
+        for (OperationDetailResponse operationDetail: operations) {
+            final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
+            if (operationTemplate.isEmpty()) {
+                logger.warn("No template found for operationType={}, skipping the entry.", operationDetail.getOperationType());
+                continue;
             }
+            final Operation operation = mobileTokenConverter.convert(operationDetail, operationTemplate.get());
+            responseObject.add(operation);
         }
         return responseObject;
     }
@@ -146,7 +144,7 @@ public class MobileTokenService {
      */
     public Response operationApprove(@NotNull final OperationApproveParameterObject request) throws MobileTokenException, PowerAuthClientException {
 
-        final OperationDetailResponse operationDetail = getOperationDetail(request.getOperationId());
+        final OperationDetailResponse operationDetail = claimOperationInternal(request.getOperationId(), null);
 
         final String activationFlag = operationDetail.getActivationFlag();
         if (activationFlag != null && !request.getActivationFlags().contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
@@ -181,8 +179,8 @@ public class MobileTokenService {
             return new Response();
         } else {
             final OperationDetailResponse operation = approveResponse.getOperation();
-            handleStatus(operation.getStatus());
-            throw new MobileTokenAuthException();
+            handleStatus(operation);
+            throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation approval fails");
         }
     }
 
@@ -208,7 +206,7 @@ public class MobileTokenService {
         );
 
         final OperationDetailResponse operation = failApprovalResponse.getOperation();
-        handleStatus(operation.getStatus());
+        handleStatus(operation);
     }
 
     /**
@@ -233,7 +231,7 @@ public class MobileTokenService {
             @NotNull RequestContext requestContext,
             List<String> activationFlags,
             String rejectReason) throws MobileTokenException, PowerAuthClientException {
-        final OperationDetailResponse operationDetail = getOperationDetail(operationId);
+        final OperationDetailResponse operationDetail = getOperationDetailInternal(operationId);
 
         final String activationFlag = operationDetail.getActivationFlag();
         if (activationFlag != null && !activationFlags.contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
@@ -262,9 +260,46 @@ public class MobileTokenService {
             return new Response();
         } else {
             final OperationDetailResponse operation = rejectResponse.getOperation();
-            handleStatus(operation.getStatus());
-            throw new MobileTokenAuthException();
+            handleStatus(operation);
+            throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation rejection fails");
         }
+    }
+
+    /**
+     * Get operation detail.
+     *
+     * @param operationId Operation ID.
+     * @param language Language.
+     * @param userId User identifier.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    public Operation getOperationDetail(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
+        final OperationDetailResponse operationDetail = getOperationDetailInternal(operationId);
+        // Check user ID against authenticated user, however skip the check in case operation is not claimed yet
+        if (operationDetail.getUserId() != null && !userId.equals(operationDetail.getUserId())) {
+            logger.warn("User ID from operation does not match authenticated user ID.");
+            throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Invalid request");
+        }
+        return convertOperation(language, operationDetail);
+    }
+
+    /**
+     * Claim operation.
+     *
+     * @param operationId Operation ID.
+     * @param language Language.
+     * @param userId User identifier.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    public Operation claimOperation(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
+        final OperationDetailResponse operationDetail = claimOperationInternal(operationId, userId);
+        return convertOperation(language, operationDetail);
     }
 
     // Private methods
@@ -277,7 +312,7 @@ public class MobileTokenService {
      * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
      * @throws MobileTokenException When the operation is in incorrect state.
      */
-    private OperationDetailResponse getOperationDetail(String operationId) throws PowerAuthClientException, MobileTokenException {
+    private OperationDetailResponse getOperationDetailInternal(String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
@@ -285,8 +320,48 @@ public class MobileTokenService {
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()
         );
-        handleStatus(operationDetail.getStatus());
+        handleStatus(operationDetail);
         return operationDetail;
+    }
+
+    /**
+     * Get operation detail by calling PowerAuth Server.
+     *
+     * @param operationId Operation ID.
+     * @param userId Optional user ID for operation claim.
+     * @return Operation detail.
+     * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
+     * @throws MobileTokenException When the operation is in incorrect state.
+     */
+    private OperationDetailResponse claimOperationInternal(String operationId, String userId) throws PowerAuthClientException, MobileTokenException {
+        final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
+        operationDetailRequest.setOperationId(operationId);
+        operationDetailRequest.setUserId(userId);
+        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
+                operationDetailRequest,
+                httpCustomizationService.getQueryParams(),
+                httpCustomizationService.getHttpHeaders()
+        );
+        handleStatus(operationDetail);
+        return operationDetail;
+    }
+
+    /**
+     * Find operation template and convert the operation.
+     *
+     * @param language Language.
+     * @param operationDetail Operation detail.
+     * @return Converted operation.
+     * @throws MobileTokenException In case the operation is in incorrect state.
+     * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
+     */
+    private Operation convertOperation(String language, OperationDetailResponse operationDetail) throws MobileTokenException, MobileTokenConfigurationException {
+        final Optional<OperationTemplateEntity> operationTemplate = operationTemplateService.findTemplate(operationDetail.getOperationType(), language);
+        if (operationTemplate.isEmpty()) {
+            logger.warn("Template not found for operationType={}.", operationDetail.getOperationType());
+            throw new MobileTokenException(ErrorCode.INVALID_REQUEST, "Template not found");
+        }
+        return mobileTokenConverter.convert(operationDetail, operationTemplate.get());
     }
 
     /**
@@ -297,22 +372,21 @@ public class MobileTokenService {
      *     <li>CANCELLED, APPROVED, REJECTED, or EXPIRED - throws exception with appropriate code and message.</li>
      * </ul>
      *
-     * @param status Operation status.
+     * @param operation Operation detail.
      * @throws MobileTokenException In case operation is in status that does not allow processing, the method throws appropriate exception.
      */
-    private void handleStatus(OperationStatus status) throws MobileTokenException {
-        switch (status) {
-            case PENDING -> {
-                // OK, this operation is still pending
-            }
+    private static void handleStatus(final OperationDetailResponse operation) throws MobileTokenException {
+        switch (operation.getStatus()) {
+            case PENDING ->
+                    logger.debug("OK, operation ID: {} is still pending", operation.getId());
             case CANCELED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_CANCELED", "Operation was already canceled");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_CANCELED, "Operation was already canceled");
             case APPROVED, REJECTED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_FINISHED", "Operation was already completed");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_FINISHED, "Operation was already completed");
             case FAILED ->
-                    throw new MobileTokenException("OPERATION_ALREADY_FAILED", "Operation already failed");
+                    throw new MobileTokenException(ErrorCode.OPERATION_ALREADY_FAILED, "Operation already failed");
             default ->
-                    throw new MobileTokenException("OPERATION_EXPIRED", "Operation already expired");
+                    throw new MobileTokenException(ErrorCode.OPERATION_EXPIRED, "Operation already expired");
         }
     }
 

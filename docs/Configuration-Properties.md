@@ -10,7 +10,6 @@ The Enrollment Server uses the following public configuration properties:
 | `spring.datasource.username` | `_empty_` | Database JDBC username |
 | `spring.datasource.password` | `_empty_` | Database JDBC password |
 | `spring.datasource.driver-class-name` | `_empty_` | Datasource JDBC class name | 
-| `spring.jpa.database-platform` | `_empty_` | Database dialect | 
 | `spring.jpa.hibernate.ddl-auto` | `none` | Configuration of automatic database schema creation | 
 | `spring.jpa.properties.hibernate.connection.characterEncoding` | `_empty_` | Character encoding |
 | `spring.jpa.properties.hibernate.connection.useUnicode` | `_empty_` | Character encoding - Unicode support |
@@ -61,3 +60,9 @@ Sample setting of logging pattern:
 ```properties
 logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:%5p}) [%X{X-Correlation-ID}] %clr(%5p) %clr(${PID: }){magenta} %clr(---){faint}%clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}
 ```
+
+
+## Monitoring and Observability
+
+The WAR file includes the `micrometer-registry-prometheus` dependency.
+Discuss its configuration with the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).

@@ -26,13 +26,13 @@
 
     <groupId>com.wultra.security</groupId>
     <artifactId>enrollment-server-parent</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.3</version>
+        <version>3.1.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -77,28 +77,37 @@
         <module>enrollment-server-api-model</module>
         <module>enrollment-server</module>
         <module>enrollment-server-onboarding</module>
-        <module>enrollment-server-onboarding-adapter-mock</module>
-        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-api</module>
         <module>enrollment-server-onboarding-api-model</module>
+        <module>enrollment-server-onboarding-adapter-mock</module>
         <module>enrollment-server-onboarding-common</module>
+        <module>enrollment-server-onboarding-domain-model</module>
+        <module>enrollment-server-onboarding-provider-innovatrics</module>
+        <module>enrollment-server-onboarding-provider-iproov</module>
+        <module>enrollment-server-onboarding-provider-zenid</module>
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>6.5.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.2.0</openapi-generator-maven-plugin.version>
 
-        <shedlock.version>5.8.0</shedlock.version>
-        <spring-statemachine.version>3.2.1</spring-statemachine.version>
-        <swagger-annotations-jakarta.version>2.2.15</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.2.0</springdoc-openapi-starter-webmvc-ui.version>
+        <shedlock.version>5.10.2</shedlock.version>
+        <spring-statemachine.version>4.0.0</spring-statemachine.version>
+        <swagger-annotations-jakarta.version>2.2.20</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.2</moneta.version>
 
-        <wultra-core.version>1.7.0</wultra-core.version>
-        <powerauth-crypto.version>1.5.1</powerauth-crypto.version>
-        <powerauth-restful-integration.version>1.5.0</powerauth-restful-integration.version>
-        <powerauth-push.version>1.5.0</powerauth-push.version>
+        <!--  TODO (racansky, 2023-10-31) temporarily override spring boot version to make commons-text 1.11.0 working  -->
+        <commons-lang3.version>3.13.0</commons-lang3.version>
 
-        <bcprov-jdk18on.version>1.76</bcprov-jdk18on.version>
+        <wultra-core.version>1.8.0</wultra-core.version>
+        <powerauth-crypto.version>1.6.0</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.6.0</powerauth-restful-integration.version>
+        <powerauth-push.version>1.6.0</powerauth-push.version>
+
+        <bcprov-jdk18on.version>1.77</bcprov-jdk18on.version>
         <logstash.version>7.4</logstash.version>
+        <!--  TODO (racansky, 2023-12-08) temporarily override the version 1.4.11 from spring boot version because of CVE  -->
+        <logback.version>1.4.14</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -111,7 +120,31 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
-                <artifactId>enrollment-server-common</artifactId>
+                <artifactId>enrollment-server-onboarding-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-iproov</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -161,12 +194,6 @@
                 <groupId>io.getlime.security</groupId>
                 <artifactId>powerauth-restful-security-spring-annotation</artifactId>
                 <version>${powerauth-restful-integration.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-starter-tomcat</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -184,8 +211,13 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-el</artifactId>
-                <version>${tomcat.version}</version>
-                <scope>test</scope>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -242,6 +274,14 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludedGroups>external-service</excludedGroups>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

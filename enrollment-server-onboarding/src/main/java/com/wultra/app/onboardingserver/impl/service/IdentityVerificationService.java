@@ -38,11 +38,11 @@ import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitS
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoundException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
-import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

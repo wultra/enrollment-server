@@ -26,8 +26,8 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -104,7 +104,11 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
+    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) throws DocumentVerificationException {
+        if (documents.stream().anyMatch(doc -> "throw.exception".equals(doc.getPhoto().getFilename()))) {
+            throw new DocumentVerificationException("Filename to throw an exception is present in documents.");
+        }
+
         final List<DocumentSubmitResult> submitResults = documents.stream()
                 .map(this::toDocumentSubmitResult)
                 .toList();
@@ -120,6 +124,11 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
 
         logger.info("Mock - submitted documents, asyncProcessingEnabled={}, {}", asyncProcessingEnabled, id);
         return result;
+    }
+
+    @Override
+    public boolean shouldStoreSelfie() {
+        return true;
     }
 
     @Override

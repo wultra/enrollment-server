@@ -36,6 +36,8 @@ import java.util.Optional;
 @Slf4j
 public class OperationTemplateService {
 
+    private static final String DEFAULT_LANGUAGE = "en";
+
     private final OperationTemplateRepository operationTemplateRepository;
 
     @Autowired
@@ -44,17 +46,36 @@ public class OperationTemplateService {
     }
 
     /**
-     * Find the operation template for the given type and language. Falling back to EN locale.
+     * Find the operation template for the given type and language.
+     * <p>
+     * Falling back to EN locale and later on to any found language.
      *
      * @param operationType Operation type.
      * @param language Template language.
      * @return Found operation template or empty.
      */
     public Optional<OperationTemplateEntity> findTemplate(@NotNull String operationType, @NotNull String language) {
-        return operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType).or(() -> {
+        return operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType).or(() ->
+                findTemplateFallback(operationType, language));
+    }
+
+    private Optional<OperationTemplateEntity> findTemplateFallback(final String operationType, final String language) {
+        if (!DEFAULT_LANGUAGE.equals(language)) {
             logger.debug("Trying fallback to EN locale for operationType={}", operationType);
-            return operationTemplateRepository.findFirstByLanguageAndPlaceholder("en", operationType);
-        });
+            return findDefaultTemplate(operationType);
+        } else {
+            return findAnyTemplate(operationType);
+        }
+    }
+
+    private Optional<OperationTemplateEntity> findDefaultTemplate(final String operationType) {
+        return operationTemplateRepository.findFirstByLanguageAndPlaceholder(DEFAULT_LANGUAGE, operationType).or(() ->
+                findAnyTemplate(operationType));
+    }
+
+    private Optional<OperationTemplateEntity> findAnyTemplate(final String operationType) {
+        logger.debug("Trying fallback to any locale for operationType={}", operationType);
+        return operationTemplateRepository.findFirstByPlaceholder(operationType);
     }
 
 }

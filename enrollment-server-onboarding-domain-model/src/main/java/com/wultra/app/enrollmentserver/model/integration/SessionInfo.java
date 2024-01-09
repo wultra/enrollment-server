@@ -30,6 +30,11 @@ import java.util.Map;
 @Data
 public class SessionInfo {
 
+    public static final String ATTRIBUTE_TIMESTAMP_LAST_USED = "timestampLastUsed";
+    public static final String ATTRIBUTE_IMAGE_UPLOADED = "imageUploaded";
+    public static final String ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE = "primaryDocumentReference";
+    public static final String ATTRIBUTE_OTHER_DOCUMENTS_REFERENCES = "otherDocumentsReferences";
+
     private Map<String, Object> sessionAttributes = new LinkedHashMap<>();
 
 }

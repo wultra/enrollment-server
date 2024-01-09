@@ -16,65 +16,137 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import org.junit.jupiter.api.BeforeEach;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.Optional;
 
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
+ * Test for {@link PresenceCheckService}.
+ *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
+@ActiveProfiles("test")
 class PresenceCheckServiceTest {
 
-    @Mock
+    @MockBean
     private IdentityVerificationService identityVerificationService;
 
-    @InjectMocks
-    private PresenceCheckService service;
+    @MockBean
+    private DocumentVerificationRepository documentVerificationRepository;
 
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @MockBean
+    private PresenceCheckLimitService presenceCheckLimitService;
+
+    @MockBean
+    private PresenceCheckProvider presenceCheckProvider;
+
+    @Autowired
+    private PresenceCheckService tested;
 
     @Test
-    void selectPhotoForPresenceCheckTest() throws Exception {
-        OwnerId ownerId = new OwnerId();
+    void testFetchTrustedPhotoFromDocumentVerifier_reverseOrder() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
 
-        // Two documents with person photo in reversed order of preference
-        DocumentVerificationEntity docPhotoDrivingLicense = new DocumentVerificationEntity();
+        final DocumentVerificationEntity docPhotoDrivingLicense = new DocumentVerificationEntity();
         docPhotoDrivingLicense.setPhotoId("drivingLicensePhotoId");
         docPhotoDrivingLicense.setType(DocumentType.DRIVING_LICENSE);
 
-        DocumentVerificationEntity docPhotoIdCard = new DocumentVerificationEntity();
+        final DocumentVerificationEntity docPhotoIdCard = new DocumentVerificationEntity();
         docPhotoIdCard.setPhotoId("idCardPhotoId");
         docPhotoIdCard.setType(DocumentType.ID_CARD);
 
-        List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
+        final List<DocumentVerificationEntity> documentsReversedOrder = List.of(docPhotoDrivingLicense, docPhotoIdCard);
 
-        service.selectPhotoForPresenceCheck(ownerId, documentsReversedOrder);
-        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId)).thenReturn(Image.builder().build());
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification))
+                .thenReturn(documentsReversedOrder);
+        when(identityVerificationService.getPhotoById(docPhotoIdCard.getPhotoId(), ownerId))
+                .thenReturn(Image.builder().build());
+
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
+
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoIdCard.getPhotoId(), ownerId);
+    }
 
-        // Unknown document with a person photo
-        DocumentVerificationEntity docPhotoUnknown = new DocumentVerificationEntity();
+    @Test
+    void testFetchTrustedPhotoFromDocumentVerifier_unknownDocument() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+
+        final DocumentVerificationEntity docPhotoUnknown = new DocumentVerificationEntity();
         docPhotoUnknown.setPhotoId("unknownPhotoId");
         docPhotoUnknown.setType(DocumentType.UNKNOWN);
 
-        List<DocumentVerificationEntity> documentUnknown = List.of(docPhotoUnknown);
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification))
+                .thenReturn(List.of(docPhotoUnknown));
+        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId))
+                .thenReturn(Image.builder().build());
 
-        service.selectPhotoForPresenceCheck(ownerId, documentUnknown);
-        when(identityVerificationService.getPhotoById(docPhotoUnknown.getPhotoId(), ownerId)).thenReturn(Image.builder().build());
+        tested.fetchTrustedPhotoFromDocumentVerifier(ownerId, identityVerification);
+
         verify(identityVerificationService, times(1)).getPhotoById(docPhotoUnknown.getPhotoId(), ownerId);
+    }
+
+    @Test
+    void initPresentCheckWithImage_withDocumentReferences() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId("a1");
+
+        final DocumentVerificationEntity page1 = new DocumentVerificationEntity();
+        page1.setId("1");
+        page1.setType(DocumentType.ID_CARD);
+        page1.setSide(CardSide.FRONT);
+        page1.setPhotoId("id_card_portrait");
+
+        final DocumentVerificationEntity page2 = new DocumentVerificationEntity();
+        page2.setId("2");
+        page2.setType(DocumentType.ID_CARD);
+        page2.setSide(CardSide.BACK);
+        page2.setPhotoId("id_card_portrait");
+
+        final DocumentVerificationEntity page3 = new DocumentVerificationEntity();
+        page3.setId("3");
+        page3.setType(DocumentType.DRIVING_LICENSE);
+        page3.setSide(CardSide.FRONT);
+        page3.setPhotoId("driving_licence_portrait");
+
+        when(presenceCheckProvider.trustedPhotoSource()).thenReturn(PresenceCheckProvider.TrustedPhotoSource.REFERENCE);
+
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(PRESENCE_CHECK);
+        identityVerification.setStatus(NOT_INITIALIZED);
+
+        when(documentVerificationRepository.findAllWithPhoto(identityVerification)).thenReturn(List.of(page1, page2, page3));
+        when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(identityVerification));
+        when(presenceCheckProvider.startPresenceCheck(ownerId)).thenReturn(new SessionInfo());
+
+        tested.init(ownerId, "p1");
+
+        assertTrue(identityVerification.getSessionInfo().contains("\"primaryDocumentReference\":\"id_card_portrait\""));
+        assertTrue(identityVerification.getSessionInfo().contains("\"otherDocumentsReferences\":[\"driving_licence_portrait\"]"));
+        verify(presenceCheckProvider).initPresenceCheck(ownerId, null);
     }
 
 }

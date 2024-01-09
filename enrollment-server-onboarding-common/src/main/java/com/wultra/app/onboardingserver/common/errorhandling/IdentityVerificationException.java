@@ -36,4 +36,8 @@ public class IdentityVerificationException extends Exception {
         super(message);
     }
 
+    public IdentityVerificationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

@@ -32,9 +32,9 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

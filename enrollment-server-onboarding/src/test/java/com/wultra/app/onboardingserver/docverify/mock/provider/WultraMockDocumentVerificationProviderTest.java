@@ -24,7 +24,6 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.docverify.AbstractDocumentVerificationProviderTest;
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.docverify.mock"})
 @EnableConfigurationProperties
-class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerificationProviderTest {
+class WultraMockDocumentVerificationProviderTest {
 
     private WultraMockDocumentVerificationProvider provider;
 
@@ -66,7 +65,7 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
     }
 
     @Test
-    void checkDocumentUploadTest() {
+    void checkDocumentUploadTest() throws Exception {
         SubmittedDocument document = createSubmittedDocument();
         DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, List.of(document));
 
@@ -177,6 +176,25 @@ class WultraMockDocumentVerificationProviderTest extends AbstractDocumentVerific
         document.setPhoto(photo);
 
         return document;
+    }
+
+    private static void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) {
+        assertEquals(documents.size(), result.getResults().size(), "Different size of submitted documents than expected");
+        assertNotNull(result.getExtractedPhotoId(), "Missing extracted photoId");
+
+        final List<String> submittedDocsIds = result.getResults().stream()
+                .map(DocumentSubmitResult::getDocumentId)
+                .toList();
+        assertEquals(documents.size(), submittedDocsIds.size(), "Different size of unique submitted documents than expected");
+        documents.forEach(document ->
+                assertTrue(submittedDocsIds.contains(document.getDocumentId())));
+
+        result.getResults().forEach(submitResult -> {
+            assertNull(submitResult.getErrorDetail());
+            assertNull(submitResult.getRejectReason());
+
+            assertNotNull(submitResult.getUploadId());
+        });
     }
 
 }

@@ -18,6 +18,8 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
+
 import java.io.Serial;
 
 /**
@@ -31,7 +33,10 @@ public class MobileTokenAuthException extends MobileTokenException {
     private static final long serialVersionUID = -4602362062047233809L;
 
     public MobileTokenAuthException() {
-        super("POWERAUTH_AUTH_FAIL", "Authentication failed");
+        super(ErrorCode.POWERAUTH_AUTH_FAIL, "Authentication failed");
     }
 
+    public MobileTokenAuthException(final String code, final String message) {
+        super(code, message);
+    }
 }

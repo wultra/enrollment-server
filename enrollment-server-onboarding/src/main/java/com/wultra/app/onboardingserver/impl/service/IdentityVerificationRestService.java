@@ -24,14 +24,14 @@ import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentApprovalRequestValidator;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentTextRequestValidator;
@@ -41,7 +41,6 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import io.getlime.core.rest.model.base.request.ObjectRequest;
-import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
@@ -58,6 +57,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.util.Map;
 
@@ -342,7 +342,7 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @Transactional
-    public ResponseEntity<Response> initPresenceCheck(ObjectRequest<PresenceCheckInitRequest> request,
+    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(ObjectRequest<PresenceCheckInitRequest> request,
                                                       EncryptionContext encryptionContext,
                                                       PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
@@ -359,7 +359,10 @@ public class IdentityVerificationRestService {
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.PRESENCE_CHECK_INIT);
-        return createResponseEntity(stateMachine);
+
+        @SuppressWarnings("unchecked")
+        final Class<ObjectResponse<PresenceCheckInitResponse>> presenceCheckInitResponseClass = (Class<ObjectResponse<PresenceCheckInitResponse>>) new ObjectResponse<PresenceCheckInitResponse>().getClass();
+        return createResponseEntity(stateMachine, presenceCheckInitResponseClass);
     }
 
     /**
@@ -622,14 +625,14 @@ public class IdentityVerificationRestService {
         return ownerId;
     }
 
-    private ResponseEntity<Response> createResponseEntity(StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
-        Response response = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class);
-        HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
-        if (response == null || status == null) {
-            logger.warn("Missing one of important values to generate response entity, response={}, status={}", response, status);
-            response = new ErrorResponse("UNEXPECTED_ERROR", "Unexpected error occurred.");
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
+    private ResponseEntity<Response> createResponseEntity(final StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
+        return createResponseEntity(stateMachine, Response.class);
+    }
+
+    private <T> ResponseEntity<T> createResponseEntity(final StateMachine<OnboardingState, OnboardingEvent> stateMachine, Class<T> responseClass) {
+        final T response = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_OBJECT, responseClass);
+        final HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
+        Assert.state(response != null && status != null, "Missing one of important values to generate response entity, response=%s, status=%s".formatted(response, status));
         return new ResponseEntity<>(response, status);
     }
 

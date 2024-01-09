@@ -24,7 +24,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;

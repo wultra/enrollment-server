@@ -20,7 +20,7 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.google.common.io.Files;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

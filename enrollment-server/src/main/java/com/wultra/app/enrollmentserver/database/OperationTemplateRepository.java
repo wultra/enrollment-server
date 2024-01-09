@@ -41,4 +41,15 @@ public interface OperationTemplateRepository extends CrudRepository<OperationTem
      */
     Optional<OperationTemplateEntity> findFirstByLanguageAndPlaceholder(String language, String placeholder);
 
+    /**
+     * Find an operation template by the given operation type.
+     * <p>
+     * Just a fallback method when no entry found by {@link #findFirstByLanguageAndPlaceholder(String, String)}.
+     *
+     * @param placeholder operation type
+     * @return operation template or empty
+     * @see #findFirstByLanguageAndPlaceholder(String, String)
+     */
+    Optional<OperationTemplateEntity> findFirstByPlaceholder(String placeholder);
+
 }

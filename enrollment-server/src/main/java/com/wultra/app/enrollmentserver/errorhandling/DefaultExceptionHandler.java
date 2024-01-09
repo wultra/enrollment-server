@@ -18,6 +18,7 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
+import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,7 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleInvalidRequestException(InvalidRequestObjectException ex) {
         logger.warn("Error occurred when processing request object.", ex);
-        return new ErrorResponse("INVALID_REQUEST", "Invalid request object.");
+        return new ErrorResponse(ErrorCode.INVALID_REQUEST, "Invalid request object.");
     }
 
     /**
@@ -69,7 +70,7 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handlePushRegistrationException(PushRegistrationFailedException ex) {
         logger.warn("Error occurred when registering to push server.", ex);
-        return new ErrorResponse("PUSH_REGISTRATION_FAILED", "Push registration failed in Mobile Token API component.");
+        return new ErrorResponse(ErrorCode.PUSH_REGISTRATION_FAILED, "Push registration failed in Mobile Token API component.");
     }
 
     /**
@@ -81,7 +82,7 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public @ResponseBody ErrorResponse handleUnauthorizedException(PowerAuthAuthenticationException ex) {
         logger.warn("Unable to verify device registration - authentication failed.", ex);
-        return new ErrorResponse("POWERAUTH_AUTH_FAIL", "Unable to verify device registration.");
+        return new ErrorResponse(ErrorCode.POWERAUTH_AUTH_FAIL, "Unable to verify device registration.");
     }
 
     /**

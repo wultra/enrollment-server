@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.PresenceCheckInitResponse;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
