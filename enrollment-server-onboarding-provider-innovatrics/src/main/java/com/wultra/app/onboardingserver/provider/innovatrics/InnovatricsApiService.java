@@ -222,14 +222,6 @@ class InnovatricsApiService {
         }
     }
 
-    // TODO remove - temporal test call
-//    @PostConstruct
-//    public void testCall() throws RestClientException {
-//        logger.info("Trying a test call");
-//        final ResponseEntity<String> response = restClient.get("/api/v1/metadata", STRING_TYPE_REFERENCE);
-//        logger.info("Result of test call: {}", response.getBody());
-//    }
-
     /**
      * Create a new customer resource.
      * @param ownerId owner identification.
