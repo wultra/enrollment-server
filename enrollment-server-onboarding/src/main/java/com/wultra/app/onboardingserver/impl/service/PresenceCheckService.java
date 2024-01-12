@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.google.common.base.Ascii;
-import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -40,6 +38,7 @@ import com.wultra.app.onboardingserver.impl.service.internal.JsonSerializationSe
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -151,7 +150,7 @@ public class PresenceCheckService {
         final SubmittedDocument submittedDoc = new SubmittedDocument();
         // TODO use different random id approach
         submittedDoc.setDocumentId(
-                Ascii.truncate("selfie-photo-" + ownerId.getActivationId(), 36, "...")
+                StringUtils.truncate("selfie-photo-" + ownerId.getActivationId(), 33) + "..."
         );
         submittedDoc.setPhoto(photo);
         submittedDoc.setType(DocumentType.SELFIE_PHOTO);
@@ -290,7 +289,7 @@ public class PresenceCheckService {
         }
 
         docsWithPhoto.forEach(docWithPhoto ->
-                Preconditions.checkNotNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
+                Validate.notNull(docWithPhoto.getPhotoId(), "Expected photoId value in " + docWithPhoto)
         );
 
         return docsWithPhoto;

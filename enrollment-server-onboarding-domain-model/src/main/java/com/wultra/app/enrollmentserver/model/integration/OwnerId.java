@@ -17,13 +17,14 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
-import com.google.common.io.BaseEncoding;
 import io.getlime.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
 import lombok.ToString;
+import org.bouncycastle.util.encoders.Base32;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -73,9 +74,8 @@ public class OwnerId {
             throw new IllegalStateException("Missing userId value");
         }
         if (userIdSecured == null) {
-            userIdSecured = BaseEncoding.base32()
-                    .omitPadding()
-                    .encode(Hash.sha256(userId));
+            userIdSecured = new String(Base32.encode(Hash.sha256(userId)), StandardCharsets.UTF_8)
+                    .replace("=", "");
             if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
                 userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
             }
