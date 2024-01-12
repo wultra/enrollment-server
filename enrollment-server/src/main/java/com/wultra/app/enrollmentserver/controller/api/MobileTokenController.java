@@ -182,7 +182,7 @@ public class MobileTokenController {
                 case OPERATION_NOT_FOUND -> {
                     logger.info("Operation ID: {} not found: {}", request.getRequestObject().getId(), e.getMessage());
                     logger.debug("Operation ID: {} not found.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.OPERATION_FAILED, "No operation was found with the provided identifier.");
+                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "No operation was found with the provided identifier.");
                 }
                 case INVALID_REQUEST -> {
                     logger.info("Request validation error: {}", e.getMessage());
@@ -234,7 +234,7 @@ public class MobileTokenController {
                 case OPERATION_NOT_FOUND -> {
                     logger.info("Operation ID: {} not found: {}", request.getRequestObject().getId(), e.getMessage());
                     logger.debug("Operation ID: {} not found.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.OPERATION_FAILED, "No operation was found with the provided identifier.");
+                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "No operation was found with the provided identifier.");
                 }
                 case INVALID_REQUEST -> {
                     logger.info("Request validation error: {}", e.getMessage());
@@ -367,23 +367,15 @@ public class MobileTokenController {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
                 case APPLICATION_NOT_FOUND -> {
-                    logger.info("Application ID: {} not found: {}", auth.getApplicationId(), e.getMessage());
-                    logger.debug("Application ID: {} not found.", auth.getApplicationId(), e);
+                    final String applicationId = auth != null ? auth.getApplicationId() : null;
+                    logger.info("Application ID: {} not found: {}", applicationId, e.getMessage());
+                    logger.debug("Application ID: {} not found.", applicationId, e);
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier.");
-                } case OPERATION_NOT_FOUND -> {
-                    logger.info("Operation ID: {} not found: {}", request.getRequestObject().getId(), e.getMessage());
-                    logger.debug("Operation ID: {} not found.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.OPERATION_FAILED, "No operation was found with the provided identifier.");
                 }
-                case OPERATION_APPROVE_FAILURE -> {
+                case OPERATION_NOT_FOUND, OPERATION_APPROVE_FAILURE, OPERATION_INVALID_STATE -> {
                     logger.info("Operation ID: {} not found or is in unexpected state: {}", request.getRequestObject().getId(), e.getMessage());
                     logger.debug("Operation ID: {} not found or is in unexpected state.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.OPERATION_FAILED, "Operation not found or is in an unexpected state.");
-                }
-                case OPERATION_INVALID_STATE -> {
-                    logger.info("Operation ID: {} is in an unexpected state: {}", request.getRequestObject().getId(), e.getMessage());
-                    logger.debug("Operation ID: {} is in an unexpected state.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.OPERATION_FAILED, "Operation is in an unexpected state.");
+                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "Operation not found or is in an unexpected state.");
                 }
                 case INVALID_REQUEST -> {
                     logger.info("Request validation error: {}", e.getMessage());
@@ -453,15 +445,10 @@ public class MobileTokenController {
                     logger.debug("Application ID: {} not found.", auth.getApplicationId(), e);
                     throw new MobileTokenException(ErrorCode.INVALID_APPLICATION, "No application was found with the provided identifier: %s".formatted(auth.getApplicationId()));
                 }
-                case OPERATION_NOT_FOUND -> {
-                    logger.info("Operation ID: {} not found: {}", request.getRequestObject().getId(), e.getMessage());
-                    logger.debug("Operation ID: {} not found.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "No operation was found with the provided identifier: %s".formatted(request.getRequestObject().getId()));
-                }
-                case OPERATION_REJECT_FAILURE -> {
+                case OPERATION_NOT_FOUND, OPERATION_REJECT_FAILURE -> {
                     logger.info("Operation ID: {} not found or is in unexpected state: {}", request.getRequestObject().getId(), e.getMessage());
                     logger.debug("Operation ID: {} not found or is in unexpected state.", request.getRequestObject().getId(), e);
-                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "Operation %s not found or is in an unexpected state".formatted(request.getRequestObject().getId()));
+                    throw new MobileTokenException(ErrorCode.INVALID_OPERATION, "Operation not found or is in an unexpected state");
                 }
                 case INVALID_REQUEST -> {
                     logger.info("Request validation error: {}", e.getMessage());
