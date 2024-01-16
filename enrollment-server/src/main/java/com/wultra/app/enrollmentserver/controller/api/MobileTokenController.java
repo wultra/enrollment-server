@@ -71,12 +71,12 @@ import java.util.Locale;
 @RequestMapping("api/auth/token/app")
 public class MobileTokenController {
 
-    public static final String APPLICATION_NOT_FOUND = "ERR0015";
-    public static final String INVALID_REQUEST = "ERR0024";
-    public static final String OPERATION_NOT_FOUND = "ERR0034";
-    public static final String OPERATION_INVALID_STATE = "ERR0036";
-    public static final String OPERATION_APPROVE_FAILURE = "ERR0037";
-    public static final String OPERATION_REJECT_FAILURE = "ERR0038";
+    private static final String APPLICATION_NOT_FOUND = "ERR0015";
+    private static final String INVALID_REQUEST = "ERR0024";
+    private static final String OPERATION_NOT_FOUND = "ERR0034";
+    private static final String OPERATION_INVALID_STATE = "ERR0036";
+    private static final String OPERATION_APPROVE_FAILURE = "ERR0037";
+    private static final String OPERATION_REJECT_FAILURE = "ERR0038";
 
     private static final Logger logger = LoggerFactory.getLogger(MobileTokenController.class);
 
