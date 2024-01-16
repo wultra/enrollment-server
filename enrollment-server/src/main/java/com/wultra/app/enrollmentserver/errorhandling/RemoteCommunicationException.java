@@ -20,29 +20,20 @@ package com.wultra.app.enrollmentserver.errorhandling;
 import java.io.Serial;
 
 /**
- * Exception raised when call to an upstream service fails with unexpected error.
+ * Exception thrown in case of an error during communication with remote system.
  *
  * @author Jan Pesek, jan.pesek@wultra.com
  */
-public class InternalServiceException extends Exception {
+public class RemoteCommunicationException extends Exception {
 
     @Serial
-    private static final long serialVersionUID = 3539063915259282763L;
+    private static final long serialVersionUID = -2565764734609472778L;
 
-    /**
-     * Constructor with a specified message.
-     * @param message Error message.
-     */
-    public InternalServiceException(String message) {
+    public RemoteCommunicationException(String message) {
         super(message);
     }
 
-    /**
-     * Constructor with a specified message and cause.
-     * @param message Message.
-     * @param cause Cause.
-     */
-    public InternalServiceException(String message, Throwable cause) {
+    public RemoteCommunicationException(String message, Throwable cause) {
         super(message, cause);
     }
 

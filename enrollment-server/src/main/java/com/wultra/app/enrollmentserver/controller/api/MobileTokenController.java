@@ -18,10 +18,10 @@
 
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.errorhandling.InternalServiceException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenAuthException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
+import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
 import com.wultra.app.enrollmentserver.impl.service.OperationApproveParameterObject;
 import com.wultra.core.http.common.request.RequestContext;
@@ -111,7 +111,7 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, InternalServiceException {
+    public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
@@ -140,7 +140,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }
@@ -164,7 +164,7 @@ public class MobileTokenController {
     })
     public ObjectResponse<Operation> getOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                         @Parameter(hidden = true) PowerAuthApiAuthentication auth,
-                                                        @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, InternalServiceException {
+                                                        @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
             if (auth != null) {
                 final String operationId = request.getRequestObject().getId();
@@ -192,7 +192,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }
@@ -216,7 +216,7 @@ public class MobileTokenController {
     })
     public ObjectResponse<Operation> claimOperation(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                     @Parameter(hidden = true) PowerAuthApiAuthentication auth,
-                                                    @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, InternalServiceException {
+                                                    @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
             if (auth != null) {
                 final String operationId = request.getRequestObject().getId();
@@ -244,7 +244,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }
@@ -264,7 +264,7 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
     })
-    public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, InternalServiceException {
+    public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
             if (auth != null) {
                 final String userId = auth.getUserId();
@@ -292,7 +292,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }
@@ -316,7 +316,7 @@ public class MobileTokenController {
     public Response operationApprove(
             @RequestBody ObjectRequest<OperationApproveRequest> request,
             @Parameter(hidden = true) PowerAuthApiAuthentication auth,
-            HttpServletRequest servletRequest) throws MobileTokenException, InternalServiceException {
+            HttpServletRequest servletRequest) throws MobileTokenException, RemoteCommunicationException {
         try {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
@@ -385,7 +385,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }
@@ -416,7 +416,7 @@ public class MobileTokenController {
     public Response operationReject(
             @RequestBody ObjectRequest<OperationRejectRequest> request,
             @Parameter(hidden = true) PowerAuthApiAuthentication auth,
-            HttpServletRequest servletRequest) throws MobileTokenException, InternalServiceException {
+            HttpServletRequest servletRequest) throws MobileTokenException, RemoteCommunicationException {
         try {
 
             final OperationRejectRequest requestObject = request.getRequestObject();
@@ -458,7 +458,7 @@ public class MobileTokenController {
                 default -> {
                     logger.warn("Calling PowerAuth service failed: {}", e.getMessage());
                     logger.debug("Calling PowerAuth service failed.", e);
-                    throw new InternalServiceException("Unable to call upstream service.");
+                    throw new RemoteCommunicationException("Unable to call upstream service.");
                 }
             }
         }

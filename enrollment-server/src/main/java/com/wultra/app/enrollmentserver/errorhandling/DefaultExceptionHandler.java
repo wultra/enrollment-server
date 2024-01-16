@@ -50,15 +50,16 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Exception handler for issues related to internal services.
-     * @param e Exception.
+     * Handling of remote communication exception.
+     *
+     * @param ex Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(InternalServiceException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public @ResponseBody ErrorResponse handleUpstreamServiceException(InternalServiceException e) {
-        logger.error("Error occurred when calling an internal API: {}", e.getMessage());
-        return new ErrorResponse("ERROR_INTERNAL_API", e.getMessage());
+    @ExceptionHandler(RemoteCommunicationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public @ResponseBody ErrorResponse handleRemoteExceptionException(RemoteCommunicationException ex) {
+        logger.warn("Communication with remote system failed", ex);
+        return new ErrorResponse("REMOTE_COMMUNICATION_ERROR", "Communication with remote system failed.");
     }
 
     /**
