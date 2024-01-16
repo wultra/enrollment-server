@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.provider.rest;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Request object for client evaluation.
  *
@@ -39,4 +41,9 @@ class ClientEvaluateRequestDto {
     private String verificationId;
 
     private String provider;
+
+    /**
+     * Data extracted from each document/page. Format is defined by the document verification provider used.
+     */
+    private List<String> extractedData;
 }
