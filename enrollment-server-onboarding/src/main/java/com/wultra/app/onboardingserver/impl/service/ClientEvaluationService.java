@@ -109,12 +109,13 @@ public class ClientEvaluationService {
         if (config.isSendingExtractedDataEnabled()) {
             requestBuilder.extractedData(fetchDocumentsExtractedData(acceptedDocuments, identityVerification));
         }
+        final EvaluateClientRequest request = requestBuilder.build();
 
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
         for (int i = 0; i < maxFailedAttempts; i++) {
             final int attempt = i + 1;
             try {
-                final EvaluateClientResponse response = onboardingProvider.evaluateClient(requestBuilder.build());
+                final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
                 processEvaluationSuccess(identityVerification, ownerId, response);
                 logger.debug("Client evaluation finished for {}, attempt: {}", identityVerification, attempt);
                 return;
