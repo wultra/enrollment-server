@@ -42,11 +42,8 @@ public class PushRegisterRequestValidator {
         }
 
         // Validate mobile platform
-        final String platform = request.getPlatform();
-        if (StringUtils.isBlank(platform)) {
+        if (request.getPlatform() == null) {
             return "No mobile platform was provided when registering for push messages.";
-        } else if (!"ios".equalsIgnoreCase(platform) && !"android".equalsIgnoreCase(platform)) { // must be iOS or Android
-            return "Unknown mobile platform was provided when registering for push messages.";
         }
 
         // Validate push token
@@ -56,7 +53,6 @@ public class PushRegisterRequestValidator {
         }
 
         return null;
-
     }
 
 }
