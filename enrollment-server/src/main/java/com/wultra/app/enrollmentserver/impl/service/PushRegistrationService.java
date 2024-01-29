@@ -72,17 +72,11 @@ public class PushRegistrationService {
             throw new InvalidRequestObjectException();
         }
 
-        // Get the values from the request
-        final String platform = requestObject.getPlatform();
+        final MobilePlatform platform = convert(requestObject.getPlatform());
         final String token = requestObject.getToken();
 
-        // Register the device and return response
-        MobilePlatform mobilePlatform = MobilePlatform.Android;
-        if ("ios".equalsIgnoreCase(platform)) {
-            mobilePlatform = MobilePlatform.iOS;
-        }
         try {
-            final boolean result = client.createDevice(applicationId, token, mobilePlatform, activationId);
+            final boolean result = client.createDevice(applicationId, token, platform, activationId);
             if (result) {
                 logger.info("Push registration succeeded, user ID: {}", userId);
                 return new Response();
@@ -94,6 +88,13 @@ public class PushRegistrationService {
             logger.error("Push registration failed", ex);
             throw new PushRegistrationFailedException();
         }
+    }
+
+    private static MobilePlatform convert(final PushRegisterRequest.Platform source) {
+        return switch (source) {
+            case IOS -> MobilePlatform.IOS;
+            case ANDROID -> MobilePlatform.ANDROID;
+        };
     }
 
 }

@@ -18,19 +18,41 @@
 
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.ToString;
 
 /**
- * Class representing a device registration request. The supported platform
- * values are 'ios' and 'android'. The push token is the value received from
- * APNS or FCM services without any modification.
+ * Class representing a device registration request.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
 public class PushRegisterRequest {
 
-    private String platform;
+    /**
+     * The platform.
+     */
+    @NotNull
+    private Platform platform;
+
+    /**
+     * The push token is the value received from APNS or FCM services without any modification.
+     */
+    @NotBlank
+    @ToString.Exclude
+    @Schema(description = "The push token is the value received from APNS or FCM services without any modification.")
     private String token;
+
+    public enum Platform {
+        @JsonProperty("ios")
+        IOS,
+
+        @JsonProperty("android")
+        ANDROID
+    }
 
 }
