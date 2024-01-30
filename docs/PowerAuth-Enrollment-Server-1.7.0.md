@@ -9,5 +9,4 @@ This guide contains instructions for migration from PowerAuth Enrollment Server 
 ### Register for Push Messages (Token)
 
 The endpoint `POST /api/push/device/register/token` now strictly validates `platform` against values `ios`, `android` or `huawei`.
-If you use the SKD, you should not be affected.
-Unless you are calling that manually.
+If you use the PowerAuth SDK, you should not be affected.
