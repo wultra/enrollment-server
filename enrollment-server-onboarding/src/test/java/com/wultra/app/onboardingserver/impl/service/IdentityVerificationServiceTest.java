@@ -130,22 +130,6 @@ class IdentityVerificationServiceTest {
     }
 
     @Test
-    void testCreateDocsMetadata_hideParsedRejectionReason() throws Exception {
-        final DocumentResultEntity docResult = new DocumentResultEntity();
-        when(documentVerificationProvider.parseRejectionReasons(docResult))
-                .thenReturn(List.of("Hide parsed reason 1.", "Hide parsed reason 2."));
-
-        final DocumentVerificationEntity doc = new DocumentVerificationEntity();
-        doc.setStatus(DocumentStatus.REJECTED);
-        doc.setResults(Set.of(docResult));
-        doc.setIdentityVerification(new IdentityVerificationEntity());
-        docResult.setDocumentVerification(doc);
-
-        final List<String> errors = tested.createDocsMetadata(List.of(doc)).get(0).getErrors();
-        assertHidden(errors);
-    }
-
-    @Test
     void testCreateDocsMetadata_hideFailedErrorDetail() {
         final DocumentVerificationEntity doc = new DocumentVerificationEntity();
         doc.setStatus(DocumentStatus.FAILED);
