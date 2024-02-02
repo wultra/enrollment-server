@@ -530,21 +530,9 @@ public class IdentityVerificationService {
     }
 
     public List<DocumentMetadataResponseDto> createDocsMetadata(List<DocumentVerificationEntity> entities) {
-        List<DocumentMetadataResponseDto> docsMetadata = new ArrayList<>();
-        entities.forEach(entity -> {
-            DocumentMetadataResponseDto docMetadata = toDocumentMetadata(entity);
-
-            if (DocumentStatus.REJECTED.equals(entity.getStatus())) {
-                List<String> errors = collectRejectionErrors(entity);
-                if (docMetadata.getErrors() == null) {
-                    docMetadata.setErrors(new ArrayList<>());
-                }
-                docMetadata.getErrors().addAll(errors);
-            }
-
-            docsMetadata.add(docMetadata);
-        });
-        return docsMetadata;
+        return entities.stream()
+                .map(this::toDocumentMetadata)
+                .toList();
     }
 
     /**
@@ -616,8 +604,9 @@ public class IdentityVerificationService {
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
         DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
-        if (StringUtils.isNotBlank(entity.getErrorDetail())) {
-            docMetadata.setErrors(List.of(entity.getErrorDetail()));
+        // Hide specific error reason if any.
+        if (StringUtils.isNotBlank(entity.getErrorDetail()) || StringUtils.isNotBlank(entity.getRejectReason())) {
+            docMetadata.setErrors(List.of("Error verifying the document."));
         }
         docMetadata.setFilename(entity.getFilename());
         docMetadata.setSide(entity.getSide());
