@@ -94,6 +94,7 @@ public class PushRegistrationService {
         return switch (source) {
             case IOS -> MobilePlatform.IOS;
             case ANDROID -> MobilePlatform.ANDROID;
+            case HUAWEI -> MobilePlatform.HUAWEI;
         };
     }
 
