@@ -97,7 +97,7 @@
         <moneta.version>1.4.4</moneta.version>
 
         <wultra-core.version>1.9.0-SNAPSHOT</wultra-core.version>
-        <powerauth-crypto.version>1.7.0-SNAPSHOT</powerauth-crypto.version>
+        <powerauth-crypto.version>1.7.0</powerauth-crypto.version>
         <powerauth-restful-integration.version>1.7.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>1.7.0-SNAPSHOT</powerauth-push.version>
 
