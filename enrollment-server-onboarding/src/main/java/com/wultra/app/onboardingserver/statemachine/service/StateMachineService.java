@@ -126,7 +126,7 @@ public class StateMachineService {
     @Transactional(readOnly = true)
     public void changeMachineStatesInBatch() {
         final AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
+        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState()) {
               stream.filter(identityVerification -> identityVerification.getDocumentVerifications().stream()
                             .anyMatch(doc -> identityVerificationConfig.getDocumentVerificationProvider().equals(doc.getProviderName())))
                     .forEach(identityVerification -> {
