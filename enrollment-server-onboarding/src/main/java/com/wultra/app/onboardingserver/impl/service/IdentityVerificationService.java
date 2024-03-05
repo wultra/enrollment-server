@@ -559,7 +559,7 @@ public class IdentityVerificationService {
      * @return identity verifications
      */
     public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
-        return identityVerificationRepository.streamAllIdentityVerificationsToChangeState();
+        return identityVerificationRepository.streamAllIdentityVerificationsToChangeState(identityVerificationConfig.getDocumentVerificationProvider());
     }
 
     private void moveToDocumentUpload(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final IdentityVerificationStatus status) {

@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine.service;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -68,8 +67,6 @@ public class StateMachineService {
     private final IdentityVerificationService identityVerificationService;
 
     private final TransactionTemplate transactionTemplate;
-
-    private final IdentityVerificationConfig identityVerificationConfig;
 
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
@@ -126,26 +123,24 @@ public class StateMachineService {
     @Transactional(readOnly = true)
     public void changeMachineStatesInBatch() {
         final AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState()) {
-              stream.filter(identityVerification -> identityVerification.getDocumentVerifications().stream()
-                            .anyMatch(doc -> identityVerificationConfig.getDocumentVerificationProvider().equals(doc.getProviderName())))
-                    .forEach(identityVerification -> {
-                        final String processId = identityVerification.getProcessId();
-                        final OwnerId ownerId = new OwnerId();
-                        ownerId.setActivationId(identityVerification.getActivationId());
-                        ownerId.setUserId(identityVerification.getUserId());
-                        logger.debug("Changing state of machine for process ID: {}", processId);
+        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
+            stream.forEach(identityVerification -> {
+                final String processId = identityVerification.getProcessId();
+                final OwnerId ownerId = new OwnerId();
+                ownerId.setActivationId(identityVerification.getActivationId());
+                ownerId.setUserId(identityVerification.getUserId());
+                logger.debug("Changing state of machine for process ID: {}", processId);
 
-                        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                        transactionTemplate.executeWithoutResult(status -> {
-                            try {
-                                processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-                                countFinished.incrementAndGet();
-                            } catch (IdentityVerificationException e) {
-                                logger.warn("Unable to change state for process ID: {}", processId, e);
-                            }
-                        });
-                    });
+                transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                transactionTemplate.executeWithoutResult(status -> {
+                    try {
+                        processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+                        countFinished.incrementAndGet();
+                    } catch (IdentityVerificationException e) {
+                        logger.warn("Unable to change state for process ID: {}", processId, e);
+                    }
+                });
+            });
         }
         if (countFinished.get() > 0) {
             logger.debug("Changed state of {} identity verifications", countFinished.get());
