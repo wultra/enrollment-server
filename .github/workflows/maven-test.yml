@@ -14,5 +14,5 @@ on:
 
 jobs:
   maven-tests:
-    uses: wultra/wultra-infrastructure/.github/workflows/maven-test.yml@issues/setup-java-action-v4
+    uses: wultra/wultra-infrastructure/.github/workflows/maven-test.yml@issues/checkout-action-v4
     secrets: inherit
