@@ -29,11 +29,17 @@ The Enrollment Server uses the following public configuration properties:
 
 ## Enrollment Server Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server.mtoken.enabled` | `true` | Publishing of Mobile Token endpoints can be enabled or disabled using this property. |
-| `enrollment-server.inbox.enabled` | `true` | Publishing of Inbox endpoints can be enabled or disabled using this property. |
-| `enrollment-server.activation-spawn.enabled` | `false` | The activation spawn functionality can be enabled or disabled using this property. |
+| Property                                                | Default | Note                                                                                                                                                                                                                                       |
+|---------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enrollment-server.mtoken.enabled`                      | `true`  | Publishing of Mobile Token endpoints can be enabled or disabled using this property.                                                                                                                                                       |
+| `enrollment-server.inbox.enabled`                       | `true`  | Publishing of Inbox endpoints can be enabled or disabled using this property.                                                                                                                                                              |
+| `enrollment-server.activation-spawn.enabled`            | `false` | The activation spawn functionality can be enabled or disabled using this property.                                                                                                                                                         |
+| `enrollment-server.admin.enabled`                       | `false` | The admin API can be enabled or disabled using this property.                                                                                                                                                                              |
+| `enrollment-server.auth-type`                           | `NONE`  | `BASIC_HTTP` for basic HTTP authentication or `OIDC` for OpenID Connect. If authentication enabled, the corresponding properties bellow must be configured.                                                                                |
+| `spring.security.user.name`                             |         | Basic HTTP property, user name                                                                                                                                                                                                             |
+| `spring.security.user.password`                         |         | Basic HTTP property, user password `{id}encodedPassword`, see [Spring Password Storage Format](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-dpe-format). | 
+| `spring.security.oauth2.resource-server.jwt.issuer-uri` |         | OIDC property, URL of the provider, e.g. `https://sts.windows.net/example/`                                                                                                                                                                |
+| `spring.security.oauth2.resource-server.jwt.audiences`  |         | OIDC property, a comma-separated list of allowed `aud` JWT claim values to be validated.                                                                                                                                                   |
 
 ## UserInfoProvider Configuration
 
