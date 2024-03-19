@@ -19,7 +19,7 @@
 package com.wultra.app.enrollmentserver.database;
 
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -30,7 +30,7 @@ import java.util.Optional;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Repository
-public interface OperationTemplateRepository extends CrudRepository<OperationTemplateEntity, Long> {
+public interface OperationTemplateRepository extends ListCrudRepository<OperationTemplateEntity, Long> {
 
     /**
      * Find an operation template by the given language and operation type.
