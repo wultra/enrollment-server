@@ -97,7 +97,15 @@ public class SecurityConfig {
     }
 
     enum AuthType {
+
+        /**
+         * Authentication is turned off.
+         */
         NONE,
+
+        /**
+         * Basic HTTP authentication.
+         */
         BASIC_HTTP,
 
         /**
