@@ -19,11 +19,13 @@ package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
 import lombok.Builder;
 
+import java.util.List;
+
 /**
  * Template detail.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-public record TemplateDetailResponse(String name, String title, String message, String attributes, String language) {
+public record TemplateDetailResponse(String name, String title, String message, List<Object> attributes, String language) {
 }
