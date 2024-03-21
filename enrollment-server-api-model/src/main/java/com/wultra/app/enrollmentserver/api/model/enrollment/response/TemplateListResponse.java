@@ -18,12 +18,24 @@
 package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Template detail.
+ * Template list response.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-public record TemplateDetailResponse(String name, String title, String message, String attributes, String language) {
+@EqualsAndHashCode(callSuper = true)
+public class TemplateListResponse extends ArrayList<TemplateListResponse.TemplateDetail> {
+
+    @Serial
+    private static final long serialVersionUID = -5446919236567435144L;
+
+    @Builder
+    public record TemplateDetail(String name, String title, String message, List<Object> attributes, String language) {
+    }
 }
