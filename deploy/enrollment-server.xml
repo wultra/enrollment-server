@@ -29,6 +29,12 @@
     <Parameter name="enrollment-server.mtoken.enabled" value="${ENROLLMENT_SERVER_MTOKEN_ENABLED:true}"/>
     <Parameter name="enrollment-server.inbox.enabled" value="${ENROLLMENT_SERVER_INBOX_ENABLED:true}"/>
     <Parameter name="enrollment-server.activation-spawn.enabled" value="${ENROLLMENT_SERVER_ACTIVATION_SPAWN_ENABLED:false}"/>
+    <Parameter name="enrollment-server.admin.enabled" value="${ENROLLMENT_SERVER_ADMIN_ENABLED:false}"/>
+    <Parameter name="enrollment-server.auth-type" value="${ENROLLMENT_SERVER_AUTH_TYPE:NONE}"/>
+    <Parameter name="spring.security.user.name" value="${ENROLLMENT_SERVER_SECURITY_AUTH_HTTP_BASIC_USER_NAME:}" />
+    <Parameter name="spring.security.user.password" value="${ENROLLMENT_SERVER_SECURITY_AUTH_HTTP_BASIC_USER_PASSWORD:}" />
+    <Parameter name="spring.security.oauth2.resource-server.jwt.issuer-uri" value="${ENROLLMENT_SERVER_SECURITY_AUTH_OIDC_ISSUER_URI:}" />
+    <Parameter name="spring.security.oauth2.resource-server.jwt.audiences" value="${ENROLLMENT_SERVER_SECURITY_AUTH_OIDC_AUDIENCES:}" />
 
     <!--  User-info configuration  -->
     <Parameter name="enrollment-server.user-info.provider" value="${ENROLLMENT_SERVER_USER_INFO_PROVIDER:}"/>

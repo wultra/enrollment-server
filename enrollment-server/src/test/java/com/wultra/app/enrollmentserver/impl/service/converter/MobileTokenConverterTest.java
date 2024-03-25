@@ -18,7 +18,6 @@
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
@@ -362,27 +361,27 @@ class MobileTokenConverterTest {
     @Test
     void testConvertAttributes() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
-        operationDetail.setParameters(ImmutableMap.<String, String>builder()
-                .put("amount", "13.7")
-                .put("currency", "EUR")
-                .put("iban", "AT483200000012345864")
-                .put("note", "Remember me")
-                .put("headingLevel", "3")
-                .put("thumbnailUrl", "https://example.com/123_thumb.jpeg")
-                .put("originalUrl", "https://example.com/123.jpeg")
-                .put("sourceAmount", "1.26")
-                .put("sourceCurrency", "ETH")
-                .put("targetAmount", "1710.98")
-                .put("targetCurrency", "USD")
-                .put("dynamic", "true")
-                .put("partyLogoUrl", "https://example.com/img/logo/logo.svg")
-                .put("partyName", "Example Ltd.")
-                .put("partyDescription", "Find out more about Example...")
-                .put("partyUrl", "https://example.com/hello")
-                .put("alertType", "WARNING")
-                .put("alertTitle", "Insufficient Balance")
-                .put("alertMessage", "You have only $1.00 on your account with number 238400856/0300.")
-                .build());
+        operationDetail.setParameters(Map.ofEntries(
+                Map.entry("amount", "13.7"),
+                Map.entry("currency", "EUR"),
+                Map.entry("iban", "AT483200000012345864"),
+                Map.entry("note", "Remember me"),
+                Map.entry("headingLevel", "3"),
+                Map.entry("thumbnailUrl", "https://example.com/123_thumb.jpeg"),
+                Map.entry("originalUrl", "https://example.com/123.jpeg"),
+                Map.entry("sourceAmount", "1.26"),
+                Map.entry("sourceCurrency", "ETH"),
+                Map.entry("targetAmount", "1710.98"),
+                Map.entry("targetCurrency", "USD"),
+                Map.entry("dynamic", "true"),
+                Map.entry("partyLogoUrl", "https://example.com/img/logo/logo.svg"),
+                Map.entry("partyName", "Example Ltd."),
+                Map.entry("partyDescription", "Find out more about Example..."),
+                Map.entry("partyUrl", "https://example.com/hello"),
+                Map.entry("alertType", "WARNING"),
+                Map.entry("alertTitle", "Insufficient Balance"),
+                Map.entry("alertMessage", "You have only $1.00 on your account with number 238400856/0300.")
+        ));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("""
@@ -518,10 +517,10 @@ class MobileTokenConverterTest {
     @Test
     void testConvertAmount_notANumber() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
-        operationDetail.setParameters(ImmutableMap.<String, String>builder()
-                .put("amount", "not a number")
-                .put("currency", "CZK")
-                .build());
+        operationDetail.setParameters(Map.of(
+                "amount", "not a number",
+                "currency", "CZK"
+        ));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("""
@@ -558,13 +557,13 @@ class MobileTokenConverterTest {
     @Test
     void testConvertAmountConversion_sourceNotANumber() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
-        operationDetail.setParameters(ImmutableMap.<String, String>builder()
-                .put("sourceAmount", "source not a number")
-                .put("sourceCurrency", "EUR")
-                .put("targetAmount", "1710.98")
-                .put("targetCurrency", "USD")
-                .put("dynamic", "true")
-                .build());
+        operationDetail.setParameters(Map.of(
+                "sourceAmount", "source not a number",
+                "sourceCurrency", "EUR",
+                "targetAmount", "1710.98",
+                "targetCurrency", "USD",
+                "dynamic", "true"
+        ));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("""
@@ -610,13 +609,13 @@ class MobileTokenConverterTest {
     @Test
     void testConvertAmountConversion_targetNotANumber() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
-        operationDetail.setParameters(ImmutableMap.<String, String>builder()
-                .put("sourceAmount", "1710.98")
-                .put("sourceCurrency", "USD")
-                .put("targetAmount", "target not a number")
-                .put("targetCurrency", "EUR")
-                .put("dynamic", "true")
-                .build());
+        operationDetail.setParameters(Map.of(
+                "sourceAmount", "1710.98",
+                "sourceCurrency", "USD",
+                "targetAmount", "target not a number",
+                "targetCurrency", "EUR",
+                "dynamic", "true"
+        ));
 
         final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
         operationTemplate.setAttributes("""

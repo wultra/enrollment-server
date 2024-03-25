@@ -17,9 +17,13 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import org.junit.jupiter.api.Test;
@@ -28,6 +32,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
+import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.OTP_VERIFICATION;
@@ -35,6 +43,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -53,6 +62,9 @@ class IdentityVerificationServiceTest {
 
     @Mock
     private IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
+
+    @Mock
+    private DocumentVerificationProvider documentVerificationProvider;
 
     @InjectMocks
     private IdentityVerificationService tested;
@@ -96,4 +108,49 @@ class IdentityVerificationServiceTest {
         assertThat(savedIdentityVerification.getErrorDetail(), equalTo("documentVerificationFailed"));
         assertThat(savedIdentityVerification.getErrorOrigin(), equalTo(ErrorOrigin.FINAL_VALIDATION));
     }
+
+    @Test
+    void testCreateDocsMetadata_hideRejectedErrorDetail() {
+        final DocumentVerificationEntity doc = new DocumentVerificationEntity();
+        doc.setStatus(DocumentStatus.REJECTED);
+        doc.setErrorDetail("Hide specific error occurred.");
+
+        final List<String> errors = tested.createDocsMetadata(List.of(doc)).get(0).getErrors();
+        assertHidden(errors);
+    }
+
+    @Test
+    void testCreateDocsMetadata_hideRejectedRejectReason() {
+        final DocumentVerificationEntity doc = new DocumentVerificationEntity();
+        doc.setStatus(DocumentStatus.REJECTED);
+        doc.setRejectReason("Hide specific rejection reason.");
+
+        final List<String> errors = tested.createDocsMetadata(List.of(doc)).get(0).getErrors();
+        assertHidden(errors);
+    }
+
+    @Test
+    void testCreateDocsMetadata_hideFailedErrorDetail() {
+        final DocumentVerificationEntity doc = new DocumentVerificationEntity();
+        doc.setStatus(DocumentStatus.FAILED);
+        doc.setErrorDetail("Hide some error occurred.");
+
+        final List<String> errors = tested.createDocsMetadata(List.of(doc)).get(0).getErrors();
+        assertHidden(errors);
+    }
+
+    @Test
+    void testCreateDocsMetadata_accepted() {
+        final DocumentVerificationEntity doc = new DocumentVerificationEntity();
+        doc.setStatus(DocumentStatus.ACCEPTED);
+
+        final List<String> errors = tested.createDocsMetadata(List.of(doc)).get(0).getErrors();
+        assertTrue(CollectionUtils.isEmpty(errors));
+    }
+
+    private static void assertHidden(final List<String> errors) {
+        assertEquals(1, errors.size());
+        assertEquals("Error verifying the document.", errors.get(0));
+    }
+
 }

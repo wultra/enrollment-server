@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.task.cleaning;
 
-import com.google.common.collect.Lists;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
@@ -33,8 +32,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Service with cleaning functionality.
@@ -120,7 +122,7 @@ class CleaningService {
         final Date createdDateExpiredOtp = DateUtil.convertExpirationToCreatedDate(otpExpiration);
         final List<String> otpIds = onboardingOtpRepository.findExpiredIds(createdDateExpiredOtp);
         final Date now = new Date();
-        for (List<String> otpIdChunk : Lists.partition(otpIds, BATCH_SIZE)) {
+        for (List<String> otpIdChunk : ListUtils.partition(otpIds, BATCH_SIZE)) {
             terminateAndAuditOtps(otpIdChunk, now);
         }
     }
@@ -139,7 +141,7 @@ class CleaningService {
             return;
         }
         logger.info("Terminating {} expired processes", ids.size());
-        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
+        for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             terminateAndAuditProcesses(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
     }
@@ -165,7 +167,7 @@ class CleaningService {
         }
 
         final Date now = new Date();
-        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
+        for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             logger.info("Terminating {} expired document verifications", idsChunk.size());
             terminateAndAuditDocuments(idsChunk, now, ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
@@ -184,7 +186,7 @@ class CleaningService {
         final Date now = new Date();
         final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
 
-        for (List<String> idsChunk : Lists.partition(ids, BATCH_SIZE)) {
+        for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             logger.info("Terminating {} expired identity verifications", idsChunk.size());
             terminateAndAuditIdentityVerifications(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, errorOrigin);
         }
@@ -207,7 +209,7 @@ class CleaningService {
         final Date now = new Date();
         final ErrorOrigin errorOrigin = ErrorOrigin.PROCESS_LIMIT_CHECK;
 
-        for (List<String> processIdChunk : Lists.partition(processIds, BATCH_SIZE)) {
+        for (List<String> processIdChunk : ListUtils.partition(processIds, BATCH_SIZE)) {
             logger.info("Terminating {} processes", processIdChunk.size());
             terminateAndAuditProcesses(processIdChunk, now, errorDetail, errorOrigin);
 
@@ -247,5 +249,22 @@ class CleaningService {
         documentIds.forEach(documentId ->
                 documentVerificationRepository.findById(documentId).ifPresent(document ->
                         auditService.audit(document, "Expired Document verification for user: {}, {}", document.getIdentityVerification().getUserId(), errorDetail)));
+    }
+
+    protected static final class ListUtils {
+
+        private ListUtils() {
+            throw new IllegalStateException("Utility class");
+        }
+
+        public static Collection<List<String>> partition(final List<String> source, final int partitionSize) {
+            if (source.size() <= partitionSize) {
+                return List.of(source);
+            }
+            return IntStream.range(0, source.size())
+                    .boxed()
+                    .collect(Collectors.groupingBy(partition -> (partition / partitionSize), Collectors.mapping(source::get, Collectors.toList())))
+                    .values();
+        }
     }
 }

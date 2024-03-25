@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -57,6 +58,15 @@ public class OperationTemplateService {
     public Optional<OperationTemplateEntity> findTemplate(@NotNull String operationType, @NotNull String language) {
         return operationTemplateRepository.findFirstByLanguageAndPlaceholder(language, operationType).or(() ->
                 findTemplateFallback(operationType, language));
+    }
+
+    /**
+     * Find all templates.
+     *
+     * @return templates
+     */
+    public List<OperationTemplateEntity> findAll() {
+        return operationTemplateRepository.findAll();
     }
 
     private Optional<OperationTemplateEntity> findTemplateFallback(final String operationType, final String language) {

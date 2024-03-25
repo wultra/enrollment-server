@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
@@ -125,7 +124,7 @@ class InnovatricsLivenessService {
         }
 
         final String customerId = (String) sessionInfo.getSessionAttributes().get(SessionInfo.ATTRIBUTE_PRIMARY_DOCUMENT_REFERENCE);
-        if (Strings.isNullOrEmpty(customerId)) {
+        if (StringUtils.isBlank(customerId)) {
             throw new IdentityVerificationException("Missing a customer ID value for calling Innovatrics, " + id);
         }
         return customerId;

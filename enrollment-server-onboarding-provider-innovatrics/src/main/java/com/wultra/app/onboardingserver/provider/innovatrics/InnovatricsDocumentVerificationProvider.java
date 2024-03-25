@@ -20,11 +20,10 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
@@ -33,10 +32,10 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -99,7 +98,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         }
 
         final Optional<DocumentSubmitResult> primaryPage = results.getResults().stream()
-                .filter(result -> Strings.isNullOrEmpty(result.getRejectReason()) && Strings.isNullOrEmpty(result.getErrorDetail()))
+                .filter(result -> StringUtils.isBlank(result.getRejectReason()) && StringUtils.isBlank(result.getErrorDetail()))
                 .findFirst();
 
         if (primaryPage.isPresent()) {
@@ -132,9 +131,9 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
         final String rejectReasons = results.getResults().stream()
                 .map(DocumentVerificationResult::getRejectReason)
-                .filter(StringUtils::hasText)
+                .filter(StringUtils::isNotBlank)
                 .collect(Collectors.joining(";"));
-        if (StringUtils.hasText(rejectReasons)) {
+        if (StringUtils.isNotBlank(rejectReasons)) {
             logger.debug("Some documents were rejected: rejectReasons={}, {}", rejectReasons, id);
             results.setStatus(DocumentVerificationStatus.REJECTED);
             results.setRejectReason(rejectReasons);
@@ -172,7 +171,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
         logger.debug("Parsing rejection reasons of {}", docResult);
         final String rejectionReasons = docResult.getRejectReason();
-        if (!StringUtils.hasText(rejectionReasons)) {
+        if (StringUtils.isBlank(rejectionReasons)) {
             return Collections.emptyList();
         }
 

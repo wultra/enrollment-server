@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.provider.iproov;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -34,6 +33,7 @@ import com.wultra.app.onboardingserver.provider.iproov.model.api.ClientErrorResp
 import com.wultra.app.onboardingserver.provider.iproov.model.api.EnrolResponse;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -161,7 +161,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     @Override
     public PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException {
         final String token = (String) sessionInfo.getSessionAttributes().get(VERIFICATION_TOKEN);
-        if (Strings.isNullOrEmpty(token)) {
+        if (StringUtils.isBlank(token)) {
             throw new PresenceCheckException("Missing a token value for verification validation in iProov, " + id);
         }
 

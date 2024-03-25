@@ -9,7 +9,6 @@ The Onboarding Server uses the following public configuration properties:
 | `spring.datasource.url` | `jdbc:postgresql://localhost:5432/powerauth` | Database JDBC URL |
 | `spring.datasource.username` | `powerauth` | Database JDBC username |
 | `spring.datasource.password` | `_empty_` | Database JDBC password |
-| `spring.datasource.driver-class-name` | `org.postgresql.Driver` | Datasource JDBC class name | 
 | `spring.jpa.hibernate.ddl-auto` | `none` | Configuration of automatic database schema creation | 
 | `spring.jpa.properties.hibernate.connection.characterEncoding` | `utf8` | Character encoding |
 | `spring.jpa.properties.hibernate.connection.useUnicode` | `true` | Character encoding - Unicode support |
@@ -46,7 +45,6 @@ The Onboarding Server uses the following public configuration properties:
 | `enrollment-server-onboarding.identity-verification.otp.enabled` | `true` | Whether OTP verification is enabled during identity verification. |
 | `enrollment-server-onboarding.identity-verification.max-failed-attempts` | `5` | Maximum failed attempts for identity verification. |
 | `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5` | Maximum failed attempts for document upload. |
-| `enrollment-server-onboarding.client-evaluation.max-failed-attempts` | `5` | Maximum failed attempts for client evaluation. |
 
 ## Digital Onboarding Adapter Configuration
 
@@ -69,6 +67,7 @@ The Onboarding Server uses the following public configuration properties:
 | Property | Default | Note |
 |---|---|---|
 | `enrollment-server-onboarding.client-evaluation.max-failed-attempts` | 5 | Number of maximum failed attempts for client evaluation. |
+| `enrollment-server-onboarding.client-evaluation.include-extracted-data` | `false` | Include extracted data to the evaluate client request. The format of extracted data is defined by the provider of document verification. |
 
 ## Document Verification Provider Configuration
 
@@ -170,6 +169,8 @@ logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS
 
 
 ## Monitoring and Observability
-
+| Property                                  | Default | Note                                                                                                                                                                        |
+|-------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `management.tracing.sampling.probability` | `1.0`   | Specifies the proportion of requests that are sampled for tracing. A value of 1.0 means that 100% of requests are sampled, while a value of 0 effectively disables tracing. |
 The WAR file includes the `micrometer-registry-prometheus` dependency.
 Discuss its configuration with the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).

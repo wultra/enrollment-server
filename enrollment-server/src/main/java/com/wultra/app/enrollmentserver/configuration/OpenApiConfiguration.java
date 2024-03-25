@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,9 +50,11 @@ import org.springframework.context.annotation.Configuration;
 )
 public class OpenApiConfiguration {
 
+    private static final String PACKAGE_ADMIN = "com.wultra.app.enrollmentserver.controller.api.admin";
+
     @Bean
     public GroupedOpenApi defaultApiGroup() {
-        String[] packages = {
+        final String[] packages = {
                 "io.getlime.security.powerauth",
                 "com.wultra.app.enrollmentserver.controller.api"
         };
@@ -59,6 +62,16 @@ public class OpenApiConfiguration {
         return GroupedOpenApi.builder()
                 .group("enrollment-server")
                 .packagesToScan(packages)
+                .packagesToExclude(PACKAGE_ADMIN)
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "enrollment-server.admin.enabled", havingValue = "true")
+    public GroupedOpenApi adminApiGroup() {
+        return GroupedOpenApi.builder()
+                .group("enrollment-server-admin")
+                .packagesToScan(PACKAGE_ADMIN)
                 .build();
     }
 

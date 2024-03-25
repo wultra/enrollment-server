@@ -9,7 +9,6 @@ The Enrollment Server uses the following public configuration properties:
 | `spring.datasource.url` | `_empty_` | Database JDBC URL |
 | `spring.datasource.username` | `_empty_` | Database JDBC username |
 | `spring.datasource.password` | `_empty_` | Database JDBC password |
-| `spring.datasource.driver-class-name` | `_empty_` | Datasource JDBC class name | 
 | `spring.jpa.hibernate.ddl-auto` | `none` | Configuration of automatic database schema creation | 
 | `spring.jpa.properties.hibernate.connection.characterEncoding` | `_empty_` | Character encoding |
 | `spring.jpa.properties.hibernate.connection.useUnicode` | `_empty_` | Character encoding - Unicode support |
@@ -30,11 +29,17 @@ The Enrollment Server uses the following public configuration properties:
 
 ## Enrollment Server Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server.mtoken.enabled` | `true` | Publishing of Mobile Token endpoints can be enabled or disabled using this property. |
-| `enrollment-server.inbox.enabled` | `true` | Publishing of Inbox endpoints can be enabled or disabled using this property. |
-| `enrollment-server.activation-spawn.enabled` | `false` | The activation spawn functionality can be enabled or disabled using this property. |
+| Property                                                | Default | Note                                                                                                                                                                                                                                       |
+|---------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enrollment-server.mtoken.enabled`                      | `true`  | Publishing of Mobile Token endpoints can be enabled or disabled using this property.                                                                                                                                                       |
+| `enrollment-server.inbox.enabled`                       | `true`  | Publishing of Inbox endpoints can be enabled or disabled using this property.                                                                                                                                                              |
+| `enrollment-server.activation-spawn.enabled`            | `false` | The activation spawn functionality can be enabled or disabled using this property.                                                                                                                                                         |
+| `enrollment-server.admin.enabled`                       | `false` | The admin API can be enabled or disabled using this property.                                                                                                                                                                              |
+| `enrollment-server.auth-type`                           | `NONE`  | `BASIC_HTTP` for basic HTTP authentication or `OIDC` for OpenID Connect. If authentication enabled, the corresponding properties bellow must be configured.                                                                                |
+| `spring.security.user.name`                             |         | Basic HTTP property, user name                                                                                                                                                                                                             |
+| `spring.security.user.password`                         |         | Basic HTTP property, user password `{id}encodedPassword`, see [Spring Password Storage Format](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-dpe-format). | 
+| `spring.security.oauth2.resource-server.jwt.issuer-uri` |         | OIDC property, URL of the provider, e.g. `https://sts.windows.net/example/`                                                                                                                                                                |
+| `spring.security.oauth2.resource-server.jwt.audiences`  |         | OIDC property, a comma-separated list of allowed `aud` JWT claim values to be validated.                                                                                                                                                   |
 
 ## UserInfoProvider Configuration
 
@@ -63,6 +68,8 @@ logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS
 
 
 ## Monitoring and Observability
-
+| Property                                  | Default | Note                                                                                                                                                                        |
+|-------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `management.tracing.sampling.probability` | `1.0`   | Specifies the proportion of requests that are sampled for tracing. A value of 1.0 means that 100% of requests are sampled, while a value of 0 effectively disables tracing. |
 The WAR file includes the `micrometer-registry-prometheus` dependency.
 Discuss its configuration with the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).

@@ -19,7 +19,9 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -71,12 +74,15 @@ class ClientEvaluationServiceTest {
     void testProcessClientEvaluation_successful() throws Exception {
         when(identityVerificationConfig.getClientEvaluationMaxFailedAttempts())
                 .thenReturn(1);
+        when(identityVerificationConfig.isSendingExtractedDataEnabled())
+                .thenReturn(true);
 
         final EvaluateClientRequest evaluateClientRequest = EvaluateClientRequest.builder()
                 .processId("p1")
                 .userId("u1")
                 .identityVerificationId("i1")
                 .verificationId("v1")
+                .extractedData(List.of("d1_data"))
                 .build();
         final EvaluateClientResponse evaluateClientResponse = EvaluateClientResponse.builder()
                 .accepted(true)
@@ -90,8 +96,8 @@ class ClientEvaluationServiceTest {
         identityVerification.setUserId("u1");
         identityVerification.setPhase(CLIENT_EVALUATION);
         identityVerification.setDocumentVerifications(Set.of(
-                createDocumentVerification("d1", DocumentStatus.ACCEPTED, "v1"),
-                createDocumentVerification("d2", DocumentStatus.ACCEPTED, "v1"),
+                createDocumentVerificationWithResults("d1", DocumentStatus.ACCEPTED, "v1", "d1_data"),
+                createDocumentVerificationWithResults("d2", DocumentStatus.ACCEPTED, "v1", DocumentSubmitResult.NO_DATA_EXTRACTED),
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
 
         final OwnerId ownerId = new OwnerId();
@@ -164,6 +170,15 @@ class ClientEvaluationServiceTest {
         documentVerification.setStatus(status);
         documentVerification.setVerificationId(verificationId);
         documentVerification.setUsedForVerification(true);
+        return documentVerification;
+    }
+
+    private static DocumentVerificationEntity createDocumentVerificationWithResults(final String id, final DocumentStatus status, final String verificationId, final String extractedData) {
+        final DocumentResultEntity documentResult = new DocumentResultEntity();
+        documentResult.setExtractedData(extractedData);
+
+        final DocumentVerificationEntity documentVerification = createDocumentVerification(id, status, verificationId);
+        documentVerification.setResults(Set.of(documentResult));
         return documentVerification;
     }
 }

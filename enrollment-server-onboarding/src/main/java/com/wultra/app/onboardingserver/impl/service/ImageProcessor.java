@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.google.common.io.Files;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
@@ -74,7 +73,7 @@ public class ImageProcessor {
                 final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 ImageIO.write(bufferedOutputImage, TYPE_PNG, outputStream);
 
-                final String filenamePng = Files.getNameWithoutExtension(filename) + SUFFIX_PNG;
+                final String filenamePng = getFilenameWithoutExtension(filename) + SUFFIX_PNG;
 
                 final byte[] targetData = outputStream.toByteArray();
                 logger.debug("Image: {}, size: {} KB, {}", filenamePng, targetData.length / KILOBYTE, ownerId);
@@ -88,6 +87,14 @@ public class ImageProcessor {
             }
         } catch (IOException e) {
             throw new PresenceCheckException("Unable to read image", e);
+        }
+    }
+
+    private static String getFilenameWithoutExtension(final String filename) {
+        if (filename.contains(".")) {
+            return filename.substring(0, filename.lastIndexOf("."));
+        } else {
+            return filename;
         }
     }
 }

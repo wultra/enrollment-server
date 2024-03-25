@@ -16,11 +16,11 @@
  */
 package com.wultra.app.onboardingserver.statemachine.util;
 
-import com.google.common.base.Preconditions;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import io.getlime.core.rest.model.base.response.Response;
+import org.apache.commons.lang3.Validate;
 import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateContext;
 
@@ -38,7 +38,7 @@ public final class StateContextUtil {
     }
 
     public static void setResponseOk(final StateContext<OnboardingState, OnboardingEvent> context, final Response response) {
-        Preconditions.checkArgument(
+        Validate.isTrue(
                 !context.getStateMachine().hasStateMachineError(),
                 String.format("Found state machine error in %s, when expected ok", context)
         );

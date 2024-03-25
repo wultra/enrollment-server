@@ -21,7 +21,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
@@ -86,20 +89,27 @@ public class ClientEvaluationService {
     public void processClientEvaluation(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         logger.debug("Client evaluation started for {}", identityVerification);
 
+        final Set<DocumentVerificationEntity> acceptedDocuments = selectAcceptedDocuments(identityVerification);
+
         final String verificationId;
         try {
-            verificationId = getVerificationId(identityVerification);
+            verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
         } catch (Exception e) {
             processVerificationIdError(identityVerification, ownerId, e);
             return;
         }
 
-        final EvaluateClientRequest request = EvaluateClientRequest.builder()
+        final EvaluateClientRequest.EvaluateClientRequestBuilder requestBuilder = EvaluateClientRequest.builder()
                 .processId(identityVerification.getProcessId())
                 .userId(identityVerification.getUserId())
                 .identityVerificationId(identityVerification.getId())
                 .verificationId(verificationId)
-                .build();
+                .provider(config.getDocumentVerificationProvider());
+
+        if (config.isSendingExtractedDataEnabled()) {
+            requestBuilder.extractedData(fetchDocumentsExtractedData(acceptedDocuments, identityVerification));
+        }
+        final EvaluateClientRequest request = requestBuilder.build();
 
         final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
         for (int i = 0; i < maxFailedAttempts; i++) {
@@ -117,10 +127,29 @@ public class ClientEvaluationService {
         processTooManyEvaluationError(identityVerification, ownerId);
     }
 
-    private static String getVerificationId(final IdentityVerificationEntity identityVerification) {
-        final Set<String> verificationIds = identityVerification.getDocumentVerifications().stream()
+    private static Set<DocumentVerificationEntity> selectAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
+        return identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+                .collect(toSet());
+    }
+
+    private static List<String> fetchDocumentsExtractedData(final Set<DocumentVerificationEntity> documents, final IdentityVerificationEntity identityVerification) {
+        return documents.stream()
+                .map(doc -> selectLatestDocumentResult(doc, identityVerification))
+                .map(DocumentResultEntity::getExtractedData)
+                .filter(data -> !DocumentSubmitResult.NO_DATA_EXTRACTED.equals(data))
+                .toList();
+    }
+
+    private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity, final IdentityVerificationEntity identityVerification) {
+        return documentVerificationEntity.getResults().stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Missing document result for %s of %s".formatted(documentVerificationEntity, identityVerification)));
+    }
+
+    private static String fetchVerificationId(final IdentityVerificationEntity identityVerification, final Set<DocumentVerificationEntity> documents) {
+        final Set<String> verificationIds = documents.stream()
                 .map(DocumentVerificationEntity::getVerificationId)
                 .collect(toSet());
 

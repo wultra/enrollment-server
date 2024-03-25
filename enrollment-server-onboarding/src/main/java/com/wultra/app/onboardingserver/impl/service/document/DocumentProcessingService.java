@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.google.common.base.Strings;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
@@ -239,7 +238,7 @@ public class DocumentProcessingService {
      * @param docVerification Resubmitted document.
      */
     private void handleResubmit(final OwnerId ownerId, final String originalDocumentId, final DocumentVerificationEntity docVerification) {
-        if (Strings.isNullOrEmpty(originalDocumentId)) {
+        if (StringUtils.isBlank(originalDocumentId)) {
             logger.debug("Document {} is not a resubmit {}", docVerification, ownerId);
             return;
         }
