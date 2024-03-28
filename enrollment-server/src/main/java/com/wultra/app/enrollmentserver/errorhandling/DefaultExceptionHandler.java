@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Exception handler for RESTful API issues.
@@ -158,4 +159,17 @@ public class DefaultExceptionHandler {
         return new ErrorResponse("INBOX_FAILED", "Unable to process inbox request.");
     }
 
+    /**
+     * Exception handler for no resource found.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public @ResponseBody ErrorResponse handleNoResourceFoundException(final NoResourceFoundException e) {
+        logger.warn("Error occurred when calling an API: {}", e.getMessage());
+        logger.debug("Exception detail: ", e);
+        return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
+    }
 }
