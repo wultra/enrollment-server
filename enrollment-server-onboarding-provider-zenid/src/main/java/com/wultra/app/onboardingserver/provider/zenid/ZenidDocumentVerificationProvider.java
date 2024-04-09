@@ -20,22 +20,22 @@ package com.wultra.app.onboardingserver.provider.zenid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.zenid.model.api.*;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.core.rest.client.base.RestClientException;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -336,7 +336,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     @Override
     public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) throws RemoteCommunicationException, DocumentVerificationException {
-        Preconditions.checkArgument(initAttributes.containsKey(SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
+        Validate.isTrue(initAttributes.containsKey(SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
         String token = initAttributes.get(SDK_INIT_TOKEN);
 
         ResponseEntity<ZenidWebInitSdkResponse> responseEntity;

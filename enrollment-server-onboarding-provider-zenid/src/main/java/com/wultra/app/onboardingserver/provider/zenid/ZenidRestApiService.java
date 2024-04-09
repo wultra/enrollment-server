@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.google.common.base.Preconditions;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -27,6 +26,7 @@ import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -104,7 +104,7 @@ class ZenidRestApiService {
      */
     public ResponseEntity<ZenidWebUploadSampleResponse> uploadSample(OwnerId ownerId, SubmittedDocument document)
             throws RestClientException {
-        Preconditions.checkNotNull(document.getPhoto(), "Missing photo in " + document);
+        Validate.notNull(document.getPhoto(), "Missing photo in " + document);
 
         final MultiValueMap<String, String> queryParams = buildQueryParams(ownerId, document);
 
@@ -148,9 +148,8 @@ class ZenidRestApiService {
      * @param sampleIds Ids of previously uploaded samples.
      * @return Response entity with the investigation result
      */
-    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds)
-            throws RestClientException {
-        Preconditions.checkArgument(sampleIds.size() > 0, "Missing sample ids for investigation");
+    public ResponseEntity<ZenidWebInvestigateResponse> investigateSamples(List<String> sampleIds) throws RestClientException {
+        Validate.notEmpty(sampleIds, "Missing sample ids for investigation");
 
         MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
         sampleIds.forEach(sampleId -> queryParams.add("sampleIDs", sampleId));

@@ -26,13 +26,13 @@
 
     <groupId>com.wultra.security</groupId>
     <artifactId>enrollment-server-parent</artifactId>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -88,26 +88,21 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.2.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.4.0</openapi-generator-maven-plugin.version>
 
-        <shedlock.version>5.10.2</shedlock.version>
+        <shedlock.version>5.13.0</shedlock.version>
         <spring-statemachine.version>4.0.0</spring-statemachine.version>
-        <swagger-annotations-jakarta.version>2.2.20</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.3.0</springdoc-openapi-starter-webmvc-ui.version>
-        <moneta.version>1.4.2</moneta.version>
+        <swagger-annotations-jakarta.version>2.2.21</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.5.0</springdoc-openapi-starter-webmvc-ui.version>
+        <moneta.version>1.4.4</moneta.version>
 
-        <!--  TODO (racansky, 2023-10-31) temporarily override spring boot version to make commons-text 1.11.0 working  -->
-        <commons-lang3.version>3.13.0</commons-lang3.version>
-
-        <wultra-core.version>1.8.0</wultra-core.version>
-        <powerauth-crypto.version>1.6.0</powerauth-crypto.version>
-        <powerauth-restful-integration.version>1.6.0</powerauth-restful-integration.version>
-        <powerauth-push.version>1.6.0</powerauth-push.version>
+        <wultra-core.version>1.9.0</wultra-core.version>
+        <powerauth-crypto.version>1.7.0</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.7.0</powerauth-restful-integration.version>
+        <powerauth-push.version>1.7.0</powerauth-push.version>
 
         <bcprov-jdk18on.version>1.77</bcprov-jdk18on.version>
         <logstash.version>7.4</logstash.version>
-        <!--  TODO (racansky, 2023-12-08) temporarily override the version 1.4.11 from spring boot version because of CVE  -->
-        <logback.version>1.4.14</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -316,13 +311,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>de.skuzzle.enforcer</groupId>
-                        <artifactId>restrict-imports-enforcer-rule</artifactId>
-                        <version>2.4.0</version>
-                    </dependency>
-                </dependencies>
                 <executions>
                     <execution>
                         <id>enforce-banned-dependencies</id>
@@ -336,23 +324,9 @@
                                         <exclude>org.apache.tomcat.embed:*:*:*:compile</exclude>
                                         <exclude>org.bouncycastle:bcpkix-jdk15on:*:*:compile</exclude>
                                         <exclude>org.bouncycastle:bcprov-jdk15on:*:*:compile</exclude>
+                                        <exclude>com.google.guava:guava*:*:*:compile</exclude>
                                     </excludes>
                                 </bannedDependencies>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>enforce-banned-java-imports</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <RestrictImports>
-                                    <!--  https://github.com/google/guava/issues/2960  -->
-                                    <reason>Guava depends on jsr305 but we prefer jakarta in our code</reason>
-                                    <bannedImport>javax.annotation.**</bannedImport>
-                                </RestrictImports>
                             </rules>
                         </configuration>
                     </execution>

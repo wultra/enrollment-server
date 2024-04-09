@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2024 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,35 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider.rest;
+package com.wultra.app.enrollmentserver.model.integration;
 
-import lombok.Data;
+import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Request object for client evaluation.
+ * Test for {@link OwnerId}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ClientEvaluateRequestDto {
+class OwnerIdTest {
 
-    private String processId;
+    @Test
+    void testUserIdSecured() {
+        final OwnerId tested = new OwnerId();
+        tested.setUserId("Joe");
 
-    /**
-     * Identifier of verification in identity verification system under which the uploaded documents were verified.
-     */
-    private String identityVerificationId;
+        final String result = tested.getUserIdSecured();
 
-    private String userId;
-
-    private String verificationId;
-
-    private String provider;
-
-    /**
-     * Data extracted from each document/page. Format is defined by the document verification provider used.
-     */
-    private List<String> extractedData;
+        assertEquals("NXMLPV6TYXCGRGZT4UNZ6EF4NKN6RH7I7IVBE7EMNQB42BOWRLHA", result);
+    }
 }

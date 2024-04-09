@@ -17,18 +17,18 @@
  */
 package com.wultra.app.onboardingserver.docverify.mock.provider;
 
-import com.google.common.base.Ascii;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.docverify.mock.MockConst;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -65,11 +65,12 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     public WultraMockDocumentVerificationProvider() {
         logger.warn("Using mocked version of {}", DocumentVerificationProvider.class.getName());
 
-        submittedDocs = CacheBuilder.newBuilder()
+        // TODO (racansky, 2024-01-04) consider removing Caffeine dependency and replace it by simple LinkedHashMap#removeEldestEntry
+        submittedDocs = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(1))
                 .build();
 
-        verificationUploadIds = CacheBuilder.newBuilder()
+        verificationUploadIds = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(1))
                 .build();
     }
@@ -242,7 +243,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         if (docId.startsWith("upload")) {
             uploadedDocId = docId;
         } else {
-            uploadedDocId = Ascii.truncate("uploaded-" + docId, 36, "...");
+            uploadedDocId = StringUtils.truncate("uploaded-" + docId, 33) + "...";
         }
         submitResult.setUploadId(uploadedDocId);
         submitResult.setValidationResult("{\"validationResult\": { \"data\": \"" + docId + "\" } }");

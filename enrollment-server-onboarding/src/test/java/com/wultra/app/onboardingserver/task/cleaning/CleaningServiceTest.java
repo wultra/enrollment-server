@@ -28,6 +28,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import static com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin.PROCESS_LIMIT_CHECK;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -225,6 +230,30 @@ class CleaningServiceTest {
         final DocumentVerificationEntity documentVerification = fetchDocumentVerification(documentId1);
         assertEquals("expiredProcessActivation", documentVerification.getErrorDetail());
         assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
+    }
+
+    @Test
+    void testPartition() {
+        final List<String> source = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h");
+
+        final Collection<List<String>> result = CleaningService.ListUtils.partition(source, 3);
+
+        assertEquals(3, result.size());
+
+        final Iterator<List<String>> iterator = result.iterator();
+        assertEquals(List.of("a", "b", "c"), iterator.next());
+        assertEquals(List.of("d", "e", "f"), iterator.next());
+        assertEquals(List.of("g", "h"), iterator.next());
+    }
+
+    @Test
+    void testPartition_tooSmall() {
+        final List<String> source = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h");
+
+        final Collection<List<String>> result = CleaningService.ListUtils.partition(source, 10);
+
+        assertEquals(1, result.size());
+        assertEquals(List.of("a", "b", "c", "d", "e", "f", "g", "h"), result.iterator().next());
     }
 
     private void assertStatus(final String id, final DocumentStatus status) {

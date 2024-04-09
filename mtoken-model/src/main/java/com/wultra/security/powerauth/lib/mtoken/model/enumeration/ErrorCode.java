@@ -43,6 +43,18 @@ public class ErrorCode {
     public static final String INVALID_ACTIVATION           = "INVALID_ACTIVATION";
 
     /**
+     * Error code for situation when an invalid application identifier is
+     * attempted for operation manipulation.
+     */
+    public static final String INVALID_APPLICATION          = "INVALID_APPLICATION";
+
+    /**
+     * Error code for situation when an invalid operation identifier is
+     * attempted for operation manipulation.
+     */
+    public static final String INVALID_OPERATION          = "INVALID_OPERATION";
+
+    /**
      * Error code for situation when signature verification fails.
      */
     public static final String POWERAUTH_AUTH_FAIL          = "POWERAUTH_AUTH_FAIL";
