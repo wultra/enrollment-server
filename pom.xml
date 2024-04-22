@@ -101,7 +101,6 @@
         <powerauth-restful-integration.version>1.8.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>1.8.0-SNAPSHOT</powerauth-push.version>
 
-        <bcprov-jdk18on.version>1.78.1</bcprov-jdk18on.version>
         <logstash.version>7.4</logstash.version>
     </properties>
 
@@ -225,13 +224,6 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations-jakarta</artifactId>
                 <version>${swagger-annotations-jakarta.version}</version>
-            </dependency>
-
-            <!-- Bouncy Castle -->
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk18on</artifactId>
-                <version>${bcprov-jdk18on.version}</version>
             </dependency>
 
             <!-- Logging -->
