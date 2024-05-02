@@ -76,12 +76,6 @@
             <artifactId>http-common</artifactId>
         </dependency>
 
-        <!-- Bouncy Castle -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-        </dependency>
-
         <!-- Spring Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
