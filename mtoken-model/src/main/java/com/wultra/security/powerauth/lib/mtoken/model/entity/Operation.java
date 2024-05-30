@@ -17,7 +17,9 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.Date;
@@ -37,6 +39,20 @@ public class Operation {
     @NotNull
     private String data;
     private String status;
+
+    /**
+     * Optional details why the status has changed by backend services.
+     * The value is more about code than free-text detail.
+     * Mind that it differs from {@code reason} at the cancel request filled by the user.
+     */
+    @Schema(description = """
+            Optional details why the status has changed by backend services.
+            The value is more about code than free-text detail.
+            Mind that it differs from `reason` at the cancel request filled by the user.
+            """)
+    @Size(max = 32)
+    private String statusReason;
+
     private Date operationCreated;
     private Date operationExpires;
     private UiExtensions ui;
