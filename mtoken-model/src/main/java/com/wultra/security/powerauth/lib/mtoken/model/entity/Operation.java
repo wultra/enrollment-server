@@ -42,12 +42,12 @@ public class Operation {
 
     /**
      * Optional details why the status has changed by backend services.
-     * The value is more about code than free-text detail.
+     * The value should be sent in the form of a computer-readable code, not a free-form text.
      * Mind that it differs from {@code reason} at the cancel request filled by the user.
      */
     @Schema(description = """
             Optional details why the status has changed by backend services.
-            The value is more about code than free-text detail.
+            The value should be sent in the form of a computer-readable code, not a free-form text.
             Mind that it differs from `reason` at the cancel request filled by the user.
             """)
     @Size(max = 32)
