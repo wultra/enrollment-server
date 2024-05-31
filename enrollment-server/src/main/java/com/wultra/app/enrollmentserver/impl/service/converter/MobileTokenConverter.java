@@ -103,6 +103,7 @@ public class MobileTokenConverter {
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
             operation.setStatus(operationDetail.getStatus().name());
+            operation.setStatusReason(operationDetail.getStatusReason());
             operation.setUi(uiExtensions);
             operation.setFormData(formData);
 
