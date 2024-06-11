@@ -15,17 +15,21 @@ The Enrollment Server uses the following public configuration properties:
 
 ## PowerAuth Service Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `powerauth.service.url` | `http://localhost:8080/powerauth-java-server/rest` | PowerAuth service REST API base URL. | 
-| `powerauth.service.security.clientToken` | `_empty_` | PowerAuth REST API authentication token. | 
-| `powerauth.service.security.clientSecret` | `_empty_` | PowerAuth REST API authentication secret / password. |
+| Property                                             | Default                                            | Note                                                 |
+|------------------------------------------------------|----------------------------------------------------|------------------------------------------------------|
+| `powerauth.service.url`                              | `http://localhost:8080/powerauth-java-server/rest` | PowerAuth service REST API base URL.                 |
+| `powerauth.service.restClientConfig.responseTimeout` | `60s`                                              | PowerAuth REST API response timeout.                 |
+| `powerauth.service.restClientConfig.maxIdleTime`     | `200s`                                             | PowerAuth REST API max idle time.                    |
+| `powerauth.service.security.clientToken`             | `_empty_`                                          | PowerAuth REST API authentication token.             |
+| `powerauth.service.security.clientSecret`            | `_empty_`                                          | PowerAuth REST API authentication secret / password. |
 
 ## PowerAuth Push Service Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `powerauth.push.service.url` | `http://localhost:8080/powerauth-push-server` | PowerAuth Push service REST API base URL. |
+| Property                                                  | Default                                       | Note                                              |
+|-----------------------------------------------------------|-----------------------------------------------|---------------------------------------------------|
+| `powerauth.push.service.url`                              | `http://localhost:8080/powerauth-push-server` | PowerAuth Push service REST API base URL.         |
+| `powerauth.push.service.restClientConfig.responseTimeout` | `60s`                                         | PowerAuth Push service REST API response timeout. |
+| `powerauth.push.service.restClientConfig.maxIdleTime`     | `200s`                                        | PowerAuth Push service REST API max idle time.    |
 
 ## Enrollment Server Configuration
 

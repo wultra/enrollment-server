@@ -52,7 +52,7 @@ import java.util.Collections;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@ConditionalOnExpression("!'${powerauth.push.service.url}'.empty and ${enrollment-server.inbox.enabled}")
+@ConditionalOnExpression("!'${powerauth.push.service.url:}'.empty and ${enrollment-server.inbox.enabled}")
 @RestController
 @RequestMapping(value = "api/inbox")
 @Slf4j

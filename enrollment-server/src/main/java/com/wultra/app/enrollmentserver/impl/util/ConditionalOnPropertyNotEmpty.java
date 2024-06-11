@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.impl.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -49,10 +50,12 @@ public @interface ConditionalOnPropertyNotEmpty {
 
         @Override
         public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-            Map<String, Object> attrs = metadata.getAnnotationAttributes(ConditionalOnPropertyNotEmpty.class.getName());
-            String propertyName = (String) Objects.requireNonNull(attrs).get("value");
-            String val = context.getEnvironment().getProperty(propertyName);
-            return StringUtils.isNotBlank(val);
+            final Map<String, Object> attrs = metadata.getAnnotationAttributes(ConditionalOnPropertyNotEmpty.class.getName());
+            final String propertyName = (String) Objects.requireNonNull(attrs).get("value");
+            final String val = context.getEnvironment().getProperty(propertyName);
+            final boolean result = StringUtils.isNotBlank(val);
+            LoggerFactory.getLogger(ConditionalOnPropertyNotEmpty.class).debug("Property: {}, not-empty: {}", propertyName, result);
+            return result;
         }
     }
 
