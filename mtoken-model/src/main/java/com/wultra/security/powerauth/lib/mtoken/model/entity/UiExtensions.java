@@ -23,7 +23,9 @@ import lombok.Data;
 import java.util.Map;
 
 /**
- * This class represents the extensions to the user interface (UI) that can be used to customize the behavior and appearance of the mobile app during operation approval.
+ * Data object representing UI extensions displayed during the operation approval.
+ *
+ * @author Petr Dvorak, petr@wultra.com
  */
 @Data
 public class UiExtensions {
