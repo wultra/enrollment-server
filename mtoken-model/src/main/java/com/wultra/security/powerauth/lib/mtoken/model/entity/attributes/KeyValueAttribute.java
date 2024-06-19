@@ -36,17 +36,10 @@ public class KeyValueAttribute extends Attribute {
     protected String value;
 
     /**
-     * Default constructor.
+     * No-arg constructor.
      */
-    public KeyValueAttribute() {
-        super(Type.KEY_VALUE);
-    }
-
-    /**
-     * Protected constructor for easier subclassing.
-     */
-    protected KeyValueAttribute(Type type) {
-        super(type);
+    private KeyValueAttribute() {
+        super();
     }
 
     /**
@@ -56,7 +49,6 @@ public class KeyValueAttribute extends Attribute {
      * @param value Value.
      */
     public KeyValueAttribute(String id, String label, String value) {
-        this();
         this.id = id;
         this.label = label;
         this.value = value;
