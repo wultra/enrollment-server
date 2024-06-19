@@ -139,8 +139,7 @@ public class MobileTokenConverter {
         if (operationTemplateParams != null) {
             final List<Attribute> formDataAttributes = operationTemplateParams.stream()
                     .map(templateParam -> buildAttribute(templateParam, parameters))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
+                    .flatMap(Optional::stream)
                     .toList();
             formData.setAttributes(formDataAttributes);
         }
