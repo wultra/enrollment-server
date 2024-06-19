@@ -19,6 +19,7 @@
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
@@ -130,15 +131,17 @@ public class MobileTokenConverter {
         }
 
         final String attributes = operationTemplate.getAttributes();
-        if (attributes != null) {
-            final OperationTemplateParam[] operationTemplateParams = objectMapper.readValue(attributes, OperationTemplateParam[].class);
-            if (operationTemplateParams != null) {
-                final List<Attribute> formDataAttributes = formData.getAttributes();
-                for (OperationTemplateParam templateParam : operationTemplateParams) {
-                    buildAttribute(templateParam, parameters)
-                            .ifPresent(formDataAttributes::add);
-                }
-            }
+        if (attributes == null) {
+            return formData;
+        }
+
+        final List<OperationTemplateParam> operationTemplateParams = objectMapper.readValue(attributes, new TypeReference<>(){});
+        if (operationTemplateParams != null) {
+            final List<Attribute> formDataAttributes = operationTemplateParams.stream()
+                    .map(templateParam -> buildAttribute(templateParam, parameters))
+                    .flatMap(Optional::stream)
+                    .toList();
+            formData.setAttributes(formDataAttributes);
         }
         return formData;
     }
