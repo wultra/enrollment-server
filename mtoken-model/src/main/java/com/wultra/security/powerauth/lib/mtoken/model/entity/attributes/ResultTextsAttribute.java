@@ -65,7 +65,6 @@ public class ResultTextsAttribute extends Attribute {
         private String failure;
         private String reject;
 
-
         public Builder id(final String value) {
             this.id = value;
             return this;
