@@ -21,6 +21,7 @@ Following structured custom form data attributes are available:
 - `HEADING` - heading with label 
 - `ALERT` - alert with various alert types
 - `PARTY_INFO` - information about party
+- `RESULT_TEXTS` - Customization texts to show for `success`, `failure`, or `reject` operation. If not present (single property or the whole object), default messages are used.
 
 ## Value Formatting
 
@@ -204,3 +205,24 @@ Remarks:
 
 Remarks:
 - Always use `PARTY_INFO` as `type`
+
+#### RESULT_TEXTS
+
+```json
+{
+  "id": "operation.resultTexts",
+  "type": "RESULT_TEXTS",
+  "text": "Result Texts",
+  "params": {
+    "success": "success-message-value-may-be-changed",
+    "failure": "failure-message-value-may-be-changed",
+    "reject": "reject-message-value-may-be-changed"
+  }
+}
+```
+
+Remarks:
+
+- Always use `RESULT_TEXTS` as `type`
+- Parameters `success`, `failure`, and `reject` are optional. If not present (single property or the whole object), default messages are used.
+- The attribute `params` specifies values (not keys to retrieve values from the operation details parameters).

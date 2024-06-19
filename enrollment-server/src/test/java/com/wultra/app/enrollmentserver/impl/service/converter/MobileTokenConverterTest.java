@@ -569,6 +569,16 @@ class MobileTokenConverterTest {
                       "description": "partyDescription",
                       "websiteUrl": "partyUrl"
                     }
+                  },
+                  {
+                    "id": "operation.resultTexts",
+                    "type": "RESULT_TEXTS",
+                    "text": "Result Texts",
+                    "params": {
+                      "success": "Web login approved",
+                      "failure": "Web login failed",
+                      "reject": "Web login rejected"
+                    }
                   }
                 ]""");
 
@@ -577,7 +587,7 @@ class MobileTokenConverterTest {
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
-        assertEquals(9, attributes.size());
+        assertEquals(10, attributes.size());
         final var atributesIterator = attributes.iterator();
         assertEquals(AmountAttribute.builder()
                 .id("operation.amount")
@@ -616,6 +626,13 @@ class MobileTokenConverterTest {
                 .description("Find out more about Example...")
                 .websiteUrl("https://example.com/hello")
                 .build()), atributesIterator.next());
+        assertEquals(ResultTextsAttribute.builder()
+                .id("operation.resultTexts")
+                .label("Result Texts")
+                .success("Web login approved")
+                .failure("Web login failed")
+                .reject("Web login rejected")
+                .build(), atributesIterator.next());
     }
 
     @Test
