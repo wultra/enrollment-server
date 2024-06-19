@@ -17,7 +17,10 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import java.util.Map;
 
 /**
  * Data object representing UI extensions displayed during the operation approval.
@@ -28,17 +31,27 @@ import lombok.Data;
 public class UiExtensions {
 
     /**
-     * Property that hints the mobile app that the "Approve" and "Reject" buttons should be flipped,
-     * raising the CTA priority of the "Reject" button over the "Approve" button.
+     * Property that hints the mobile app that the `Approve` and `Reject` buttons should be flipped,
+     * raising the CTA priority of the `Reject` button over the `Approve` button.
      */
+    @Schema(description = """
+            Property that hints the mobile app that the `Approve` and `Reject` buttons should be flipped,
+            raising the CTA priority of the `Reject` button over the `Approve` button.
+            """)
     private Boolean flipButtons;
 
     /**
      * Property that hints the mobile app that the operation approval should be blocked in case that
-     * there is an ongoing call on the device. The UI should still allow pressing the "Approve" button,
+     * there is an ongoing call on the device. The UI should still allow pressing the `Approve` button,
      * but instead of displaying a PIN code / biometric authentication, user should be presented with
      * a screen informing the user that the operation cannot be approved while the user is on the phone.
      */
+    @Schema(description = """
+            Property that hints the mobile app that the operation approval should be blocked in case that
+            there is an ongoing call on the device. The UI should still allow pressing the `Approve` button,
+            but instead of displaying a PIN code / biometric authentication, user should be presented with
+            a screen informing the user that the operation cannot be approved while the user is on the phone.
+            """)
     private Boolean blockApprovalOnCall;
 
     /**
@@ -46,6 +59,11 @@ public class UiExtensions {
      * approval screen. The purpose of the screen could be to provide an additional warning before
      * approving an operation, or to display generic information related to the operation approval.
      */
+    @Schema(description = """
+            Property that defines a screen content that is displayed before the user sees the operation
+            approval screen. The purpose of the screen could be to provide an additional warning before
+            approving an operation, or to display generic information related to the operation approval.
+            """)
     private PreApprovalScreen preApprovalScreen;
 
     /**
@@ -53,5 +71,20 @@ public class UiExtensions {
      * approval screen. The purpose of the screen could be to provide additional information after
      * approving an operation, or to provide an option to execute simple consecutive actions.
      */
+    @Schema(description = """
+            Property that defines a screen content that is displayed after the user sees the operation
+            approval screen. The purpose of the screen could be to provide additional information after
+            approving an operation, or to provide an option to execute simple consecutive actions.
+            """)
     private PostApprovalScreen postApprovalScreen;
+
+    /**
+     * A mapping of additional data templates that can be sent to the app for further customization.
+     * For example, these templates can contain specific data fields and their corresponding form format to be displayed in the app.
+     */
+    @Schema(description = """
+            A mapping of additional data templates that can be sent to the app for further customization.
+            For example, these templates can contain specific data fields and their corresponding form format to be displayed in the app.
+            """)
+    private Map<String, Object> templates;
 }

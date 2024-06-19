@@ -170,6 +170,110 @@ class MobileTokenConverterTest {
     }
 
     @Test
+    void testConvertUiTemplates() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "flipButtons": false,
+                  "blockApprovalOnCall": true,
+                  "templates": {
+                    "list": {
+                      "title": null,
+                      "message": "operation.amount",
+                      "image": null,
+                      "style": "POSITIVE"
+                    },
+                    "history": null,
+                    "detail": {
+                      "style": null,
+                      "headerSection": false,
+                      "sections": [
+                        {
+                          "style": "MONEY",
+                          "cells": [
+                            {
+                              "name": "operation.amount",
+                              "visibleTitle": false,
+                              "style": null,
+                              "canCopy": true,
+                              "collapsable": "NO"
+                            },
+                            {
+                              "name": "operation.conversion",
+                              "style": null,
+                              "canCopy": true,
+                              "collapsable": "NO"
+                            },
+                            {
+                              "name": "operation.conversion2",
+                              "visibleTitle": true,
+                              "style": null,
+                              "canCopy": false,
+                              "collapsable": "COLLAPSED"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+                """);
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final Map<String, Object> expectedPayload = new HashMap<>() {{
+            put("list", new HashMap<String, String>() {{
+                put("title", null);
+                put("message", "operation.amount");
+                put("image", null);
+                put("style", "POSITIVE");
+            }});
+            put("history", null);
+            put("detail", new HashMap<String, Object>() {{
+                put("style", null);
+                put("headerSection", false);
+                put("sections", List.of(
+                        Map.of(
+                                "style", "MONEY",
+                                "cells", List.of(
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.amount");
+                                            put("visibleTitle", false);
+                                            put("style", null);
+                                            put("canCopy", true);
+                                            put("collapsable", "NO");
+                                        }},
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.conversion");
+                                            put("style", null);
+                                            put("canCopy", true);
+                                            put("collapsable", "NO");
+                                        }},
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.conversion2");
+                                            put("visibleTitle", true);
+                                            put("style", null);
+                                            put("canCopy", false);
+                                            put("collapsable", "COLLAPSED");
+                                        }}
+                                )
+                        )
+                ));
+            }});
+        }};
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getTemplates)
+                .isNotNull()
+                .isEqualTo(expectedPayload);
+    }
+
+    @Test
     void testConvertUiPostApprovalMerchantRedirect() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
