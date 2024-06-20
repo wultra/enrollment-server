@@ -43,8 +43,8 @@ public class ImageAttribute extends Attribute {
     /**
      * No-arg constructor.
      */
-    public ImageAttribute() {
-        super(Type.IMAGE);
+    private ImageAttribute() {
+        super();
     }
 
     /**
@@ -55,7 +55,6 @@ public class ImageAttribute extends Attribute {
      * @param originalUrl  URL to the original image in higher resolution. May be {@code null}.
      */
     public ImageAttribute(String id, String label, String thumbnailUrl, String originalUrl) {
-        this();
         this.id = id;
         this.label = label;
         this.thumbnailUrl = thumbnailUrl;

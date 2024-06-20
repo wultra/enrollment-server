@@ -60,12 +60,11 @@ public class AmountConversionAttribute extends Attribute {
     /**
      * No-arg constructor.
      */
-    AmountConversionAttribute() {
-        super(Type.AMOUNT_CONVERSION);
+    private AmountConversionAttribute() {
+        super();
     }
 
-    protected AmountConversionAttribute(final Builder builder) {
-        this();
+    private AmountConversionAttribute(final Builder builder) {
         this.dynamic = builder.dynamic;
         this.id = builder.id;
         this.label = builder.label;

@@ -17,7 +17,6 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity.attributes;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
@@ -44,59 +43,6 @@ import lombok.NoArgsConstructor;
 public class Attribute {
 
     /**
-     * Attribute type.
-     */
-    public enum Type {
-
-        /**
-         * Amount attribute type - represents amount and currency.
-         */
-        AMOUNT,
-
-        /**
-         * Amount conversion attribute type - represents amount and currency conversion.
-         */
-        AMOUNT_CONVERSION,
-
-        /**
-         * Key-value attribute type - represents generic single-line key value.
-         */
-        KEY_VALUE,
-
-        /**
-         * Note, a multi-line key-value attribute.
-         */
-        NOTE,
-
-        /**
-         * Heading attribute type, represents a visual separator.
-         */
-        HEADING,
-
-        /**
-         * Alert attribute type, represents an alert of success (green), info (blue), warning (orange), and error (red).
-         */
-        ALERT,
-
-        /**
-         * Information about third-party subject.
-         */
-        PARTY_INFO,
-
-        /**
-         * Image attribute type - represents an image as a URL to the thumbnail and the higher resolution.
-         */
-        IMAGE
-    }
-
-    /**
-     * Type of the attribute.
-     */
-    // JsonIgnore added, otherwise type was serialized twice
-    @JsonIgnore
-    protected Type type;
-
-    /**
      * ID of the attribute.
      */
     protected String id;
@@ -106,7 +52,4 @@ public class Attribute {
      */
     protected String label;
 
-    public Attribute(Type type) {
-        this.type = type;
-    }
 }
