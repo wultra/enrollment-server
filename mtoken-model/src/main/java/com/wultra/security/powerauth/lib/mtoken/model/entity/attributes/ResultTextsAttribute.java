@@ -41,12 +41,11 @@ public class ResultTextsAttribute extends Attribute {
     /**
      * No-arg constructor.
      */
-    public ResultTextsAttribute() {
-        super(Type.RESULT_TEXTS);
+    private ResultTextsAttribute() {
+        super();
     }
 
-    protected ResultTextsAttribute(final Builder builder) {
-        this();
+    private ResultTextsAttribute(final Builder builder) {
         this.id = builder.id;
         this.label = builder.label;
         this.success = builder.success;
