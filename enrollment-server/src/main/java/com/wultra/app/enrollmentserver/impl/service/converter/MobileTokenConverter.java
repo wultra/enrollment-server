@@ -130,6 +130,8 @@ public class MobileTokenConverter {
             formData.setMessage(operationTemplate.getMessage());
         }
 
+        formData.setResultTexts(null); // TODO Lubos
+
         final String attributes = operationTemplate.getAttributes();
         if (attributes == null) {
             return formData;
@@ -219,8 +221,6 @@ public class MobileTokenConverter {
                 buildImageAttribute(templateParam, params);
             case "PARTY_INFO" ->
                 buildPartyInfoAttribute(templateParam, params);
-            case "RESULT_TEXTS" ->
-                buildResultTextsAttribute(templateParam);
             default -> { // attempt fallback to key-value type
                 logger.error("Invalid operation attribute type: {}", type);
                 yield buildKeyValueAttribute(templateParam, params);
@@ -393,21 +393,6 @@ public class MobileTokenConverter {
                 .websiteUrl(fetchTemplateParamValueNullable(templateParam, params, "websiteUrl"))
                 .build();
         return Optional.of(new PartyAttribute(id, text, partyInfo));
-    }
-
-    private static Optional<Attribute> buildResultTextsAttribute(final OperationTemplateParam templateParam) {
-        final String id = templateParam.getId();
-        final String text = templateParam.getText();
-        final String success = templateParam.getParams().get("success");
-        final String failure = templateParam.getParams().get("failure");
-        final String reject = templateParam.getParams().get("reject");
-        return Optional.of(ResultTextsAttribute.builder()
-                .id(id)
-                .label(text)
-                .success(success)
-                .failure(failure)
-                .reject(reject)
-                .build());
     }
 
     private static Optional<String> fetchTemplateParamValue(final OperationTemplateParam templateParam, final Map<String, String> params, final String key) {

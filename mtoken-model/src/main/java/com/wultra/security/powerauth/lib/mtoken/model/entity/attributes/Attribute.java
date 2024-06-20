@@ -38,8 +38,7 @@ import lombok.NoArgsConstructor;
         @JsonSubTypes.Type(value = NoteAttribute.class, name = "NOTE"),
         @JsonSubTypes.Type(value = ImageAttribute.class, name = "IMAGE"),
         @JsonSubTypes.Type(value = PartyAttribute.class, name = "PARTY_INFO"),
-        @JsonSubTypes.Type(value = AlertAttribute.class, name = "ALERT"),
-        @JsonSubTypes.Type(value = ResultTextsAttribute.class, name = "RESULT_TEXTS")
+        @JsonSubTypes.Type(value = AlertAttribute.class, name = "ALERT")
 })
 public class Attribute {
 

@@ -569,16 +569,6 @@ class MobileTokenConverterTest {
                       "description": "partyDescription",
                       "websiteUrl": "partyUrl"
                     }
-                  },
-                  {
-                    "id": "operation.resultTexts",
-                    "type": "RESULT_TEXTS",
-                    "text": "Result Texts",
-                    "params": {
-                      "success": "Web login approved",
-                      "failure": "Web login failed",
-                      "reject": "Web login rejected"
-                    }
                   }
                 ]""");
 
@@ -587,7 +577,7 @@ class MobileTokenConverterTest {
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
-        assertEquals(10, attributes.size());
+        assertEquals(9, attributes.size());
         final var atributesIterator = attributes.iterator();
         assertEquals(AmountAttribute.builder()
                 .id("operation.amount")
@@ -626,13 +616,6 @@ class MobileTokenConverterTest {
                 .description("Find out more about Example...")
                 .websiteUrl("https://example.com/hello")
                 .build()), atributesIterator.next());
-        assertEquals(ResultTextsAttribute.builder()
-                .id("operation.resultTexts")
-                .label("Result Texts")
-                .success("Web login approved")
-                .failure("Web login failed")
-                .reject("Web login rejected")
-                .build(), atributesIterator.next());
     }
 
     @Test
@@ -896,6 +879,28 @@ class MobileTokenConverterTest {
         assertNotNull(attributes);
         assertEquals(1, attributes.size());
         assertEquals("operation.amount", attributes.get(0).getId());
+    }
+
+    @Test
+    void testConvertFormData() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.ofEntries(
+                Map.entry("amount", "13.7"),
+                Map.entry("currency", "EUR"),
+                Map.entry("iban", "AT483200000012345864")
+        ));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setTitle("Payment to ${iban}");
+        operationTemplate.setMessage("Pay ${amount} ${currency}");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final FormData formData = result.getFormData();
+
+        assertEquals("Payment to AT483200000012345864", formData.getTitle());
+        assertEquals("Pay 13.7 EUR", formData.getMessage());
+        assertNotNull(formData.getResultTexts()); // TODO Lubos
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
