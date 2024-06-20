@@ -23,9 +23,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class, properties = "enrollment-server.admin.enabled=true")
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Sql
 class AdminControllerTest {
 
     @Autowired
@@ -48,7 +52,9 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content()
                         .contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.status", is("OK")));
-        // TODO Lubos assert resultTexts
+                .andExpect(jsonPath("$.status", is("OK")))
+                .andExpect(jsonPath("$.responseObject.*", hasSize(1)))
+                .andExpect(jsonPath("$.responseObject[0].title", is("Payment Approval")))
+                .andExpect(jsonPath("$.responseObject[0].resultTexts.success", is("Payment of ${amount} ${currency} was confirmed")));
     }
 }

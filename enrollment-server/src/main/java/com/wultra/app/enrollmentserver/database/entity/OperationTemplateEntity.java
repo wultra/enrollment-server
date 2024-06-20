@@ -66,14 +66,14 @@ public class OperationTemplateEntity implements Serializable {
     @Column(name = "ui")
     private String ui;
 
-    @Column(name = "attributes")
+    @Column(name = "attributes", columnDefinition = "text")
     private String attributes;
 
     /**
      * Customized texts to display for {@code success}, {@code failure}, or {@code reject} operations.
      * If not provided (either as individual properties or for the entire object), default messages will be used.
      */
-    @Column(name = "result_texts")
+    @Column(name = "result_texts", columnDefinition = "text")
     private String resultTexts;
 
     @Override
