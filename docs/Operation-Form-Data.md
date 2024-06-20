@@ -21,7 +21,7 @@ Following structured custom form data attributes are available:
 - `HEADING` - heading with label 
 - `ALERT` - alert with various alert types
 - `PARTY_INFO` - information about party
-- `RESULT_TEXTS` - Customization texts to show for `success`, `failure`, or `reject` operation. If not present (single property or the whole object), default messages are used.
+- `RESULT_TEXTS` - Customized texts to display for `success`, `failure`, or `reject` operations. If not provided (either as individual properties or for the entire object), default messages will be used.
 
 ## Value Formatting
 

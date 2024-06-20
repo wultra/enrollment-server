@@ -22,8 +22,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Customization texts to show for {@code success}, {@code failure}, or {@code reject} operation.
- * If not present (single property or the whole object), default messages are used.
+ * Customized texts to display for {@code success}, {@code failure}, or {@code reject} operations.
+ * If not provided (either as individual properties or for the entire object), default messages will be used.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
