@@ -11,9 +11,9 @@ Following attributes are **required** to be specified for each operation:
 
 Following attributes are **optional** to be specified for each operation:
 
-- `resultTexts.success` - Customized text to display for _success_ operation. If not provided, default messages will be used.
-- `resultTexts.failure` - Customized text to display for _failure_ operation. If not provided, default messages will be used.
-- `resultTexts.reject` - Customized text to display for _reject_ operation. If not provided, default messages will be used.
+- `resultTexts.success` - Customized text to display for _success_ operation. If not provided, the default message will be used.
+- `resultTexts.failure` - Customized text to display for _failure_ operation. If not provided, the default message will be used.
+- `resultTexts.reject` - Customized text to display for _reject_ operation. If not provided, the default message will be used.
 
 ## Custom Operation Form Data Attributes
 
