@@ -570,7 +570,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private DocumentVerificationStatus toStatus(ZenidWebInvestigateResponse.StateEnum stateEnum) {
         return switch (stateEnum) {
-            case DONE -> DocumentVerificationStatus.ACCEPTED;
+            case DONE, ARCHIVED -> DocumentVerificationStatus.ACCEPTED;
             case ERROR -> DocumentVerificationStatus.FAILED;
             case NOTDONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
             case REJECTED -> DocumentVerificationStatus.REJECTED;
