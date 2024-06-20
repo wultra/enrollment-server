@@ -4,10 +4,16 @@ When creating an operation, you can customize the operation form data. This cust
 
 ## Standard Operation Form Data Attributes
 
-Following attributes are required to be specified for each operation:
+Following attributes are **required** to be specified for each operation:
 
 - `title` - title of the operation
 - `message` - message for the user related to the operation
+
+Following attributes are **optional** to be specified for each operation:
+
+- `resultTexts.success` - Customized text to display for _success_ operation. If not provided, default messages will be used.
+- `resultTexts.failure` - Customized text to display for _failure_ operation. If not provided, default messages will be used.
+- `resultTexts.reject` - Customized text to display for _reject_ operation. If not provided, default messages will be used.
 
 ## Custom Operation Form Data Attributes
 
@@ -21,7 +27,6 @@ Following structured custom form data attributes are available:
 - `HEADING` - heading with label 
 - `ALERT` - alert with various alert types
 - `PARTY_INFO` - information about party
-- `RESULT_TEXTS` - Customized texts to display for `success`, `failure`, or `reject` operations. If not provided (either as individual properties or for the entire object), default messages will be used.
 
 ## Value Formatting
 
@@ -205,24 +210,3 @@ Remarks:
 
 Remarks:
 - Always use `PARTY_INFO` as `type`
-
-#### RESULT_TEXTS
-
-```json
-{
-  "id": "operation.resultTexts",
-  "type": "RESULT_TEXTS",
-  "text": "Result Texts",
-  "params": {
-    "success": "success-message-value-may-be-changed",
-    "failure": "failure-message-value-may-be-changed",
-    "reject": "reject-message-value-may-be-changed"
-  }
-}
-```
-
-Remarks:
-
-- Always use `RESULT_TEXTS` as `type`
-- Parameters `success`, `failure`, and `reject` are optional. If not present (single property or the whole object), default messages are used.
-- The attribute `params` specifies values (not keys to retrieve values from the operation details parameters).
