@@ -119,18 +119,12 @@ public class MobileTokenConverter {
     private FormData prepareFormData(
             final OperationTemplateEntity operationTemplate,
             final Map<String, String> parameters,
-            final StringSubstitutor sub) throws JsonProcessingException {
+            final StringSubstitutor substitutor) throws JsonProcessingException {
 
         final FormData formData = new FormData();
-        if (sub != null) {
-            formData.setTitle(sub.replace(operationTemplate.getTitle()));
-            formData.setMessage(sub.replace(operationTemplate.getMessage()));
-        } else {
-            formData.setTitle(operationTemplate.getTitle());
-            formData.setMessage(operationTemplate.getMessage());
-        }
-
-        formData.setResultTexts(null); // TODO Lubos
+        formData.setTitle(replaceIfNeeded(substitutor, operationTemplate.getTitle()));
+        formData.setMessage(replaceIfNeeded(substitutor, operationTemplate.getMessage()));
+        formData.setResultTexts(convert(replaceIfNeeded(substitutor, operationTemplate.getResultTexts())));
 
         final String attributes = operationTemplate.getAttributes();
         if (attributes == null) {
@@ -146,6 +140,17 @@ public class MobileTokenConverter {
             formData.setAttributes(formDataAttributes);
         }
         return formData;
+    }
+
+    private ResultTexts convert(final String source) throws JsonProcessingException {
+        if (!StringUtils.hasText(source)) {
+            return null;
+        }
+        return objectMapper.readValue(source, ResultTexts.class);
+    }
+
+    private static String replaceIfNeeded(final StringSubstitutor substitutor, final String source) {
+        return substitutor == null ? source : substitutor.replace(source);
     }
 
     private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
