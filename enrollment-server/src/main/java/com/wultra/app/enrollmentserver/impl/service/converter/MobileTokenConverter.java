@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -92,9 +93,9 @@ public class MobileTokenConverter {
     public Operation convert(OperationDetailResponse operationDetail, OperationTemplateEntity operationTemplate) throws MobileTokenConfigurationException {
         try {
             final Map<String, String> parameters = operationDetail.getParameters();
-            final StringSubstitutor sub = createStringSubstitutor(parameters);
-            final UiExtensions uiExtensions = convertUiExtension(operationDetail, operationTemplate, sub);
-            final FormData formData = prepareFormData(operationTemplate, parameters, sub);
+            final UnaryOperator<String> substitutor = createStringSubstitutor(parameters);
+            final UiExtensions uiExtensions = convertUiExtension(operationDetail, operationTemplate, substitutor);
+            final FormData formData = prepareFormData(operationTemplate, parameters, substitutor);
 
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
@@ -119,12 +120,12 @@ public class MobileTokenConverter {
     private FormData prepareFormData(
             final OperationTemplateEntity operationTemplate,
             final Map<String, String> parameters,
-            final StringSubstitutor substitutor) throws JsonProcessingException {
+            final UnaryOperator<String> substitutor) throws JsonProcessingException {
 
         final FormData formData = new FormData();
-        formData.setTitle(replaceIfNeeded(substitutor, operationTemplate.getTitle()));
-        formData.setMessage(replaceIfNeeded(substitutor, operationTemplate.getMessage()));
-        formData.setResultTexts(convert(replaceIfNeeded(substitutor, operationTemplate.getResultTexts())));
+        formData.setTitle(substitutor.apply(operationTemplate.getTitle()));
+        formData.setMessage(substitutor.apply(operationTemplate.getMessage()));
+        formData.setResultTexts(convert(substitutor.apply(operationTemplate.getResultTexts())));
 
         final String attributes = operationTemplate.getAttributes();
         if (attributes == null) {
@@ -149,28 +150,24 @@ public class MobileTokenConverter {
         return objectMapper.readValue(source, ResultTexts.class);
     }
 
-    private static String replaceIfNeeded(final StringSubstitutor substitutor, final String source) {
-        return substitutor == null ? source : substitutor.replace(source);
-    }
-
-    private static StringSubstitutor createStringSubstitutor(final Map<String, String> parameters) {
+    private static UnaryOperator<String> createStringSubstitutor(final Map<String, String> parameters) {
         if (CollectionUtils.isEmpty(parameters)) {
-            return null;
+            return UnaryOperator.identity();
         } else {
             final Map<String, String> escapedParameters = parameters.entrySet().stream()
                     .filter(entry -> entry.getValue() != null)
                     .collect(toMap(Map.Entry::getKey, it -> StringEscapeUtils.escapeJson(it.getValue())));
-            return new StringSubstitutor(escapedParameters);
+            return new StringSubstitutorWrapper(escapedParameters);
         }
     }
 
     private UiExtensions convertUiExtension(
             final OperationDetailResponse operationDetail,
             final OperationTemplateEntity operationTemplate,
-            final StringSubstitutor substitutor) throws JsonProcessingException {
+            final UnaryOperator<String> substitutor) throws JsonProcessingException {
 
         if (StringUtils.hasText(operationTemplate.getUi())) {
-            final String uiJsonString = substitutor == null ? operationTemplate.getUi() : substitutor.replace(operationTemplate.getUi());
+            final String uiJsonString = substitutor.apply(operationTemplate.getUi());
             logger.debug("Deserializing ui: '{}' of OperationTemplate ID: {} to UiExtensions", uiJsonString, operationTemplate.getId());
             return deserializeUiExtensions(uiJsonString, operationDetail);
         } else if (StringUtils.hasText(operationDetail.getRiskFlags())) {
@@ -421,4 +418,17 @@ public class MobileTokenConverter {
     }
 
     private record AmountFormatted(BigDecimal amountRaw, String amountFormatted, String valueFormatted) {}
+
+    private static class StringSubstitutorWrapper implements UnaryOperator<String> {
+        private final StringSubstitutor substitutor;
+
+        StringSubstitutorWrapper(final Map<String, String> escapedParameters) {
+            substitutor = new StringSubstitutor(escapedParameters);
+        }
+
+        @Override
+        public String apply(final String source) {
+            return substitutor.replace(source);
+        }
+    }
 }
