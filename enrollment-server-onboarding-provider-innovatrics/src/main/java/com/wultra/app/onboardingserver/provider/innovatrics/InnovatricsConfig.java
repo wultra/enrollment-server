@@ -40,7 +40,7 @@ import org.springframework.http.HttpHeaders;
         '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and '${enrollment-server-onboarding.document-verification.provider}' == 'innovatrics'
         """)
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.innovatrics"})
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Slf4j
 class InnovatricsConfig {
 

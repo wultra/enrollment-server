@@ -38,7 +38,7 @@ import java.time.Duration;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConfigurationProperties("ext")
 @ComponentScan(basePackages = {
         "com.wultra.app.onboardingserver.docverify",

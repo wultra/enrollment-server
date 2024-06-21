@@ -41,23 +41,8 @@ import java.util.List;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class WebApplicationConfig implements WebMvcConfigurer {
-
-    @Bean
-    public PowerAuthWebArgumentResolver powerAuthWebArgumentResolver() {
-        return new PowerAuthWebArgumentResolver();
-    }
-
-    @Bean
-    public PowerAuthEncryptionArgumentResolver powerAuthEncryptionArgumentResolver() {
-        return new PowerAuthEncryptionArgumentResolver();
-    }
-
-    @Bean
-    public PowerAuthAnnotationInterceptor powerAuthInterceptor() {
-        return new PowerAuthAnnotationInterceptor();
-    }
 
     @Bean
     public FilterRegistrationBean<PowerAuthRequestFilter> powerAuthFilterRegistration () {
@@ -76,6 +61,18 @@ public class WebApplicationConfig implements WebMvcConfigurer {
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(powerAuthWebArgumentResolver());
         argumentResolvers.add(powerAuthEncryptionArgumentResolver());
+    }
+
+    private static PowerAuthWebArgumentResolver powerAuthWebArgumentResolver() {
+        return new PowerAuthWebArgumentResolver();
+    }
+
+    private static PowerAuthEncryptionArgumentResolver powerAuthEncryptionArgumentResolver() {
+        return new PowerAuthEncryptionArgumentResolver();
+    }
+
+    private static PowerAuthAnnotationInterceptor powerAuthInterceptor() {
+        return new PowerAuthAnnotationInterceptor();
     }
 
     /**

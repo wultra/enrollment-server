@@ -39,7 +39,6 @@ import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedG
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
@@ -64,7 +63,7 @@ import java.util.EnumSet;
         value = "enrollment-server-onboarding.identity-verification.enabled",
         havingValue = "true"
 )
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableStateMachineFactory(name = "enrollmentStateMachine")
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OnboardingState, OnboardingEvent> {
 
@@ -220,8 +219,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         configureCompletedTransition(transitions);
     }
 
-    @Bean
-    public StateMachineListener<OnboardingState, OnboardingEvent> listener() {
+    private static StateMachineListener<OnboardingState, OnboardingEvent> listener() {
         return new StateMachineListenerAdapter<>() {
 
             @Override
@@ -235,7 +233,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                     logger.debug("State changed from {} to {}", from.getId(), to.getId());
                 }
             }
-
         };
     }
 

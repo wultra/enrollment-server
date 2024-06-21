@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Slf4j
 @ConditionalOnPropertyNotEmpty("powerauth.push.service.url")
 public class PushServiceConfig {

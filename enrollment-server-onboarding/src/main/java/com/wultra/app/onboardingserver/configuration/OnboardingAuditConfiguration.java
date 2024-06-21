@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.configuration;
 
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.AuditFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -29,21 +28,9 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ComponentScan(basePackages = {"com.wultra.core.audit.base"})
 public class OnboardingAuditConfiguration {
-
-    private final AuditFactory auditFactory;
-
-    /**
-     * Configuration constructor.
-     *
-     * @param auditFactory Audit factory.
-     */
-    @Autowired
-    public OnboardingAuditConfiguration(AuditFactory auditFactory) {
-        this.auditFactory = auditFactory;
-    }
 
     /**
      * Prepare audit interface.
@@ -51,7 +38,7 @@ public class OnboardingAuditConfiguration {
      * @return Audit interface.
      */
     @Bean
-    public Audit audit() {
+    public Audit audit(final AuditFactory auditFactory) {
         return auditFactory.getAudit();
     }
 
