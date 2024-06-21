@@ -42,7 +42,7 @@ import static io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties
 @Slf4j
 public class UserInfoProviderConfiguration {

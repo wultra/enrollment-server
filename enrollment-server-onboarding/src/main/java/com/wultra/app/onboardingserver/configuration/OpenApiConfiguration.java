@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @OpenAPIDefinition(
         info = @Info(
                 title = "Onboarding Server API",

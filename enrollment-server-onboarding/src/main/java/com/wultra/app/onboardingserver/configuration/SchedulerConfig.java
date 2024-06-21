@@ -34,7 +34,7 @@ import javax.sql.DataSource;
  */
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtLeastFor = "100ms", defaultLockAtMostFor = "1m")
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class SchedulerConfig {
 
     /**

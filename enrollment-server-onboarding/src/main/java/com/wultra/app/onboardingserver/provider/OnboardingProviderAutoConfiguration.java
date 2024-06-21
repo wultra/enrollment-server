@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(OnboardingProvider.class)
 public class OnboardingProviderAutoConfiguration {
 

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ComponentScan(basePackages = {"com.wultra.core.audit.base"})
 public class EnrollmentAuditConfiguration {
 

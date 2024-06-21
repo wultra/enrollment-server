@@ -69,7 +69,7 @@ import java.util.Objects;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
 @ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.iproov"})
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Slf4j
 class IProovConfig {
 

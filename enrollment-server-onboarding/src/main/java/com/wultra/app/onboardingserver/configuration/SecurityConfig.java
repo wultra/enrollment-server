@@ -30,7 +30,7 @@ import org.springframework.security.web.SecurityFilterChain;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class SecurityConfig {
 

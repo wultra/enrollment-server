@@ -41,7 +41,7 @@ import java.util.Map;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "enrollment-server-onboarding.onboarding-adapter.url")
 @EnableConfigurationProperties({RestOnboardingProviderConfiguration.class})
 @AutoConfigureBefore(OnboardingProviderAutoConfiguration.class)
