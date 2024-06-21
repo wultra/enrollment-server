@@ -1,6 +1,6 @@
 /*
  * PowerAuth Mobile Token Model
- * Copyright (C) 2017 Wultra s.r.o.
+ * Copyright (C) 2024 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,28 +17,21 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
-import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.Attribute;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Class representing displayable attributes for mobile token data.
+ * Customized texts to display for {@code success}, {@code failure}, or {@code reject} operations.
+ * If not provided (either as individual properties or for the entire object), default messages will be used.
  *
- * @author Petr Dvorak, petr@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Data
-public class FormData {
+public class ResultTexts {
 
-    @NotNull
-    private String title;
-    @NotNull
-    private String message;
-    @NotNull
-    private List<Attribute> attributes = new ArrayList<>();
+    private String success;
 
-    private ResultTexts resultTexts;
+    private String failure;
+
+    private String reject;
 
 }

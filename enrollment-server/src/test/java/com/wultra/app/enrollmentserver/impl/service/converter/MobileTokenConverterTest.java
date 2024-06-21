@@ -575,6 +575,8 @@ class MobileTokenConverterTest {
         LocaleContextHolder.setLocale(new Locale("en"));
         final Operation result = tested.convert(operationDetail, operationTemplate);
 
+        assertNull(result.getFormData().getResultTexts());
+
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
         assertEquals(9, attributes.size());
@@ -879,6 +881,40 @@ class MobileTokenConverterTest {
         assertNotNull(attributes);
         assertEquals(1, attributes.size());
         assertEquals("operation.amount", attributes.get(0).getId());
+    }
+
+    @Test
+    void testConvertFormData() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.ofEntries(
+                Map.entry("amount", "13.7"),
+                Map.entry("currency", "EUR"),
+                Map.entry("iban", "AT483200000012345864")
+        ));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setTitle("Payment to ${iban}");
+        operationTemplate.setMessage("Pay ${amount} ${currency}");
+        operationTemplate.setResultTexts("""
+                {
+                  "success": "Payment of ${amount} ${currency} was confirmed",
+                  "reject": "Payment was rejected",
+                  "failure": "Payment approval failed"
+                }
+                """);
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final FormData formData = result.getFormData();
+
+        assertEquals("Payment to AT483200000012345864", formData.getTitle());
+        assertEquals("Pay 13.7 EUR", formData.getMessage());
+
+        final ResultTexts resultTexts = formData.getResultTexts();
+        assertNotNull(resultTexts);
+        assertEquals("Payment of 13.7 EUR was confirmed", resultTexts.getSuccess());
+        assertEquals("Payment was rejected", resultTexts.getReject());
+        assertEquals("Payment approval failed", resultTexts.getFailure());
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {

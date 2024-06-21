@@ -22,6 +22,29 @@ Others (like URL, username, password) depend on your environment.
 liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --url=jdbc:postgresql://localhost:5432/powerauth --username=powerauth status
 ```
 
+To generate SQL script run this command.
+
+
+#### Oracle
+
+```shell
+liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/oracle/generated-oracle-script.sql updateSQL --url=offline:oracle
+```
+
+
+#### MS SQL
+
+```shell
+liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/mssql/generated-mssql-script.sql updateSQL --url=offline:mssql
+```
+
+
+#### PostgreSQL
+
+```shell
+liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/postgresql/generated-postgresql-script.sql updateSQL --url=offline:postgresql
+```
+
 
 ### Docker
 
