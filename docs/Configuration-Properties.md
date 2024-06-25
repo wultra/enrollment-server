@@ -15,17 +15,21 @@ The Enrollment Server uses the following public configuration properties:
 
 ## PowerAuth Service Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `powerauth.service.url` | `http://localhost:8080/powerauth-java-server/rest` | PowerAuth service REST API base URL. | 
-| `powerauth.service.security.clientToken` | `_empty_` | PowerAuth REST API authentication token. | 
-| `powerauth.service.security.clientSecret` | `_empty_` | PowerAuth REST API authentication secret / password. |
+| Property                                             | Default                                            | Note                                                 |
+|------------------------------------------------------|----------------------------------------------------|------------------------------------------------------|
+| `powerauth.service.url`                              | `http://localhost:8080/powerauth-java-server/rest` | PowerAuth service REST API base URL.                 |
+| `powerauth.service.restClientConfig.responseTimeout` | `60s`                                              | PowerAuth REST API response timeout.                 |
+| `powerauth.service.restClientConfig.maxIdleTime`     | `200s`                                             | PowerAuth REST API max idle time.                    |
+| `powerauth.service.security.clientToken`             | `_empty_`                                          | PowerAuth REST API authentication token.             |
+| `powerauth.service.security.clientSecret`            | `_empty_`                                          | PowerAuth REST API authentication secret / password. |
 
 ## PowerAuth Push Service Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `powerauth.push.service.url` | `http://localhost:8080/powerauth-push-server` | PowerAuth Push service REST API base URL. |
+| Property                                                  | Default                                       | Note                                              |
+|-----------------------------------------------------------|-----------------------------------------------|---------------------------------------------------|
+| `powerauth.push.service.url`                              | `http://localhost:8080/powerauth-push-server` | PowerAuth Push service REST API base URL.         |
+| `powerauth.push.service.restClientConfig.responseTimeout` | `60s`                                         | PowerAuth Push service REST API response timeout. |
+| `powerauth.push.service.restClientConfig.maxIdleTime`     | `200s`                                        | PowerAuth Push service REST API max idle time.    |
 
 ## Enrollment Server Configuration
 
@@ -68,8 +72,10 @@ logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS
 
 
 ## Monitoring and Observability
+
 | Property                                  | Default | Note                                                                                                                                                                        |
 |-------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `management.tracing.sampling.probability` | `1.0`   | Specifies the proportion of requests that are sampled for tracing. A value of 1.0 means that 100% of requests are sampled, while a value of 0 effectively disables tracing. |
+
 The WAR file includes the `micrometer-registry-prometheus` dependency.
 Discuss its configuration with the [Spring Boot documentation](https://docs.spring.io/spring-boot/docs/3.1.x/reference/html/actuator.html#actuator.metrics).

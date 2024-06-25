@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server/1.8.x/20240620-add-resultTexts.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_operation_template" columnName="result_texts"/>
+            </not>
+        </preConditions>
+        <comment>Add result_texts column</comment>
+        <addColumn tableName="es_operation_template">
+            <column name="result_texts" type="text" />
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

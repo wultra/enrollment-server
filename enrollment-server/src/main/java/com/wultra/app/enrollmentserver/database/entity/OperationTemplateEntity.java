@@ -66,23 +66,26 @@ public class OperationTemplateEntity implements Serializable {
     @Column(name = "ui")
     private String ui;
 
-    @Column(name = "attributes")
+    @Column(name = "attributes", columnDefinition = "text")
     private String attributes;
+
+    /**
+     * Customized texts to display for {@code success}, {@code failure}, or {@code reject} operations.
+     * If not provided (either as individual properties or for the entire object), default messages will be used.
+     */
+    @Column(name = "result_texts", columnDefinition = "text")
+    private String resultTexts;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof final OperationTemplateEntity that)) return false;
         return Objects.equals(placeholder, that.placeholder)
-                && Objects.equals(language, that.language)
-                && Objects.equals(title, that.title)
-                && Objects.equals(message, that.message)
-                && Objects.equals(ui, that.ui)
-                && Objects.equals(attributes, that.attributes);
+                && Objects.equals(language, that.language);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(placeholder, language, title, message, ui, attributes);
+        return Objects.hash(placeholder, language);
     }
 }

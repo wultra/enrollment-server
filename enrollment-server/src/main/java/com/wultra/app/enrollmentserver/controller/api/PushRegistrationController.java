@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
-@ConditionalOnPropertyNotEmpty(value="powerauth.push.service.url")
+@ConditionalOnPropertyNotEmpty("powerauth.push.service.url")
 @RestController
 @RequestMapping(value = "api/push")
 public class PushRegistrationController {

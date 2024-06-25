@@ -32,10 +32,10 @@ public class HeadingAttribute extends Attribute {
     private int level;
 
     /**
-     * Default constructor.
+     * No-arg constructor.
      */
-    public HeadingAttribute() {
-        super(Type.HEADING);
+    private HeadingAttribute() {
+        super();
     }
 
     /**
@@ -44,7 +44,6 @@ public class HeadingAttribute extends Attribute {
      * @param label Heading text.
      */
     public HeadingAttribute(String id, String label, int level) {
-        this();
         this.id = id;
         this.label = label;
         this.level = level;

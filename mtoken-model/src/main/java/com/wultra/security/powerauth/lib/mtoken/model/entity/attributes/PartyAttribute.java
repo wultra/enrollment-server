@@ -33,10 +33,10 @@ public class PartyAttribute extends Attribute {
     private PartyInfo partyInfo;
 
     /**
-     * Default constructor.
+     * No-arg constructor.
      */
-    public PartyAttribute() {
-        super(Type.PARTY_INFO);
+    private PartyAttribute() {
+        super();
     }
 
     /**
@@ -46,7 +46,6 @@ public class PartyAttribute extends Attribute {
      * @param partyInfo Party information.
      */
     public PartyAttribute(String id, String label, PartyInfo partyInfo) {
-        this();
         this.id = id;
         this.label = label;
         this.partyInfo = partyInfo;

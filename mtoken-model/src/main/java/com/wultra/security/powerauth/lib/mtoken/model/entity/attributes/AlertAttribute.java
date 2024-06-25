@@ -71,10 +71,10 @@ public class AlertAttribute extends Attribute {
     private String message;
 
     /**
-     * Default constructor.
+     * No-arg constructor.
      */
-    public AlertAttribute() {
-        super(Type.ALERT);
+    private AlertAttribute() {
+        super();
     }
 
     /**
@@ -86,7 +86,6 @@ public class AlertAttribute extends Attribute {
      * @param message Alert message.
      */
     public AlertAttribute(String id, AlertType alertType, String label, String title, String message) {
-        this();
         this.id = id;
         this.alertType = alertType;
         this.label = label;

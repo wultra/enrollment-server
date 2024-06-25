@@ -2,7 +2,6 @@ swagger: '2.0'
 info:
   version: v1
   title: ZenidWeb
-host: raiffeisen.frauds.zenid.cz
 schemes:
   - https
 paths:
@@ -10,9 +9,11 @@ paths:
     post:
       tags:
         - Api
-      summary: "This method uploads a sample for processing. Sample can be a single image or video file. This call gets file, normalize it (e.t. rotate etc) and OCR its content.\r\nThe file content can be sent in two different formats:\r\nRAW: send the file content as body of the request in binary form without alternations\r\nFORM: use the multipart form encoding and send the file content in file variable\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nEmptyBody - no uploaded file."
+      summary: This method uploads a sample for processing. Sample can be a single image or video file. This call gets file, normalize it (e.t. rotate etc) and OCR its content.
+      description: "The file content can be sent in two different formats: \r\n* **RAW:** send the file content as body of the request in binary form without alternations, \r\n* **FORM:** use the multipart form encoding and send the file content in file variable.\r\n\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these)\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **EmptyBody** - no uploaded file."
       operationId: Api_UploadSample
       consumes:
+        - multipart/form-data
         - multipart/form-data
       produces:
         - application/json
@@ -22,38 +23,30 @@ paths:
       parameters:
         - name: expectedSampleType
           in: query
-          description: >-
-            Expected type of sample. Set this if you know the type of sample
-            ahead to speed up processing. Required.
+          description: Expected type of sample. Set this if you know the type of sample ahead to speed up processing. Required.
           required: true
           type: string
           enum:
-            - Unknown
-            - Selfie
             - DocumentPicture
+            - Selfie
             - SelfieVideo
             - DocumentVideo
             - Archived
+            - Unknown
         - name: uploadSessionID
           in: query
-          description: >-
-            SessionID is GUID created by client to group multiple sample uploads
-            together
+          description: SessionID is GUID created by client to group multiple sample uploads together
           required: false
           type: string
           format: uuid
         - name: customData
           in: query
-          description: >-
-            Custom data to be associated with this sample. Sample can later be
-            located using customData. Any string.
+          description: Custom data to be associated with this sample. Sample can later be located using customData. Any string.
           required: false
           type: string
         - name: fileName
           in: query
-          description: >-
-            Name of the original file (for example DSC01.jpg). If form upload is
-            needed, then this is optional
+          description: Name of the original file (for example DSC01.jpg). If form upload is needed, then this is optional
           required: false
           type: string
         - name: country
@@ -83,21 +76,186 @@ paths:
             - Se
             - Si
             - Bg
+            - Al
+            - Ad
             - Be
+            - By
+            - Ba
+            - Me
             - Ee
             - Ie
             - Cy
+            - Li
             - Lt
             - Lv
             - Lu
             - Mt
+            - Md
+            - Mc
+            - 'No'
             - Pt
             - Gr
+            - Sm
+            - Mk
+            - Rs
+            - Ch
+            - Tr
+            - Va
+            - Vn
+            - In
+            - Us
+            - Jp
+            - Pk
+            - Ng
+            - Br
+            - Bd
+            - Cn
+            - Id
+            - Mx
+            - Ol
+            - Ph
+            - Et
+            - Eg
+            - Cd
+            - Ir
+            - Th
+            - Tz
+            - Za
+            - Mm
+            - Co
+            - Kr
+            - Ke
+            - Ar
+            - Dz
+            - Sd
+            - Ug
+            - Iq
+            - Ca
+            - Ma
+            - Uz
+            - Sa
+            - Ye
+            - Pe
+            - Ao
+            - My
+            - Af
+            - Mz
+            - Gh
+            - Ci
+            - Np
+            - Ve
+            - Mg
+            - Au
+            - Kp
+            - Cm
+            - Ne
+            - Tw
+            - Ml
+            - Bf
+            - Lk
+            - Sy
+            - Mw
+            - Cl
+            - Kz
+            - Zm
+            - Ec
+            - So
+            - Sn
+            - Gt
+            - Td
+            - Kh
+            - Zw
+            - Ss
+            - Rw
+            - Gn
+            - Bi
+            - Bj
+            - Bo
+            - Tn
+            - Ht
+            - Jo
+            - Cu
+            - Do
+            - Az
+            - Il
+            - Tj
+            - Hn
+            - Ae
+            - Sl
+            - Tg
+            - La
+            - Kg
+            - Tm
+            - Ly
+            - Sv
+            - Ni
+            - Py
+            - Cg
+            - Sg
+            - Cf
+            - Lb
+            - Ps
+            - Cr
+            - Lr
+            - Nz
+            - Om
+            - Kw
+            - Mr
+            - Pa
+            - Er
+            - Ge
+            - Uy
+            - Mn
+            - Am
+            - Jm
+            - Qa
+            - Na
+            - Gm
+            - Bw
+            - Ls
+            - Ga
+            - Gw
+            - Xk
+            - Bh
+            - Gq
+            - Tt
+            - Tl
+            - Mu
+            - Sz
+            - Dj
+            - Fj
+            - Bt
+            - Km
+            - Gy
+            - Sb
+            - Sr
+            - Cv
+            - Bn
+            - Bz
+            - Bs
+            - Mv
+            - Vu
+            - Bb
+            - St
+            - Ws
+            - Lc
+            - Ki
+            - Gd
+            - Vc
+            - Fm
+            - Ag
+            - Sc
+            - To
+            - Dm
+            - Kn
+            - Mh
+            - Pw
+            - Nr
+            - Tv
+            - Pg
         - name: role
           in: query
-          description: >-
-            Expected role of the uploaded document (IDC, Passport, Drivers
-            licence)
+          description: Expected role of the uploaded document (IDC, Passport, Drivers licence)
           required: false
           type: string
           enum:
@@ -112,43 +270,32 @@ paths:
             - Birth
             - Add
             - Ide
+            - Vis
+            - Exp
         - name: fileLastWriteTime
           in: query
-          description: >-
-            Last write time of the file uploaded. This can be determined using
-            javascript. Value is used for fraud detection (EXIF comparison)
+          description: Last write time of the file uploaded. This can be determined using javascript. Value is used for fraud detection (EXIF comparison)
           required: false
           type: string
           format: date-time
         - name: async
           in: query
-          description: >-
-            Set this true if you want this request to respond as soon as the
-            data are uploaded for processing, not waiting for result.
+          description: Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.
           required: false
           type: boolean
         - name: callbackUrl
           in: query
-          description: >-
-            Set URL for call back here, if you want to receive JSON object with
-            response there.
+          description: Set URL for call back here, if you want to receive JSON object with response there.
           required: false
           type: string
         - name: searchForSubsamples
           in: query
-          description: >-
-            For videos, this makes ZenID extract static picture of the card from
-            the video of card. For document pictures, if single sample contains
-            multiple card pictures (for example multi-page PDF or scan with
-            multiple picture), set this to true to search for them and extract
-            as separate "subsamples"
+          description: For videos, this makes ZenID extract static picture of the card from the video of card. For document pictures, if single sample contains multiple card pictures (for example multi-page PDF or scan with multiple picture), set this to true to search for them and extract as separate "subsamples"
           required: false
           type: boolean
         - name: anonymizeImage
           in: query
-          description: >-
-            ZenID can optionally anonymize specific documents by blackening
-            certain fields. Set this to true to perform anonymization
+          description: ZenID can optionally anonymize specific documents by blackening certain fields. Set this to true to perform anonymization
           required: false
           type: boolean
         - name: documentCode
@@ -157,15 +304,23 @@ paths:
           required: false
           type: string
           enum:
+            - IDC1
             - IDC2
             - DRV
-            - IDC1
             - PAS
+            - EU_VIS_2019
+            - CZ_BIRTH_A2
+            - CZ_BIRTH_A3
+            - CZ_BIRTH_A4
+            - CZ_RES_2020_A2
             - SK_IDC_2008plus
             - SK_DRV_2004_08_09
             - SK_DRV_2013
             - SK_DRV_2015
             - SK_PAS_2008_14
+            - SK_RES_2011
+            - SK_RES_2020
+            - SK_IDC_2022
             - SK_DRV_1993
             - PL_IDC_2015
             - DE_IDC_2010
@@ -239,7 +394,6 @@ paths:
             - BE_IDC_2020_21
             - GR_PAS_2020
             - PT_PAS_2006_09
-            - PT_PAS_2017
             - PT_IDC_2007_08_09_15
             - SE_IDC_2012_21
             - FI_IDC_2017_21
@@ -265,6 +419,62 @@ paths:
             - PL_PAS_2011
             - PL_DRV_1999
             - LT_IDC_2021
+            - UA_PAS_2007_15
+            - UA_IDC_2017
+            - UA_DRV_2016
+            - UA_DRV_2005
+            - UA_DRV_2021
+            - EU_EHIC_2004_C
+            - VN_PAS_2005
+            - NL_DRV_2006
+            - NL_DRV_2013
+            - NL_DRV_2014
+            - AL_PAS_2009
+            - BA_PAS_2014
+            - CH_PAS_2010
+            - ME_PAS_2008
+            - MK_PAS_2007
+            - RS_PAS_2008
+            - NO_PAS_2011_15
+            - NO_PAS_2020
+            - GB_PAS_2010_11_15_19
+            - BY_PAS_2006
+            - BY_PAS_2021
+            - MD_PAS_2011_14_18
+            - IS_PAS_2006
+            - IN_PAS_2000_13
+            - TR_PAS_2010
+            - TR_PAS_2018
+            - RO_IDC_2021sep
+            - PL_DRV_1999_A2
+            - DE_IDC_2010_A2
+            - DE_IDC_2010_A3
+            - PL_DRV_2013_A2
+            - AT_IDC_2002_05_10_A2
+            - CY_IDC_2015_20_A2
+            - CY_IDC_2000_08_A2
+            - CY_PAS_2010_20_A2
+            - ES_PAS_2003_06_A2
+            - LU_IDC_2008_13_A2
+            - NL_IDC_2014_17_21_A2
+            - SE_IDC_2022
+            - SE_PAS_2022
+            - DK_PAS_2021
+            - CH_PAS_2022
+            - VN_PAS_2022
+            - ME_PAS_2008_A2
+            - OL_IDC_2022
+            - SM_PAS_2006
+            - AD_PAS_2017
+            - BE_PAS_2022
+            - RU_PAS_2006_10
+            - TR_PAS_2023
+            - DO_IDC_2014
+            - LI_PAS_2006
+            - VA_PAS_2013
+            - US_PAS_2006
+            - JP_PAS_2013
+            - PK_PAS_2022
         - name: pageCode
           in: query
           description: Side of the document to seek if you know it
@@ -275,31 +485,522 @@ paths:
             - B
         - name: priorityQueueName
           in: query
-          description: >-
-            Setting this puts the request into a separate queue for processing,
-            ignoring standard queue.
+          description: Setting this puts the request into a separate queue for processing, ignoring standard queue.
           required: false
           type: string
         - name: profile
           in: query
-          description: >-
-            Optional name of profile. Use it to sort samples by different input
-            channels for example.
+          description: Optional name of profile. Use it to sort samples by different input channels for example.
           required: false
           type: string
-        - name: processingMode
+        - name: acceptableInput
           in: query
-          description: >-
-            Fast (default) or Slow. Slow process mode might fix some alignment
-            problems but is slower.
+          description: Detailed specification of acceptable input document. Use this to specify for example multiple different documents as inputs. If this parameter is specified, then role, documentCode, pageCode and country are ignored
+          required: false
+          schema:
+            $ref: '#/definitions/ZenidShared.AcceptableInput'
+          type: string
+        - name: File
+          in: formData
+          description: Upload samples file
+          required: true
+          type: file
+        - name: SdkSignature
+          in: formData
+          description: Optional SDK signature for pictures. Generated by SDK. This should be sent as a second file in form data. Another supported method is to append it to body of request if sent in binary form.
+          required: false
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ZenidWeb.UploadSampleResponse'
+  /api/sampleAndInvestigate:
+    post:
+      tags:
+        - Api
+      summary: This method uploads and then investigates single sample. For normal use please use "investageSamples". Sample can be a single image or video file. This call gets file, normalize it (e.t. rotate etc) and OCR its content.
+      description: "The file content can be sent in two different formats:\r\n* **RAW:** send the file content as body of the request in binary form without alternations\r\n* **FORM:** use the multipart form encoding and send the file content in file variable\r\n\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **EmptyBody** - no uploaded file."
+      operationId: Api_UploadAndInvestigateSample
+      consumes:
+        - multipart/form-data
+        - multipart/form-data
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: expectedSampleType
+          in: query
+          description: Expected type of sample. Set this if you know the type of sample ahead to speed up processing. Required.
+          required: true
+          type: string
+          enum:
+            - DocumentPicture
+            - Selfie
+            - SelfieVideo
+            - DocumentVideo
+            - Archived
+            - Unknown
+        - name: uploadSessionID
+          in: query
+          description: SessionID is GUID created by client to group multiple sample uploads together
+          required: false
+          type: string
+          format: uuid
+        - name: customData
+          in: query
+          description: Custom data to be associated with this sample. Sample can later be located using customData. Any string.
+          required: false
+          type: string
+        - name: fileName
+          in: query
+          description: Name of the original file (for example DSC01.jpg). If form upload is needed, then this is optional
+          required: false
+          type: string
+        - name: country
+          in: query
+          description: Expected country of the uploaded document (Cz, At, Sk...)
           required: false
           type: string
           enum:
-            - Fast
-            - Slow
-        - name: sdkSignature
+            - Cz
+            - Sk
+            - At
+            - Hu
+            - Pl
+            - De
+            - Hr
+            - Ro
+            - Ru
+            - Ua
+            - It
+            - Dk
+            - Es
+            - Fi
+            - Fr
+            - Gb
+            - Is
+            - Nl
+            - Se
+            - Si
+            - Bg
+            - Al
+            - Ad
+            - Be
+            - By
+            - Ba
+            - Me
+            - Ee
+            - Ie
+            - Cy
+            - Li
+            - Lt
+            - Lv
+            - Lu
+            - Mt
+            - Md
+            - Mc
+            - 'No'
+            - Pt
+            - Gr
+            - Sm
+            - Mk
+            - Rs
+            - Ch
+            - Tr
+            - Va
+            - Vn
+            - In
+            - Us
+            - Jp
+            - Pk
+            - Ng
+            - Br
+            - Bd
+            - Cn
+            - Id
+            - Mx
+            - Ol
+            - Ph
+            - Et
+            - Eg
+            - Cd
+            - Ir
+            - Th
+            - Tz
+            - Za
+            - Mm
+            - Co
+            - Kr
+            - Ke
+            - Ar
+            - Dz
+            - Sd
+            - Ug
+            - Iq
+            - Ca
+            - Ma
+            - Uz
+            - Sa
+            - Ye
+            - Pe
+            - Ao
+            - My
+            - Af
+            - Mz
+            - Gh
+            - Ci
+            - Np
+            - Ve
+            - Mg
+            - Au
+            - Kp
+            - Cm
+            - Ne
+            - Tw
+            - Ml
+            - Bf
+            - Lk
+            - Sy
+            - Mw
+            - Cl
+            - Kz
+            - Zm
+            - Ec
+            - So
+            - Sn
+            - Gt
+            - Td
+            - Kh
+            - Zw
+            - Ss
+            - Rw
+            - Gn
+            - Bi
+            - Bj
+            - Bo
+            - Tn
+            - Ht
+            - Jo
+            - Cu
+            - Do
+            - Az
+            - Il
+            - Tj
+            - Hn
+            - Ae
+            - Sl
+            - Tg
+            - La
+            - Kg
+            - Tm
+            - Ly
+            - Sv
+            - Ni
+            - Py
+            - Cg
+            - Sg
+            - Cf
+            - Lb
+            - Ps
+            - Cr
+            - Lr
+            - Nz
+            - Om
+            - Kw
+            - Mr
+            - Pa
+            - Er
+            - Ge
+            - Uy
+            - Mn
+            - Am
+            - Jm
+            - Qa
+            - Na
+            - Gm
+            - Bw
+            - Ls
+            - Ga
+            - Gw
+            - Xk
+            - Bh
+            - Gq
+            - Tt
+            - Tl
+            - Mu
+            - Sz
+            - Dj
+            - Fj
+            - Bt
+            - Km
+            - Gy
+            - Sb
+            - Sr
+            - Cv
+            - Bn
+            - Bz
+            - Bs
+            - Mv
+            - Vu
+            - Bb
+            - St
+            - Ws
+            - Lc
+            - Ki
+            - Gd
+            - Vc
+            - Fm
+            - Ag
+            - Sc
+            - To
+            - Dm
+            - Kn
+            - Mh
+            - Pw
+            - Nr
+            - Tv
+            - Pg
+        - name: role
           in: query
-          description: Optional SDK signature for pictures. Generated by SDK
+          description: Expected role of the uploaded document (IDC, Passport, Drivers licence)
+          required: false
+          type: string
+          enum:
+            - Idc
+            - Pas
+            - Drv
+            - Res
+            - Gun
+            - Hic
+            - Std
+            - Car
+            - Birth
+            - Add
+            - Ide
+            - Vis
+            - Exp
+        - name: fileLastWriteTime
+          in: query
+          description: Last write time of the file uploaded. This can be determined using javascript. Value is used for fraud detection (EXIF comparison)
+          required: false
+          type: string
+          format: date-time
+        - name: async
+          in: query
+          description: Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.
+          required: false
+          type: boolean
+        - name: callbackUrl
+          in: query
+          description: Set URL for call back here, if you want to receive JSON object with response there.
+          required: false
+          type: string
+        - name: searchForSubsamples
+          in: query
+          description: For videos, this makes ZenID extract static picture of the card from the video of card. For document pictures, if single sample contains multiple card pictures (for example multi-page PDF or scan with multiple picture), set this to true to search for them and extract as separate "subsamples"
+          required: false
+          type: boolean
+        - name: anonymizeImage
+          in: query
+          description: ZenID can optionally anonymize specific documents by blackening certain fields. Set this to true to perform anonymization
+          required: false
+          type: boolean
+        - name: documentCode
+          in: query
+          description: Code of the specific document if you know it
+          required: false
+          type: string
+          enum:
+            - IDC1
+            - IDC2
+            - DRV
+            - PAS
+            - EU_VIS_2019
+            - CZ_BIRTH_A2
+            - CZ_BIRTH_A3
+            - CZ_BIRTH_A4
+            - CZ_RES_2020_A2
+            - SK_IDC_2008plus
+            - SK_DRV_2004_08_09
+            - SK_DRV_2013
+            - SK_DRV_2015
+            - SK_PAS_2008_14
+            - SK_RES_2011
+            - SK_RES_2020
+            - SK_IDC_2022
+            - SK_DRV_1993
+            - PL_IDC_2015
+            - DE_IDC_2010
+            - DE_IDC_2001
+            - HR_IDC_2013_15
+            - AT_IDE_2000
+            - HU_IDC_2000_01_12
+            - HU_IDC_2016
+            - AT_IDC_2002_05_10
+            - HU_ADD_2012
+            - AT_PAS_2006_14
+            - AT_DRV_2006
+            - AT_DRV_2013
+            - CZ_RES_2011_14
+            - CZ_RES_2006_T
+            - CZ_RES_2006_07
+            - CZ_GUN_2014
+            - HU_PAS_2006_12
+            - HU_DRV_2012_13
+            - HU_DRV_2012_B
+            - EU_EHIC_2004_A
+            - Unknown
+            - CZ_GUN_2017
+            - CZ_RES_2020
+            - PL_IDC_2019
+            - IT_PAS_2006_10
+            - INT_ISIC_2008
+            - DE_PAS
+            - DK_PAS
+            - ES_PAS
+            - FI_PAS
+            - FR_PAS
+            - GB_PAS
+            - IS_PAS
+            - NL_PAS
+            - RO_PAS
+            - SE_PAS
+            - PL_PAS
+            - PL_DRV_2013
+            - CZ_BIRTH
+            - CZ_VEHICLE_I
+            - INT_ISIC_2019
+            - SI_PAS
+            - SI_IDC
+            - SI_DRV
+            - EU_EHIC_2004_B
+            - PL_IDC_2001_02_13
+            - IT_IDC_2016
+            - HR_PAS_2009_15
+            - HR_DRV_2013
+            - HR_IDC_2003
+            - SI_DRV_2009
+            - BG_PAS_2010
+            - BG_IDC_2010
+            - BG_DRV_2010_13
+            - HR_IDC_2021
+            - AT_IDC_2021
+            - DE_PAS_2007
+            - DE_DRV_2013_21
+            - DE_DRV_1999_01_04_11
+            - FR_IDC_2021
+            - FR_IDC_1988_94
+            - ES_PAS_2003_06
+            - ES_IDC_2015
+            - ES_IDC_2006
+            - IT_IDC_2004
+            - RO_IDC_2001_06_09_17_21
+            - NL_IDC_2014_17_21
+            - BE_PAS_2014_17_19
+            - BE_IDC_2013_15
+            - BE_IDC_2020_21
+            - GR_PAS_2020
+            - PT_PAS_2006_09
+            - PT_IDC_2007_08_09_15
+            - SE_IDC_2012_21
+            - FI_IDC_2017_21
+            - IE_PAS_2006_13
+            - LT_PAS_2008_09_11_19
+            - LT_IDC_2009_12
+            - LV_PAS_2015
+            - LV_PAS_2007
+            - LV_IDC_2012
+            - LV_IDC_2019
+            - EE_PAS_2014
+            - EE_PAS_2021
+            - EE_IDC_2011
+            - EE_IDC_2018_21
+            - CY_PAS_2010_20
+            - CY_IDC_2000_08
+            - CY_IDC_2015_20
+            - LU_PAS_2015
+            - LU_IDC_2014_21
+            - LU_IDC_2008_13
+            - MT_PAS_2008
+            - MT_IDC_2014
+            - PL_PAS_2011
+            - PL_DRV_1999
+            - LT_IDC_2021
+            - UA_PAS_2007_15
+            - UA_IDC_2017
+            - UA_DRV_2016
+            - UA_DRV_2005
+            - UA_DRV_2021
+            - EU_EHIC_2004_C
+            - VN_PAS_2005
+            - NL_DRV_2006
+            - NL_DRV_2013
+            - NL_DRV_2014
+            - AL_PAS_2009
+            - BA_PAS_2014
+            - CH_PAS_2010
+            - ME_PAS_2008
+            - MK_PAS_2007
+            - RS_PAS_2008
+            - NO_PAS_2011_15
+            - NO_PAS_2020
+            - GB_PAS_2010_11_15_19
+            - BY_PAS_2006
+            - BY_PAS_2021
+            - MD_PAS_2011_14_18
+            - IS_PAS_2006
+            - IN_PAS_2000_13
+            - TR_PAS_2010
+            - TR_PAS_2018
+            - RO_IDC_2021sep
+            - PL_DRV_1999_A2
+            - DE_IDC_2010_A2
+            - DE_IDC_2010_A3
+            - PL_DRV_2013_A2
+            - AT_IDC_2002_05_10_A2
+            - CY_IDC_2015_20_A2
+            - CY_IDC_2000_08_A2
+            - CY_PAS_2010_20_A2
+            - ES_PAS_2003_06_A2
+            - LU_IDC_2008_13_A2
+            - NL_IDC_2014_17_21_A2
+            - SE_IDC_2022
+            - SE_PAS_2022
+            - DK_PAS_2021
+            - CH_PAS_2022
+            - VN_PAS_2022
+            - ME_PAS_2008_A2
+            - OL_IDC_2022
+            - SM_PAS_2006
+            - AD_PAS_2017
+            - BE_PAS_2022
+            - RU_PAS_2006_10
+            - TR_PAS_2023
+            - DO_IDC_2014
+            - LI_PAS_2006
+            - VA_PAS_2013
+            - US_PAS_2006
+            - JP_PAS_2013
+            - PK_PAS_2022
+        - name: pageCode
+          in: query
+          description: Side of the document to seek if you know it
+          required: false
+          type: string
+          enum:
+            - F
+            - B
+        - name: priorityQueueName
+          in: query
+          description: Setting this puts the request into a separate queue for processing, ignoring standard queue.
+          required: false
+          type: string
+        - name: profile
+          in: query
+          description: Optional name of profile. Use it to sort samples by different input channels for example.
           required: false
           type: string
         - name: File
@@ -307,16 +1008,22 @@ paths:
           description: Upload samples file
           required: true
           type: file
+        - name: SdkSignature
+          in: formData
+          description: Optional SDK signature for pictures. Generated by SDK. This should be sent as a second file in form data. Another supported method is to append it to body of request if sent in binary form.
+          required: false
+          type: file
       responses:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/ZenidWeb.UploadSampleResponse'
+            $ref: '#/definitions/ZenidWeb.InvestigateResponse'
   /api/investigateSamples:
     get:
       tags:
         - Api
-      summary: "Investigation node. Investigation gets list of samples, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - any of sampleIDs is not stored in DB.\r\nSampleInInvalidState - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\nInvalidSampleCombination - investigation must contain samples from single person/customer"
+      summary: "Investigation node. Investigation gets list of samples, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nResult of validation is returned in ValidatorResult structure (detail info about validator result) and Rank (info about all input samples, overall score and basic info about failed validators)"
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **UnknownSampleID** - any of sampleIDs is not stored in DB.\r\n* **SampleInInvalidState** - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\n* **InvalidSampleCombination** - investigation must contain samples from single person/customer"
       operationId: Api_InvestigateSamples
       consumes: []
       produces:
@@ -335,30 +1042,22 @@ paths:
           collectionFormat: multi
         - name: profile
           in: query
-          description: >-
-            Optional name of profile. Each profile defines settings for
-            validators.
+          description: Optional name of profile. Each profile defines settings for validators.
           required: false
           type: string
         - name: customData
           in: query
-          description: >-
-            Custom data to be associated with this sample. Sample can later be
-            located using customData. Any string.
+          description: Custom data to be associated with this sample. Sample can later be located using customData. Any string.
           required: false
           type: string
         - name: async
           in: query
-          description: >-
-            Set this true if you want this request to respond as soon as the
-            data are uploaded for processing, not waiting for result.
+          description: Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.
           required: false
           type: boolean
         - name: callbackUrl
           in: query
-          description: >-
-            Set URL for call back here, if you want to receive JSON object with
-            response there.
+          description: Set URL for call back here, if you want to receive JSON object with response there.
           required: false
           type: string
         - name: language
@@ -373,9 +1072,7 @@ paths:
             - German
         - name: priorityQueueName
           in: query
-          description: >-
-            Setting this puts the request into a separate queue for processing,
-            ignoring standard queue.
+          description: Setting this puts the request into a separate queue for processing, ignoring standard queue.
           required: false
           type: string
       responses:
@@ -387,7 +1084,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Investigation node. Investigation gets GUID, unique identifier, gets all samples tagged with this UploadSessionID, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownUploadSessionID - UploadSessionID is not known\r\nSampleInInvalidState - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\nInvalidSampleCombination - investigation must contain samples from single person/customer"
+      summary: "Investigation node. Investigation gets GUID, unique identifier, gets all samples tagged with this UploadSessionID, combine mined data from them in one combined object (see MinedAllData), and validate it with set of validators.\r\nResult of validation is returned in ValidatorResult structure (detail info about validator result) and Rank (info about all input samples, overall score and basic info about failed validators)"
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **UnknownUploadSessionID** - UploadSessionID is not known\r\n* **SampleInInvalidState** - sample is in invalid state - for example it is waiting for operators or processing of sample ended with error\r\n* **InvalidSampleCombination** - investigation must contain samples from single person/customer"
       operationId: Api_InvestigateUploadSession
       consumes: []
       produces:
@@ -404,30 +1102,22 @@ paths:
           format: uuid
         - name: profile
           in: query
-          description: >-
-            Optional name of profile. Each profile defines settings for
-            validators.
+          description: Optional name of profile. Each profile defines settings for validators.
           required: false
           type: string
         - name: customData
           in: query
-          description: >-
-            Custom data to be associated with this sample. Sample can later be
-            located using customData. Any string.
+          description: Custom data to be associated with this sample. Sample can later be located using customData. Any string.
           required: false
           type: string
         - name: async
           in: query
-          description: >-
-            Set this true if you want this request to respond as soon as the
-            data are uploaded for processing, not waiting for result.
+          description: Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.
           required: false
           type: boolean
         - name: callbackUrl
           in: query
-          description: >-
-            Set URL for call back here, if you want to receive JSON object with
-            response there.
+          description: Set URL for call back here, if you want to receive JSON object with response there.
           required: false
           type: string
         - name: language
@@ -449,7 +1139,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Node for synchronizing samples - returns sample for given ID. This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - if that ID is not used in DB for any sample."
+      summary: Node for synchronizing samples - returns sample for given ID. This call can be used for synchronizing information about samples with external systems.
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **UnknownSampleID** - if that ID is not used in DB for any sample."
       operationId: Api_GetSample
       consumes: []
       produces:
@@ -503,9 +1194,7 @@ paths:
           type: string
         - name: birthNumber
           in: query
-          description: >-
-            Birth Number (RČ in czech) of the person whose documents are
-            searched for
+          description: Birth Number (RČ in czech) of the person whose documents are searched for
           required: false
           type: string
         - name: birthDate
@@ -516,9 +1205,7 @@ paths:
           format: date-time
         - name: deleteType
           in: query
-          description: >-
-            Set if you want delete only samples and investigations or face from
-            FaceDB or everything
+          description: Set if you want delete only samples and investigations or face from FaceDB or everything
           required: false
           type: string
           enum:
@@ -534,9 +1221,7 @@ paths:
     get:
       tags:
         - Api
-      summary: >-
-        Deletes a sample. Also deletes an investigation in which this sample was
-        used
+      summary: Deletes a sample. Also deletes an investigation in which this sample was used
       operationId: Api_DeleteSample
       consumes: []
       produces:
@@ -559,7 +1244,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Node for synchronizing investigations - returns investigations for given ID. This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nUnknownSampleID - if Investigation ID is not stored in DB."
+      summary: "Node for synchronizing investigations - returns investigations for given ID. This call can be used for synchronizing information about samples with external systems.\r\nResult of validation is returned in ValidatorResult structure (detail info about validator result) Rank (info about all input samples, overall score and basic info about failed validators)"
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **UnknownSampleID** - if Investigation ID is not stored in DB."
       operationId: Api_GetInvestigation
       consumes: []
       produces:
@@ -583,7 +1269,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Get list of samples (newer than timestamp). This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nInvalidTimeStamp - error while decoding timestamp."
+      summary: Get list of samples (newer than timestamp). This call can be used for synchronizing information about samples with external systems.
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **InvalidTimeStamp** - error while decoding timestamp."
       operationId: Api_GetSamples
       consumes: []
       produces:
@@ -594,10 +1281,28 @@ paths:
       parameters:
         - name: timestamp
           in: query
-          description: if defined, list is limited to samples newer than given timestamp
+          description: if defined, list is limited to samples newer than given database timestamp. Set to 0 to get all samples. Database timestamp is returned by response
           required: false
           type: integer
           format: int64
+        - name: sessionID
+          in: query
+          description: if defined, list is limited to samples which was uploaded with defined sessionID
+          required: false
+          type: string
+          format: uuid
+        - name: timePeriodStart
+          in: query
+          description: if defined, list is limited to samples which was uploaded after defined time
+          required: false
+          type: string
+          format: date-time
+        - name: timePeriodEnd
+          in: query
+          description: if defined, list is limited to samples which was uploaded before defined time
+          required: false
+          type: string
+          format: date-time
       responses:
         '200':
           description: OK
@@ -607,7 +1312,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Get list of investigations (newer than timestamp). This call can be used for synchronizing information about samples with external systems.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,\r\nInvalidTimeStamp - error while decoding timestamp."
+      summary: Get list of investigations (newer than timestamp). This call can be used for synchronizing information about samples with external systems.
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,\r\n* **InvalidTimeStamp** - error while decoding timestamp."
       operationId: Api_GetInvestigations
       consumes: []
       produces:
@@ -618,12 +1324,16 @@ paths:
       parameters:
         - name: timestamp
           in: query
-          description: >-
-            if defined, list is limited to investigations newer than given
-            timestamp
+          description: if defined, list is limited to investigations newer than given timestamp
           required: false
           type: integer
           format: int64
+        - name: sessionID
+          in: query
+          description: if defined, list is limited to investigations which contain samples uploaded with defined sessionID
+          required: false
+          type: string
+          format: uuid
       responses:
         '200':
           description: OK
@@ -633,7 +1343,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Get list of names of profiles, defined in system. This call can be used for selecting profile in investigation.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,"
+      summary: Get list of names of profiles, defined in system. This call can be used for selecting profile in investigation.
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,"
       operationId: Api_GetProfiles
       consumes: []
       produces:
@@ -650,7 +1361,8 @@ paths:
     get:
       tags:
         - Api
-      summary: "Returns list of validators - their id and text description.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these): InternalServerError - problem while preprocessing or unknown problem while processing,"
+      summary: Returns list of validators - their id and text description.
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing,"
       operationId: Api_GetValidatorEnum
       consumes: []
       produces:
@@ -680,9 +1392,7 @@ paths:
     get:
       tags:
         - Api
-      summary: >-
-        Performs diagnostics test. Note depending on parameters, license might
-        be consumed
+      summary: Performs diagnostics test. Note depending on parameters, license might be consumed
       operationId: Api_Diagnostics
       consumes: []
       produces:
@@ -733,7 +1443,8 @@ paths:
     post:
       tags:
         - Api
-      summary: "Loads face image in the image repository (for comparing faces for validation).\r\nIn most cases, /api/sample with sampleType=Selfie should be used instead.\r\nWhile processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\nInternalServerError - problem while preprocessing or unknown problem while processing or disabled face database."
+      summary: "Loads face image in the image repository (for comparing faces for validation).\r\nIn most cases, /api/sample with sampleType=Selfie should be used instead."
+      description: "While processing, error could be identified.\r\nIn that case empty response with described ErrorCode and Description is returned (one of these):\r\n* **InternalServerError** - problem while preprocessing or unknown problem while processing or disabled face database."
       operationId: Api_UploadFace
       consumes:
         - multipart/form-data
@@ -755,9 +1466,7 @@ paths:
           type: string
         - name: async
           in: query
-          description: >-
-            Set this true if you want this request to respond as soon as the
-            data are uploaded for processing, not waiting for result.
+          description: Set this true if you want this request to respond as soon as the data are uploaded for processing, not waiting for result.
           required: false
           type: boolean
         - name: callbackUrl
@@ -779,7 +1488,8 @@ paths:
     post:
       tags:
         - Api
-      summary: "Verifies card validity using same means as existing CardRecalled validator\r\nIt takes a List of cards to verify - each with DocumentCode and card number and returns same list with Recalled status. Recalled status can be either True = recalled, False = not recalled, Null = could not determine/not supported document code."
+      summary: "Verifies card validity using same means as existing CardRecalled validator\r\nIt takes a List of cards to verify - each with DocumentCode and card number and returns same list with Recalled status."
+      description: Recalled status can be either True = recalled, False = not recalled, Null = could not determine/not supported document code.
       operationId: Api_VerifyCardsRecalled
       consumes:
         - application/json
@@ -823,16 +1533,21 @@ definitions:
       SampleType:
         description: Real SampleType
         enum:
-          - Unknown
-          - Selfie
           - DocumentPicture
+          - Selfie
           - SelfieVideo
           - DocumentVideo
           - Archived
+          - Unknown
         type: string
       MinedData:
         $ref: '#/definitions/ZenidShared.MineAllResult'
         description: Structure of data, mined from sample - {ZenidShared.MineAllResult}.
+      RawFieldsOcr:
+        description: Raw OCR results of fields (not mined)
+        type: array
+        items:
+          $ref: '#/definitions/ZenidWeb.Classes.FieldOcrResult'
       State:
         description: State of the request - NotDone/Done/Error
         enum:
@@ -841,6 +1556,7 @@ definitions:
           - Error
           - Operator
           - Rejected
+          - Archived
         type: string
       ProjectedImage:
         $ref: '#/definitions/ZenidShared.Hash'
@@ -856,17 +1572,22 @@ definitions:
         type: string
       ImagePageCount:
         format: int32
-        description: >-
-          Number of pages this document has (in case of PDF or TIFF). This can
-          be used in history URL /history/image/{hash}?page=1
+        description: Number of pages this document has (in case of PDF or TIFF). This can be used in history URL /history/image/{hash}?page=1
         type: integer
+      DocumentOutlineInOriginalImage:
+        description: Outline of the document in the original image in relative dimensions
+        type: array
+        items:
+          $ref: '#/definitions/System.Drawing.PointF'
       Subsamples:
-        description: >-
-          If subsample processing is enable, this list contains further images
-          extracted from the primary image, each with extra document image
+        description: If subsample processing is enable, this list contains further images extracted from the primary image, each with extra document image
         type: array
         items:
           $ref: '#/definitions/ZenidWeb.UploadSampleResponse'
+      UploadTime:
+        format: date-time
+        description: Time of the sample upload (server time)
+        type: string
       ErrorCode:
         description: If throght processing some error occurs, ErrorCode property is set.
         enum:
@@ -880,10 +1601,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -913,9 +1638,7 @@ definitions:
         description: identification number for id card - set only on id cards
       DrivinglicenseNumber:
         $ref: '#/definitions/ZenidShared.MinedText'
-        description: >-
-          identification number for driving licence - set only on driving
-          licences
+        description: identification number for driving licence - set only on driving licences
       PassportNumber:
         $ref: '#/definitions/ZenidShared.MinedText'
         description: identification number for passport - set only on passports
@@ -934,19 +1657,25 @@ definitions:
         $ref: '#/definitions/ZenidShared.MinedMrz'
         description: Machine readable zone
       DocumentCode:
-        description: >-
-          Code identificating document (when combining from more samples the
-          most probable version is set)
+        description: Set access point shouldnt be used anywhere. It is in DocumentCode property just because of xml serialization
         enum:
+          - IDC1
           - IDC2
           - DRV
-          - IDC1
           - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -1020,7 +1749,6 @@ definitions:
           - BE_IDC_2020_21
           - GR_PAS_2020
           - PT_PAS_2006_09
-          - PT_PAS_2017
           - PT_IDC_2007_08_09_15
           - SE_IDC_2012_21
           - FI_IDC_2017_21
@@ -1046,9 +1774,65 @@ definitions:
           - PL_PAS_2011
           - PL_DRV_1999
           - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
         type: string
       DocumentCountry:
-        description: Country associated with this document type
+        description: "Country associated with this document type.\r\nSet access point shouldnt be used anywhere. It is in DocumentCountry property just because of xml serialization"
         enum:
           - Cz
           - Sk
@@ -1071,21 +1855,186 @@ definitions:
           - Se
           - Si
           - Bg
+          - Al
+          - Ad
           - Be
+          - By
+          - Ba
+          - Me
           - Ee
           - Ie
           - Cy
+          - Li
           - Lt
           - Lv
           - Lu
           - Mt
+          - Md
+          - Mc
+          - 'No'
           - Pt
           - Gr
+          - Sm
+          - Mk
+          - Rs
+          - Ch
+          - Tr
+          - Va
+          - Vn
+          - In
+          - Us
+          - Jp
+          - Pk
+          - Ng
+          - Br
+          - Bd
+          - Cn
+          - Id
+          - Mx
+          - Ol
+          - Ph
+          - Et
+          - Eg
+          - Cd
+          - Ir
+          - Th
+          - Tz
+          - Za
+          - Mm
+          - Co
+          - Kr
+          - Ke
+          - Ar
+          - Dz
+          - Sd
+          - Ug
+          - Iq
+          - Ca
+          - Ma
+          - Uz
+          - Sa
+          - Ye
+          - Pe
+          - Ao
+          - My
+          - Af
+          - Mz
+          - Gh
+          - Ci
+          - Np
+          - Ve
+          - Mg
+          - Au
+          - Kp
+          - Cm
+          - Ne
+          - Tw
+          - Ml
+          - Bf
+          - Lk
+          - Sy
+          - Mw
+          - Cl
+          - Kz
+          - Zm
+          - Ec
+          - So
+          - Sn
+          - Gt
+          - Td
+          - Kh
+          - Zw
+          - Ss
+          - Rw
+          - Gn
+          - Bi
+          - Bj
+          - Bo
+          - Tn
+          - Ht
+          - Jo
+          - Cu
+          - Do
+          - Az
+          - Il
+          - Tj
+          - Hn
+          - Ae
+          - Sl
+          - Tg
+          - La
+          - Kg
+          - Tm
+          - Ly
+          - Sv
+          - Ni
+          - Py
+          - Cg
+          - Sg
+          - Cf
+          - Lb
+          - Ps
+          - Cr
+          - Lr
+          - Nz
+          - Om
+          - Kw
+          - Mr
+          - Pa
+          - Er
+          - Ge
+          - Uy
+          - Mn
+          - Am
+          - Jm
+          - Qa
+          - Na
+          - Gm
+          - Bw
+          - Ls
+          - Ga
+          - Gw
+          - Xk
+          - Bh
+          - Gq
+          - Tt
+          - Tl
+          - Mu
+          - Sz
+          - Dj
+          - Fj
+          - Bt
+          - Km
+          - Gy
+          - Sb
+          - Sr
+          - Cv
+          - Bn
+          - Bz
+          - Bs
+          - Mv
+          - Vu
+          - Bb
+          - St
+          - Ws
+          - Lc
+          - Ki
+          - Gd
+          - Vc
+          - Fm
+          - Ag
+          - Sc
+          - To
+          - Dm
+          - Kn
+          - Mh
+          - Pw
+          - Nr
+          - Tv
+          - Pg
         type: string
       DocumentRole:
-        description: >-
-          General role of this document (ID card vs Passport vs Driver license
-          etc)
+        description: "General role of this document (ID card vs Passport vs Driving license etc)\r\nSet access point shouldnt be used anywhere. It is in DocumentRole property just because of xml serialization"
         enum:
           - Idc
           - Pas
@@ -1098,6 +2047,8 @@ definitions:
           - Birth
           - Add
           - Ide
+          - Vis
+          - Exp
         type: string
       PageCode:
         description: identification of page of document
@@ -1111,12 +2062,17 @@ definitions:
         $ref: '#/definitions/ZenidShared.MinedText'
       CarNumber:
         $ref: '#/definitions/ZenidShared.MinedText'
+      VisaNumber:
+        $ref: '#/definitions/ZenidShared.MinedText'
       FirstNameOfParents:
         $ref: '#/definitions/ZenidShared.MinedText'
       ResidencyNumber:
         $ref: '#/definitions/ZenidShared.MinedText'
       ResidencyNumberPhoto:
         $ref: '#/definitions/ZenidShared.MinedText'
+      FathersName:
+        $ref: '#/definitions/ZenidShared.MinedText'
+        description: Patronymium in UA
       ResidencyPermitDescription:
         $ref: '#/definitions/ZenidShared.MinedText'
       ResidencyPermitCode:
@@ -1133,10 +2089,150 @@ definitions:
         $ref: '#/definitions/ZenidShared.MinedText'
       HealthInsuranceCardNumber:
         $ref: '#/definitions/ZenidShared.MinedText'
+      HealthInsuranceNumber:
+        $ref: '#/definitions/ZenidShared.MinedText'
       InsuranceCompanyCode:
         $ref: '#/definitions/ZenidShared.MinedText'
       IssuingCountry:
         $ref: '#/definitions/ZenidShared.MinedText'
+      FathersBirthDate:
+        $ref: '#/definitions/ZenidShared.MinedDate'
+      FathersSurname:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      FathersBirthNumber:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      FathersBirthSurname:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      MothersBirthDate:
+        $ref: '#/definitions/ZenidShared.MinedDate'
+      MothersSurname:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      MothersBirthNumber:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      MothersBirthSurname:
+        $ref: '#/definitions/ZenidShared.MinedText'
+      BirthCertificateNumber:
+        $ref: '#/definitions/ZenidShared.MinedText'
+  ZenidWeb.Classes.FieldOcrResult:
+    type: object
+    properties:
+      FieldId:
+        enum:
+          - A1
+          - A2
+          - A3
+          - FirstName
+          - LastName
+          - Photo
+          - BirthDate
+          - BirthNumber
+          - Authority
+          - Mrz1
+          - Mrz2
+          - Mrz3
+          - IdcardNumber
+          - Sex
+          - MaritalStatus
+          - BirthAddress
+          - BA1
+          - BA2
+          - IssueDate
+          - ExpiryDate
+          - PassportNumber
+          - DrivinglicenseNumber
+          - Barcode
+          - BirthLastName
+          - SpecialRemarks
+          - Height
+          - EyesColor
+          - Titles
+          - Authority1
+          - Authority2
+          - LastName1
+          - LastName2TitlesAfter
+          - DrvCodes
+          - Signature
+          - OtherInfo
+          - MiniHologram
+          - MiniPhoto
+          - CarNumber
+          - LicenseTypes
+          - FirstNameOfParents
+          - BirthDateNumber
+          - DrivinglicenseNumber2
+          - RDIFChipAccess
+          - Pseudonym
+          - ResidencyPermitDescription
+          - ResidencyPermitCode
+          - ResidencyNumber
+          - AuthorityAndIssueDate
+          - Nationality
+          - GunlicenseNumber
+          - Stamp
+          - Stamp2
+          - SurnameAndName1
+          - SurnameAndName2
+          - SurnameAndName3
+          - MothersSurnameAndName
+          - TemporaryAddress1
+          - TemporaryAddress2
+          - AddressStartingDate
+          - TemporaryAddressStartingDate
+          - TemporaryAddressEndingDate
+          - NameInNationalLanguage
+          - BirthDateAndAddress
+          - SpecialRemarks2
+          - SpecialRemarks3
+          - Unknown
+          - HealthInsuranceCardNumber
+          - InsuranceCompanyCode
+          - IssuingCountry
+          - ResidencyNumberPhoto
+          - IssueDateAndAuthority
+          - TitlesAfter
+          - PlaceOfIssue
+          - BirthAddressAndDate
+          - IssueDateAndPlaceOfIssue
+          - MothersSurname
+          - MothersName
+          - FathersSurname
+          - FathersName
+          - LastName2
+          - A4
+          - FirstName2
+          - IssueAndExpiryDate
+          - FiscalNumber
+          - SocialNumber
+          - AlternativeName
+          - VisaNumber
+          - Duration
+          - Type
+          - Count
+          - NamesOfParents
+          - NamesOfParents2
+          - HealthInsuranceNumber
+          - FathersBirthDate
+          - MothersBirthDate
+          - BirthCertificateNumber1
+          - BirthCertificateNumber2
+          - BirthCertificateNumber3
+          - BirthCertificateNumber4
+          - FathersBirthNumber
+          - MothersBirthNumber
+          - FathersSurnameBirthSurname
+          - MothersSurnameBirthSurname
+          - Authority3
+          - Sex2
+        type: string
+      Confidence:
+        format: int32
+        type: integer
+      OrcResult:
+        type: string
+      OrcRawResult:
+        type: string
+      OutlineInProjectedImage:
+        $ref: '#/definitions/System.Nullable[System.Drawing.RectangleF]'
   ZenidShared.Hash:
     description: Simple MD5 hash wrapper with easy compare/text conversions
     type: object
@@ -1146,6 +2242,18 @@ definitions:
       IsNull:
         type: boolean
         readOnly: true
+  System.Drawing.PointF:
+    type: object
+    properties:
+      IsEmpty:
+        type: boolean
+        readOnly: true
+      X:
+        format: float
+        type: number
+      'Y':
+        format: float
+        type: number
   ZenidShared.MinedText:
     description: Identifies mined text - its value and confidence
     type: object
@@ -1169,18 +2277,17 @@ definitions:
       A3:
         description: physical third row of address on card
         type: string
+      A4:
+        description: physical fourth row of address on card
+        type: string
       AdministrativeAreaLevel1:
         description: main admin. area - in CZ - kraj
         type: string
       AdministrativeAreaLevel2:
-        description: >-
-          secondary admin. area - in CZ - okres or towns behaves also as okres -
-          like Brno
+        description: secondary admin. area - in CZ - okres or towns behaves also as okres - like Brno
         type: string
       Locality:
-        description: >-
-          identification of town/city/village (if not already defined up - Brno,
-          Praha) / OSM: boundary=administrative+ admin_level=8
+        description: 'identification of town/city/village (if not already defined up - Brno, Praha) / OSM: boundary=administrative+ admin_level=8'
         type: string
       Sublocality:
         description: "town-subdivision\r\nCZ - čtvrť/katastrální území (Neighborhood/Cadastral place) / OSM: boundary=administrative+ admin_level=10\r\nSK - čtvrť/katastrální území (Neighborhood/Cadastral place) / OSM: boundary=administrative+ admin_level=10\r\nDE - stadtteil without selfgovernment / OSM: boundary=administrative+ admin_level=10\r\nHU - admin-level 9\r\n            \r\ntodo slovak: Valaská - Piesok is in addess, but Piesok is just place=village, no admin_level=10"
@@ -1192,9 +2299,7 @@ definitions:
         description: in CZ - ulice
         type: string
       HouseNumber:
-        description: >-
-          descriptive house number in town - used in Czechia, Slovakia, Austria
-          (číslo popisné, číslo súpisné, Konskriptionsnummer)
+        description: descriptive house number in town - used in Czechia, Slovakia, Austria (číslo popisné, číslo súpisné, Konskriptionsnummer)
         type: string
       StreetNumber:
         description: descriptive number of house on the street - in CZ - číslo orientační
@@ -1211,9 +2316,7 @@ definitions:
         format: int32
         type: integer
   ZenidShared.MinedRc:
-    description: >-
-      Object containing mined information about birth-number - checksum, date,
-      sex...
+    description: Object containing mined information about birth-number - checksum, date, sex...
     type: object
     properties:
       BirthDate:
@@ -1223,7 +2326,6 @@ definitions:
       Checksum:
         format: int32
         type: integer
-        readOnly: true
       Sex:
         enum:
           - F
@@ -1261,9 +2363,7 @@ definitions:
         format: int32
         type: integer
   ZenidShared.MinedMaritalStatus:
-    description: >-
-      MinedMaritalStatus - test of field, its confidence and property
-      MaritalStatus (parsed text)
+    description: MinedMaritalStatus - test of field, its confidence and property MaritalStatus (parsed text)
     type: object
     properties:
       MaritalStatus:
@@ -1285,26 +2385,20 @@ definitions:
         format: int32
         type: integer
   ZenidShared.MinedPhoto:
-    description: >-
-      MinedPhoto - shows image data, and also two face-related values -
-      estimated age and sex.
+    description: MinedPhoto - shows image data, and also two face-related values - estimated age and sex.
     type: object
     properties:
       ImageData:
         $ref: '#/definitions/ZenidShared.LazyMatImage'
-      EstimatedAge:
-        format: double
-        type: number
-      EstimatedSex:
-        enum:
-          - F
-          - M
-        type: string
+      EyesInfo:
+        $ref: '#/definitions/ZenidShared.EyesInfo'
       HasOccludedMouth:
         type: boolean
       HasSunGlasses:
         type: boolean
       HasHeadWear:
+        type: boolean
+      FromNfc:
         type: boolean
       Text:
         type: string
@@ -1322,115 +2416,96 @@ definitions:
       Confidence:
         format: int32
         type: integer
+  System.Nullable[System.Drawing.RectangleF]:
+    type: object
+    properties:
+      Location:
+        $ref: '#/definitions/System.Drawing.PointF'
+      Size:
+        type: string
+      X:
+        format: float
+        type: number
+      'Y':
+        format: float
+        type: number
+      Width:
+        format: float
+        type: number
+      Height:
+        format: float
+        type: number
+      Left:
+        format: float
+        type: number
+        readOnly: true
+      Top:
+        format: float
+        type: number
+        readOnly: true
+      Right:
+        format: float
+        type: number
+        readOnly: true
+      Bottom:
+        format: float
+        type: number
+        readOnly: true
+      IsEmpty:
+        type: boolean
+        readOnly: true
   ZenidShared.LazyMatImage:
     type: object
     properties:
       ImageHash:
         $ref: '#/definitions/ZenidShared.Hash'
+  ZenidShared.EyesInfo:
+    type: object
+    properties:
+      BoxLeftTopRel:
+        $ref: '#/definitions/System.Drawing.PointF'
+      BoxRightBottomRel:
+        $ref: '#/definitions/System.Drawing.PointF'
   ZenidShared.Mrz:
     type: object
     properties:
-      Type:
-        enum:
-          - ID_v2000
-          - ID_v2012
-          - PAS_v2006
-          - Unknown
-          - AUT_IDC2002
-          - AUT_PAS2006
-          - SVK_IDC2008
-          - SVK_DL2013
-          - SVK_PAS2008
-          - POL_IDC2015
-          - HRV_IDC2003
-          - CZE_RES_2011_14
-          - HUN_PAS_2006_12
-          - HU_IDC_2000_01_12_16
-        type: string
-      Subtype:
-        enum:
-          - OP
-          - R
-          - D
-          - S
-          - Default
-          - Unknown
-        type: string
       BirthDate:
-        description: >-
-          Inner Birth date string of MRZ. Low-level data, ignore it. Use
-          BirthDate from MineAllResult object.
+        description: Inner Birth date string of MRZ. Low-level data, ignore it. Use BirthDate from MineAllResult object.
         type: string
       BirthDateVerified:
-        description: >-
-          Inner flag, if MRZ BirthDate checksum is ok. Low-level check, ignore
-          it. Use Validators.
+        description: Inner flag, if MRZ BirthDate checksum is ok. Low-level check, ignore it. Use Validators.
         type: boolean
       DocumentNumber:
-        description: >-
-          Inner Document number string of MRZ. Low-level data, ignore it. Use
-          value from MineAllResult object.
+        description: Inner Document number string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
       DocumentNumberVerified:
-        description: >-
-          Inner flag, if MRZ DocumentNumber checksum is ok. Low-level check,
-          ignore it. Use Validators.
+        description: Inner flag, if MRZ DocumentNumber checksum is ok. Low-level check, ignore it. Use Validators.
         type: boolean
       ExpiryDate:
-        description: >-
-          Inner Expiry date string of MRZ. Low-level data, ignore it. Use value
-          from MineAllResult object.
+        description: Inner Expiry date string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
       ExpiryDateVerified:
-        description: >-
-          Inner flag, if MRZ ExpiryDate checksum is ok. Low-level check, ignore
-          it. Use Validators.
+        description: Inner flag, if MRZ ExpiryDate checksum is ok. Low-level check, ignore it. Use Validators.
         type: boolean
       GivenName:
-        description: >-
-          Inner Given name string of MRZ. Low-level data, ignore it. Use value
-          from MineAllResult object.
+        description: Inner Given name string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
       ChecksumVerified:
-        description: >-
-          Inner flag, if checksum of MRZ itself is ok. Low-level check, ignore
-          it. Use Validators.
+        description: Inner flag, if checksum of MRZ itself is ok. Low-level check, ignore it. Use Validators.
         type: boolean
       ChecksumDigit:
         format: int32
         description: Inner value of global MRZ checksum.
         type: integer
       LastName:
-        description: >-
-          Inner Last name string of MRZ. Low-level data, ignore it. Use value
-          from MineAllResult object.
+        description: Inner Last name string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
       Nationality:
-        description: >-
-          Inner Nationality string of MRZ. Low-level data, ignore it. Use value
-          from MineAllResult object.
+        description: Inner Nationality string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
       Sex:
-        description: >-
-          Inner Sex string of MRZ. Low-level data, ignore it. Use value from
-          MineAllResult object.
+        description: Inner Sex string of MRZ. Low-level data, ignore it. Use value from MineAllResult object.
         type: string
-      BirthNumber:
-        description: >-
-          Inner Birthnumber string of MRZ (used on Czech passports). Low-level
-          data, ignore it. Use value from MineAllResult object.
-        type: string
-      BirthNumberChecksum:
-        format: int32
-        description: >-
-          Inner value of Birthnumber checksum in MRZ (on Czech passports).
-          Low-level check, ignore it. Use Validators.
-        type: integer
-      BirthNumberVerified:
-        description: >-
-          Inner flag, if MRZ BirthNumber checksum is ok (used on Czech
-          passports). Low-level check, ignore it. Use Validators.
-        type: boolean
       BirthdateChecksum:
         format: int32
         description: Inner value of MRZ BirthDate checksum.
@@ -1444,37 +2519,28 @@ definitions:
         description: Inner value of MRZ ExpiryDate checksum.
         type: integer
       IssueDate:
-        description: >-
-          Prefix of the MRZ (type of the MRZ + subtype (differs, some ID cards
-          have ID, other I_ or IO) + country issuer. Low-level data, can be
-          ignored.
+        description: Prefix of the MRZ (type of the MRZ + subtype (differs, some ID cards have ID, other I_ or IO) + country issuer. Low-level data, can be ignored.
+        type: string
+      AdditionalData:
+        description: Output of OptionalSubstructure dont fitting in IssueDate or BirthNumber
+        type: string
+      AdditionalData2:
+        description: Output of OptionalSubstructure dont fitting in IssueDate or BirthNumber (second line)
+        type: string
+      Issuer:
+        description: Issuer ISO identification
+        type: string
+      BirthDateParsed:
+        format: date-time
+        description: Inner machine-readable value of BirthDate (in DateTime structure). Low-level data, use value from MineAllResult object.
+        type: string
+      ExpiryDateParsed:
+        format: date-time
+        description: Inner machine-readable value of ExpiryDate (in DateTime structure). Low-level data, use value from MineAllResult object.
         type: string
       IssueDateParsed:
         format: date-time
         type: string
-        readOnly: true
-      AdditionalData:
-        description: >-
-          Output of OptionalSubstructure dont fitting in IssueDate or
-          BirthNumber
-        type: string
-      BirthDateParsed:
-        format: date-time
-        description: >-
-          Inner machine-readable value of BirthDate (in DateTime structure).
-          Low-level data, use value from MineAllResult object.
-        type: string
-        readOnly: true
-      ExpiryDateParsed:
-        format: date-time
-        description: >-
-          Inner machine-readable value of ExpiryDate (in DateTime structure).
-          Low-level data, use value from MineAllResult object.
-        type: string
-        readOnly: true
-      MrzLength:
-        $ref: '#/definitions/System.ValueTuple[System.Int32,System.Int32]'
-        readOnly: true
       MrzDefType:
         enum:
           - TD1_IDC
@@ -1482,123 +2548,296 @@ definitions:
           - TD3_PAS
           - SKDRV
           - None
+          - FrenchID1988
+          - NLDRV
         type: string
-  System.ValueTuple[System.Int32,System.Int32]:
-    type: object
-    properties:
-      Item1:
+      BirthNumber:
+        description: Inner Birthnumber string of MRZ (used on Czech passports). Low-level data, ignore it. Use value from MineAllResult object.
+        type: string
+      BirthNumberChecksum:
         format: int32
+        description: Inner value of Birthnumber checksum in MRZ (on Czech passports). Low-level check, ignore it. Use Validators.
         type: integer
-      Item2:
-        format: int32
-        type: integer
-  ZenidWeb.InvestigateResponse:
-    description: Response object for the investigation nodes.
-    type: object
-    properties:
-      InvestigationID:
-        format: int32
-        description: Unique identification of the investigation (set of samples)
-        type: integer
-      CustomData:
-        description: Copy of the input parameter CustomData
-        type: string
-      MinedData:
-        $ref: '#/definitions/ZenidShared.MineAllResult'
-        description: Structure of data, mined from sample - {ZenidShared.MineAllResult}.
-      DocumentsData:
-        description: >-
-          If investigation covers multiple documents, each will have their own
-          entry here
-        type: array
-        items:
-          $ref: '#/definitions/ZenidShared.MineAllResult'
-      InvestigationUrl:
-        description: URL of the investigation detail
-        type: string
-      ValidatorResults:
-        description: >-
-          Result of the all validators - List of
-          {ZenidWeb.InvestigationValidatorResponse}
-        type: array
-        items:
-          $ref: '#/definitions/ZenidWeb.InvestigationValidatorResponse'
-      State:
-        description: State of the request - NotDone/Done/Error
-        enum:
-          - NotDone
-          - Done
-          - Error
-          - Operator
-          - Rejected
-        type: string
-      ErrorCode:
-        description: If throght processing some error occurs, ErrorCode property is set.
-        enum:
-          - UnknownSampleID
-          - UnknownUploadSessionID
-          - EmptyBody
-          - InternalServerError
-          - InvalidTimeStamp
-          - SampleInInvalidState
-          - InvalidSampleCombination
-          - AccessDenied
-          - UnknownPerson
-          - InvalidInputData
-        type: string
-      ErrorText:
-        description: Error text
-        type: string
-      MessageType:
-        type: string
-        readOnly: true
-  ZenidWeb.InvestigationValidatorResponse:
-    type: object
-    properties:
-      Name:
-        type: string
-      Code:
-        format: int32
-        description: Code identification of validator in external system
-        type: integer
-      Score:
-        format: int32
-        description: Score of the validator for given input
-        type: integer
-      AcceptScore:
-        format: int32
-        description: >-
-          Accept score - if score is higher than accept score, Validator
-          response OK is set to true
-        type: integer
-      Issues:
-        description: Description of the issues of validation (why score is lower)
-        type: array
-        items:
-          $ref: '#/definitions/ZenidWeb.InvestigationIssueResponse'
-      Ok:
+      BirthNumberVerified:
+        description: Inner flag, if MRZ BirthNumber checksum is ok (used on Czech passports). Low-level check, ignore it. Use Validators.
         type: boolean
-  ZenidWeb.InvestigationIssueResponse:
+      SecondaryDocumentNumber:
+        description: "Some documents (passports) dont have any additional number. Some have PIN (birthnumber in object MRZ). Some have number of some other document, for example\r\ndocument of ID card. In that case this field is used."
+        type: string
+      SecondaryDocumentRole:
+        description: Role of secondary document. For some passports, that is Idc.
+        enum:
+          - Idc
+          - Pas
+          - Drv
+          - Res
+          - Gun
+          - Hic
+          - Std
+          - Car
+          - Birth
+          - Add
+          - Ide
+          - Vis
+          - Exp
+        type: string
+      SecondaryDocumentNumberChecksum:
+        format: int32
+        type: integer
+      SecondaryDocumentNumberVerified:
+        description: Check, if number is verified.
+        type: boolean
+  ZenidShared.AcceptableInput:
     type: object
     properties:
-      IssueUrl:
-        description: Url with detailed visualization of the issue.
+      PossibleDocuments:
+        type: array
+        items:
+          $ref: '#/definitions/ZenidShared.DocumentFilter'
+  ZenidShared.DocumentFilter:
+    type: object
+    properties:
+      Role:
+        enum:
+          - Idc
+          - Pas
+          - Drv
+          - Res
+          - Gun
+          - Hic
+          - Std
+          - Car
+          - Birth
+          - Add
+          - Ide
+          - Vis
+          - Exp
         type: string
-      IssueDescription:
-        description: Description of issue
+      Country:
+        enum:
+          - Cz
+          - Sk
+          - At
+          - Hu
+          - Pl
+          - De
+          - Hr
+          - Ro
+          - Ru
+          - Ua
+          - It
+          - Dk
+          - Es
+          - Fi
+          - Fr
+          - Gb
+          - Is
+          - Nl
+          - Se
+          - Si
+          - Bg
+          - Al
+          - Ad
+          - Be
+          - By
+          - Ba
+          - Me
+          - Ee
+          - Ie
+          - Cy
+          - Li
+          - Lt
+          - Lv
+          - Lu
+          - Mt
+          - Md
+          - Mc
+          - 'No'
+          - Pt
+          - Gr
+          - Sm
+          - Mk
+          - Rs
+          - Ch
+          - Tr
+          - Va
+          - Vn
+          - In
+          - Us
+          - Jp
+          - Pk
+          - Ng
+          - Br
+          - Bd
+          - Cn
+          - Id
+          - Mx
+          - Ol
+          - Ph
+          - Et
+          - Eg
+          - Cd
+          - Ir
+          - Th
+          - Tz
+          - Za
+          - Mm
+          - Co
+          - Kr
+          - Ke
+          - Ar
+          - Dz
+          - Sd
+          - Ug
+          - Iq
+          - Ca
+          - Ma
+          - Uz
+          - Sa
+          - Ye
+          - Pe
+          - Ao
+          - My
+          - Af
+          - Mz
+          - Gh
+          - Ci
+          - Np
+          - Ve
+          - Mg
+          - Au
+          - Kp
+          - Cm
+          - Ne
+          - Tw
+          - Ml
+          - Bf
+          - Lk
+          - Sy
+          - Mw
+          - Cl
+          - Kz
+          - Zm
+          - Ec
+          - So
+          - Sn
+          - Gt
+          - Td
+          - Kh
+          - Zw
+          - Ss
+          - Rw
+          - Gn
+          - Bi
+          - Bj
+          - Bo
+          - Tn
+          - Ht
+          - Jo
+          - Cu
+          - Do
+          - Az
+          - Il
+          - Tj
+          - Hn
+          - Ae
+          - Sl
+          - Tg
+          - La
+          - Kg
+          - Tm
+          - Ly
+          - Sv
+          - Ni
+          - Py
+          - Cg
+          - Sg
+          - Cf
+          - Lb
+          - Ps
+          - Cr
+          - Lr
+          - Nz
+          - Om
+          - Kw
+          - Mr
+          - Pa
+          - Er
+          - Ge
+          - Uy
+          - Mn
+          - Am
+          - Jm
+          - Qa
+          - Na
+          - Gm
+          - Bw
+          - Ls
+          - Ga
+          - Gw
+          - Xk
+          - Bh
+          - Gq
+          - Tt
+          - Tl
+          - Mu
+          - Sz
+          - Dj
+          - Fj
+          - Bt
+          - Km
+          - Gy
+          - Sb
+          - Sr
+          - Cv
+          - Bn
+          - Bz
+          - Bs
+          - Mv
+          - Vu
+          - Bb
+          - St
+          - Ws
+          - Lc
+          - Ki
+          - Gd
+          - Vc
+          - Fm
+          - Ag
+          - Sc
+          - To
+          - Dm
+          - Kn
+          - Mh
+          - Pw
+          - Nr
+          - Tv
+          - Pg
+        type: string
+      Page:
+        enum:
+          - F
+          - B
         type: string
       DocumentCode:
-        description: Document code of sample, where issue is present
         enum:
+          - IDC1
           - IDC2
           - DRV
-          - IDC1
           - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -1672,7 +2911,6 @@ definitions:
           - BE_IDC_2020_21
           - GR_PAS_2020
           - PT_PAS_2006_09
-          - PT_PAS_2017
           - PT_IDC_2007_08_09_15
           - SE_IDC_2012_21
           - FI_IDC_2017_21
@@ -1698,6 +2936,579 @@ definitions:
           - PL_PAS_2011
           - PL_DRV_1999
           - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
+        type: string
+      ModelID:
+        type: string
+  ZenidWeb.InvestigateResponse:
+    description: Response object for the investigation nodes.
+    type: object
+    properties:
+      InvestigationID:
+        format: int32
+        description: Unique identification of the investigation (set of samples)
+        type: integer
+      CustomData:
+        description: Copy of the input parameter CustomData
+        type: string
+      MinedData:
+        $ref: '#/definitions/ZenidShared.MineAllResult'
+        description: Structure of data, mined from sample - {ZenidShared.MineAllResult}.
+      DocumentsData:
+        description: If investigation covers multiple documents, each will have their own entry here
+        type: array
+        items:
+          $ref: '#/definitions/ZenidShared.MineAllResult'
+      InvestigationUrl:
+        description: URL of the investigation detail
+        type: string
+      Rank:
+        $ref: '#/definitions/RecogLib.RankDetail'
+        description: Rank of investigation result (A (OK), B (Warning), F (Fail))
+      Time:
+        format: date-time
+        description: Time of investigation (server time)
+        type: string
+      ValidatorResults:
+        description: Result of the all validators - List of {ZenidWeb.InvestigationValidatorResponse}
+        type: array
+        items:
+          $ref: '#/definitions/ZenidWeb.InvestigationValidatorResponse'
+      State:
+        description: State of the request - NotDone/Done/Error
+        enum:
+          - NotDone
+          - Done
+          - Error
+          - Operator
+          - Rejected
+          - Archived
+        type: string
+      ErrorCode:
+        description: If throght processing some error occurs, ErrorCode property is set.
+        enum:
+          - UnknownSampleID
+          - UnknownUploadSessionID
+          - EmptyBody
+          - InternalServerError
+          - InvalidTimeStamp
+          - SampleInInvalidState
+          - InvalidSampleCombination
+          - AccessDenied
+          - UnknownPerson
+          - InvalidInputData
+          - InitSDKRecreatesSessionError
+        type: string
+      ErrorText:
+        description: Error text
+        type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
+      MessageType:
+        type: string
+        readOnly: true
+  RecogLib.RankDetail:
+    type: object
+    properties:
+      Overall:
+        enum:
+          - A
+          - B
+          - F
+        type: string
+      Samples:
+        type: array
+        items:
+          $ref: '#/definitions/RecogLib.SampleOverview'
+      Conditions:
+        type: array
+        items:
+          $ref: '#/definitions/RecogLib.RankCondition'
+  ZenidWeb.InvestigationValidatorResponse:
+    type: object
+    properties:
+      Name:
+        type: string
+      Code:
+        format: int32
+        description: Code identification of validator in external system
+        type: integer
+      Score:
+        format: int32
+        description: Score of the validator for given input
+        type: integer
+      AcceptScore:
+        format: int32
+        description: Accept score - if score is higher than accept score, Validator response OK is set to true
+        type: integer
+      Issues:
+        description: Description of the issues of validation (why score is lower)
+        type: array
+        items:
+          $ref: '#/definitions/ZenidWeb.InvestigationIssueResponse'
+      Ok:
+        type: boolean
+  RecogLib.SampleOverview:
+    type: object
+    properties:
+      SampleType:
+        enum:
+          - DocumentPicture
+          - Selfie
+          - SelfieVideo
+          - DocumentVideo
+          - Archived
+          - Unknown
+        type: string
+      Page:
+        enum:
+          - F
+          - B
+        type: string
+      Rank:
+        description: Rank B or F indicates problems and it is recommended to take image again and re-upload
+        enum:
+          - A
+          - B
+          - F
+        type: string
+      DocumentCode:
+        enum:
+          - IDC1
+          - IDC2
+          - DRV
+          - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
+          - SK_IDC_2008plus
+          - SK_DRV_2004_08_09
+          - SK_DRV_2013
+          - SK_DRV_2015
+          - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
+          - SK_DRV_1993
+          - PL_IDC_2015
+          - DE_IDC_2010
+          - DE_IDC_2001
+          - HR_IDC_2013_15
+          - AT_IDE_2000
+          - HU_IDC_2000_01_12
+          - HU_IDC_2016
+          - AT_IDC_2002_05_10
+          - HU_ADD_2012
+          - AT_PAS_2006_14
+          - AT_DRV_2006
+          - AT_DRV_2013
+          - CZ_RES_2011_14
+          - CZ_RES_2006_T
+          - CZ_RES_2006_07
+          - CZ_GUN_2014
+          - HU_PAS_2006_12
+          - HU_DRV_2012_13
+          - HU_DRV_2012_B
+          - EU_EHIC_2004_A
+          - Unknown
+          - CZ_GUN_2017
+          - CZ_RES_2020
+          - PL_IDC_2019
+          - IT_PAS_2006_10
+          - INT_ISIC_2008
+          - DE_PAS
+          - DK_PAS
+          - ES_PAS
+          - FI_PAS
+          - FR_PAS
+          - GB_PAS
+          - IS_PAS
+          - NL_PAS
+          - RO_PAS
+          - SE_PAS
+          - PL_PAS
+          - PL_DRV_2013
+          - CZ_BIRTH
+          - CZ_VEHICLE_I
+          - INT_ISIC_2019
+          - SI_PAS
+          - SI_IDC
+          - SI_DRV
+          - EU_EHIC_2004_B
+          - PL_IDC_2001_02_13
+          - IT_IDC_2016
+          - HR_PAS_2009_15
+          - HR_DRV_2013
+          - HR_IDC_2003
+          - SI_DRV_2009
+          - BG_PAS_2010
+          - BG_IDC_2010
+          - BG_DRV_2010_13
+          - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
+        type: string
+      SampleID:
+        description: If SampleID is undefined, it means that validators require sample, but it miss
+        type: string
+  RecogLib.RankCondition:
+    type: object
+    properties:
+      Result:
+        enum:
+          - A
+          - B
+          - F
+        type: string
+      ConditionParamJson:
+        type: string
+      Type:
+        enum:
+          - FailedMrzAndNoBlurNoLowConfidence
+          - FailedMrzAndFontShape
+          - ExpirationAndFontShape
+          - BarcodeAndNoBlur
+          - BarcodeAndMrzMismatch
+          - Simple
+          - FontFailedNoBlur
+        type: string
+  ZenidWeb.InvestigationIssueResponse:
+    type: object
+    properties:
+      IssueUrl:
+        description: Url with detailed visualization of the issue.
+        type: string
+      IssueDescription:
+        description: Description of issue
+        type: string
+      DocumentCode:
+        description: Document code of sample, where issue is present
+        enum:
+          - IDC1
+          - IDC2
+          - DRV
+          - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
+          - SK_IDC_2008plus
+          - SK_DRV_2004_08_09
+          - SK_DRV_2013
+          - SK_DRV_2015
+          - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
+          - SK_DRV_1993
+          - PL_IDC_2015
+          - DE_IDC_2010
+          - DE_IDC_2001
+          - HR_IDC_2013_15
+          - AT_IDE_2000
+          - HU_IDC_2000_01_12
+          - HU_IDC_2016
+          - AT_IDC_2002_05_10
+          - HU_ADD_2012
+          - AT_PAS_2006_14
+          - AT_DRV_2006
+          - AT_DRV_2013
+          - CZ_RES_2011_14
+          - CZ_RES_2006_T
+          - CZ_RES_2006_07
+          - CZ_GUN_2014
+          - HU_PAS_2006_12
+          - HU_DRV_2012_13
+          - HU_DRV_2012_B
+          - EU_EHIC_2004_A
+          - Unknown
+          - CZ_GUN_2017
+          - CZ_RES_2020
+          - PL_IDC_2019
+          - IT_PAS_2006_10
+          - INT_ISIC_2008
+          - DE_PAS
+          - DK_PAS
+          - ES_PAS
+          - FI_PAS
+          - FR_PAS
+          - GB_PAS
+          - IS_PAS
+          - NL_PAS
+          - RO_PAS
+          - SE_PAS
+          - PL_PAS
+          - PL_DRV_2013
+          - CZ_BIRTH
+          - CZ_VEHICLE_I
+          - INT_ISIC_2019
+          - SI_PAS
+          - SI_IDC
+          - SI_DRV
+          - EU_EHIC_2004_B
+          - PL_IDC_2001_02_13
+          - IT_IDC_2016
+          - HR_PAS_2009_15
+          - HR_DRV_2013
+          - HR_IDC_2003
+          - SI_DRV_2009
+          - BG_PAS_2010
+          - BG_IDC_2010
+          - BG_DRV_2010_13
+          - HR_IDC_2021
+          - AT_IDC_2021
+          - DE_PAS_2007
+          - DE_DRV_2013_21
+          - DE_DRV_1999_01_04_11
+          - FR_IDC_2021
+          - FR_IDC_1988_94
+          - ES_PAS_2003_06
+          - ES_IDC_2015
+          - ES_IDC_2006
+          - IT_IDC_2004
+          - RO_IDC_2001_06_09_17_21
+          - NL_IDC_2014_17_21
+          - BE_PAS_2014_17_19
+          - BE_IDC_2013_15
+          - BE_IDC_2020_21
+          - GR_PAS_2020
+          - PT_PAS_2006_09
+          - PT_IDC_2007_08_09_15
+          - SE_IDC_2012_21
+          - FI_IDC_2017_21
+          - IE_PAS_2006_13
+          - LT_PAS_2008_09_11_19
+          - LT_IDC_2009_12
+          - LV_PAS_2015
+          - LV_PAS_2007
+          - LV_IDC_2012
+          - LV_IDC_2019
+          - EE_PAS_2014
+          - EE_PAS_2021
+          - EE_IDC_2011
+          - EE_IDC_2018_21
+          - CY_PAS_2010_20
+          - CY_IDC_2000_08
+          - CY_IDC_2015_20
+          - LU_PAS_2015
+          - LU_IDC_2014_21
+          - LU_IDC_2008_13
+          - MT_PAS_2008
+          - MT_IDC_2014
+          - PL_PAS_2011
+          - PL_DRV_1999
+          - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
         type: string
       FieldID:
         description: FieldID wher issue is present
@@ -1788,6 +3599,25 @@ definitions:
           - FiscalNumber
           - SocialNumber
           - AlternativeName
+          - VisaNumber
+          - Duration
+          - Type
+          - Count
+          - NamesOfParents
+          - NamesOfParents2
+          - HealthInsuranceNumber
+          - FathersBirthDate
+          - MothersBirthDate
+          - BirthCertificateNumber1
+          - BirthCertificateNumber2
+          - BirthCertificateNumber3
+          - BirthCertificateNumber4
+          - FathersBirthNumber
+          - MothersBirthNumber
+          - FathersSurnameBirthSurname
+          - MothersSurnameBirthSurname
+          - Authority3
+          - Sex2
         type: string
       SampleID:
         description: ID of the identification issue
@@ -1801,12 +3631,12 @@ definitions:
       SampleType:
         description: Type of sample
         enum:
-          - Unknown
-          - Selfie
           - DocumentPicture
+          - Selfie
           - SelfieVideo
           - DocumentVideo
           - Archived
+          - Unknown
         type: string
   ZenidWeb.DeletePersonResponse:
     type: object
@@ -1819,6 +3649,9 @@ definitions:
         type: array
         items:
           type: string
+      DeletedFacesWithoutCorrespondingSampleCount:
+        format: int32
+        type: integer
       ErrorCode:
         description: If throght processing some error occurs, ErrorCode property is set.
         enum:
@@ -1832,10 +3665,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -1855,10 +3692,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -1867,9 +3708,7 @@ definitions:
     type: object
     properties:
       Results:
-        description: >-
-          List of declarations of samples - ID, CustomData, UploadSessionID,
-          State
+        description: List of declarations of samples - ID, CustomData, UploadSessionID, State
         type: array
         items:
           $ref: '#/definitions/ZenidWeb.ListSamplesResponse.SampleItem'
@@ -1890,10 +3729,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -1904,9 +3747,7 @@ definitions:
         description: DB ID of given sample.
         type: string
       ParentSampleID:
-        description: >-
-          If the sample is subsample image created from primary one, this is the
-          ID of primary image
+        description: If the sample is subsample image created from primary one, this is the ID of primary image
         type: string
       CustomData:
         description: CustomData attribute (copied from Request)
@@ -1924,6 +3765,7 @@ definitions:
           - Error
           - Operator
           - Rejected
+          - Archived
         type: string
   ZenidWeb.ListInvestigationsResponse:
     description: Return value of api/investigation
@@ -1951,10 +3793,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -1977,6 +3823,7 @@ definitions:
           - Error
           - Operator
           - Rejected
+          - Archived
         type: string
   ZenidWeb.ListProfilesResponse:
     description: Return value of api/profiles
@@ -2000,10 +3847,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -2026,15 +3877,23 @@ definitions:
         type: array
         items:
           enum:
+            - IDC1
             - IDC2
             - DRV
-            - IDC1
             - PAS
+            - EU_VIS_2019
+            - CZ_BIRTH_A2
+            - CZ_BIRTH_A3
+            - CZ_BIRTH_A4
+            - CZ_RES_2020_A2
             - SK_IDC_2008plus
             - SK_DRV_2004_08_09
             - SK_DRV_2013
             - SK_DRV_2015
             - SK_PAS_2008_14
+            - SK_RES_2011
+            - SK_RES_2020
+            - SK_IDC_2022
             - SK_DRV_1993
             - PL_IDC_2015
             - DE_IDC_2010
@@ -2108,7 +3967,6 @@ definitions:
             - BE_IDC_2020_21
             - GR_PAS_2020
             - PT_PAS_2006_09
-            - PT_PAS_2017
             - PT_IDC_2007_08_09_15
             - SE_IDC_2012_21
             - FI_IDC_2017_21
@@ -2134,6 +3992,62 @@ definitions:
             - PL_PAS_2011
             - PL_DRV_1999
             - LT_IDC_2021
+            - UA_PAS_2007_15
+            - UA_IDC_2017
+            - UA_DRV_2016
+            - UA_DRV_2005
+            - UA_DRV_2021
+            - EU_EHIC_2004_C
+            - VN_PAS_2005
+            - NL_DRV_2006
+            - NL_DRV_2013
+            - NL_DRV_2014
+            - AL_PAS_2009
+            - BA_PAS_2014
+            - CH_PAS_2010
+            - ME_PAS_2008
+            - MK_PAS_2007
+            - RS_PAS_2008
+            - NO_PAS_2011_15
+            - NO_PAS_2020
+            - GB_PAS_2010_11_15_19
+            - BY_PAS_2006
+            - BY_PAS_2021
+            - MD_PAS_2011_14_18
+            - IS_PAS_2006
+            - IN_PAS_2000_13
+            - TR_PAS_2010
+            - TR_PAS_2018
+            - RO_IDC_2021sep
+            - PL_DRV_1999_A2
+            - DE_IDC_2010_A2
+            - DE_IDC_2010_A3
+            - PL_DRV_2013_A2
+            - AT_IDC_2002_05_10_A2
+            - CY_IDC_2015_20_A2
+            - CY_IDC_2000_08_A2
+            - CY_PAS_2010_20_A2
+            - ES_PAS_2003_06_A2
+            - LU_IDC_2008_13_A2
+            - NL_IDC_2014_17_21_A2
+            - SE_IDC_2022
+            - SE_PAS_2022
+            - DK_PAS_2021
+            - CH_PAS_2022
+            - VN_PAS_2022
+            - ME_PAS_2008_A2
+            - OL_IDC_2022
+            - SM_PAS_2006
+            - AD_PAS_2017
+            - BE_PAS_2022
+            - RU_PAS_2006_10
+            - TR_PAS_2023
+            - DO_IDC_2014
+            - LI_PAS_2006
+            - VA_PAS_2013
+            - US_PAS_2006
+            - JP_PAS_2013
+            - PK_PAS_2022
           type: string
       ErrorCode:
         description: If throght processing some error occurs, ErrorCode property is set.
@@ -2148,10 +4062,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -2195,10 +4113,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -2234,10 +4156,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -2253,15 +4179,23 @@ definitions:
     properties:
       DocumentCode:
         enum:
+          - IDC1
           - IDC2
           - DRV
-          - IDC1
           - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -2335,7 +4269,6 @@ definitions:
           - BE_IDC_2020_21
           - GR_PAS_2020
           - PT_PAS_2006_09
-          - PT_PAS_2017
           - PT_IDC_2007_08_09_15
           - SE_IDC_2012_21
           - FI_IDC_2017_21
@@ -2361,6 +4294,62 @@ definitions:
           - PL_PAS_2011
           - PL_DRV_1999
           - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
         type: string
       CardNumber:
         type: string
@@ -2384,10 +4373,14 @@ definitions:
           - AccessDenied
           - UnknownPerson
           - InvalidInputData
+          - InitSDKRecreatesSessionError
         type: string
       ErrorText:
         description: Error text
         type: string
+      ProcessingTimeMs:
+        format: int64
+        type: integer
       MessageType:
         type: string
         readOnly: true
@@ -2398,15 +4391,23 @@ definitions:
         type: boolean
       DocumentCode:
         enum:
+          - IDC1
           - IDC2
           - DRV
-          - IDC1
           - PAS
+          - EU_VIS_2019
+          - CZ_BIRTH_A2
+          - CZ_BIRTH_A3
+          - CZ_BIRTH_A4
+          - CZ_RES_2020_A2
           - SK_IDC_2008plus
           - SK_DRV_2004_08_09
           - SK_DRV_2013
           - SK_DRV_2015
           - SK_PAS_2008_14
+          - SK_RES_2011
+          - SK_RES_2020
+          - SK_IDC_2022
           - SK_DRV_1993
           - PL_IDC_2015
           - DE_IDC_2010
@@ -2480,7 +4481,6 @@ definitions:
           - BE_IDC_2020_21
           - GR_PAS_2020
           - PT_PAS_2006_09
-          - PT_PAS_2017
           - PT_IDC_2007_08_09_15
           - SE_IDC_2012_21
           - FI_IDC_2017_21
@@ -2506,6 +4506,62 @@ definitions:
           - PL_PAS_2011
           - PL_DRV_1999
           - LT_IDC_2021
+          - UA_PAS_2007_15
+          - UA_IDC_2017
+          - UA_DRV_2016
+          - UA_DRV_2005
+          - UA_DRV_2021
+          - EU_EHIC_2004_C
+          - VN_PAS_2005
+          - NL_DRV_2006
+          - NL_DRV_2013
+          - NL_DRV_2014
+          - AL_PAS_2009
+          - BA_PAS_2014
+          - CH_PAS_2010
+          - ME_PAS_2008
+          - MK_PAS_2007
+          - RS_PAS_2008
+          - NO_PAS_2011_15
+          - NO_PAS_2020
+          - GB_PAS_2010_11_15_19
+          - BY_PAS_2006
+          - BY_PAS_2021
+          - MD_PAS_2011_14_18
+          - IS_PAS_2006
+          - IN_PAS_2000_13
+          - TR_PAS_2010
+          - TR_PAS_2018
+          - RO_IDC_2021sep
+          - PL_DRV_1999_A2
+          - DE_IDC_2010_A2
+          - DE_IDC_2010_A3
+          - PL_DRV_2013_A2
+          - AT_IDC_2002_05_10_A2
+          - CY_IDC_2015_20_A2
+          - CY_IDC_2000_08_A2
+          - CY_PAS_2010_20_A2
+          - ES_PAS_2003_06_A2
+          - LU_IDC_2008_13_A2
+          - NL_IDC_2014_17_21_A2
+          - SE_IDC_2022
+          - SE_PAS_2022
+          - DK_PAS_2021
+          - CH_PAS_2022
+          - VN_PAS_2022
+          - ME_PAS_2008_A2
+          - OL_IDC_2022
+          - SM_PAS_2006
+          - AD_PAS_2017
+          - BE_PAS_2022
+          - RU_PAS_2006_10
+          - TR_PAS_2023
+          - DO_IDC_2014
+          - LI_PAS_2006
+          - VA_PAS_2013
+          - US_PAS_2006
+          - JP_PAS_2013
+          - PK_PAS_2022
         type: string
       CardNumber:
         type: string

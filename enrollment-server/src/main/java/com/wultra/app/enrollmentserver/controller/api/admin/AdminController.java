@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Admin controller.
@@ -71,7 +72,21 @@ public class AdminController {
                 .message(source.getMessage())
                 .language(source.getLanguage())
                 .attributes(convert(source.getAttributes()))
+                .resultTexts(convertResultTexts(source.getResultTexts()))
                 .build();
+    }
+
+    private Map<String, String> convertResultTexts(final String source) {
+        if (!StringUtils.hasText(source)) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(source, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            logger.warn("Unable to convert resultTexts, returning an empty collection", e);
+            return Map.of();
+        }
     }
 
     private List<Object> convert(final String source) {

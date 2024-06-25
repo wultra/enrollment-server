@@ -29,6 +29,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
+
+import java.time.Duration;
 
 /**
  * PowerAuth service configuration class.
@@ -48,6 +51,12 @@ public class PowerAuthWebServiceConfiguration {
     @Value("${powerauth.service.url}")
     private String powerAuthServiceUrl;
 
+    @Value("${powerauth.service.restClientConfig.responseTimeout}")
+    private Duration powerAuthServiceTimeout;
+
+    @Value("${powerauth.service.restClientConfig.maxIdleTime}")
+    private Duration powerAuthServiceMaxIdleTime;
+
     @Value("${powerauth.service.security.clientToken}")
     private String clientToken;
 
@@ -55,22 +64,18 @@ public class PowerAuthWebServiceConfiguration {
     private String clientSecret;
 
     @Bean
-    public PowerAuthClient powerAuthClient() {
-        try {
-            // Endpoint security is on
-            if (clientToken != null && !clientToken.isEmpty()) {
-                PowerAuthRestClientConfiguration config = new PowerAuthRestClientConfiguration();
-                config.setPowerAuthClientToken(clientToken);
-                config.setPowerAuthClientSecret(clientSecret);
-                return new PowerAuthRestClient(powerAuthServiceUrl, config);
-            } else {
-                return new PowerAuthRestClient(powerAuthServiceUrl);
-            }
-        } catch (PowerAuthClientException ex) {
-            // Log the error in case Rest client initialization failed
-            logger.error(ex.getMessage(), ex);
-            return null;
+    public PowerAuthClient powerAuthClient() throws PowerAuthClientException {
+        final PowerAuthRestClientConfiguration config = new PowerAuthRestClientConfiguration();
+        config.setResponseTimeout(powerAuthServiceTimeout);
+        config.setMaxIdleTime(powerAuthServiceMaxIdleTime);
+
+        if (StringUtils.hasText(clientToken)) {
+            logger.info("Configuring security for PowerAuthRestClient.");
+            config.setPowerAuthClientToken(clientToken);
+            config.setPowerAuthClientSecret(clientSecret);
         }
+
+        return new PowerAuthRestClient(powerAuthServiceUrl, config);
     }
 
 }

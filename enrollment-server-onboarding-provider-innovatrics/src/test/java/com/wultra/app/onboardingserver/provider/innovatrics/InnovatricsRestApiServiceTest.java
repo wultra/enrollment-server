@@ -51,7 +51,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 class InnovatricsRestApiServiceTest {
 
-    static final int PORT = 52936;
+    // TODO (racansky, 2024-06-17) find the way how to set the same random port for mock server and property
+    static final int PORT = 52937;
 
     @Autowired
     private InnovatricsApiService tested;

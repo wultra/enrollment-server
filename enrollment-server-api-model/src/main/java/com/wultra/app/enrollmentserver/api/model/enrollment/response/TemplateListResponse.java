@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Template list response.
@@ -36,6 +37,6 @@ public class TemplateListResponse extends ArrayList<TemplateListResponse.Templat
     private static final long serialVersionUID = -5446919236567435144L;
 
     @Builder
-    public record TemplateDetail(String name, String title, String message, List<Object> attributes, String language) {
+    public record TemplateDetail(String name, String title, String message, List<Object> attributes, String language, Map<String, String> resultTexts) {
     }
 }
