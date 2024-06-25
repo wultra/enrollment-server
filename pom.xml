@@ -96,10 +96,10 @@
         <springdoc-openapi-starter-webmvc-ui.version>2.5.0</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.4</moneta.version>
 
-        <wultra-core.version>1.10.0-SNAPSHOT</wultra-core.version>
-        <powerauth-crypto.version>1.8.0-SNAPSHOT</powerauth-crypto.version>
-        <powerauth-restful-integration.version>1.8.0-SNAPSHOT</powerauth-restful-integration.version>
-        <powerauth-push.version>1.8.0-SNAPSHOT</powerauth-push.version>
+        <wultra-core.version>1.10.0</wultra-core.version>
+        <powerauth-crypto.version>1.8.0</powerauth-crypto.version>
+        <powerauth-restful-integration.version>1.8.0</powerauth-restful-integration.version>
+        <powerauth-push.version>1.8.0</powerauth-push.version>
 
         <logstash.version>7.4</logstash.version>
     </properties>
