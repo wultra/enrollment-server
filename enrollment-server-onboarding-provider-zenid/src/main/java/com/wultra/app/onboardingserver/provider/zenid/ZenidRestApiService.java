@@ -287,7 +287,7 @@ class ZenidRestApiService {
 
     private ZenidWebUploadSampleResponse.SampleTypeEnum toSampleType(DocumentType type) {
         return switch (type) {
-            case ID_CARD, DRIVING_LICENSE, PASSPORT -> ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENTPICTURE;
+            case ID_CARD, DRIVING_LICENSE, PASSPORT -> ZenidWebUploadSampleResponse.SampleTypeEnum.DOCUMENT_PICTURE;
             case SELFIE_PHOTO -> ZenidWebUploadSampleResponse.SampleTypeEnum.SELFIE;
             default -> throw new IllegalStateException("Not supported documentType: " + type);
         };

@@ -75,13 +75,13 @@
                             <generateModelDocumentation>false</generateModelDocumentation>
                             <generateModels>true</generateModels>
                             <generateModelTests>false</generateModelTests>
-                            <generateSupportingFiles>false</generateSupportingFiles>
                             <skipValidateSpec>true</skipValidateSpec>
                             <configOptions>
                                 <library>native</library>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <modelPackage>com.wultra.app.onboardingserver.provider.iproov.model.api</modelPackage>
                                 <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
                             </configOptions>
                         </configuration>
                     </execution>
