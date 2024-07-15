@@ -297,7 +297,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
             }
             handleLicenceError(response.getErrorCode(), response.getErrorText());
 
-            if (ZenidWebDeleteSampleResponse.ErrorCodeEnum.UNKNOWNSAMPLEID.equals(response.getErrorCode())) {
+            if (ZenidWebDeleteSampleResponse.ErrorCodeEnum.UNKNOWN_SAMPLE_ID.equals(response.getErrorCode())) {
                 logger.info("Cleanup of an unknown document with uploadId={}", uploadId);
             } else if (response.getErrorCode() != null) {
                 throw new DocumentVerificationException(
@@ -387,7 +387,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 logger.info("No data extracted from {} in ZenID, defaulting to empty json data, {}", uploadContext, id);
                 documentSubmitResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
             }
-        } else if (state == ZenidWebUploadSampleResponse.StateEnum.NOTDONE) {
+        } else if (state == ZenidWebUploadSampleResponse.StateEnum.NOT_DONE) {
             logger.debug("Document upload of {} is still in progress in ZenID, {}", uploadContext, id);
         } else if (state == ZenidWebUploadSampleResponse.StateEnum.REJECTED) {
             logger.debug("Document upload of {} is rejected in ZenID, {}, {}", uploadContext, response.getErrorText(), id);
@@ -572,7 +572,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         return switch (stateEnum) {
             case DONE, ARCHIVED -> DocumentVerificationStatus.ACCEPTED;
             case ERROR -> DocumentVerificationStatus.FAILED;
-            case NOTDONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
+            case NOT_DONE, OPERATOR -> DocumentVerificationStatus.IN_PROGRESS;
             case REJECTED -> DocumentVerificationStatus.REJECTED;
         };
     }
