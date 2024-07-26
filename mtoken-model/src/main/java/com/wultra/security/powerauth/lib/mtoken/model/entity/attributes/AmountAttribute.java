@@ -45,12 +45,11 @@ public class AmountAttribute extends Attribute {
     /**
      * No-arg constructor.
      */
-    AmountAttribute() {
-        super(Type.AMOUNT);
+    private AmountAttribute() {
+        super();
     }
 
     protected AmountAttribute(final Builder builder) {
-        this();
         this.id = builder.id;
         this.label = builder.label;
         this.amount = builder.amount;

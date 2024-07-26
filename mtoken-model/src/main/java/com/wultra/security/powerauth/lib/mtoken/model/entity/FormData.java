@@ -39,4 +39,6 @@ public class FormData {
     @NotNull
     private List<Attribute> attributes = new ArrayList<>();
 
+    private ResultTexts resultTexts;
+
 }

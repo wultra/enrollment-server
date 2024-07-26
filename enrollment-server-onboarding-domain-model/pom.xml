@@ -30,19 +30,13 @@
     <parent>
         <groupId>com.wultra.security</groupId>
         <artifactId>enrollment-server-parent</artifactId>
-        <version>1.7.0</version>
+        <version>1.8.0</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>io.getlime.security</groupId>
             <artifactId>powerauth-java-crypto</artifactId>
-        </dependency>
-
-        <!-- Bouncy Castle -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->

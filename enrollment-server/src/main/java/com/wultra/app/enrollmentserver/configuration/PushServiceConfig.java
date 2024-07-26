@@ -18,11 +18,11 @@
 
 package com.wultra.app.enrollmentserver.configuration;
 
+import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
+import com.wultra.core.rest.client.base.RestClientConfiguration;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,22 +32,17 @@ import org.springframework.context.annotation.Configuration;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Configuration
+@Slf4j
+@ConditionalOnPropertyNotEmpty("powerauth.push.service.url")
 public class PushServiceConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(PushServiceConfig.class);
-
-    @Value("${powerauth.push.service.url:}")
-    private String powerAuthPushServiceUrl;
-
     @Bean
-    public PushServerClient pushServerClient() {
-        try {
-            return new PushServerClient(powerAuthPushServiceUrl);
-        } catch (PushServerClientException ex) {
-            // Log the error in case Rest client initialization failed
-            logger.error(ex.getMessage(), ex);
-            return null;
-        }
+    public PushServerClient pushServerClient(final PushServiceConfigProperties pushServiceProperties) throws PushServerClientException {
+        final String url = pushServiceProperties.getUrl();
+        logger.info("Configuring PushServerClient for URL: {}", url);
+        final RestClientConfiguration restClientConfig = pushServiceProperties.getRestClientConfig();
+        restClientConfig.setBaseUrl(url);
+        return new PushServerClient(restClientConfig);
     }
 
 }

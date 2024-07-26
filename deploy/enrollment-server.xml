@@ -19,11 +19,15 @@
 
     <!-- PowerAuth Service Configuration -->
     <Parameter name="powerauth.service.url" value="${ENROLLMENT_SERVER_POWERAUTH_SERVICE_URL:http://localhost:8080/powerauth-java-server/rest}"/>
+    <Parameter name="powerauth.service.restClientConfig.responseTimeout" value="${ENROLLMENT_SERVER_POWERAUTH_SERVICE_RESPONSE_TIMEOUT:60s}"/>
+    <Parameter name="powerauth.service.restClientConfig.maxIdleTime" value="${ENROLLMENT_SERVER_POWERAUTH_SERVICE_MAX_IDLE_TIME:200s}"/>
     <Parameter name="powerauth.service.security.clientToken" value="${ENROLLMENT_SERVER_SECURITY_CLIENT_TOKEN:}"/>
     <Parameter name="powerauth.service.security.clientSecret" value="${ENROLLMENT_SERVER_SECURITY_CLIENT_SECRET:}"/>
 
     <!-- PowerAuth Push Service Configuration -->
     <Parameter name="powerauth.push.service.url" value="${ENROLLMENT_SERVER_PUSH_SERVER_URL:}"/>
+    <Parameter name="powerauth.push.service.restClientConfig.responseTimeout" value="${ENROLLMENT_SERVER_PUSH_SERVER_RESPONSE_TIMEOUT:60s}"/>
+    <Parameter name="powerauth.push.service.restClientConfig.maxIdleTime" value="${ENROLLMENT_SERVER_PUSH_SERVER__MAX_IDLE_TIME:200s}"/>
 
     <!-- Enrollment Server Configuration -->
     <Parameter name="enrollment-server.mtoken.enabled" value="${ENROLLMENT_SERVER_MTOKEN_ENABLED:true}"/>

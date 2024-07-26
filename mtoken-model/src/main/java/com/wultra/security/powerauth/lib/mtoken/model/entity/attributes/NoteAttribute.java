@@ -33,10 +33,10 @@ public class NoteAttribute extends Attribute {
     private String note;
 
     /**
-     * Default constructor.
+     * No-arg constructor.
      */
-    public NoteAttribute() {
-        super(Type.NOTE);
+    private NoteAttribute() {
+        super();
     }
 
     /**
@@ -46,7 +46,6 @@ public class NoteAttribute extends Attribute {
      * @param note Note.
      */
     public NoteAttribute(String id, String label, String note) {
-        this();
         this.id = id;
         this.label = label;
         this.note = note;

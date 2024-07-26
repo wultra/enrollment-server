@@ -170,6 +170,110 @@ class MobileTokenConverterTest {
     }
 
     @Test
+    void testConvertUiTemplates() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "flipButtons": false,
+                  "blockApprovalOnCall": true,
+                  "templates": {
+                    "list": {
+                      "title": null,
+                      "message": "operation.amount",
+                      "image": null,
+                      "style": "POSITIVE"
+                    },
+                    "history": null,
+                    "detail": {
+                      "style": null,
+                      "headerSection": false,
+                      "sections": [
+                        {
+                          "style": "MONEY",
+                          "cells": [
+                            {
+                              "name": "operation.amount",
+                              "visibleTitle": false,
+                              "style": null,
+                              "canCopy": true,
+                              "collapsable": "NO"
+                            },
+                            {
+                              "name": "operation.conversion",
+                              "style": null,
+                              "canCopy": true,
+                              "collapsable": "NO"
+                            },
+                            {
+                              "name": "operation.conversion2",
+                              "visibleTitle": true,
+                              "style": null,
+                              "canCopy": false,
+                              "collapsable": "COLLAPSED"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+                """);
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final Map<String, Object> expectedPayload = new HashMap<>() {{
+            put("list", new HashMap<String, String>() {{
+                put("title", null);
+                put("message", "operation.amount");
+                put("image", null);
+                put("style", "POSITIVE");
+            }});
+            put("history", null);
+            put("detail", new HashMap<String, Object>() {{
+                put("style", null);
+                put("headerSection", false);
+                put("sections", List.of(
+                        Map.of(
+                                "style", "MONEY",
+                                "cells", List.of(
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.amount");
+                                            put("visibleTitle", false);
+                                            put("style", null);
+                                            put("canCopy", true);
+                                            put("collapsable", "NO");
+                                        }},
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.conversion");
+                                            put("style", null);
+                                            put("canCopy", true);
+                                            put("collapsable", "NO");
+                                        }},
+                                        new HashMap<String, Object>() {{
+                                            put("name", "operation.conversion2");
+                                            put("visibleTitle", true);
+                                            put("style", null);
+                                            put("canCopy", false);
+                                            put("collapsable", "COLLAPSED");
+                                        }}
+                                )
+                        )
+                ));
+            }});
+        }};
+
+        assertThat(result)
+                .isNotNull()
+                .extracting(Operation::getUi)
+                .isNotNull()
+                .extracting(UiExtensions::getTemplates)
+                .isNotNull()
+                .isEqualTo(expectedPayload);
+    }
+
+    @Test
     void testConvertUiPostApprovalMerchantRedirect() throws Exception {
         final OperationDetailResponse operationDetail = createOperationDetailResponse();
 
@@ -470,6 +574,8 @@ class MobileTokenConverterTest {
 
         LocaleContextHolder.setLocale(new Locale("en"));
         final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNull(result.getFormData().getResultTexts());
 
         final List<Attribute> attributes = result.getFormData().getAttributes();
 
@@ -775,6 +881,40 @@ class MobileTokenConverterTest {
         assertNotNull(attributes);
         assertEquals(1, attributes.size());
         assertEquals("operation.amount", attributes.get(0).getId());
+    }
+
+    @Test
+    void testConvertFormData() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setParameters(Map.ofEntries(
+                Map.entry("amount", "13.7"),
+                Map.entry("currency", "EUR"),
+                Map.entry("iban", "AT483200000012345864")
+        ));
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setTitle("Payment to ${iban}");
+        operationTemplate.setMessage("Pay ${amount} ${currency}");
+        operationTemplate.setResultTexts("""
+                {
+                  "success": "Payment of ${amount} ${currency} was confirmed",
+                  "reject": "Payment was rejected",
+                  "failure": "Payment approval failed"
+                }
+                """);
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        final FormData formData = result.getFormData();
+
+        assertEquals("Payment to AT483200000012345864", formData.getTitle());
+        assertEquals("Pay 13.7 EUR", formData.getMessage());
+
+        final ResultTexts resultTexts = formData.getResultTexts();
+        assertNotNull(resultTexts);
+        assertEquals("Payment of 13.7 EUR was confirmed", resultTexts.getSuccess());
+        assertEquals("Payment was rejected", resultTexts.getReject());
+        assertEquals("Payment approval failed", resultTexts.getFailure());
     }
 
     private static OperationDetailResponse createOperationDetailResponse() {
