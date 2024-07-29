@@ -101,7 +101,7 @@
         <powerauth-restful-integration.version>1.9.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>1.9.0-SNAPSHOT</powerauth-push.version>
 
-        <logstash.version>7.4</logstash.version>
+        <logstash.version>8.0</logstash.version>
     </properties>
 
     <dependencyManagement>
