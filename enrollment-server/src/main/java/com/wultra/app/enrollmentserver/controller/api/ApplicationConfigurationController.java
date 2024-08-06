@@ -27,6 +27,8 @@ import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncrypt
 import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,7 +59,13 @@ public class ApplicationConfigurationController {
      */
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     @PostMapping("oidc")
-    public ObjectResponse<OidcApplicationConfigurationResponse> fetchOidcConfiguration(@EncryptedRequestBody OidcApplicationConfigurationRequest request, EncryptionContext encryptionContext) throws PowerAuthApplicationConfigurationException, PowerAuthEncryptionException {
+    @Operation(
+            summary = "Fetch OIDC application configuration.",
+            description = "Fetch OIDC application configuration."
+    )
+    public ObjectResponse<OidcApplicationConfigurationResponse> fetchOidcConfiguration(
+            @EncryptedRequestBody OidcApplicationConfigurationRequest request,
+            @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthApplicationConfigurationException, PowerAuthEncryptionException {
         if (encryptionContext == null) {
             logger.error("Encryption failed");
             throw new PowerAuthEncryptionException("Encryption failed");
