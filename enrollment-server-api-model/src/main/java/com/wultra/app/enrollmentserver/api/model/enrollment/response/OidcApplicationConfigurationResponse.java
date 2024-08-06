@@ -19,8 +19,6 @@ package com.wultra.app.enrollmentserver.api.model.enrollment.response;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * Response object for OIDC application configuration.
  *
@@ -31,7 +29,7 @@ public class OidcApplicationConfigurationResponse {
 
     private String providerId;
     private String clientId;
-    private List<String> scopes;
+    private String scopes;
     private String authorizeUri;
     private String redirectUri;
 

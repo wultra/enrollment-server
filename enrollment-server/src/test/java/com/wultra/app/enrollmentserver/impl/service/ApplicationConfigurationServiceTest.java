@@ -32,8 +32,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -80,7 +78,7 @@ class ApplicationConfigurationServiceTest {
 
         assertEquals("xyz999", result.getProviderId());
         assertEquals("jabberwocky", result.getClientId());
-        assertEquals(List.of("openid"), result.getScopes());
+        assertEquals("openid", result.getScopes());
         assertEquals("https://redirect.example.com", result.getRedirectUri());
         assertEquals("https://authorize.example.com", result.getAuthorizeUri());
     }
@@ -124,9 +122,7 @@ class ApplicationConfigurationServiceTest {
                            "providerId": "abc123",
                            "clientId": "1234567890abcdef",
                            "clientSecret": "top secret",
-                           "scopes": [
-                             "openid"
-                           ],
+                           "scopes": "openid",
                            "authorizeUri": "https://...",
                            "redirectUri": "https://...",
                            "tokenUri": "https://...",
@@ -136,9 +132,7 @@ class ApplicationConfigurationServiceTest {
                            "providerId": "xyz999",
                            "clientId": "jabberwocky",
                            "clientSecret": "top secret",
-                           "scopes": [
-                             "openid"
-                           ],
+                           "scopes": "openid",
                            "authorizeUri": "https://authorize.example.com",
                            "redirectUri": "https://redirect.example.com",
                            "tokenUri": "https://...",
