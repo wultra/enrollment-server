@@ -148,6 +148,18 @@ public class DefaultExceptionHandler {
     }
 
     /**
+     * Handling of application configuration exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(PowerAuthApplicationConfigurationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleActivationCodeException(PowerAuthApplicationConfigurationException ex) {
+        logger.warn("Unable to fetch application configuration", ex);
+        return new ErrorResponse("APPLICATION_CONFIGURATION_ERROR", "Unable to fetch application configuration.");
+    }
+
+    /**
      * Handling of inbox exceptions.
      * @param ex Exception.
      * @return Response with error details.
