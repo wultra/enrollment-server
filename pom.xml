@@ -88,7 +88,7 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.7.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.8.0</openapi-generator-maven-plugin.version>
 
         <shedlock.version>5.15.1</shedlock.version>
         <spring-statemachine.version>4.0.0</spring-statemachine.version>
