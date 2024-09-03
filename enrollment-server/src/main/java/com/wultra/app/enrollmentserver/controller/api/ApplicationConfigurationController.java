@@ -19,14 +19,16 @@ package com.wultra.app.enrollmentserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.enrollment.request.OidcApplicationConfigurationRequest;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.OidcApplicationConfigurationResponse;
-import com.wultra.app.enrollmentserver.errorhandling.PowerAuthApplicationConfigurationException;
-import com.wultra.app.enrollmentserver.impl.service.ApplicationConfigurationService;
 import io.getlime.core.rest.model.base.response.ObjectResponse;
 import io.getlime.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import io.getlime.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionScope;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthApplicationConfigurationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.getlime.security.powerauth.rest.api.spring.service.oidc.OidcApplicationConfiguration;
+import io.getlime.security.powerauth.rest.api.spring.service.oidc.OidcApplicationConfigurationService;
+import io.getlime.security.powerauth.rest.api.spring.service.oidc.OidcConfigurationQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
@@ -46,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ApplicationConfigurationController {
 
-    private ApplicationConfigurationService applicationConfigurationService;
+    private OidcApplicationConfigurationService oidcApplicationConfigurationService;
 
     /**
      * Fetch OIDC application configuration.
@@ -65,17 +67,28 @@ public class ApplicationConfigurationController {
     )
     public ObjectResponse<OidcApplicationConfigurationResponse> fetchOidcConfiguration(
             @EncryptedRequestBody OidcApplicationConfigurationRequest request,
-            @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthApplicationConfigurationException, PowerAuthEncryptionException {
+            @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, PowerAuthApplicationConfigurationException {
 
         if (encryptionContext == null) {
             logger.error("Encryption failed");
             throw new PowerAuthEncryptionException("Encryption failed");
         }
 
-        final OidcApplicationConfigurationResponse result = applicationConfigurationService.fetchOidcApplicationConfiguration(ApplicationConfigurationService.OidcQuery.builder()
+        final OidcApplicationConfiguration oidcApplicationConfiguration = oidcApplicationConfigurationService.fetchOidcApplicationConfiguration(OidcConfigurationQuery.builder()
                 .providerId(request.getProviderId())
                 .applicationKey(encryptionContext.getApplicationKey())
                 .build());
+        final OidcApplicationConfigurationResponse result = convert(oidcApplicationConfiguration);
         return new ObjectResponse<>(result);
+    }
+
+    private static OidcApplicationConfigurationResponse convert(final OidcApplicationConfiguration source) {
+        final OidcApplicationConfigurationResponse target = new OidcApplicationConfigurationResponse();
+        target.setClientId(source.getClientId());
+        target.setAuthorizeUri(source.getAuthorizeUri());
+        target.setScopes(source.getScopes());
+        target.setRedirectUri(source.getRedirectUri());
+        target.setProviderId(source.getProviderId());
+        return target;
     }
 }

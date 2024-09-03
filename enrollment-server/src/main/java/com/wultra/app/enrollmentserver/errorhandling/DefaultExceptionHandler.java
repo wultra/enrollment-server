@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.errorhandling;
 
 import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthApplicationConfigurationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
