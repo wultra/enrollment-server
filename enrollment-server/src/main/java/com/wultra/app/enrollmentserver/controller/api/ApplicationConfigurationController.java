@@ -89,6 +89,7 @@ public class ApplicationConfigurationController {
         target.setScopes(source.getScopes());
         target.setRedirectUri(source.getRedirectUri());
         target.setProviderId(source.getProviderId());
+        target.setPkceEnabled(source.isPkceEnabled());
         return target;
     }
 }
