@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.errorhandling;
 
 import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import io.getlime.core.rest.model.base.response.ErrorResponse;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthApplicationConfigurationException;
 import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -145,6 +146,18 @@ public class DefaultExceptionHandler {
     public @ResponseBody ErrorResponse handleActivationCodeException(ActivationCodeException ex) {
         logger.warn("Unable to fetch activation code", ex);
         return new ErrorResponse("ACTIVATION_CODE_FAILED", "Unable to fetch activation code.");
+    }
+
+    /**
+     * Handling of application configuration exceptions.
+     * @param ex Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(PowerAuthApplicationConfigurationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleActivationCodeException(PowerAuthApplicationConfigurationException ex) {
+        logger.warn("Unable to fetch application configuration", ex);
+        return new ErrorResponse("APPLICATION_CONFIGURATION_ERROR", "Unable to fetch application configuration.");
     }
 
     /**
