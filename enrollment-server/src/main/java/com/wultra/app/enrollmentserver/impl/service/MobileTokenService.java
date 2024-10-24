@@ -144,7 +144,7 @@ public class MobileTokenService {
      */
     public Response operationApprove(@NotNull final OperationApproveParameterObject request) throws MobileTokenException, PowerAuthClientException {
 
-        final OperationDetailResponse operationDetail = claimOperationInternal(request.getOperationId(), null);
+        final OperationDetailResponse operationDetail = getOperationDetailInternal(request.getOperationId());
 
         final String activationFlag = operationDetail.getActivationFlag();
         if (activationFlag != null && !request.getActivationFlags().contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
@@ -297,7 +297,7 @@ public class MobileTokenService {
      * @throws MobileTokenException In case the operation is in incorrect state.
      * @throws MobileTokenConfigurationException In case operation template is not configured correctly.
      */
-    public Operation claimOperation(String operationId, String language, String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
+    public Operation claimOperation(@NotNull String operationId, @NotNull String language, @NotNull String userId) throws MobileTokenException, PowerAuthClientException, MobileTokenConfigurationException {
         final OperationDetailResponse operationDetail = claimOperationInternal(operationId, userId);
         return convertOperation(language, operationDetail);
     }
@@ -312,7 +312,7 @@ public class MobileTokenService {
      * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
      * @throws MobileTokenException When the operation is in incorrect state.
      */
-    private OperationDetailResponse getOperationDetailInternal(String operationId) throws PowerAuthClientException, MobileTokenException {
+    private OperationDetailResponse getOperationDetailInternal(@NotNull String operationId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
@@ -325,15 +325,15 @@ public class MobileTokenService {
     }
 
     /**
-     * Get operation detail by calling PowerAuth Server.
+     * Claim the operation by calling operation detail on PowerAuth Server.
      *
      * @param operationId Operation ID.
-     * @param userId Optional user ID for operation claim.
+     * @param userId User ID for operation claim.
      * @return Operation detail.
      * @throws PowerAuthClientException In case communication with PowerAuth Server fails.
      * @throws MobileTokenException When the operation is in incorrect state.
      */
-    private OperationDetailResponse claimOperationInternal(String operationId, String userId) throws PowerAuthClientException, MobileTokenException {
+    private OperationDetailResponse claimOperationInternal(@NotNull String operationId, @NotNull String userId) throws PowerAuthClientException, MobileTokenException {
         final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
         operationDetailRequest.setOperationId(operationId);
         operationDetailRequest.setUserId(userId);
