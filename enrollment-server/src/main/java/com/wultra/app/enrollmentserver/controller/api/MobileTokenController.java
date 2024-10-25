@@ -162,15 +162,15 @@ public class MobileTokenController {
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
             PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
     })
-    public ObjectResponse<Operation> getOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
-                                                        @Parameter(hidden = true) PowerAuthApiAuthentication auth,
-                                                        @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
+    public ObjectResponse<Operation> fetchOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
+                                                          @Parameter(hidden = true) PowerAuthApiAuthentication auth,
+                                                          @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
             if (auth != null) {
                 final String operationId = request.getRequestObject().getId();
                 final String language = locale.getLanguage();
                 final String userId = auth.getUserId();
-                final Operation response = mobileTokenService.getOperationDetail(operationId, language, userId);
+                final Operation response = mobileTokenService.fetchOperationDetail(operationId, language, userId);
                 final Date currentTimestamp = new Date();
                 return new MobileTokenResponse<>(response, currentTimestamp);
             } else {
