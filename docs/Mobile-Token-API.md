@@ -790,15 +790,16 @@ Registers a device to push notifications. Authorization is done using PowerAuth 
 ```json
 {
   "requestObject": {
-    "platform": "ios",
+    "platform": "apns",
     "token": "10de0b9c-791f-4e9f-93c4-e2203951c307"
   }
 }
 ```
 
 Supported platforms:
-- `ios`
-- `android`
+- `apns`
+- `fcm`
+- `hms`
 
 #### Response 200
 
@@ -869,15 +870,16 @@ Registers a device to push notifications. Authorization is done using PowerAuth 
 ```json
 {
   "requestObject": {
-    "platform": "ios",
+    "platform": "apns",
     "token": "10de0b9c-791f-4e9f-93c4-e2203951c307"
   }
 }
 ```
 
 Supported platforms:
-- `ios`
-- `android`
+- `aps`
+- `fcm`
+- `hms`
 
 #### Response 200
 

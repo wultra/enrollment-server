@@ -40,21 +40,33 @@ public class PushRegisterRequest {
     private Platform platform;
 
     /**
-     * The push token is the value received from APNS, FCM, or HMS services without any modification.
+     * The push token is the value received from APNs, FCM, or HMS services without any modification.
      */
     @NotBlank
     @ToString.Exclude
-    @Schema(description = "The push token is the value received from APNS, FCM, or HMS services without any modification.")
+    @Schema(description = "The push token is the value received from APNs, FCM, or HMS services without any modification.")
     private String token;
 
     public enum Platform {
+        @JsonProperty("apns")
+        APNS,
+
+        @JsonProperty("fcm")
+        FCM,
+
+        @JsonProperty("hms")
+        HMS,
+
         @JsonProperty("ios")
+        @Deprecated
         IOS,
 
         @JsonProperty("android")
+        @Deprecated
         ANDROID,
 
         @JsonProperty("huawei")
+        @Deprecated
         HUAWEI
     }
 

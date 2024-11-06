@@ -94,6 +94,9 @@ public class PushRegistrationService {
 
     private static MobilePlatform convert(final PushRegisterRequest.Platform source) {
         return switch (source) {
+            case APNS -> MobilePlatform.APNS;
+            case FCM -> MobilePlatform.FCM;
+            case HMS -> MobilePlatform.HMS;
             case IOS -> MobilePlatform.IOS;
             case ANDROID -> MobilePlatform.ANDROID;
             case HUAWEI -> MobilePlatform.HUAWEI;

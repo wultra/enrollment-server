@@ -2,6 +2,7 @@
 
 This page contains PowerAuth Enrollment Server migration instructions.
 
+- [PowerAuth Enrollment Server 1.10.0](./PowerAuth-Enrollment-Server-1.10.0.md)
 - [PowerAuth Enrollment Server 1.9.0](./PowerAuth-Enrollment-Server-1.9.0.md)
 - [PowerAuth Enrollment Server 1.8.0](./PowerAuth-Enrollment-Server-1.8.0.md)
 - [PowerAuth Enrollment Server 1.7.0](./PowerAuth-Enrollment-Server-1.7.0.md)
