@@ -27,7 +27,9 @@ import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
+import io.getlime.push.model.enumeration.ApnsEnvironment;
 import io.getlime.push.model.enumeration.MobilePlatform;
+import io.getlime.push.model.request.CreateDeviceRequest;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,10 +77,18 @@ public class PushRegistrationService {
         }
 
         final MobilePlatform platform = convert(requestObject.getPlatform());
+        final ApnsEnvironment environment = convert(requestObject.getEnvironment());
         final String token = requestObject.getToken();
 
         try {
-            final boolean result = client.createDevice(applicationId, token, platform, activationId);
+            final CreateDeviceRequest requestCreate = CreateDeviceRequest.builder()
+                    .appId(applicationId)
+                    .token(token)
+                    .platform(platform)
+                    .environment(environment)
+                    .activationId(activationId)
+                    .build();
+            final boolean result = client.createDevice(requestCreate);
             if (result) {
                 logger.info("Push registration succeeded, user ID: {}", userId);
                 return new Response();
@@ -100,6 +110,13 @@ public class PushRegistrationService {
             case IOS -> MobilePlatform.IOS;
             case ANDROID -> MobilePlatform.ANDROID;
             case HUAWEI -> MobilePlatform.HUAWEI;
+        };
+    }
+
+    private static ApnsEnvironment convert(final PushRegisterRequest.Environment source) {
+        return switch (source) {
+            case DEVELOPMENT -> ApnsEnvironment.DEVELOPMENT;
+            case PRODUCTION -> ApnsEnvironment.PRODUCTION;
         };
     }
 

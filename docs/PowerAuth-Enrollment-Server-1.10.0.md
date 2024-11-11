@@ -8,3 +8,14 @@ This guide contains instructions for migration from PowerAuth Enrollment Server 
 
 The endpoints `POST /api/push/device/register` and `POST /api/push/device/register/token` now use updated platform `platform` values `apns`, `fcm`, and `hms`.
 The original values `ios`, `android`, and `huawei` are still supported, but will be removed in a future release.
+
+### Specification of Environment during Registration for Push Messages
+
+It is now possible to specify APNs environment during device registration in Push Server.
+The change is reflected by addition of property `environment` in endpoints `POST /api/push/device/register` and `POST /api/push/device/register/token`.
+
+The allowed values of the `environment` parameter are:
+- `development` - development APNs host is used for sending push messages
+- `production` - production APNs host is used for sending push messages
+
+For platforms other than APNs the parameter is not used, `null` value is allowed.
