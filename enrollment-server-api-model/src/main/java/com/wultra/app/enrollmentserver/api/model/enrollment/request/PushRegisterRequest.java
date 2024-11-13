@@ -40,6 +40,11 @@ public class PushRegisterRequest {
     private Platform platform;
 
     /**
+     * APNs environment (optional).
+     */
+    private Environment environment;
+
+    /**
      * The push token is the value received from APNs, FCM, or HMS services without any modification.
      */
     @NotBlank
@@ -68,6 +73,14 @@ public class PushRegisterRequest {
         @JsonProperty("huawei")
         @Deprecated
         HUAWEI
+    }
+
+    public enum Environment {
+        @JsonProperty("development")
+        DEVELOPMENT,
+
+        @JsonProperty("production")
+        PRODUCTION
     }
 
 }
