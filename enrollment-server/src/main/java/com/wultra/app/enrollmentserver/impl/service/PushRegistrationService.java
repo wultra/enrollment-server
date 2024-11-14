@@ -114,6 +114,9 @@ public class PushRegistrationService {
     }
 
     private static ApnsEnvironment convert(final PushRegisterRequest.Environment source) {
+        if (source == null) {
+            return null;
+        }
         return switch (source) {
             case DEVELOPMENT -> ApnsEnvironment.DEVELOPMENT;
             case PRODUCTION -> ApnsEnvironment.PRODUCTION;
