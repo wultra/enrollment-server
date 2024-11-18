@@ -4,7 +4,7 @@ LABEL maintainer="petr@wultra.com"
 # Prepare environment variables
 ENV JAVA_HOME=/opt/java/openjdk \
     LB_HOME=/usr/local/liquibase \
-    LB_VERSION=4.23.2 \
+    LB_VERSION=4.30.0 \
     PKG_RELEASE=1~jammy \
     TOMCAT_HOME=/usr/local/tomcat \
     TOMCAT_MAJOR=10 \
