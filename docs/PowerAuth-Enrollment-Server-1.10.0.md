@@ -19,3 +19,7 @@ The allowed values of the `environment` parameter are:
 - `production` - production APNs host is used for sending push messages
 
 For platforms other than APNs the parameter is not used, `null` value is allowed.
+
+## Internal Changes
+
+Operation claim now uses the new `POST /rest/v3/operation/claim` for claiming operations instead of `POST /rest/v3/operation/detail` to separate operation claim action from obtaining operation detail.
