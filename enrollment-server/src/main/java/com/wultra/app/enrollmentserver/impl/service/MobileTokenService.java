@@ -28,6 +28,7 @@ import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.model.request.OperationClaimRequest;
 import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
 import com.wultra.security.powerauth.client.model.request.OperationFailApprovalRequest;
 import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
@@ -334,11 +335,11 @@ public class MobileTokenService {
      * @throws MobileTokenException When the operation is in incorrect state.
      */
     private OperationDetailResponse claimOperationInternal(@NotNull String operationId, @NotNull String userId) throws PowerAuthClientException, MobileTokenException {
-        final OperationDetailRequest operationDetailRequest = new OperationDetailRequest();
-        operationDetailRequest.setOperationId(operationId);
-        operationDetailRequest.setUserId(userId);
-        final OperationDetailResponse operationDetail = powerAuthClient.operationDetail(
-                operationDetailRequest,
+        final OperationClaimRequest operationClaimRequest = new OperationClaimRequest();
+        operationClaimRequest.setOperationId(operationId);
+        operationClaimRequest.setUserId(userId);
+        final OperationDetailResponse operationDetail = powerAuthClient.operationClaim(
+                operationClaimRequest,
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()
         );
