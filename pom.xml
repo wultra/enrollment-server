@@ -90,7 +90,7 @@
     <properties>
         <openapi-generator-maven-plugin.version>7.9.0</openapi-generator-maven-plugin.version>
 
-        <shedlock.version>5.16.0</shedlock.version>
+        <shedlock.version>6.0.1</shedlock.version>
         <spring-statemachine.version>4.0.0</spring-statemachine.version>
         <swagger-annotations-jakarta.version>2.2.25</swagger-annotations-jakarta.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.6.0</springdoc-openapi-starter-webmvc-ui.version>
