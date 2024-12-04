@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,14 +27,14 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Configuration for {@link OnboardingProvider}.
+ * Configuration properties for {@link RestOnboardingProvider}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ConfigurationProperties("enrollment-server-onboarding.onboarding-adapter")
 @Getter
 @Setter
-class RestOnboardingProviderConfiguration {
+public class RestOnboardingProviderConfigProperties {
 
     private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
     private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";

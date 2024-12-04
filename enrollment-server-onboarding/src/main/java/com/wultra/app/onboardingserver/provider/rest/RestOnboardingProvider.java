@@ -41,7 +41,7 @@ import java.util.UUID;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Slf4j
-class RestOnboardingProvider implements OnboardingProvider {
+public class RestOnboardingProvider implements OnboardingProvider {
 
     private final String correlationHeaderName;
 
@@ -49,7 +49,7 @@ class RestOnboardingProvider implements OnboardingProvider {
 
     private final RestClient restClient;
 
-    public RestOnboardingProvider(final RestClient restClient, final RestOnboardingProviderConfiguration configuration) {
+    public RestOnboardingProvider(final RestClient restClient, final RestOnboardingProviderConfigProperties configuration) {
         this.restClient = restClient;
         this.correlationHeaderName = configuration.getCorrelationHeader().getName();
         this.requestIdHeaderName = configuration.getRequestIdHeader().getName();
