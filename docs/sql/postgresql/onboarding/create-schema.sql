@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS shedlock (
     PRIMARY KEY (name)
 );
 
--- Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library
+-- Create audit log table - https://github.com/wultra/java-core#wultra-auditing-library
 CREATE TABLE IF NOT EXISTS audit_log (
     audit_log_id       VARCHAR(36) PRIMARY KEY,
     application_name   VARCHAR(256) NOT NULL,

@@ -20,8 +20,8 @@ package com.wultra.app.enrollmentserver.configuration;
 
 import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
-import io.getlime.push.client.PushServerClient;
-import io.getlime.push.client.PushServerClientException;
+import com.wultra.push.client.PushServerClient;
+import com.wultra.push.client.PushServerClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

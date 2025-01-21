@@ -28,7 +28,7 @@ import com.wultra.security.powerauth.client.model.request.ListActivationFlagsReq
 import com.wultra.security.powerauth.client.model.request.RemoveActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.UpdateActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
-import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
