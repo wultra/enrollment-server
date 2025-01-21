@@ -17,7 +17,7 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.response;
 
-import io.getlime.core.rest.model.base.response.ObjectResponse;
+import com.wultra.core.rest.model.base.response.ObjectResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

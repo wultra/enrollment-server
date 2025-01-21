@@ -52,7 +52,7 @@ public class OpenApiConfiguration {
     @Bean
     public GroupedOpenApi defaultApiGroup() {
         String[] packages = {
-                "io.getlime.security.powerauth",
+                "com.wultra.security.powerauth",
                 "com.wultra.app.onboardingserver.controller.api",
                 "com.wultra.app.onboardingserver.provider.innovatrics"
         };

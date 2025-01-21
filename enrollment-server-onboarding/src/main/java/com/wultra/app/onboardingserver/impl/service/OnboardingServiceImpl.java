@@ -54,7 +54,7 @@ import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
-import io.getlime.core.rest.model.base.response.Response;
+import com.wultra.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -37,8 +37,8 @@ import com.wultra.security.powerauth.client.model.response.OperationUserActionRe
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
-import io.getlime.core.rest.model.base.response.Response;
-import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

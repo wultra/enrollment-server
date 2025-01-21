@@ -42,7 +42,7 @@ import java.time.Duration;
 @ConfigurationProperties("ext")
 @ComponentScan(basePackages = {
         "com.wultra.security.powerauth",
-        "io.getlime.security.powerauth",
+        "com.wultra.security.powerauth",
 })
 public class PowerAuthWebServiceConfiguration {
 
