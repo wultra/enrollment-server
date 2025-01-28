@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
-import io.getlime.security.powerauth.crypto.lib.util.Hash;
+import com.wultra.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;

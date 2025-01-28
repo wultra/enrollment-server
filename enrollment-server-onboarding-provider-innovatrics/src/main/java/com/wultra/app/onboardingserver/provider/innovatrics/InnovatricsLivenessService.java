@@ -28,7 +28,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateCustomerLivenessRecordResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateSelfieResponse;
-import io.getlime.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

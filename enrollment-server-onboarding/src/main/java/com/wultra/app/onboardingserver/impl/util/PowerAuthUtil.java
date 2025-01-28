@@ -18,8 +18,8 @@
 package com.wultra.app.onboardingserver.impl.util;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
-import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 
 /**
  * PowerAuth utilities.
