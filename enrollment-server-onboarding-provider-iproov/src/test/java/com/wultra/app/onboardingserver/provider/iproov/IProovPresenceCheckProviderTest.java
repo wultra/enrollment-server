@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("external-service")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.presencecheck.iproov"})
+@ComponentScan(basePackages = "com.wultra.app.onboardingserver.presencecheck.iproov")
 @EnableConfigurationProperties
 @Tag("external-service")
 class IProovPresenceCheckProviderTest {

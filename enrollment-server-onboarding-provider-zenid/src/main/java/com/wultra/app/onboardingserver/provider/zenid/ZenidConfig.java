@@ -40,7 +40,7 @@ import java.time.OffsetDateTime;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "zenid")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.zenid"})
+@ComponentScan(basePackages = "com.wultra.app.onboardingserver.provider.zenid")
 @Configuration
 @Slf4j
 class ZenidConfig {
