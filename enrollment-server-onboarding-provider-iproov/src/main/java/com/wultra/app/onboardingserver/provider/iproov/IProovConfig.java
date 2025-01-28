@@ -68,7 +68,7 @@ import java.util.Objects;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "iproov")
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.iproov"})
+@ComponentScan("com.wultra.app.onboardingserver.provider.iproov")
 @Configuration
 @Slf4j
 class IProovConfig {

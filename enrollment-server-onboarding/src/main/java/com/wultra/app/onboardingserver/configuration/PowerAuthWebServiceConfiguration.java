@@ -40,7 +40,7 @@ import java.time.Duration;
  */
 @Configuration
 @ConfigurationProperties("ext")
-@ComponentScan(basePackages = {
+@ComponentScan({
         "com.wultra.app.onboardingserver.docverify",
         "com.wultra.app.onboardingserver.presencecheck",
         "com.wultra.security.powerauth"

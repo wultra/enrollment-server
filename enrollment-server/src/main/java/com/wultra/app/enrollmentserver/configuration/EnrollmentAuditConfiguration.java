@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Configuration
-@ComponentScan(basePackages = {"com.wultra.core.audit.base"})
+@ComponentScan("com.wultra.core.audit.base")
 public class EnrollmentAuditConfiguration {
 
     private final AuditFactory auditFactory;
