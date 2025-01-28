@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("external-service")
-@ComponentScan(basePackages = "com.wultra.app.onboardingserver.docverify.zenid")
+@ComponentScan("com.wultra.app.onboardingserver.docverify.zenid")
 @EnableConfigurationProperties
 @Tag("external-service")
 class ZenidDocumentVerificationProviderTest {
