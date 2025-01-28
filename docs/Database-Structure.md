@@ -14,7 +14,7 @@ The DDL files contain an `audit_log` table definition. The table differs slightl
 
 Only one `audit_log` table is required per PowerAuth stack in case the same schema is used for all deployed applications.
 
-For more information about auditing library, see the [Wultra auditing library documentation](https://github.com/wultra/lime-java-core#wultra-auditing-library).
+For more information about auditing library, see the [Wultra auditing library documentation](https://github.com/wultra/java-core#wultra-auditing-library).
 
 
 ## Table Documentation

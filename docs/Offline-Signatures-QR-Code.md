@@ -248,7 +248,7 @@ To compute the signature base string, you need:
 
 The [algorithm for signature data normalization](https://developers.wultra.com/docs/develop/powerauth-crypto/Computing-and-Validating-Signatures#normalized-data-for-http-requests) is available in the cryptography description.
 
-The Java class [PowerAuthHttpBody](https://github.com/wultra/powerauth-crypto/blob/master/powerauth-java-http/src/main/java/io/getlime/security/powerauth/http/PowerAuthHttpBody.java) already contains a ready to use method for computing the normalized signature base string:
+The Java class [PowerAuthHttpBody](https://github.com/wultra/powerauth-crypto/blob/master/powerauth-java-http/src/main/java/com/wultra/security/powerauth/http/PowerAuthHttpBody.java) already contains a ready to use method for computing the normalized signature base string:
 
 ```java
 String signatureBaseString

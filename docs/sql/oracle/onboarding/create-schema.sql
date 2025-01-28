@@ -187,7 +187,7 @@ BEGIN EXECUTE IMMEDIATE 'CREATE TABLE shedlock (
 EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;
 /
 
--- Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library
+-- Create audit log table - https://github.com/wultra/java-core#wultra-auditing-library
 BEGIN EXECUTE IMMEDIATE 'CREATE TABLE audit_log (
     audit_log_id       VARCHAR2(36 CHAR) PRIMARY KEY,
     application_name   VARCHAR2(256 CHAR) NOT NULL,
