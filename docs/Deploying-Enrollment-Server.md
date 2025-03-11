@@ -3,7 +3,7 @@
 This chapter explains how to deploy Enrollment Server.
 
 <!-- begin box warning -->
-The enrollment server component will need to be customized in case you need to customize the activation process. The customization is described in the tutorial [Implementing the Server-Side for Authentication in Mobile Banking Apps (SCA)](https://developers.wultra.com/products/mobile-token/2021-05/tutorials/Authentication-in-Mobile-Apps/Server-Side-Tutorial#deploying-the-enrollment-server).
+The enrollment server component will need to be customized in case you need to customize the activation process. The customization is described in the tutorial [Implementing the Server-Side for Authentication in Mobile Banking Apps (SCA)](https://developers.wultra.com/tutorials/posts/Mobile-First-Authentication/Server-Side-Tutorial-Deployment).
 <!-- end -->
 
 ## Downloading Enrollment Server
