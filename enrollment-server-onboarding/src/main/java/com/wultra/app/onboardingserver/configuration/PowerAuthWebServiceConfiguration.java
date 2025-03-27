@@ -18,9 +18,7 @@
 
 package com.wultra.app.onboardingserver.configuration;
 
-import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.rest.client.PowerAuthRestClient;
 import com.wultra.security.powerauth.rest.client.PowerAuthRestClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +63,16 @@ public class PowerAuthWebServiceConfiguration {
     private String clientSecret;
 
     @Bean
-    public PowerAuthClient powerAuthClient() throws PowerAuthClientException {
+    public com.wultra.security.powerauth.client.v3.PowerAuthClient powerAuthClientV3() throws PowerAuthClientException {
+        return new com.wultra.security.powerauth.rest.client.v3.PowerAuthRestClient(powerAuthServiceUrl, prepareClientConfiguration());
+    }
+
+    @Bean
+    public com.wultra.security.powerauth.client.v4.PowerAuthClient powerAuthClientV4() throws PowerAuthClientException {
+        return new com.wultra.security.powerauth.rest.client.v4.PowerAuthRestClient(powerAuthServiceUrl, prepareClientConfiguration());
+    }
+
+    private PowerAuthRestClientConfiguration prepareClientConfiguration() {
         final PowerAuthRestClientConfiguration config = new PowerAuthRestClientConfiguration();
         config.setResponseTimeout(powerAuthServiceTimeout);
         config.setMaxIdleTime(powerAuthServiceMaxIdleTime);
@@ -75,8 +82,7 @@ public class PowerAuthWebServiceConfiguration {
             config.setPowerAuthClientToken(clientToken);
             config.setPowerAuthClientSecret(clientSecret);
         }
-
-        return new PowerAuthRestClient(powerAuthServiceUrl, config);
+        return config;
     }
 
 }

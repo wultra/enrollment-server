@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 import com.wultra.app.enrollmentserver.database.OperationTemplateRepository;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
-import com.wultra.security.powerauth.client.PowerAuthClient;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
