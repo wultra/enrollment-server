@@ -38,7 +38,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResp
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
@@ -106,10 +106,10 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/list")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
@@ -157,10 +157,10 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/detail")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<Operation> fetchOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                           @Parameter(hidden = true) PowerAuthApiAuthentication auth,
@@ -209,10 +209,10 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/detail/claim")
     @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<Operation> claimOperation(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                     @Parameter(hidden = true) PowerAuthApiAuthentication auth,
@@ -261,8 +261,8 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/history")
     @PowerAuth(resourceId = "/operation/history", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         try {
@@ -309,9 +309,9 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/authorize")
     @PowerAuth(resourceId = "/operation/authorize", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_BIOMETRY
     })
     public Response operationApprove(
             @RequestBody ObjectRequest<OperationApproveRequest> request,
@@ -338,7 +338,7 @@ public class MobileTokenController {
                 final String activationId = auth.getActivationContext().getActivationId();
                 final String userId = auth.getUserId();
                 final String applicationId = auth.getApplicationId();
-                final PowerAuthSignatureTypes signatureFactors = auth.getAuthenticationContext().getSignatureType();
+                final PowerAuthCodeType signatureFactors = auth.getAuthenticationContext().getSignatureType();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 if (activationFlags.stream().anyMatch(DISALLOWED_FLAGS::contains)) {
                     logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
@@ -411,7 +411,7 @@ public class MobileTokenController {
      */
     @PostMapping("/operation/cancel")
     @PowerAuth(resourceId = "/operation/cancel", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION
+            PowerAuthCodeType.POSSESSION
     })
     public Response operationReject(
             @RequestBody ObjectRequest<OperationRejectRequest> request,
