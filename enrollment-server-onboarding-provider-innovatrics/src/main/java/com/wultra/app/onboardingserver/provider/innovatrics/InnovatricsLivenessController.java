@@ -69,7 +69,7 @@ class InnovatricsLivenessController {
      */
     @PostMapping("presence-check/upload")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/presence-check/upload", signatureType = PowerAuthCodeType.POSSESSION)
+    @PowerAuth(resourceId = "/api/identity/presence-check/upload", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response upload(
             @EncryptedRequestBody byte[] requestData,
             @Parameter(hidden = true) EncryptionContext encryptionContext,

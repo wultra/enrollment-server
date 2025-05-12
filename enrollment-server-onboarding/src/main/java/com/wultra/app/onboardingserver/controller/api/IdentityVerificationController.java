@@ -83,7 +83,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("init")
-    @PowerAuth(resourceId = "/api/identity/init", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/init", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ResponseEntity<Response> initializeIdentityVerification(@RequestBody ObjectRequest<IdentityVerificationInitRequest> request,
@@ -105,7 +105,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("status")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(@RequestBody ObjectRequest<IdentityVerificationStatusRequest> request,
@@ -131,7 +131,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public Response submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
@@ -155,7 +155,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("document/upload")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
@@ -176,7 +176,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
     @PostMapping("document/status")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(@RequestBody ObjectRequest<DocumentStatusRequest> request,
@@ -200,7 +200,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("document/init-sdk")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/document/init-sdk", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/document/init-sdk", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
@@ -226,7 +226,7 @@ public class IdentityVerificationController {
      */
     @PostMapping("presence-check/init")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/presence-check/init", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/presence-check/init", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
@@ -249,7 +249,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @PostMapping("presence-check/submit")
-    @PowerAuth(resourceId = "/api/identity/presence-check/submit", signatureType = PowerAuthCodeType.POSSESSION)
+    @PowerAuth(resourceId = "/api/identity/presence-check/submit", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ResponseEntity<Response> submitPresenceCheck(@RequestBody ObjectRequest<PresenceCheckSubmitRequest> request,
                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
@@ -267,7 +267,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      */
     @PostMapping("otp/resend")
-    @PowerAuth(resourceId = "/api/identity/otp/resend", signatureType = PowerAuthCodeType.POSSESSION)
+    @PowerAuth(resourceId = "/api/identity/otp/resend", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ResponseEntity<Response> resendOtp(
             final @RequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
@@ -306,7 +306,7 @@ public class IdentityVerificationController {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @PostMapping("cleanup")
-    @PowerAuth(resourceId = "/api/identity/cleanup", signatureType = {
+    @PowerAuth(resourceId = "/api/identity/cleanup", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public Response cleanup(@RequestBody ObjectRequest<IdentityVerificationCleanupRequest> request,
@@ -329,7 +329,7 @@ public class IdentityVerificationController {
             summary = "Obtain consent text",
             description = "Obtain a text of user consent in specified language."
     )
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
@@ -353,7 +353,7 @@ public class IdentityVerificationController {
             summary = "Store user consent",
             description = "Store user consent, whether approved or not."
     )
-    @PowerAuth(resourceId = "/api/identity/consent/approve", signatureType = PowerAuthCodeType.POSSESSION)
+    @PowerAuth(resourceId = "/api/identity/consent/approve", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response approveConsent(
             final @RequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {

@@ -83,7 +83,7 @@ public class ActivationCodeController {
      */
     @PostMapping("code")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/activation/code", signatureType = {
+    @PowerAuth(resourceId = "/api/activation/code", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })

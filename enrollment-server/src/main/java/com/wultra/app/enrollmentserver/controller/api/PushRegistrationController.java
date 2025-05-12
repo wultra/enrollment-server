@@ -69,7 +69,7 @@ public class PushRegistrationController {
      * @throws PushRegistrationFailedException In case push registration fails.
      */
     @PostMapping("device/register")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
@@ -89,7 +89,7 @@ public class PushRegistrationController {
      * @throws PushRegistrationFailedException In case push registration fails.
      */
     @PostMapping("device/register/token")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE

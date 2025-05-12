@@ -66,7 +66,7 @@ public class InboxController {
     }
 
     @PostMapping("count")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -88,7 +88,7 @@ public class InboxController {
     }
 
     @PostMapping("message/list")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -115,7 +115,7 @@ public class InboxController {
     }
 
     @PostMapping("message/detail")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -137,7 +137,7 @@ public class InboxController {
     }
 
     @PostMapping("message/read")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -161,7 +161,7 @@ public class InboxController {
     }
 
     @PostMapping("message/read-all")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,

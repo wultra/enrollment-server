@@ -105,7 +105,7 @@ public class MobileTokenController {
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
     @PostMapping("/operation/list")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -156,7 +156,7 @@ public class MobileTokenController {
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
     @PostMapping("/operation/detail")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -208,7 +208,7 @@ public class MobileTokenController {
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
     @PostMapping("/operation/detail/claim")
-    @PowerAuthToken(signatureType = {
+    @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
@@ -260,7 +260,7 @@ public class MobileTokenController {
      * @throws MobileTokenConfigurationException In the case of system misconfiguration.
      */
     @PostMapping("/operation/history")
-    @PowerAuth(resourceId = "/operation/history", signatureType = {
+    @PowerAuth(resourceId = "/operation/history", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
@@ -308,7 +308,7 @@ public class MobileTokenController {
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
     @PostMapping("/operation/authorize")
-    @PowerAuth(resourceId = "/operation/authorize", signatureType = {
+    @PowerAuth(resourceId = "/operation/authorize", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE,
             PowerAuthCodeType.POSSESSION_BIOMETRY
@@ -338,7 +338,7 @@ public class MobileTokenController {
                 final String activationId = auth.getActivationContext().getActivationId();
                 final String userId = auth.getUserId();
                 final String applicationId = auth.getApplicationId();
-                final PowerAuthCodeType signatureFactors = auth.getAuthenticationContext().getSignatureType();
+                final PowerAuthCodeType signatureFactors = auth.getAuthenticationContext().getAuthenticationCodeType();
                 final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
                 if (activationFlags.stream().anyMatch(DISALLOWED_FLAGS::contains)) {
                     logger.warn("Operation approval failed due to presence of a disallowed activation flag, operation ID: {}.", operationId);
@@ -410,7 +410,7 @@ public class MobileTokenController {
      * @throws MobileTokenException In the case error mobile token service occurs.
      */
     @PostMapping("/operation/cancel")
-    @PowerAuth(resourceId = "/operation/cancel", signatureType = {
+    @PowerAuth(resourceId = "/operation/cancel", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
     public Response operationReject(
