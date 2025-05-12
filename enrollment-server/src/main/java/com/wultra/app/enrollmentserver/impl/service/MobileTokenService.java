@@ -24,7 +24,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.core.http.common.request.RequestContext;
-import com.wultra.security.powerauth.client.model.enumeration.v4.AuthenticationCodeType;
+import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -156,7 +156,7 @@ public class MobileTokenService {
         approveRequest.setOperationId(request.getOperationId());
         approveRequest.setData(request.getData());
         approveRequest.setUserId(request.getUserId());
-        approveRequest.setAuthenticationCodeType(AuthenticationCodeType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
+        approveRequest.setSignatureType(SignatureType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(request.getApplicationId());
         // Prepare additional data
         approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, request.getActivationId());
