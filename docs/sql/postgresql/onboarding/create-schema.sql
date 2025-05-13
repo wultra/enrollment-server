@@ -222,3 +222,5 @@ CREATE INDEX IF NOT EXISTS audit_param_log ON audit_param (audit_log_id);
 CREATE INDEX IF NOT EXISTS audit_param_timestamp ON audit_param (timestamp_created);
 CREATE INDEX IF NOT EXISTS audit_param_key ON audit_param (param_key);
 CREATE INDEX IF NOT EXISTS audit_param_value ON audit_param (param_value);
+
+CREATE INDEX IF NOT EXISTS onboarding_process_activation_id ON es_onboarding_process(activation_id);
