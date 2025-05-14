@@ -28,10 +28,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -134,12 +131,23 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * @param dateCreatedBefore timestamp created must be before the given value
      * @return onboarding process IDs
      */
+    default List<String> findActiveByTimestampWithLock(Date dateCreatedBefore) {
+        return findByTimestampAndStatusesWithLock(dateCreatedBefore, OnboardingStatus.NOT_YET_COMPLETED);
+    }
+
+    /**
+     * Return onboarding process IDs by the given timestamp. Include only the given statuses. Lock these
+     * processes using PESSIMISTIC_WRITE lock until the end of the transaction.
+     *
+     * @param statuses Collection of allowed statuses.
+     * @param dateCreatedBefore timestamp created must be before the given value
+     * @return onboarding process IDs
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p.id FROM OnboardingProcessEntity p " +
-            "WHERE p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FINISHED " +
-            "AND p.status <> com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus.FAILED " +
+            "WHERE p.status in :statuses " +
             "AND p.timestampCreated < :dateCreatedBefore")
-    List<String> findActiveByTimestampWithLock(Date dateCreatedBefore);
+    List<String> findByTimestampAndStatusesWithLock(Date dateCreatedBefore, Collection<OnboardingStatus> statuses);
 
     /**
      * Return onboarding processes to remove activation. Lock these processes using PESSIMISTIC_WRITE lock until
