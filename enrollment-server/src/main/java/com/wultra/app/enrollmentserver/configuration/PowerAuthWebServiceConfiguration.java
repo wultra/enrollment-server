@@ -40,7 +40,10 @@ import java.time.Duration;
  */
 @Configuration
 @ConfigurationProperties("ext")
-@ComponentScan("com.wultra.security.powerauth")
+@ComponentScan(basePackages = {
+        "com.wultra.security.powerauth",
+        "io.getlime.security.powerauth",
+})
 public class PowerAuthWebServiceConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(PowerAuthWebServiceConfiguration.class);

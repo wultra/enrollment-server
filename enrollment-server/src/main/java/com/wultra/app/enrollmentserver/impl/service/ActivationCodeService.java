@@ -31,8 +31,8 @@ import com.wultra.security.powerauth.client.model.error.PowerAuthClientException
 import com.wultra.security.powerauth.client.model.request.AddActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
-import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
-import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

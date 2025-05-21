@@ -28,7 +28,7 @@ import com.wultra.security.powerauth.client.model.request.OperationListForUserRe
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
-import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import io.getlime.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

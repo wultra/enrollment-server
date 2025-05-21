@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.errorhandling;
 
-import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthActivationException;
+import io.getlime.security.powerauth.rest.api.spring.exception.PowerAuthActivationException;
 
 import java.io.Serial;
 

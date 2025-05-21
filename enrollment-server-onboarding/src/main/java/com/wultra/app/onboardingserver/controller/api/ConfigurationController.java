@@ -17,7 +17,7 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.core.rest.model.base.response.ObjectResponse;
+import io.getlime.core.rest.model.base.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

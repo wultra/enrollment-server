@@ -18,7 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.core.http.common.request.RequestContext;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import io.getlime.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;

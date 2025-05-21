@@ -55,7 +55,7 @@ public class OpenApiConfiguration {
     @Bean
     public GroupedOpenApi defaultApiGroup() {
         final String[] packages = {
-                "com.wultra.security.powerauth",
+                "io.getlime.security.powerauth",
                 "com.wultra.app.enrollmentserver.controller.api"
         };
 

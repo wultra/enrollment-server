@@ -17,7 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.response.error;
 
-import com.wultra.core.rest.model.base.response.ErrorResponse;
+import io.getlime.core.rest.model.base.response.ErrorResponse;
 import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 

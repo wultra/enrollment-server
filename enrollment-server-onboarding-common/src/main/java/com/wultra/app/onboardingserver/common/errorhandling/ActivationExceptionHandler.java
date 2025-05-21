@@ -19,7 +19,7 @@
 package com.wultra.app.onboardingserver.common.errorhandling;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.error.ActivationOtpErrorResponse;
-import com.wultra.core.rest.model.base.response.ErrorResponse;
+import io.getlime.core.rest.model.base.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;

@@ -43,7 +43,8 @@ import java.time.Duration;
 @ComponentScan({
         "com.wultra.app.onboardingserver.docverify",
         "com.wultra.app.onboardingserver.presencecheck",
-        "com.wultra.security.powerauth"
+        "com.wultra.security.powerauth",
+        "io.getlime.security.powerauth",
 })
 public class PowerAuthWebServiceConfiguration {
 

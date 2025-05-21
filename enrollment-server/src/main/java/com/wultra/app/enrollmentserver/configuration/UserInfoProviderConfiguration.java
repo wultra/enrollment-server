@@ -20,9 +20,9 @@ package com.wultra.app.enrollmentserver.configuration;
 import com.wultra.app.enrollmentserver.impl.provider.userinfo.RestUserInfoProvider;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import com.wultra.core.rest.client.base.RestClientException;
-import com.wultra.security.powerauth.rest.api.model.entity.UserInfoStage;
-import com.wultra.security.powerauth.rest.api.spring.provider.MinimalClaimsUserInfoProvider;
-import com.wultra.security.powerauth.rest.api.spring.provider.UserInfoProvider;
+import io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage;
+import io.getlime.security.powerauth.rest.api.spring.provider.MinimalClaimsUserInfoProvider;
+import io.getlime.security.powerauth.rest.api.spring.provider.UserInfoProvider;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
-import static com.wultra.security.powerauth.rest.api.model.entity.UserInfoStage.USER_INFO_ENDPOINT;
+import static io.getlime.security.powerauth.rest.api.model.entity.UserInfoStage.USER_INFO_ENDPOINT;
 
 /**
  * Configuration of PowerAuth Restful Integration.

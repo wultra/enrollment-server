@@ -18,7 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.provider.userinfo;
 
 import com.wultra.core.rest.client.base.RestClientConfiguration;
-import com.wultra.security.powerauth.rest.api.spring.model.UserInfoContext;
+import io.getlime.security.powerauth.rest.api.spring.model.UserInfoContext;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;

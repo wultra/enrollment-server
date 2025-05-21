@@ -26,7 +26,7 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
-import com.wultra.core.rest.model.base.response.Response;
+import io.getlime.core.rest.model.base.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

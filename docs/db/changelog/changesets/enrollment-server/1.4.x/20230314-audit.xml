@@ -3,7 +3,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <!--  Create audit log table - https://github.com/wultra/java-core#wultra-auditing-library  -->
+    <!--  Create audit log table - https://github.com/wultra/lime-java-core#wultra-auditing-library  -->
     <changeSet id="1" logicalFilePath="enrollment-server/1.4.x/20230314-audit.xml" author="Lubos Racansky">
         <preConditions onFail="MARK_RAN">
             <not>
