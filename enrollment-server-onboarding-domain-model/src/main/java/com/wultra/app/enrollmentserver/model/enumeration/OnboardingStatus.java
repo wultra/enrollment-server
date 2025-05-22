@@ -17,6 +17,8 @@
  */
 package com.wultra.app.enrollmentserver.model.enumeration;
 
+import java.util.Set;
+
 /**
  * Enumeration representing onboarding process status.
  *
@@ -42,6 +44,12 @@ public enum OnboardingStatus {
     /**
      * Onboarding process is failed.
      */
-    FAILED
+    FAILED;
+
+    /**
+     * A constant representing the set of onboarding statuses where the process is still in progress.
+     * This includes activation and verification steps that have not yet been completed.
+     */
+    public static final Set<OnboardingStatus> NOT_YET_COMPLETED = Set.of(ACTIVATION_IN_PROGRESS, VERIFICATION_IN_PROGRESS);
 
 }
