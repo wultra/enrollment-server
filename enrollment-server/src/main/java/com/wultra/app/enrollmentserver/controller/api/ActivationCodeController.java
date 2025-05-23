@@ -24,7 +24,7 @@ import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.enrollmentserver.impl.service.ActivationCodeService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
@@ -83,9 +83,9 @@ public class ActivationCodeController {
      */
     @PostMapping("code")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/activation/code", signatureType = {
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    @PowerAuth(resourceId = "/api/activation/code", authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request,
                                                                         @Parameter(hidden = true) EncryptionContext encryptionContext,

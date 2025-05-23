@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
-import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
+import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
@@ -63,17 +63,17 @@ public class MobileTokenConverter {
         this.objectMapper = objectMapper;
     }
 
-    private AllowedSignatureType convert(List<SignatureType> signatureType) {
+    private AllowedSignatureType convert(List<SignatureType> authenticationCodeTypes) {
         final AllowedSignatureType allowedSignatureType = new AllowedSignatureType();
-        if (signatureType.contains(SignatureType.POSSESSION)) {
+        if (authenticationCodeTypes.contains(SignatureType.POSSESSION)) {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_1FA);
         } else {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_2FA);
             final List<String> variants = new ArrayList<>();
-            if (signatureType.contains(SignatureType.POSSESSION_KNOWLEDGE)) {
+            if (authenticationCodeTypes.contains(SignatureType.POSSESSION_KNOWLEDGE)) {
                 variants.add("possession_knowledge");
             }
-            if (signatureType.contains(SignatureType.POSSESSION_BIOMETRY)) {
+            if (authenticationCodeTypes.contains(SignatureType.POSSESSION_BIOMETRY)) {
                 variants.add("possession_biometry");
             }
             allowedSignatureType.setVariants(variants);

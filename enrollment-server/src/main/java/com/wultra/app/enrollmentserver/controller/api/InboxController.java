@@ -32,7 +32,7 @@ import com.wultra.push.model.entity.InboxMessage;
 import com.wultra.push.model.entity.ListOfInboxMessages;
 import com.wultra.push.model.response.GetInboxMessageCountResponse;
 import com.wultra.push.model.response.GetInboxMessageDetailResponse;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
@@ -66,11 +66,11 @@ public class InboxController {
     }
 
     @PostMapping("count")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
@@ -88,11 +88,11 @@ public class InboxController {
     }
 
     @PostMapping("message/list")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
@@ -115,11 +115,11 @@ public class InboxController {
     }
 
     @PostMapping("message/detail")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
@@ -137,11 +137,11 @@ public class InboxController {
     }
 
     @PostMapping("message/read")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
@@ -161,11 +161,11 @@ public class InboxController {
     }
 
     @PostMapping("message/read-all")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE_BIOMETRY
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         checkApiAuthentication(apiAuthentication);
