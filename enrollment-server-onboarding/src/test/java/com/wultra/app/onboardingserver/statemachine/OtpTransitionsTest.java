@@ -30,13 +30,13 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlan;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
@@ -51,16 +51,16 @@ import static org.mockito.Mockito.*;
 @Transactional
 class OtpTransitionsTest extends AbstractStateMachineTest {
 
-    @MockBean
+    @MockitoBean
     private IdentityVerificationConfig identityVerificationConfig;
 
-    @MockBean
+    @MockitoBean
     private OnboardingProcessRepository onboardingProcessRepository;
 
-    @MockBean
+    @MockitoBean
     private IdentityVerificationOtpService identityVerificationOtpService;
 
-    @MockBean
+    @MockitoBean
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @Test

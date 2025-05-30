@@ -30,10 +30,10 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
@@ -47,13 +47,13 @@ import static org.mockito.Mockito.when;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test")
-@MockBean(IdentityVerificationRepository.class)
+@MockitoBean(types = IdentityVerificationRepository.class)
 class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
 
-    @MockBean
+    @MockitoBean
     private DocumentVerificationRepository documentVerificationRepository;
 
-    @MockBean
+    @MockitoBean
     private OnboardingProcessRepository onboardingProcessRepository;
 
     @Test

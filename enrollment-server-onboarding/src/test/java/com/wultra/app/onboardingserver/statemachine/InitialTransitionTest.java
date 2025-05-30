@@ -28,10 +28,10 @@ import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Optional;
 
@@ -48,10 +48,10 @@ class InitialTransitionTest extends AbstractStateMachineTest {
     @Autowired
     private StateMachineService stateMachineService;
 
-    @MockBean
+    @MockitoBean
     private OnboardingProcessRepository onboardingProcessRepository;
 
-    @MockBean
+    @MockitoBean
     private IdentityVerificationCreateService identityVerificationCreateService;
 
     @Test

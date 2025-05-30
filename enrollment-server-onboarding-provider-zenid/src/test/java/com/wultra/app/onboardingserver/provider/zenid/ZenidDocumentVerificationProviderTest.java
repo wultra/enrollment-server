@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -68,7 +67,7 @@ class ZenidDocumentVerificationProviderTest {
 
     private OwnerId ownerId;
 
-    @MockBean
+    @MockitoBean
     private DocumentVerificationRepository documentVerificationRepository;
 
     @Autowired
