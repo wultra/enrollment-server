@@ -20,7 +20,7 @@ package com.wultra.app.onboardingserver.impl.service.document;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
-import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
@@ -33,9 +33,9 @@ import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
@@ -56,7 +56,7 @@ import static org.mockito.Mockito.*;
 @Sql
 class DocumentProcessingServiceTest {
 
-    @MockBean
+    @MockitoBean
     DataExtractionService dataExtractionService;
 
     @Autowired
