@@ -23,3 +23,12 @@ For platforms other than APNs the parameter is not used, `null` value is allowed
 ## Internal Changes
 
 Operation claim now uses the new `POST /rest/v3/operation/claim` for claiming operations instead of `POST /rest/v3/operation/detail` to separate operation claim action from obtaining operation detail.
+
+## Other Changes
+
+### Structured Logging for Device Registration Endpoints
+
+Logging structure for the `/api/push/device/register` and `/api/push/device/register/token` endpoints has been updated
+to parsable key-value format to enable better automated log processing, and align with the logging approach used in the
+PowerAuth Server.
+This change is only relevant for the first and last info-level logs during request processing.
