@@ -30,6 +30,8 @@ import io.getlime.push.client.PushServerClientException;
 import io.getlime.push.model.enumeration.ApnsEnvironment;
 import io.getlime.push.model.enumeration.MobilePlatform;
 import io.getlime.push.model.request.CreateDeviceRequest;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +58,11 @@ public class PushRegistrationService {
 
     public Response registerDevice(
             @NotNull ObjectRequest<PushRegisterRequest> request,
-            String userId,
-            String activationId,
-            String applicationId) throws InvalidRequestObjectException, PushRegistrationFailedException {
+            PowerAuthApiAuthentication apiAuthentication) throws InvalidRequestObjectException, PushRegistrationFailedException {
 
-        logger.info("Push registration started, user ID: {}", userId);
+        final String userId = apiAuthentication.getUserId();
+        final String activationId = apiAuthentication.getActivationContext().getActivationId();
+        final String applicationId = apiAuthentication.getApplicationId();
 
         // Verify that userId, applicationId and activationId are set
         if (userId == null || applicationId == null || activationId == null) {
@@ -87,6 +89,8 @@ public class PushRegistrationService {
                     .platform(platform)
                     .environment(environment)
                     .activationId(activationId)
+                    .userId(userId)
+                    .activationStatus(convert(apiAuthentication.getActivationContext().getActivationStatus()))
                     .build();
             final boolean result = client.createDevice(requestCreate);
             if (result) {
@@ -120,6 +124,20 @@ public class PushRegistrationService {
         return switch (source) {
             case DEVELOPMENT -> ApnsEnvironment.DEVELOPMENT;
             case PRODUCTION -> ApnsEnvironment.PRODUCTION;
+        };
+    }
+
+    private static ActivationStatus convert(final io.getlime.security.powerauth.rest.api.spring.model.ActivationStatus source) {
+        if (source == null) {
+            return null;
+        }
+
+        return switch (source) {
+            case CREATED -> ActivationStatus.CREATED;
+            case PENDING_COMMIT -> ActivationStatus.PENDING_COMMIT;
+            case ACTIVE -> ActivationStatus.ACTIVE;
+            case BLOCKED -> ActivationStatus.BLOCKED;
+            case REMOVED -> ActivationStatus.REMOVED;
         };
     }
 
