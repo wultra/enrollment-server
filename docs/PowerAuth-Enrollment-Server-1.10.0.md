@@ -20,6 +20,12 @@ The allowed values of the `environment` parameter are:
 
 For platforms other than APNs the parameter is not used, `null` value is allowed.
 
+### Additional data for the operation approval
+
+It is now possible to specify `additionalData` attribute at `POST /api/auth/token/app/operation/authorize` request.
+The structure is customer-specific.
+Could be used, for example, for passing FDS data.
+
 ## Internal Changes
 
 Operation claim now uses the new `POST /rest/v3/operation/claim` for claiming operations instead of `POST /rest/v3/operation/detail` to separate operation claim action from obtaining operation detail.

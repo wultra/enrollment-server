@@ -28,10 +28,7 @@ import com.wultra.security.powerauth.client.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.request.OperationClaimRequest;
-import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
-import com.wultra.security.powerauth.client.model.request.OperationFailApprovalRequest;
-import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
+import com.wultra.security.powerauth.client.model.request.*;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
@@ -46,6 +43,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -58,13 +56,15 @@ import java.util.Optional;
 public class MobileTokenService {
 
     private static final int OPERATION_LIST_LIMIT = 100;
+
     private static final String ATTR_ACTIVATION_ID = "activationId";
     private static final String ATTR_APPLICATION_ID = "applicationId";
     private static final String ATTR_IP_ADDRESS = "ipAddress";
     private static final String ATTR_USER_AGENT = "userAgent";
     private static final String ATTR_AUTH_FACTOR = "authFactor";
     private static final String ATTR_REJECT_REASON = "rejectReason";
-    private static final String PROXIMITY_OTP = "proximity_otp";
+    private static final String ATTR_PROXIMITY_OTP = "proximity_otp";
+    private static final String ATTR_MOBILE_TOKEN_DATA = "mobileTokenData";
 
     private final PowerAuthClient powerAuthClient;
     private final MobileTokenConverter mobileTokenConverter;
@@ -158,16 +158,8 @@ public class MobileTokenService {
         approveRequest.setUserId(request.getUserId());
         approveRequest.setSignatureType(SignatureType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(request.getApplicationId());
-        // Prepare additional data
-        approveRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, request.getActivationId());
-        approveRequest.getAdditionalData().put(ATTR_APPLICATION_ID, request.getApplicationId());
-        approveRequest.getAdditionalData().put(ATTR_IP_ADDRESS, request.getRequestContext().getIpAddress());
-        approveRequest.getAdditionalData().put(ATTR_USER_AGENT, request.getRequestContext().getUserAgent());
-        approveRequest.getAdditionalData().put(ATTR_AUTH_FACTOR, request.getSignatureFactors().toString());
 
-        if (request.getProximityCheckOtp() != null) {
-            approveRequest.getAdditionalData().put(PROXIMITY_OTP, request.getProximityCheckOtp());
-        }
+        fillAdditionalData(request, approveRequest);
 
         final OperationUserActionResponse approveResponse = powerAuthClient.operationApprove(
                 approveRequest,
@@ -182,6 +174,23 @@ public class MobileTokenService {
             final OperationDetailResponse operation = approveResponse.getOperation();
             handleStatus(operation);
             throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation approval fails");
+        }
+    }
+
+    private static void fillAdditionalData(final OperationApproveParameterObject source, final OperationApproveRequest target) {
+        final Map<String, Object> additionalData = target.getAdditionalData();
+
+        additionalData.put(ATTR_ACTIVATION_ID, source.getActivationId());
+        additionalData.put(ATTR_APPLICATION_ID, source.getApplicationId());
+        additionalData.put(ATTR_IP_ADDRESS, source.getRequestContext().getIpAddress());
+        additionalData.put(ATTR_USER_AGENT, source.getRequestContext().getUserAgent());
+        additionalData.put(ATTR_AUTH_FACTOR, source.getSignatureFactors().toString());
+
+        if (source.getProximityCheckOtp() != null) {
+            additionalData.put(ATTR_PROXIMITY_OTP, source.getProximityCheckOtp());
+        }
+        if (source.getAdditionalData() != null) {
+            additionalData.put(ATTR_MOBILE_TOKEN_DATA, source.getAdditionalData());
         }
     }
 

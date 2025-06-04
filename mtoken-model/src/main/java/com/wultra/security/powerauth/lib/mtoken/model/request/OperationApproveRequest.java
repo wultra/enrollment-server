@@ -24,6 +24,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -36,6 +37,11 @@ public class OperationApproveRequest {
 
     @NotEmpty
     private String id;
+
+    /**
+     * Operation data to approve.
+     */
+    @Schema(description = "Operation data to approve.", example = "A1*A100CZK*Q238400856\\/0300**D20190629*NUtility Bill Payment - 05\\/2019")
     @NotNull
     private String data;
 
@@ -44,6 +50,12 @@ public class OperationApproveRequest {
      */
     @Schema(description = "Optional proximity check data." )
     private ProximityCheck proximityCheck;
+
+    /**
+     * Optional additional data, structure is customer-specific. Could be used, for example, for passing FDS data.
+     */
+    @Schema(description = "Optional additional data, structure is customer-specific. Could be used, for example, for storing FDS data.")
+    private Map<String, Object> additionalData;
 
     public Optional<ProximityCheck> getProximityCheck() {
         return Optional.ofNullable(proximityCheck);

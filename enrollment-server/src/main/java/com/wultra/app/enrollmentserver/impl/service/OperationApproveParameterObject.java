@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Parameter object for {@link MobileTokenService#operationApprove(OperationApproveParameterObject)}.
@@ -58,4 +59,6 @@ public class OperationApproveParameterObject {
     private List<String> activationFlags;
 
     private String proximityCheckOtp;
+
+    private Map<String, Object> additionalData;
 }
