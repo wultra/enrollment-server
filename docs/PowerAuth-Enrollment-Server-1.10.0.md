@@ -22,7 +22,7 @@ For platforms other than APNs the parameter is not used, `null` value is allowed
 
 ### Additional Data for the Operation Approval
 
-It is now possible to specify `additionalData` attribute at `POST /api/auth/token/app/operation/authorize` request.
+It is now possible to specify `mobileTokenData` attribute at `POST /api/auth/token/app/operation/authorize` request.
 The structure is customer-specific.
 Could be used, for example, for passing FDS data.
 
