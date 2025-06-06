@@ -60,5 +60,5 @@ public class OperationApproveParameterObject {
 
     private String proximityCheckOtp;
 
-    private Map<String, Object> additionalData;
+    private Map<String, Object> mobileTokenData;
 }

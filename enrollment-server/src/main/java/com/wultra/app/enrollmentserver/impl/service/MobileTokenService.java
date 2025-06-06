@@ -189,8 +189,8 @@ public class MobileTokenService {
         if (source.getProximityCheckOtp() != null) {
             additionalData.put(ATTR_PROXIMITY_OTP, source.getProximityCheckOtp());
         }
-        if (source.getAdditionalData() != null) {
-            additionalData.put(ATTR_MOBILE_TOKEN_DATA, source.getAdditionalData());
+        if (source.getMobileTokenData() != null) {
+            additionalData.put(ATTR_MOBILE_TOKEN_DATA, source.getMobileTokenData());
         }
     }
 

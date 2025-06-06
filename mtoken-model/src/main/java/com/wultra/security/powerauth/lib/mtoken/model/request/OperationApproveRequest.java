@@ -52,10 +52,10 @@ public class OperationApproveRequest {
     private ProximityCheck proximityCheck;
 
     /**
-     * Optional additional data, structure is customer-specific. Could be used, for example, for passing FDS data.
+     * Optional mobile token data, structure is customer-specific. Could be used, for example, for passing FDS data.
      */
-    @Schema(description = "Optional additional data, structure is customer-specific. Could be used, for example, for storing FDS data.")
-    private Map<String, Object> additionalData;
+    @Schema(description = "Optional mobile token data, structure is customer-specific. Could be used, for example, for storing FDS data.")
+    private Map<String, Object> mobileTokenData;
 
     public Optional<ProximityCheck> getProximityCheck() {
         return Optional.ofNullable(proximityCheck);

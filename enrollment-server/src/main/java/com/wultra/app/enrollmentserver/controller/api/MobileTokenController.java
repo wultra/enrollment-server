@@ -354,7 +354,7 @@ public class MobileTokenController {
                         .requestContext(requestContext)
                         .activationFlags(activationFlags)
                         .proximityCheckOtp(fetchProximityCheckOtp(requestObject))
-                        .additionalData(requestObject.getAdditionalData())
+                        .mobileTokenData(requestObject.getMobileTokenData())
                         .build();
 
                 return mobileTokenService.operationApprove(serviceRequest);
