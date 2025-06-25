@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider.rest;
+package com.wultra.app.onboardingserver.provider;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.provider.OnboardingProviderAutoConfiguration;
+import com.wultra.app.onboardingserver.provider.rest.RestOnboardingProvider;
+import com.wultra.app.onboardingserver.provider.rest.RestOnboardingProviderConfigProperties;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -26,8 +26,9 @@ import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,20 +38,21 @@ import org.springframework.util.MimeTypeUtils;
 import java.util.Map;
 
 /**
- * Autoconfiguration for {@link OnboardingProvider} registering REST implementation.
+ * Configuration for {@link OnboardingProvider} registering {@link EmptyOnboardingProvider} or {@link RestOnboardingProvider}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Configuration
-@ConditionalOnProperty(value = "enrollment-server-onboarding.onboarding-adapter.url")
-@EnableConfigurationProperties({RestOnboardingProviderConfiguration.class})
-@AutoConfigureBefore(OnboardingProviderAutoConfiguration.class)
+@EnableConfigurationProperties(RestOnboardingProviderConfigProperties.class)
 @Slf4j
-class RestOnboardingProviderAutoConfiguration {
+class OnboardingProviderConfiguration {
 
-    @Bean("onboardingAdapterRestClient")
-    public RestClient restClient(
-            final RestOnboardingProviderConfiguration configuration,
+    private static final String ONBOARDING_ADAPTER_REST_CLIENT = "onboardingAdapterRestClient";
+
+    @ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('${enrollment-server-onboarding.onboarding-adapter.url:}')")
+    @Bean(ONBOARDING_ADAPTER_REST_CLIENT)
+    RestClient restClient(
+            final RestOnboardingProviderConfigProperties configuration,
             @Value("${enrollment-server-onboarding.onboarding-adapter.url}") final String url) throws RestClientException {
 
         logger.info("Initializing onboarding adapter RestClient for url={}", url);
@@ -81,11 +83,20 @@ class RestOnboardingProviderAutoConfiguration {
         return new DefaultRestClient(config);
     }
 
+    @ConditionalOnBean(name = ONBOARDING_ADAPTER_REST_CLIENT)
     @Bean
-    OnboardingProvider onboardingProvider(
-            @Qualifier("onboardingAdapterRestClient") RestClient restClient,
-            final RestOnboardingProviderConfiguration configuration) {
+    OnboardingProvider restOnboardingProvider(
+            @Qualifier(ONBOARDING_ADAPTER_REST_CLIENT) RestClient restClient,
+            final RestOnboardingProviderConfigProperties configuration) {
+
         logger.info("Initializing RestOnboardingProvider");
         return new RestOnboardingProvider(restClient, configuration);
+    }
+
+    @ConditionalOnMissingBean(OnboardingProvider.class)
+    @Bean
+    OnboardingProvider emptyOnboardingProvider() {
+        logger.warn("No OnboardingProvider found, registering default EmptyOnboardingProvider");
+        return new EmptyOnboardingProvider();
     }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/1.7.x/20250513-add-onboarding-process-index.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_onboarding_process" indexName="onboarding_process_activation_id" />
+            </not>
+        </preConditions>
+        <comment>Create a new index on es_onboarding_process(activation_id)</comment>
+        <createIndex tableName="es_onboarding_process" indexName="onboarding_process_activation_id">
+            <column name="activation_id" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

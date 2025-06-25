@@ -27,7 +27,11 @@ import io.getlime.core.rest.model.base.request.ObjectRequest;
 import io.getlime.core.rest.model.base.response.Response;
 import io.getlime.push.client.PushServerClient;
 import io.getlime.push.client.PushServerClientException;
+import io.getlime.push.model.enumeration.ApnsEnvironment;
 import io.getlime.push.model.enumeration.MobilePlatform;
+import io.getlime.push.model.request.CreateDeviceRequest;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import io.getlime.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +58,11 @@ public class PushRegistrationService {
 
     public Response registerDevice(
             @NotNull ObjectRequest<PushRegisterRequest> request,
-            String userId,
-            String activationId,
-            String applicationId) throws InvalidRequestObjectException, PushRegistrationFailedException {
+            PowerAuthApiAuthentication apiAuthentication) throws InvalidRequestObjectException, PushRegistrationFailedException {
 
-        logger.info("Push registration started, user ID: {}", userId);
+        final String userId = apiAuthentication.getUserId();
+        final String activationId = apiAuthentication.getActivationContext().getActivationId();
+        final String applicationId = apiAuthentication.getApplicationId();
 
         // Verify that userId, applicationId and activationId are set
         if (userId == null || applicationId == null || activationId == null) {
@@ -75,10 +79,20 @@ public class PushRegistrationService {
         }
 
         final MobilePlatform platform = convert(requestObject.getPlatform());
+        final ApnsEnvironment environment = convert(requestObject.getEnvironment());
         final String token = requestObject.getToken();
 
         try {
-            final boolean result = client.createDevice(applicationId, token, platform, activationId);
+            final CreateDeviceRequest requestCreate = CreateDeviceRequest.builder()
+                    .appId(applicationId)
+                    .token(token)
+                    .platform(platform)
+                    .environment(environment)
+                    .activationId(activationId)
+                    .userId(userId)
+                    .activationStatus(convert(apiAuthentication.getActivationContext().getActivationStatus()))
+                    .build();
+            final boolean result = client.createDevice(requestCreate);
             if (result) {
                 logger.info("Push registration succeeded, user ID: {}", userId);
                 return new Response();
@@ -94,9 +108,36 @@ public class PushRegistrationService {
 
     private static MobilePlatform convert(final PushRegisterRequest.Platform source) {
         return switch (source) {
+            case APNS -> MobilePlatform.APNS;
+            case FCM -> MobilePlatform.FCM;
+            case HMS -> MobilePlatform.HMS;
             case IOS -> MobilePlatform.IOS;
             case ANDROID -> MobilePlatform.ANDROID;
             case HUAWEI -> MobilePlatform.HUAWEI;
+        };
+    }
+
+    private static ApnsEnvironment convert(final PushRegisterRequest.Environment source) {
+        if (source == null) {
+            return null;
+        }
+        return switch (source) {
+            case DEVELOPMENT -> ApnsEnvironment.DEVELOPMENT;
+            case PRODUCTION -> ApnsEnvironment.PRODUCTION;
+        };
+    }
+
+    private static ActivationStatus convert(final io.getlime.security.powerauth.rest.api.spring.model.ActivationStatus source) {
+        if (source == null) {
+            return null;
+        }
+
+        return switch (source) {
+            case CREATED -> ActivationStatus.CREATED;
+            case PENDING_COMMIT -> ActivationStatus.PENDING_COMMIT;
+            case ACTIVE -> ActivationStatus.ACTIVE;
+            case BLOCKED -> ActivationStatus.BLOCKED;
+            case REMOVED -> ActivationStatus.REMOVED;
         };
     }
 

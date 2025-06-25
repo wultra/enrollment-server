@@ -39,7 +39,7 @@ import org.springframework.http.HttpHeaders;
 @ConditionalOnExpression("""
         '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and '${enrollment-server-onboarding.document-verification.provider}' == 'innovatrics'
         """)
-@ComponentScan(basePackages = {"com.wultra.app.onboardingserver.provider.innovatrics"})
+@ComponentScan("com.wultra.app.onboardingserver.provider.innovatrics")
 @Configuration
 @Slf4j
 class InnovatricsConfig {
