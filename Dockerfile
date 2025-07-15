@@ -5,10 +5,12 @@ LABEL maintainer="petr@wultra.com"
 ENV JAVA_HOME=/opt/java/openjdk \
     LB_HOME=/usr/local/liquibase \
     LB_VERSION=4.30.0 \
+    LB_ARCHIVE_SHA256=184ffd609518091da42d6cd75e883b4f6ff1763cce8883e95fc99f7f05ca262d \
     PKG_RELEASE=1~jammy \
     TOMCAT_HOME=/usr/local/tomcat \
     TOMCAT_MAJOR=10 \
     TOMCAT_VERSION=10.1.42 \
+    TOMCAT_ARCHIVE_SHA512=eb09be6df829ebc1fb8851282888966101e878b2c4a507623f3acabc2a1337b89271b4ad7b9361f0bf4bcfe7b5cfec93617bd716043c68afef029c080fff6546 \
     TZ=UTC
 
 ENV PATH=$PATH:$LB_HOME:$TOMCAT_HOME/bin
@@ -20,7 +22,7 @@ RUN apt-get -y update  \
 
 # Install tomcat
 RUN curl -jkSL -o /tmp/apache-tomcat.tar.gz http://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR}/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz \
-    && [ "eb09be6df829ebc1fb8851282888966101e878b2c4a507623f3acabc2a1337b89271b4ad7b9361f0bf4bcfe7b5cfec93617bd716043c68afef029c080fff6546  /tmp/apache-tomcat.tar.gz" = "$(sha512sum /tmp/apache-tomcat.tar.gz)" ] \
+    && [ "$TOMCAT_ARCHIVE_SHA512  /tmp/apache-tomcat.tar.gz" = "$(sha512sum /tmp/apache-tomcat.tar.gz)" ] \
     && gunzip /tmp/apache-tomcat.tar.gz \
     && tar -C /opt -xf /tmp/apache-tomcat.tar \
     && ln -s /opt/apache-tomcat-$TOMCAT_VERSION $TOMCAT_HOME
@@ -31,7 +33,7 @@ RUN rm -rf $TOMCAT_HOME/webapps/*
 # This setup was inspired by https://github.com/mobtitude/liquibase/blob/master/Dockerfile
 RUN set -x \
     && wget -q -O /tmp/liquibase.tar.gz "https://github.com/liquibase/liquibase/releases/download/v$LB_VERSION/liquibase-$LB_VERSION.tar.gz" \
-    && [ "fc7d2a9fa97d91203d639b664715d40953c6c9155a5225a0ddc4c8079b9a3641  /tmp/liquibase.tar.gz" = "$(sha256sum /tmp/liquibase.tar.gz)" ] \
+    && [ "$LB_ARCHIVE_SHA256  /tmp/liquibase.tar.gz" = "$(sha256sum /tmp/liquibase.tar.gz)" ] \
     && mkdir -p "$LB_HOME" \
     && tar -xzf /tmp/liquibase.tar.gz -C "$LB_HOME" \
     && rm -rf "$LB_HOME/sdk" \
