@@ -20,7 +20,7 @@ Following endpoints are published in Enrollment Server RESTful API:
 - `POST` [/api/auth/token/app/operation/detail](#get-operation-detail) - Get detail of a Mobile Token operation
 - `POST` [/api/auth/token/app/operation/detail/claim](#claim-operation) - Claim a Mobile Token operation for a user
 - `POST` [/api/auth/token/app/operation/history](#get-history-of-operations) - Get history of Mobile Token operations
-- `POST` [/api/auth/token/app/operation/authorize](#confirm-operation) - Confirm a Mobile Token operation
+- `POST` [/api/auth/token/app/operation/authorize](#approve-operation) - Approve a Mobile Token operation
 - `POST` [/api/auth/token/app/operation/cancel](#reject-operation) - Reject a Mobile Token operation
 
 ### Push Registration API
@@ -95,7 +95,7 @@ In order to get a correctly localized response, use the `Accept-Language` HTTP h
 <!-- begin api POST /api/auth/token/app/operation/list -->
 ### Get Pending Operations
 
-Get the list with all operations that are pending confirmation.
+Get the list with all operations that are pending approval.
 
 <!-- begin remove -->
 
@@ -143,8 +143,8 @@ Get the list with all operations that are pending confirmation.
         ]
       },
       "formData": {
-        "title": "Confirm Payment",
-        "message": "Hello,\nplease confirm following payment:",
+        "title": "Approve Payment",
+        "message": "Hello,\nplease approve the following payment:",
         "attributes": [
           {
             "type": "ALERT",
@@ -282,8 +282,8 @@ Get an operation detail.
       ]
     },
     "formData": {
-      "title": "Confirm Payment",
-      "message": "Hello,\nplease confirm following payment:",
+      "title": "Approve Payment",
+      "message": "Hello,\nplease approve following payment:",
       "attributes": [
         {
           "type": "ALERT",
@@ -420,8 +420,8 @@ Claim an operation for a user.
       ]
     },
     "formData": {
-      "title": "Confirm Payment",
-      "message": "Hello,\nplease confirm following payment:",
+      "title": "Approve Payment",
+      "message": "Hello,\nplease approve following payment:",
       "attributes": [
         {
           "type": "ALERT",
@@ -507,7 +507,7 @@ Claim an operation for a user.
 <!-- begin api POST /api/auth/token/app/operation/history -->
 ### Get History of Operations
 
-Get the list of confirmed or rejected Mobile Token operations. 
+Get the list of approved or rejected Mobile Token operations. 
 
 <!-- begin remove -->
 
@@ -555,8 +555,8 @@ Get the list of confirmed or rejected Mobile Token operations.
         ]
       },
       "formData": {
-        "title": "Confirm Payment",
-        "message": "Hello,\nplease confirm following payment:",
+        "title": "Approve Payment",
+        "message": "Hello,\nplease approve following payment:",
         "attributes": [
           {
             "type": "ALERT",
@@ -641,9 +641,9 @@ Get the list of confirmed or rejected Mobile Token operations.
 <!-- end -->
 
 <!-- begin api POST /api/auth/token/app/operation/authorize -->
-### Confirm Operation
+### Approve Operation
 
-Confirms an operation with given ID and data. This endpoint requires a signature of a type specified by the operation.
+Approves an operation with given ID and data. This endpoint requires a signature of a type specified by the operation.
 
 <!-- begin remove -->
 
@@ -753,7 +753,7 @@ Reject an operation with given ID, with a provided reason.
 
 | Type | Description |
 |---|---|
-| `1FA` | One-factor signature - user just has to tap "Confirm" button to confirm it. |
+| `1FA` | One-factor signature - user just has to tap "Approve" button to aproove it. |
 | `2FA` | Two-factor signature - user needs to use either password of biometry as addition to possession factor. The `variants` key then determines what signature type is allowed for the given operation. |
 | `ECDSA` | ECDSA signature with device private key. |
 

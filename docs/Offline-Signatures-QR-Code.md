@@ -23,7 +23,7 @@ The format of QR code for offline operations is a high density string composed f
    - ASCII control characters (code < 32) are forbidden
    - `\n` can be used for newline character
    - `\\` can be used for backslash
-3. `{MESSAGE}` - message associated with operation, in UTF8 format. For example: "Please confirm this playment"
+3. `{MESSAGE}` - message associated with operation, in UTF8 format. For example: "Please aproove this playment"
    - ASCII control characters (code < 32) are forbidden
    - `\n` can be used for newline character
    - `\\` can be used for backslash
@@ -48,7 +48,7 @@ For example:
 ```
 5ff1b1ed-a3cc-45a3-8ab0-ed60950312b6
 Payment
-Please confirm this payment
+Please approve this payment
 A1*A100CZK*ICZ2730300000001165254011*D20180425
 B
 AD8bOO0Df73kNaIGb3Vmpg==
@@ -57,7 +57,7 @@ AD8bOO0Df73kNaIGb3Vmpg==
 
 ## Operation Data
 
-Operation data is an asterisk separated list of fields, where the first field defines a version of operation data and template. Other fields are additional and contains typically significant attributes, which has to be presented to the user, before the operation is confirmed and signed.
+Operation data is an asterisk separated list of fields, where the first field defines a version of operation data and template. Other fields are additional and contains typically significant attributes, which has to be presented to the user, before the operation is approved and signed.
 
 An exact details of the operation data structure can be found in the separate documentation:
 
@@ -163,7 +163,7 @@ For example:
 ```
 5ff1b1ed-a3cc-45a3-8ab0-ed60950312b6
 Payment
-Please confirm this payment
+Please approve this payment
 A1*A100CZK*ICZ2730300000001165254011*D20180425
 B
 ```
