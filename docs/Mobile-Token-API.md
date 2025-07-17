@@ -753,7 +753,7 @@ Reject an operation with given ID, with a provided reason.
 
 | Type | Description |
 |---|---|
-| `1FA` | One-factor signature - user just has to tap "Approve" button to aproove it. |
+| `1FA` | One-factor signature - user just has to tap "Approve" button to approve it. |
 | `2FA` | Two-factor signature - user needs to use either password of biometry as addition to possession factor. The `variants` key then determines what signature type is allowed for the given operation. |
 | `ECDSA` | ECDSA signature with device private key. |
 

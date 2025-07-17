@@ -23,7 +23,7 @@ The format of QR code for offline operations is a high density string composed f
    - ASCII control characters (code < 32) are forbidden
    - `\n` can be used for newline character
    - `\\` can be used for backslash
-3. `{MESSAGE}` - message associated with operation, in UTF8 format. For example: "Please aproove this playment"
+3. `{MESSAGE}` - message associated with operation, in UTF8 format. For example: "Please approve this payment"
    - ASCII control characters (code < 32) are forbidden
    - `\n` can be used for newline character
    - `\\` can be used for backslash
