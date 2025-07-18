@@ -14,7 +14,7 @@
 
 ## Operation Data Overview
 
-Operation data is an asterisk separated list of fields, where the first field defines a version of operation data and template. Other fields are additional and typically contain significant attributes, which has to be presented to the user, before the operation is confirmed and signed.
+Operation data is an asterisk separated list of fields, where the first field defines a version of operation data and template. Other fields are additional and typically contain significant attributes, which has to be presented to the user, before the operation is approved and signed.
 
 Each field has its unique type, defined by first letter. For example, following string contains header `A1` and three additional fields: "Amount", "Account" and "Date":
 
@@ -39,7 +39,7 @@ Version `A` has following limitations:
 
 - `0` - Generic template. Each field will be displayed with "default" title.
 - `1` - Payment data
-- `2` - Login confirmation
+- `2` - Login approval
 
 If template defines an optional field and this field is not present in operation data, then an empty string can be used. For example, following strings defines various forms of payment:
 
@@ -47,7 +47,7 @@ If template defines an optional field and this field is not present in operation
 - `A1*A100CZK*ICZ2730300000001165254011` - the same as above, but with omitted asterisks
 - `A1*A100CZK*ICZ2730300000001165254011***Nnote for recipient` - Last note is optional but used, so asterisks must be used to put note field at the right position.
 
-_Note: Templates other than `0` may have an implicit `{TITLE}` and `{MESSAGE}` attributes displayed on the client side (in the mobile application). For example, it's not required to issue "Payment" and "Please confirm this payment" titles, when the "payment" template is used, simple an empty newline can be used for both data attributes. This rule unfortunately goes agains our forward compatibility principle, so it's recommended only for version `A` templates. Unless data capacity is a critical issue, we recommend using explicit title and message._
+_Note: Templates other than `0` may have an implicit `{TITLE}` and `{MESSAGE}` attributes displayed on the client side (in the mobile application). For example, it's not required to issue "Payment" and "Please approve this payment" titles, when the "payment" template is used, simple an empty newline can be used for both data attributes. This rule unfortunately goes agains our forward compatibility principle, so it's recommended only for version `A` templates. Unless data capacity is a critical issue, we recommend using explicit title and message._
 
 ### Data Types
 
@@ -116,7 +116,7 @@ Generic template has no predefined order of fields. You can use up to 5 fields w
 | Attribute | Title                        |
 |-----------|:-----------------------------|
 | Title     | Payment                      |
-| Message   | Please confirm this payment  |
+| Message   | Please approve this payment  |
 
 Data fields
 
@@ -141,7 +141,7 @@ A1*A100CZK*ICZ2730300000001165254011*R/VS123456/SS/KS*D20180425
 | Attribute | Title                        |
 |-----------|:-----------------------------|
 | Title     | Login request                |
-| Message   | Please confirm login into internet banking. |
+| Message   | Please approve login into internet banking. |
 
 Data fields for this type of teplate are not specified, so any available fields will be interpreted as for generic template.
 
