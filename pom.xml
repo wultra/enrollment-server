@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -88,13 +88,13 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.13.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.14.0</openapi-generator-maven-plugin.version>
 
-        <okhttp3.version>4.12.0</okhttp3.version>
-        <shedlock.version>6.6.1</shedlock.version>
-        <spring-statemachine.version>4.0.0</spring-statemachine.version>
-        <swagger-annotations-jakarta.version>2.2.32</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.8.8</springdoc-openapi-starter-webmvc-ui.version>
+        <okhttp3.version>5.1.0</okhttp3.version>
+        <shedlock.version>6.9.2</shedlock.version>
+        <spring-statemachine.version>4.0.1</spring-statemachine.version>
+        <swagger-annotations-jakarta.version>2.2.34</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.8.9</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.5</moneta.version>
 
         <wultra-core.version>2.0.0-SNAPSHOT</wultra-core.version>
@@ -390,8 +390,8 @@
                     <url>https://wultra.jfrog.io/artifactory/internal-maven-repository</url>
                 </repository>
                 <repository>
-                    <id>ossrh-snapshots</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+                    <id>central-portal-snapshots</id>
+                    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
                     <releases>
                         <enabled>false</enabled>
                     </releases>
@@ -412,12 +412,12 @@
             </properties>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>ossrh-snapshots-distribution</id>
-                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+                    <id>central-portal-snapshots-distribution</id>
+                    <url>https://central.sonatype.com/repository/maven-snapshots/</url>
                 </snapshotRepository>
                 <repository>
-                    <id>ossrh-staging-distribution</id>
-                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <id>central-portal-staging-distribution</id>
+                    <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
         </profile>
@@ -425,18 +425,8 @@
 
     <repositories>
         <repository>
-            <id>ossrh-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>ossrh-snapshots-s01</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
             <releases>
                 <enabled>false</enabled>
             </releases>

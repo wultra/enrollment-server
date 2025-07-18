@@ -75,7 +75,15 @@ public class PushRegistrationController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
-        return registerDeviceImpl(request, apiAuthentication);
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration");
+        }
+
+        logger.info("action: registerDeviceDefault, state: initiated, userId: {}", apiAuthentication.getUserId());
+        final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
+        logger.info("action: registerDeviceDefault, state: succeeded");
+        return response;
     }
 
     /**
@@ -95,27 +103,15 @@ public class PushRegistrationController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
-        return registerDeviceImpl(request, apiAuthentication);
-    }
-
-    private Response registerDeviceImpl(
-            ObjectRequest<PushRegisterRequest> request,
-            PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PushRegistrationFailedException, InvalidRequestObjectException {
-
-        // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration");
             throw new PowerAuthAuthenticationException("Unable to verify device registration");
         }
 
-        // Check if the context is authenticated - if it is, add activation ID.
-        // This assures that the activation is assigned with a correct device.
-        final String userId = apiAuthentication.getUserId();
-        final String activationId = apiAuthentication.getActivationContext().getActivationId();
-        final String applicationId = apiAuthentication.getApplicationId();
-
-        return pushRegistrationService.registerDevice(request, userId, activationId, applicationId);
+        logger.info("action: registerDeviceToken, state: initiated, userId: {}", apiAuthentication.getUserId());
+        final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
+        logger.info("action: registerDeviceToken, state: succeeded");
+        return response;
     }
 
 }

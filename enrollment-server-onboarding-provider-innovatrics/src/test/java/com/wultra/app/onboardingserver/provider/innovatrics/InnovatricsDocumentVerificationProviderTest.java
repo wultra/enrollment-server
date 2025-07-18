@@ -30,14 +30,15 @@ import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test of {@link InnovatricsDocumentVerificationProvider}.
@@ -51,7 +52,7 @@ class InnovatricsDocumentVerificationProviderTest {
     @Autowired
     private InnovatricsDocumentVerificationProvider tested;
 
-    @MockBean
+    @MockitoBean
     private InnovatricsApiService apiService;
 
     @Test
