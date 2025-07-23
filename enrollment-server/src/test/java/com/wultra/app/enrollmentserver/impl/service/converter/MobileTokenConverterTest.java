@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
 import com.wultra.security.powerauth.client.model.enumeration.OperationStatus;
-import com.wultra.security.powerauth.client.model.enumeration.SignatureType;
+import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
 import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;

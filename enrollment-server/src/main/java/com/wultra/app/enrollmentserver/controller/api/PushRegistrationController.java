@@ -24,7 +24,7 @@ import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectExcepti
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.Response;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
@@ -69,10 +69,10 @@ public class PushRegistrationController {
      * @throws PushRegistrationFailedException In case push registration fails.
      */
     @PostMapping("device/register")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         if (apiAuthentication == null) {
@@ -97,10 +97,10 @@ public class PushRegistrationController {
      * @throws PushRegistrationFailedException In case push registration fails.
      */
     @PostMapping("device/register/token")
-    @PowerAuthToken(signatureType = {
-            PowerAuthSignatureTypes.POSSESSION,
-            PowerAuthSignatureTypes.POSSESSION_BIOMETRY,
-            PowerAuthSignatureTypes.POSSESSION_KNOWLEDGE
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION,
+            PowerAuthCodeType.POSSESSION_BIOMETRY,
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         if (apiAuthentication == null) {

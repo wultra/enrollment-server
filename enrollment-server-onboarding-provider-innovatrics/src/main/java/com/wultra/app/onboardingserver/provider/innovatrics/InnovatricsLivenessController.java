@@ -20,7 +20,7 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.core.rest.model.base.response.Response;
-import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthSignatureTypes;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
@@ -69,7 +69,7 @@ class InnovatricsLivenessController {
      */
     @PostMapping("presence-check/upload")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuth(resourceId = "/api/identity/presence-check/upload", signatureType = PowerAuthSignatureTypes.POSSESSION)
+    @PowerAuth(resourceId = "/api/identity/presence-check/upload", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response upload(
             @EncryptedRequestBody byte[] requestData,
             @Parameter(hidden = true) EncryptionContext encryptionContext,
