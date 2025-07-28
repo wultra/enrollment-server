@@ -34,7 +34,6 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.Assert;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -61,7 +60,7 @@ public class SecurityConfig {
             http.httpBasic(AbstractHttpConfigurer::disable);
         } else {
             http.authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).authenticated()
+                    .requestMatchers("/api/admin/**").authenticated()
                     .anyRequest().permitAll());
         }
 
