@@ -38,6 +38,7 @@ public class Operation {
     private String name;
     @NotNull
     private String data;
+    @NotNull
     private String status;
 
     /**
