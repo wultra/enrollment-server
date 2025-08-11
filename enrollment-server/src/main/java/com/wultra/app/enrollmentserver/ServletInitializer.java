@@ -29,9 +29,6 @@ public class ServletInitializer extends SpringBootServletInitializer {
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
 
-        // Register BC provider and tell PowerAuth components to use it.
-        Security.addProvider(new BouncyCastleProvider());
-
         return application.sources(EnrollmentServerApplication.class);
     }
 
