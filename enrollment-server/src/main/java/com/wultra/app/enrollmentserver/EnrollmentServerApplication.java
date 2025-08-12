@@ -32,7 +32,6 @@ import java.security.Security;
 public class EnrollmentServerApplication {
 
     public static void main(String[] args) {
-        Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(EnrollmentServerApplication.class, args);
     }
 
