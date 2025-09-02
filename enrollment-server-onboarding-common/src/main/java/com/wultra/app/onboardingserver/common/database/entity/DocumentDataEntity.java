@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
@@ -66,7 +65,7 @@ public class DocumentDataEntity implements Serializable {
     @Column(name = "filename", nullable = false)
     private String filename;
 
-    @Column(name = "data", nullable = false)
+    @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
     @Column(name = "timestamp_created", nullable = false)
