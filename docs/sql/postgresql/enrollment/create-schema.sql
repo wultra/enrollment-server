@@ -33,3 +33,12 @@ CREATE TABLE es_operation_template (
 );
 
 CREATE UNIQUE INDEX es_operation_template_placeholder ON es_operation_template(placeholder, language);
+
+-- Scheduler lock table - https://github.com/lukas-krecan/ShedLock#configure-lockprovider
+CREATE TABLE IF NOT EXISTS shedlock (
+    name VARCHAR(64) NOT NULL,
+    lock_until TIMESTAMP NOT NULL,
+    locked_at TIMESTAMP NOT NULL,
+    locked_by VARCHAR(255) NOT NULL,
+    PRIMARY KEY (name)
+);
