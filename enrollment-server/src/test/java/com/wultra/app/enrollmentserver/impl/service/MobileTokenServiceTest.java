@@ -23,9 +23,9 @@ import static org.mockito.Mockito.*;
 import com.wultra.app.enrollmentserver.database.OperationTemplateRepository;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
-import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
+import com.wultra.security.powerauth.client.model.response.v4.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
@@ -90,8 +90,8 @@ class MobileTokenServiceTest {
         operationDetailResponse.setOperationType(operationType);
         operationDetailResponse.setParameters(new HashMap<>());
 
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse response
-                = new com.wultra.security.powerauth.client.model.response.OperationListResponse();
+        final com.wultra.security.powerauth.client.model.response.v4.OperationListResponse response
+                = new com.wultra.security.powerauth.client.model.response.v4.OperationListResponse();
         response.add(operationDetailResponse);
 
         when(powerAuthClient.operationList(request, null, null)).thenReturn(response);
@@ -135,8 +135,8 @@ class MobileTokenServiceTest {
         operationDetailResponse.setOperationType(operationType);
         operationDetailResponse.setParameters(new HashMap<>());
 
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse response
-                = new com.wultra.security.powerauth.client.model.response.OperationListResponse();
+        final com.wultra.security.powerauth.client.model.response.v4.OperationListResponse response
+                = new com.wultra.security.powerauth.client.model.response.v4.OperationListResponse();
         response.add(operationDetailResponse);
 
         when(powerAuthClient.operationPendingList(request, null, null)).thenReturn(response);
@@ -180,8 +180,8 @@ class MobileTokenServiceTest {
         operationDetailResponse.setOperationType(operationType);
         operationDetailResponse.setParameters(new HashMap<>());
 
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse response
-                = new com.wultra.security.powerauth.client.model.response.OperationListResponse();
+        final com.wultra.security.powerauth.client.model.response.v4.OperationListResponse response
+                = new com.wultra.security.powerauth.client.model.response.v4.OperationListResponse();
         response.add(operationDetailResponse);
 
         when(powerAuthClient.operationList(request, null, null)).thenReturn(response);

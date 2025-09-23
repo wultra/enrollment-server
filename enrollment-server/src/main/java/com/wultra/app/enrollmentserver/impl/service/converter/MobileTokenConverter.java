@@ -24,8 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
-import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
-import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
+import com.wultra.security.powerauth.client.model.enumeration.v4.AuthenticationCodeType;
+import com.wultra.security.powerauth.client.model.response.v4.OperationDetailResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import lombok.extern.slf4j.Slf4j;
@@ -63,17 +63,17 @@ public class MobileTokenConverter {
         this.objectMapper = objectMapper;
     }
 
-    private AllowedSignatureType convert(List<SignatureType> authenticationCodeTypes) {
+    private AllowedSignatureType convert(List<AuthenticationCodeType> authenticationCodeTypes) {
         final AllowedSignatureType allowedSignatureType = new AllowedSignatureType();
-        if (authenticationCodeTypes.contains(SignatureType.POSSESSION)) {
+        if (authenticationCodeTypes.contains(AuthenticationCodeType.POSSESSION)) {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_1FA);
         } else {
             allowedSignatureType.setType(AllowedSignatureType.Type.MULTIFACTOR_2FA);
             final List<String> variants = new ArrayList<>();
-            if (authenticationCodeTypes.contains(SignatureType.POSSESSION_KNOWLEDGE)) {
+            if (authenticationCodeTypes.contains(AuthenticationCodeType.POSSESSION_KNOWLEDGE)) {
                 variants.add("possession_knowledge");
             }
-            if (authenticationCodeTypes.contains(SignatureType.POSSESSION_BIOMETRY)) {
+            if (authenticationCodeTypes.contains(AuthenticationCodeType.POSSESSION_BIOMETRY)) {
                 variants.add("possession_biometry");
             }
             allowedSignatureType.setVariants(variants);
@@ -100,7 +100,7 @@ public class MobileTokenConverter {
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
             operation.setName(operationDetail.getOperationType());
-            operation.setAllowedSignatureType(convert(operationDetail.getSignatureType()));
+            operation.setAllowedSignatureType(convert(operationDetail.getAuthenticationCodeType()));
             operation.setData(operationDetail.getData());
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
