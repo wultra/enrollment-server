@@ -24,17 +24,21 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.core.http.common.request.RequestContext;
-import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
+import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.request.*;
-import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
-import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
+import com.wultra.security.powerauth.client.model.request.OperationClaimRequest;
+import com.wultra.security.powerauth.client.model.request.OperationDetailRequest;
+import com.wultra.security.powerauth.client.model.request.OperationFailApprovalRequest;
+import com.wultra.security.powerauth.client.model.request.OperationListForUserRequest;
+import com.wultra.security.powerauth.client.model.request.v3.OperationApproveRequest;
+import com.wultra.security.powerauth.client.model.response.v3.OperationDetailResponse;
+import com.wultra.security.powerauth.client.model.response.v3.OperationUserActionResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
-import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -117,7 +121,7 @@ public class MobileTokenService {
         request.setActivationId(activationId);
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse operations =
+        final com.wultra.security.powerauth.client.model.response.v3.OperationListResponse operations =
                 pendingOnly ?
                 powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
                 powerAuthClient.operationList(request, queryParams, httpHeaders);
@@ -152,7 +156,7 @@ public class MobileTokenService {
             throw new MobileTokenException("OPERATION_REQUIRES_ACTIVATION_FLAG", "Operation requires activation flag: " + activationFlag + ", which is not present on activation.");
         }
 
-        final com.wultra.security.powerauth.client.model.request.OperationApproveRequest approveRequest = new com.wultra.security.powerauth.client.model.request.OperationApproveRequest();
+        final com.wultra.security.powerauth.client.model.request.v3.OperationApproveRequest approveRequest = new com.wultra.security.powerauth.client.model.request.v3.OperationApproveRequest();
         approveRequest.setOperationId(request.getOperationId());
         approveRequest.setData(request.getData());
         approveRequest.setUserId(request.getUserId());
