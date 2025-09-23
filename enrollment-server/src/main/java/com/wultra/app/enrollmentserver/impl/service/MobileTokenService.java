@@ -24,13 +24,14 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationExc
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.impl.service.converter.MobileTokenConverter;
 import com.wultra.core.http.common.request.RequestContext;
-import com.wultra.security.powerauth.client.model.enumeration.v3.SignatureType;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.model.enumeration.v4.AuthenticationCodeType;
+import com.wultra.security.powerauth.client.model.request.v4.OperationApproveRequest;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.enumeration.UserActionResult;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.*;
-import com.wultra.security.powerauth.client.model.response.OperationDetailResponse;
-import com.wultra.security.powerauth.client.model.response.OperationUserActionResponse;
+import com.wultra.security.powerauth.client.model.response.v4.OperationDetailResponse;
+import com.wultra.security.powerauth.client.model.response.v4.OperationUserActionResponse;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.Operation;
 import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.lib.mtoken.model.response.OperationListResponse;
@@ -117,7 +118,7 @@ public class MobileTokenService {
         request.setActivationId(activationId);
         final MultiValueMap<String, String> queryParams = httpCustomizationService.getQueryParams();
         final MultiValueMap<String, String> httpHeaders = httpCustomizationService.getHttpHeaders();
-        final com.wultra.security.powerauth.client.model.response.OperationListResponse operations =
+        final com.wultra.security.powerauth.client.model.response.v4.OperationListResponse operations =
                 pendingOnly ?
                 powerAuthClient.operationPendingList(request, queryParams, httpHeaders) :
                 powerAuthClient.operationList(request, queryParams, httpHeaders);
@@ -152,11 +153,11 @@ public class MobileTokenService {
             throw new MobileTokenException("OPERATION_REQUIRES_ACTIVATION_FLAG", "Operation requires activation flag: " + activationFlag + ", which is not present on activation.");
         }
 
-        final com.wultra.security.powerauth.client.model.request.OperationApproveRequest approveRequest = new com.wultra.security.powerauth.client.model.request.OperationApproveRequest();
+        final OperationApproveRequest approveRequest = new OperationApproveRequest();
         approveRequest.setOperationId(request.getOperationId());
         approveRequest.setData(request.getData());
         approveRequest.setUserId(request.getUserId());
-        approveRequest.setSignatureType(SignatureType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
+        approveRequest.setAuthenticationCodeType(AuthenticationCodeType.enumFromString(request.getSignatureFactors().name())); // 'toString' would perform additional toLowerCase() call
         approveRequest.setApplicationId(request.getApplicationId());
 
         fillAdditionalData(request, approveRequest);
