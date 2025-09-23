@@ -223,42 +223,25 @@ public class MobileTokenService {
     /**
      * Reject an operation.
      *
-     * @param activationId Activation ID.
-     * @param userId User ID.
-     * @param applicationId Application ID.
-     * @param operationId Operation ID.
-     * @param requestContext Request context.
-     * @param activationFlags Activation flags.
-     * @param rejectReason Reason for operation rejection.
+     * @param request Parameter object.
      * @return Simple response.
      * @throws MobileTokenException In the case error mobile token service occurs.
      * @throws PowerAuthClientException In the case that PowerAuth service call fails.
      */
-    public Response operationReject(
-            @NotNull String activationId,
-            @NotNull String userId,
-            @NotNull String applicationId,
-            @NotNull String operationId,
-            @NotNull RequestContext requestContext,
-            List<String> activationFlags,
-            String rejectReason) throws MobileTokenException, PowerAuthClientException {
-        final OperationDetailResponse operationDetail = fetchOperationDetailInternal(operationId);
+    public Response operationReject(final OperationRejectParameterObject request) throws MobileTokenException, PowerAuthClientException {
+        final OperationDetailResponse operationDetail = fetchOperationDetailInternal(request.operationId());
 
         final String activationFlag = operationDetail.getActivationFlag();
-        if (activationFlag != null && !activationFlags.contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
+        if (activationFlag != null && !request.activationFlags().contains(activationFlag)) { // allow approval if there is no flag, or if flag matches flags of activation
             throw new MobileTokenException("OPERATION_REQUIRES_ACTIVATION_FLAG", "Operation requires activation flag: " + activationFlag + ", which is not present on activation.");
         }
 
         final com.wultra.security.powerauth.client.model.request.OperationRejectRequest rejectRequest = new com.wultra.security.powerauth.client.model.request.OperationRejectRequest();
-        rejectRequest.setOperationId(operationId);
-        rejectRequest.setUserId(userId);
-        rejectRequest.setApplicationId(applicationId);
-        // Prepare additional data
-        rejectRequest.getAdditionalData().put(ATTR_ACTIVATION_ID, activationId);
-        rejectRequest.getAdditionalData().put(ATTR_APPLICATION_ID, applicationId);
-        rejectRequest.getAdditionalData().put(ATTR_IP_ADDRESS, requestContext.getIpAddress());
-        rejectRequest.getAdditionalData().put(ATTR_USER_AGENT, requestContext.getUserAgent());
-        rejectRequest.getAdditionalData().put(ATTR_REJECT_REASON, rejectReason);
+        rejectRequest.setOperationId(request.operationId());
+        rejectRequest.setUserId(request.userId());
+        rejectRequest.setApplicationId(request.applicationId());
+
+        fillAdditionalData(request, rejectRequest);
 
         final OperationUserActionResponse rejectResponse = powerAuthClient.operationReject(
                 rejectRequest,
@@ -273,6 +256,20 @@ public class MobileTokenService {
             final OperationDetailResponse operation = rejectResponse.getOperation();
             handleStatus(operation);
             throw new MobileTokenAuthException(ErrorCode.OPERATION_FAILED, "PowerAuth server operation rejection fails");
+        }
+    }
+
+    private static void fillAdditionalData(final OperationRejectParameterObject source, final OperationRejectRequest target) {
+        final Map<String, Object> additionalData = target.getAdditionalData();
+
+        additionalData.put(ATTR_ACTIVATION_ID, source.activationId());
+        additionalData.put(ATTR_APPLICATION_ID, source.applicationId());
+        additionalData.put(ATTR_IP_ADDRESS, source.requestContext().getIpAddress());
+        additionalData.put(ATTR_USER_AGENT, source.requestContext().getUserAgent());
+        additionalData.put(ATTR_REJECT_REASON, source.rejectReason());
+
+        if (source.mobileTokenData() != null) {
+            additionalData.put(ATTR_MOBILE_TOKEN_DATA, source.mobileTokenData());
         }
     }
 
