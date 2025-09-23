@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parameter object for {@link MobileTokenService#operationReject(OperationRejectParameterObject)} (OperationRejectParameterObject)}.
+ * Parameter object for {@link MobileTokenService#operationReject(OperationRejectParameterObject)}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
