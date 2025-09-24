@@ -105,6 +105,8 @@ class MobileTokenConverterTest {
         assertEquals(PreApprovalScreenV1.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
         assertNotNull(preApprovalScreen.getItems());
 
+        assertNull(ui.getPreApprovalScreens()); // V2
+
         final List<String> items = preApprovalScreen.getItems();
         assertEquals(3, items.size());
         assertEquals("You activate a new app and allow access to your accounts", items.get(0));
@@ -112,6 +114,81 @@ class MobileTokenConverterTest {
         final PostApprovalScreen postApprovalScreen = ui.getPostApprovalScreen();
         assertNotNull(postApprovalScreen);
         assertEquals("You may close the application now.", postApprovalScreen.getMessage());
+    }
+
+    @Test
+    void testPreApprovalScreenV2() throws Exception {
+        final OperationDetailResponse operationDetail = createOperationDetailResponse();
+        operationDetail.setRiskFlags("C");
+
+        final OperationTemplateEntity operationTemplate = new OperationTemplateEntity();
+        operationTemplate.setUi("""
+                {
+                  "flipButtons": true,
+                  "blockApprovalOnCall": false,
+                  "preApprovalScreens": [
+                    {
+                      "id": "custom_id",
+                      "type": "WARNING",
+                      "backButton": true,
+                      "image": "image-label",
+                      "heading": "Watch out!",
+                      "message": "You may become a victim of an attack.",
+                      "elements": [
+                        {
+                          "id": "custom_element_id",
+                          "type": "ALERT",
+                          "style": "INFO",
+                          "text": "Make sure the activation takes place on your device"
+                        },
+                        {
+                          "id": "custom_element_id",
+                          "type": "BUTTON",
+                          "action": "PHONE",
+                          "text": "Call center",
+                          "href": "+42012345678"
+                        },
+                        {
+                          "id": "custom_element_id",
+                          "type": "LIST_ITEM",
+                          "icon": "icon-label",
+                          "text": "You activate a new app and allow access to your accounts"
+                        }
+                      ],
+                      "controls": {
+                        "flip": true,
+                        "axis": "VERTICAL",
+                        "decline": {
+                          "type": "REJECT",
+                          "text": "Reject Payment"
+                        },
+                        "approve": {
+                          "type": "BUTTON",
+                          "text": "Approve Payment",
+                          "counter": 10
+                        }
+                      }
+                    },
+                    {
+                      "id": "custom_id",
+                      "type": "QR_SCAN",
+                      "heading": "Watch out!",
+                      "message": "You may become a victim of an attack."
+                    }
+                  ]
+                }""");
+
+        final Operation result = tested.convert(operationDetail, operationTemplate);
+
+        assertNotNull(result.getUi());
+
+        final UiExtensions ui = result.getUi();
+        assertEquals(true, ui.getFlipButtons());
+        assertEquals(false, ui.getBlockApprovalOnCall());
+        assertNull(ui.getPreApprovalScreen());
+        assertNotNull(ui.getPreApprovalScreens());
+
+
     }
 
     @Test
