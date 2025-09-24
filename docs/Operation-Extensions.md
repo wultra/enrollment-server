@@ -92,7 +92,73 @@ Currently, the following types of pre-approval screen are supported.
 
 ### Pre-approval Screens
 
-TODO Lubos 
+Optional information about screens that should be displayed before the operation approval.
+
+#### Example
+
+```json
+{
+  "preApprovalScreens": [
+    {
+      "id": "custom_id1",
+      "type": "WARNING",
+      "backButton": true,
+      "image": "image-label",
+      "heading": "Watch out!",
+      "message": "You may become a victim of an attack.",
+      "elements": [
+        {
+          "id": "custom_element_id",
+          "type": "ALERT",
+          "style": "INFO",
+          "text": "Make sure the activation takes place on your device"
+        },
+        {
+          "id": "custom_element_id",
+          "type": "BUTTON",
+          "action": "PHONE",
+          "text": "Call center",
+          "href": "+42012345678"
+        },
+        {
+          "id": "custom_element_id",
+          "type": "LIST_ITEM",
+          "icon": "icon-label",
+          "text": "You activate a new app and allow access to your accounts"
+        }
+      ],
+      "controls": {
+        "flip": true,
+        "axis": "VERTICAL",
+        "decline": {
+          "type": "REJECT",
+          "text": "Reject Payment"
+        },
+        "approve": {
+          "type": "BUTTON",
+          "text": "Approve Payment",
+          "counter": 10
+        }
+      }
+    },
+    {
+      "id": "custom_id2",
+      "type": "QR_SCAN",
+      "heading": "Watch out!",
+      "message": "You may become a victim of an attack."
+    }
+  ]
+}
+```
+
+
+#### Pre-approval Screen Types
+
+Currently, the following types of pre-approval screen are supported.
+
+- `WARNING` for warning screen.
+- `INFO` for a general information screen.
+- `QR_SCAN` for screen to scan QR code to do proximity check.
 
 
 ### Post-approval Screen
