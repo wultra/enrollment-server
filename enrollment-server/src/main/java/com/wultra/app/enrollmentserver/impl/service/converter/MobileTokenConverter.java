@@ -186,6 +186,14 @@ public class MobileTokenConverter {
                 preApprovalScreen.setApprovalType(PreApprovalScreenV1.ApprovalType.SLIDER);
                 ui.setPreApprovalScreen(preApprovalScreen);
             }
+            if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
+                final PreApprovalScreenV2.Approve approve = new PreApprovalScreenV2.Approve(PreApprovalScreenV2.ApprovalType.SLIDER, null, null);
+                final PreApprovalScreenV2.Controls controls = new PreApprovalScreenV2.Controls(null, null, null, approve);
+                final PreApprovalScreenV2 preApprovalScreen = new PreApprovalScreenV2();
+                preApprovalScreen.setType(PreApprovalScreenV2.ScreenType.WARNING);
+                preApprovalScreen.setControls(controls);
+                ui.setPreApprovalScreens(List.of(preApprovalScreen));
+            }
             return ui;
         } else {
             return null;

@@ -34,8 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.from;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -282,6 +281,11 @@ class MobileTokenConverterTest {
         final PreApprovalScreenV1 preApprovalScreen = ui.getPreApprovalScreen();
         assertEquals(PreApprovalScreenV1.ScreenType.WARNING, preApprovalScreen.getType());
         assertEquals(PreApprovalScreenV1.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
+
+        final List<PreApprovalScreenV2> preApprovalScreens = ui.getPreApprovalScreens();
+        assertEquals(1, preApprovalScreens.size());
+        assertEquals(PreApprovalScreenV2.ApprovalType.SLIDER, preApprovalScreens.get(0).getControls().approve().type());
+        assertEquals(PreApprovalScreenV2.ScreenType.WARNING, preApprovalScreens.get(0).getType());
     }
 
     @Test
