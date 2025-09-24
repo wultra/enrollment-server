@@ -65,10 +65,21 @@ public class PreApprovalScreenV2 {
 
     private Controls  controls;
 
-    public record Element (
-        ElementType type,
-        ElementStyle style
-    ){}
+    public record Element(
+            String id,
+            ElementType type,
+            ElementStyle style,
+            String text,
+            String href,
+            String icon,
+            ActionType action
+    ) {}
+
+    public enum ActionType {
+        LINK,
+        MAIL,
+        PHONE
+    }
 
     public enum ElementType {
         LIST_ITEM,
