@@ -128,7 +128,7 @@ class MobileTokenConverterTest {
                   "blockApprovalOnCall": false,
                   "preApprovalScreens": [
                     {
-                      "id": "custom_id",
+                      "id": "custom_id1",
                       "type": "WARNING",
                       "backButton": true,
                       "image": "image-label",
@@ -170,7 +170,7 @@ class MobileTokenConverterTest {
                       }
                     },
                     {
-                      "id": "custom_id",
+                      "id": "custom_id2",
                       "type": "QR_SCAN",
                       "heading": "Watch out!",
                       "message": "You may become a victim of an attack."
@@ -185,10 +185,48 @@ class MobileTokenConverterTest {
         final UiExtensions ui = result.getUi();
         assertEquals(true, ui.getFlipButtons());
         assertEquals(false, ui.getBlockApprovalOnCall());
-        assertNull(ui.getPreApprovalScreen());
+        assertNull(ui.getPreApprovalScreen()); // V1
         assertNotNull(ui.getPreApprovalScreens());
 
+        final List<PreApprovalScreenV2> screens = ui.getPreApprovalScreens();
+        assertEquals(2, screens.size());
 
+        final PreApprovalScreenV2 screen1 = screens.get(0);
+        assertEquals("custom_id1", screen1.getId());
+        assertEquals(PreApprovalScreenV2.ScreenType.WARNING, screen1.getType());
+        assertTrue(screen1.getBackButton());
+        assertEquals("image-label", screen1.getImage());
+        assertEquals("Watch out!", screen1.getHeading());
+        assertEquals("You may become a victim of an attack.", screen1.getMessage());
+
+        final List<PreApprovalScreenV2.Element> elements = screen1.getElements();
+        assertEquals(3, elements.size());
+        assertEquals(PreApprovalScreenV2.ElementType.ALERT, elements.get(0).type());
+        assertEquals(PreApprovalScreenV2.ElementStyle.INFO, elements.get(0).style());
+        assertEquals("Make sure the activation takes place on your device", elements.get(0).text());
+
+        assertEquals(PreApprovalScreenV2.ElementType.BUTTON, elements.get(1).type());
+        assertEquals(PreApprovalScreenV2.ActionType.PHONE, elements.get(1).action());
+        assertEquals("Call center", elements.get(1).text());
+        assertEquals("+42012345678", elements.get(1).href());
+
+        assertEquals(PreApprovalScreenV2.ElementType.LIST_ITEM, elements.get(2).type());
+        assertEquals("icon-label", elements.get(2).icon());
+        assertEquals("You activate a new app and allow access to your accounts", elements.get(2).text());
+
+        final PreApprovalScreenV2.Controls controls = screen1.getControls();
+        assertTrue(controls.flip());
+        assertEquals(PreApprovalScreenV2.Axis.VERTICAL, controls.axis());
+        assertEquals(PreApprovalScreenV2.DeclineType.REJECT, controls.decline().type());
+        assertEquals("Reject Payment", controls.decline().text());
+        assertEquals(PreApprovalScreenV2.ApprovalType.BUTTON, controls.approve().type());
+        assertEquals("Approve Payment", controls.approve().text());
+
+        final PreApprovalScreenV2 screen2 = screens.get(1);
+        assertEquals("custom_id2", screen2.getId());
+        assertEquals(PreApprovalScreenV2.ScreenType.QR_SCAN, screen2.getType());
+        assertEquals("Watch out!", screen2.getHeading());
+        assertEquals("You may become a victim of an attack.", screen2.getMessage());
     }
 
     @Test
