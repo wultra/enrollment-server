@@ -181,9 +181,9 @@ public class MobileTokenConverter {
                 ui.setBlockApprovalOnCall(true);
             }
             if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
-                final PreApprovalScreen preApprovalScreen = new PreApprovalScreen();
-                preApprovalScreen.setType(PreApprovalScreen.ScreenType.WARNING);
-                preApprovalScreen.setApprovalType(PreApprovalScreen.ApprovalType.SLIDER);
+                final PreApprovalScreenV1 preApprovalScreen = new PreApprovalScreenV1();
+                preApprovalScreen.setType(PreApprovalScreenV1.ScreenType.WARNING);
+                preApprovalScreen.setApprovalType(PreApprovalScreenV1.ApprovalType.SLIDER);
                 ui.setPreApprovalScreen(preApprovalScreen);
             }
             return ui;
@@ -195,7 +195,7 @@ public class MobileTokenConverter {
     private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
         final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
         if (uiExtensions.getPreApprovalScreen() != null
-                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreen.ScreenType.QR_SCAN
+                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreenV1.ScreenType.QR_SCAN
                 && operationDetail.getProximityOtp() == null) {
 
             logger.info("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());

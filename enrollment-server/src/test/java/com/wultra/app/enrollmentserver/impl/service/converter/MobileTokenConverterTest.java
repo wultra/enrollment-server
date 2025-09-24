@@ -98,11 +98,11 @@ class MobileTokenConverterTest {
         assertEquals(false, ui.getBlockApprovalOnCall());
         assertNotNull(ui.getPreApprovalScreen());
 
-        final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
-        assertEquals(PreApprovalScreen.ScreenType.WARNING, preApprovalScreen.getType());
+        final PreApprovalScreenV1 preApprovalScreen = ui.getPreApprovalScreen();
+        assertEquals(PreApprovalScreenV1.ScreenType.WARNING, preApprovalScreen.getType());
         assertEquals("Watch out!", preApprovalScreen.getHeading());
         assertEquals("You may become a victim of an attack.", preApprovalScreen.getMessage());
-        assertEquals(PreApprovalScreen.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
+        assertEquals(PreApprovalScreenV1.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
         assertNotNull(preApprovalScreen.getItems());
 
         final List<String> items = preApprovalScreen.getItems();
@@ -164,9 +164,9 @@ class MobileTokenConverterTest {
         assertEquals(true, ui.getBlockApprovalOnCall());
         assertNotNull(ui.getPreApprovalScreen());
 
-        final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
-        assertEquals(PreApprovalScreen.ScreenType.WARNING, preApprovalScreen.getType());
-        assertEquals(PreApprovalScreen.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
+        final PreApprovalScreenV1 preApprovalScreen = ui.getPreApprovalScreen();
+        assertEquals(PreApprovalScreenV1.ScreenType.WARNING, preApprovalScreen.getType());
+        assertEquals(PreApprovalScreenV1.ApprovalType.SLIDER, preApprovalScreen.getApprovalType());
     }
 
     @Test
@@ -815,8 +815,8 @@ class MobileTokenConverterTest {
         final UiExtensions ui = result.getUi();
         assertNotNull(ui.getPreApprovalScreen());
 
-        final PreApprovalScreen preApprovalScreen = ui.getPreApprovalScreen();
-        assertEquals(PreApprovalScreen.ScreenType.QR_SCAN, preApprovalScreen.getType());
+        final PreApprovalScreenV1 preApprovalScreen = ui.getPreApprovalScreen();
+        assertEquals(PreApprovalScreenV1.ScreenType.QR_SCAN, preApprovalScreen.getType());
         assertEquals("Scan the QR code!", preApprovalScreen.getHeading());
         assertEquals("You may become a victim of an attack.", preApprovalScreen.getMessage());
     }

@@ -45,8 +45,14 @@ If you define any UI extension, the operation risk flags are overridden.
 | `flipButtons`         | `false`  | `false` | `X`       | Flip the approve and reject buttons on the approval screen.                               |
 | `blockApprovalOnCall` | `false`  | `false` | `C`       | Block approving the operation in case there is an ongoing call.                           |
 | `preApprovalScreen`   | `false`  |         | `F`       | Optional information about screen that should be displayed before the operation approval. |
+| `preApprovalScreens`  | `false`  |         | `F`       | Optional information about screen that should be displayed before the operation approval. |
 
 ### Pre-approval Screen
+
+<!-- begin box warning -->
+Mind that `preApprovalScreen` is deprecated, use `preApprovalScreens` instead.
+See [Pre-approval Screens](#pre-approval-screens) for more details.
+<!-- end -->
 
 Optional information about screen that should be displayed before the operation approval.
 
@@ -82,6 +88,11 @@ Currently, the following types of pre-approval screen are supported.
 - `WARNING` for warning screen.
 - `INFO` for a general information screen.
 - `QR_SCAN` for screen to scan QR code to do proximity check.
+
+
+### Pre-approval Screens
+
+TODO Lubos 
 
 
 ### Post-approval Screen
