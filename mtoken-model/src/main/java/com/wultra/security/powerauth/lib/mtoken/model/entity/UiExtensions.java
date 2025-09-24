@@ -66,7 +66,7 @@ public class UiExtensions {
             Property that defines a screen content that is displayed before the user sees the operation
             approval screen. The purpose of the screen could be to provide an additional warning before
             approving an operation or to display generic information related to the operation approval.
-            Deprecated, use `postApprovalScreens` instead.
+            Deprecated, use `preApprovalScreens` instead.
             """, deprecated = true)
     @Deprecated(forRemoval = true, since = "2.0.0")
     private PreApprovalScreenV1 preApprovalScreen;
@@ -80,7 +80,6 @@ public class UiExtensions {
             Property that defines a screen content that is displayed before the user sees the operation
             approval screen. The purpose of the screen could be to provide an additional warning before
             approving an operation or to display generic information related to the operation approval.
-            Deprecated, use 'postApprovalScreens' instead.
             """)
     private List<PreApprovalScreenV2> preApprovalScreens;
 

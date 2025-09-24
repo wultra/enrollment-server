@@ -103,7 +103,7 @@ public class PreApprovalScreenV2 {
         WARNING,
 
         /**
-         * The purpose of the screen is to inform the user about a some specific operation context.
+         * The purpose of the screen is to inform the user about a specific operation context.
          */
         INFO,
 
