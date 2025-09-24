@@ -17,8 +17,11 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.Map;
 
 /**
  * Request to cancel an operation.
@@ -31,5 +34,11 @@ public class OperationRejectRequest {
     @NotEmpty
     private String id;
     private String reason;
+
+    /**
+     * Optional mobile token data, structure is customer-specific. Could be used, for example, for passing FDS data.
+     */
+    @Schema(description = "Optional mobile token data, structure is customer-specific. Could be used, for example, for storing FDS data.")
+    private Map<String, Object> mobileTokenData;
 
 }

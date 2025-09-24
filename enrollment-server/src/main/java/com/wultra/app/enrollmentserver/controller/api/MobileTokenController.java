@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.errorhandling.MobileTokenException;
 import com.wultra.app.enrollmentserver.errorhandling.RemoteCommunicationException;
 import com.wultra.app.enrollmentserver.impl.service.MobileTokenService;
 import com.wultra.app.enrollmentserver.impl.service.OperationApproveParameterObject;
+import com.wultra.app.enrollmentserver.impl.service.OperationRejectParameterObject;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.http.common.request.RequestContextConverter;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -418,23 +419,24 @@ public class MobileTokenController {
             @RequestBody ObjectRequest<OperationRejectRequest> request,
             @Parameter(hidden = true) PowerAuthApiAuthentication auth,
             HttpServletRequest servletRequest) throws MobileTokenException, RemoteCommunicationException {
-        try {
 
+        try {
             final OperationRejectRequest requestObject = request.getRequestObject();
             if (requestObject == null) {
                 throw new MobileTokenAuthException();
             }
 
-            final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
-
             if (auth != null && auth.getUserId() != null) {
-                final String activationId = auth.getActivationContext().getActivationId();
-                final String applicationId = auth.getApplicationId();
-                final String userId = auth.getUserId();
-                final List<String> activationFlags = auth.getActivationContext().getActivationFlags();
-                final String operationId = requestObject.getId();
-                final String rejectReason = requestObject.getReason();
-                return mobileTokenService.operationReject(activationId, userId, applicationId, operationId, requestContext, activationFlags, rejectReason);
+                return mobileTokenService.operationReject(OperationRejectParameterObject.builder()
+                        .activationId(auth.getActivationContext().getActivationId())
+                        .applicationId(auth.getApplicationId())
+                        .userId(auth.getUserId())
+                        .activationFlags(auth.getActivationContext().getActivationFlags())
+                        .operationId(requestObject.getId())
+                        .rejectReason(requestObject.getReason())
+                        .requestContext(RequestContextConverter.convert(servletRequest))
+                        .mobileTokenData(requestObject.getMobileTokenData())
+                        .build());
             } else {
                 throw new MobileTokenAuthException();
             }
