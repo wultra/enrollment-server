@@ -36,6 +36,7 @@ public class ActivationCodeException extends Exception {
     }
 
     /**
+     * Constructor with a detail message.
      *
      * @param message The detail message.
      */
@@ -44,6 +45,7 @@ public class ActivationCodeException extends Exception {
     }
 
     /**
+     * Constructor with a detail message and a cause.
      *
      * @param message The detail message.
      * @param cause The cause.
