@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +34,8 @@ class DelegatingActivationCodeHandlerConfiguration {
 
     @ConditionalOnMissingBean(DelegatingActivationCodeHandler.class)
     @Bean
-    DelegatingActivationCodeHandler emptyOnboardingProvider() {
+    DelegatingActivationCodeHandler emptyOnboardingProvider(final PowerAuthClient powerAuthClient) {
         logger.info("Registering DefaultDelegatingActivationCodeHandler");
-        return new DefaultDelegatingActivationCodeHandler();
+        return new DefaultDelegatingActivationCodeHandler(powerAuthClient);
     }
 }

@@ -91,8 +91,7 @@ public class ActivationCodeService {
 
         final String destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
         if (destinationAppId == null) {
-            logger.error("Invalid application ID. The provided source app ID: {} cannot activate the destination app ID: {}.", sourceAppId, applicationId);
-            throw new ActivationCodeException();
+            throw new ActivationCodeException("Invalid application ID. The provided source app ID: %s cannot activate the target app ID: %s.".formatted(sourceAppId, applicationId));
         }
 
         try {
@@ -140,8 +139,7 @@ public class ActivationCodeService {
 
             return activationCodeConverter.convert(iar);
         } catch (PowerAuthClientException e) {
-            logger.error("Unable to call upstream service.", e);
-            throw new ActivationCodeException();
+            throw new ActivationCodeException("Unable to call PowerAuth.", e);
         }
     }
 
