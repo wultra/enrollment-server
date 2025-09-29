@@ -32,13 +32,13 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Default specialization of {@link DelegatingActivationCodeHandler} using application configuration from PowerAuth Server.
+ * Specialization of {@link DelegatingActivationCodeHandler} using application configuration from PowerAuth Server.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @AllArgsConstructor
 @Slf4j
-class DefaultDelegatingActivationCodeHandler implements DelegatingActivationCodeHandler {
+class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler {
 
     private static final String ACTIVATION_CODE = "activation_code";
 

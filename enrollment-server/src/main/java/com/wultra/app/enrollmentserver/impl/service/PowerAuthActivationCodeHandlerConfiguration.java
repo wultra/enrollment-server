@@ -24,18 +24,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Registering {@link DefaultDelegatingActivationCodeHandler} if no other handler is registered.
+ * Registering {@link PowerAuthActivationCodeHandler} if no other handler is registered.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Configuration
 @Slf4j
-class DelegatingActivationCodeHandlerConfiguration {
+class PowerAuthActivationCodeHandlerConfiguration {
 
     @ConditionalOnMissingBean(DelegatingActivationCodeHandler.class)
     @Bean
-    DelegatingActivationCodeHandler emptyOnboardingProvider(final PowerAuthClient powerAuthClient) {
+    DelegatingActivationCodeHandler powerAuthActivationCodeHandler(final PowerAuthClient powerAuthClient) {
         logger.info("Registering DefaultDelegatingActivationCodeHandler");
-        return new DefaultDelegatingActivationCodeHandler(powerAuthClient);
+        return new PowerAuthActivationCodeHandler(powerAuthClient);
     }
 }

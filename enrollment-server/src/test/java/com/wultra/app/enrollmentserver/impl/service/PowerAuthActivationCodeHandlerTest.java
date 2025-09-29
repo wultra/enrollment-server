@@ -32,12 +32,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 /**
- * Test for {@link DefaultDelegatingActivationCodeHandler}.
+ * Test for {@link PowerAuthActivationCodeHandler}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ExtendWith(MockitoExtension.class)
-class DefaultDelegatingActivationCodeHandlerTest {
+class PowerAuthActivationCodeHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -45,7 +45,7 @@ class DefaultDelegatingActivationCodeHandlerTest {
     private PowerAuthClient powerAuthClient;
 
     @InjectMocks
-    private DefaultDelegatingActivationCodeHandler tested;
+    private PowerAuthActivationCodeHandler tested;
 
     @Test
     void testFetchDestinationApplicationId() throws Exception {
