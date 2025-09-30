@@ -40,7 +40,7 @@ import java.util.Objects;
 @Slf4j
 class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler {
 
-    private static final String ACTIVATION_CODE = "activation_code";
+    private static final String ACTIVATION_TRANSFER = "activation_transfer";
 
     private final PowerAuthClient powerAuthClient;
 
@@ -51,7 +51,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         try {
             final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(sourceApplicationId);
             return applicationConfig.getApplicationConfigs().stream()
-                    .filter(it -> it.getKey().equals(ACTIVATION_CODE))
+                    .filter(it -> it.getKey().equals(ACTIVATION_TRANSFER))
                     .findFirst()
                     .map(ApplicationConfigurationItem::getValues)
                     .map(this::convert)

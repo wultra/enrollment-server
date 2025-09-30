@@ -77,7 +77,7 @@ class PowerAuthActivationCodeHandlerTest {
                   "applicationId": "source-1",
                   "applicationConfigs": [
                     {
-                      "key": "activation_code",
+                      "key": "activation_transfer",
                       "values": [
                         {
                           "allowedTargetApplicationIds": [
