@@ -82,13 +82,13 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         }
     }
 
-    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationType type) {
+    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type) {
         boolean isTypeOfCopy() {
-            return type == ActivationType.COPY;
+            return type == ActivationTransferType.COPY;
         }
     }
 
-    private enum ActivationType {
+    private enum ActivationTransferType {
 
         /**
          * Keeps the original activation.
