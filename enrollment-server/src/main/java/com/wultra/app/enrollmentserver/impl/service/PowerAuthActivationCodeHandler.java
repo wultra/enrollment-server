@@ -68,7 +68,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         return values.stream()
                 .map(this::convert)
                 .filter(Objects::nonNull)
-                .filter(ActivationCodeConfiguration::isTypeOfCopy)
+                .filter(ActivationCodeConfiguration::isTypeOfSpawn)
                 .findFirst()
                 .orElse(null);
     }
@@ -83,8 +83,8 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
     }
 
     private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type) {
-        boolean isTypeOfCopy() {
-            return type == ActivationTransferType.COPY;
+        boolean isTypeOfSpawn() {
+            return type == ActivationTransferType.SPAWN;
         }
     }
 
@@ -93,7 +93,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         /**
          * Keeps the original activation.
          */
-        COPY,
+        SPAWN,
 
         /**
          * The original activation should be removed after the new activation is active and confirmed.

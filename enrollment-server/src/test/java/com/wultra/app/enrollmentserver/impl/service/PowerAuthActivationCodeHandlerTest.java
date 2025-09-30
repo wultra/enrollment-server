@@ -84,7 +84,7 @@ class PowerAuthActivationCodeHandlerTest {
                             "target-1",
                             "target-2"
                           ],
-                          "type": "COPY"
+                          "type": "SPAWN"
                         }
                       ]
                     }
