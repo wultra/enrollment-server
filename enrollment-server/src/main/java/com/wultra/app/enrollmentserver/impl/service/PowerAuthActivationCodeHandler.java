@@ -96,7 +96,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         COPY,
 
         /**
-         * The original activation is to be removed.
+         * The original activation should be removed after the new activation is active and confirmed.
          */
         MOVE
     }
