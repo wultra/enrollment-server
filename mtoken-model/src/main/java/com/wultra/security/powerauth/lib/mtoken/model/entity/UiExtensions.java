@@ -20,6 +20,7 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -57,14 +58,30 @@ public class UiExtensions {
     /**
      * Property that defines a screen content that is displayed before the user sees the operation
      * approval screen. The purpose of the screen could be to provide an additional warning before
-     * approving an operation, or to display generic information related to the operation approval.
+     * approving an operation or to display generic information related to the operation approval.
+     *
+     * @deprecated use {@link #preApprovalScreens} instead.
      */
     @Schema(description = """
             Property that defines a screen content that is displayed before the user sees the operation
             approval screen. The purpose of the screen could be to provide an additional warning before
-            approving an operation, or to display generic information related to the operation approval.
+            approving an operation or to display generic information related to the operation approval.
+            Deprecated, use `preApprovalScreens` instead.
+            """, deprecated = true)
+    @Deprecated(forRemoval = true, since = "2.0.0")
+    private PreApprovalScreenV1 preApprovalScreen;
+
+    /**
+     * Property that defines a screen content that is displayed before the user sees the operation
+     * approval screen. The purpose of the screen could be to provide an additional warning before
+     * approving an operation or to display generic information related to the operation approval.
+     */
+    @Schema(description = """
+            Property that defines a screen content that is displayed before the user sees the operation
+            approval screen. The purpose of the screen could be to provide an additional warning before
+            approving an operation or to display generic information related to the operation approval.
             """)
-    private PreApprovalScreen preApprovalScreen;
+    private List<PreApprovalScreenV2> preApprovalScreens;
 
     /**
      * Property that defines a screen content that is displayed after the user sees the operation

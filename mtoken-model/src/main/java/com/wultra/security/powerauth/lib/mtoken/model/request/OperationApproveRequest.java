@@ -17,7 +17,7 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.request;
 
-import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreen;
+import com.wultra.security.powerauth.lib.mtoken.model.entity.PreApprovalScreenV2;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -46,7 +46,7 @@ public class OperationApproveRequest {
     private String data;
 
     /**
-     * Optional proximity check data. User is instructed by {@link PreApprovalScreen.ScreenType#QR_SCAN}.
+     * Optional proximity check data. User is instructed by {@link PreApprovalScreenV2.ScreenType#QR_SCAN}.
      */
     @Schema(description = "Optional proximity check data." )
     private ProximityCheck proximityCheck;

@@ -45,8 +45,14 @@ If you define any UI extension, the operation risk flags are overridden.
 | `flipButtons`         | `false`  | `false` | `X`       | Flip the approve and reject buttons on the approval screen.                               |
 | `blockApprovalOnCall` | `false`  | `false` | `C`       | Block approving the operation in case there is an ongoing call.                           |
 | `preApprovalScreen`   | `false`  |         | `F`       | Optional information about screen that should be displayed before the operation approval. |
+| `preApprovalScreens`  | `false`  |         | `F`       | Optional information about screen that should be displayed before the operation approval. |
 
 ### Pre-approval Screen
+
+<!-- begin box warning -->
+Mind that `preApprovalScreen` is deprecated, use `preApprovalScreens` instead.
+See [Pre-approval Screens](#pre-approval-screens) for more details.
+<!-- end -->
 
 Optional information about screen that should be displayed before the operation approval.
 
@@ -73,6 +79,104 @@ Optional information about screen that should be displayed before the operation 
 | `preApprovalScreen.message`      | `true`   | -       | Message displayed to the user, placed under the screen heading.                        |
 | `preApprovalScreen.items`        | `false`  | `null`  | Bullet point items displayed by the message.                                           |
 | `preApprovalScreen.approvalType` | `false`  | `null`  | Type of the approval screen component. Currently, only a `SLIDER` option is available. |
+
+
+#### Pre-approval Screen Types
+
+Currently, the following types of pre-approval screen are supported.
+
+- `WARNING` for warning screen.
+- `INFO` for a general information screen.
+- `QR_SCAN` for screen to scan QR code to do proximity check.
+
+
+### Pre-approval Screens
+
+Optional information about screens that should be displayed before the operation approval.
+
+#### Example
+
+```json
+{
+  "preApprovalScreens": [
+    {
+      "id": "custom_id1",
+      "type": "WARNING",
+      "backButton": true,
+      "image": "image-label",
+      "heading": "Watch out!",
+      "message": "You may become a victim of an attack.",
+      "elements": [
+        {
+          "id": "custom_element_id",
+          "type": "ALERT",
+          "style": "INFO",
+          "text": "Make sure the activation takes place on your device"
+        },
+        {
+          "id": "custom_element_id",
+          "type": "BUTTON",
+          "action": "PHONE",
+          "text": "Call center",
+          "href": "+42012345678"
+        },
+        {
+          "id": "custom_element_id",
+          "type": "LIST_ITEM",
+          "icon": "icon-label",
+          "text": "You activate a new app and allow access to your accounts"
+        }
+      ],
+      "controls": {
+        "flip": true,
+        "axis": "VERTICAL",
+        "decline": {
+          "type": "REJECT",
+          "text": "Reject Payment"
+        },
+        "approve": {
+          "type": "BUTTON",
+          "text": "Approve Payment",
+          "counter": 10
+        }
+      }
+    },
+    {
+      "id": "custom_id2",
+      "type": "QR_SCAN",
+      "heading": "Watch out!",
+      "message": "You may become a victim of an attack."
+    }
+  ]
+}
+```
+
+#### Attributes
+
+| Attribute                                       | Required | Default | Description                                                                                                                                                                       |
+|-------------------------------------------------|----------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `preApprovalScreens[].id`                       | `false`  | -       | Custom identifier of the screen.                                                                                                                                                  |
+| `preApprovalScreens[].type`                     | `true`   | -       | Type of the screen. (`WARNING`, `INFO`, or `QR_SCAN`)                                                                                                                             |
+| `preApprovalScreens[].backButton`               | `false`  | `false` | Whether to display back button on the screen.                                                                                                                                     |
+| `preApprovalScreens[].image`                    | `false`  | -       | Image identifier to display on the screen.                                                                                                                                        |
+| `preApprovalScreens[].heading`                  | `true`   | -       | Heading of the screen.                                                                                                                                                            |
+| `preApprovalScreens[].message`                  | `true`   | -       | Message displayed to the user, placed under the screen heading.                                                                                                                   |
+| `preApprovalScreens[].elements`                 | `false`  | `null`  | Array of screen elements (alert, button, list item).                                                                                                                              |
+| `preApprovalScreens[].elements[].id`            | `false`  | -       | Custom identifier of the element.                                                                                                                                                 |
+| `preApprovalScreens[].elements[].type`          | `true`   | -       | Type of element (`ALERT`, `BUTTON`, `LIST_ITEM`).                                                                                                                                 |
+| `preApprovalScreens[].elements[].style`         | `false`  | -       | Style of the element. For `Alert` (`INFO`, `WARNING`, `DANGER`) affects both the alert cell styling and the icon. For `ListItem` elements, the style affects only the icon color. |
+| `preApprovalScreens[].elements[].text`          | `true`   | -       | Text content of the element.                                                                                                                                                      |
+| `preApprovalScreens[].elements[].action`        | `false`  | -       | Action type for buttons (`LINK`, `MAIL`, `PHONE`).                                                                                                                                |
+| `preApprovalScreens[].elements[].href`          | `false`  | -       | Link/reference for the action (e.g. phone number).                                                                                                                                |
+| `preApprovalScreens[].elements[].icon`          | `false`  | -       | Icon label for list items.                                                                                                                                                        |
+| `preApprovalScreens[].controls`                 | `false`  | `null`  | Configuration of approval controls.                                                                                                                                               |
+| `preApprovalScreens[].controls.flip`            | `false`  | `false` | Whether to flip approve/reject buttons.                                                                                                                                           |
+| `preApprovalScreens[].controls.axis`            | `false`  | -       | Layout axis for buttons (`VERTICAL`, `HORIZONTAL`).                                                                                                                               |
+| `preApprovalScreens[].controls.decline.type`    | `false`  | -       | Type of decline (`BACK`, `REJECT`).                                                                                                                                               |
+| `preApprovalScreens[].controls.decline.text`    | `false`  | -       | Text for decline button.                                                                                                                                                          |
+| `preApprovalScreens[].controls.approve.type`    | `false`  | -       | Type of approve (`SLIDER`, `BUTTON`).                                                                                                                                             |
+| `preApprovalScreens[].controls.approve.text`    | `false`  | -       | Text for approve button.                                                                                                                                                          |
+| `preApprovalScreens[].controls.approve.counter` | `false`  | -       | Countdown counter in seconds for approve button.                                                                                                                                  |
 
 
 #### Pre-approval Screen Types

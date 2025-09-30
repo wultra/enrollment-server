@@ -181,10 +181,18 @@ public class MobileTokenConverter {
                 ui.setBlockApprovalOnCall(true);
             }
             if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
-                final PreApprovalScreen preApprovalScreen = new PreApprovalScreen();
-                preApprovalScreen.setType(PreApprovalScreen.ScreenType.WARNING);
-                preApprovalScreen.setApprovalType(PreApprovalScreen.ApprovalType.SLIDER);
+                final PreApprovalScreenV1 preApprovalScreen = new PreApprovalScreenV1();
+                preApprovalScreen.setType(PreApprovalScreenV1.ScreenType.WARNING);
+                preApprovalScreen.setApprovalType(PreApprovalScreenV1.ApprovalType.SLIDER);
                 ui.setPreApprovalScreen(preApprovalScreen);
+            }
+            if (riskFlags.contains(RISK_FLAG_FRAUD_WARNING)) {
+                final PreApprovalScreenV2.Approve approve = new PreApprovalScreenV2.Approve(PreApprovalScreenV2.ApprovalType.SLIDER, null, null);
+                final PreApprovalScreenV2.Controls controls = new PreApprovalScreenV2.Controls(null, null, null, approve);
+                final PreApprovalScreenV2 preApprovalScreen = new PreApprovalScreenV2();
+                preApprovalScreen.setType(PreApprovalScreenV2.ScreenType.WARNING);
+                preApprovalScreen.setControls(controls);
+                ui.setPreApprovalScreens(List.of(preApprovalScreen));
             }
             return ui;
         } else {
@@ -195,7 +203,7 @@ public class MobileTokenConverter {
     private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
         final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
         if (uiExtensions.getPreApprovalScreen() != null
-                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreen.ScreenType.QR_SCAN
+                && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreenV1.ScreenType.QR_SCAN
                 && operationDetail.getProximityOtp() == null) {
 
             logger.info("Template for operation ID: {} is configured to use pre-approval screen QR_SCAN, but OTP was not created", operationDetail.getId());

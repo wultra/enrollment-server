@@ -26,9 +26,11 @@ import java.util.List;
  * Information about screen displayed before an operation approval.
  *
  * @author Petr Dvorak, petr@wultra.com
+ * @deprecated use {@link PreApprovalScreenV2} instead
  */
 @Data
-public class PreApprovalScreen {
+@Deprecated(forRemoval = true, since = "2.0.0")
+public class PreApprovalScreenV1 {
 
     /**
      * Type of the pre-approval screen.
@@ -40,7 +42,7 @@ public class PreApprovalScreen {
         WARNING,
 
         /**
-         * The purpose of the screen is to inform user about a some specific operation context.
+         * The purpose of the screen is to inform user about a specific operation context.
          */
         INFO,
 
@@ -55,7 +57,7 @@ public class PreApprovalScreen {
      */
     public enum ApprovalType {
         /**
-         * The user needs to slide a UI slider ("Slide to unlock") to proceed to the operation approval screen.
+         * The user needs to slide a UI slider ('Slide to unlock') to proceed to the operation approval screen.
          */
         SLIDER
     }

@@ -11,3 +11,8 @@ This guide contains instructions for migration from PowerAuth Enrollment Server 
 It is now possible to specify `mobileTokenData` attribute at `POST /api/auth/token/app/operation/cancel` request.
 The structure is customer-specific.
 Could be used, for example, for passing FDS data.
+
+
+### Deprecation of Pre-approval Screen
+
+The operation UI template attribute `preApprovalScreen` is deprecated, use `preApprovalScreens` instead.
