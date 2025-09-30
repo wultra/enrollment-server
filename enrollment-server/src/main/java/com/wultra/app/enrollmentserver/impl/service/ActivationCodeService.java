@@ -102,7 +102,7 @@ public class ActivationCodeService {
             initRequest.setApplicationId(destinationAppId);
             initRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initRequest.setActivationOtp(otp);
-            initRequest.setAdditionalData(Map.of("sourceAppId", sourceAppId, "targetAppId", destinationAppId));
+            initRequest.setAdditionalData(Map.of("sourceAppId", sourceAppId, "targetAppId", destinationAppId, "origin", "activation_transfer"));
 
             final InitActivationResponse iar = powerAuthClient.initActivation(
                     initRequest,
