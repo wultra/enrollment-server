@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
+import com.wultra.core.annotations.PublicSpi;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ import java.util.List;
  *
  * @author Petr Dvorak, petr@wultra.com
  */
+@PublicSpi
 public interface DelegatingActivationCodeHandler {
 
     /**
@@ -58,7 +60,9 @@ public interface DelegatingActivationCodeHandler {
      * @return List of new activation flags for the destination activation.
      * @throws ActivationCodeException Thrown in case activation flag processing fails.
      */
-    List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, String sourceAppId, List<String> sourceApplicationRoles, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException;
+    default List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, String sourceAppId, List<String> sourceApplicationRoles, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
+        return List.of();
+    }
 
     /**
      * Callback method with newly created activation code information.
@@ -73,6 +77,8 @@ public interface DelegatingActivationCodeHandler {
      * @param activationCodeSignature Activation code signature of the new activation code.
      * @throws ActivationCodeException Thrown in case activation code processing fails.
      */
-    void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, String sourceAppId, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException;
+    default void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, String sourceAppId, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
+        // Default implementation does nothing
+    }
 
 }

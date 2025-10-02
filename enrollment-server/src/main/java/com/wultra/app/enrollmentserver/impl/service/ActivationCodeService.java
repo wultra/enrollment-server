@@ -25,19 +25,20 @@ import com.wultra.app.enrollmentserver.impl.service.converter.ActivationCodeConv
 import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestValidator;
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
-import com.wultra.security.powerauth.client.model.enumeration.ActivationOtpValidation;
+import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.AddActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service responsible for fetching the new activation codes.
@@ -46,6 +47,7 @@ import java.util.List;
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 public class ActivationCodeService {
 
     private final PowerAuthClient powerAuthClient;
@@ -55,37 +57,6 @@ public class ActivationCodeService {
     private DelegatingActivationCodeHandler delegatingActivationCodeHandler;
 
     private final Audit audit;
-
-    /**
-     * Autowiring constructor.
-     *
-     * @param powerAuthClient PowerAuth Client instance.
-     * @param activationCodeConverter Activation code converter class.
-     * @param httpCustomizationService HTTP customization service.
-     * @param audit Audit.
-     */
-    @Autowired
-    public ActivationCodeService(
-            final PowerAuthClient powerAuthClient,
-            final ActivationCodeConverter activationCodeConverter,
-            final HttpCustomizationService httpCustomizationService,
-            final Audit audit) {
-
-        this.powerAuthClient = powerAuthClient;
-        this.activationCodeConverter = activationCodeConverter;
-        this.httpCustomizationService = httpCustomizationService;
-        this.audit = audit;
-    }
-
-    /**
-     * Set delegating activation code handler via auto-wiring.
-     *
-     * @param delegatingActivationCodeHandler Delegating activation code handler bean.
-     */
-    @Autowired(required = false)
-    public void setActivationCodeDelegate(DelegatingActivationCodeHandler delegatingActivationCodeHandler) {
-        this.delegatingActivationCodeHandler = delegatingActivationCodeHandler;
-    }
 
     /**
      * Request activation code for provided OTP value, user ID and app ID.
@@ -107,12 +78,6 @@ public class ActivationCodeService {
 
         logger.info("Activation code registration started, user ID: {}", sourceUserId);
 
-        // Verify that delegating activation code handler is implemented
-        if (delegatingActivationCodeHandler == null) {
-            logger.error("Missing delegating activation code handler implementation");
-            throw new ActivationCodeException();
-        }
-
         // Validate the request object
         final String error = ActivationCodeRequestValidator.validate(request);
         if (error != null) {
@@ -126,8 +91,7 @@ public class ActivationCodeService {
 
         final String destinationAppId = delegatingActivationCodeHandler.fetchDestinationApplicationId(applicationId, sourceAppId, sourceActivationFlags, sourceApplicationRoles);
         if (destinationAppId == null) {
-            logger.error("Invalid application ID. The provided source app ID: {} cannot activate the destination app ID: {}.", sourceAppId, applicationId);
-            throw new ActivationCodeException();
+            throw new ActivationCodeException("Invalid application ID. The provided source app ID: %s cannot activate the target app ID: %s.".formatted(sourceAppId, applicationId));
         }
 
         try {
@@ -136,8 +100,9 @@ public class ActivationCodeService {
             final InitActivationRequest initRequest = new InitActivationRequest();
             initRequest.setUserId(sourceUserId);
             initRequest.setApplicationId(destinationAppId);
-            initRequest.setActivationOtpValidation(ActivationOtpValidation.ON_KEY_EXCHANGE);
+            initRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initRequest.setActivationOtp(otp);
+            initRequest.setAdditionalData(Map.of("sourceAppId", sourceAppId, "targetAppId", destinationAppId, "origin", "activation_transfer"));
 
             final InitActivationResponse iar = powerAuthClient.initActivation(
                     initRequest,
@@ -174,8 +139,7 @@ public class ActivationCodeService {
 
             return activationCodeConverter.convert(iar);
         } catch (PowerAuthClientException e) {
-            logger.error("Unable to call upstream service.", e);
-            throw new ActivationCodeException();
+            throw new ActivationCodeException("Unable to call PowerAuth.", e);
         }
     }
 
