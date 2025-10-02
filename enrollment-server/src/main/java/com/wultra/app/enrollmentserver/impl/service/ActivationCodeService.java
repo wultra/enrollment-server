@@ -27,7 +27,6 @@ import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
 import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.request.AddActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
@@ -36,7 +35,6 @@ import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationSe
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -107,6 +105,7 @@ public class ActivationCodeService {
             // TODO parent
             initRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initRequest.setActivationOtp(request.getOtp());
+            initRequest.setFlags(response.initialFlags());
             initRequest.setAdditionalData(Map.of("sourceApplicationId", sourceApplicationId, "targetAppId", targetApplicationId, "origin", "activation_transfer"));
 
             final InitActivationResponse iar = powerAuthClient.initActivation(
@@ -122,23 +121,6 @@ public class ActivationCodeService {
                     sourceActivationId, sourceUserId, targetApplicationId, sourceApplicationId, targetApplicationId,
                     iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
             );
-
-            // Add the activation flags
-            final List<String> flags = response.initialFlags(); // TODO Lubos
-
-            if (!CollectionUtils.isEmpty(flags)) {
-                logger.info("Calling PowerAuth Server to add activation flags to activation ID: {}, flags: {}.", iar.getActivationId(), flags.toArray());
-                final AddActivationFlagsRequest addRequest = new AddActivationFlagsRequest();
-                addRequest.setActivationId(iar.getActivationId());
-                addRequest.getActivationFlags().addAll(flags);
-                powerAuthClient.addActivationFlags(addRequest,
-                        httpCustomizationService.getQueryParams(),
-                        httpCustomizationService.getHttpHeaders()
-                );
-                logger.info("Successfully added flags to activation ID: {}.", iar.getActivationId());
-            } else {
-                logger.info("Activation with ID: {} has no additional flags.", iar.getActivationId());
-            }
 
             return activationCodeConverter.convert(iar);
         } catch (PowerAuthClientException e) {
