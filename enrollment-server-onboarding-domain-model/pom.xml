@@ -35,10 +35,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.wultra.security</groupId>
-            <artifactId>powerauth-java-crypto</artifactId>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
-
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -17,14 +17,15 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
-import com.wultra.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
 import lombok.ToString;
-import org.bouncycastle.util.encoders.Base32;
+import org.apache.commons.codec.binary.Base32;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 /**
@@ -74,10 +75,16 @@ public class OwnerId {
             throw new IllegalStateException("Missing userId value");
         }
         if (userIdSecured == null) {
-            userIdSecured = new String(Base32.encode(Hash.sha256(userId)), StandardCharsets.UTF_8)
-                    .replace("=", "");
-            if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
-                userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
+            try {
+                final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                final byte[] usedIdHash = digest.digest(userId.getBytes(StandardCharsets.UTF_8));
+                userIdSecured = new String(new Base32().encode(usedIdHash), StandardCharsets.UTF_8)
+                        .replace("=", "");
+                if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
+                    userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
+                }
+            } catch (NoSuchAlgorithmException e) {
+                // Impossible error
             }
         }
         return userIdSecured;
