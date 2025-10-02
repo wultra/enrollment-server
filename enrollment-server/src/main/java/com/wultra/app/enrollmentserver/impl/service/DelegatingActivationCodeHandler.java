@@ -62,5 +62,4 @@ public interface DelegatingActivationCodeHandler {
          */
         MOVE
     }
-
 }

@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Specialization of {@link DelegatingActivationCodeHandler} using application configuration from PowerAuth Server.
@@ -54,12 +55,14 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
                     .filter(it -> it.getKey().equals(ACTIVATION_TRANSFER))
                     .findFirst()
                     .map(ApplicationConfigurationItem::getValues)
-                    .map(this::convert)
+                    .stream()
+                    .flatMap(this::convert)
                     .filter(it -> it.isAllowedTargetApplicationId(request.targetApplicationId()))
+                    .findFirst()
                     .map(it -> DelegatingActivationCodeHandler.TransferConfigurationResponse.builder()
                             .applicationId(request.targetApplicationId())
                             .initialFlags(it.initialFlags)
-                            .type(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN) // TODO Lubos MOVE
+                            .type(convert(it.type()))
                             .build())
                     .orElse(null);
         } catch (PowerAuthClientException e) {
@@ -67,19 +70,23 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         }
     }
 
-    private ActivationCodeConfiguration convert(final List<Object> values) {
+    private DelegatingActivationCodeHandler.ActivationTransferType convert(ActivationTransferType source) {
+        return switch(source) {
+            case SPAWN -> DelegatingActivationCodeHandler.ActivationTransferType.SPAWN;
+            case MOVE -> DelegatingActivationCodeHandler.ActivationTransferType.MOVE;
+        };
+    }
+
+    private Stream<ActivationCodeConfiguration> convert(final List<Object> values) {
         return values.stream()
                 .map(this::convert)
                 .filter(Objects::nonNull)
-                .filter(ActivationCodeConfiguration::isTypeOfSpawn)
-                .findFirst()
-                .orElse(null);
+                .filter(ActivationCodeConfiguration::isTypeNotNull);
     }
 
     private ActivationCodeConfiguration convert(final Object value) {
         try {
-            return objectMapper.convertValue(value, new TypeReference<>() {
-            });
+            return objectMapper.convertValue(value, new TypeReference<>() {});
         } catch (IllegalArgumentException e) {
             logger.warn("Unable to convert {}", value, e);
             return null;
@@ -89,11 +96,11 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
     private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type, List<String> initialFlags) {
 
         boolean isAllowedTargetApplicationId(final String applicationId) {
-            return allowedTargetApplicationIds.contains(applicationId);
+            return allowedTargetApplicationIds != null && allowedTargetApplicationIds.contains(applicationId);
         }
 
-        boolean isTypeOfSpawn() {
-            return type == ActivationTransferType.SPAWN;
+        boolean isTypeNotNull() {
+            return type != null;
         }
     }
 

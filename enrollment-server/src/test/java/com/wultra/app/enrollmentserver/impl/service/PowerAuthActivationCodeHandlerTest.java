@@ -50,7 +50,7 @@ class PowerAuthActivationCodeHandlerTest {
     private PowerAuthActivationCodeHandler tested;
 
     @Test
-    void testFetchDestinationApplicationId() throws Exception {
+    void testFetchTransferConfiguration_spawn() throws Exception {
         final GetApplicationConfigResponse response = createResponse();
 
         when(powerAuthClient.getApplicationConfig("source-1"))
@@ -68,10 +68,44 @@ class PowerAuthActivationCodeHandlerTest {
         assertEquals(List.of("foo"), result.initialFlags());
     }
 
-    // TODO Lubos test for MOVE
+    @Test
+    void testFetchTransferConfiguration_move() throws Exception {
+        final GetApplicationConfigResponse response = createResponse();
+
+        when(powerAuthClient.getApplicationConfig("source-1"))
+                .thenReturn(response);
+
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-4")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTransferConfiguration(request);
+
+        assertEquals("target-4", result.applicationId());
+        assertEquals(DelegatingActivationCodeHandler.ActivationTransferType.MOVE, result.type());
+        assertNull(result.initialFlags());
+    }
 
     @Test
-    void testFetchDestinationApplicationId_invalidTarget() throws Exception {
+    void testFetchTransferConfiguration_missingType() throws Exception {
+        final GetApplicationConfigResponse response = createResponse();
+
+        when(powerAuthClient.getApplicationConfig("source-1"))
+                .thenReturn(response);
+
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-6")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTransferConfiguration(request);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testFetchTransferConfiguration_invalidTarget() throws Exception {
         final GetApplicationConfigResponse response = createResponse();
 
         when(powerAuthClient.getApplicationConfig("source-1"))
@@ -101,6 +135,21 @@ class PowerAuthActivationCodeHandlerTest {
                             "target-2"
                           ],
                           "initialFlags": ["foo"],
+                          "type": "SPAWN"
+                        },
+                        {
+                          "allowedTargetApplicationIds": [
+                            "target-4",
+                            "target-5"
+                          ],
+                          "type": "MOVE"
+                        },
+                        {
+                          "allowedTargetApplicationIds": [
+                            "target-6"
+                          ]
+                        },
+                        {
                           "type": "SPAWN"
                         }
                       ]
