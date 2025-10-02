@@ -40,7 +40,7 @@
     <Parameter name="spring.security.oauth2.resource-server.jwt.issuer-uri" value="${ENROLLMENT_SERVER_SECURITY_AUTH_OIDC_ISSUER_URI:}" />
     <Parameter name="spring.security.oauth2.resource-server.jwt.audiences" value="${ENROLLMENT_SERVER_SECURITY_AUTH_OIDC_AUDIENCES:}" />
 
-    <!-- Bouncy castle Configuration -->
+    <!-- Bouncy Castle Configuration -->
     <Parameter name="bouncycastle.provider.initialization.enabled" value="${ENROLLMENT_SERVER_BOUNCY_CASTLE_PROVIDER_ENABLED:true}"/>
 
     <!-- User-info configuration -->
