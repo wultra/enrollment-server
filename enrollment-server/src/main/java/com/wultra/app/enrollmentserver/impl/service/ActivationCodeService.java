@@ -36,7 +36,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,12 +67,8 @@ public class ActivationCodeService {
      */
     public ActivationCodeResponse requestActivationCode(ActivationCodeRequest request, PowerAuthApiAuthentication apiAuthentication) throws InvalidRequestObjectException, ActivationCodeException {
 
-        // Fetch information from the authentication object
-        final String sourceActivationId = apiAuthentication.getActivationContext().getActivationId();
         final String sourceUserId = apiAuthentication.getUserId();
         final String sourceApplicationId = apiAuthentication.getApplicationId();
-        final List<String> sourceActivationFlags = apiAuthentication.getActivationContext().getActivationFlags();
-        final List<String> sourceApplicationRoles = apiAuthentication.getApplicationRoles();
 
         logger.info("Activation code registration started, user ID: {}", sourceUserId);
 
@@ -115,12 +110,6 @@ public class ActivationCodeService {
             );
             logger.info("Successfully obtained a new activation with ID: {}", iar.getActivationId());
             auditInitActivation(iar);
-
-            // Notify systems about newly created activation
-            delegatingActivationCodeHandler.didReturnActivationCode(
-                    sourceActivationId, sourceUserId, targetApplicationId, sourceApplicationId, targetApplicationId,
-                    iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
-            );
 
             return activationCodeConverter.convert(iar);
         } catch (PowerAuthClientException e) {

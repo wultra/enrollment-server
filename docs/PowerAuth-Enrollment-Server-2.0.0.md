@@ -27,3 +27,5 @@ The following methods in the interface `DelegatingActivationCodeHandler` has bee
 
 - `String fetchDestinationApplicationId(String, String, List<String>, List<String>)`
 - `void didReturnActivationCode(String, String, String, String, String, String, String, String)`
+
+The method `void didReturnActivationCode(String, String, String, String, String, String, String, String)` has been removed without any replacement.
