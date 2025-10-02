@@ -59,18 +59,22 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
                     .flatMap(this::convert)
                     .filter(it -> it.isAllowedTargetApplicationId(request.targetApplicationId()))
                     .findFirst()
-                    .map(it -> DelegatingActivationCodeHandler.TransferConfigurationResponse.builder()
-                            .applicationId(request.targetApplicationId())
-                            .initialFlags(it.initialFlags)
-                            .type(convert(it.type()))
-                            .build())
+                    .map(it -> createTransferConfigurationResponse(request.targetApplicationId(), it))
                     .orElse(null);
         } catch (PowerAuthClientException e) {
             throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(request.sourceApplicationId()), e);
         }
     }
 
-    private DelegatingActivationCodeHandler.ActivationTransferType convert(ActivationTransferType source) {
+    private static TransferConfigurationResponse createTransferConfigurationResponse(final String applicationId, final ActivationCodeConfiguration configuration) {
+        return TransferConfigurationResponse.builder()
+                .applicationId(applicationId)
+                .initialFlags(configuration.initialFlags())
+                .type(convert(configuration.type()))
+                .build();
+    }
+
+    private static DelegatingActivationCodeHandler.ActivationTransferType convert(ActivationTransferType source) {
         return switch(source) {
             case SPAWN -> DelegatingActivationCodeHandler.ActivationTransferType.SPAWN;
             case MOVE -> DelegatingActivationCodeHandler.ActivationTransferType.MOVE;
