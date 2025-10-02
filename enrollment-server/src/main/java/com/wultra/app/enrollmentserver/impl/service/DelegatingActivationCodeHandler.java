@@ -32,35 +32,15 @@ import java.util.List;
 public interface DelegatingActivationCodeHandler {
 
     /**
-     *  Fetch target application ID value based on source application ID. Check if the source application can
-     *  activate the target one - if the source application cannot activate the target application,
-     *  this method should return {@code null}.
+     * Fetch transfer configuration based on source and target application ID.
+     * Check if the source application can activate the target one - if the source application cannot activate the target application,
+     * this method should return {@code null}.
      *
-     * @param request request object
-     * @return response object or {@code null}
-     * @throws ActivationCodeException Thrown in case target application ID could not be retrieved.
+     * @param request Contains source and target application IDs
+     * @return Response containing target application ID, transfer type and initial flags or {@code null}
+     * @throws ActivationCodeException Thrown in case the transfer configuration could not be retrieved.
      */
-    TargetApplicationResponse fetchTargetApplication(TargetApplicationRequest request) throws ActivationCodeException;
-
-    /**
-     * Callback method to add new activation flags to activation.
-     *
-     * @param sourceActivationId Source activation ID (activation used to fetch the code).
-     * @param sourceActivationFlags Source activation flags (flags of the activation that initiated the transfer).
-     * @param userId User ID (user ID who requested the activation).
-     * @param applicationId Application identifier which was used for app lookup (String identifier sent from client).
-     * @param sourceAppId Source app ID (the app that initiated the process).
-     * @param sourceApplicationRoles Source application roles (roles of the app that initiated the transfer).
-     * @param destinationAppId Destination app ID (the app that is to be activated).
-     * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
-     * @param activationCode Activation code of the new activation.
-     * @param activationCodeSignature Activation code signature of the new activation code.
-     * @return List of new activation flags for the destination activation.
-     * @throws ActivationCodeException Thrown in case activation flag processing fails.
-     */
-    default List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, String sourceAppId, List<String> sourceApplicationRoles, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
-        return List.of();
-    }
+    TransferConfigurationResponse fetchTransferConfiguration(TransferConfigurationRequest request) throws ActivationCodeException;
 
     /**
      * Callback method with newly created activation code information.
@@ -80,11 +60,11 @@ public interface DelegatingActivationCodeHandler {
     }
 
     @Builder
-    record TargetApplicationRequest(String targetApplicationId, String sourceApplicationId) {
+    record TransferConfigurationRequest(String targetApplicationId, String sourceApplicationId) {
     }
 
     @Builder
-    record TargetApplicationResponse(String applicationId, ActivationTransferType type) {
+    record TransferConfigurationResponse(String applicationId, ActivationTransferType type, List<String> initialFlags) {
     }
 
     enum ActivationTransferType {

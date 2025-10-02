@@ -86,7 +86,7 @@ public class ActivationCodeService {
             throw new InvalidRequestObjectException();
         }
 
-        final DelegatingActivationCodeHandler.TargetApplicationResponse response = delegatingActivationCodeHandler.fetchTargetApplication(DelegatingActivationCodeHandler.TargetApplicationRequest.builder()
+        final DelegatingActivationCodeHandler.TransferConfigurationResponse response = delegatingActivationCodeHandler.fetchTransferConfiguration(DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
                 .targetApplicationId(request.getApplicationId())
                 .sourceApplicationId(sourceApplicationId)
                 .build());
@@ -124,10 +124,8 @@ public class ActivationCodeService {
             );
 
             // Add the activation flags
-            final List<String> flags = delegatingActivationCodeHandler.addActivationFlags(
-                    sourceActivationId, sourceActivationFlags, targetApplicationId, sourceUserId, sourceApplicationId, sourceApplicationRoles, targetApplicationId,
-                    iar.getActivationId(), iar.getActivationCode(), iar.getActivationSignature()
-            );
+            final List<String> flags = response.initialFlags(); // TODO Lubos
+
             if (!CollectionUtils.isEmpty(flags)) {
                 logger.info("Calling PowerAuth Server to add activation flags to activation ID: {}, flags: {}.", iar.getActivationId(), flags.toArray());
                 final AddActivationFlagsRequest addRequest = new AddActivationFlagsRequest();

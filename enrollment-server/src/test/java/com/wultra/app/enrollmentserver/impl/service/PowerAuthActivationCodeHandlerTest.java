@@ -27,6 +27,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -54,15 +56,16 @@ class PowerAuthActivationCodeHandlerTest {
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final var request = DelegatingActivationCodeHandler.TargetApplicationRequest.builder()
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
                 .targetApplicationId("target-1")
                 .sourceApplicationId("source-1")
                 .build();
 
-        final var result = tested.fetchTargetApplication(request);
+        final var result = tested.fetchTransferConfiguration(request);
 
         assertEquals("target-1", result.applicationId());
         assertEquals(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN, result.type());
+        assertEquals(List.of("foo"), result.initialFlags());
     }
 
     // TODO Lubos test for MOVE
@@ -74,12 +77,12 @@ class PowerAuthActivationCodeHandlerTest {
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final var request = DelegatingActivationCodeHandler.TargetApplicationRequest.builder()
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
                 .targetApplicationId("target-3")
                 .sourceApplicationId("source-1")
                 .build();
 
-        final var result = tested.fetchTargetApplication(request);
+        final var result = tested.fetchTransferConfiguration(request);
 
         assertNull(result);
     }
@@ -97,6 +100,7 @@ class PowerAuthActivationCodeHandlerTest {
                             "target-1",
                             "target-2"
                           ],
+                          "initialFlags": ["foo"],
                           "type": "SPAWN"
                         }
                       ]

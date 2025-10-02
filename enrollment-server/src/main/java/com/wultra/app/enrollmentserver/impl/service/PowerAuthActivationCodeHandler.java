@@ -47,7 +47,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
-    public DelegatingActivationCodeHandler.TargetApplicationResponse fetchTargetApplication(final DelegatingActivationCodeHandler.TargetApplicationRequest request) throws ActivationCodeException {
+    public DelegatingActivationCodeHandler.TransferConfigurationResponse fetchTransferConfiguration(final DelegatingActivationCodeHandler.TransferConfigurationRequest request) throws ActivationCodeException {
         try {
             final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(request.sourceApplicationId());
             return applicationConfig.getApplicationConfigs().stream()
@@ -55,11 +55,10 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
                     .findFirst()
                     .map(ApplicationConfigurationItem::getValues)
                     .map(this::convert)
-                    .map(ActivationCodeConfiguration::allowedTargetApplicationIds)
-                    .filter(allowedIds -> allowedIds.contains(request.targetApplicationId()))
-                    .map(allowedIds -> request.targetApplicationId())
-                    .map(applicationId -> DelegatingActivationCodeHandler.TargetApplicationResponse.builder()
-                            .applicationId(applicationId)
+                    .filter(it -> it.isAllowedTargetApplicationId(request.targetApplicationId()))
+                    .map(it -> DelegatingActivationCodeHandler.TransferConfigurationResponse.builder()
+                            .applicationId(request.targetApplicationId())
+                            .initialFlags(it.initialFlags)
                             .type(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN) // TODO Lubos MOVE
                             .build())
                     .orElse(null);
@@ -67,8 +66,6 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
             throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(request.sourceApplicationId()), e);
         }
     }
-
-    // TODO Lubos provide initial flags
 
     private ActivationCodeConfiguration convert(final List<Object> values) {
         return values.stream()
@@ -81,14 +78,20 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
 
     private ActivationCodeConfiguration convert(final Object value) {
         try {
-            return objectMapper.convertValue(value, new TypeReference<>() {});
+            return objectMapper.convertValue(value, new TypeReference<>() {
+            });
         } catch (IllegalArgumentException e) {
             logger.warn("Unable to convert {}", value, e);
             return null;
         }
     }
 
-    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type) {
+    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type, List<String> initialFlags) {
+
+        boolean isAllowedTargetApplicationId(final String applicationId) {
+            return allowedTargetApplicationIds.contains(applicationId);
+        }
+
         boolean isTypeOfSpawn() {
             return type == ActivationTransferType.SPAWN;
         }
