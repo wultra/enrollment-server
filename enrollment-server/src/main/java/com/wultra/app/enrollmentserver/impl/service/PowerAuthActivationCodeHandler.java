@@ -47,22 +47,28 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
-    public String fetchDestinationApplicationId(final String targetApplicationId, final String sourceApplicationId, final List<String> activationFlags, final List<String> applicationRoles) throws ActivationCodeException {
+    public DelegatingActivationCodeHandler.TargetApplicationResponse fetchTargetApplication(final DelegatingActivationCodeHandler.TargetApplicationRequest request) throws ActivationCodeException {
         try {
-            final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(sourceApplicationId);
+            final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(request.sourceApplicationId());
             return applicationConfig.getApplicationConfigs().stream()
                     .filter(it -> it.getKey().equals(ACTIVATION_TRANSFER))
                     .findFirst()
                     .map(ApplicationConfigurationItem::getValues)
                     .map(this::convert)
                     .map(ActivationCodeConfiguration::allowedTargetApplicationIds)
-                    .filter(allowedIds -> allowedIds.contains(targetApplicationId))
-                    .map(allowedIds -> targetApplicationId)
+                    .filter(allowedIds -> allowedIds.contains(request.targetApplicationId()))
+                    .map(allowedIds -> request.targetApplicationId())
+                    .map(applicationId -> DelegatingActivationCodeHandler.TargetApplicationResponse.builder()
+                            .applicationId(applicationId)
+                            .type(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN) // TODO Lubos MOVE
+                            .build())
                     .orElse(null);
         } catch (PowerAuthClientException e) {
-            throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(sourceApplicationId), e);
+            throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(request.sourceApplicationId()), e);
         }
     }
+
+    // TODO Lubos provide initial flags
 
     private ActivationCodeConfiguration convert(final List<Object> values) {
         return values.stream()

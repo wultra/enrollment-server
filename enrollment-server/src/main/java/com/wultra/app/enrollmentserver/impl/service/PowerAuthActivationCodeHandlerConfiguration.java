@@ -35,7 +35,7 @@ class PowerAuthActivationCodeHandlerConfiguration {
     @ConditionalOnMissingBean(DelegatingActivationCodeHandler.class)
     @Bean
     DelegatingActivationCodeHandler powerAuthActivationCodeHandler(final PowerAuthClient powerAuthClient) {
-        logger.info("Registering DefaultDelegatingActivationCodeHandler");
+        logger.info("Registering PowerAuthActivationCodeHandler");
         return new PowerAuthActivationCodeHandler(powerAuthClient);
     }
 }

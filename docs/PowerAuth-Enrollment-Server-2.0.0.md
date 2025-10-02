@@ -16,3 +16,11 @@ Could be used, for example, for passing FDS data.
 ### Deprecation of Pre-approval Screen
 
 The operation UI template attribute `preApprovalScreen` is deprecated, use `preApprovalScreens` instead.
+
+
+## Java API
+
+
+### DelegatingActivationCodeHandler
+
+The method `String fetchDestinationApplicationId(String, String, List<String>, List<String>)` in the interface `DelegatingActivationCodeHandler` has been replaced by `TargetApplicationResponse fetchTargetApplication(TargetApplicationRequest);`.

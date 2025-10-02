@@ -54,10 +54,18 @@ class PowerAuthActivationCodeHandlerTest {
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final String result = tested.fetchDestinationApplicationId("target-1", "source-1", null, null);
+        final var request = DelegatingActivationCodeHandler.TargetApplicationRequest.builder()
+                .targetApplicationId("target-1")
+                .sourceApplicationId("source-1")
+                .build();
 
-        assertEquals("target-1", result);
+        final var result = tested.fetchTargetApplication(request);
+
+        assertEquals("target-1", result.applicationId());
+        assertEquals(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN, result.type());
     }
+
+    // TODO Lubos test for MOVE
 
     @Test
     void testFetchDestinationApplicationId_invalidTarget() throws Exception {
@@ -66,7 +74,12 @@ class PowerAuthActivationCodeHandlerTest {
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final String result = tested.fetchDestinationApplicationId("target-3", "source-1", null, null);
+        final var request = DelegatingActivationCodeHandler.TargetApplicationRequest.builder()
+                .targetApplicationId("target-3")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTargetApplication(request);
 
         assertNull(result);
     }

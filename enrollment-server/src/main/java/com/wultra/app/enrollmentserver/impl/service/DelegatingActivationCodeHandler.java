@@ -19,6 +19,7 @@ package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.core.annotations.PublicSpi;
+import lombok.Builder;
 
 import java.util.List;
 
@@ -31,18 +32,15 @@ import java.util.List;
 public interface DelegatingActivationCodeHandler {
 
     /**
-     * Fetch destination application ID value based on application ID. Check if the source app can
-     * activate the destination one - if the source application cannot activate destination app, this
-     * method should return null.
+     *  Fetch target application ID value based on source application ID. Check if the source application can
+     *  activate the target one - if the source application cannot activate the target application,
+     *  this method should return {@code null}.
      *
-     * @param applicationId Application identifier for app lookup.
-     * @param sourceAppId Source application ID.
-     * @param activationFlags Activation flags.
-     * @param applicationRoles Application roles.
-     * @return Destination application ID.
-     * @throws ActivationCodeException Thrown in case destination application ID could not be retrieved.
+     * @param request request object
+     * @return response object or {@code null}
+     * @throws ActivationCodeException Thrown in case target application ID could not be retrieved.
      */
-    String fetchDestinationApplicationId(String applicationId, String sourceAppId, List<String> activationFlags, List<String> applicationRoles) throws ActivationCodeException;
+    TargetApplicationResponse fetchTargetApplication(TargetApplicationRequest request) throws ActivationCodeException;
 
     /**
      * Callback method to add new activation flags to activation.
@@ -79,6 +77,27 @@ public interface DelegatingActivationCodeHandler {
      */
     default void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, String sourceAppId, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
         // Default implementation does nothing
+    }
+
+    @Builder
+    record TargetApplicationRequest(String targetApplicationId, String sourceApplicationId) {
+    }
+
+    @Builder
+    record TargetApplicationResponse(String applicationId, ActivationTransferType type) {
+    }
+
+    enum ActivationTransferType {
+
+        /**
+         * Keeps the original activation.
+         */
+        SPAWN,
+
+        /**
+         * The original activation should be removed after the new activation is active and confirmed.
+         */
+        MOVE
     }
 
 }
