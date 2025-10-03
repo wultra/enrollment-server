@@ -27,4 +27,30 @@ import java.io.Serial;
 public class ActivationCodeException extends Exception {
     @Serial
     private static final long serialVersionUID = 368452747764248241L;
+
+    /**
+     * No-argument constructor.
+     */
+    public ActivationCodeException() {
+        super();
+    }
+
+    /**
+     * Constructor with a detail message.
+     *
+     * @param message The detail message.
+     */
+    public ActivationCodeException(final String message) {
+        super(message);
+    }
+
+    /**
+     * Constructor with a detail message and a cause.
+     *
+     * @param message The detail message.
+     * @param cause The cause.
+     */
+    public ActivationCodeException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }
