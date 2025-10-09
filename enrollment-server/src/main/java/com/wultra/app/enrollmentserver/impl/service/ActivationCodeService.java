@@ -25,6 +25,7 @@ import com.wultra.app.enrollmentserver.impl.service.converter.ActivationCodeConv
 import com.wultra.app.enrollmentserver.model.validator.ActivationCodeRequestValidator;
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationTransferType;
 import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
@@ -96,8 +97,8 @@ public class ActivationCodeService {
             final InitActivationRequest initRequest = new InitActivationRequest();
             initRequest.setUserId(sourceUserId);
             initRequest.setApplicationId(response.applicationId());
-            // TODO Lubos spawn, move
-            // TODO parent
+            initRequest.setParentActivationId(apiAuthentication.getActivationContext().getActivationId());
+            initRequest.setTransferType(convert(response.type()));
             initRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initRequest.setActivationOtp(request.getOtp());
             initRequest.setFlags(response.initialFlags());
@@ -118,6 +119,13 @@ public class ActivationCodeService {
         } catch (PowerAuthClientException e) {
             throw new ActivationCodeException("Unable to call PowerAuth.", e);
         }
+    }
+
+    private static ActivationTransferType convert(final DelegatingActivationCodeHandler.ActivationTransferType source) {
+        return switch (source) {
+            case SPAWN -> ActivationTransferType.SPAWN;
+            case MOVE -> ActivationTransferType.MOVE;
+        };
     }
 
     private void auditInitActivation(final InitActivationResponse response) {
