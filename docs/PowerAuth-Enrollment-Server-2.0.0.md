@@ -23,7 +23,7 @@ The operation UI template attribute `preApprovalScreen` is deprecated, use `preA
 
 ### DelegatingActivationCodeHandler
 
-The following methods in the interface `DelegatingActivationCodeHandler` has been replaced by a single method `TransferConfigurationResponse fetchTransferConfiguration(TransferConfigurationRequest)`.
+The following methods in the interface `DelegatingActivationCodeHandler` have been replaced by a single method `TransferConfigurationResponse fetchTransferConfiguration(TransferConfigurationRequest)`.
 
 - `String fetchDestinationApplicationId(String, String, List<String>, List<String>)`
 - `void didReturnActivationCode(String, String, String, String, String, String, String, String)`
