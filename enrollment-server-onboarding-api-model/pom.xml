@@ -12,6 +12,7 @@
 
     <artifactId>enrollment-server-onboarding-api-model</artifactId>
     <description>API model of the enrollment onboarding server.</description>
+    <name>Enrollment Server Onboarding API Model</name>
 
     <dependencies>
         <dependency>
