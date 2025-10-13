@@ -28,13 +28,19 @@
         <version>1.10.1</version>
     </parent>
 
-    <groupId>com.wultra.security</groupId>
     <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
+    <name>Enrollment Server Onboarding Provider Innovatrics</name>
 
     <dependencies>
         <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>enrollment-server-onboarding-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
