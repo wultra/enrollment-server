@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Specialization of {@link DelegatingActivationCodeHandler} using application configuration from PowerAuth Server.
@@ -47,30 +48,44 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
-    public String fetchDestinationApplicationId(final String targetApplicationId, final String sourceApplicationId, final List<String> activationFlags, final List<String> applicationRoles) throws ActivationCodeException {
+    public DelegatingActivationCodeHandler.TransferConfigurationResponse fetchTransferConfiguration(final DelegatingActivationCodeHandler.TransferConfigurationRequest request) throws ActivationCodeException {
         try {
-            final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(sourceApplicationId);
+            final GetApplicationConfigResponse applicationConfig = powerAuthClient.getApplicationConfig(request.sourceApplicationId());
             return applicationConfig.getApplicationConfigs().stream()
                     .filter(it -> it.getKey().equals(ACTIVATION_TRANSFER))
                     .findFirst()
                     .map(ApplicationConfigurationItem::getValues)
-                    .map(this::convert)
-                    .map(ActivationCodeConfiguration::allowedTargetApplicationIds)
-                    .filter(allowedIds -> allowedIds.contains(targetApplicationId))
-                    .map(allowedIds -> targetApplicationId)
+                    .stream()
+                    .flatMap(this::convert)
+                    .filter(it -> it.isAllowedTargetApplicationId(request.targetApplicationId()))
+                    .findFirst()
+                    .map(it -> createTransferConfigurationResponse(request.targetApplicationId(), it))
                     .orElse(null);
         } catch (PowerAuthClientException e) {
-            throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(sourceApplicationId), e);
+            throw new ActivationCodeException("Fetching application configuration for ID: %s failed.".formatted(request.sourceApplicationId()), e);
         }
     }
 
-    private ActivationCodeConfiguration convert(final List<Object> values) {
+    private static TransferConfigurationResponse createTransferConfigurationResponse(final String applicationId, final ActivationCodeConfiguration configuration) {
+        return TransferConfigurationResponse.builder()
+                .applicationId(applicationId)
+                .initialFlags(configuration.initialFlags())
+                .type(convert(configuration.type()))
+                .build();
+    }
+
+    private static DelegatingActivationCodeHandler.ActivationTransferType convert(ActivationTransferType source) {
+        return switch(source) {
+            case SPAWN -> DelegatingActivationCodeHandler.ActivationTransferType.SPAWN;
+            case MOVE -> DelegatingActivationCodeHandler.ActivationTransferType.MOVE;
+        };
+    }
+
+    private Stream<ActivationCodeConfiguration> convert(final List<Object> values) {
         return values.stream()
                 .map(this::convert)
                 .filter(Objects::nonNull)
-                .filter(ActivationCodeConfiguration::isTypeOfSpawn)
-                .findFirst()
-                .orElse(null);
+                .filter(ActivationCodeConfiguration::isTypeNotNull);
     }
 
     private ActivationCodeConfiguration convert(final Object value) {
@@ -82,9 +97,14 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
         }
     }
 
-    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type) {
-        boolean isTypeOfSpawn() {
-            return type == ActivationTransferType.SPAWN;
+    private record ActivationCodeConfiguration(List<String> allowedTargetApplicationIds, ActivationTransferType type, List<String> initialFlags) {
+
+        boolean isAllowedTargetApplicationId(final String applicationId) {
+            return allowedTargetApplicationIds != null && allowedTargetApplicationIds.contains(applicationId);
+        }
+
+        boolean isTypeNotNull() {
+            return type != null;
         }
     }
 

@@ -19,6 +19,7 @@ package com.wultra.app.enrollmentserver.impl.service;
 
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.core.annotations.PublicSpi;
+import lombok.Builder;
 
 import java.util.List;
 
@@ -31,54 +32,34 @@ import java.util.List;
 public interface DelegatingActivationCodeHandler {
 
     /**
-     * Fetch destination application ID value based on application ID. Check if the source app can
-     * activate the destination one - if the source application cannot activate destination app, this
-     * method should return null.
+     * Fetch transfer configuration based on source and target application ID.
+     * Check if the source application can activate the target one - if the source application cannot activate the target application,
+     * this method should return {@code null}.
      *
-     * @param applicationId Application identifier for app lookup.
-     * @param sourceAppId Source application ID.
-     * @param activationFlags Activation flags.
-     * @param applicationRoles Application roles.
-     * @return Destination application ID.
-     * @throws ActivationCodeException Thrown in case destination application ID could not be retrieved.
+     * @param request Contains source and target application IDs
+     * @return Response containing target application ID, transfer type and initial flags or {@code null}
+     * @throws ActivationCodeException Thrown in case the transfer configuration could not be retrieved.
      */
-    String fetchDestinationApplicationId(String applicationId, String sourceAppId, List<String> activationFlags, List<String> applicationRoles) throws ActivationCodeException;
+    TransferConfigurationResponse fetchTransferConfiguration(TransferConfigurationRequest request) throws ActivationCodeException;
 
-    /**
-     * Callback method to add new activation flags to activation.
-     *
-     * @param sourceActivationId Source activation ID (activation used to fetch the code).
-     * @param sourceActivationFlags Source activation flags (flags of the activation that initiated the transfer).
-     * @param userId User ID (user ID who requested the activation).
-     * @param applicationId Application identifier which was used for app lookup (String identifier sent from client).
-     * @param sourceAppId Source app ID (the app that initiated the process).
-     * @param sourceApplicationRoles Source application roles (roles of the app that initiated the transfer).
-     * @param destinationAppId Destination app ID (the app that is to be activated).
-     * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
-     * @param activationCode Activation code of the new activation.
-     * @param activationCodeSignature Activation code signature of the new activation code.
-     * @return List of new activation flags for the destination activation.
-     * @throws ActivationCodeException Thrown in case activation flag processing fails.
-     */
-    default List<String> addActivationFlags(String sourceActivationId, List<String> sourceActivationFlags, String userId, String applicationId, String sourceAppId, List<String> sourceApplicationRoles, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
-        return List.of();
+    @Builder
+    record TransferConfigurationRequest(String targetApplicationId, String sourceApplicationId) {
     }
 
-    /**
-     * Callback method with newly created activation code information.
-     *
-     * @param sourceActivationId Source activation ID (activation used to fetch the code).
-     * @param userId User ID (user ID who requested the activation).
-     * @param applicationId Application identifier which was used for app lookup (String identifier sent from client).
-     * @param sourceAppId Source app ID (the app that initiated the process).
-     * @param destinationAppId Destination app ID (the app that is to be activated).
-     * @param destinationActivationId Destination activation ID (the activation ID of the new activation).
-     * @param activationCode Activation code of the new activation.
-     * @param activationCodeSignature Activation code signature of the new activation code.
-     * @throws ActivationCodeException Thrown in case activation code processing fails.
-     */
-    default void didReturnActivationCode(String sourceActivationId, String userId, String applicationId, String sourceAppId, String destinationAppId, String destinationActivationId, String activationCode, String activationCodeSignature) throws ActivationCodeException {
-        // Default implementation does nothing
+    @Builder
+    record TransferConfigurationResponse(String applicationId, ActivationTransferType type, List<String> initialFlags) {
     }
 
+    enum ActivationTransferType {
+
+        /**
+         * Keeps the original activation.
+         */
+        SPAWN,
+
+        /**
+         * The original activation should be removed after the new activation is active and confirmed.
+         */
+        MOVE
+    }
 }

@@ -27,6 +27,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -48,25 +50,73 @@ class PowerAuthActivationCodeHandlerTest {
     private PowerAuthActivationCodeHandler tested;
 
     @Test
-    void testFetchDestinationApplicationId() throws Exception {
+    void testFetchTransferConfiguration_spawn() throws Exception {
         final GetApplicationConfigResponse response = createResponse();
 
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final String result = tested.fetchDestinationApplicationId("target-1", "source-1", null, null);
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-1")
+                .sourceApplicationId("source-1")
+                .build();
 
-        assertEquals("target-1", result);
+        final var result = tested.fetchTransferConfiguration(request);
+
+        assertEquals("target-1", result.applicationId());
+        assertEquals(DelegatingActivationCodeHandler.ActivationTransferType.SPAWN, result.type());
+        assertEquals(List.of("foo"), result.initialFlags());
     }
 
     @Test
-    void testFetchDestinationApplicationId_invalidTarget() throws Exception {
+    void testFetchTransferConfiguration_move() throws Exception {
         final GetApplicationConfigResponse response = createResponse();
 
         when(powerAuthClient.getApplicationConfig("source-1"))
                 .thenReturn(response);
 
-        final String result = tested.fetchDestinationApplicationId("target-3", "source-1", null, null);
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-4")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTransferConfiguration(request);
+
+        assertEquals("target-4", result.applicationId());
+        assertEquals(DelegatingActivationCodeHandler.ActivationTransferType.MOVE, result.type());
+        assertNull(result.initialFlags());
+    }
+
+    @Test
+    void testFetchTransferConfiguration_missingType() throws Exception {
+        final GetApplicationConfigResponse response = createResponse();
+
+        when(powerAuthClient.getApplicationConfig("source-1"))
+                .thenReturn(response);
+
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-6")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTransferConfiguration(request);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testFetchTransferConfiguration_invalidTarget() throws Exception {
+        final GetApplicationConfigResponse response = createResponse();
+
+        when(powerAuthClient.getApplicationConfig("source-1"))
+                .thenReturn(response);
+
+        final var request = DelegatingActivationCodeHandler.TransferConfigurationRequest.builder()
+                .targetApplicationId("target-3")
+                .sourceApplicationId("source-1")
+                .build();
+
+        final var result = tested.fetchTransferConfiguration(request);
 
         assertNull(result);
     }
@@ -84,6 +134,22 @@ class PowerAuthActivationCodeHandlerTest {
                             "target-1",
                             "target-2"
                           ],
+                          "initialFlags": ["foo"],
+                          "type": "SPAWN"
+                        },
+                        {
+                          "allowedTargetApplicationIds": [
+                            "target-4",
+                            "target-5"
+                          ],
+                          "type": "MOVE"
+                        },
+                        {
+                          "allowedTargetApplicationIds": [
+                            "target-6"
+                          ]
+                        },
+                        {
                           "type": "SPAWN"
                         }
                       ]
