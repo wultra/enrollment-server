@@ -84,8 +84,8 @@
         <module>enrollment-server-onboarding-domain-model</module>
         <module>enrollment-server-onboarding-provider-innovatrics</module>
         <module>enrollment-server-onboarding-provider-iproov</module>
-        <module>enrollment-server-onboarding-provider-zenid</module>
         <module>enrollment-server-onboarding-provider-microblink</module>
+        <module>enrollment-server-onboarding-provider-zenid</module>
     </modules>
 
     <properties>
