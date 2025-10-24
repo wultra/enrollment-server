@@ -1,0 +1,1744 @@
+openapi: 3.0.4
+info:
+  title: BlinkID Verify API v2
+  description: Document verification API for BlinkID Verify service - Version 2
+    with advanced features
+  version: 2.0.0
+  contact:
+    name: Microblink Support
+    url: https://help.microblink.com
+    email: support@microblink.com
+servers:
+  - url: https://us-east.verify.microblink.com
+    description: US East Production Server
+  - url: https://eu-west.verify.microblink.com
+    description: EU West Production Server
+security:
+  - basicAuth: []
+tags:
+  - name: Document Verification v2
+    description: API endpoints for document verification
+  - name: Health v2
+    description: Health check endpoints for service monitoring
+  - name: schema_documentverificationresponse
+    description: <SchemaDefinition
+      schemaRef="#/components/schemas/DocumentVerificationResponse" />
+    x-displayName: DocumentVerificationResponse
+  - name: schema_documentverificationrequest
+    description: <SchemaDefinition
+      schemaRef="#/components/schemas/DocumentVerificationRequest" />
+    x-displayName: DocumentVerificationRequest
+  - name: schema_check
+    description: <SchemaDefinition schemaRef="#/components/schemas/Check" />
+    x-displayName: Check
+  - name: schema_processingstatus
+    description: <SchemaDefinition schemaRef="#/components/schemas/ProcessingStatus" />
+    x-displayName: ProcessingStatus
+  - name: schema_matchlevel
+    description: <SchemaDefinition schemaRef="#/components/schemas/MatchLevel" />
+    x-displayName: MatchLevel
+  - name: schema_certaintylevel
+    description: <SchemaDefinition schemaRef="#/components/schemas/CertaintyLevel" />
+    x-displayName: CertaintyLevel
+  - name: schema_recommendedoutcome
+    description: <SchemaDefinition schemaRef="#/components/schemas/RecommendedOutcome" />
+    x-displayName: RecommendedOutcome
+  - name: schema_documentverificationusecaseoptions
+    description: <SchemaDefinition
+      schemaRef="#/components/schemas/DocumentVerificationUseCaseOptions" />
+    x-displayName: DocumentVerificationUseCaseOptions
+  - name: schema_documentverificationprocessingoptions
+    description: <SchemaDefinition
+      schemaRef="#/components/schemas/DocumentVerificationProcessingOptions" />
+    x-displayName: DocumentVerificationProcessingOptions
+  - name: schema_extractionresult
+    description: <SchemaDefinition schemaRef="#/components/schemas/ExtractionResult" />
+    x-displayName: ExtractionResult
+  - name: schema_checkresult
+    description: <SchemaDefinition schemaRef="#/components/schemas/CheckResult" />
+    x-displayName: CheckResult
+x-tagGroups:
+  - name: API Endpoints
+    tags:
+      - Document Verification v2
+      - Health v2
+  - name: Key Schemas
+    tags:
+      - schema_documentverificationresponse
+      - schema_documentverificationrequest
+      - schema_check
+      - schema_processingstatus
+      - schema_matchlevel
+      - schema_certaintylevel
+      - schema_recommendedoutcome
+      - schema_documentverificationusecaseoptions
+      - schema_documentverificationprocessingoptions
+      - schema_extractionresult
+      - schema_checkresult
+paths:
+  /api/v2/docver:
+    post:
+      summary: Verify Document
+      description: Submit document images for advanced verification with detailed
+        analytics and fraud detection
+      tags:
+        - Document Verification v2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentVerificationRequest"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                ImageFront:
+                  type: string
+                  format: binary
+                  description: Front side image of the document.
+                ImageBack:
+                  type: string
+                  format: binary
+                  description: Back side image of the document.
+                ImageBarcode:
+                  type: string
+                  format: binary
+                  description: Barcode image of the document.
+                TraceId:
+                  type: string
+                  description: Optional client-side trace ID for logging and tracking.
+                Type:
+                  type: string
+                  description: Specifies the document type.
+                ReturnFullDocumentImage:
+                  type: boolean
+                  default: false
+                ReturnFaceImage:
+                  type: boolean
+                  default: false
+                ReturnSignatureImage:
+                  type: boolean
+                  default: false
+                ReturnSecurityFeaturesDocumentImage:
+                  type: boolean
+                  default: true
+                ScreenMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                PhotocopyMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                BarcodeAnomalyMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                PhotoForgeryMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                StaticSecurityFeaturesMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                DataMatchMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                BlurMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                GlareMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                LightingMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                SharpnessMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                HandOcclusionMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                DpiMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                TiltMatchLevel:
+                  type: string
+                  enum:
+                    - LEVEL_1
+                    - LEVEL_2
+                    - LEVEL_3
+                    - LEVEL_4
+                    - LEVEL_5
+                    - LEVEL_6
+                    - LEVEL_7
+                    - LEVEL_8
+                    - LEVEL_9
+                    - LEVEL_10
+                    - DISABLED
+                AnonymizationMode:
+                  type: string
+                  enum:
+                    - NONE
+                    - IMAGE_ONLY
+                    - RESULT_FIELDS_ONLY
+                    - FULL_RESULT
+                VerificationSideMode:
+                  type: string
+                  default: MULTI_SIDE
+                  enum:
+                    - FRONT_ONLY
+                    - BACK_ONLY
+                    - MULTI_SIDE
+                ImageFormat:
+                  type: string
+                  enum:
+                    - JPG
+                    - PNG
+                TreatExpirationAsFraud:
+                  type: boolean
+                  default: true
+                ImageQualityInterpretation:
+                  type: string
+                  enum:
+                    - IGNORE
+                    - CONSERVATIVE
+                    - HIGH_ASSURANCE
+                    - HIGH_CONVERSION
+                    - VERY_HIGH_CONVERSION
+      responses:
+        "200":
+          description: Successful verification response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentVerificationResponse"
+        "400":
+          description: Bad Request - Invalid parameters or image loading failed.
+        "401":
+          description: Unauthorized - invalid API key
+        "415":
+          description: Unsupported Media Type.
+        "429":
+          description: Rate limit exceeded
+        "500":
+          description: Internal Server Error.
+        "504":
+          description: Gateway Timeout - Request to the processing worker timed out.
+  /health/ready:
+    get:
+      summary: Readiness Check
+      description: Check if the service is ready to accept requests
+      tags:
+        - Health v2
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        "503":
+          description: Service is not ready
+  /health/live:
+    get:
+      summary: Liveness Check
+      description: Check if the service is alive and running
+      tags:
+        - Health v2
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        "503":
+          description: Service is not alive
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication using your API license key as username
+  schemas:
+    DocumentVerificationImageSource:
+      type: object
+      properties:
+        url:
+          type: string
+          nullable: true
+        base64:
+          type: string
+          nullable: true
+      additionalProperties: false
+    AnonymizationMode:
+      uniqueItems: true
+      enum:
+        - None
+        - ImageOnly
+        - ResultFieldsOnly
+        - FullResult
+      type: string
+      format: string
+    MatchLevel:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Level1
+        - Level2
+        - Level3
+        - Level4
+        - Level5
+        - Level6
+        - Level7
+        - Level8
+        - Level9
+        - Level10
+        - Disabled
+      type: string
+      format: string
+      example: Level1
+    ImageQualityInterpretation:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Ignore
+        - Conservative
+        - HighAssurance
+        - HighConversion
+        - VeryHighConversion
+      type: string
+      format: string
+      example: Ignore
+    ImageFormat:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Jpg
+        - Png
+        - Qoi
+      type: string
+      format: string
+      example: Jpg
+    DocumentVerificationProcessingOptions:
+      type: object
+      properties:
+        returnFullDocumentImage:
+          type: boolean
+          nullable: true
+        returnFaceImage:
+          type: boolean
+          nullable: true
+        returnSignatureImage:
+          type: boolean
+          nullable: true
+        anonymizationMode:
+          $ref: "#/components/schemas/AnonymizationMode"
+        treatExpirationAsFraud:
+          type: boolean
+          nullable: true
+        screenMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        photocopyMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        barcodeAnomalyMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        photoForgeryMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        staticSecurityFeaturesMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        dataMatchMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        blurMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        glareMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        lightingMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        sharpnessMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        handOcclusionMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        dpiMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        tiltMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        imageQualityInterpretation:
+          $ref: "#/components/schemas/ImageQualityInterpretation"
+        returnImageFormat:
+          $ref: "#/components/schemas/ImageFormat"
+      additionalProperties: false
+    DocumentVerificationPolicy:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Permissive
+        - Standard
+        - Strict
+        - VeryStrict
+      type: string
+      format: string
+      example: Permissive
+    VerificationContext:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Remote
+        - InPerson
+      type: string
+      format: string
+      example: Remote
+    ReviewStrategy:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Never
+        - RejectedAndAccepted
+        - RejectedOnly
+        - AcceptedOnly
+      type: string
+      format: string
+      example: Never
+    ReviewSensitivity:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Low
+        - Default
+        - High
+      type: string
+      format: string
+      example: Low
+    CaptureConditions:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - NoControl
+        - Basic
+      type: string
+      format: string
+      example: NoControl
+    DocumentVerificationUseCaseOptions:
+      type: object
+      properties:
+        documentVerificationPolicy:
+          $ref: "#/components/schemas/DocumentVerificationPolicy"
+        verificationContext:
+          $ref: "#/components/schemas/VerificationContext"
+        manualReviewStrategy:
+          $ref: "#/components/schemas/ReviewStrategy"
+        manualReviewSensitivity:
+          $ref: "#/components/schemas/ReviewSensitivity"
+        captureConditions:
+          $ref: "#/components/schemas/CaptureConditions"
+      additionalProperties: false
+    DocumentVerificationRequest:
+      type: object
+      properties:
+        imageFront:
+          $ref: "#/components/schemas/DocumentVerificationImageSource"
+        imageBack:
+          $ref: "#/components/schemas/DocumentVerificationImageSource"
+        imageBarcode:
+          $ref: "#/components/schemas/DocumentVerificationImageSource"
+        options:
+          $ref: "#/components/schemas/DocumentVerificationProcessingOptions"
+        useCase:
+          $ref: "#/components/schemas/DocumentVerificationUseCaseOptions"
+        captureSessionId:
+          type: string
+          nullable: true
+        sessionID:
+          type: string
+          nullable: true
+      additionalProperties: false
+    ProcessingStatus:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - NotAvailable
+        - ExtractionFailed
+        - PartiallyCompleted
+        - Completed
+        - CompletedAfterFront
+        - ServerModelError
+        - FullyCroppedDocument
+      type: string
+      format: string
+      example: NotAvailable
+    FieldValueType:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - FirstName
+        - LastName
+        - FullName
+        - AdditionalNameInformation
+        - LocalizedName
+        - FathersName
+        - MothersName
+        - Address
+        - AdditionalAddressInformation
+        - AdditionalOptionalAddressInformation
+        - PlaceOfBirth
+        - Nationality
+        - Race
+        - Religion
+        - Profession
+        - MaritalStatus
+        - ResidentialStatus
+        - Employer
+        - Sex
+        - DateOfBirth
+        - DateOfIssue
+        - DateOfExpiry
+        - DocumentNumber
+        - PersonalIdNumber
+        - DocumentAdditionalNumber
+        - DocumentOptionalAdditionalNumber
+        - AdditionalPersonalIdNumber
+        - IssuingAuthority
+        - DriverLicenseDetailedInfo
+        - Mrz
+        - ClassEffectiveDate
+        - ClassExpiryDate
+      type: string
+      format: string
+      example: FirstName
+    FieldCheck:
+      allOf:
+        - $ref: "#/components/schemas/Check"
+        - type: object
+          properties:
+            field:
+              $ref: "#/components/schemas/FieldValueType"
+          additionalProperties: false
+    TieredCheck:
+      allOf:
+        - $ref: "#/components/schemas/Check"
+        - type: object
+          properties:
+            matchLevel:
+              $ref: "#/components/schemas/MatchLevel"
+          additionalProperties: false
+    CheckResult:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - NotPerformed
+        - Pass
+        - Fail
+      type: string
+      format: string
+      example: NotPerformed
+    Check:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+        result:
+          $ref: "#/components/schemas/CheckResult"
+        performedChecks:
+          type: integer
+          format: int32
+          nullable: true
+        details:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Check"
+          nullable: true
+      additionalProperties: false
+    CertaintyLevel:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - NotPerformed
+        - High
+        - Medium
+        - Low
+      type: string
+      format: string
+      example: NotPerformed
+    RecommendedOutcome:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Undeterminable
+        - Reject
+        - Accept
+        - Retry
+        - ManuallyReview
+      type: string
+      format: string
+      example: Undeterminable
+    DetailedCheck:
+      allOf:
+        - $ref: "#/components/schemas/Check"
+        - type: object
+          properties:
+            certaintyLevel:
+              $ref: "#/components/schemas/CertaintyLevel"
+            recommendedOutcome:
+              $ref: "#/components/schemas/RecommendedOutcome"
+          additionalProperties: false
+    IndicatorType:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - ImageQuality
+        - ScanProcess
+      type: string
+      format: string
+      example: ImageQuality
+    IndicatorResult:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - NotPerformed
+        - Pass
+        - Fail
+        - Warn
+      type: string
+      format: string
+      example: NotPerformed
+    Indicator:
+      required:
+        - name
+        - result
+        - type
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/IndicatorType"
+        result:
+          $ref: "#/components/schemas/IndicatorResult"
+      additionalProperties: false
+    ExtrProcessingStatus:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Success
+        - DetectionFailed
+        - ImagePreprocessingFailed
+        - StabilityTestFailed
+        - ScanningWrongSide
+        - FieldIdentificationFailed
+        - MandatoryFieldMissing
+        - InvalidCharactersFound
+        - ImageReturnFailed
+        - BarcodeRecognitionFailed
+        - MrzParsingFailed
+        - ClassFiltered
+        - UnsupportedClass
+        - UnsupportedByLicense
+        - AwaitingOtherSide
+        - NotScanned
+        - BarcodeDetectionFailed
+      type: string
+      format: string
+      example: Success
+    ResultState:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Empty
+        - Uncertain
+        - Valid
+        - StageValid
+      type: string
+      format: string
+      example: Empty
+    StringResult:
+      allOf:
+        - $ref: "#/components/schemas/Result"
+        - required:
+            - value
+          type: object
+          properties:
+            value:
+              type: string
+          additionalProperties: false
+    Point2df:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+      additionalProperties: false
+    Dimensions:
+      type: object
+      properties:
+        width:
+          type: number
+          format: float
+        height:
+          type: number
+          format: float
+      additionalProperties: false
+    LocationInfo:
+      type: object
+      properties:
+        topLeftCorner:
+          $ref: "#/components/schemas/Point2df"
+        dimensions:
+          $ref: "#/components/schemas/Dimensions"
+      additionalProperties: false
+    Side:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Front
+        - Back
+      type: string
+      format: string
+      example: Front
+    ExtractedScript:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Latin
+        - Cyrillic
+        - Arabic
+        - Greek
+      type: string
+      format: string
+      example: Latin
+    DetailedStringResult:
+      allOf:
+        - $ref: "#/components/schemas/StringResult"
+        - type: object
+          properties:
+            location:
+              $ref: "#/components/schemas/LocationInfo"
+            side:
+              $ref: "#/components/schemas/Side"
+            script:
+              $ref: "#/components/schemas/ExtractedScript"
+          additionalProperties: false
+    DetailedDateResult:
+      allOf:
+        - $ref: "#/components/schemas/DateResult"
+        - type: object
+          properties:
+            originalResult:
+              type: array
+              items:
+                $ref: "#/components/schemas/DetailedStringResult"
+              nullable: true
+          additionalProperties: false
+    DateResult:
+      allOf:
+        - $ref: "#/components/schemas/Result"
+        - required:
+            - day
+            - filledByDomainKnowledge
+            - month
+            - successfullyParsed
+            - year
+          type: object
+          properties:
+            day:
+              type: integer
+              format: int32
+            month:
+              type: integer
+              format: int32
+            year:
+              type: integer
+              format: int32
+            isPermanent:
+              type: boolean
+              nullable: true
+            successfullyParsed:
+              type: boolean
+            filledByDomainKnowledge:
+              type: boolean
+            originalResult:
+              type: string
+              nullable: true
+          additionalProperties: false
+    Result:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+        field:
+          type: string
+          nullable: true
+        details:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+      additionalProperties: false
+    VizResult:
+      type: object
+      properties:
+        front:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+        back:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+      additionalProperties: false
+    Country:
+      uniqueItems: true
+      enum:
+        - None
+        - Albania
+        - Algeria
+        - Argentina
+        - Australia
+        - Austria
+        - Azerbaijan
+        - Bahrain
+        - Bangladesh
+        - Belgium
+        - BosniaAndHerzegovina
+        - Brunei
+        - Bulgaria
+        - Cambodia
+        - Canada
+        - Chile
+        - Colombia
+        - CostaRica
+        - Croatia
+        - Cyprus
+        - Czechia
+        - Denmark
+        - DominicanRepublic
+        - Egypt
+        - Estonia
+        - Finland
+        - France
+        - Georgia
+        - Germany
+        - Ghana
+        - Greece
+        - Guatemala
+        - HongKong
+        - Hungary
+        - India
+        - Indonesia
+        - Ireland
+        - Israel
+        - Italy
+        - Jordan
+        - Kazakhstan
+        - Kenya
+        - Kosovo
+        - Kuwait
+        - Latvia
+        - Lithuania
+        - Malaysia
+        - Maldives
+        - Malta
+        - Mauritius
+        - Mexico
+        - Morocco
+        - Netherlands
+        - NewZealand
+        - Nigeria
+        - Pakistan
+        - Panama
+        - Paraguay
+        - Philippines
+        - Poland
+        - Portugal
+        - PuertoRico
+        - Qatar
+        - Romania
+        - Russia
+        - SaudiArabia
+        - Serbia
+        - Singapore
+        - Slovakia
+        - Slovenia
+        - SouthAfrica
+        - Spain
+        - Sweden
+        - Switzerland
+        - Taiwan
+        - Thailand
+        - Tunisia
+        - Turkey
+        - Uae
+        - Uganda
+        - Uk
+        - Ukraine
+        - Usa
+        - Vietnam
+        - Brazil
+        - Norway
+        - Oman
+        - Ecuador
+        - ElSalvador
+        - SriLanka
+        - Peru
+        - Uruguay
+        - Bahamas
+        - Bermuda
+        - Bolivia
+        - China
+        - EuropeanUnion
+        - Haiti
+        - Honduras
+        - Iceland
+        - Japan
+        - Luxembourg
+        - Montenegro
+        - Nicaragua
+        - SouthKorea
+        - Venezuela
+        - Afghanistan
+        - AlandIslands
+        - AmericanSamoa
+        - Andorra
+        - Angola
+        - Anguilla
+        - Antarctica
+        - AntiguaAndBarbuda
+        - Armenia
+        - Aruba
+        - BailiwickOfGuernsey
+        - BailiwickOfJersey
+        - Barbados
+        - Belarus
+        - Belize
+        - Benin
+        - Bhutan
+        - BonaireSaintEustatiusAndSaba
+        - Botswana
+        - BouvetIsland
+        - BritishIndianOceanTerritory
+        - BurkinaFaso
+        - Burundi
+        - Cameroon
+        - CapeVerde
+        - CaribbeanNetherlands
+        - CaymanIslands
+        - CentralAfricanRepublic
+        - Chad
+        - ChristmasIsland
+        - CocosIslands
+        - Comoros
+        - Congo
+        - CookIslands
+        - Cuba
+        - Curacao
+        - DemocraticRepublicOfTheCongo
+        - Djibouti
+        - Dominica
+        - EastTimor
+        - EquatorialGuinea
+        - Eritrea
+        - Ethiopia
+        - FalklandIslands
+        - FaroeIslands
+        - FederatedStatesOfMicronesia
+        - Fiji
+        - FrenchGuiana
+        - FrenchPolynesia
+        - FrenchSouthernTerritories
+        - Gabon
+        - Gambia
+        - Gibraltar
+        - Greenland
+        - Grenada
+        - Guadeloupe
+        - Guam
+        - Guinea
+        - GuineaBissau
+        - Guyana
+        - HeardIslandAndMcdonaldIslands
+        - Iran
+        - Iraq
+        - IsleOfMan
+        - IvoryCoast
+        - Jamaica
+        - Kiribati
+        - Kyrgyzstan
+        - Laos
+        - Lebanon
+        - Lesotho
+        - Liberia
+        - Libya
+        - Liechtenstein
+        - Macau
+        - Madagascar
+        - Malawi
+        - Mali
+        - MarshallIslands
+        - Martinique
+        - Mauritania
+        - Mayotte
+        - Moldova
+        - Monaco
+        - Mongolia
+        - Montserrat
+        - Mozambique
+        - Myanmar
+        - Namibia
+        - Nauru
+        - Nepal
+        - NewCaledonia
+        - Niger
+        - Niue
+        - NorfolkIsland
+        - NorthernCyprus
+        - NorthernMarianaIslands
+        - NorthKorea
+        - NorthMacedonia
+        - Palau
+        - Palestine
+        - PapuaNewGuinea
+        - Pitcairn
+        - Reunion
+        - Rwanda
+        - SaintBarthelemy
+        - SaintHelenaAscensionAndTristianDaCunha
+        - SaintKittsAndNevis
+        - SaintLucia
+        - SaintMartin
+        - SaintPierreAndMiquelon
+        - SaintVincentAndTheGrenadines
+        - Samoa
+        - SanMarino
+        - SaoTomeAndPrincipe
+        - Senegal
+        - Seychelles
+        - SierraLeone
+        - SintMaarten
+        - SolomonIslands
+        - Somalia
+        - SouthGeorgiaAndTheSouthSandwichIslands
+        - SouthSudan
+        - Sudan
+        - Suriname
+        - SvalbardAndJanMayen
+        - Eswatini
+        - Syria
+        - Tajikistan
+        - Tanzania
+        - Togo
+        - Tokelau
+        - Tonga
+        - TrinidadAndTobago
+        - Turkmenistan
+        - TurksAndCaicosIslands
+        - Tuvalu
+        - UnitedStatesMinorOutlyingIslands
+        - Uzbekistan
+        - Vanuatu
+        - VaticanCity
+        - VirginIslandsBritish
+        - VirginIslandsUs
+        - WallisAndFutuna
+        - WesternSahara
+        - Yemen
+        - Yugoslavia
+        - Zambia
+        - Zimbabwe
+        - SchengenArea
+      type: string
+      format: string
+    Type:
+      uniqueItems: true
+      enum:
+        - None
+        - ConsularId
+        - Dl
+        - DlPublicServicesCard
+        - EmploymentPass
+        - FinCard
+        - Id
+        - MultipurposeId
+        - MyKad
+        - MyKid
+        - MyPr
+        - MyTentera
+        - PanCard
+        - ProfessionalId
+        - PublicServicesCard
+        - ResidencePermit
+        - ResidentId
+        - TemporaryResidencePermit
+        - VoterId
+        - WorkPermit
+        - IKad
+        - MilitaryId
+        - MyKas
+        - SocialSecurityCard
+        - HealthInsuranceCard
+        - Passport
+        - SPass
+        - AddressCard
+        - AlienId
+        - AlienPassport
+        - GreenCard
+        - MinorsId
+        - PostalId
+        - ProfessionalDl
+        - TaxId
+        - WeaponPermit
+        - Visa
+        - BorderCrossingCard
+        - DriverCard
+        - GlobalEntryCard
+        - MyPolis
+        - NexusCard
+        - PassportCard
+        - ProofOfAgeCard
+        - RefugeeId
+        - TribalId
+        - VeteranId
+        - CitizenshipCertificate
+        - MyNumberCard
+        - ConsularPassport
+        - MinorsPassport
+        - MinorsPublicServicesCard
+        - DrivingPrivilegeCard
+        - AsylumRequest
+        - DriverQualificationCard
+        - ProvisionalDl
+        - RefugeePassport
+        - SpecialId
+        - UniformedServicesId
+        - ImmigrantVisa
+        - ConsularVoterId
+        - TwicCard
+        - ExitEntryPermit
+        - MainlandTravelPermitTaiwan
+        - NbiClearance
+        - ProofOfRegistration
+        - TemporaryProtectionPermit
+        - AfghanCitizenCard
+        - Eid
+        - Pass
+        - SisId
+        - AsicCard
+        - BidoonCard
+        - InterimHealthInsuranceCard
+        - NonVoterId
+        - ReciprocalHealthInsuranceCard
+        - VehicleRegistration
+        - EsaadCard
+        - RegistrationCertificate
+        - MedicalMarijuanaId
+        - NonCardTribalId
+        - DiplomaticId
+      type: string
+      format: string
+    Region:
+      uniqueItems: true
+      enum:
+        - None
+        - Alabama
+        - Alaska
+        - Alberta
+        - Arizona
+        - Arkansas
+        - AustralianCapitalTerritory
+        - BritishColumbia
+        - California
+        - Colorado
+        - Connecticut
+        - Delaware
+        - DistrictOfColumbia
+        - Florida
+        - Georgia
+        - Hawaii
+        - Idaho
+        - Illinois
+        - Indiana
+        - Iowa
+        - Kansas
+        - Kentucky
+        - Louisiana
+        - Maine
+        - Manitoba
+        - Maryland
+        - Massachusetts
+        - Michigan
+        - Minnesota
+        - Mississippi
+        - Missouri
+        - Montana
+        - Nebraska
+        - Nevada
+        - NewBrunswick
+        - NewHampshire
+        - NewJersey
+        - NewMexico
+        - NewSouthWales
+        - NewYork
+        - NorthernTerritory
+        - NorthCarolina
+        - NorthDakota
+        - NovaScotia
+        - Ohio
+        - Oklahoma
+        - Ontario
+        - Oregon
+        - Pennsylvania
+        - Quebec
+        - Queensland
+        - RhodeIsland
+        - Saskatchewan
+        - SouthAustralia
+        - SouthCarolina
+        - SouthDakota
+        - Tasmania
+        - Tennessee
+        - Texas
+        - Utah
+        - Vermont
+        - Victoria
+        - Virginia
+        - Washington
+        - WesternAustralia
+        - WestVirginia
+        - Wisconsin
+        - Wyoming
+        - Yukon
+        - CiudadDeMexico
+        - Jalisco
+        - NewfoundlandAndLabrador
+        - NuevoLeon
+        - BajaCalifornia
+        - Chihuahua
+        - Guanajuato
+        - Guerrero
+        - Mexico
+        - Michoacan
+        - NewYorkCity
+        - Tamaulipas
+        - Veracruz
+        - Chiapas
+        - Coahuila
+        - Durango
+        - GuerreroCocula
+        - GuerreroJuchitan
+        - GuerreroTepecoacuilco
+        - GuerreroTlacoapa
+        - Gujarat
+        - Hidalgo
+        - Karnataka
+        - Kerala
+        - KhyberPakhtunkhwa
+        - MadhyaPradesh
+        - Maharashtra
+        - Morelos
+        - Nayarit
+        - Oaxaca
+        - Puebla
+        - Punjab
+        - Queretaro
+        - SanLuisPotosi
+        - Sinaloa
+        - Sonora
+        - Tabasco
+        - TamilNadu
+        - Yucatan
+        - Zacatecas
+        - Aguascalientes
+        - BajaCaliforniaSur
+        - Campeche
+        - Colima
+        - QuintanaRooBenitoJuarez
+        - QuintanaRoo
+        - QuintanaRooSolidaridad
+        - Tlaxcala
+        - QuintanaRooCozumel
+        - SaoPaolo
+        - RioDeJaneiro
+        - RioGrandeDoSul
+        - NorthwestTerritories
+        - Nunavut
+        - PrinceEdwardIsland
+        - DistritoFederal
+        - Maranhao
+        - MatoGrosso
+        - MinasGerais
+        - Para
+        - Parana
+        - Pernambuco
+        - SantaCatarina
+        - AndhraPradesh
+        - Ceara
+        - Goias
+        - GuerreroAcapulcoDeJuarez
+        - Haryana
+        - Sergipe
+        - Alagoas
+        - Bangsamoro
+      type: string
+      format: string
+    ClassInfo:
+      required:
+        - country
+        - region
+        - type
+      type: object
+      properties:
+        country:
+          $ref: "#/components/schemas/Country"
+        type:
+          $ref: "#/components/schemas/Type"
+        region:
+          $ref: "#/components/schemas/Region"
+        isoAlpha3CountryCode:
+          type: string
+          nullable: true
+        isoAlpha2CountryCode:
+          type: string
+          nullable: true
+        isoNumericCountryCode:
+          type: string
+          nullable: true
+      additionalProperties: false
+    RecognitionMode:
+      uniqueItems: true
+      enum:
+        - None
+        - MrzId
+        - MrzVisa
+        - MrzPassport
+        - PhotoId
+        - FullRecognition
+        - BarcodeId
+      type: string
+      format: string
+    FieldType:
+      uniqueItems: true
+      enum:
+        - ADDITIONAL_ADDRESS_INFORMATION
+        - ADDITIONAL_NAME_INFORMATION
+        - ADDITIONAL_OPTIONAL_ADDRESS_INFORMATION
+        - ADDITIONAL_PERSONAL_ID_NUMBER
+        - ADDRESS
+        - CLASS_EFFECTIVE_DATE
+        - CLASS_EXPIRY_DATE
+        - CONDITIONS
+        - DATE_OF_BIRTH
+        - DATE_OF_EXPIRY
+        - DATE_OF_ISSUE
+        - DOCUMENT_ADDITIONAL_NUMBER
+        - DOCUMENT_OPTIONAL_ADDITIONAL_NUMBER
+        - DOCUMENT_NUMBER
+        - EMPLOYER
+        - ENDORSEMENTS
+        - FATHERS_NAME
+        - FIRST_NAME
+        - FULL_NAME
+        - ISSUING_AUTHORITY
+        - LAST_NAME
+        - LICENCE_TYPE
+        - LOCALIZED_NAME
+        - MARITAL_STATUS
+        - MOTHERS_NAME
+        - MRZ
+        - NATIONALITY
+        - PERSONAL_ID_NUMBER
+        - PLACE_OF_BIRTH
+        - PROFESSION
+        - RACE
+        - RELIGION
+        - RESIDENTIAL_STATUS
+        - RESTRICTIONS
+        - SEX
+        - VEHICLE_CLASS
+        - BLOOD_TYPE
+        - SPONSOR
+        - VISA_TYPE
+        - NUMBER_OF_ENTRIES
+        - DURATION_OF_STAY
+        - DOCUMENT_SUBTYPE
+        - REMARKS
+        - RESIDENCE_PERMIT_TYPE
+        - CERTIFICATE_NUMBER
+        - COUNTRY_CODE
+        - NATIONAL_INSURANCE_NUMBER
+      type: string
+      format: string
+    AdditionalProcessingInfo:
+      type: object
+      properties:
+        missingMandatoryFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldType"
+          nullable: true
+        invalidCharacterFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldType"
+          nullable: true
+        extraPresentFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldType"
+          nullable: true
+      additionalProperties: false
+    AdditionalInfo:
+      required:
+        - firstSideAdditionalProcessingInfo
+        - secondSideAdditionalProcessingInfo
+      type: object
+      properties:
+        frontProcessingStatus:
+          $ref: "#/components/schemas/ExtrProcessingStatus"
+        backProcessingStatus:
+          $ref: "#/components/schemas/ExtrProcessingStatus"
+        recognitionMode:
+          $ref: "#/components/schemas/RecognitionMode"
+        firstSideAdditionalProcessingInfo:
+          $ref: "#/components/schemas/AdditionalProcessingInfo"
+        secondSideAdditionalProcessingInfo:
+          $ref: "#/components/schemas/AdditionalProcessingInfo"
+      additionalProperties: false
+    ExtractionResult:
+      type: object
+      properties:
+        processingStatus:
+          $ref: "#/components/schemas/ExtrProcessingStatus"
+        recognitionStatus:
+          $ref: "#/components/schemas/ResultState"
+        overall:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+        viz:
+          $ref: "#/components/schemas/VizResult"
+        mrz:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+        barcode:
+          type: array
+          items:
+            $ref: "#/components/schemas/Result"
+          nullable: true
+        classInfo:
+          $ref: "#/components/schemas/ClassInfo"
+        additionalInfo:
+          $ref: "#/components/schemas/AdditionalInfo"
+      additionalProperties: false
+    MessageStatus:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - Debug
+        - Info
+        - Warning
+        - Error
+      type: string
+      format: string
+      example: Debug
+    ResponseMessage:
+      required:
+        - code
+        - message
+        - status
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        status:
+          $ref: "#/components/schemas/MessageStatus"
+      additionalProperties: false
+    ImageResult:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        base64:
+          type: string
+          nullable: true
+      additionalProperties: false
+    VerificationSideMode:
+      uniqueItems: true
+      enum:
+        - Unknown
+        - MultiSide
+        - FrontOnly
+        - BackOnly
+      type: string
+      format: string
+      example: MultiSide
+    DocumentVerificationProcessingOptionsResponse:
+      type: object
+      properties:
+        screenMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        photocopyMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        barcodeAnomalyMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        photoForgeryMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        staticSecurityFeaturesMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        dataMatchMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        blurMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        glareMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        lightingMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        sharpnessMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        handOcclusionMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        dpiMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        tiltMatchLevel:
+          $ref: "#/components/schemas/MatchLevel"
+        imageQualityInterpretation:
+          $ref: "#/components/schemas/ImageQualityInterpretation"
+        sideMode:
+          $ref: "#/components/schemas/VerificationSideMode"
+        treatExpirationAsFraud:
+          type: boolean
+          nullable: true
+      additionalProperties: false
+    RuntimeInformation:
+      required:
+        - clientSdkName
+        - clientSdkVersion
+        - extractionRecognizerVersion
+        - runnerInstanceKey
+        - runnerVersion
+        - serviceVersion
+        - verificationRecognizerVersion
+        - wrapperVersion
+      type: object
+      properties:
+        startedOn:
+          type: string
+          format: date-time
+        finishedOn:
+          type: string
+          format: date-time
+        elapsedMs:
+          type: integer
+          format: int64
+        serviceVersion:
+          type: string
+        runnerVersion:
+          type: string
+        runnerInstanceKey:
+          type: string
+        runnerInstanceIndex:
+          type: integer
+          format: int32
+        wrapperVersion:
+          type: string
+        extractionRecognizerVersion:
+          type: string
+        verificationRecognizerVersion:
+          type: string
+        clientSdkName:
+          type: string
+        clientSdkVersion:
+          type: string
+        traceId:
+          type: string
+          nullable: true
+      additionalProperties: false
+    DocumentVerificationResponse:
+      type: object
+      properties:
+        processingStatus:
+          $ref: "#/components/schemas/ProcessingStatus"
+        verification:
+          $ref: "#/components/schemas/DetailedCheck"
+        checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Check"
+          nullable: true
+        processIndicators:
+          type: array
+          items:
+            $ref: "#/components/schemas/Indicator"
+          nullable: true
+        extraction:
+          $ref: "#/components/schemas/ExtractionResult"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseMessage"
+          readOnly: true
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImageResult"
+          nullable: true
+        optionsUsed:
+          $ref: "#/components/schemas/DocumentVerificationProcessingOptionsResponse"
+        useCaseUsed:
+          $ref: "#/components/schemas/DocumentVerificationUseCaseOptions"
+        runtime:
+          $ref: "#/components/schemas/RuntimeInformation"
+      additionalProperties: false
