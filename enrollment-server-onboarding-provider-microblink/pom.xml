@@ -38,4 +38,39 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>swagger-definitions-microblink</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <verbose>false</verbose>
+                            <inputSpec>${basedir}/src/main/resources/api/blinkid-verify-api-v2.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <generateApis>false</generateApis>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateModels>true</generateModels>
+                            <generateModelTests>false</generateModelTests>
+                            <skipValidateSpec>true</skipValidateSpec>
+                            <configOptions>
+                                <library>native</library>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <modelPackage>com.wultra.app.onboardingserver.provider.microblink.model.api</modelPackage>
+                                <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
