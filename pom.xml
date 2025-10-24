@@ -85,6 +85,7 @@
         <module>enrollment-server-onboarding-provider-innovatrics</module>
         <module>enrollment-server-onboarding-provider-iproov</module>
         <module>enrollment-server-onboarding-provider-zenid</module>
+        <module>enrollment-server-onboarding-provider-microblink</module>
     </modules>
 
     <properties>
