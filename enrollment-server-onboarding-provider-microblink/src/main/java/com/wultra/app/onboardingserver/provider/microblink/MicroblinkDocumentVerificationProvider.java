@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -47,15 +48,18 @@ import java.util.*;
 @Component
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
-    private final Cache<UUID, SubmittedDocument> documentCache;
+    private final Cache<String, MicroblinkVerificationData> verificationDataCache;
+    private final Cache<String, String> photoCache;
     private final RestClient restClient;
 
     @Autowired
     public MicroblinkDocumentVerificationProvider(
-            @Qualifier("microblinkDocumentCache") Cache<UUID, SubmittedDocument> documentCache,
+            @Qualifier("microblinkDocumentsCache") Cache<String, MicroblinkVerificationData> verificationDataCache,
+            @Qualifier("microblinkPhotoCache") Cache<String, String> photoCache,
             @Qualifier("microblinkRestClient") RestClient restClient
     ) {
-        this.documentCache = documentCache;
+        this.verificationDataCache = verificationDataCache;
+        this.photoCache = photoCache;
         this.restClient = restClient;
     }
 
@@ -65,22 +69,22 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId id, List<SubmittedDocument> documents) {
-        final var results = new ArrayList<DocumentSubmitResult>();
+    public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> documents) {
+        final var microblinkVerificationData = buildMicroblinkVerificationData(documents);
+        verificationDataCache.put(ownerId.getActivationId(), microblinkVerificationData);
 
-        for (SubmittedDocument document : documents) {
-            var uploadUuid = UUID.randomUUID();
-            documentCache.put(uploadUuid, document);
-
-            final var documentResult = new DocumentSubmitResult();
-            documentResult.setDocumentId(document.getDocumentId());
-            documentResult.setUploadId(uploadUuid.toString());
-            results.add(documentResult);
-            // TODO: set 'extractedPhotoId'
-        }
+        final var results = microblinkVerificationData.documents().stream()
+                .map(d -> {
+                    final var result = new DocumentSubmitResult();
+                    result.setDocumentId(d.documentId());
+                    result.setUploadId(d.uploadId());
+                    return result;
+                })
+                .toList();
 
         final var result = new DocumentsSubmitResult();
         result.setResults(results);
+        result.setExtractedPhotoId(microblinkVerificationData.photoId());
         return result;
     }
 
@@ -90,40 +94,63 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
-        final var documentUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
+    public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
+        final var activationId = ownerId.getActivationId();
 
-        final var documents = documentCache.getAllPresent(documentUuids);
-        final var frontDocument = findDocument(documents, CardSide.FRONT);
-        final var backDocument = findDocument(documents, CardSide.BACK);
+        final var verificationData = Optional.ofNullable(verificationDataCache.getIfPresent(activationId))
+                .orElseThrow(() -> new DocumentVerificationException("Documents not found for activationId %s".formatted(activationId)));
 
-        final var request = buildRequest(frontDocument, backDocument);
+        final var documents = Optional.ofNullable(verificationData.documents())
+                .orElseThrow(() -> new DocumentVerificationException("No uploaded documents for activationId %s".formatted(activationId)));
 
-        try {
-            final var response = restClient.post("/api/v2/docver", request, new ParameterizedTypeReference<DocumentVerificationResponse>() {});
-            final var responseBody = Optional.ofNullable(response.getBody())
-                    .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
+        final var documentsByTypeAndSide = new HashMap<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>>();
+        for (final var document : documents) {
+            final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(document.type(), k -> new HashMap<>());
 
-            final var responseRuntime = responseBody.getRuntime();
-            final var responseVerification = responseBody.getVerification();
+            final var documentOfSameSide = documentsOfSameType.getOrDefault(document.side(), null);
+            if (documentOfSameSide != null) {
+                throw new DocumentVerificationException(
+                        "Multiple documents of type %s and side %s found for activationId %s. Document ids: %s".formatted(
+                                document.type(),
+                                document.side(),
+                                activationId,
+                                String.join(",", List.of(documentOfSameSide.documentId(), document.documentId()))
+                        )
+                );
+            }
 
-            final var result = new DocumentsVerificationResult();
-            result.setVerificationId(responseRuntime.getTraceId());
-            result.setStatus(responseVerification.getResult() == CheckResult.PASS ? DocumentVerificationStatus.ACCEPTED : DocumentVerificationStatus.REJECTED);
-
-            return result;
-        } catch (final RestClientException e) {
-            throw new RemoteCommunicationException(
-                    "Failed REST call to verify documents %s in Microblink, statusCode=%s, responseBody='%s', %s".formatted(
-                            String.join(",", uploadIds),
-                            e.getStatusCode(),
-                            e.getResponse(),
-                            id
-                    ),
-                    e);
+            documentsOfSameType.put(document.side(), document);
         }
+
+        final var documentCheckResults = new ArrayList<CheckResult>();
+        for (final var documentsOfSameType : documentsByTypeAndSide.entrySet()) {
+            final var documentType = documentsOfSameType.getKey();
+            final var documentFront = Optional.ofNullable(documentsOfSameType.getValue().getOrDefault(CardSide.FRONT, null))
+                    .orElseThrow();
+            final var documentBack = Optional.ofNullable(documentsOfSameType.getValue().getOrDefault(CardSide.BACK, null))
+                    .orElseThrow();
+
+            final var apiResponse = sendApiRequest(ownerId, documentFront, documentBack);
+            documentCheckResults.add(apiResponse.getVerification().getResult());
+
+            if (documentType == DocumentType.ID_CARD) {
+                final var faceImageBase64 = apiResponse.getImages()
+                        .stream()
+                        .filter(image -> image.getName().equals("FaceImage"))
+                        .findFirst()
+                        .map(ImageResult::getBase64)
+                        .orElseThrow();
+
+                photoCache.put(verificationData.photoId(), faceImageBase64);
+            }
+        }
+
+        final var totalCheckResult = documentCheckResults.stream()
+                .allMatch(r -> r == CheckResult.PASS) ? DocumentVerificationStatus.ACCEPTED : DocumentVerificationStatus.REJECTED;
+
+        final var result = new DocumentsVerificationResult();
+        result.setStatus(totalCheckResult);
+        return result;
     }
 
     @Override
@@ -133,16 +160,30 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public Image getPhoto(String photoId) {
-        throw new UnsupportedOperationException("Method getPhoto is not implemented by Microblink provider.");
+        final var photoBase64 = Optional.ofNullable(photoCache.getIfPresent(photoId))
+                .orElseThrow();
+
+        return Image.builder()
+                .filename("FaceImage.jpg")
+                .data(Base64.getDecoder().decode(photoBase64))
+                .build();
     }
 
     @Override
-    public void cleanupDocuments(OwnerId id, List<String> uploadIds) {
-        final var uploadUuid = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
+    public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
+        final var verificationData = verificationDataCache.getIfPresent(ownerId.getActivationId());
 
-        documentCache.invalidateAll(uploadUuid);
+        if (verificationData != null) {
+            final var documents = verificationData.documents().stream()
+                    .filter(d -> !uploadIds.contains(d.uploadId()))
+                    .toList();
+
+            final var updatedVerificationData = verificationData.toBuilder()
+                    .documents(documents)
+                    .build();
+
+            verificationDataCache.put(ownerId.getActivationId(), updatedVerificationData);
+        }
     }
 
     @Override
@@ -164,9 +205,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return imageSource;
     }
 
-    private static DocumentVerificationRequest buildRequest(final SubmittedDocument frontDocument, final SubmittedDocument backDocument) {
-        final var frontImageSource = buildImageSource(frontDocument.getPhoto());
-        final var backImageSource = buildImageSource(backDocument.getPhoto());
+    private static DocumentVerificationRequest buildRequest(final MicroblinkVerificationData.Document frontDocument, final MicroblinkVerificationData.Document backDocument) {
+        final var frontImageSource = buildImageSource(frontDocument.image());
+        final var backImageSource = buildImageSource(backDocument.image());
 
         final var useCase = new DocumentVerificationUseCaseOptions();
 
@@ -177,11 +218,39 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static SubmittedDocument findDocument(final Map<UUID, SubmittedDocument> documents, final CardSide side) throws DocumentVerificationException {
-        return documents.values()
-                .stream()
-                .filter(v -> v.getSide() == side)
-                .findFirst()
-                .orElseThrow(() -> new DocumentVerificationException("Document site %s is missing".formatted(side)));
+    private static MicroblinkVerificationData buildMicroblinkVerificationData(final List<SubmittedDocument> submittedDocuments) {
+        final var documents = submittedDocuments.stream()
+                .map(r -> MicroblinkVerificationData.Document.builder()
+                        .documentId(r.getDocumentId())
+                        .uploadId(UUID.randomUUID().toString())
+                        .type(r.getType())
+                        .side(r.getSide())
+                        .image(r.getPhoto())
+                        .build())
+                .toList();
+
+        return MicroblinkVerificationData.builder()
+                .documents(documents)
+                .photoId(UUID.randomUUID().toString())
+                .build();
+    }
+
+    private DocumentVerificationResponse sendApiRequest(final OwnerId ownerId, final MicroblinkVerificationData.Document frontDocument, final MicroblinkVerificationData.Document backDocument) throws DocumentVerificationException, RemoteCommunicationException {
+        try {
+            final var request = buildRequest(frontDocument, backDocument);
+
+            final var response = restClient.post("/api/v2/docver", request, new ParameterizedTypeReference<DocumentVerificationResponse>() {});
+            return Optional.ofNullable(response.getBody())
+                    .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
+        } catch (final RestClientException e) {
+            throw new RemoteCommunicationException(
+                    "Failed REST call to verify documents %s in Microblink, statusCode=%s, responseBody='%s', %s".formatted(
+                            String.join(",", List.of(frontDocument.uploadId(), backDocument.uploadId())),
+                            e.getStatusCode(),
+                            e.getResponse(),
+                            ownerId
+                    ),
+                    e);
+        }
     }
 }

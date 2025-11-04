@@ -39,7 +39,7 @@ import java.time.Duration;
 class MicroblinkConfigProperties {
 
     /**
-     * Duration after which the uploaded document expires in the cache.
+     * Record time-to-live in the cache after it is written
      */
     private Duration expireAfter;
 
