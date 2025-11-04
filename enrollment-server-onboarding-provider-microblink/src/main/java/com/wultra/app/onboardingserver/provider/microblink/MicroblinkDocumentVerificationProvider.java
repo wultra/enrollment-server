@@ -76,6 +76,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentResult.setDocumentId(document.getDocumentId());
             documentResult.setUploadId(uploadUuid.toString());
             results.add(documentResult);
+            // TODO: set 'extractedPhotoId'
         }
 
         final var result = new DocumentsSubmitResult();
@@ -136,7 +137,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
+    public void cleanupDocuments(OwnerId id, List<String> uploadIds) {
         final var uploadUuid = uploadIds.stream()
                 .map(UUID::fromString)
                 .toList();
@@ -163,7 +164,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return imageSource;
     }
 
-    private static DocumentVerificationRequest buildRequest(final SubmittedDocument frontDocument, final SubmittedDocument backDocument) throws DocumentVerificationException {
+    private static DocumentVerificationRequest buildRequest(final SubmittedDocument frontDocument, final SubmittedDocument backDocument) {
         final var frontImageSource = buildImageSource(frontDocument.getPhoto());
         final var backImageSource = buildImageSource(backDocument.getPhoto());
 
