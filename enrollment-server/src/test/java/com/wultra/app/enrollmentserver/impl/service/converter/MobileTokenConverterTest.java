@@ -201,19 +201,23 @@ class MobileTokenConverterTest {
 
         final List<PreApprovalScreenV2.Element> elements = screen1.getElements();
         assertEquals(3, elements.size());
-        assertEquals(PreApprovalScreenV2.ElementType.ALERT, elements.get(0).type());
-        assertEquals(PreApprovalScreenV2.ElementStyle.INFO, elements.get(0).style());
-        assertEquals("Make sure the activation takes place on your device", elements.get(0).text());
 
-        assertEquals(PreApprovalScreenV2.ElementType.BUTTON, elements.get(1).type());
-        assertEquals(PreApprovalScreenV2.ActionType.PHONE, elements.get(1).action());
-        assertEquals("Call center", elements.get(1).text());
-        assertEquals("+42012345678", elements.get(1).href());
-        assertEquals("REJECT", elements.get(1).actionSettings());
+        assertInstanceOf(PreApprovalScreenV2.AlertElement.class, elements.get(0));
+        final PreApprovalScreenV2.AlertElement alertElement = (PreApprovalScreenV2.AlertElement) elements.get(0);
+        assertEquals(PreApprovalScreenV2.ElementStyle.INFO, alertElement.getStyle());
+        assertEquals("Make sure the activation takes place on your device", alertElement.getText());
 
-        assertEquals(PreApprovalScreenV2.ElementType.LIST_ITEM, elements.get(2).type());
-        assertEquals("icon-label", elements.get(2).icon());
-        assertEquals("You activate a new app and allow access to your accounts", elements.get(2).text());
+        assertInstanceOf(PreApprovalScreenV2.ButtonElement.class, elements.get(1));
+        final PreApprovalScreenV2.ButtonElement buttonElement = (PreApprovalScreenV2.ButtonElement) elements.get(1);
+        assertEquals(PreApprovalScreenV2.ActionType.PHONE, buttonElement.getAction());
+        assertEquals("Call center", buttonElement.getText());
+        assertEquals("+42012345678", buttonElement.getHref());
+        assertEquals("REJECT", buttonElement.getActionSettings());
+
+        assertInstanceOf(PreApprovalScreenV2.ListItemElement.class, elements.get(2));
+        final PreApprovalScreenV2.ListItemElement listItemElement = (PreApprovalScreenV2.ListItemElement) elements.get(2);
+        assertEquals("icon-label", listItemElement.getIcon());
+        assertEquals("You activate a new app and allow access to your accounts", listItemElement.getText());
 
         final PreApprovalScreenV2.Controls controls = screen1.getControls();
         assertTrue(controls.flip());
