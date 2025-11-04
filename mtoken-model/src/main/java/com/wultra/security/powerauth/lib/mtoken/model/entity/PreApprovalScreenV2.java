@@ -87,7 +87,7 @@ public class PreApprovalScreenV2 {
         @NotBlank
         private String id;
 
-        @NotNull
+        @NotBlank
         private String text;
     }
 
