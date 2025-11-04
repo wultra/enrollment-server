@@ -17,7 +17,9 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -33,10 +35,26 @@ import java.time.Duration;
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
 @Configuration
 @Getter
+@Setter
 class MicroblinkConfigProperties {
 
     /**
      * Duration after which the uploaded document expires in the cache.
      */
     private Duration expireAfter;
+
+    /**
+     * Username for Microblink REST API authentication
+     */
+    private String username;
+
+    /**
+     * Password for Microblink REST API authentication
+     */
+    private String password;
+
+    /**
+     * REST client configuration
+     */
+    private RestClientConfiguration restClientConfig;
 }

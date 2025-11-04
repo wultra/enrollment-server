@@ -21,6 +21,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wultra.app.enrollmentserver.model.integration.SubmittedDocument;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.UUID;
@@ -31,9 +32,10 @@ import java.util.UUID;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Configuration
+@ComponentScan("com.wultra.app.onboardingserver.provider.microblink")
 public class MicroblinkDocumentCacheConfig {
 
-    @Bean
+    @Bean("microblinkDocumentCache")
     public Cache<UUID, SubmittedDocument> microblinkDocumentCache(final MicroblinkConfigProperties properties) {
         return Caffeine.newBuilder()
                 .expireAfterWrite(properties.getExpireAfter())

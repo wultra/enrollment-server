@@ -141,6 +141,12 @@
 
             <dependency>
                 <groupId>com.wultra.security</groupId>
+                <artifactId>enrollment-server-onboarding-provider-microblink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
                 <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
                 <version>${project.version}</version>
             </dependency>
