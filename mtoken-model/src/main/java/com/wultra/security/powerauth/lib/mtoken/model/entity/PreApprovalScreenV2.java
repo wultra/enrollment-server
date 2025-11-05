@@ -73,7 +73,7 @@ public class PreApprovalScreenV2 {
             String href,
             String icon,
             ActionType action,
-            @Schema(example = "REJECT")
+            @Schema(description = "Custom extended behavior or secondary action for the button.", example = "REJECT")
             String actionSettings
     ) {}
 
