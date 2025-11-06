@@ -32,7 +32,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 record MicroblinkVerificationData(
         List<Document> documents,
-        String photoId
+        String facePhotoId
 ) {
 
     @Builder(toBuilder = true)

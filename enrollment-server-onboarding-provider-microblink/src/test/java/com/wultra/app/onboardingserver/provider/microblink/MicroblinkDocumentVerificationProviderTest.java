@@ -17,19 +17,22 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,12 +40,15 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for Microblink document verification provider.
@@ -55,21 +61,46 @@ class MicroblinkDocumentVerificationProviderTest {
     private static final String USER_ID = "fc87e60a-85fe-405c-bfa3-9580211e1670";
     private static final String ACTIVATION_ID = "da15f970-d939-46f0-abe7-7858e74ea3b0";
 
-    private static final String DOCUMENT_FRONT_UPLOAD_ID = "52ca4d10-06ac-442c-934c-9d085ab18934";
-    private static final String DOCUMENT_BACK_UPLOAD_ID = "bdfb45ce-a808-4b65-86a8-9f5f184c56f6";
+    private static final String DOCUMENT_ID_CARD_FRONT_ID = "id-card-front";
+    private static final String DOCUMENT_ID_CARD_FRONT_UPLOAD_ID = "52ca4d10-06ac-442c-934c-9d085ab18934";
+
+    private static final String DOCUMENT_ID_CARD_BACK_ID = "id-card-back";
+    private static final String DOCUMENT_ID_CARD_BACK_UPLOAD_ID = "bdfb45ce-a808-4b65-86a8-9f5f184c56f6";
+
+    private static final String DOCUMENT_DRIVING_LICENSE_FRONT_ID = "driving-license-front";
+    private static final String DOCUMENT_DRIVING_LICENSE_BACK_ID = "driving-license-back";
+
+    private static final String FACE_PHOTO_ID = "c1a4f5e2-3b6d-4f8e-9a1b-2c3d4e5f6a7b";
 
     private OwnerId ownerId;
-    private SubmittedDocument submittedDocumentFront;
-    private SubmittedDocument submittedDocumentBack;
+
+    private MicroblinkVerificationData.Document verificationDocumentCardIdFront;
+    private MicroblinkVerificationData.Document verificationDocumentCardIdBack;
+    private MicroblinkVerificationData.Document verificationDocumentDrivingLicenseFront;
+    private MicroblinkVerificationData.Document verificationDocumentDrivingLicenseBack;
+
+    private SubmittedDocument submittedDocumentIdCardFront;
+    private SubmittedDocument submittedDocumentIdCardBack;
+    private SubmittedDocument submittedDocumentDrivingLicenseFront;
+    private SubmittedDocument submittedDocumentDrivingLicenseBack;
+
+    @Mock
+    private Cache<String, MicroblinkVerificationData> verificationDataCache;
+
+    @Mock
+    private Cache<String, String> photoCache;
 
     @Mock
     private RestClient restClient;
 
     @Mock
-    private Cache<UUID, SubmittedDocument> microblinkDocumentCache;
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private MicroblinkDocumentVerificationProvider provider;
+
+    @Captor
+    private ArgumentCaptor<MicroblinkVerificationData> verificationDataCaptor;
 
     @BeforeEach
     void setUp() {
@@ -77,27 +108,46 @@ class MicroblinkDocumentVerificationProviderTest {
         ownerId.setUserId(USER_ID);
         ownerId.setActivationId(ACTIVATION_ID);
 
-        submittedDocumentFront = new SubmittedDocument();
-        submittedDocumentFront.setDocumentId("document-front-side");
-        submittedDocumentFront.setType(DocumentType.ID_CARD);
-        submittedDocumentFront.setSide(CardSide.FRONT);
-        submittedDocumentFront.setPhoto(
-                Image.builder()
-                        .filename("document_front.jpg")
-                        .data(new byte[] {1, 2, 3})
-                        .build()
+        verificationDocumentCardIdFront = buildVerificationDataDocument(
+                DOCUMENT_ID_CARD_FRONT_ID,
+                DOCUMENT_ID_CARD_FRONT_UPLOAD_ID,
+                DocumentType.ID_CARD,
+                CardSide.FRONT,
+                "document_front.jpg",
+                new byte[] {1}
         );
 
-        submittedDocumentBack = new SubmittedDocument();
-        submittedDocumentBack.setDocumentId("document-back-side");
-        submittedDocumentBack.setType(DocumentType.ID_CARD);
-        submittedDocumentBack.setSide(CardSide.BACK);
-        submittedDocumentBack.setPhoto(
-                Image.builder()
-                        .filename("document_front.jpg")
-                        .data(new byte[] {4, 5, 6})
-                        .build()
+        verificationDocumentCardIdBack = buildVerificationDataDocument(
+                DOCUMENT_ID_CARD_BACK_ID,
+                DOCUMENT_ID_CARD_BACK_UPLOAD_ID,
+                DocumentType.ID_CARD,
+                CardSide.BACK,
+                "document_back.jpg",
+                new byte[] {2}
         );
+
+        verificationDocumentDrivingLicenseFront = buildVerificationDataDocument(
+                DOCUMENT_DRIVING_LICENSE_FRONT_ID,
+                UUID.randomUUID().toString(),
+                DocumentType.DRIVING_LICENSE,
+                CardSide.FRONT,
+                "driving_license_front.jpg",
+                new byte[] {3}
+        );
+
+        verificationDocumentDrivingLicenseBack = buildVerificationDataDocument(
+                DOCUMENT_DRIVING_LICENSE_BACK_ID,
+                UUID.randomUUID().toString(),
+                DocumentType.DRIVING_LICENSE,
+                CardSide.BACK,
+                "driving_license_back.jpg",
+                new byte[] {4}
+        );
+
+        submittedDocumentIdCardFront = buildSubmittedDocument(verificationDocumentCardIdFront);
+        submittedDocumentIdCardBack = buildSubmittedDocument(verificationDocumentCardIdBack);
+        submittedDocumentDrivingLicenseFront = buildSubmittedDocument(verificationDocumentDrivingLicenseFront);
+        submittedDocumentDrivingLicenseBack = buildSubmittedDocument(verificationDocumentDrivingLicenseBack);
     }
 
     @Test
@@ -112,200 +162,278 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(new VerificationSdkInfo(), sdkInfo);
     }
 
-    @Test
-    void testSubmitDocuments_emptyDocumentsLists_resultWithEmptyDocuments() {
-        // given
-        final List<SubmittedDocument> submittedDocuments = Collections.emptyList();
-
-        // when
-        final var result = provider.submitDocuments(ownerId, submittedDocuments);
-
-        // then
-        assertEquals(new DocumentsSubmitResult(), result);
-    }
-
-    @Test
-    void testSubmitDocuments_emptyDocumentsLists_nothingIsStoredIntoCache() {
-        // given
-        final List<SubmittedDocument> submittedDocuments = Collections.emptyList();
-
-        // when
-        final var result = provider.submitDocuments(ownerId, submittedDocuments);
-
-        // then
-        verify(microblinkDocumentCache, never()).put(any(), any());
-    }
 
     @Test
     void testSubmitDocuments_documentWithBothSides_resultWithUploadedDocuments() {
         // given
-        final var submittedDocuments = List.of(submittedDocumentFront, submittedDocumentBack);
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack,
+                submittedDocumentDrivingLicenseFront,
+                submittedDocumentDrivingLicenseBack
+        );
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertDocumentSubmitResult(result.getResults(), "document-front-side");
-        assertDocumentSubmitResult(result.getResults(), "document-back-side");
+        assertDocumentsSubmitResult(result);
     }
 
     @Test
     void testSubmitDocuments_documentWithBothSides_documentsAreStoredIntoCache() {
         // given
-        final var submittedDocuments = List.of(submittedDocumentFront, submittedDocumentBack);
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack,
+                submittedDocumentDrivingLicenseFront,
+                submittedDocumentDrivingLicenseBack
+        );
 
         // when
         provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(microblinkDocumentCache).put(any(UUID.class), eq(submittedDocumentFront));
-        verify(microblinkDocumentCache).put(any(UUID.class), eq(submittedDocumentBack));
+        verify(verificationDataCache).put(eq(ACTIVATION_ID), verificationDataCaptor.capture());
+        assertVerificationDataAfterSubmit(verificationDataCaptor.getValue());
     }
 
     @Test
-    void testVerifyDocuments_oneDocumentIsMissing_exceptionIsThrown() {
+    void testVerifyDocuments_verificationDataNotFoundInCache_exceptionIsThrown() {
         // given
-        final var cachedDocuments = Map.of(
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID), submittedDocumentBack
-        );
-
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
-        final var uploadUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
-
-        when(microblinkDocumentCache.getAllPresent(uploadUuids)).thenReturn(cachedDocuments);
+        // -
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, uploadIds));
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of()));
 
         // then
-        assertEquals("Document site FRONT is missing", exception.getMessage());
+        assertEquals("Verification data not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyDocuments_verificationDataWithoutDocuments_exceptionIsThrown() {
+        // given
+        final var verificationData = new MicroblinkVerificationData(Collections.emptyList(), FACE_PHOTO_ID);
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of()));
+
+        // then
+        assertEquals("No uploaded documents for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyDocuments_documentWithUploadIdIsMissing_exceptionIsThrown() {
+        // given
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of("missingUploadId")));
+
+        // then
+        assertEquals("Documents with uploadIds missingUploadId not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyDocuments_multipleDocumentsWithSameTypeAndSide_exceptionIsThrown() {
+        // given
+        final var verificationDocumentCardIdFrontDuplicate = verificationDocumentCardIdFront.toBuilder()
+                .documentId("duplicated-id-card-front")
+                .uploadId(UUID.randomUUID().toString())
+                .build();
+
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdFrontDuplicate))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, verificationDocumentCardIdFrontDuplicate.uploadId())));
+
+        // then
+        assertEquals("Multiple documents of type ID_CARD and side FRONT found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0. Document ids: id-card-front,duplicated-id-card-front", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyDocuments_documentForFacePhotoNotProvided_exceptionIsThrown() {
+        // given
+        final var documentWithoutFacePhoto = verificationDocumentCardIdFront.toBuilder()
+                .type(DocumentType.UNKNOWN)
+                .build();
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(documentWithoutFacePhoto))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(documentWithoutFacePhoto.uploadId())));
+
+        // then
+        assertEquals("No document of preferred type for face photo extraction found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+    }
+
+    @Test
+    void testVerifyDocuments_onlyOneSideOfDocumentProvided_exceptionIsThrown() {
+        // given
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID)));
+
+        // then
+        assertEquals("Document of type ID_CARD and side BACK not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
     }
 
     @Test
     void testVerifyDocuments_restClientException_exceptionIsThrown() throws RestClientException {
         // given
-        final var cachedDocuments = Map.of(
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID), submittedDocumentBack,
-                UUID.fromString(DOCUMENT_FRONT_UPLOAD_ID), submittedDocumentFront
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
         );
-
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
-        final var uploadUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
-
-        when(microblinkDocumentCache.getAllPresent(uploadUuids)).thenReturn(cachedDocuments);
-        when(restClient.post("/api/v2/docver", buildMicroblinkRequest(), new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
                 .thenThrow(new RestClientException("Test exception", HttpStatus.SERVICE_UNAVAILABLE, "Test error body", null));
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.verifyDocuments(ownerId, uploadIds));
+        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
-        assertEquals(
-                "Failed REST call to verify documents 52ca4d10-06ac-442c-934c-9d085ab18934,bdfb45ce-a808-4b65-86a8-9f5f184c56f6 in Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body', OwnerId(activationId=da15f970-d939-46f0-abe7-7858e74ea3b0, userId=fc87e60a-85fe-405c-bfa3-9580211e1670)",
-                exception.getMessage()
-        );
-        assertNotNull(exception.getCause());
+        assertEquals("Failed REST call to verify documents 52ca4d10-06ac-442c-934c-9d085ab18934,bdfb45ce-a808-4b65-86a8-9f5f184c56f6 in Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body', OwnerId(activationId=da15f970-d939-46f0-abe7-7858e74ea3b0, userId=fc87e60a-85fe-405c-bfa3-9580211e1670)", exception.getMessage());
     }
 
     @Test
     void testVerifyDocuments_responseWithoutBody_exceptionIsThrown() throws RestClientException {
         // given
-        final var cachedDocuments = Map.of(
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID), submittedDocumentBack,
-                UUID.fromString(DOCUMENT_FRONT_UPLOAD_ID), submittedDocumentFront
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
         );
-
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
-        final var uploadUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
-
-        when(microblinkDocumentCache.getAllPresent(uploadUuids)).thenReturn(cachedDocuments);
-        when(restClient.post("/api/v2/docver", buildMicroblinkRequest(), new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
-                .thenReturn(ResponseEntity.ok().build());
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
+                .thenReturn(ResponseEntity.ok().build());;
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, uploadIds));
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
         assertEquals("Response body is empty", exception.getMessage());
     }
 
     @Test
-    void testVerifyDocuments_responseWithVerificationFail_nokResponse() throws RestClientException, RemoteCommunicationException, DocumentVerificationException {
+    void testVerifyDocuments_extractedDocumentTypeDoesNotMatchClaimedOne_exceptionIsThrown() throws RestClientException {
         // given
-        final var cachedDocuments = Map.of(
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID), submittedDocumentBack,
-                UUID.fromString(DOCUMENT_FRONT_UPLOAD_ID), submittedDocumentFront
+        final var verificationData = MicroblinkVerificationData.builder()
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .facePhotoId(FACE_PHOTO_ID)
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                verificationDocumentCardIdBack.image().getData()
         );
 
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
-        final var uploadUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
+        final var apiResponse = buildMicroblinkResponse(CheckResult.PASS);
 
-        when(microblinkDocumentCache.getAllPresent(uploadUuids)).thenReturn(cachedDocuments);
-
-        final var microblinkResponse = buildMicroblinkResponse(CheckResult.FAIL);
-        when(restClient.post("/api/v2/docver", buildMicroblinkRequest(), new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
-                .thenReturn(ResponseEntity.ok(microblinkResponse));
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
+                .thenReturn(ResponseEntity.ok(apiResponse));
 
         // when
-        final var result = provider.verifyDocuments(ownerId, uploadIds);
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
-        assertDocumentsVerificationResult(result, DocumentVerificationStatus.REJECTED);
+        assertEquals("Response body is empty", exception.getMessage());
+    }
+
+    // TODO: cases for verifyDocuments
+    // - document type mismatch
+    // - document type unsupported
+    // - crosscheck - missing data
+    // - missing face photo
+    // - face photo resolved correctly
+    // - error serializing extracted data into response
+    // - document crosscheck fail - different data
+    // - document with rejected result
+    // - all documents OK
+    // - only requested uploadIds are processed
+
+    @Test
+    void testCleanupDocuments_verificationDataDoesNotExists_exceptionIsNotThrown() {
+        // given
+        // -
+
+        // when / then
+        assertDoesNotThrow(() -> provider.cleanupDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID)));
     }
 
     @Test
-    void testVerifyDocuments_responseWithVerificationSuccess_okResponse() throws RestClientException, RemoteCommunicationException, DocumentVerificationException {
+    void testCleanupDocuments_verificationDataExists_requestedDocumentsAreCleared() {
         // given
-        final var cachedDocuments = Map.of(
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID), submittedDocumentBack,
-                UUID.fromString(DOCUMENT_FRONT_UPLOAD_ID), submittedDocumentFront
-        );
+        final var verificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .build();
 
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
-        final var uploadUuids = uploadIds.stream()
-                .map(UUID::fromString)
-                .toList();
-
-        when(microblinkDocumentCache.getAllPresent(uploadUuids)).thenReturn(cachedDocuments);
-
-        final var microblinkResponse = buildMicroblinkResponse(CheckResult.PASS);
-        when(restClient.post("/api/v2/docver", buildMicroblinkRequest(), new ParameterizedTypeReference<DocumentVerificationResponse>() {}))
-                .thenReturn(ResponseEntity.ok(microblinkResponse));
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
 
         // when
-        final var result = provider.verifyDocuments(ownerId, uploadIds);
+        provider.cleanupDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID));
 
         // then
-        assertDocumentsVerificationResult(result, DocumentVerificationStatus.ACCEPTED);
+        final var updatedVerificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentCardIdBack))
+                .build();
+
+        verify(verificationDataCache).put(ACTIVATION_ID, updatedVerificationData);
     }
 
-    @Test
-    void testCleanupDocuments() {
-        // given
-        final var uploadIds = List.of(DOCUMENT_FRONT_UPLOAD_ID, DOCUMENT_BACK_UPLOAD_ID);
+    private void assertDocumentsSubmitResult(final DocumentsSubmitResult result) {
+        final var documentResults = result.getResults();
+        assertEquals(4, documentResults.size());
 
-        // when
-        provider.cleanupDocuments(ownerId, uploadIds);
+        assertDocumentSubmitResult(documentResults, DOCUMENT_ID_CARD_FRONT_ID);
+        assertDocumentSubmitResult(documentResults, DOCUMENT_ID_CARD_BACK_ID);
+        assertDocumentSubmitResult(documentResults, DOCUMENT_DRIVING_LICENSE_FRONT_ID);
+        assertDocumentSubmitResult(documentResults, DOCUMENT_DRIVING_LICENSE_BACK_ID);
 
-        // then
-        final var expectedUuids = List.of(
-                UUID.fromString(DOCUMENT_FRONT_UPLOAD_ID),
-                UUID.fromString(DOCUMENT_BACK_UPLOAD_ID)
-        );
-
-        verify(microblinkDocumentCache).invalidateAll(expectedUuids);
+        assertNull(result.getRejectReason());
+        assertNull(result.getErrorDetail());
+        assertDoesNotThrow(() -> UUID.fromString(result.getExtractedPhotoId()));
     }
 
-    private void assertDocumentSubmitResult(final List<DocumentSubmitResult> documents, final String documentId) {
-        final var document = documents.stream()
+    private static void assertDocumentSubmitResult(final List<DocumentSubmitResult> result, final String documentId) {
+        final var document = result.stream()
                 .filter(r -> r.getDocumentId().equals(documentId))
                 .findFirst()
                 .orElseThrow();
@@ -317,15 +445,15 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(document.getExtractedData());
     }
 
-    private DocumentVerificationRequest buildMicroblinkRequest() {
+    private DocumentVerificationRequest buildMicroblinkRequest(final byte[] documentFrontImageData, final byte[] documentBackImageData) {
         final var frontImageSource = new DocumentVerificationImageSource();
         frontImageSource.setBase64(
-                Base64.getEncoder().encodeToString(submittedDocumentFront.getPhoto().getData())
+                Base64.getEncoder().encodeToString(documentFrontImageData)
         );
 
         final var backImageSource = new DocumentVerificationImageSource();
         backImageSource.setBase64(
-                Base64.getEncoder().encodeToString(submittedDocumentBack.getPhoto().getData())
+                Base64.getEncoder().encodeToString(documentBackImageData)
         );
 
         final var useCase = new DocumentVerificationUseCaseOptions();
@@ -340,7 +468,7 @@ class MicroblinkDocumentVerificationProviderTest {
     private DocumentVerificationResponse buildMicroblinkResponse(final CheckResult checkResult) {
         final var verification = new DetailedCheck();
         verification.setCertaintyLevel(CertaintyLevel.HIGH);
-        verification.setRecommendedOutcome(RecommendedOutcome.REJECT);
+        verification.setRecommendedOutcome(RecommendedOutcome.UNKNOWN);
         verification.result(checkResult);
 
         final var runtime = new RuntimeInformation();
@@ -353,8 +481,109 @@ class MicroblinkDocumentVerificationProviderTest {
         return response;
     }
 
-    private void assertDocumentsVerificationResult(final DocumentsVerificationResult result, final DocumentVerificationStatus verificationStatus) {
-        assertEquals("00-0ffe7a27e6129c701d980635456f220f-001de07a3723b393-01", result.getVerificationId());
-        assertEquals(verificationStatus, result.getStatus());
+    private void assertVerificationDataAfterSubmit(final MicroblinkVerificationData verificationData) {
+        assertDoesNotThrow(() -> UUID.fromString(verificationData.facePhotoId()));
+
+        final var documents = verificationData.documents();
+        assertEquals(4, documents.size());
+
+        assertDocument(
+                documents,
+                DOCUMENT_ID_CARD_FRONT_ID,
+                DocumentType.ID_CARD,
+                CardSide.FRONT,
+                "document_front.jpg",
+                new byte[] {1}
+        );
+
+        assertDocument(
+                documents,
+                DOCUMENT_ID_CARD_BACK_ID,
+                DocumentType.ID_CARD,
+                CardSide.BACK,
+                "document_back.jpg",
+                new byte[] {2}
+        );
+
+        assertDocument(
+                documents,
+                DOCUMENT_DRIVING_LICENSE_FRONT_ID,
+                DocumentType.DRIVING_LICENSE,
+                CardSide.FRONT,
+                "driving_license_front.jpg",
+                new byte[] {3}
+        );
+
+        assertDocument(
+                documents,
+                DOCUMENT_DRIVING_LICENSE_BACK_ID,
+                DocumentType.DRIVING_LICENSE,
+                CardSide.BACK,
+                "driving_license_back.jpg",
+                new byte[] {4}
+        );
+    }
+
+    private static void assertDocument(
+            final List<MicroblinkVerificationData.Document> documents,
+            final String documentId,
+            final DocumentType expectedType,
+            final CardSide expectedSide,
+            final String expectedImageFilename,
+            final byte[] expectedImageData
+    ) {
+        final var document = documents.stream()
+                .filter(d -> d.documentId().equals(documentId))
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(document.uploadId()));
+        assertEquals(expectedType, document.type());
+        assertEquals(expectedSide, document.side());
+
+        final var expectedBackImage = Image.builder()
+                .filename(expectedImageFilename)
+                .data(expectedImageData)
+                .build();
+        assertEquals(expectedBackImage, document.image());
+    }
+
+    private static SubmittedDocument buildSubmittedDocument(
+            MicroblinkVerificationData.Document verificationDocument
+    ) {
+        final var document = new SubmittedDocument();
+        document.setDocumentId(verificationDocument.documentId());
+        document.setType(verificationDocument.type());
+        document.setSide(verificationDocument.side());
+        document.setPhoto(
+                Image.builder()
+                        .filename(verificationDocument.image().getFilename())
+                        .data(Arrays.clone(verificationDocument.image().getData()))
+                        .build()
+        );
+
+        return document;
+    }
+
+    private static MicroblinkVerificationData.Document buildVerificationDataDocument(
+            final String documentId,
+            final String uploadId,
+            final DocumentType type,
+            final CardSide side,
+            final String imageFilename,
+            final byte[] imageData
+    ) {
+        final var image = Image.builder()
+                .filename(imageFilename)
+                .data(imageData)
+                .build();
+
+        return MicroblinkVerificationData.Document.builder()
+                .documentId(documentId)
+                .uploadId(uploadId)
+                .type(type)
+                .side(side)
+                .image(image)
+                .build();
     }
 }
