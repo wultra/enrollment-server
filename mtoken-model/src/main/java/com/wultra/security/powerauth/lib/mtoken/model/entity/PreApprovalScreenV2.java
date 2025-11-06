@@ -20,7 +20,6 @@ package com.wultra.security.powerauth.lib.mtoken.model.entity;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.Getter;
@@ -84,10 +83,8 @@ public class PreApprovalScreenV2 {
         public static final String ALERT = "ALERT";
         public static final String BUTTON = "BUTTON";
 
-        @NotBlank
         private String id;
 
-        @NotBlank
         private String text;
     }
 
