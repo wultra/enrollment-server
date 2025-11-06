@@ -17,9 +17,13 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -65,28 +69,57 @@ public class PreApprovalScreenV2 {
 
     private Controls  controls;
 
-    public record Element(
-            String id,
-            ElementType type,
-            ElementStyle style,
-            String text,
-            String href,
-            String icon,
-            ActionType action,
-            @Schema(description = "Custom extended behavior or secondary action for the button.", example = "REJECT")
-            String actionSettings
-    ) {}
+    @Getter
+    @Setter
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = ListItemElement.class, name = Element.LIST_ITEM),
+            @JsonSubTypes.Type(value = AlertElement.class, name = Element.ALERT),
+            @JsonSubTypes.Type(value = ButtonElement.class, name = Element.BUTTON)
+    })
+    public abstract static class Element {
+
+        public static final String LIST_ITEM = "LIST_ITEM";
+        public static final String ALERT = "ALERT";
+        public static final String BUTTON = "BUTTON";
+
+        private String id;
+
+        private String text;
+    }
+
+    @Getter
+    @Setter
+    @Schema(description = "List item element")
+    public static class ListItemElement extends Element {
+        private String icon;
+        private ElementStyle style;
+    }
+
+    @Getter
+    @Setter
+    @Schema(description = "Alert element")
+    public static class AlertElement extends Element {
+        private ElementStyle style;
+    }
+
+    @Getter
+    @Setter
+    @Schema(description = "Button element")
+    public static class ButtonElement extends Element {
+
+        private ActionType action;
+
+        private String href;
+
+        @Schema(description = "Custom extended behavior or secondary action for the button.", example = "REJECT")
+        private String actionSettings;
+    }
 
     public enum ActionType {
         LINK,
         MAIL,
         PHONE
-    }
-
-    public enum ElementType {
-        LIST_ITEM,
-        ALERT,
-        BUTTON
     }
 
     public enum ElementStyle {
