@@ -145,7 +145,8 @@ class MobileTokenConverterTest {
                           "type": "BUTTON",
                           "action": "PHONE",
                           "text": "Call center",
-                          "href": "+42012345678"
+                          "href": "+42012345678",
+                          "actionSettings": "REJECT"
                         },
                         {
                           "id": "custom_element_id",
@@ -208,6 +209,7 @@ class MobileTokenConverterTest {
         assertEquals(PreApprovalScreenV2.ActionType.PHONE, elements.get(1).action());
         assertEquals("Call center", elements.get(1).text());
         assertEquals("+42012345678", elements.get(1).href());
+        assertEquals("REJECT", elements.get(1).actionSettings());
 
         assertEquals(PreApprovalScreenV2.ElementType.LIST_ITEM, elements.get(2).type());
         assertEquals("icon-label", elements.get(2).icon());

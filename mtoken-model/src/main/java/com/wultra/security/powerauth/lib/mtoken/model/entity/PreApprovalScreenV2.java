@@ -72,7 +72,9 @@ public class PreApprovalScreenV2 {
             String text,
             String href,
             String icon,
-            ActionType action
+            ActionType action,
+            @Schema(description = "Custom extended behavior or secondary action for the button.", example = "REJECT")
+            String actionSettings
     ) {}
 
     public enum ActionType {
