@@ -18,7 +18,6 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -38,6 +37,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -55,18 +56,17 @@ import java.util.stream.Collectors;
 @Component
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
-    private final Cache<String, MicroblinkVerificationData> verificationDataCache;
-    private final Cache<String, String> photoCache;
+    private final Cache verificationDataCache;
+    private final Cache photoCache;
     private final RestClient restClient;
 
     @Autowired
     public MicroblinkDocumentVerificationProvider(
-            @Qualifier("microblinkDocumentsCache") Cache<String, MicroblinkVerificationData> verificationDataCache,
-            @Qualifier("microblinkPhotoCache") Cache<String, String> photoCache,
+            @Qualifier("microblinkCacheManager") CacheManager cacheManager,
             @Qualifier("microblinkRestClient") RestClient restClient
     ) {
-        this.verificationDataCache = verificationDataCache;
-        this.photoCache = photoCache;
+        this.verificationDataCache = cacheManager.getCache("microblinkDocumentsCache");
+        this.photoCache = cacheManager.getCache("microblinkPhotoCache");
         this.restClient = restClient;
     }
 
@@ -79,7 +79,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) {
         final var activationId = ownerId.getActivationId();
 
-        var microblinkVerificationData = verificationDataCache.getIfPresent(activationId);
+        var microblinkVerificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
         final var addedDocuments = submittedDocuments.stream()
                 .map(MicroblinkDocumentVerificationProvider::buildMicroblinkVerificationDocument)
@@ -133,7 +133,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         final var activationId = ownerId.getActivationId();
 
-        final var verificationData = Optional.ofNullable(verificationDataCache.getIfPresent(activationId))
+        final var verificationData = Optional.ofNullable(verificationDataCache.get(activationId, MicroblinkVerificationData.class))
                 .orElseThrow(() -> new DocumentVerificationException("Verification data not found for activationId %s".formatted(activationId)));
 
         final var allDocuments = verificationData.documents();
@@ -201,9 +201,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public Image getPhoto(String photoId) {
-        final var photoBase64 = Optional.ofNullable(photoCache.getIfPresent(photoId))
-                .orElseThrow();
+    public Image getPhoto(String photoId) throws DocumentVerificationException {
+        final var photoBase64 = Optional.ofNullable(photoCache.get(photoId, String.class))
+                .orElseThrow(() -> new DocumentVerificationException("Photo with id %s not found".formatted(photoId)));
 
         return Image.builder()
                 .filename("FaceImage.jpg")
@@ -213,7 +213,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
-        final var verificationData = verificationDataCache.getIfPresent(ownerId.getActivationId());
+        final var activationId = ownerId.getActivationId();
+        final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
         if (verificationData != null) {
             final var documents = verificationData.documents().stream()
@@ -224,7 +225,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .documents(documents)
                     .build();
 
-            verificationDataCache.put(ownerId.getActivationId(), updatedVerificationData);
+            verificationDataCache.put(activationId, updatedVerificationData);
         }
     }
 

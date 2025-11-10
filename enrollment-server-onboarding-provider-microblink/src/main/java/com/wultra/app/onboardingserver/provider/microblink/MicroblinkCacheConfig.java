@@ -17,8 +17,10 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -29,20 +31,22 @@ import org.springframework.context.annotation.Configuration;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Configuration
+@EnableCaching
 @ComponentScan("com.wultra.app.onboardingserver.provider.microblink")
 public class MicroblinkCacheConfig {
 
-    @Bean("microblinkDocumentsCache")
-    public Cache<String, MicroblinkVerificationData> microblinkDocumentsCache(final MicroblinkConfigProperties properties) {
-        return Caffeine.newBuilder()
-                .expireAfterWrite(properties.getCacheRecordTTL())
-                .build();
-    }
+    @Bean("microblinkCacheManager")
+    public CacheManager cacheManager(final MicroblinkConfigProperties properties) {
+        final var caffeineBuilder = Caffeine.newBuilder()
+                .expireAfterWrite(properties.getCacheRecordTTL());
 
-    @Bean("microblinkPhotoCache")
-    public Cache<String, String> microblinkPhotoCache(final MicroblinkConfigProperties properties) {
-        return Caffeine.newBuilder()
-                .expireAfterWrite(properties.getCacheRecordTTL())
-                .build();
+        final var cacheManager = new CaffeineCacheManager(
+                "microblinkDocumentsCache",
+                "microblinkPhotoCache"
+        );
+
+        cacheManager.setCaffeine(caffeineBuilder);
+
+        return cacheManager;
     }
 }
