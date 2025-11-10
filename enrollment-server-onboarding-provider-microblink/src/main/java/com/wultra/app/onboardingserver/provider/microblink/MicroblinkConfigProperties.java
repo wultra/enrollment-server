@@ -41,17 +41,7 @@ class MicroblinkConfigProperties {
     /**
      * Record time-to-live in the cache after it is written
      */
-    private Duration expireAfter;
-
-    /**
-     * Username for Microblink REST API authentication
-     */
-    private String username;
-
-    /**
-     * Password for Microblink REST API authentication
-     */
-    private String password;
+    private Duration cacheRecordTTL;
 
     /**
      * REST client configuration

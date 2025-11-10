@@ -35,14 +35,14 @@ public class MicroblinkCacheConfig {
     @Bean("microblinkDocumentsCache")
     public Cache<String, MicroblinkVerificationData> microblinkDocumentsCache(final MicroblinkConfigProperties properties) {
         return Caffeine.newBuilder()
-                .expireAfterWrite(properties.getExpireAfter())
+                .expireAfterWrite(properties.getCacheRecordTTL())
                 .build();
     }
 
     @Bean("microblinkPhotoCache")
     public Cache<String, String> microblinkPhotoCache(final MicroblinkConfigProperties properties) {
         return Caffeine.newBuilder()
-                .expireAfterWrite(properties.getExpireAfter())
+                .expireAfterWrite(properties.getCacheRecordTTL())
                 .build();
     }
 }

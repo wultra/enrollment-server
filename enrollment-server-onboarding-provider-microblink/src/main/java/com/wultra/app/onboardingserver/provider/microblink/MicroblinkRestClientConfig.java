@@ -47,17 +47,10 @@ class MicroblinkRestClientConfig {
 
         final var httpHeaders = new HttpHeaders();
         httpHeaders.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, buildBasicAuthHeader(properties));
 
         final var restClientConfig = properties.getRestClientConfig();
         restClientConfig.setDefaultHttpHeaders(httpHeaders);
 
         return new DefaultRestClient(restClientConfig);
-    }
-
-    private String buildBasicAuthHeader(MicroblinkConfigProperties properties) {
-        final var auth = properties.getUsername() + ":" + properties.getPassword();
-        final var authBytes = Base64.getEncoder().encode(auth.getBytes());
-        return "Basic " + new String(authBytes);
     }
 }
