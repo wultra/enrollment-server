@@ -797,7 +797,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testParseRejectionReasons_correctResponseIsReturned() throws DocumentVerificationException {
+    void testParseRejectionReasons_correctResponseIsReturned() {
         // given
         final var verificationResult = """
                     "verification": {
