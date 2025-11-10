@@ -2,7 +2,7 @@
 
 ## Process overview
 
-Diagram illustrate the simplified process and its step order.
+Diagram illustrates the simplified process and its step order.
 
 ![Onboarding Process](./img/Onboarding_Process.png)
 
