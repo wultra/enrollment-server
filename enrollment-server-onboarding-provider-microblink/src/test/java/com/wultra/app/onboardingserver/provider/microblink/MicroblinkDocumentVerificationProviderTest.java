@@ -766,6 +766,35 @@ class MicroblinkDocumentVerificationProviderTest {
         verify(verificationDataCache).put(ACTIVATION_ID, updatedVerificationData);
     }
 
+    @Test
+    void testGetPhoto_photoDoesNotExist_exceptionIsThrown() {
+        // given
+        // -
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.getPhoto(FACE_PHOTO_ID));
+
+        // then
+        assertEquals("Photo with id c1a4f5e2-3b6d-4f8e-9a1b-2c3d4e5f6a7b not found", exception.getMessage());
+    }
+
+    @Test
+    void testGetPhoto_photoExists_correctResponseIsReturned() throws DocumentVerificationException {
+        // given
+        when(photoCache.get(FACE_PHOTO_ID, String.class)).thenReturn("dGVzdC1waG90bw==");
+
+        // when
+        final var response = provider.getPhoto(FACE_PHOTO_ID);
+
+        // then
+        final var expectedResponse = Image.builder()
+                .filename("FaceImage.jpg")
+                .data(Base64.getDecoder().decode("dGVzdC1waG90bw=="))
+                .build();
+
+        assertEquals(expectedResponse, response);
+    }
+
     private void assertDocumentsSubmitResult(final DocumentsSubmitResult result, List<String> expectedDocumentIds) {
         final var documentResults = result.getResults();
         assertEquals(expectedDocumentIds.size(), documentResults.size());
