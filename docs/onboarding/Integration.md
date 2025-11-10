@@ -92,7 +92,7 @@ The system will finalize the process by calling [User Lookup Service](./External
 We can create a new registration using SDK. The SDK will use `activation_code` returned from the Process Finish. At the same time, the previous temporary registration will be marked as REMOVED.
 
 **3. Persist Activation (with PIN/Biometry setup)**
-The registration process must be completed by entering the PIN and allow to use of biometry.
+The registration process must be completed by entering the PIN and allowing the use of biometry.
 
 Following steps are common for both registration types.
 
