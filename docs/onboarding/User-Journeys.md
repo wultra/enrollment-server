@@ -64,7 +64,7 @@ The face biometrics are captured by the provider's iProov SDK and the verificati
 
 This step can be confirmed by a second factor using an OTP, which is required (it must be verified by the legal department) for valid Strong Customer Authentication (SCA).
 
-There may be need to **setup PIN and confirm use of biometry** again if we chosen onboarding process with temporary registration. If we use flagged registration, this step can be ommited.
+There may be need to **setup PIN and confirm use of biometry** again if we have chosen onboarding process with temporary registration. If we use flagged registration, this step can be omitted.
 
 **The success page** informs the user that the result was successful and offers the next steps.
 
