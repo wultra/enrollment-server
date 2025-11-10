@@ -231,8 +231,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
-        // TODO
-        throw new NotImplementedException();
+        return List.of(docResult.getVerificationResult());
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
@@ -793,6 +794,29 @@ class MicroblinkDocumentVerificationProviderTest {
                 .build();
 
         assertEquals(expectedResponse, response);
+    }
+
+    @Test
+    void testParseRejectionReasons_correctResponseIsReturned() throws DocumentVerificationException {
+        // given
+        final var verificationResult = """
+                    "verification": {
+                        "certaintyLevel": "High",
+                        "recommendedOutcome": "Reject",
+                        "type": "DetailedCheck",
+                        "result": "Fail",
+                        "performedChecks": 10
+                    }
+                """;
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(verificationResult);
+
+        // when
+        final var result = provider.parseRejectionReasons(documentResult);
+
+        // then
+        assertArrayEquals(List.of(verificationResult).toArray(), result.toArray());
     }
 
     private void assertDocumentsSubmitResult(final DocumentsSubmitResult result, List<String> expectedDocumentIds) {
