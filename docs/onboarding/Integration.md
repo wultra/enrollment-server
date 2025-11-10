@@ -8,7 +8,7 @@
 Described in [User Journeys](./User-Journeys.md) section.
 
 **2. Process Configuration**
-Call the SDK with with `process_type` to retrieve specific process configuration.
+Call the SDK with `process_type` to retrieve specific process configuration.
 
 **3. Process Start**
 Initialize onboarding process with `process_type` and user `credentials`.
