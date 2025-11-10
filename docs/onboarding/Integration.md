@@ -60,7 +60,7 @@ Optionally, we can call an external [Client Evaluation Service](./External-Onboa
 **7. Presence Check Initialization**
 This step ensures the initialization of presence checks and uploads the trusted image, which is usually extracted from the document verification process. It also returns the verification token.
 
-**9. Init Biometry SDK**
+**8. Init Biometry SDK**
 The verification token obtained in the previous step is required for use with the partner's iProov SDK. Use the SDK to complete the presence check.
 
 **10. Presence Check Submit**
