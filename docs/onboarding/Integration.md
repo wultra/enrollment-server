@@ -86,7 +86,7 @@ The system removes the flag `VERIFICATION_IN_PROGRESS` to identify that the devi
 ### Temporary registration
 
 **1. Process Finish + User Lookup**
-The system will finalize the process by calling [User Lookup Service](./External-Onboarding-Services.md#post-userlookup) to obtain the final user ID, in case you used a temporary or internal process user ID was used as the user identifier. This step also returns the `activation_code` to the SDK.
+The system will finalize the process by calling [User Lookup Service](./External-Onboarding-Services.md#post-userlookup) to obtain the final user ID, in case a temporary or internal process user ID was used as the user identifier. This step also returns the `activation_code` to the SDK.
 
 **2. Create Activation** 
 We can create a new registration using SDK. The SDK will use `activation_code` returned from the Process Finish. At the same time, the previous temporary registration will be marked as REMOVED.
