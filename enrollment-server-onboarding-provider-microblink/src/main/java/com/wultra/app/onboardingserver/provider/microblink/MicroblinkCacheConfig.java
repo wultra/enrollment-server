@@ -18,11 +18,11 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -32,17 +32,19 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableCaching
-@ComponentScan("com.wultra.app.onboardingserver.provider.microblink")
+@Slf4j
 public class MicroblinkCacheConfig {
 
     @Bean("microblinkCacheManager")
     public CacheManager cacheManager(final MicroblinkConfigProperties properties) {
+        logger.info("Registering Microblink CacheManager");
+
         final var caffeineBuilder = Caffeine.newBuilder()
                 .expireAfterWrite(properties.getCacheRecordTTL());
 
         final var cacheManager = new CaffeineCacheManager(
-                "microblinkDocumentsCache",
-                "microblinkPhotoCache"
+                MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME,
+                MicroblinkConfigProperties.PHOTO_CACHE_NAME
         );
 
         cacheManager.setCaffeine(caffeineBuilder);

@@ -37,7 +37,6 @@ import java.util.Base64;
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
 @Configuration
-@ComponentScan("com.wultra.app.onboardingserver.provider.microblink")
 @Slf4j
 class MicroblinkRestClientConfig {
 

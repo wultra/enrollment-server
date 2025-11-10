@@ -36,7 +36,10 @@ import java.time.Duration;
 @Configuration
 @Getter
 @Setter
-class MicroblinkConfigProperties {
+public class MicroblinkConfigProperties {
+
+    public static final String DOCUMENTS_CACHE_NAME = "microblinkDocumentsCache";
+    public static final String PHOTO_CACHE_NAME = "microblinkPhotoCache";
 
     /**
      * Record time-to-live in the cache after it is written

@@ -33,7 +33,7 @@ import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVer
 import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import org.apache.commons.lang3.NotImplementedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
+@Slf4j
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
 @Component
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
@@ -65,8 +66,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             @Qualifier("microblinkCacheManager") CacheManager cacheManager,
             @Qualifier("microblinkRestClient") RestClient restClient
     ) {
-        this.verificationDataCache = cacheManager.getCache("microblinkDocumentsCache");
-        this.photoCache = cacheManager.getCache("microblinkPhotoCache");
+        this.verificationDataCache = cacheManager.getCache(MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME);
+        this.photoCache = cacheManager.getCache(MicroblinkConfigProperties.PHOTO_CACHE_NAME);
         this.restClient = restClient;
     }
 
@@ -78,6 +79,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) {
         final var activationId = ownerId.getActivationId();
+        logger.info("Submitting documents {} for activationId {}", submittedDocuments.stream().map(SubmittedDocument::getDocumentId).toList(), activationId);
 
         var microblinkVerificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
@@ -132,22 +134,23 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         final var activationId = ownerId.getActivationId();
+        logger.info("Verifying documents with uploadIds {} for activationId {}", String.join(",", uploadIds), activationId);
 
         final var verificationData = Optional.ofNullable(verificationDataCache.get(activationId, MicroblinkVerificationData.class))
-                .orElseThrow(() -> new DocumentVerificationException("Verification data not found for activationId %s".formatted(activationId)));
+                .orElseThrow(() -> new DocumentVerificationException("Verification data not found"));
 
         final var allDocuments = verificationData.documents();
         if (CollectionUtils.isEmpty(allDocuments)) {
-            throw new DocumentVerificationException("No uploaded documents for activationId %s".formatted(activationId));
+            throw new DocumentVerificationException("Verification data without documents");
         }
 
-        final var documents = filterDocumentsByUploadId(allDocuments, uploadIds, activationId);
+        final var documents = filterDocumentsByUploadId(allDocuments, uploadIds);
 
-        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documents, activationId);
+        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documents);
         final var facePhotoExtractionDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(documentsByTypeAndSide::containsKey)
                 .findFirst()
-                .orElseThrow(() -> new DocumentVerificationException("No document of preferred type for face photo extraction found for activationId %s".formatted(activationId)));
+                .orElseThrow(() -> new DocumentVerificationException("No document of preferred type for face photo extraction found"));
 
         final var documentCheckResults = new ArrayList<String>();
         final var documentsCrosscheckData = new HashMap<String, List<String>>();
@@ -155,16 +158,16 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         for (final var documentsOfSameType : documentsByTypeAndSide.entrySet()) {
             final var documentType = documentsOfSameType.getKey();
-            final var documentFront = findDocumentBySide(documentsOfSameType, CardSide.FRONT, activationId);
-            final var documentBack = findDocumentBySide(documentsOfSameType, CardSide.BACK, activationId);
+            final var documentFront = findDocumentBySide(documentsOfSameType, CardSide.FRONT);
+            final var documentBack = findDocumentBySide(documentsOfSameType, CardSide.BACK);
 
-            final var apiResponseParser = sendApiRequest(ownerId, documentFront, documentBack);
+            final var apiResponseParser = sendApiRequest(documentFront, documentBack);
             final var response = apiResponseParser.getResponse();
 
             documentCheckResults.add(response.verification().result());
 
             final var extractedType = response.extraction().classInfo().type();
-            verifyDocumentType(documentType, extractedType, activationId);
+            verifyDocumentType(documentType, extractedType);
 
             final var overallExtraction = response.extraction().overall();
             putDocumentCrosscheckData(overallExtraction, documentsCrosscheckData);
@@ -184,7 +187,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResults.addAll(documentsVerificationResult);
         }
 
-        verifyDocumentsCrosscheck(documentsCrosscheckData, activationId);
+        verifyDocumentsCrosscheck(documentsCrosscheckData);
 
         final var allChecksPassed = documentCheckResults.stream()
                 .allMatch("Pass"::equalsIgnoreCase);
@@ -214,6 +217,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
         final var activationId = ownerId.getActivationId();
+        logger.info("Cleaning up documents with uploadIds {} for activationId {}", String.join(",", uploadIds), activationId);
+
         final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
         if (verificationData != null) {
@@ -230,7 +235,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public List<String> parseRejectionReasons(DocumentResultEntity docResult) throws DocumentVerificationException {
+    public List<String> parseRejectionReasons(DocumentResultEntity docResult) {
         return List.of(docResult.getVerificationResult());
     }
 
@@ -270,7 +275,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .build();
     }
 
-    private DocumentVerificationResponseParser sendApiRequest(final OwnerId ownerId, final MicroblinkVerificationData.Document frontDocument, final MicroblinkVerificationData.Document backDocument) throws DocumentVerificationException, RemoteCommunicationException {
+    private DocumentVerificationResponseParser sendApiRequest(
+            final MicroblinkVerificationData.Document frontDocument,
+            final MicroblinkVerificationData.Document backDocument
+    ) throws DocumentVerificationException, RemoteCommunicationException {
         try {
             final var request = buildRequest(frontDocument, backDocument);
 
@@ -284,19 +292,21 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return new DocumentVerificationResponseParser(body);
         } catch (final RestClientException e) {
             throw new RemoteCommunicationException(
-                    "Failed REST call to verify documents %s in Microblink, statusCode=%s, responseBody='%s', %s".formatted(
-                            String.join(",", List.of(frontDocument.uploadId(), backDocument.uploadId())),
+                    "Failed REST API call to Microblink, statusCode=%s, responseBody='%s'".formatted(
                             e.getStatusCode(),
-                            e.getResponse(),
-                            ownerId
+                            e.getResponse()
                     ),
-                    e);
+                    e
+            );
         } catch (JsonProcessingException e) {
             throw new DocumentVerificationException("Failed to parse Microblink API response");
         }
     }
 
-    private static List<MicroblinkVerificationData.Document> filterDocumentsByUploadId(final List<MicroblinkVerificationData.Document> documents, final List<String> uploadIds, final String activationId) throws DocumentVerificationException {
+    private static List<MicroblinkVerificationData.Document> filterDocumentsByUploadId(
+            final List<MicroblinkVerificationData.Document> documents,
+            final List<String> uploadIds
+    ) throws DocumentVerificationException {
         final var uploadIdSet = new HashSet<>(uploadIds);
 
         final var filteredDocuments = new ArrayList<MicroblinkVerificationData.Document>();
@@ -309,24 +319,25 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
 
         if (!uploadIdSet.isEmpty()) {
-            throw new DocumentVerificationException("Documents with uploadIds %s not found for activationId %s".formatted(String.join(",", uploadIdSet), activationId));
+            throw new DocumentVerificationException("Documents with uploadIds %s not found".formatted(String.join(",", uploadIdSet)));
         }
 
         return filteredDocuments;
     }
 
-    private static Map<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>> groupDocumentsByTypeAndSide(final List<MicroblinkVerificationData.Document> documents, final String activationId) throws DocumentVerificationException {
-        final var documentsByTypeAndSide = new HashMap<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>>();
+    private static Map<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>> groupDocumentsByTypeAndSide(
+            final List<MicroblinkVerificationData.Document> documents
+    ) throws DocumentVerificationException {
+        final var documentsByTypeAndSide = new EnumMap<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>>(DocumentType.class);
         for (final var document : documents) {
-            final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(document.type(), k -> new HashMap<>());
+            final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(document.type(), k -> new EnumMap<>(CardSide.class));
 
             final var documentOfSameSide = documentsOfSameType.getOrDefault(document.side(), null);
             if (documentOfSameSide != null) {
                 throw new DocumentVerificationException(
-                        "Multiple documents of type %s and side %s found for activationId %s. Document ids: %s".formatted(
+                        "Multiple documents of type %s and side %s found. Document ids: %s".formatted(
                                 document.type(),
                                 document.side(),
-                                activationId,
                                 String.join(",", List.of(documentOfSameSide.documentId(), document.documentId()))
                         )
                 );
@@ -340,14 +351,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private static MicroblinkVerificationData.Document findDocumentBySide(
             final Map.Entry<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>> documentsOfSameType,
-            final CardSide side,
-            final String activationId
+            final CardSide side
     ) throws DocumentVerificationException {
         final var documentType = documentsOfSameType.getKey();
         final var document = documentsOfSameType.getValue().getOrDefault(side, null);
 
         return Optional.ofNullable(document)
-                .orElseThrow(() -> new DocumentVerificationException("Document of type %s and side %s not found for activationId %s".formatted(documentType, side, activationId)));
+                .orElseThrow(() -> new DocumentVerificationException("Document of type %s and side %s not found".formatted(documentType, side)));
     }
 
     private static void putDocumentCrosscheckData(final List<com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse.Result> documentExtractedData, final Map<String, List<String>> documentsCrosscheckData) throws DocumentVerificationException {
@@ -381,7 +391,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final String documentFrontUploadId,
             final String documentBackUploadId,
             final DocumentVerificationResponseParser responseParser
-    ) throws DocumentVerificationException {
+    ) {
         final var verificationJson = responseParser.getVerificationJson();
 
         final var documentFrontVerificationResult = new DocumentVerificationResult();
@@ -397,37 +407,31 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return List.of(documentFrontVerificationResult, documentBackVerificationResult);
     }
 
-    private static void verifyDocumentsCrosscheck(final Map<String, List<String>> documentsCrosscheckData, final String activationId) throws DocumentVerificationException {
+    private static void verifyDocumentsCrosscheck(final Map<String, List<String>> documentsCrosscheckData) throws DocumentVerificationException {
         for (final var extractedDataEntry : documentsCrosscheckData.entrySet()) {
             final var fieldName = extractedDataEntry.getKey();
             final var extractedValues = extractedDataEntry.getValue();
 
             final var distinctValuesCount = extractedValues.stream().distinct().count();
             if (distinctValuesCount != 1) {
-                throw new DocumentVerificationException(
-                        "Cross-check of extracted data failed for activationId %s on field %s".formatted(
-                                activationId,
-                                fieldName
-                        )
-                );
+                throw new DocumentVerificationException("Cross-check of extracted data failed on field %s".formatted(fieldName));
             }
         }
     }
 
-    private static void verifyDocumentType(final DocumentType claimedDocumentType, final String extractedType, final String activationId) throws DocumentVerificationException {
+    private static void verifyDocumentType(final DocumentType claimedDocumentType, final String extractedType) throws DocumentVerificationException {
         final var extractedDocumentType = switch (extractedType) {
             case "Id" -> DocumentType.ID_CARD;
             case "Passport" -> DocumentType.PASSPORT;
             case "Dl" -> DocumentType.DRIVING_LICENSE;
-            default -> throw new DocumentVerificationException("Unsupported extracted document type %s for activationId %s".formatted(extractedType, activationId));
+            default -> throw new DocumentVerificationException("Unsupported extracted document type %s".formatted(extractedType));
         };
 
         if (extractedDocumentType != claimedDocumentType) {
             throw new DocumentVerificationException(
-                    "Extracted document type %s does not match claimed type %s for activationId %s".formatted(
+                    "Extracted document type %s does not match claimed type %s".formatted(
                             extractedDocumentType,
-                            claimedDocumentType,
-                            activationId
+                            claimedDocumentType
                     )
             );
         }

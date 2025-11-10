@@ -300,7 +300,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of()));
 
         // then
-        assertEquals("Verification data not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Verification data not found", exception.getMessage());
     }
 
     @Test
@@ -314,7 +314,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of()));
 
         // then
-        assertEquals("No uploaded documents for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Verification data without documents", exception.getMessage());
     }
 
     @Test
@@ -331,7 +331,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of("missingUploadId")));
 
         // then
-        assertEquals("Documents with uploadIds missingUploadId not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Documents with uploadIds missingUploadId not found", exception.getMessage());
     }
 
     @Test
@@ -353,7 +353,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, verificationDocumentCardIdFrontDuplicate.uploadId())));
 
         // then
-        assertEquals("Multiple documents of type ID_CARD and side FRONT found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0. Document ids: id-card-front,duplicated-id-card-front", exception.getMessage());
+        assertEquals("Multiple documents of type ID_CARD and side FRONT found. Document ids: id-card-front,duplicated-id-card-front", exception.getMessage());
     }
 
     @Test
@@ -373,7 +373,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(documentWithoutFacePhoto.uploadId())));
 
         // then
-        assertEquals("No document of preferred type for face photo extraction found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("No document of preferred type for face photo extraction found", exception.getMessage());
     }
 
     @Test
@@ -390,7 +390,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID)));
 
         // then
-        assertEquals("Document of type ID_CARD and side BACK not found for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Document of type ID_CARD and side BACK not found", exception.getMessage());
     }
 
     @Test
@@ -414,7 +414,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
-        assertEquals("Failed REST call to verify documents 52ca4d10-06ac-442c-934c-9d085ab18934,bdfb45ce-a808-4b65-86a8-9f5f184c56f6 in Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body', OwnerId(activationId=da15f970-d939-46f0-abe7-7858e74ea3b0, userId=fc87e60a-85fe-405c-bfa3-9580211e1670)", exception.getMessage());
+        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", exception.getMessage());
     }
 
     @Test
@@ -465,7 +465,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
-        assertEquals("Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Extracted document type DRIVING_LICENSE does not match claimed type ID_CARD", exception.getMessage());
     }
 
     @Test
@@ -492,7 +492,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID)));
 
         // then
-        assertEquals("Unsupported extracted document type EmploymentPass for activationId da15f970-d939-46f0-abe7-7858e74ea3b0", exception.getMessage());
+        assertEquals("Unsupported extracted document type EmploymentPass", exception.getMessage());
     }
 
     @Test
@@ -627,7 +627,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID, DOCUMENT_DRIVING_LICENSE_FRONT_UPLOAD_ID, DOCUMENT_DRIVING_LICENSE_BACK_UPLOAD_ID)));
 
         // then
-        assertEquals("Cross-check of extracted data failed for activationId da15f970-d939-46f0-abe7-7858e74ea3b0 on field FirstName", exception.getMessage());
+        assertEquals("Cross-check of extracted data failed on field FirstName", exception.getMessage());
     }
 
     @Test
