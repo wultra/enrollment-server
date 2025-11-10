@@ -15,32 +15,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider.microblink;
+package com.wultra.app.onboardingserver.provider.microblink.api;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.integration.Image;
 import lombok.Builder;
 
 import java.util.List;
 
 /**
- * Microblink verification data for one onboarding process.
+ * Response from Microblink BlinkID REST API.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@Builder(toBuilder = true)
-record MicroblinkVerificationData(
-        List<Document> documents,
-        String facePhotoId
+@Builder
+public record DocumentVerificationResponse(
+    Verification verification,
+    Extraction extraction,
+    Runtime runtime,
+    List<Image> images
 ) {
+    public record Verification(
+            String result
+    ) {}
 
-    @Builder(toBuilder = true)
-    public record Document(
-            String documentId,
-            String uploadId,
-            DocumentType type,
-            CardSide side,
-            Image image
+    public record Extraction(
+        List<Result> overall,
+        ExtractionClassInfo classInfo
+    ) {}
+
+    public record Result(
+        String field,
+        String value,
+        Integer day,
+        Integer month,
+        Integer year
+    ) {}
+
+    public record ExtractionClassInfo(
+            String type
+    ) {}
+
+    public record Runtime(
+            String traceId
+    ) {}
+
+    public record Image(
+            String name,
+            String base64
     ) {}
 }

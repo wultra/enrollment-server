@@ -1,5 +1,5 @@
 /*
- * Signer Cloud
+ * PowerAuth Enrollment Server
  * Copyright (C) 2025 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
