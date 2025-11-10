@@ -28,9 +28,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationImageSource;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationRequest;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -256,11 +254,16 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var frontImageSource = buildImageSource(frontDocument.image());
         final var backImageSource = buildImageSource(backDocument.image());
 
+        final var options = new DocumentVerificationProcessingOptions();
+        options.setReturnImageFormat(ImageFormat.JPG);
+        options.setReturnFaceImage(true);
+
         final var useCase = new DocumentVerificationUseCaseOptions();
 
         final var request = new DocumentVerificationRequest();
         request.setImageFront(frontImageSource);
         request.setImageBack(backImageSource);
+        request.setOptions(options);
         request.setUseCase(useCase);
         return request;
     }
