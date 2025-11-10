@@ -9,7 +9,6 @@
 
 **Overview**
 
-- [Introduction](./Introduction.md)
 - [User Journeys](./User-Journeys.md)
 
 **Technical Details**

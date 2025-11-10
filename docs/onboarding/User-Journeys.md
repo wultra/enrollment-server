@@ -38,33 +38,33 @@ Banking customers usually need to fill out an **AML/KYC form**. You can place th
 
 The core onboarding steps are managed by the backend.
 
-The most straightforward way to identify the user is to use **SMS OTP**. The code is used for initial device registration.
+Optional: The most straightforward way to identify the user is to use **SMS OTP**. This code is used for initial device registration.
 
-To complete the device activation, the user must **set up a PIN and allow the use of biometrics**.
+To complete the device registration, the user must **set up a PIN**.
 
 You can skip previous two steps if you don't need to identify the user, for example, in the Re-KYC flow.
 
-The process may require user **consent**. Consent is optional but usually required before scanning documents or biometric data.
+Optional: The process may require user **consent**. Consent are usually required before scanning documents or biometric data.
 
 **Document verification** starts with selecting the document type. You can configure which document types will be accepted and how many are required (e.g., two out of three documents).
 
 The info page tells users which document type is being scanned and whether they should capture one or two sides.
 
-The document should be scanned using the provider's Capture SDK. This will produce images that need to be uploaded via the Onboarding SDK.
+The document should be scanned using the provider's BlinkID SDK. This will produce images that need to be uploaded via the Onboarding SDK.
 
 Keep in mind that if you are scanning a document with two sides, you need to scan one side first, followed by the other. If you are scanning more than one document, which is common, you need to repeat the info page and capture process for each document.
 
 All collected documents are sent to the back end for verification and data extraction. The extracted data contains the face image required for the presence check.
 
-**The Presence Check** compares the live biometrics with the provided image. We typically use an image extracted from the previous step, but you can also use your own user image if it's available.
+**The Presence Check** compares the live biometrics with the provided image. We typically use an image extracted from the previous step.
 
 The face biometrics process starts with an info page where you should inform users about the process.
 
-The face biometrics are captured by the partner's SDK on the mobile device, and the verification is processed through the partner's network. The result is then returned to the SDK. All you need to do is inform the Onboarding SDK that the step is complete so that we can continue with the process.
+The face biometrics are captured by the provider's iProov SDK and the verification is processed through the partner's network. The result is then returned to the SDK. All you need to do is inform the Onboarding SDK that the step is complete so that we can continue with the process.
 
-This step can be confirmed by a second factor using an OTP, which is required for valid strong customer authentication (SCA).
+This step can be confirmed by a second factor using an OTP, which is required (it must be verified by the legal department) for valid Strong Customer Authentication (SCA).
 
-There may be need to **setup PIN and confirm use of biometry** again if we chosen onboarding process with temporary activation. If we use flagged activation, this step can be ommited.
+There may be need to **setup PIN and confirm use of biometry** again if we chosen onboarding process with temporary registration. If we use flagged registration, this step can be ommited.
 
 **The success page** informs the user that the result was successful and offers the next steps.
 
