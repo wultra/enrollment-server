@@ -44,7 +44,7 @@ To complete the device registration, the user must **set up a PIN**.
 
 You can skip previous two steps if you don't need to identify the user, for example, in the Re-KYC flow.
 
-Optional: The process may require user **consent**. Consent are usually required before scanning documents or biometric data.
+Optional: The process may require user **consent**. Consents are usually required before scanning documents or biometric data.
 
 **Document verification** starts with selecting the document type. You can configure which document types will be accepted and how many are required (e.g., two out of three documents).
 
