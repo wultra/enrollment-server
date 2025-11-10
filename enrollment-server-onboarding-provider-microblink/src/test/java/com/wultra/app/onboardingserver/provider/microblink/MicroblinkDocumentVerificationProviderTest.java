@@ -164,30 +164,26 @@ class MicroblinkDocumentVerificationProviderTest {
 
 
     @Test
-    void testSubmitDocuments_documentWithBothSides_resultWithUploadedDocuments() {
+    void testSubmitDocuments_verificationDataIsCreated_correctResponseIsReturned() {
         // given
         final var submittedDocuments = List.of(
                 submittedDocumentIdCardFront,
-                submittedDocumentIdCardBack,
-                submittedDocumentDrivingLicenseFront,
-                submittedDocumentDrivingLicenseBack
+                submittedDocumentIdCardBack
         );
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertDocumentsSubmitResult(result);
+        assertDocumentsSubmitResult(result, List.of(DOCUMENT_ID_CARD_FRONT_ID, DOCUMENT_ID_CARD_BACK_ID));
     }
 
     @Test
-    void testSubmitDocuments_documentWithBothSides_documentsAreStoredIntoCache() {
+    void testSubmitDocuments_verificationDataIsCreated_documentsAreStoredIntoCache() {
         // given
         final var submittedDocuments = List.of(
                 submittedDocumentIdCardFront,
-                submittedDocumentIdCardBack,
-                submittedDocumentDrivingLicenseFront,
-                submittedDocumentDrivingLicenseBack
+                submittedDocumentIdCardBack
         );
 
         // when
@@ -195,7 +191,100 @@ class MicroblinkDocumentVerificationProviderTest {
 
         // then
         verify(verificationDataCache).put(eq(ACTIVATION_ID), verificationDataCaptor.capture());
-        assertVerificationDataAfterSubmit(verificationDataCaptor.getValue());
+        assertVerificationDataAfterSubmit(verificationDataCaptor.getValue(), List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack));
+    }
+
+    @Test
+    void testSubmitDocuments_documentsAreAdded_correctResponseIsReturned() {
+        // given
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack
+        );
+
+        final var verificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack))
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertDocumentsSubmitResult(result, List.of(DOCUMENT_ID_CARD_FRONT_ID, DOCUMENT_ID_CARD_BACK_ID));
+    }
+
+    @Test
+    void testSubmitDocuments_documentsAreAdded_documentsAreStoredIntoCache() {
+        // given
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack
+        );
+
+        final var verificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack))
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        verify(verificationDataCache).put(eq(ACTIVATION_ID), verificationDataCaptor.capture());
+        assertVerificationDataAfterSubmit(
+                verificationDataCaptor.getValue(),
+                List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack, verificationDocumentCardIdFront, verificationDocumentCardIdBack)
+        );
+    }
+
+    @Test
+    void testSubmitDocuments_documentsAreUpdated_correctResponseIsReturned() {
+        // given
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack
+        );
+
+        final var verificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertDocumentsSubmitResult(result, List.of(DOCUMENT_ID_CARD_FRONT_ID, DOCUMENT_ID_CARD_BACK_ID));
+    }
+
+    @Test
+    void testSubmitDocuments_documentsAreUpdated_documentsAreStoredIntoCache() {
+        // given
+        final var submittedDocuments = List.of(
+                submittedDocumentIdCardFront,
+                submittedDocumentIdCardBack
+        );
+
+        final var verificationData = MicroblinkVerificationData.builder()
+                .facePhotoId(FACE_PHOTO_ID)
+                .documents(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack))
+                .build();
+
+        when(verificationDataCache.getIfPresent(ACTIVATION_ID)).thenReturn(verificationData);
+
+        // when
+        provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        verify(verificationDataCache).put(eq(ACTIVATION_ID), verificationDataCaptor.capture());
+        assertVerificationDataAfterSubmit(verificationDataCaptor.getValue(), List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack));
     }
 
     @Test
@@ -676,14 +765,11 @@ class MicroblinkDocumentVerificationProviderTest {
         verify(verificationDataCache).put(ACTIVATION_ID, updatedVerificationData);
     }
 
-    private void assertDocumentsSubmitResult(final DocumentsSubmitResult result) {
+    private void assertDocumentsSubmitResult(final DocumentsSubmitResult result, List<String> expectedDocumentIds) {
         final var documentResults = result.getResults();
-        assertEquals(4, documentResults.size());
+        assertEquals(expectedDocumentIds.size(), documentResults.size());
 
-        assertDocumentSubmitResult(documentResults, DOCUMENT_ID_CARD_FRONT_ID);
-        assertDocumentSubmitResult(documentResults, DOCUMENT_ID_CARD_BACK_ID);
-        assertDocumentSubmitResult(documentResults, DOCUMENT_DRIVING_LICENSE_FRONT_ID);
-        assertDocumentSubmitResult(documentResults, DOCUMENT_DRIVING_LICENSE_BACK_ID);
+        expectedDocumentIds.forEach(documentId -> assertDocumentSubmitResult(documentResults, documentId));
 
         assertNull(result.getRejectReason());
         assertNull(result.getErrorDetail());
@@ -783,71 +869,28 @@ class MicroblinkDocumentVerificationProviderTest {
                 """;
     }
 
-    private void assertVerificationDataAfterSubmit(final MicroblinkVerificationData verificationData) {
+    private void assertVerificationDataAfterSubmit(final MicroblinkVerificationData verificationData, List<MicroblinkVerificationData.Document> expectedDocuments) {
         assertDoesNotThrow(() -> UUID.fromString(verificationData.facePhotoId()));
 
         final var documents = verificationData.documents();
-        assertEquals(4, documents.size());
+        assertEquals(expectedDocuments.size(), documents.size());
 
-        assertDocument(
-                documents,
-                DOCUMENT_ID_CARD_FRONT_ID,
-                DocumentType.ID_CARD,
-                CardSide.FRONT,
-                "document_front.jpg",
-                new byte[] {1}
-        );
-
-        assertDocument(
-                documents,
-                DOCUMENT_ID_CARD_BACK_ID,
-                DocumentType.ID_CARD,
-                CardSide.BACK,
-                "document_back.jpg",
-                new byte[] {2}
-        );
-
-        assertDocument(
-                documents,
-                DOCUMENT_DRIVING_LICENSE_FRONT_ID,
-                DocumentType.DRIVING_LICENSE,
-                CardSide.FRONT,
-                "driving_license_front.jpg",
-                new byte[] {3}
-        );
-
-        assertDocument(
-                documents,
-                DOCUMENT_DRIVING_LICENSE_BACK_ID,
-                DocumentType.DRIVING_LICENSE,
-                CardSide.BACK,
-                "driving_license_back.jpg",
-                new byte[] {4}
-        );
+        expectedDocuments.forEach(expectedDocument -> assertDocument(expectedDocument, documents));
     }
 
     private static void assertDocument(
-            final List<MicroblinkVerificationData.Document> documents,
-            final String documentId,
-            final DocumentType expectedType,
-            final CardSide expectedSide,
-            final String expectedImageFilename,
-            final byte[] expectedImageData
+            final MicroblinkVerificationData.Document expectedDocument,
+            final List<MicroblinkVerificationData.Document> documents
     ) {
-        final var document = documents.stream()
-                .filter(d -> d.documentId().equals(documentId))
+        final var actualDocument = documents.stream()
+                .filter(d -> d.documentId().equals(expectedDocument.documentId()))
                 .findFirst()
                 .orElseThrow();
 
-        assertDoesNotThrow(() -> UUID.fromString(document.uploadId()));
-        assertEquals(expectedType, document.type());
-        assertEquals(expectedSide, document.side());
-
-        final var expectedBackImage = Image.builder()
-                .filename(expectedImageFilename)
-                .data(expectedImageData)
-                .build();
-        assertEquals(expectedBackImage, document.image());
+        assertDoesNotThrow(() -> UUID.fromString(actualDocument.uploadId()));
+        assertEquals(expectedDocument.type(), actualDocument.type());
+        assertEquals(expectedDocument.side(), actualDocument.side());
+        assertEquals(expectedDocument.image(), actualDocument.image());
     }
 
     private static SubmittedDocument buildSubmittedDocument(

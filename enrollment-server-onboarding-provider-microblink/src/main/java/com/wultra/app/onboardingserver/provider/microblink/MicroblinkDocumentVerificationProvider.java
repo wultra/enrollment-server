@@ -18,7 +18,6 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -30,7 +29,9 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationImageSource;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationRequest;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -43,6 +44,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the {@link DocumentVerificationProvider} with <a href="https://www.microblink.com/">Microblink</a>.
@@ -74,11 +76,40 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> documents) {
-        final var microblinkVerificationData = buildMicroblinkVerificationData(documents);
+    public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) {
+        final var activationId = ownerId.getActivationId();
+
+        var microblinkVerificationData = verificationDataCache.getIfPresent(activationId);
+
+        final var addedDocuments = submittedDocuments.stream()
+                .map(MicroblinkDocumentVerificationProvider::buildMicroblinkVerificationDocument)
+                .toList();
+
+        if (microblinkVerificationData == null) {
+            microblinkVerificationData = MicroblinkVerificationData.builder()
+                    .documents(addedDocuments)
+                    .facePhotoId(UUID.randomUUID().toString())
+                    .build();
+        } else {
+            final var submittedDocumentIds = submittedDocuments.stream()
+                    .map(SubmittedDocument::getDocumentId)
+                    .collect(Collectors.toSet());
+
+            var newDocuments = new ArrayList<>(microblinkVerificationData.documents()
+                    .stream()
+                    .filter(document -> !submittedDocumentIds.contains(document.documentId()))
+                    .toList());
+
+            newDocuments.addAll(addedDocuments);
+
+            microblinkVerificationData = microblinkVerificationData.toBuilder()
+                    .documents(newDocuments)
+                    .build();
+        }
+
         verificationDataCache.put(ownerId.getActivationId(), microblinkVerificationData);
 
-        final var results = microblinkVerificationData.documents().stream()
+        final var results = addedDocuments.stream()
                 .map(document -> {
                     final var result = new DocumentSubmitResult();
                     result.setDocumentId(document.documentId());
@@ -229,20 +260,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static MicroblinkVerificationData buildMicroblinkVerificationData(final List<SubmittedDocument> submittedDocuments) {
-        final var documents = submittedDocuments.stream()
-                .map(r -> MicroblinkVerificationData.Document.builder()
-                        .documentId(r.getDocumentId())
-                        .uploadId(UUID.randomUUID().toString())
-                        .type(r.getType())
-                        .side(r.getSide())
-                        .image(r.getPhoto())
-                        .build())
-                .toList();
-
-        return MicroblinkVerificationData.builder()
-                .documents(documents)
-                .facePhotoId(UUID.randomUUID().toString())
+    private static MicroblinkVerificationData.Document buildMicroblinkVerificationDocument(final SubmittedDocument submittedDocument) {
+        return MicroblinkVerificationData.Document.builder()
+                .documentId(submittedDocument.getDocumentId())
+                .uploadId(UUID.randomUUID().toString())
+                .type(submittedDocument.getType())
+                .side(submittedDocument.getSide())
+                .image(submittedDocument.getPhoto())
                 .build();
     }
 
