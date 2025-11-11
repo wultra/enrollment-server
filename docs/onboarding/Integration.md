@@ -74,7 +74,7 @@ Although OTP usage is optional, it is required for valid strong customer authent
 
 ## Final Device Activation
 
-![Final Device Activation](./img/Final_Device_Registration.png)
+![Final Device Activation](./img/Final_Device_Activation.png)
 
 The process is dependent on how you created registration at the start.
 
