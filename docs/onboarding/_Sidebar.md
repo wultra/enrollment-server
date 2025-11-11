@@ -7,6 +7,13 @@
 - [Configuration of Verification Providers](./Configuration-Verification-Providers.md)
 - [Database Structure](./Database-Structure.md)
 
+**Overview**
+
+- [User Journeys](./User-Journeys.md)
+
+**Technical Details**
+- [Integration](./Integration.md)
+
 **REST APIs**
 
 - [Onboarding API](./Onboarding-API.md)
