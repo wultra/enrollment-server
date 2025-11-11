@@ -44,7 +44,7 @@ public class MicroblinkConfigProperties {
     /**
      * Record time-to-live in the cache after it is written
      */
-    private Duration cacheRecordTTL;
+    private Duration cacheRecordTTL = Duration.ofHours(1);
 
     /**
      * REST client configuration

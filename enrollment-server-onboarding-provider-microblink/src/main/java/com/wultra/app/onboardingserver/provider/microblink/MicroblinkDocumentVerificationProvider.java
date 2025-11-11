@@ -171,7 +171,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             putDocumentCrosscheckData(overallExtraction, documentsCrosscheckData);
 
             if (documentType == facePhotoExtractionDocumentType) {
-                final var faceImageBase64 = response.images()
+                final var faceImageBase64 = Optional.ofNullable(response.images())
+                        .orElse(Collections.emptyList())
                         .stream()
                         .filter(image -> image.name().equals("FaceImage"))
                         .findFirst()
@@ -378,16 +379,29 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(String::toLowerCase)
                 .orElseThrow(() -> new DocumentVerificationException("Field LastName not found in extracted data"));
 
-        final var dateOfBirth = documentExtractedData.stream()
+        final var dateOfBirthResult = documentExtractedData.stream()
                 .filter(r -> "DateOfBirth".equals(r.field()))
                 .findFirst()
-                .map(r -> LocalDate.of(r.year(), r.month(), r.day()))
-                .map(LocalDate::toString)
                 .orElseThrow(() -> new DocumentVerificationException("Field DateOfBirth not found in extracted data"));
+
+        final var dateOfBirth = parseDate(dateOfBirthResult).toString();
 
         documentsCrosscheckData.computeIfAbsent("FirstName", k -> new ArrayList<>()).add(firstName);
         documentsCrosscheckData.computeIfAbsent("LastName", k -> new ArrayList<>()).add(lastName);
         documentsCrosscheckData.computeIfAbsent("DateOfBirth", k -> new ArrayList<>()).add(dateOfBirth);
+    }
+
+    private static LocalDate parseDate(final com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse.Result result) throws DocumentVerificationException {
+        final var year = Optional.ofNullable(result.year())
+                .orElseThrow(() -> new DocumentVerificationException("Year of field DateOfBirth was not extracted"));
+
+        final var month = Optional.ofNullable(result.month())
+                .orElseThrow(() -> new DocumentVerificationException("Month of field DateOfBirth was not extracted"));
+
+        final var day = Optional.ofNullable(result.day())
+                .orElseThrow(() -> new DocumentVerificationException("Day of field DateOfBirth was not extracted"));
+
+        return LocalDate.of(year, month, day);
     }
 
     private List<DocumentVerificationResult> buildDocumentVerificationResults(
