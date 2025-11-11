@@ -58,6 +58,11 @@
 
         <dependency>
             <groupId>com.wultra.security</groupId>
+            <artifactId>enrollment-server-onboarding-provider-microblink</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.wultra.security</groupId>
             <artifactId>enrollment-server-onboarding-provider-zenid</artifactId>
         </dependency>
 
