@@ -17,25 +17,56 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
+import com.wultra.core.rest.client.base.DefaultRestClient;
+import com.wultra.core.rest.client.base.RestClient;
+import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 /**
- * Cache config for storing Microblink documents.
+ * Configuration for Microblink specific beans.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
+@EnableConfigurationProperties(MicroblinkConfigProperties.class)
 @Configuration
-@EnableCaching
 @Slf4j
-public class MicroblinkCacheConfig {
+class MicroblinkConfig {
+
+    private MicroblinkConfigProperties properties;
+
+    @Bean("microblinkRestClient")
+    RestClient microblinkRestClient(MicroblinkConfigProperties properties) throws RestClientException {
+        logger.info("Registering Microblink RestClient with base URL: {}", properties.getRestClientConfig().getBaseUrl());
+
+        final var httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        final var restClientConfig = properties.getRestClientConfig();
+        restClientConfig.setDefaultHttpHeaders(httpHeaders);
+
+        return new DefaultRestClient(restClientConfig);
+    }
+
+    @Bean("microblinkDocumentVerificationResponseParser")
+    DocumentVerificationResponseParser documentVerificationResponseParser() {
+        final var objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        return new DocumentVerificationResponseParser(objectMapper);
+    }
 
     @Bean("microblinkCacheManager")
     public CacheManager cacheManager(final MicroblinkConfigProperties properties) {

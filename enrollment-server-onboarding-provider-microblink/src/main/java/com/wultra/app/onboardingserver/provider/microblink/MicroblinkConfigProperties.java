@@ -20,9 +20,7 @@ package com.wultra.app.onboardingserver.provider.microblink;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
@@ -32,8 +30,6 @@ import java.time.Duration;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.microblink")
-@ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
-@Configuration
 @Getter
 @Setter
 public class MicroblinkConfigProperties {
