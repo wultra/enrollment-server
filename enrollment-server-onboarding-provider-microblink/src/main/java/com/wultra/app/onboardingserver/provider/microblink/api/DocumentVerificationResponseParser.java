@@ -20,47 +20,46 @@ package com.wultra.app.onboardingserver.provider.microblink.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
+import org.springframework.stereotype.Component;
 
 /**
  * Parser for Microblink BlinkID REST API response.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@Getter
+@Component
 public class DocumentVerificationResponseParser {
 
-    private final String responseJson;
-    private String verificationJson;
-    private String extractionFrontJson;
-    private String extractionBackJson;
+    final ObjectMapper objectMapper;
 
-    private DocumentVerificationResponse response;
-
-    public DocumentVerificationResponseParser(String responseJson) throws JsonProcessingException {
-        this.responseJson = responseJson;
-
-        parseResponse(responseJson);
+    public DocumentVerificationResponseParser(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
-    private void parseResponse(final String responseJson) throws JsonProcessingException {
+    public DocumentVerificationParsedResponse parseResponse(final String responseJson) throws JsonProcessingException {
         final var mapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        response = mapper.readValue(responseJson, DocumentVerificationResponse.class);
+        final var response = mapper.readValue(responseJson, DocumentVerificationParsedResponse.class);
 
         final var root = mapper.readTree(responseJson);
-        extractionFrontJson = root.path("extraction")
+        final var extractionFrontJson = root.path("extraction")
                 .path("viz")
                 .path("front")
                 .toString();
 
-        extractionBackJson = root.path("extraction")
+        final var extractionBackJson = root.path("extraction")
                 .path("viz")
                 .path("back")
                 .toString();
 
-        verificationJson = root.path("verification")
+        final var verificationJson = root.path("verification")
                 .toString();
+
+        return response.toBuilder()
+                .extractionFrontJson(extractionFrontJson)
+                .extractionBackJson(extractionBackJson)
+                .verificationJson(verificationJson)
+                .build();
     }
 }

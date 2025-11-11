@@ -26,12 +26,15 @@ import java.util.List;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@Builder
-public record DocumentVerificationResponse(
+@Builder(toBuilder = true)
+public record DocumentVerificationParsedResponse(
     Verification verification,
     Extraction extraction,
     Runtime runtime,
-    List<Image> images
+    List<Image> images,
+    String verificationJson,
+    String extractionFrontJson,
+    String extractionBackJson
 ) {
     public record Verification(
             String result

@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -24,6 +26,7 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -151,7 +154,10 @@ class MicroblinkDocumentVerificationProviderTest {
         when(cacheManager.getCache("microblinkDocumentsCache")).thenReturn(verificationDataCache);
         when(cacheManager.getCache("microblinkPhotoCache")).thenReturn(photoCache);
 
-        provider = new MicroblinkDocumentVerificationProvider(cacheManager, restClient);
+        final var objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        provider = new MicroblinkDocumentVerificationProvider(cacheManager, restClient, new DocumentVerificationResponseParser(objectMapper));
     }
 
     @Test

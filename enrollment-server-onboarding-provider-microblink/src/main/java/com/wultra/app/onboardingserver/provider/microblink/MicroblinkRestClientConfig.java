@@ -17,6 +17,9 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -48,5 +51,13 @@ class MicroblinkRestClientConfig {
         restClientConfig.setDefaultHttpHeaders(httpHeaders);
 
         return new DefaultRestClient(restClientConfig);
+    }
+
+    @Bean("microblinkDocumentVerificationResponseParser")
+    DocumentVerificationResponseParser documentVerificationResponseParser() {
+        final var objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        return new DocumentVerificationResponseParser(objectMapper);
     }
 }
