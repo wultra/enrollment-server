@@ -161,8 +161,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         for (final var documentsOfSameType : documentsByTypeAndSide.entrySet()) {
             final var documentType = documentsOfSameType.getKey();
-            final var documentFront = findDocumentBySide(documentsOfSameType, CardSide.FRONT);
-            final var documentBack = findDocumentBySide(documentsOfSameType, CardSide.BACK);
+            final var documentFront = documentsOfSameType.getValue().getOrDefault(CardSide.FRONT, null);
+            final var documentBack = documentsOfSameType.getValue().getOrDefault(CardSide.BACK, null);
 
             final var parsedResponse = sendApiRequest(documentFront, documentBack);
 
@@ -353,17 +353,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
 
         return documentsByTypeAndSide;
-    }
-
-    private static MicroblinkVerificationData.Document findDocumentBySide(
-            final Map.Entry<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>> documentsOfSameType,
-            final CardSide side
-    ) throws DocumentVerificationException {
-        final var documentType = documentsOfSameType.getKey();
-        final var document = documentsOfSameType.getValue().getOrDefault(side, null);
-
-        return Optional.ofNullable(document)
-                .orElseThrow(() -> new DocumentVerificationException("Document of type %s and side %s not found".formatted(documentType, side)));
     }
 
     private static void putDocumentCrosscheckData(final List<DocumentVerificationParsedResponse.Result> documentExtractedData, final Map<String, List<String>> documentsCrosscheckData) throws DocumentVerificationException {

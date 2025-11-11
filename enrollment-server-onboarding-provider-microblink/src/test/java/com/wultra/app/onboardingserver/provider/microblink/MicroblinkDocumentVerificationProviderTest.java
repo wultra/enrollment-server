@@ -383,23 +383,6 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_onlyOneSideOfDocumentProvided_exceptionIsThrown() {
-        // given
-        final var verificationData = MicroblinkVerificationData.builder()
-                .documents(List.of(verificationDocumentCardIdFront))
-                .facePhotoId(FACE_PHOTO_ID)
-                .build();
-
-        when(verificationDataCache.get(ACTIVATION_ID, MicroblinkVerificationData.class)).thenReturn(verificationData);
-
-        // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID)));
-
-        // then
-        assertEquals("Document of type ID_CARD and side BACK not found", exception.getMessage());
-    }
-
-    @Test
     void testVerifyDocuments_restClientException_exceptionIsThrown() throws RestClientException {
         // given
         final var verificationData = MicroblinkVerificationData.builder()
