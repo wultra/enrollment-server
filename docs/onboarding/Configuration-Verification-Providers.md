@@ -7,6 +7,7 @@ This document describes configuration of providers for personal identity documen
 The document verification process is currently supported for following providers:
 - [ZenID](https://zenid.trask.cz/) - use value `zenid` in configuration
 - [Innovatrics](https://www.innovatrics.com/) - use value `innovatrics` in configuration
+- [Microblink](https://microblink.com/) - use value `microblink` in configuration
 - Mock - useful for simple testing and local runs - use value `mock` in configuration
 
 ### ZenID
