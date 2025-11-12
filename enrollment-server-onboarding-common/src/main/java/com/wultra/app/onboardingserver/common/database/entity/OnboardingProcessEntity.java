@@ -124,6 +124,11 @@ public class OnboardingProcessEntity implements Serializable {
     @ToString.Exclude
     private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_config_id", referencedColumnName = "id", updatable = false)
+    // TODO (racansky, 2025-11-11) nullable for the backward compatibility, make it not-null
+    private OnboardingProcessConfigurationEntity processConfiguration;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
