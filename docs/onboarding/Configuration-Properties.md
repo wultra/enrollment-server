@@ -164,7 +164,8 @@ See [Innovatrics documentation](https://developers.innovatrics.com/digital-onboa
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername`  |         | HTTP Basic authentication username.                            |
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword`  |         | HTTP Basic authentication password.                            |
 | `enrollment-server-onboarding.document-verification.microblink.cacheRecordTTL`                          | `1h`    | Time to live for cached Microblink documents for verification. |
-
+| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.IOS`                |         | iOS Mobile SDK license key.                                    |
+| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.ANDROID`            |         | Android Mobile SDK license key.                                |
 
 ## Correlation HTTP Header Configuration
 
