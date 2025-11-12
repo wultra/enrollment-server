@@ -18,12 +18,9 @@
 package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.core.rest.model.base.response.ObjectResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * Controller publishing configuration to inform the client app.
@@ -34,13 +31,8 @@ import java.util.Map;
 @RequestMapping(value = "api/configuration")
 public class ConfigurationController {
 
-    @Value("${enrollment-server-onboarding.onboarding-process.enabled}")
-    private boolean onboardingEnabled;
-
     @PostMapping
     public ObjectResponse<Object> fetchConfiguration() {
-        final Object response = Map.of("onboarding",
-                Map.of("enabled", onboardingEnabled));
-        return new ObjectResponse<>(response);
+        return new ObjectResponse<>();
     }
 }

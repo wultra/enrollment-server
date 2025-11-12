@@ -19,7 +19,9 @@ package com.wultra.app.onboardingserver.provider.innovatrics;
 
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateCustomerResponse;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.CreateDocumentPageResponse;
 import okhttp3.mockwebserver.MockResponse;
@@ -33,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.*;
                 "enrollment-server-onboarding.provider.innovatrics.serviceBaseUrl=http://localhost:" + InnovatricsRestApiServiceTest.PORT
         })
 @ActiveProfiles("test")
+@MockitoBean(types = {IdentityVerificationRepository.class, AuditService.class})
 class InnovatricsRestApiServiceTest {
 
     // TODO (racansky, 2024-06-17) find the way how to set the same random port for mock server and property
