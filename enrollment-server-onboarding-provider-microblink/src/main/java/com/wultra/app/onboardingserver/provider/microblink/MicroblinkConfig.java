@@ -25,6 +25,7 @@ import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
@@ -83,5 +84,20 @@ class MicroblinkConfig {
         cacheManager.setCaffeine(caffeineBuilder);
 
         return cacheManager;
+    }
+
+    @Bean
+    public MicroblinkDocumentVerificationProvider microblinkDocumentVerificationProvider(
+            @Qualifier("microblinkCacheManager") CacheManager cacheManager,
+            @Qualifier("microblinkRestClient") RestClient restClient,
+            @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
+            MicroblinkConfigProperties properties
+    ) {
+        return new MicroblinkDocumentVerificationProvider(
+                cacheManager,
+                restClient,
+                responseParser,
+                properties.getMobileSdkLicenseKeys()
+        );
     }
 }

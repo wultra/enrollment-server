@@ -7,6 +7,7 @@ This document describes configuration of providers for personal identity documen
 The document verification process is currently supported for following providers:
 - [ZenID](https://zenid.trask.cz/) - use value `zenid` in configuration
 - [Innovatrics](https://www.innovatrics.com/) - use value `innovatrics` in configuration
+- [Microblink](https://microblink.com/) - use value `microblink` in configuration
 - Mock - useful for simple testing and local runs - use value `mock` in configuration
 
 ### ZenID
@@ -66,6 +67,18 @@ innovatrics:
 ```
 
 The format of the document name is `{country}_{type}_{edition}` according to the response of `/metadata` request.
+
+
+### Microblink
+
+The BlinkID component from Microblink is used for document verification. For details, see [the official Microblink documentation](https://blinkidverify.docs.microblink.com/docs/docver/overview/intro).
+It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. See [the endpoint specification](https://blinkidverify.docs.microblink.com/docs/docver/api-docs/api-v2).
+
+When a document is uploaded, then it is temporarily stored in cache on Onboarding server. After all documents are uploaded, the endpoint is called for each document.
+
+The mobile SDK uses Microblink SDK to capture document images. The SDK requires license key, which is stored in Onboarding server configuration per mobile platform.
+The license key is sent in response body of `POST /api/identity/document/init-sdk` as `licenseKey` attribute. 
+In request body there should be attribute `mobilePlatform`. Possible values are `IOS` and `ANDROID`.
 
 ## Presence Check
 

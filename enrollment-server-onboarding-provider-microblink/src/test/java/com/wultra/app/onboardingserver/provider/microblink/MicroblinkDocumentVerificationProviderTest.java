@@ -44,10 +44,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -157,11 +154,21 @@ class MicroblinkDocumentVerificationProviderTest {
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        provider = new MicroblinkDocumentVerificationProvider(cacheManager, restClient, new DocumentVerificationResponseParser(objectMapper));
+        final var licenseKeys = Map.of(
+                MicroblinkMobilePlatform.IOS, "ios-license-key",
+                MicroblinkMobilePlatform.ANDROID, "android-license-key"
+        );
+
+        provider = new MicroblinkDocumentVerificationProvider(
+                cacheManager,
+                restClient,
+                new DocumentVerificationResponseParser(objectMapper),
+                licenseKeys
+        );
     }
 
     @Test
-    void testInitVerificationSdk() {
+    void testInitVerificationSdk_mobilePlatformNotProvided_emptyResultReturned() {
         // given
         // -
 
@@ -170,6 +177,33 @@ class MicroblinkDocumentVerificationProviderTest {
 
         // then
         assertEquals(new VerificationSdkInfo(), sdkInfo);
+    }
+
+    @Test
+    void testInitVerificationSdk_unsupportedMobilePlatformProvided_emptyResultReturned() {
+        // given
+        // -
+
+        // when
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "unsupported"));
+
+        // then
+        assertEquals(new VerificationSdkInfo(), sdkInfo);
+    }
+
+    @Test
+    void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey() {
+        // given
+        // -
+
+        // when
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "IOS"));
+
+        // then
+        final var expectedResult = new VerificationSdkInfo();
+        expectedResult.getAttributes().put("licenseKey", "ios-license-key");
+
+        assertEquals(expectedResult, sdkInfo);
     }
 
 
