@@ -1,5 +1,3 @@
-package com.wultra.app.onboardingserver.provider.microblink;
-
 /*
  * PowerAuth Enrollment Server
  * Copyright (C) 2025 Wultra s.r.o.
@@ -17,6 +15,7 @@ package com.wultra.app.onboardingserver.provider.microblink;
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.onboardingserver.provider.microblink;
 
 /**
  * Supported mobile platforms for Microblink.

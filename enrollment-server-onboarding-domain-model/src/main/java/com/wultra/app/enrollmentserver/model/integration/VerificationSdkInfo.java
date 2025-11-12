@@ -17,7 +17,9 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +30,8 @@ import java.util.Map;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class VerificationSdkInfo {
 
     /**

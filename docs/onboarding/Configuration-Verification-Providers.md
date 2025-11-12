@@ -71,8 +71,8 @@ The format of the document name is `{country}_{type}_{edition}` according to the
 
 ### Microblink
 
-The BlinkID component from Microblink is used for document verification. The official documentation can be found at [this link](https://blinkidverify.docs.microblink.com/docs/docver/overview/intro).
-It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. See endpoint specification at [this link](https://blinkidverify.docs.microblink.com/docs/docver/api-docs/api-v2).
+The BlinkID component from Microblink is used for document verification. For details, see [the official Microblink documentation](https://blinkidverify.docs.microblink.com/docs/docver/overview/intro).
+It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. See [the endpoint specification](https://blinkidverify.docs.microblink.com/docs/docver/api-docs/api-v2).
 
 When a document is uploaded, then it is temporarily stored in cache on Onboarding server. After all documents are uploaded, the endpoint is called for each document.
 

@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Configuration properties for Microblink document verification provider.
@@ -51,5 +52,5 @@ public class MicroblinkConfigProperties {
     /**
      * Mobile SDK license keys by platform.
      */
-    private EnumMap<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
+    private Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
 }

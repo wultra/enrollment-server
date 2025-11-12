@@ -248,13 +248,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var mobilePlatform = initAttributes.getOrDefault("mobilePlatform", null);
         logger.info("Requested sdk license key for platform {}", mobilePlatform);
 
-        final var sdkInfo = new VerificationSdkInfo();
-
-        Optional.ofNullable(mobilePlatform)
+        return Optional.ofNullable(mobilePlatform)
                 .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(platform, null))
-                .ifPresent(licenseKey -> sdkInfo.getAttributes().put("licenseKey", licenseKey));
-
-        return sdkInfo;
+                .map(licenseKey -> new VerificationSdkInfo(Map.of("licenseKey", licenseKey)))
+                .orElseGet(VerificationSdkInfo::new);
     }
 
     private static DocumentVerificationImageSource buildImageSource(final Image image) {
