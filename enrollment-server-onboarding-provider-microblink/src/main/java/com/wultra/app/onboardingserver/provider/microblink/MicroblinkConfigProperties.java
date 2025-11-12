@@ -51,5 +51,5 @@ public class MicroblinkConfigProperties {
     /**
      * Mobile SDK license keys by platform.
      */
-    private EnumMap<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys;
+    private EnumMap<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
 }

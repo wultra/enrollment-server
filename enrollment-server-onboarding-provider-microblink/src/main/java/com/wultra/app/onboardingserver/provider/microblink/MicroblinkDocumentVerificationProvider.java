@@ -251,7 +251,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var sdkInfo = new VerificationSdkInfo();
 
         Optional.ofNullable(mobilePlatform)
-                .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(mobilePlatform, null))
+                .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(platform, null))
                 .ifPresent(licenseKey -> sdkInfo.getAttributes().put("licenseKey", licenseKey));
 
         return sdkInfo;

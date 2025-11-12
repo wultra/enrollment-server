@@ -77,8 +77,8 @@ It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. Se
 When a document is uploaded, then it is temporarily stored in cache on Onboarding server. After all documents are uploaded, the endpoint is called for each document.
 
 The mobile SDK uses Microblink SDK to capture document images. The SDK requires license key, which is stored in Onboarding server configuration per mobile platform.
-The license key is sent in response body of `POST /api/identity/document/init-sdk` as `licenseKey` attribute. In request 
-body there should be attribute `mobilePlatform`. Possible values are `IOS` and `ANDROID`.
+The license key is sent in response body of `POST /api/identity/document/init-sdk` as `licenseKey` attribute. 
+In request body there should be attribute `mobilePlatform`. Possible values are `IOS` and `ANDROID`.
 
 ## Presence Check
 
