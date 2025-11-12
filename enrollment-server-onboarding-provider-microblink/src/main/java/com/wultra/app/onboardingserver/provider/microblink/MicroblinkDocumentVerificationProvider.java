@@ -33,14 +33,10 @@ import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
@@ -53,25 +49,28 @@ import java.util.stream.Collectors;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Slf4j
-@ConditionalOnProperty(value = "enrollment-server-onboarding.document-verification.provider", havingValue = "microblink")
-@Component
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
     private final Cache verificationDataCache;
     private final Cache photoCache;
     private final RestClient restClient;
     private final DocumentVerificationResponseParser responseParser;
+    private final Map<String, String> mobileSdkLicenseKeyByPlatform;
 
-    @Autowired
     public MicroblinkDocumentVerificationProvider(
-            @Qualifier("microblinkCacheManager") CacheManager cacheManager,
-            @Qualifier("microblinkRestClient") RestClient restClient,
-            @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser
+            CacheManager cacheManager,
+            RestClient restClient,
+            DocumentVerificationResponseParser responseParser,
+            Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys
     ) {
         this.verificationDataCache = cacheManager.getCache(MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME);
         this.photoCache = cacheManager.getCache(MicroblinkConfigProperties.PHOTO_CACHE_NAME);
         this.restClient = restClient;
         this.responseParser = responseParser;
+
+        mobileSdkLicenseKeyByPlatform = mobileSdkLicenseKeys.entrySet()
+                .stream()
+                .collect(Collectors.toMap(k -> k.getKey().toString(), Map.Entry::getValue));
     }
 
     @Override
@@ -244,7 +243,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) {
-        return new VerificationSdkInfo();
+        logger.info("Initializing Microblink SDK for activationId {}", id.getActivationId());
+
+        final var mobilePlatform = initAttributes.getOrDefault("mobilePlatform", null);
+        logger.info("Requested sdk license key for platform {}", mobilePlatform);
+
+        final var sdkInfo = new VerificationSdkInfo();
+
+        Optional.ofNullable(mobilePlatform)
+                .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(mobilePlatform, null))
+                .ifPresent(licenseKey -> sdkInfo.getAttributes().put("licenseKey", licenseKey));
+
+        return sdkInfo;
     }
 
     private static DocumentVerificationImageSource buildImageSource(final Image image) {

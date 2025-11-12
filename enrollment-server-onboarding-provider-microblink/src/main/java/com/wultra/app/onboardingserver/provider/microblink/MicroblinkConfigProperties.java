@@ -23,6 +23,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.EnumMap;
 
 /**
  * Configuration properties for Microblink document verification provider.
@@ -46,4 +47,9 @@ public class MicroblinkConfigProperties {
      * REST client configuration
      */
     private RestClientConfiguration restClientConfig;
+
+    /**
+     * Mobile SDK license keys by platform.
+     */
+    private EnumMap<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys;
 }
