@@ -24,8 +24,8 @@
             <column name="id" type="bigint" defaultValueSequenceNext="es_onboarding_process_configuration_seq">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="name" type="varchar(255)">
-                    <constraints nullable="false" unique="true" uniqueConstraintName="es_onboarding_process_configuration_name_uk" />
+            <column name="process_type" type="varchar(255)">
+                    <constraints nullable="false" unique="true" uniqueConstraintName="es_onboarding_process_configuration_process_type_uk" />
             </column>
             <column name="config" type="text">
                 <constraints nullable="false" />
