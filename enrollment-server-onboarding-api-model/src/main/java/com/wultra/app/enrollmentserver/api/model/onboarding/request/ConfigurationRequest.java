@@ -15,22 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
-package com.wultra.app.onboardingserver.common.database;
-
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
+import jakarta.validation.constraints.NotBlank;
 
 /**
- * Repository for {@link OnboardingProcessConfigurationEntity}.
+ * Configuration request.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Repository
-public interface OnboardingProcessConfigurationRepository extends CrudRepository<OnboardingProcessConfigurationEntity, Long> {
-
-    Optional<OnboardingProcessConfigurationEntity> findByProcessType(String processType);
+public record ConfigurationRequest(
+        @NotBlank String processType) {
 }

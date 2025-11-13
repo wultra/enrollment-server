@@ -43,7 +43,7 @@ class OnboardingProcessConfigurationRepositoryTest {
 
     @Test
     void testJsonMapping() {
-        final OnboardingProcessConfigurationEntity entity = tested.findById(1L).orElseThrow(AssertionFailedError::new);
+        final OnboardingProcessConfigurationEntity entity = tested.findByProcessType("reactivation").orElseThrow(AssertionFailedError::new);
         final OnboardingProcessConfigurationValue result = entity.getConfiguration();
 
         assertTrue(result.enabled());
@@ -67,7 +67,7 @@ class OnboardingProcessConfigurationRepositoryTest {
 
     @Test
     void testJsonMapping_defaultValues() {
-        final OnboardingProcessConfigurationEntity entity = tested.findById(2L).orElseThrow(AssertionFailedError::new);
+        final OnboardingProcessConfigurationEntity entity = tested.findByProcessType("onboarding").orElseThrow(AssertionFailedError::new);
         final OnboardingProcessConfigurationValue result = entity.getConfiguration();
 
         assertFalse(result.enabled());

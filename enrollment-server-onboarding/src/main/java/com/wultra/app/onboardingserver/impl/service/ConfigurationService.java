@@ -15,22 +15,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.wultra.app.onboardingserver.impl.service;
 
-package com.wultra.app.onboardingserver.common.database;
-
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessConfigurationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 /**
- * Repository for {@link OnboardingProcessConfigurationEntity}.
+ * Configuration service.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Repository
-public interface OnboardingProcessConfigurationRepository extends CrudRepository<OnboardingProcessConfigurationEntity, Long> {
+@Service
+@AllArgsConstructor
+public class ConfigurationService {
 
-    Optional<OnboardingProcessConfigurationEntity> findByProcessType(String processType);
+    private OnboardingProcessConfigurationRepository onboardingProcessConfigurationRepository;
+
+    @Transactional(readOnly = true)
+    public Optional<OnboardingProcessConfigurationEntity> fetchConfiguration(final String processType) {
+        return onboardingProcessConfigurationRepository.findByProcessType(processType);
+    }
 }
