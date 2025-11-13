@@ -34,7 +34,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class ConfigurationService {
 
-    private OnboardingProcessConfigurationRepository onboardingProcessConfigurationRepository;
+    private final OnboardingProcessConfigurationRepository onboardingProcessConfigurationRepository;
 
     @Transactional(readOnly = true)
     public Optional<OnboardingProcessConfigurationEntity> fetchConfiguration(final String processType) {

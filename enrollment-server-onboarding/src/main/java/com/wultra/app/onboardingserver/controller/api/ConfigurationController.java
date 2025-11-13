@@ -52,7 +52,7 @@ import java.util.List;
 @RequestMapping(value = "api/configuration")
 public class ConfigurationController {
 
-    private ConfigurationService configurationService;
+    private final ConfigurationService configurationService;
 
     @PostMapping
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
