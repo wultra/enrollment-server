@@ -23,6 +23,6 @@ package com.wultra.app.onboardingserver.provider.microblink;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 public enum MicroblinkMobilePlatform {
-    IOS,
+    APPLE,
     ANDROID
 }

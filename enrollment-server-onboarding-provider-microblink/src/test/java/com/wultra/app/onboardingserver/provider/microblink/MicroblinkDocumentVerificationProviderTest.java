@@ -34,6 +34,8 @@ import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -155,7 +157,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         final var licenseKeys = Map.of(
-                MicroblinkMobilePlatform.IOS, "ios-license-key",
+                MicroblinkMobilePlatform.APPLE, "apple-license-key",
                 MicroblinkMobilePlatform.ANDROID, "android-license-key"
         );
 
@@ -168,42 +170,68 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testInitVerificationSdk_mobilePlatformNotProvided_emptyResultReturned() {
+    void testInitVerificationSdk_attributeProviderIsNull_exceptionIsThrown() {
         // given
         // -
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Collections.emptyMap());
+        final var exception = assertThrows(IllegalArgumentException.class, () -> provider.initVerificationSdk(ownerId, Collections.emptyMap()));
 
         // then
-        assertEquals(new VerificationSdkInfo(), sdkInfo);
+        assertEquals("Unsupported provider. Requested 'null', configured 'blinkid'", exception.getMessage());
     }
 
     @Test
-    void testInitVerificationSdk_unsupportedMobilePlatformProvided_emptyResultReturned() {
+    void testInitVerificationSdk_attributeProviderIsNotSupported_exceptionIsThrown() {
         // given
         // -
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "unsupported"));
+        final var exception = assertThrows(IllegalArgumentException.class, () -> provider.initVerificationSdk(ownerId, Map.of("provider", "unsupported")));
 
         // then
-        assertEquals(new VerificationSdkInfo(), sdkInfo);
+        assertEquals("Unsupported provider. Requested 'unsupported', configured 'blinkid'", exception.getMessage());
     }
 
     @Test
-    void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey() {
+    void testInitVerificationSdk_mobilePlatformNotProvided_correctResultReturned() {
         // given
         // -
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "IOS"));
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("provider", "blinkid"));
 
         // then
-        final var expectedResult = new VerificationSdkInfo();
-        expectedResult.getAttributes().put("licenseKey", "ios-license-key");
+        assertEquals(new VerificationSdkInfo(Map.of("provider", "blinkid")), sdkInfo);
+    }
 
-        assertEquals(expectedResult, sdkInfo);
+    @Test
+    void testInitVerificationSdk_unsupportedMobilePlatformProvided_correctResultReturned() {
+        // given
+        // -
+
+        // when
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("provider", "blinkid", "mobile-platform", "unsupported"));
+
+        // then
+        assertEquals(new VerificationSdkInfo(Map.of("provider", "blinkid")), sdkInfo);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "apple,apple-license-key",
+            "android,android-license-key"
+    })
+    void testInitVerificationSdk_supportedMobilePlatformProvided_correctResultReturned(final String platform, final String expectedLicense) {
+        // given
+        // -
+
+        // when
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("provider", "blinkid", "mobile-platform", platform));
+
+        // then
+        final var expectedSdkInfo = new VerificationSdkInfo(Map.of("provider", "blinkid", "license-key", expectedLicense));
+        assertEquals(expectedSdkInfo, sdkInfo);
     }
 
 

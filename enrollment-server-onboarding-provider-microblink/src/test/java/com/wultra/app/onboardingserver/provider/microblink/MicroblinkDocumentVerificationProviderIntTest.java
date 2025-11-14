@@ -164,27 +164,31 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testInitVerificationSdk_androidMobilePlatform_responseWithLicenseKey() {
+    void testInitVerificationSdk_unsupportedProvider_exceptionIsThrown() {
         // given
         // -
 
         // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "ANDROID"));
+        final var exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("provider", "unsupported"))
+        );
 
         // then
-        assertEquals(new VerificationSdkInfo(Map.of("licenseKey", "dummy-android-license-key")), result);
+        assertEquals("Unsupported provider. Requested 'unsupported', configured 'blinkid'", exception.getMessage());
     }
 
     @Test
-    void testInitVerificationSdk_iosMobilePlatform_responseWithLicenseKey() {
+    void testInitVerificationSdk_supportedMobilePlatform_responseWithCorrectAttributes() {
         // given
         // -
 
         // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "IOS"));
+        final var attributes = Map.of("provider", "blinkid", "mobile-platform", "android");
+        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, attributes);
 
         // then
-        assertEquals(new VerificationSdkInfo(Map.of("licenseKey", "dummy-ios-license-key")), result);
+        assertEquals(new VerificationSdkInfo(Map.of("provider", "blinkid", "license-key", "dummy-android-license-key")), result);
     }
 
     @Test

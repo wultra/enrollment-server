@@ -33,6 +33,7 @@ import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Validate;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.ParameterizedTypeReference;
@@ -50,6 +51,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
+
+    private static final String BLINKID_PROVIDER_NAME = "blinkid";
 
     private final Cache verificationDataCache;
     private final Cache photoCache;
@@ -70,7 +73,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         mobileSdkLicenseKeyByPlatform = mobileSdkLicenseKeys.entrySet()
                 .stream()
-                .collect(Collectors.toMap(k -> k.getKey().toString(), Map.Entry::getValue));
+                .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
     }
 
     @Override
@@ -245,13 +248,23 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) {
         logger.info("Initializing Microblink SDK for activationId {}", id.getActivationId());
 
-        final var mobilePlatform = initAttributes.getOrDefault("mobilePlatform", null);
+        final var requestedProvider = initAttributes.getOrDefault("provider", null);
+        Validate.isTrue(
+                BLINKID_PROVIDER_NAME.equals(requestedProvider),
+                "Unsupported provider. Requested '%s', configured '%s'".formatted(requestedProvider, BLINKID_PROVIDER_NAME)
+        );
+
+        final var responseAttributes = new HashMap<String, String>();
+        responseAttributes.put("provider", BLINKID_PROVIDER_NAME);
+
+        final var mobilePlatform = initAttributes.getOrDefault("mobile-platform", null);
         logger.info("Requested sdk license key for platform {}", mobilePlatform);
 
-        return Optional.ofNullable(mobilePlatform)
+        Optional.ofNullable(mobilePlatform)
                 .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(platform, null))
-                .map(licenseKey -> new VerificationSdkInfo(Map.of("licenseKey", licenseKey)))
-                .orElseGet(VerificationSdkInfo::new);
+                .ifPresent(licenseKey -> responseAttributes.put("license-key", licenseKey));
+
+        return new VerificationSdkInfo(responseAttributes);
     }
 
     private static DocumentVerificationImageSource buildImageSource(final Image image) {

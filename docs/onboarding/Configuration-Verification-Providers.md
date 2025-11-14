@@ -77,8 +77,22 @@ It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. Se
 When a document is uploaded, then it is temporarily stored in cache on Onboarding server. After all documents are uploaded, the endpoint is called for each document.
 
 The mobile SDK uses Microblink SDK to capture document images. The SDK requires license key, which is stored in Onboarding server configuration per mobile platform.
-The license key is sent in response body of `POST /api/identity/document/init-sdk` as `licenseKey` attribute. 
-In request body there should be attribute `mobilePlatform`. Possible values are `IOS` and `ANDROID`.
+
+Mandatory attributes in `POST /api/identity/document/init-sdk` request body (all values are case-sensitive):
+
+| Attribute         | Allowed values     | Description                                                                                                                                |
+|-------------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `provider`        | `blinkid`          | The document verification provider. Exception is thrown if any other value is provided.                                                    | 
+| `mobile-platform` | `apple`, `android` | The mobile platform on which the Microblink SDK is used. The `license-key` is not included in the response if any other value is provided. |
+
+
+Attributes in response body:
+
+| Attribute        | Value           | Description                                                                               |
+|------------------|-----------------|-------------------------------------------------------------------------------------------|
+| `provider`       | `blinkid`       | The document verification provider, identical to the one in request.                      |
+| `license-key`    | `{license_key}` | The license key for Microblink mobile SDK, if supported platform is provided in request.  |
+
 
 ## Presence Check
 
