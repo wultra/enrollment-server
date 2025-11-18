@@ -25,7 +25,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.innovatrics.model.api.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,7 @@ import static org.mockito.Mockito.when;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test")
+@MockitoBean(types = {IdentityVerificationRepository.class, AuditService.class})
 class InnovatricsDocumentVerificationProviderTest {
 
     @Autowired

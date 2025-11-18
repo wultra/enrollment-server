@@ -43,7 +43,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,10 +52,6 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@ConditionalOnProperty(
-        value = "enrollment-server-onboarding.onboarding-process.enabled",
-        havingValue = "true"
-)
 @RestController
 @RequestMapping(value = "api/onboarding")
 public class OnboardingController {

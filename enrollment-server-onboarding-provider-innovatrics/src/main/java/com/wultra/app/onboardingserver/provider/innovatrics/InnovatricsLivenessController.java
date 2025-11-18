@@ -33,7 +33,7 @@ import com.wultra.security.powerauth.rest.api.spring.exception.authentication.Po
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,9 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@ConditionalOnExpression("""
-        '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and ${enrollment-server-onboarding.onboarding-process.enabled} == true
-        """)
+@ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
 @RestController
 @RequestMapping(value = "api/identity")
 @AllArgsConstructor

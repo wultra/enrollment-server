@@ -27,7 +27,6 @@ The Onboarding Server uses the following public configuration properties:
 
 | Property | Default | Note |
 |---|---|---|
-| `enrollment-server-onboarding.onboarding-process.enabled` | `false` | Whether the onboarding process is enabled. |
 | `enrollment-server-onboarding.onboarding-process.otp.length` | `8` | Length of generated digital OTP codes. |
 | `enrollment-server-onboarding.onboarding-process.otp.expiration` | `5m` | Expiration time for OTP codes. |
 | `enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts` | `5` | Maximum number of failed attempts for OTP verification. |

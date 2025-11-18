@@ -32,7 +32,7 @@ import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContex
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,9 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnExpression("""
-        '${enrollment-server-onboarding.presence-check.provider}' == 'innovatrics' and ${enrollment-server-onboarding.onboarding-process.enabled} == true
-        """)
+@ConditionalOnProperty(value = "enrollment-server-onboarding.presence-check.provider", havingValue = "innovatrics")
 class InnovatricsLivenessService {
 
     private final InnovatricsApiService innovatricsApiService;
