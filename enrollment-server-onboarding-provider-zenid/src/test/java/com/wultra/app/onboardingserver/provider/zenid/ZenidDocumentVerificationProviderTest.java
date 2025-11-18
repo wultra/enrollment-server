@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2025 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,264 +15,85 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
-import com.wultra.app.enrollmentserver.model.integration.*;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.zenid.model.api.ZenidWebInitSdkResponse;
+import com.wultra.core.rest.client.base.RestClientException;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 /**
- * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * Unit tests for ZenID document verification provider.
+ *
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@SpringBootTest(classes = EnrollmentServerTestApplication.class)
-@ActiveProfiles("external-service")
-@ComponentScan("com.wultra.app.onboardingserver.docverify.zenid")
-@EnableConfigurationProperties
-@Tag("external-service")
+@ExtendWith(MockitoExtension.class)
 class ZenidDocumentVerificationProviderTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ZenidDocumentVerificationProviderTest.class);
+    @Mock
+    private ZenidRestApiService zenidApiService;
 
-    private static final String DOC_ID_CARD_BACK = "idCardBack";
-
-    private static final String DOC_ID_CARD_FRONT = "idCardFront";
-
-    private List<String> uploadIds;
-
-    private OwnerId ownerId;
-
-    @MockitoBean
-    private DocumentVerificationRepository documentVerificationRepository;
-
-    @Autowired
+    @InjectMocks
     private ZenidDocumentVerificationProvider provider;
 
-    @BeforeEach
-    public void init() {
-        ownerId = createOwnerId();
-        uploadIds = new ArrayList<>();
-    }
-
-    @AfterEach
-    public void teardown() {
-        try {
-            cleanupDocuments(ownerId);
-        } catch (Exception e) {
-            logger.warn("Unable to cleanup documents during teardown", e);
-        }
-    }
-
     @Test
-    void checkDocumentUploadTest() throws Exception {
-        SubmittedDocument document = createIdCardFrontDocument();
-        List<SubmittedDocument> documents = List.of(document);
+    void testInitVerificationSdk_providerAttributeNotPresent_exceptionIsThrown() {
+        // given
+        // -
 
-        DocumentsSubmitResult docsSubmitResult = submitDocuments(ownerId, documents);
-        DocumentSubmitResult docSubmitResult = docsSubmitResult.getResults().get(0);
-        DocumentVerificationEntity docVerification = new DocumentVerificationEntity();
-        docVerification.setType(document.getType());
-        docVerification.setUploadId(docSubmitResult.getUploadId());
-        DocumentsSubmitResult result = provider.checkDocumentUpload(ownerId, docVerification);
-
-        assertEquals(1, result.getResults().size());
-        assertEquals(docVerification.getUploadId(), result.getResults().get(0).getUploadId());
-    }
-
-    @Test
-    void submitDocumentsTest() throws Exception {
-        List<SubmittedDocument> documents = createSubmittedDocuments();
-
-        DocumentsSubmitResult result = submitDocuments(ownerId, documents);
-
-        assertSubmittedDocuments(ownerId, documents, result);
-    }
-
-    @Test
-    void verifyDocumentsTest() throws Exception {
-        List<SubmittedDocument> documents = createSubmittedDocuments();
-
-        DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
-
-        final List<String> uploadIds = submitResult.getResults().stream()
-                .map(DocumentSubmitResult::getUploadId)
-                .toList();
-
-        DocumentsVerificationResult verificationResult = provider.verifyDocuments(ownerId, uploadIds);
-
-        assertNotNull(verificationResult.getVerificationId());
-        assertEquals(uploadIds.size(), verificationResult.getResults().size());
-    }
-
-    @Test
-    void getVerificationResultTest() throws Exception {
-        List<SubmittedDocument> documents = createSubmittedDocuments();
-
-        DocumentsSubmitResult submitResult = provider.submitDocuments(ownerId, documents);
-
-        final List<String> uploadIds = submitResult.getResults().stream()
-                .map(DocumentSubmitResult::getUploadId)
-                .toList();
-
-        DocumentsVerificationResult verifyDocumentsResult = provider.verifyDocuments(ownerId, uploadIds);
-        Mockito.when(documentVerificationRepository.findAllUploadIds(verifyDocumentsResult.getVerificationId()))
-                .thenReturn(uploadIds);
-
-        DocumentsVerificationResult verificationResult = provider.getVerificationResult(ownerId, verifyDocumentsResult.getVerificationId());
-
-        assertEquals(verifyDocumentsResult.getVerificationId(), verificationResult.getVerificationId());
-        assertEquals(uploadIds.size(), verificationResult.getResults().size());
-    }
-
-    @Test
-    void getPhotoTest() throws Exception {
-        List<SubmittedDocument> documents = createSubmittedDocuments();
-
-        DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
-
-        Image photo = provider.getPhoto(result.getExtractedPhotoId());
-
-        assertNotNull(photo.getData());
-        assertNotNull(photo.getFilename());
-    }
-
-    @Test
-    void cleanupDocumentsTest() throws Exception {
-        List<SubmittedDocument> documents = createSubmittedDocuments();
-
-        submitDocuments(ownerId, documents);
-
-        cleanupDocuments(ownerId);
-    }
-
-    @Test
-    void parseRejectionReasonsTest() throws Exception {
-        DocumentResultEntity docResult = new DocumentResultEntity();
-        docResult.setVerificationResult("[{\"Ok\": false, \"Issues\":[{\"IssueDescription\": \"Rejection reason\"}]}]");
-        List<String> rejectionReasons = provider.parseRejectionReasons(docResult);
-        assertEquals(List.of("Rejection reason"), rejectionReasons);
-    }
-
-    @Test
-    void initVerificationSdkTest() throws Exception {
-        Map<String, String> attributes = Map.of("sdk-init-token", UUID.randomUUID().toString());
-        VerificationSdkInfo verificationSdkInfo = provider.initVerificationSdk(ownerId, attributes);
-        assertNotNull(verificationSdkInfo.getAttributes().get("zenid-sdk-init-response"), "Missing SDK init response");
-    }
-
-    private void cleanupDocuments(OwnerId ownerId) throws Exception {
-        if (!uploadIds.isEmpty()) {
-            provider.cleanupDocuments(ownerId, uploadIds);
-        }
-    }
-
-    private DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> documents) throws Exception {
-        DocumentsSubmitResult result = provider.submitDocuments(ownerId, documents);
-
-        final List<String> uploadIdsFromSubmit = result.getResults().stream()
-                .map(DocumentSubmitResult::getUploadId)
-                .toList();
-        uploadIds.addAll(uploadIdsFromSubmit);
-
-        return result;
-    }
-
-    private List<SubmittedDocument> createSubmittedDocuments() throws Exception {
-        return List.of(
-                createIdCardFrontDocument(),
-                createIdCardBackDocument()
+        // when
+        final var exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> provider.initVerificationSdk(new OwnerId(), Map.of("sdk-init-token", "dummy-token"))
         );
+
+        // then
+        assertEquals("Requested unsupported provider 'null'", exception.getMessage());
     }
 
-    private SubmittedDocument createIdCardFrontDocument() throws IOException {
-        SubmittedDocument idCardFront = new SubmittedDocument();
-        idCardFront.setDocumentId(DOC_ID_CARD_FRONT);
-        Image idCardFrontPhoto = loadPhoto("/images/specimen_id_front.jpg");
-        idCardFront.setPhoto(idCardFrontPhoto);
-        idCardFront.setSide(CardSide.FRONT);
-        idCardFront.setType(DocumentType.ID_CARD);
+    @Test
+    void testInitVerificationSdk_unsupportedProviderInAttributes_exceptionIsThrown() {
+        // given
+        // -
 
-        return idCardFront;
+        // when
+        final var exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> provider.initVerificationSdk(new OwnerId(), Map.of("sdk-init-token", "dummy-token", "provider", "unsupported"))
+        );
+
+        // then
+        assertEquals("Requested unsupported provider 'unsupported'", exception.getMessage());
     }
 
-    private SubmittedDocument createIdCardBackDocument() throws IOException {
-        SubmittedDocument idCardBack = new SubmittedDocument();
-        idCardBack.setDocumentId(DOC_ID_CARD_BACK);
-        Image idCardBackPhoto = loadPhoto("/images/specimen_id_back.jpg");
-        idCardBack.setPhoto(idCardBackPhoto);
-        idCardBack.setSide(CardSide.BACK);
-        idCardBack.setType(DocumentType.ID_CARD);
+    @Test
+    void testInitVerificationSdk_allMandatoryAttributesPresent_correctResponseIsReturned() throws RemoteCommunicationException, DocumentVerificationException, RestClientException {
+        // given
+        final var apiResponse = new ZenidWebInitSdkResponse();
+        apiResponse.setResponse("dummy-response");
 
-        return idCardBack;
+        when(zenidApiService.initSdk("dummy-token")).thenReturn(ResponseEntity.ok(apiResponse));
+
+        // when
+        final var response = provider.initVerificationSdk(new OwnerId(), Map.of("sdk-init-token", "dummy-token", "provider", "zenid"));
+
+        // then
+        final var expectedResponse = new VerificationSdkInfo(Map.of("provider", "zenid", "zenid-sdk-init-response", "dummy-response"));
+        assertEquals(expectedResponse, response);
     }
-
-    private OwnerId createOwnerId() {
-        OwnerId ownerId = new OwnerId();
-        ownerId.setActivationId("integration-test-" + UUID.randomUUID());
-        ownerId.setUserId("integration-test-user-id");
-        return ownerId;
-    }
-
-    private static Image loadPhoto(final String path) throws IOException {
-        final File file = new File(path);
-
-        return Image.builder()
-                .data(readImageData(path))
-                .filename(file.getName())
-                .build();
-    }
-
-    private static byte[] readImageData(final String path) throws IOException {
-        try (InputStream stream = ZenidDocumentVerificationProviderTest.class.getResourceAsStream(path)) {
-            if (stream == null) {
-                throw new IllegalStateException("Unable to get a stream for: " + path);
-            }
-            return stream.readAllBytes();
-        }
-    }
-
-    private static void assertSubmittedDocuments(OwnerId ownerId, List<SubmittedDocument> documents, DocumentsSubmitResult result) {
-        assertEquals(documents.size(), result.getResults().size(), "Different size of submitted documents than expected");
-        assertNotNull(result.getExtractedPhotoId(), "Missing extracted photoId");
-
-        final List<String> submittedDocsIds = result.getResults().stream()
-                .map(DocumentSubmitResult::getDocumentId)
-                .toList();
-        assertEquals(documents.size(), submittedDocsIds.size(), "Different size of unique submitted documents than expected");
-        documents.forEach(document ->
-                assertTrue(submittedDocsIds.contains(document.getDocumentId())));
-
-        result.getResults().forEach(submitResult -> {
-            assertNull(submitResult.getErrorDetail());
-            assertNull(submitResult.getRejectReason());
-
-            assertNotNull(submitResult.getUploadId());
-        });
-    }
-
 }
