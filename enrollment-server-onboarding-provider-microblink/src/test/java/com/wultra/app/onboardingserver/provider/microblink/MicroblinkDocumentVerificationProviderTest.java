@@ -30,10 +30,15 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -98,6 +103,9 @@ class MicroblinkDocumentVerificationProviderTest {
     @Mock
     private RestClient restClient;
 
+    @Mock
+    private PowerAuthClient powerAuthClient;
+
     private MicroblinkDocumentVerificationProvider provider;
 
     @Captor
@@ -155,7 +163,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         final var licenseKeys = Map.of(
-                MicroblinkMobilePlatform.IOS, "ios-license-key",
+                MicroblinkMobilePlatform.APPLE, "apple-license-key",
                 MicroblinkMobilePlatform.ANDROID, "android-license-key"
         );
 
@@ -163,49 +171,72 @@ class MicroblinkDocumentVerificationProviderTest {
                 cacheManager,
                 restClient,
                 new DocumentVerificationResponseParser(objectMapper),
-                licenseKeys
+                licenseKeys,
+                powerAuthClient
         );
     }
 
     @Test
-    void testInitVerificationSdk_mobilePlatformNotProvided_emptyResultReturned() {
+    void testInitVerificationSdk_platformFetchFail_exceptionIsThrown() throws PowerAuthClientException {
         // given
-        // -
+        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenThrow(new PowerAuthClientException("Test exception"));
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Collections.emptyMap());
+        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.initVerificationSdk(ownerId, Map.of()));
 
         // then
-        assertEquals(new VerificationSdkInfo(), sdkInfo);
+        assertEquals("Error when fetching mobile platform", exception.getMessage());
+        assertNotNull(exception.getCause());
     }
 
     @Test
-    void testInitVerificationSdk_unsupportedMobilePlatformProvided_emptyResultReturned() {
+    void testInitVerificationSdk_unsupportedPlatformFetchedFromPowerAuth_resultWithoutLicenseKey() throws PowerAuthClientException, RemoteCommunicationException {
         // given
-        // -
+        final var response = new GetActivationStatusResponse();
+        response.setPlatform("unsupported");
+
+        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenReturn(response);
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "unsupported"));
+        final var result = provider.initVerificationSdk(ownerId, Map.of());
 
         // then
-        assertEquals(new VerificationSdkInfo(), sdkInfo);
+        assertEquals(new VerificationSdkInfo(), result);
     }
 
     @Test
-    void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey() {
+    void testInitVerificationSdk_supportedPlatformFetchedFromPowerAuth_resultWithLicenseKey() throws PowerAuthClientException, RemoteCommunicationException {
+        // given
+        final var response = new GetActivationStatusResponse();
+        response.setPlatform("android");
+
+        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenReturn(response);
+
+        // when
+        final var result = provider.initVerificationSdk(ownerId, Map.of());
+
+        // then
+        assertEquals(new VerificationSdkInfo(Map.of("license-key", "android-license-key")), result);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "apple,apple-license-key",
+            "android,android-license-key"
+    })
+    void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey(final String platform, final String expectedLicense) throws RemoteCommunicationException {
         // given
         // -
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("mobilePlatform", "IOS"));
+        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("platform", platform));
 
         // then
         final var expectedResult = new VerificationSdkInfo();
-        expectedResult.getAttributes().put("licenseKey", "ios-license-key");
+        expectedResult.getAttributes().put("license-key", expectedLicense);
 
         assertEquals(expectedResult, sdkInfo);
     }
-
 
     @Test
     void testSubmitDocuments_verificationDataIsCreated_correctResponseIsReturned() {

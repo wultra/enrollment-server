@@ -32,6 +32,8 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -53,24 +55,28 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private final Cache verificationDataCache;
     private final Cache photoCache;
-    private final RestClient restClient;
+    private final RestClient microblinkClient;
     private final DocumentVerificationResponseParser responseParser;
     private final Map<String, String> mobileSdkLicenseKeyByPlatform;
+    private final PowerAuthClient powerAuthClient;
 
     public MicroblinkDocumentVerificationProvider(
             CacheManager cacheManager,
-            RestClient restClient,
+            RestClient microblinkClient,
             DocumentVerificationResponseParser responseParser,
-            Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys
+            Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys,
+            PowerAuthClient powerAuthClient
     ) {
         this.verificationDataCache = cacheManager.getCache(MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME);
         this.photoCache = cacheManager.getCache(MicroblinkConfigProperties.PHOTO_CACHE_NAME);
-        this.restClient = restClient;
+        this.microblinkClient = microblinkClient;
         this.responseParser = responseParser;
 
         mobileSdkLicenseKeyByPlatform = mobileSdkLicenseKeys.entrySet()
                 .stream()
-                .collect(Collectors.toMap(k -> k.getKey().toString(), Map.Entry::getValue));
+                .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
+
+        this.powerAuthClient = powerAuthClient;
     }
 
     @Override
@@ -242,15 +248,20 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public VerificationSdkInfo initVerificationSdk(OwnerId id, Map<String, String> initAttributes) {
-        logger.info("Initializing Microblink SDK for activationId {}", id.getActivationId());
+    public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes) throws RemoteCommunicationException {
+        final var activationId = ownerId.getActivationId();
+        logger.info("Initializing Microblink SDK for activationId {}", activationId);
 
-        final var mobilePlatform = initAttributes.getOrDefault("mobilePlatform", null);
+        var mobilePlatform = initAttributes.getOrDefault("platform", null);
         logger.info("Requested sdk license key for platform {}", mobilePlatform);
+
+        if (mobilePlatform == null || !mobileSdkLicenseKeyByPlatform.containsKey(mobilePlatform)) {
+            mobilePlatform = fetchMobilePlatform(activationId);
+        }
 
         return Optional.ofNullable(mobilePlatform)
                 .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(platform, null))
-                .map(licenseKey -> new VerificationSdkInfo(Map.of("licenseKey", licenseKey)))
+                .map(licenseKey -> new VerificationSdkInfo(Map.of("license-key", licenseKey)))
                 .orElseGet(VerificationSdkInfo::new);
     }
 
@@ -297,7 +308,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             final var request = buildRequest(frontDocument, backDocument);
 
-            final var response = restClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
+            final var response = microblinkClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
             final var body = Optional.ofNullable(response)
                     .map(HttpEntity::getBody)
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
@@ -451,5 +462,14 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             );
         }
 
+    }
+
+    private String fetchMobilePlatform(final String activationId) throws RemoteCommunicationException {
+        try {
+            final var response = powerAuthClient.getActivationStatus(activationId);
+            return response.getPlatform();
+        } catch (PowerAuthClientException e) {
+            throw new RemoteCommunicationException("Error when fetching mobile platform", e);
+        }
     }
 }
