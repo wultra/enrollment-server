@@ -45,8 +45,8 @@ public record ConfigurationResponse(
 
     @Builder
     public record Documents(
-            @Schema(description = "Number of required documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED)
-            byte requiredDocumentsCount,
+            @Schema(description = "Number of required documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
+            int requiredDocumentsCount,
             List<Document> items
     ) {
     }
