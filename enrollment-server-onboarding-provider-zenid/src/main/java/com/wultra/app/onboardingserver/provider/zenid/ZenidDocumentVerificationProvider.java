@@ -58,6 +58,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private static final String SDK_INIT_RESPONSE = "zenid-sdk-init-response";
     private static final String SDK_INIT_TOKEN = "sdk-init-token";
+    private static final String ZENID_PROVIDER_NAME = "zenid";
 
     private static final String INTERNAL_SERVER_ERROR = "InternalServerError";
     private static final String LICENSE_INVALID = "License invalid";
@@ -339,6 +340,9 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         Validate.isTrue(initAttributes.containsKey(SDK_INIT_TOKEN), "Missing initialization token for ZenID SDK");
         String token = initAttributes.get(SDK_INIT_TOKEN);
 
+        final var requestedProvider = initAttributes.getOrDefault("provider", null);
+        Validate.isTrue(ZENID_PROVIDER_NAME.equals(requestedProvider), "Requested unsupported provider '%s'".formatted(requestedProvider));
+
         ResponseEntity<ZenidWebInitSdkResponse> responseEntity;
         try {
             responseEntity = zenidApiService.initSdk(token);
@@ -361,9 +365,8 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                         responseEntity.getStatusCode(), response, id));
         }
 
-        VerificationSdkInfo verificationSdkInfo = new VerificationSdkInfo();
-        verificationSdkInfo.getAttributes().put(SDK_INIT_RESPONSE, response.getResponse());
-        return verificationSdkInfo;
+        final var responseAttributes = Map.of(SDK_INIT_RESPONSE, response.getResponse(), "provider", ZENID_PROVIDER_NAME);
+        return new VerificationSdkInfo(responseAttributes);
     }
 
     private DocumentSubmitResult createDocumentSubmitResult(OwnerId id,
