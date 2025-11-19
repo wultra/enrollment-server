@@ -163,7 +163,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         final var licenseKeys = Map.of(
-                MicroblinkMobilePlatform.APPLE, "apple-license-key",
+                MicroblinkMobilePlatform.IOS, "ios-license-key",
                 MicroblinkMobilePlatform.ANDROID, "android-license-key"
         );
 
@@ -221,7 +221,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @ParameterizedTest
     @CsvSource({
-            "apple,apple-license-key",
+            "ios,ios-license-key",
             "android,android-license-key"
     })
     void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey(final String platform, final String expectedLicense) throws RemoteCommunicationException {

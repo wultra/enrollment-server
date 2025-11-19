@@ -210,15 +210,15 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testInitVerificationSdk_appleMobilePlatform_responseWithLicenseKey() throws RemoteCommunicationException {
+    void testInitVerificationSdk_iosMobilePlatform_responseWithLicenseKey() throws RemoteCommunicationException {
         // given
         // -
 
         // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("platform", "apple"));
+        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("platform", "ios"));
 
         // then
-        assertEquals(new VerificationSdkInfo(Map.of("license-key", "dummy-apple-license-key")), result);
+        assertEquals(new VerificationSdkInfo(Map.of("license-key", "dummy-ios-license-key")), result);
     }
 
     @Test
