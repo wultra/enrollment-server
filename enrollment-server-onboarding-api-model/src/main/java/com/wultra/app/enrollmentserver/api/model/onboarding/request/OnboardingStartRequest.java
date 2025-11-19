@@ -17,7 +17,10 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
 import java.util.Map;
 
@@ -26,14 +29,17 @@ import java.util.Map;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartRequest {
+@Builder
+@Jacksonized
+public record OnboardingStartRequest(
 
-    private Map<String, Object> identification;
+        @Schema(description = "The user identification. The structure of the identification is vendor specific.")
+        @NotEmpty
+        Map<String, Object> identification,
 
-    /**
-     * Optional FDS data, structure is vendor specific.
-     */
-    private Map<String, Object> fdsData;
+        @Schema(description = "Optional FDS data, structure is vendor specific.")
+        Map<String, Object> fdsData,
 
+        @Schema(description = "The process type identification. If not specified, the default process type will be used.", example = "reactivation")
+        String processType) {
 }
