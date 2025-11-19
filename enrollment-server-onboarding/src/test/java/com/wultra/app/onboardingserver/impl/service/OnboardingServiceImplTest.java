@@ -25,10 +25,10 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.core.http.common.request.RequestContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -42,13 +42,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test")
 @Sql
+@Transactional
 class OnboardingServiceImplTest {
 
     @Autowired
     private OnboardingServiceImpl tested;
-
-    @Value("${enrollment-server-onboarding.onboarding-process.default-type:}")
-    private String defaultProcessType;
 
     @Test
     void testStartProcess() throws Exception {
