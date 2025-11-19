@@ -31,14 +31,15 @@ import java.util.Map;
  */
 @Builder
 @Jacksonized
-public record OnboardingStartRequest (
+public record OnboardingStartRequest(
 
-    @NotEmpty
-    Map<String, Object> identification,
+        @Schema(description = "The user identification. The structure of the identification is vendor specific.")
+        @NotEmpty
+        Map<String, Object> identification,
 
-    @Schema(description = "Optional FDS data, structure is vendor specific.")
-    Map<String, Object> fdsData,
+        @Schema(description = "Optional FDS data, structure is vendor specific.")
+        Map<String, Object> fdsData,
 
-    @Schema(description = "The process type identification. If not specified, the default process type will be used.", example = "reactivation")
-    String processType) {
+        @Schema(description = "The process type identification. If not specified, the default process type will be used.", example = "reactivation")
+        String processType) {
 }

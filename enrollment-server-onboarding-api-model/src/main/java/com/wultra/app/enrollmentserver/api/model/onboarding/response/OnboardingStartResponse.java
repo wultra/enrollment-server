@@ -34,12 +34,15 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public record OnboardingStartResponse(
 
+        @Schema(description = "Process ID of the onboarding process.", format = "uuid", example = "edebea8d-5eb4-4b92-b366-2a12a0dafe53")
         @NotBlank
         String processId,
 
+        @Schema(description = "Current status of the onboarding process.")
         @NotNull
         OnboardingStatus onboardingStatus,
 
+        @Schema(description = "Configuration data for the onboarding process.")
         @NotNull
         ConfigurationDataDto config,
 
