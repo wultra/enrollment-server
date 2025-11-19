@@ -27,4 +27,4 @@ Also added a foreign key `process_config_id` to the table `es_onboarding_process
 The following changes were made to the onboarding start endpoint:
 
 - Added a new optional request field `processType` to specify which onboarding process type should be used.
-- Added a new optional response field `activationCode` to return activation code.`
+- Added a new optional response field `activationCode` to return activation code.

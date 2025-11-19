@@ -19,6 +19,8 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
 import java.util.Map;
 
@@ -27,6 +29,8 @@ import java.util.Map;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+@Builder
+@Jacksonized
 public record OnboardingStartRequest (
 
     @NotEmpty
