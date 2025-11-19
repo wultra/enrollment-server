@@ -32,7 +32,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessConfigurationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -57,6 +59,7 @@ import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -78,6 +81,8 @@ import java.util.Map;
 public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private static final String IDENTIFICATION_DATA_DATE_FORMAT = "yyyy-MM-dd";
+
+    private final OnboardingProcessConfigurationRepository onboardingProcessConfigurationRepository;
 
     private final OnboardingConfig onboardingConfig;
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -114,6 +119,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Autowired
     public OnboardingServiceImpl(
             final OnboardingProcessRepository onboardingProcessRepository,
+            final OnboardingProcessConfigurationRepository onboardingProcessConfigurationRepository,
             final OnboardingConfig config,
             final IdentityVerificationConfig identityVerificationConfig,
             final OtpServiceImpl otpService,
@@ -128,6 +134,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
         this.integrationConfigDto = new ConfigurationDataDto();
+        this.onboardingProcessConfigurationRepository = onboardingProcessConfigurationRepository;
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
         integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
     }
@@ -153,7 +160,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
                 .map(it -> resumeExistingProcess(it, identification, fdsData, requestContext))
-                .orElseGet(() -> createNewProcess(identification, identificationData, fdsData, requestContext));
+                .orElseGet(() -> createNewProcessAndLookupUser(request, identificationData, requestContext));
 
         // Check for brute force attacks
         final Calendar c = Calendar.getInstance();
@@ -438,27 +445,47 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         }
     }
 
-    private OnboardingProcessEntity createNewProcess(
-            final Map<String, Object> identification,
+    @SneakyThrows(OnboardingProcessException.class)
+    private OnboardingProcessEntity createNewProcessAndLookupUser(
+            final OnboardingStartRequest request,
             final String identificationData,
-            final Map<String, Object> fdsData,
             final RequestContext requestContext) {
 
-        final OnboardingProcessEntity process = createNewProcess(identificationData, fdsData, requestContext);
+        final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUser(process, identification);
+        final String userId = lookupUser(process, request.identification());
         process.setUserId(userId);
         auditService.audit(process, "Process started for user: {}", userId);
         return process;
     }
 
-    private OnboardingProcessEntity createNewProcess(final String identificationData, final Map<String, Object> fdsData, final RequestContext requestContext) {
+    private OnboardingProcessEntity createNewProcess(final OnboardingStartRequest request, final String identificationData, final RequestContext requestContext) throws OnboardingProcessException {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setIdentificationData(identificationData);
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
-        setProcessCustomData(process, fdsData, requestContext);
+        process.setProcessConfiguration(fetchProcessConfiguration(request.processType()));
+        setProcessCustomData(process, request.fdsData(), requestContext);
         return onboardingProcessRepository.save(process);
+    }
+
+    private OnboardingProcessConfigurationEntity fetchProcessConfiguration(final String processType) throws OnboardingProcessException {
+        return onboardingProcessConfigurationRepository.findByProcessType(resolveProcessType(processType))
+                .orElseThrow(() -> new OnboardingProcessException("No configuration found for process type: " + processType));
+    }
+
+    private String resolveProcessType(final String processType) throws OnboardingProcessException {
+        if (StringUtils.isNotBlank(processType)) {
+            return processType;
+        }
+
+        logger.debug("Process type missing, looking for default value");
+        final String defaultProcessType = onboardingConfig.getDefaultProcessType();
+        if (StringUtils.isNotBlank(defaultProcessType)) {
+            return defaultProcessType;
+        } else {
+            throw new OnboardingProcessException("Default process type is not configured.");
+        }
     }
 
     private static void setProcessCustomData(final OnboardingProcessEntity process, final Map<String, Object> fdsData, final RequestContext requestContext) {

@@ -53,4 +53,10 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.max-processes-per-day:5}")
     private int maxProcessCountPerDay;
 
+    /**
+     * Default process type used for starting onboarding if not specified by the mobile application.
+     */
+    @Value("${enrollment-server-onboarding.onboarding-process.default-type:}")
+    private String defaultProcessType;
+
 }

@@ -25,17 +25,18 @@ The Onboarding Server uses the following public configuration properties:
 
 ## Onboarding Process Configuration
 
-| Property | Default | Note |
-|---|---|---|
-| `enrollment-server-onboarding.onboarding-process.otp.length` | `8` | Length of generated digital OTP codes. |
-| `enrollment-server-onboarding.onboarding-process.otp.expiration` | `5m` | Expiration time for OTP codes. |
-| `enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts` | `5` | Maximum number of failed attempts for OTP verification. |
-| `enrollment-server-onboarding.onboarding-process.otp.resend-period` | `30s` | A time period after which next OTP can be sent. |
-| `enrollment-server-onboarding.onboarding-process.expiration` | `3h` | Onboarding process expiration time. |
-| `enrollment-server-onboarding.onboarding-process.activation.expiration` | `5m` | Expiration of activations used within an onboarding process. |
-| `enrollment-server-onboarding.onboarding-process.verification.expiration` | `1h` | Expiration of identity verification within an onboarding process. |
-| `enrollment-server-onboarding.onboarding-process.max-processes-per-day` | `5` | Maximum number of onboarding processes during last 24 hours per user. |
-| `enrollment-server-onboarding.onboarding-process.max-error-score` | `15` | Maximum error score for an onboarding process. |
+| Property                                                                  | Default   | Note                                                                                          |
+|---------------------------------------------------------------------------|-----------|-----------------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.onboarding-process.otp.length`              | `8`       | Length of generated digital OTP codes.                                                        |
+| `enrollment-server-onboarding.onboarding-process.otp.expiration`          | `5m`      | Expiration time for OTP codes.                                                                |
+| `enrollment-server-onboarding.onboarding-process.otp.max-failed-attempts` | `5`       | Maximum number of failed attempts for OTP verification.                                       |
+| `enrollment-server-onboarding.onboarding-process.otp.resend-period`       | `30s`     | A time period after which next OTP can be sent.                                               |
+| `enrollment-server-onboarding.onboarding-process.expiration`              | `3h`      | Onboarding process expiration time.                                                           |
+| `enrollment-server-onboarding.onboarding-process.activation.expiration`   | `5m`      | Expiration of activations used within an onboarding process.                                  |
+| `enrollment-server-onboarding.onboarding-process.verification.expiration` | `1h`      | Expiration of identity verification within an onboarding process.                             |
+| `enrollment-server-onboarding.onboarding-process.max-processes-per-day`   | `5`       | Maximum number of onboarding processes during last 24 hours per user.                         |
+| `enrollment-server-onboarding.onboarding-process.max-error-score`         | `15`      | Maximum error score for an onboarding process.                                                |
+| `enrollment-server-onboarding.onboarding-process.default-type`            | `_empty_` | Default process type used for starting onboarding if not specified by the mobile application. |
 
 ## Identity Verification Configuration
 
