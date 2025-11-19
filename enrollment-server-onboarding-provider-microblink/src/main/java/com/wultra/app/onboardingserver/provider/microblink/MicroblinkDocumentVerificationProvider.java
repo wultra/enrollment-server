@@ -55,21 +55,21 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private final Cache verificationDataCache;
     private final Cache photoCache;
-    private final RestClient microblinkClient;
+    private final RestClient microblinkRestClient;
     private final DocumentVerificationResponseParser responseParser;
     private final Map<String, String> mobileSdkLicenseKeyByPlatform;
     private final PowerAuthClient powerAuthClient;
 
     public MicroblinkDocumentVerificationProvider(
             CacheManager cacheManager,
-            RestClient microblinkClient,
+            RestClient microblinkRestClient,
             DocumentVerificationResponseParser responseParser,
             Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys,
             PowerAuthClient powerAuthClient
     ) {
         this.verificationDataCache = cacheManager.getCache(MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME);
         this.photoCache = cacheManager.getCache(MicroblinkConfigProperties.PHOTO_CACHE_NAME);
-        this.microblinkClient = microblinkClient;
+        this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
 
         mobileSdkLicenseKeyByPlatform = mobileSdkLicenseKeys.entrySet()
@@ -308,7 +308,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             final var request = buildRequest(frontDocument, backDocument);
 
-            final var response = microblinkClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
+            final var response = microblinkRestClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
             final var body = Optional.ofNullable(response)
                     .map(HttpEntity::getBody)
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
