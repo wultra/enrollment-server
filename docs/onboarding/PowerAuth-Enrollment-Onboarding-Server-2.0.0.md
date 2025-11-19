@@ -17,3 +17,14 @@ For manual changes use SQL scripts:
 
 A new table `es_onboarding_process_configuration` has been added.
 Also added a foreign key `process_config_id` to the table `es_onboarding_process`.
+
+
+## REST API Changes
+
+
+### Onboarding Start
+
+The following changes were made to the onboarding start endpoint:
+
+- Added a new optional request field `processType` to specify which onboarding process type should be used.
+- Added a new optional response field `activationCode` to return activation code.`

@@ -146,9 +146,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OnboardingStartRequest request,
             final RequestContext requestContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException {
 
-        final Map<String, Object> identification = request.getIdentification();
+        final Map<String, Object> identification = request.identification();
         final String identificationData = parseIdentificationData(identification);
-        final Map<String, Object> fdsData = request.getFdsData();
+        final Map<String, Object> fdsData = request.fdsData();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock");
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdentificationDataAndStatusWithLock(identificationData, OnboardingStatus.ACTIVATION_IN_PROGRESS)
@@ -181,11 +181,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             sendOtp(process, otpCode);
         }
 
-        OnboardingStartResponse response = new OnboardingStartResponse();
-        response.setProcessId(process.getId());
-        response.setOnboardingStatus(process.getStatus());
-        response.setConfig(integrationConfigDto);
-        return response;
+        return OnboardingStartResponse.builder()
+                .processId(process.getId())
+                .onboardingStatus(process.getStatus())
+                .config(integrationConfigDto)
+                .activationCode(null) // TODO (racansky, 2025-11-19, #1359) fill activation code
+                .build();
     }
 
     /**

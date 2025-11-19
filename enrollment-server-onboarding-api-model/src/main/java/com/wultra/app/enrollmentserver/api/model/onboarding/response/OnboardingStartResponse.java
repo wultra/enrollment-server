@@ -19,18 +19,39 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
 /**
  * Response class used when starting the onboarding process.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@Data
-public class OnboardingStartResponse {
+@Builder
+@Jacksonized
+public record OnboardingStartResponse(
 
-    private String processId;
-    private OnboardingStatus onboardingStatus;
-    private ConfigurationDataDto config;
+        @NotBlank
+        String processId,
 
+        @NotNull
+        OnboardingStatus onboardingStatus,
+
+        @NotNull
+        ConfigurationDataDto config,
+
+        @Schema(description = "Activation code used during the activation process. If not present, the activation is created later on in the onboarding process. Uses 4x5 characters in Base32 encoding separated by a '-' character.", example = "KA4PD-RTIE2-KOP3U-H53EA", minLength = 23, maxLength = 23)
+        String activationCode) {
+
+    @Override
+    public String toString() {
+        return "OnboardingStartResponse{" +
+                "processId='" + processId + '\'' +
+                ", onboardingStatus=" + onboardingStatus +
+                ", config=" + config +
+                '}';
+    }
 }
