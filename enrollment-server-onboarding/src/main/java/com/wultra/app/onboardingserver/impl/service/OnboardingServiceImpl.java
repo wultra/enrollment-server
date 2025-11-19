@@ -469,8 +469,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return onboardingProcessRepository.save(process);
     }
 
-    private OnboardingProcessConfigurationEntity fetchProcessConfiguration(final String processType) throws OnboardingProcessException {
-        return onboardingProcessConfigurationRepository.findByProcessType(resolveProcessType(processType))
+    private OnboardingProcessConfigurationEntity fetchProcessConfiguration(final String source) throws OnboardingProcessException {
+        final String processType = resolveProcessType(source);
+        return onboardingProcessConfigurationRepository.findByProcessType(processType)
                 .orElseThrow(() -> new OnboardingProcessException("No configuration found for process type: " + processType));
     }
 
