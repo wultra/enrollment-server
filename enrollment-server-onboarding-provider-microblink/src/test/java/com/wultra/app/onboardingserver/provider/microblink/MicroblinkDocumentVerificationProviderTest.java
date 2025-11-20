@@ -894,7 +894,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(document.getRejectReason());
         assertNull(document.getValidationResult());
         assertNull(document.getErrorDetail());
-        assertNull(document.getExtractedData());
+        assertEquals("{}", document.getExtractedData());
     }
 
     private DocumentVerificationRequest buildMicroblinkRequest(final byte[] documentFrontImageData, final byte[] documentBackImageData) {

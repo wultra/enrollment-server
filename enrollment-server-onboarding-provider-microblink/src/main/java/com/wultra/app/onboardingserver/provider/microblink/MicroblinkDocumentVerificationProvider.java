@@ -124,6 +124,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     final var result = new DocumentSubmitResult();
                     result.setDocumentId(document.documentId());
                     result.setUploadId(document.uploadId());
+                    // Setting the extracted data to an empty JSON object is important here. Leaving it null will prevent
+                    // the document from being passed to the next step and verified. See DocumentProcessingService::processDocsSubmitResults.
+                    result.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
                     return result;
                 })
                 .toList();
