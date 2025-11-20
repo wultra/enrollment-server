@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,8 +56,9 @@ class OnboardingServiceImplTest {
                 .processType("reactivation")
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context);
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
@@ -71,8 +73,9 @@ class OnboardingServiceImplTest {
                 .processType("") // blank on purpose
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context);
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
@@ -87,8 +90,9 @@ class OnboardingServiceImplTest {
                 .processType("non-existing")
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
 
-        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context));
+        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context, encryptionContext));
 
         assertEquals("No configuration found for process type: non-existing", result.getMessage());
     }

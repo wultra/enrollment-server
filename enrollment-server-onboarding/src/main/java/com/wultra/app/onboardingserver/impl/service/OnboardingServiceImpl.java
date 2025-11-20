@@ -57,6 +57,7 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -151,7 +152,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public OnboardingStartResponse startOnboarding(
             final OnboardingStartRequest request,
-            final RequestContext requestContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException {
+            final RequestContext requestContext,
+            final EncryptionContext encryptionContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         final Map<String, Object> identification = request.identification();
         final String identificationData = parseIdentificationData(identification);
@@ -182,7 +184,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         if (userId == null) {
-            logger.debug("User ID is null, OTP is not sent");
+            logger.info("User ID is null, OTP is not sent");
         } else {
             logger.debug("Sending OTP for user ID: {}", userId);
             sendOtp(process, otpCode);
@@ -192,8 +194,19 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .processId(process.getId())
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
-                .activationCode(null) // TODO (racansky, 2025-11-19, #1359) fill activation code
+                .activationCode(fetchActivationCode(userId, encryptionContext.getApplicationKey()))
                 .build();
+    }
+
+    private String fetchActivationCode(final String userId, final String applicationKey) throws RemoteCommunicationException {
+        if (userId != null) {
+            // TODO improve parameters
+            return activationService.initActivation(userId, applicationKey);
+        } else {
+            // TODO generate fake activation code
+            logger.info("User ID is null, generating fake activationCode");
+            return null;
+        }
     }
 
     /**
