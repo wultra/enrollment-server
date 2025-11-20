@@ -492,7 +492,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
             assertNull(actualDocument.getRejectReason());
             assertNull(actualDocument.getValidationResult());
             assertNull(actualDocument.getErrorDetail());
-            assertNull(actualDocument.getExtractedData());
+            assertEquals("{}", actualDocument.getExtractedData());
         }
     }
 
