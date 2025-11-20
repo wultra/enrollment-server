@@ -669,10 +669,17 @@ Approves an operation with given ID and data. This endpoint requires a signature
 {
   "requestObject": {
     "id": "3699a9c0-45f0-458d-84bc-5bde7ec384f7",
-    "data": "A1*A100CZK*Q238400856\/0300**D20190629*NUtility Bill Payment - 05\/2019"
+    "data": "A1*A100CZK*Q238400856\/0300**D20190629*NUtility Bill Payment - 05\/2019",
+    "mobileTokenData": {
+      "additionalProp1": "string",
+      "additionalProp2": "string",
+      "additionalProp3": "string"
+    }
   }
 }
 ```
+
+Optional `mobileTokenData`, structure is customer-specific. Could be used, for example, for storing FDS data.
 
 #### Response 200
 
@@ -712,10 +719,17 @@ Reject an operation with given ID, with a provided reason.
 {
   "requestObject": {
     "id": "352d6cfa-b8d7-4366-af1f-c99b071b4dc4",
-    "reason": "INCORRECT_DATA"
+    "reason": "INCORRECT_DATA",
+    "mobileTokenData": {
+      "additionalProp1": "string",
+      "additionalProp2": "string",
+      "additionalProp3": "string"
+    }
   }
 }
 ```
+
+Optional `mobileTokenData`, structure is customer-specific. Could be used, for example, for storing FDS data.
 
 #### Response 200
 
