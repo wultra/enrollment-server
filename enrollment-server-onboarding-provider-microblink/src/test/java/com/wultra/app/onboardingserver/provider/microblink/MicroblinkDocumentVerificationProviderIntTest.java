@@ -345,7 +345,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
 
         // then
-        assertVerificationResult(result, DocumentVerificationStatus.REJECTED, verificationRejectJson);
+        assertVerificationResult(result, DocumentVerificationStatus.REJECTED, microblinkRejectResponseBody);
     }
 
     @Test
@@ -398,7 +398,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
 
         // then
-        assertVerificationResult(result, DocumentVerificationStatus.ACCEPTED, verificationPassJson);
+        assertVerificationResult(result, DocumentVerificationStatus.ACCEPTED, microblinkPassResponseBody);
     }
 
     @Test

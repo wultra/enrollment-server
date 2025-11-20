@@ -34,7 +34,8 @@ public record DocumentVerificationParsedResponse(
     List<Image> images,
     String verificationJson,
     String extractionFrontJson,
-    String extractionBackJson
+    String extractionBackJson,
+    String responseJson
 ) {
     public record Verification(
             String result

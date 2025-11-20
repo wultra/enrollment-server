@@ -788,8 +788,6 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
     }
 
-    // - only requested uploadIds are processed
-
     @Test
     void testCleanupDocuments_verificationDataDoesNotExists_exceptionIsNotThrown() {
         // given

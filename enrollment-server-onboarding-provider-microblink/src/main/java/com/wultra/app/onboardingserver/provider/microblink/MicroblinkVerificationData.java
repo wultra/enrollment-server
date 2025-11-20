@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.integration.Image;
 import lombok.Builder;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Microblink verification data for one onboarding process.
@@ -42,5 +43,23 @@ record MicroblinkVerificationData(
             DocumentType type,
             CardSide side,
             Image image
-    ) {}
+    ) {
+
+        @Override
+        public String toString() {
+            final var image = Optional.ofNullable(image())
+                    .map(i -> "Image{filename=%s, dataLength=%s}".formatted(
+                            i.getFilename(),
+                            i.getData() == null ? "null" : i.getData().length))
+                    .orElse("null");
+
+            return "Document{documentId=%s, uploadId=%s, type=%s, side=%s, image=%s}".formatted(
+                    documentId,
+                    uploadId,
+                    type,
+                    side,
+                    image
+            );
+        }
+    }
 }
