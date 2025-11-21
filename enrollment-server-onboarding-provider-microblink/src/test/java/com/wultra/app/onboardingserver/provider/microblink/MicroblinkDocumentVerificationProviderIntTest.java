@@ -531,7 +531,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     private void assertVerificationResult(DocumentsVerificationResult result, final DocumentVerificationStatus status, final String verificationJson) {
-        assertNull(result.getVerificationId());
+        assertDoesNotThrow(() -> UUID.fromString(result.getVerificationId()));
         assertEquals(status, result.getStatus());
         assertNull(result.getVerificationScore());
         assertNull(result.getRejectReason());

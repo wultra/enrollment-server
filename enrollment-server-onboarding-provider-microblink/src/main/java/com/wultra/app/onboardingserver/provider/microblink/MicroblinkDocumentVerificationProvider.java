@@ -145,7 +145,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
         final var activationId = ownerId.getActivationId();
-        logger.info("Verifying documents with uploadIds {} for activationId {}", String.join(",", uploadIds), activationId);
+        final var verificationId = UUID.randomUUID().toString();
+        logger.info(
+                "Verifying documents with uploadIds=[{}], activationId={}, verificationId={}",
+                String.join(",", uploadIds),
+                activationId,
+                verificationId
+        );
 
         final var verificationData = Optional.ofNullable(verificationDataCache.get(activationId, MicroblinkVerificationData.class))
                 .orElseThrow(() -> new DocumentVerificationException("Verification data not found"));
@@ -204,6 +210,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .allMatch("Pass"::equalsIgnoreCase);
 
         final var result = new DocumentsVerificationResult();
+        result.setVerificationId(verificationId);
         result.setStatus(allChecksPassed ? DocumentVerificationStatus.ACCEPTED : DocumentVerificationStatus.REJECTED);
         result.setResults(documentVerificationResults);
         return result;
