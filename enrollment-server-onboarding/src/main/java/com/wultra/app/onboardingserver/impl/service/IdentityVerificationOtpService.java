@@ -237,6 +237,7 @@ public class IdentityVerificationOtpService {
         final String userId = process.getUserId();
         final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
                 .processId(processId)
+                .processType(process.getProcessConfiguration().getProcessType())
                 .userId(userId)
                 .otpCode(otpCode)
                 .resend(isResend)

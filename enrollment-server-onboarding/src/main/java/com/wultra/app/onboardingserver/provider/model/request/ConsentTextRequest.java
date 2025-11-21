@@ -42,6 +42,9 @@ public final class ConsentTextRequest {
     private String processId;
 
     @NonNull
+    private String processType;
+
+    @NonNull
     private String userId;
 
     /**

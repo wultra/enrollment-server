@@ -344,6 +344,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final String userId = process.getUserId();
         final ConsentTextRequest providerRequest = ConsentTextRequest.builder()
                 .processId(request.getProcessId())
+                .processType(process.getProcessConfiguration().getProcessType())
                 .userId(userId)
                 .consentType(request.getConsentType())
                 .locale(LocaleContextHolder.getLocale())
@@ -370,6 +371,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final String userId = process.getUserId();
         final ApproveConsentRequest providerRequest = ApproveConsentRequest.builder()
                 .processId(request.getProcessId())
+                .processType(process.getProcessConfiguration().getProcessType())
                 .userId(userId)
                 .consentType(request.getConsentType())
                 .approved(request.isApproved())
@@ -426,6 +428,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
                     .identification(identification)
                     .processId(process.getId())
+                    .processType(process.getProcessConfiguration().getProcessType())
                     .build();
             final LookupUserResponse response = onboardingProvider.lookupUser(lookupUserRequest);
             auditService.auditOnboardingProvider(process, "Looked up user: {}", response.getUserId());
@@ -542,6 +545,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private void sendOtp(final OnboardingProcessEntity process, final String otpCode) throws OnboardingOtpDeliveryException {
         final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
                 .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
                 .userId(process.getUserId())
                 .otpCode(otpCode)
                 .resend(false)
@@ -561,6 +565,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         final String userId = process.getUserId();
         final SendOtpCodeRequest sendOtpCodeRequest = SendOtpCodeRequest.builder()
                 .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
                 .userId(userId)
                 .otpCode(otpCode)
                 .locale(LocaleContextHolder.getLocale())

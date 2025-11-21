@@ -96,6 +96,7 @@ Service for onboarding process approval.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
@@ -109,6 +110,7 @@ Service for onboarding process approval.
 | Attribute                | Type      | Description                                                                                                                            |
 |:-------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|
 | `processId`              | `String`  | ID of an onboarding process.                                                                                                           |
+| `processType`            | `String`  | Type of the onboarding process.                                                                                                        |
 | `userId`                 | `String`  | ID of a user stored on onboarding process.                                                                                             |
 | `identityVerificationId` | `String`  | ID of the document verification subprocess.                                                                                            |
 | `evaluationResult`       | `String`  | The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation. |
@@ -156,15 +158,17 @@ Service to identify the prospect and assign user identifier.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "identification": Object # Dictionary/Hashmap
 }
 ```
 
 ##### Request Params
 
-| Attribute        | Type     | Description                                                                                                                                                                                                                                                                                                                                                              |
-|:-----------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`      | `String` | ID of an onboarding process.                                                                                                                                                                                                                                                                                                                                             |
+| Attribute        | Type     | Description                                                                                                                                                                                                                                                                                                                                                             |
+|:-----------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `processId`      | `String` | ID of an onboarding process.                                                                                                                                                                                                                                                                                                                                            |
+| `processType`    | `String` | Type of the onboarding process.                                                                                                                                                                                                                                                                                                                                         |
 | `identification` | `Object` | The credentials passed from the mobile app. This attribute should be defined as dictionary/hashmap with [free-form object](https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects) type. Keys in the dictionary can differ depending on use-case on specific instance. Example value `{"clientNumber": "String","birthDate": "String"}` |
 
 #### Response 200
@@ -211,6 +215,7 @@ NOTE: Currently triggered only in positive result.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
@@ -225,6 +230,7 @@ NOTE: Currently triggered only in positive result.
 | Attribute                | Type     | Description                                                                               |
 |:-------------------------|:---------|:------------------------------------------------------------------------------------------|
 | `processId`              | `String` | ID of an onboarding process.                                                              |
+| `processType`            | `String` | Type of the onboarding process.                                                           |
 | `userId`                 | `String` | ID of a user stored on onboarding process.                                                |
 | `identityVerificationId` | `String` | ID of the document verification subprocess.                                               |
 | `provider`               | `String` | Name of the configured external document provider: ZenID or Microblink.                   |
@@ -272,6 +278,7 @@ Service to send generated OTPs.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "userId": "String",
     "language": "String",
     "otpCode": "String",
@@ -282,14 +289,15 @@ Service to send generated OTPs.
 
 ##### Request Params
 
-| Attribute   | Type      | Description                                                           |
-|:------------|:----------|:----------------------------------------------------------------------|
-| `processId` | `String`  | ID of an onboarding process.                                          |
-| `userId`    | `String`  | ID of a user stored on onboarding process.                            |
-| `language`  | `String`  | The language used by the mobile app in ISO 639-1 format.              |
-| `otpCode`   | `String`  | OTP generated by the system.                                          |
-| `otpType`   | `String`  | Static value ACTIVATION.                                              |
-| `resend`    | `Boolean` | Indication if the code is send for first time or resend is requested. |
+| Attribute     | Type      | Description                                                           |
+|:--------------|:----------|:----------------------------------------------------------------------|
+| `processId`   | `String`  | ID of an onboarding process.                                          |
+| `processType` | `String`  | Type of the onboarding process.                                       |
+| `userId`      | `String`  | ID of a user stored on onboarding process.                            |
+| `language`    | `String`  | The language used by the mobile app in ISO 639-1 format.              |
+| `otpCode`     | `String`  | OTP generated by the system.                                          |
+| `otpType`     | `String`  | Static value ACTIVATION.                                              |
+| `resend`      | `Boolean` | Indication if the code is send for first time or resend is requested. |
 
 #### Response 200
 
@@ -329,6 +337,7 @@ Service providing the storage of provided consents.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "userId": "String",
     "consentType": "String",
     "approved": Boolean
@@ -340,6 +349,7 @@ Service providing the storage of provided consents.
 | Attribute     | Type      | Description                                     |
 |:--------------|:----------|:------------------------------------------------|
 | `processId`   | `String`  | ID of an onboarding process.                    |
+| `processType` | `String`  | Type of the onboarding process.                 |
 | `userId`      | `String`  | ID of a user stored on onboarding process.      |
 | `consentType` | `String`  | Type of the consent configured for the process. |
 | `approved`    | `Boolean` | User approval or rejection.                     |
@@ -374,6 +384,7 @@ Service providing the text of the consent.
 ```json
 {
     "processId": "String",
+    "processType": "String",
     "userId": "String",
     "consentType": "String",
     "language": "String"
@@ -385,6 +396,7 @@ Service providing the text of the consent.
 | Attribute     | Type     | Description                                              |
 |:--------------|:---------|:---------------------------------------------------------|
 | `processId`   | `String` | ID of an onboarding process.                             |
+| `processType` | `String` | Type of the onboarding process.                          |
 | `userId`      | `String` | ID of a user stored on onboarding process.               |
 | `consentType` | `String` | Type of the consent configured for the process.          |
 | `language`    | `String` | The language used by the mobile app in ISO 639-1 format. |
