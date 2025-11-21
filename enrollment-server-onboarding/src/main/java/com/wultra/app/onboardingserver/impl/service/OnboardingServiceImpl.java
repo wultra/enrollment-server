@@ -194,18 +194,22 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             sendOtp(process, otpCode);
         }
 
+        final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
+                .applicationKey(encryptionContext.getApplicationKey())
+                .userId(userId)
+                .build();
+
         return OnboardingStartResponse.builder()
                 .processId(process.getId())
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
-                .activationCode(fetchActivationCode(userId, encryptionContext.getApplicationKey()))
+                .activationCode(fetchActivationCode(initActivationContext))
                 .build();
     }
 
-    private String fetchActivationCode(final String userId, final String applicationKey) throws RemoteCommunicationException {
-        if (userId != null) {
-            // TODO improve parameters
-            return activationService.initActivation(userId, applicationKey);
+    private String fetchActivationCode(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
+        if (request.userId() != null) {
+            return activationService.initActivation(request);
         } else {
             logger.info("User ID is null, generating fake activationCode");
             return generateActivationCode();

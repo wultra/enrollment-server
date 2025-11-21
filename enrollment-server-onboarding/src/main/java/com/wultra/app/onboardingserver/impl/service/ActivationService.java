@@ -32,6 +32,7 @@ import com.wultra.security.powerauth.client.model.response.LookupApplicationByAp
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -53,28 +54,27 @@ public class ActivationService {
     /**
      * Init activation.
      *
-     * @param userId user ID
-     * @param applicationKey Application key
+     * @param request Init activation context.
      * @return activation code
      * @throws RemoteCommunicationException if communication with PowerAuth server fails
      */
-    public String initActivation(final String userId, final String applicationKey) throws RemoteCommunicationException {
+    public String initActivation(final InitActivationContext request) throws RemoteCommunicationException {
         try {
             final LookupApplicationByAppKeyRequest lookupRequest = new LookupApplicationByAppKeyRequest();
-            lookupRequest.setApplicationKey(applicationKey);
+            lookupRequest.setApplicationKey(request.applicationKey());
 
             final LookupApplicationByAppKeyResponse lookupResponse = powerAuthClient.lookupApplicationByAppKey(
                     lookupRequest,
                     httpCustomizationService.getQueryParams(),
                     httpCustomizationService.getHttpHeaders());
 
-            final InitActivationRequest request = new InitActivationRequest();
-            request.setApplicationId(lookupResponse.getApplicationId());
-            request.setUserId(userId);
-            request.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
+            final InitActivationRequest initActivationRequest = new InitActivationRequest();
+            initActivationRequest.setApplicationId(lookupResponse.getApplicationId());
+            initActivationRequest.setUserId(request.userId());
+            initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
 
             final InitActivationResponse initActivationResponse = powerAuthClient.initActivation(
-                    request,
+                    initActivationRequest,
                     httpCustomizationService.getQueryParams(),
                     httpCustomizationService.getHttpHeaders());
 
@@ -119,4 +119,7 @@ public class ActivationService {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
     }
+
+    @Builder
+    public record InitActivationContext(String userId, String applicationKey) {}
 }
