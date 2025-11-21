@@ -42,7 +42,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Test for {@link OnboardingServiceImpl}.
@@ -142,19 +142,9 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenThrow(new OnboardingProviderException("User not found."));
 
-        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
-        appKeyResponse.setApplicationId("mock_app_id");
-
-        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
-                .thenReturn(appKeyResponse);
-
-        final InitActivationResponse initResponse = new InitActivationResponse();
-        initResponse.setActivationCode("mock_activation_code");
-
-        when(powerAuthClient.initActivation(any(), any(), any()))
-                .thenReturn(initResponse);
-
         final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+
+        verify(powerAuthClient, never()).initActivation(any(), any(), any());
 
         assertNotNull(result);
         assertNotNull(result.processId());
