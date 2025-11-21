@@ -57,6 +57,8 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
+import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +110,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
     private final OnboardingProvider onboardingProvider;
+
+    private final IdentifierGenerator identifierGenerator = new IdentifierGenerator();
 
     /**
      * Service constructor.
@@ -203,8 +207,16 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             // TODO improve parameters
             return activationService.initActivation(userId, applicationKey);
         } else {
-            // TODO generate fake activation code
             logger.info("User ID is null, generating fake activationCode");
+            return generateActivationCode();
+        }
+    }
+
+    private String generateActivationCode() {
+        try {
+            return identifierGenerator.generateActivationCode();
+        } catch (CryptoProviderException e) {
+            logger.error("Failed to generate fake activation code: {}", e.getMessage(), e);
             return null;
         }
     }

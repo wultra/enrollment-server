@@ -22,9 +22,13 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingS
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +58,9 @@ class OnboardingServiceImplTest {
     @MockitoBean
     private OnboardingProvider onboardingProvider;
 
+    @MockitoBean
+    private PowerAuthClient powerAuthClient;
+
     @Autowired
     private OnboardingServiceImpl tested;
 
@@ -70,12 +77,25 @@ class OnboardingServiceImplTest {
                 .userId("mock_user")
                 .build());
 
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final InitActivationResponse initResponse = new InitActivationResponse();
+        initResponse.setActivationCode("mock_activation_code");
+
+        when(powerAuthClient.initActivation(any(), any(), any()))
+                .thenReturn(initResponse);
+
         final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNotNull(result.activationCode());
+        assertEquals("mock_activation_code", result.activationCode());
     }
 
     @Test
@@ -91,12 +111,57 @@ class OnboardingServiceImplTest {
                 .userId("mock_user")
                 .build());
 
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final InitActivationResponse initResponse = new InitActivationResponse();
+        initResponse.setActivationCode("mock_activation_code");
+
+        when(powerAuthClient.initActivation(any(), any(), any()))
+                .thenReturn(initResponse);
+
         final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNotNull(result.activationCode());
+    }
+
+    @Test
+    void testStartProcess_nullUser() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("reactivation")
+                .build();
+        final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
+
+        when(onboardingProvider.lookupUser(any())).thenThrow(new OnboardingProviderException("User not found."));
+
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final InitActivationResponse initResponse = new InitActivationResponse();
+        initResponse.setActivationCode("mock_activation_code");
+
+        when(powerAuthClient.initActivation(any(), any(), any()))
+                .thenReturn(initResponse);
+
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+
+        assertNotNull(result);
+        assertNotNull(result.processId());
+        assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
+        assertNotNull(result.activationCode());
+        assertTrue(result.activationCode().matches("([A-Z0-9]{5}-){3}[A-Z0-9]{5}"),
+                "Activation code should match pattern: XXXXX-XXXXX-XXXXX-XXXXX");
     }
 
     @Test
