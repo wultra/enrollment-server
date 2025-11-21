@@ -22,18 +22,23 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingS
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link OnboardingServiceImpl}.
@@ -46,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class OnboardingServiceImplTest {
 
+    @MockitoBean
+    private OnboardingProvider onboardingProvider;
+
     @Autowired
     private OnboardingServiceImpl tested;
 
@@ -56,14 +64,18 @@ class OnboardingServiceImplTest {
                 .processType("reactivation")
                 .build();
         final RequestContext context = RequestContext.builder().build();
-        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
+
+        when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
+                .userId("mock_user")
+                .build());
 
         final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
-        assertNull(result.activationCode());
+        assertNotNull(result.activationCode());
     }
 
     @Test
@@ -73,14 +85,18 @@ class OnboardingServiceImplTest {
                 .processType("") // blank on purpose
                 .build();
         final RequestContext context = RequestContext.builder().build();
-        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
+
+        when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
+                .userId("mock_user")
+                .build());
 
         final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
-        assertNull(result.activationCode());
+        assertNotNull(result.activationCode());
     }
 
     @Test
