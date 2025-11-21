@@ -87,8 +87,6 @@ public class ClientEvaluationService {
             return;
         }
 
-
-
         final EvaluateClientRequest.EvaluateClientRequestBuilder requestBuilder = EvaluateClientRequest.builder()
                 .processId(identityVerification.getProcessId())
                 .processType(processType)
