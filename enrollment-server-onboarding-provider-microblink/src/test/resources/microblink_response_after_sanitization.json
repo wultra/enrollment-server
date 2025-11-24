@@ -1,0 +1,262 @@
+{
+  "extraction": {
+    "processingStatus": "Success",
+    "recognitionStatus": "Valid",
+    "overall": [
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=4",
+        "type": "DetailedStringResult",
+        "field": "FirstName"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=3",
+        "type": "DetailedStringResult",
+        "field": "LastName"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "length=10",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": "length=1",
+        "month": "length=1",
+        "year": "length=4",
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfBirth"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "length=10",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": "length=1",
+        "month": "length=2",
+        "year": "length=4",
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfIssue"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "length=10",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": "length=2",
+        "month": "length=1",
+        "year": "length=4",
+        "isPermanent": false,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfExpiry"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=9",
+        "type": "DetailedStringResult",
+        "field": "DocumentNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=5",
+        "type": "DetailedStringResult",
+        "field": "PlaceOfBirth"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=11",
+        "type": "DetailedStringResult",
+        "field": "PersonalIdNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "length=3",
+        "type": "DetailedStringResult",
+        "field": "IssuingAuthority"
+      },
+      {
+        "type": "Result",
+        "field": "DriverLicenseDetailedInfo",
+        "results": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "length=1",
+            "type": "DetailedStringResult",
+            "field": "VehicleClass"
+          }
+        ]
+      }
+    ],
+    "viz": {
+      "front": [
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=4",
+          "type": "DetailedStringResult",
+          "field": "FirstName"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=3",
+          "type": "DetailedStringResult",
+          "field": "LastName"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "length=10",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": "length=1",
+          "month": "length=1",
+          "year": "length=4",
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfBirth"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "length=10",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": "length=1",
+          "month": "length=2",
+          "year": "length=4",
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfIssue"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "length=10",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": "length=2",
+          "month": "length=1",
+          "year": "length=4",
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfExpiry"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=9",
+          "type": "DetailedStringResult",
+          "field": "DocumentNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=5",
+          "type": "DetailedStringResult",
+          "field": "PlaceOfBirth"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=11",
+          "type": "DetailedStringResult",
+          "field": "PersonalIdNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "length=3",
+          "type": "DetailedStringResult",
+          "field": "IssuingAuthority"
+        },
+        {
+          "type": "Result",
+          "field": "DriverLicenseDetailedInfo",
+          "results": [
+            {
+              "side": "Unknown",
+              "script": "Latin",
+              "value": "length=1",
+              "type": "DetailedStringResult",
+              "field": "VehicleClass"
+            }
+          ]
+        }
+      ],
+      "back": []
+    },
+    "barcode": [
+      {
+        "value": "length=0",
+        "type": "StringResult",
+        "field": "RawDataBase64"
+      }
+    ],
+    "classInfo": {
+      "country": "Moldova",
+      "type": "Dl",
+      "region": "None",
+      "isoAlpha3CountryCode": "MDA",
+      "isoAlpha2CountryCode": "MD",
+      "isoNumericCountryCode": "498"
+    },
+    "additionalInfo": {
+      "frontProcessingStatus": "Success",
+      "backProcessingStatus": "Success",
+      "recognitionMode": "FullRecognition",
+      "firstSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      },
+      "secondSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      }
+    }
+  },
+  "images": [
+    {
+      "name": "FaceImage",
+      "base64": "abcd"
+    }
+  ]
+}

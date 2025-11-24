@@ -43,6 +43,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -326,8 +327,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(licenseKey -> new VerificationSdkInfo(Map.of("license-key", licenseKey)))
                     .orElseGet(VerificationSdkInfo::new);
 
-            // TODO: Sanitize license-key
-            logger.info("provider: microblink, action: initVerificationSdk, state: succeeded, sdkInfo: {}", sdkInfo);
+            logger.info("provider: microblink, action: initVerificationSdk, state: succeeded, sdkInfo: {}", MicroblinkLogSanitizationUtils.sanitizeSdkInfo(sdkInfo));
             return sdkInfo;
         } catch (final RemoteCommunicationException e) {
             logger.info("provider: microblink, action: initVerificationSdk, state: failed, error: {}", e.getMessage());
@@ -379,7 +379,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         try {
             final var request = buildRequest(frontDocument, backDocument);
-            logger.debug("Request body: {}", request); // TODO: Sanitize all sensitive data
+            logger.debug("Request body: {}", (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationRequest(request));
 
             final var response = microblinkRestClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
             final var body = Optional.ofNullable(response)
@@ -388,7 +388,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var parsedResponse =  responseParser.parseResponse(body);
             logger.info("Response traceId={}, verificationResult={}", parsedResponse.runtime().traceId(), parsedResponse.verificationJson());
-            logger.debug("Response body: {}", body); // TODO: Sanitize all sensitive data
+            logger.debug("Response body: {}", (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationResponseJson(body));
 
             return parsedResponse;
         } catch (final RestClientException e) {
