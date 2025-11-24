@@ -111,11 +111,11 @@ jobs:
         run: |
           mkdir -p ./${{ matrix.app }}/docker/images-and-libs
           mvn -B -U -pl ${{ matrix.app }} -DuseInternalRepo=true -Dmaven.test.skip=true --no-transfer-progress package
-          cp ./${{ matrix.app }}/target/${{ matrix.app }}-${{ env.REVISION }}.war ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.cdx.json
+          cp ./${{ matrix.app }}/target/${{ matrix.app }}-${{ env.REVISION }}.war ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war
       - name: Prepare SBOM files
         run: |
           mkdir -p ./${{ matrix.app }}/docker/sbom
-          unzip -p ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war WEB-INF/classes/META-INF/sbom/application.cdx.json > ./${{ matrix.app }}/docker/sbom/${{ matrix.app }}.war
+          unzip -p ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war WEB-INF/classes/META-INF/sbom/application.cdx.json > ./${{ matrix.app }}/docker/sbom/${{ matrix.app }}.cdx.json
       - name: Copy liquibase files
         run: |
           mkdir -p ./${{ matrix.app }}/docker-init/liquibase/data/
