@@ -111,7 +111,7 @@ jobs:
         run: |
           mkdir -p ./${{ matrix.app }}/docker/images-and-libs
           mvn -B -U -pl ${{ matrix.app }} -DuseInternalRepo=true -Dmaven.test.skip=true --no-transfer-progress package
-          cp ./${{ matrix.app }}/target/${{ matrix.app }}-${{ env.REVISION }}.war ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war
+          cp ./${{ matrix.app }}/target/${{ matrix.app }}-${{ env.REVISION }}.war ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.cdx.json
       - name: Prepare SBOM files
         run: |
           mkdir -p ./${{ matrix.app }}/docker/sbom
