@@ -4,7 +4,7 @@ KEEP_RUNNING=${KEEP_RUNNING:-false}
 KEEP_RUNNING_PORT=${KEEP_RUNNING_PORT:-666}
 
 liquibase --headless=true --log-level=INFO \
-    --changeLogFile="changelog/db.changelog-master.xml" \
+    --changeLogFile="changelog/enrollment-server-onboarding/db.changelog-master.xml" \
     --username="${ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_USERNAME:-}" \
     --password="${ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_PASSWORD:-}" \
     --url="${ENROLLMENT_SERVER_ONBOARDING_DATASOURCE_URL}" \
