@@ -20,6 +20,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -36,6 +37,8 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Service for working with activations.
  *
@@ -49,7 +52,6 @@ public class ActivationService {
     private final PowerAuthClient powerAuthClient;
 
     private final HttpCustomizationService httpCustomizationService;
-
 
     /**
      * Init activation.
@@ -72,6 +74,7 @@ public class ActivationService {
             initActivationRequest.setApplicationId(lookupResponse.getApplicationId());
             initActivationRequest.setUserId(request.userId());
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
+            initActivationRequest.setFlags(List.of(ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING));
 
             final InitActivationResponse initActivationResponse = powerAuthClient.initActivation(
                     initActivationRequest,

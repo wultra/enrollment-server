@@ -26,11 +26,13 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,6 +40,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -96,6 +99,13 @@ class OnboardingServiceImplTest {
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNotNull(result.activationCode());
         assertEquals("mock_activation_code", result.activationCode());
+
+        final ArgumentCaptor<InitActivationRequest> requestCaptor = ArgumentCaptor.forClass(InitActivationRequest.class);
+        verify(powerAuthClient).initActivation(requestCaptor.capture(), any(), any());
+
+        final InitActivationRequest captorValue = requestCaptor.getValue();
+        assertEquals("mock_app_id", captorValue.getApplicationId());
+        assertEquals(List.of("VERIFICATION_PENDING"), captorValue.getFlags());
     }
 
     @Test
