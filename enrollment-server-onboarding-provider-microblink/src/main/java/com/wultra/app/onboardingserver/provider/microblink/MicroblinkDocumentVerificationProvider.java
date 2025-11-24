@@ -93,7 +93,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(SubmittedDocument::getDocumentId)
                 .toList();
 
-        logger.info("provider: microblink, action: submitDocuments, state: initiated, ownerId: {}, documentIds: [{}]", ownerId, documentIds);
+        logger.info("provider: microblink, action: submitDocuments, state: initiated, ownerId: {}, documentIds: {}", ownerId, documentIds);
 
         var microblinkVerificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
@@ -173,7 +173,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             logger.info("provider: microblink, action: verifyDocuments, state: succeeded, result: {}", result);
             return result;
-        } catch (final RuntimeException | RemoteCommunicationException | DocumentVerificationException e) {
+        } catch (final RemoteCommunicationException | DocumentVerificationException e) {
             logger.info("provider: microblink, action: verifyDocuments, state: failed, error: {}", e.getMessage());
             throw e;
         }
@@ -270,7 +270,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             logger.info("provider: microblink, action: getPhoto, state: succeeded");
             return image;
-        } catch (final RuntimeException | DocumentVerificationException e) {
+        } catch (final DocumentVerificationException e) {
             logger.info("provider: microblink, action: getPhoto, state: failed, error: {}", e.getMessage());
             throw e;
         }
@@ -278,7 +278,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
-        logger.info("provider: microblink, action: cleanupDocuments, state: initiated, ownerId: {}, uploadIds: [{}]", ownerId, String.join(",", uploadIds));
+        logger.info("provider: microblink, action: cleanupDocuments, state: initiated, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
 
         final var activationId = ownerId.getActivationId();
         final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
