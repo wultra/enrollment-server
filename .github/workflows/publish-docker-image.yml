@@ -115,7 +115,7 @@ jobs:
       - name: Prepare SBOM files
         run: |
           mkdir -p ./${{ matrix.app }}/docker/sbom
-          unzip -p ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war WEB-INF/classes/META-INF/sbom/application.cdx.json > ./${{ matrix.app }}/docker/sbom/${{ matrix.app }}.war
+          unzip -p ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war WEB-INF/classes/META-INF/sbom/application.cdx.json > ./${{ matrix.app }}/docker/sbom/${{ matrix.app }}.cdx.json
       - name: Copy liquibase files
         run: |
           mkdir -p ./${{ matrix.app }}/docker-init/liquibase/data/
