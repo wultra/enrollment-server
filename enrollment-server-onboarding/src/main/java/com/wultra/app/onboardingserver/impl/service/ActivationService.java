@@ -37,8 +37,6 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * Service for working with activations.
  *
@@ -50,6 +48,8 @@ import java.util.List;
 public class ActivationService {
 
     private final PowerAuthClient powerAuthClient;
+
+    private final ActivationFlagService activationFlagService;
 
     private final HttpCustomizationService httpCustomizationService;
 
@@ -74,7 +74,7 @@ public class ActivationService {
             initActivationRequest.setApplicationId(lookupResponse.getApplicationId());
             initActivationRequest.setUserId(request.userId());
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
-            initActivationRequest.setFlags(List.of(ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING));
+            initActivationRequest.setFlags(activationFlagService.fetchInitialActivationFlags());
 
             final InitActivationResponse initActivationResponse = powerAuthClient.initActivation(
                     initActivationRequest,
