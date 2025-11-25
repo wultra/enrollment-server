@@ -157,6 +157,7 @@ See [Innovatrics documentation](https://developers.innovatrics.com/digital-onboa
 
 
 ## Microblink Configuration
+
 | Property                                                                                                | Default | Note                                                           |
 |---------------------------------------------------------------------------------------------------------|---------|----------------------------------------------------------------|
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl`                |         | Base REST service URL for Microblink.                          |
