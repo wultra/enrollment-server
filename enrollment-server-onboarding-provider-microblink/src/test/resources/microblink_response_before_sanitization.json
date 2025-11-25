@@ -1,0 +1,262 @@
+{
+  "extraction": {
+    "processingStatus": "Success",
+    "recognitionStatus": "Valid",
+    "overall": [
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "JOHN",
+        "type": "DetailedStringResult",
+        "field": "FirstName"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "DOE",
+        "type": "DetailedStringResult",
+        "field": "LastName"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "01.02.1999",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 1,
+        "month": 2,
+        "year": 1999,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfBirth"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "08.11.2115",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 8,
+        "month": 11,
+        "year": 2115,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfIssue"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "24.03.2023",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 24,
+        "month": 3,
+        "year": 2023,
+        "isPermanent": false,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfExpiry"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "123456789",
+        "type": "DetailedStringResult",
+        "field": "DocumentNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "Earth",
+        "type": "DetailedStringResult",
+        "field": "PlaceOfBirth"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "01234567890",
+        "type": "DetailedStringResult",
+        "field": "PersonalIdNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "ABC",
+        "type": "DetailedStringResult",
+        "field": "IssuingAuthority"
+      },
+      {
+        "type": "Result",
+        "field": "DriverLicenseDetailedInfo",
+        "results": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "B",
+            "type": "DetailedStringResult",
+            "field": "VehicleClass"
+          }
+        ]
+      }
+    ],
+    "viz": {
+      "front": [
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "JOHN",
+          "type": "DetailedStringResult",
+          "field": "FirstName"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "DOE",
+          "type": "DetailedStringResult",
+          "field": "LastName"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "01.02.1999",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": 1,
+          "month": 2,
+          "year": 1999,
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfBirth"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "08.11.2115",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": 8,
+          "month": 11,
+          "year": 2115,
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfIssue"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Front",
+              "script": "Latin",
+              "value": "24.03.2023",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": 24,
+          "month": 3,
+          "year": 2023,
+          "successfullyParsed": true,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfExpiry"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "123456789",
+          "type": "DetailedStringResult",
+          "field": "DocumentNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "Earth",
+          "type": "DetailedStringResult",
+          "field": "PlaceOfBirth"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "01234567890",
+          "type": "DetailedStringResult",
+          "field": "PersonalIdNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "ABC",
+          "type": "DetailedStringResult",
+          "field": "IssuingAuthority"
+        },
+        {
+          "type": "Result",
+          "field": "DriverLicenseDetailedInfo",
+          "results": [
+            {
+              "side": "Unknown",
+              "script": "Latin",
+              "value": "B",
+              "type": "DetailedStringResult",
+              "field": "VehicleClass"
+            }
+          ]
+        }
+      ],
+      "back": []
+    },
+    "barcode": [
+      {
+        "value": "",
+        "type": "StringResult",
+        "field": "RawDataBase64"
+      }
+    ],
+    "classInfo": {
+      "country": "Moldova",
+      "type": "Dl",
+      "region": "None",
+      "isoAlpha3CountryCode": "MDA",
+      "isoAlpha2CountryCode": "MD",
+      "isoNumericCountryCode": "498"
+    },
+    "additionalInfo": {
+      "frontProcessingStatus": "Success",
+      "backProcessingStatus": "Success",
+      "recognitionMode": "FullRecognition",
+      "firstSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      },
+      "secondSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      }
+    }
+  },
+  "images": [
+    {
+      "name": "FaceImage",
+      "base64": "abcd"
+    }
+  ]
+}

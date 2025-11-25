@@ -60,6 +60,7 @@ public class DocumentVerificationResponseParser {
                 .extractionFrontJson(extractionFrontJson)
                 .extractionBackJson(extractionBackJson)
                 .verificationJson(verificationJson)
+                .responseJson(responseJson)
                 .build();
     }
 }
