@@ -33,6 +33,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,7 +70,7 @@ public class ActivationFlagService {
      */
     public void initActivationFlagsForIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
+            final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
                 throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification, " + ownerId);
             }
@@ -91,7 +92,7 @@ public class ActivationFlagService {
      */
     public void updateActivationFlagsForFailedIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
+            final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
 
             // Remove flag VERIFICATION_IN_PROGRESS
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
