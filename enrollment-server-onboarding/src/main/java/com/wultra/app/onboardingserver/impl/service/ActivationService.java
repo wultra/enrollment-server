@@ -57,10 +57,10 @@ public class ActivationService {
      * Init activation.
      *
      * @param request Init activation context.
-     * @return activation code
+     * @return Init activation response.
      * @throws RemoteCommunicationException if communication with PowerAuth server fails
      */
-    public String initActivation(final InitActivationContext request) throws RemoteCommunicationException {
+    public InitActivationResponse initActivation(final InitActivationContext request) throws RemoteCommunicationException {
         try {
             final LookupApplicationByAppKeyRequest lookupRequest = new LookupApplicationByAppKeyRequest();
             lookupRequest.setApplicationKey(request.applicationKey());
@@ -76,12 +76,10 @@ public class ActivationService {
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initActivationRequest.setFlags(activationFlagService.fetchInitialActivationFlags());
 
-            final InitActivationResponse initActivationResponse = powerAuthClient.initActivation(
+            return powerAuthClient.initActivation(
                     initActivationRequest,
                     httpCustomizationService.getQueryParams(),
                     httpCustomizationService.getHttpHeaders());
-
-            return initActivationResponse.getActivationCode();
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
