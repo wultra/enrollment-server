@@ -40,6 +40,7 @@ import java.util.List;
 /**
  * Service for working with activation flags.
  *
+ * @implNote Mind that the flags have to be disallowed in the enrollment server module in {@code MobileTokenController}.
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
