@@ -468,7 +468,10 @@ public class DocumentProcessingService {
 
         byte[] documentData;
         if (document.uploadId() == null) {
-            documentData = Base64.getDecoder().decode(document.data());
+            documentData = Optional.ofNullable(document.data())
+                    .map(d -> Base64.getDecoder().decode(d))
+                    .orElseThrow(() ->
+                            new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
         } else {
             final DocumentDataEntity storedDocument = documentDataRepository.findById(document.uploadId())
                     .orElseThrow(() ->

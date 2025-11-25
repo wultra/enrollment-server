@@ -18,7 +18,6 @@
 
 package com.wultra.app.onboardingserver.controller.api.v2;
 
-import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
@@ -53,7 +52,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "api/v2/identity")
-class IdentityVerificationController {
+class IdentityVerificationV2Controller {
 
     private final IdentityVerificationRestService identityVerificationRestService;
 
