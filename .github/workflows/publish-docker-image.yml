@@ -197,4 +197,5 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PUBLIC_KEY: ${{ secrets.COSIGN_PUBLIC_KEY }}
           IMAGES: ${{ steps.digests.outputs.TAGS_DIGESTS }}
-          INPUT_FILES: './${{ matrix.app }}/docker/sbom/${{ matrix.app }}.cdx.json'
+          INPUT_FILES: '/sbom/${{ matrix.app }}.cdx.json'
+          INPUT_FILES_PATH: './${{ matrix.app }}/docker/sbom/'
