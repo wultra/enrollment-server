@@ -57,6 +57,7 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
@@ -199,20 +200,26 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .userId(userId)
                 .build();
 
+        final InitActivationResponse initActivationResponse = initActivation(initActivationContext);
+        process.setActivationId(initActivationResponse.getActivationId());
+        onboardingProcessRepository.save(process);
+
         return OnboardingStartResponse.builder()
                 .processId(process.getId())
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
-                .activationCode(fetchActivationCode(initActivationContext))
+                .activationCode(initActivationResponse.getActivationCode())
                 .build();
     }
 
-    private String fetchActivationCode(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
+    private InitActivationResponse initActivation(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
         if (request.userId() != null) {
             return activationService.initActivation(request);
         } else {
             logger.info("User ID is null, generating fake activationCode");
-            return generateActivationCode();
+            final InitActivationResponse response = new InitActivationResponse();
+            response.setActivationCode(generateActivationCode());
+            return response;
         }
     }
 

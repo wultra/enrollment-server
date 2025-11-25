@@ -21,6 +21,8 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingSt
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -42,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,6 +71,9 @@ class OnboardingServiceImplTest {
     @Autowired
     private OnboardingServiceImpl tested;
 
+    @Autowired
+    private OnboardingProcessRepository onboardingProcessRepository;
+
     @Test
     void testStartProcess() throws Exception {
         final OnboardingStartRequest request = OnboardingStartRequest.builder()
@@ -88,6 +95,7 @@ class OnboardingServiceImplTest {
 
         final InitActivationResponse initResponse = new InitActivationResponse();
         initResponse.setActivationCode("mock_activation_code");
+        initResponse.setActivationId(UUID.randomUUID().toString());
 
         when(powerAuthClient.initActivation(any(), any(), any()))
                 .thenReturn(initResponse);
@@ -106,6 +114,10 @@ class OnboardingServiceImplTest {
         final InitActivationRequest captorValue = requestCaptor.getValue();
         assertEquals("mock_app_id", captorValue.getApplicationId());
         assertEquals(List.of("VERIFICATION_PENDING"), captorValue.getFlags());
+
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
+        assertTrue(process.isPresent());
+        assertEquals(initResponse.getActivationId(), process.get().getActivationId());
     }
 
     @Test
