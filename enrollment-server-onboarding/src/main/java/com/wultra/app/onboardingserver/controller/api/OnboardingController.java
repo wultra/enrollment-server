@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingSt
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.TooManyProcessesException;
@@ -87,7 +88,7 @@ public class OnboardingController {
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
             @EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
             @Parameter(hidden = true) EncryptionContext encryptionContext,
-            final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException {
+            final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
@@ -100,7 +101,7 @@ public class OnboardingController {
 
         final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
-        final OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject(), requestContext);
+        final OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject(), requestContext, encryptionContext);
         return new ObjectResponse<>(response);
     }
 

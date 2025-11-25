@@ -22,17 +22,30 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingS
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Test for {@link OnboardingServiceImpl}.
@@ -45,6 +58,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class OnboardingServiceImplTest {
 
+    @MockitoBean
+    private OnboardingProvider onboardingProvider;
+
+    @MockitoBean
+    private PowerAuthClient powerAuthClient;
+
     @Autowired
     private OnboardingServiceImpl tested;
 
@@ -55,13 +74,38 @@ class OnboardingServiceImplTest {
                 .processType("reactivation")
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context);
+        when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
+                .userId("mock_user")
+                .build());
+
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final InitActivationResponse initResponse = new InitActivationResponse();
+        initResponse.setActivationCode("mock_activation_code");
+
+        when(powerAuthClient.initActivation(any(), any(), any()))
+                .thenReturn(initResponse);
+
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
-        assertNull(result.activationCode());
+        assertNotNull(result.activationCode());
+        assertEquals("mock_activation_code", result.activationCode());
+
+        final ArgumentCaptor<InitActivationRequest> requestCaptor = ArgumentCaptor.forClass(InitActivationRequest.class);
+        verify(powerAuthClient).initActivation(requestCaptor.capture(), any(), any());
+
+        final InitActivationRequest captorValue = requestCaptor.getValue();
+        assertEquals("mock_app_id", captorValue.getApplicationId());
+        assertEquals(List.of("VERIFICATION_PENDING"), captorValue.getFlags());
     }
 
     @Test
@@ -71,13 +115,53 @@ class OnboardingServiceImplTest {
                 .processType("") // blank on purpose
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
 
-        final OnboardingStartResponse result = tested.startOnboarding(request, context);
+        when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
+                .userId("mock_user")
+                .build());
+
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final InitActivationResponse initResponse = new InitActivationResponse();
+        initResponse.setActivationCode("mock_activation_code");
+
+        when(powerAuthClient.initActivation(any(), any(), any()))
+                .thenReturn(initResponse);
+
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
 
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
-        assertNull(result.activationCode());
+        assertNotNull(result.activationCode());
+    }
+
+    @Test
+    void testStartProcess_nullUser() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("reactivation")
+                .build();
+        final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
+
+        when(onboardingProvider.lookupUser(any())).thenThrow(new OnboardingProviderException("User not found."));
+
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+
+        verify(powerAuthClient, never()).initActivation(any(), any(), any());
+
+        assertNotNull(result);
+        assertNotNull(result.processId());
+        assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
+        assertNotNull(result.activationCode());
+        assertTrue(result.activationCode().matches("([A-Z0-9]{5}-){3}[A-Z0-9]{5}"),
+                "Activation code should match pattern: XXXXX-XXXXX-XXXXX-XXXXX");
     }
 
     @Test
@@ -87,8 +171,9 @@ class OnboardingServiceImplTest {
                 .processType("non-existing")
                 .build();
         final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext(null, null, null, null, null);
 
-        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context));
+        final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context, encryptionContext));
 
         assertEquals("No configuration found for process type: non-existing", result.getMessage());
     }

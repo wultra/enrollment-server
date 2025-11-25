@@ -20,11 +20,20 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.request.v3.GetActivationStatusRequest;
+import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
+import com.wultra.security.powerauth.client.model.request.LookupApplicationByAppKeyRequest;
 import com.wultra.security.powerauth.client.model.request.RemoveActivationRequest;
+import com.wultra.security.powerauth.client.model.request.v3.GetActivationStatusRequest;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -34,18 +43,48 @@ import org.springframework.stereotype.Service;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 public class ActivationService {
 
     private final PowerAuthClient powerAuthClient;
 
+    private final ActivationFlagService activationFlagService;
+
+    private final HttpCustomizationService httpCustomizationService;
+
     /**
-     * All-arg constructor.
+     * Init activation.
      *
-     * @param powerAuthClient PowerAuth service client.
+     * @param request Init activation context.
+     * @return activation code
+     * @throws RemoteCommunicationException if communication with PowerAuth server fails
      */
-    public ActivationService(final PowerAuthClient powerAuthClient) {
-        this.powerAuthClient = powerAuthClient;
+    public String initActivation(final InitActivationContext request) throws RemoteCommunicationException {
+        try {
+            final LookupApplicationByAppKeyRequest lookupRequest = new LookupApplicationByAppKeyRequest();
+            lookupRequest.setApplicationKey(request.applicationKey());
+
+            final LookupApplicationByAppKeyResponse lookupResponse = powerAuthClient.lookupApplicationByAppKey(
+                    lookupRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders());
+
+            final InitActivationRequest initActivationRequest = new InitActivationRequest();
+            initActivationRequest.setApplicationId(lookupResponse.getApplicationId());
+            initActivationRequest.setUserId(request.userId());
+            initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
+            initActivationRequest.setFlags(activationFlagService.fetchInitialActivationFlags());
+
+            final InitActivationResponse initActivationResponse = powerAuthClient.initActivation(
+                    initActivationRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders());
+
+            return initActivationResponse.getActivationCode();
+        } catch (PowerAuthClientException e) {
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -59,7 +98,7 @@ public class ActivationService {
         request.setActivationId(activationId);
 
         try {
-            powerAuthClient.removeActivation(request);
+            powerAuthClient.removeActivation(request, httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
@@ -77,9 +116,13 @@ public class ActivationService {
         request.setActivationId(activationId);
 
         try {
-            return powerAuthClient.getActivationStatus(request).getActivationStatus();
+            return powerAuthClient.getActivationStatus(request, httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders())
+                    .getActivationStatus();
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
     }
+
+    @Builder
+    public record InitActivationContext(String userId, String applicationKey) {}
 }

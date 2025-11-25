@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
@@ -116,8 +115,7 @@ public class IdentityVerificationStatusService {
         return response;
     }
 
-    private boolean containsActivationFlagVerificationPending(OwnerId ownerId) throws RemoteCommunicationException {
-        final List<String> flags = activationFlagService.listActivationFlags(ownerId);
-        return flags.contains(ActivationFlagService.ACTIVATION_FLAG_VERIFICATION_PENDING);
+    private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
+        return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
     }
 }

@@ -57,6 +57,9 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
+import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -108,6 +111,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final OnboardingProvider onboardingProvider;
 
+    private final IdentifierGenerator identifierGenerator = new IdentifierGenerator();
+
     /**
      * Service constructor.
      * @param onboardingProcessRepository Onboarding process repository.
@@ -151,7 +156,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     @Transactional
     public OnboardingStartResponse startOnboarding(
             final OnboardingStartRequest request,
-            final RequestContext requestContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException {
+            final RequestContext requestContext,
+            final EncryptionContext encryptionContext) throws OnboardingProcessException, OnboardingOtpDeliveryException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
         final Map<String, Object> identification = request.identification();
         final String identificationData = parseIdentificationData(identification);
@@ -182,18 +188,41 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         if (userId == null) {
-            logger.debug("User ID is null, OTP is not sent");
+            logger.info("User ID is null, OTP is not sent");
         } else {
             logger.debug("Sending OTP for user ID: {}", userId);
             sendOtp(process, otpCode);
         }
 
+        final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
+                .applicationKey(encryptionContext.getApplicationKey())
+                .userId(userId)
+                .build();
+
         return OnboardingStartResponse.builder()
                 .processId(process.getId())
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
-                .activationCode(null) // TODO (racansky, 2025-11-19, #1359) fill activation code
+                .activationCode(fetchActivationCode(initActivationContext))
                 .build();
+    }
+
+    private String fetchActivationCode(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
+        if (request.userId() != null) {
+            return activationService.initActivation(request);
+        } else {
+            logger.info("User ID is null, generating fake activationCode");
+            return generateActivationCode();
+        }
+    }
+
+    private String generateActivationCode() {
+        try {
+            return identifierGenerator.generateActivationCode();
+        } catch (CryptoProviderException e) {
+            logger.error("Failed to generate fake activation code: {}", e.getMessage(), e);
+            return null;
+        }
     }
 
     /**

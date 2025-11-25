@@ -22,15 +22,15 @@ package com.wultra.app.onboardingserver.common.service;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.RemoveActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.UpdateActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
+import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -40,27 +40,27 @@ import java.util.List;
 /**
  * Service for working with activation flags.
  *
+ * @implNote Mind that the flags have to be disallowed in the enrollment server module in {@code MobileTokenController}.
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@AllArgsConstructor
+@Slf4j
 public class ActivationFlagService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ActivationFlagService.class);
-
-    public static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
-    public static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
+    private static final String ACTIVATION_FLAG_VERIFICATION_PENDING = "VERIFICATION_PENDING";
+    private static final String ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS = "VERIFICATION_IN_PROGRESS";
 
     private final PowerAuthClient powerAuthClient;
     private final HttpCustomizationService httpCustomizationService;
 
     /**
-     * Service constructor.
-     * @param powerAuthClient PowerAuth service client.
-     * @param httpCustomizationService HTTP customization service.
+     * Fetch initial activation flags.
+     *
+     * @return List of initial activation flags.
      */
-    public ActivationFlagService(PowerAuthClient powerAuthClient, HttpCustomizationService httpCustomizationService) {
-        this.powerAuthClient = powerAuthClient;
-        this.httpCustomizationService = httpCustomizationService;
+    public List<String> fetchInitialActivationFlags() {
+        return List.of(ACTIVATION_FLAG_VERIFICATION_PENDING);
     }
 
     /**
@@ -71,7 +71,7 @@ public class ActivationFlagService {
      */
     public void initActivationFlagsForIdentityVerification(OwnerId ownerId) throws IdentityVerificationException, RemoteCommunicationException {
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+            final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING)) {
                 throw new IdentityVerificationException("Activation flag VERIFICATION_PENDING not found when initializing identity verification, " + ownerId);
             }
@@ -93,7 +93,7 @@ public class ActivationFlagService {
      */
     public void updateActivationFlagsForFailedIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException {
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+            final List<String> activationFlags = new ArrayList<>(listActivationFlagsInternal(ownerId.getActivationId()));
 
             // Remove flag VERIFICATION_IN_PROGRESS
             activationFlags.remove(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS);
@@ -119,7 +119,7 @@ public class ActivationFlagService {
      */
     public void updateActivationFlagsForSucceededIdentityVerification(OwnerId ownerId) throws RemoteCommunicationException, IdentityVerificationException {
         try {
-            final List<String> activationFlags = listActivationFlagsInternal(ownerId);
+            final List<String> activationFlags = listActivationFlagsInternal(ownerId.getActivationId());
             if (!activationFlags.contains(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS)) {
                 throw new IdentityVerificationException("Activation flag VERIFICATION_IN_PROGRESS not found when completing identity verification");
             }
@@ -134,13 +134,16 @@ public class ActivationFlagService {
     }
 
     /**
-     * Obtain list of activation flags.
-     * @param ownerId Owner identification.
+     * Find out if activation flag {@code VERIFICATION_PENDING} is present.
+     *
+     * @param activationId Activation ID.
+     * @return {@code True} if activation flag {@code VERIFICATION_PENDING} is present, {@code false} otherwise.
      * @throws RemoteCommunicationException Thrown when list of activation flags could not be obtained.
      */
-    public List<String> listActivationFlags(OwnerId ownerId) throws RemoteCommunicationException {
+    public boolean containsActivationFlagVerificationPending(final String activationId) throws RemoteCommunicationException {
         try {
-            return listActivationFlagsInternal(ownerId);
+            final List<String> flags = listActivationFlagsInternal(activationId);
+            return flags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING);
         } catch (PowerAuthClientException ex) {
             logger.warn("Activation flag request failed, error: {}", ex.getMessage());
             logger.debug(ex.getMessage(), ex);
@@ -150,19 +153,19 @@ public class ActivationFlagService {
 
     /**
      * Obtain list of activation flags.
-     * @param ownerId Owner identification.
+     * @param activationId Activation ID.
      * @throws PowerAuthClientException Thrown when list of activation flags could not be obtained.
      */
-    private List<String> listActivationFlagsInternal(OwnerId ownerId) throws PowerAuthClientException {
-        final ListActivationFlagsRequest listRequest = new ListActivationFlagsRequest();
-        listRequest.setActivationId(ownerId.getActivationId());
+    private List<String> listActivationFlagsInternal(final String activationId) throws PowerAuthClientException {
+        final ListActivationFlagsRequest request = new ListActivationFlagsRequest();
+        request.setActivationId(activationId);
         final ListActivationFlagsResponse response = powerAuthClient.listActivationFlags(
-                listRequest,
+                request,
                 httpCustomizationService.getQueryParams(),
                 httpCustomizationService.getHttpHeaders()
         );
 
-        return new ArrayList<>(response.getActivationFlags());
+        return response.getActivationFlags();
     }
 
     /**
