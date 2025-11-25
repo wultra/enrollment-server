@@ -31,6 +31,8 @@ class OtpSendRequestDto {
 
     private String processId;
 
+    private String processType;
+
     private String userId;
 
     /**

@@ -31,6 +31,8 @@ class ProcessEventRequestDto {
 
     private String processId;
 
+    private String processType;
+
     private String identityVerificationId;
 
     private String userId;

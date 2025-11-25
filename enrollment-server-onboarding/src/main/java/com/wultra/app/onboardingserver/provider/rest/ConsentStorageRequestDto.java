@@ -33,6 +33,8 @@ class ConsentStorageRequestDto {
 
     private String processId;
 
+    private String processType;
+
     private Boolean approved;
 
 }

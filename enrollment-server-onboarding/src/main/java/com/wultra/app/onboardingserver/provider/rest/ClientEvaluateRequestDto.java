@@ -31,6 +31,8 @@ class ClientEvaluateRequestDto {
 
     private String processId;
 
+    private String processType;
+
     /**
      * Identifier of verification in identity verification system under which the uploaded documents were verified.
      */

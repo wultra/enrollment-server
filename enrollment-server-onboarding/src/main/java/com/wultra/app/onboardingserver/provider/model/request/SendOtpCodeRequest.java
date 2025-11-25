@@ -42,6 +42,9 @@ public final class SendOtpCodeRequest {
     private String processId;
 
     @NonNull
+    private String processType;
+
+    @NonNull
     private String userId;
 
     @NonNull

@@ -29,6 +29,8 @@ class ConsentTextRequestDto {
 
     private String processId;
 
+    private String processType;
+
     private String userId;
 
     /**

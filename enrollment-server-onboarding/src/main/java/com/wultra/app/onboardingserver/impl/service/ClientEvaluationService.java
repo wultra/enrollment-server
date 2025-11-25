@@ -26,13 +26,15 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,6 +49,7 @@ import static java.util.stream.Collectors.toSet;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 public class ClientEvaluationService {
 
@@ -60,25 +63,7 @@ public class ClientEvaluationService {
 
     private final AuditService auditService;
 
-    /**
-     * All-arg constructor.
-     *
-     * @param onboardingProvider Onboarding provider.
-     * @param config Identity verification config.
-     * @param identityVerificationService Identity verification repository.
-     * @param auditService Audit service.
-     */
-    @Autowired
-    public ClientEvaluationService(
-            final OnboardingProvider onboardingProvider,
-            final IdentityVerificationConfig config,
-            final IdentityVerificationService identityVerificationService,
-            final AuditService auditService) {
-        this.onboardingProvider = onboardingProvider;
-        this.config = config;
-        this.identityVerificationService = identityVerificationService;
-        this.auditService = auditService;
-    }
+    private final CommonOnboardingService onboardingService;
 
     /**
      * Process client evaluation of the given identity verification.
@@ -92,8 +77,11 @@ public class ClientEvaluationService {
         final Set<DocumentVerificationEntity> acceptedDocuments = selectAcceptedDocuments(identityVerification);
 
         final String verificationId;
+        final String processType;
         try {
             verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
+            final OnboardingProcessEntity process = onboardingService.findProcessWithLock(identityVerification.getProcessId());
+            processType = process.getProcessConfiguration().getProcessType();
         } catch (Exception e) {
             processVerificationIdError(identityVerification, ownerId, e);
             return;
@@ -101,6 +89,7 @@ public class ClientEvaluationService {
 
         final EvaluateClientRequest.EvaluateClientRequestBuilder requestBuilder = EvaluateClientRequest.builder()
                 .processId(identityVerification.getProcessId())
+                .processType(processType)
                 .userId(identityVerification.getUserId())
                 .identityVerificationId(identityVerification.getId())
                 .verificationId(verificationId)

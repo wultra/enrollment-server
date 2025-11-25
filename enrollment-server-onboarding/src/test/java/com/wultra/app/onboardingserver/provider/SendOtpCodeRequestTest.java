@@ -36,6 +36,7 @@ class SendOtpCodeRequestTest {
         final String result = SendOtpCodeRequest.builder()
                 .otpCode("top secret")
                 .processId("666")
+                .processType("onboarding")
                 .locale(Locale.ENGLISH)
                 .otpType(SendOtpCodeRequest.OtpType.ACTIVATION)
                 .userId("42")

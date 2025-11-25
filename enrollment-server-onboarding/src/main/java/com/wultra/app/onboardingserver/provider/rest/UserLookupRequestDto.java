@@ -31,6 +31,8 @@ class UserLookupRequestDto {
 
     private String processId;
 
+    private String processType;
+
     private Map<String, Object> identification;
 
 }

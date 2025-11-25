@@ -174,6 +174,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ProcessEventRequestDto convert(final ProcessEventRequest source) throws OnboardingProviderException {
         final ProcessEventRequestDto target = new ProcessEventRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
         target.setType(convert(source.getType()));
@@ -200,12 +201,14 @@ public class RestOnboardingProvider implements OnboardingProvider {
         final UserLookupRequestDto target = new UserLookupRequestDto();
         target.setIdentification(source.getIdentification());
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         return target;
     }
 
-    private static OtpSendRequestDto convert(final SendOtpCodeRequest source) throws OnboardingProviderException {
+    private static OtpSendRequestDto convert(final SendOtpCodeRequest source) {
         final OtpSendRequestDto target = new OtpSendRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         target.setUserId(source.getUserId());
         target.setResend(source.isResend());
         target.setOtpCode(source.getOtpCode());
@@ -224,6 +227,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ConsentTextRequestDto convert(final ConsentTextRequest source) {
         final ConsentTextRequestDto target = new ConsentTextRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         target.setUserId(source.getUserId());
         target.setLanguage(source.getLocale().getLanguage());
         target.setConsentType(source.getConsentType());
@@ -233,6 +237,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ConsentStorageRequestDto convert(final ApproveConsentRequest source) {
         final ConsentStorageRequestDto target = new ConsentStorageRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         target.setUserId(source.getUserId());
         target.setConsentType(source.getConsentType());
         target.setApproved(source.isApproved());
@@ -242,6 +247,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ClientEvaluateRequestDto convert(final EvaluateClientRequest source) {
         final ClientEvaluateRequestDto target = new ClientEvaluateRequestDto();
         target.setProcessId(source.getProcessId());
+        target.setProcessType(source.getProcessType());
         target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
         target.setVerificationId(source.getVerificationId());

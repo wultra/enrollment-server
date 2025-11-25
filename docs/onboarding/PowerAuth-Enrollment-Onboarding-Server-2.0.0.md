@@ -30,3 +30,11 @@ The following changes were made to the onboarding start endpoint:
 
 - Added a new optional request field `processType` to specify which onboarding process type should be used.
 - Added a new optional response field `activationCode` to return activation code.
+
+
+## External Onboarding Services Changes
+
+
+### Process Type
+
+For external onboarding services, the `processType` field has been added to the request body.

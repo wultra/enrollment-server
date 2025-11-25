@@ -43,4 +43,7 @@ public final class LookupUserRequest {
 
     @NonNull
     private String processId;
+
+    @NonNull
+    private String processType;
 }

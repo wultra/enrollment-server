@@ -116,6 +116,7 @@ public class IdentityVerificationFinishService {
                 .type(ProcessEventRequest.EventType.FINISHED)
                 .userId(identityVerification.getUserId())
                 .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
                 .identityVerificationId(identityVerification.getId())
                 .eventData(createFinishEventData(process))
                 .build();

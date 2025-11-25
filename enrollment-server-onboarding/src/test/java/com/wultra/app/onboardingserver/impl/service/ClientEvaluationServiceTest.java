@@ -21,10 +21,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -67,6 +66,9 @@ class ClientEvaluationServiceTest {
     @Mock
     private IdentityVerificationConfig identityVerificationConfig;
 
+    @Mock
+    private CommonOnboardingService onboardingService;
+
     @InjectMocks
     private ClientEvaluationService tested;
 
@@ -77,8 +79,16 @@ class ClientEvaluationServiceTest {
         when(identityVerificationConfig.isSendingExtractedDataEnabled())
                 .thenReturn(true);
 
+        final OnboardingProcessConfigurationEntity processConfiguration = new OnboardingProcessConfigurationEntity();
+        processConfiguration.setProcessType("onboarding");
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(processConfiguration);
+        when(onboardingService.findProcessWithLock("p1"))
+                .thenReturn(process);
+
         final EvaluateClientRequest evaluateClientRequest = EvaluateClientRequest.builder()
                 .processId("p1")
+                .processType("onboarding")
                 .userId("u1")
                 .identityVerificationId("i1")
                 .verificationId("v1")
@@ -135,15 +145,21 @@ class ClientEvaluationServiceTest {
 
         final EvaluateClientRequest evaluateClientRequest = EvaluateClientRequest.builder()
                 .processId("p1")
+                .processType("onboarding")
                 .userId("u1")
                 .identityVerificationId("i1")
                 .verificationId("v1")
                 .build();
-        final EvaluateClientResponse evaluateClientResponse = EvaluateClientResponse.builder()
-                .accepted(true)
-                .build();
+
         when(onboardingProvider.evaluateClient(evaluateClientRequest))
                 .thenThrow(new OnboardingProviderException());
+
+        final OnboardingProcessConfigurationEntity processConfiguration = new OnboardingProcessConfigurationEntity();
+        processConfiguration.setProcessType("onboarding");
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(processConfiguration);
+        when(onboardingService.findProcessWithLock("p1"))
+                .thenReturn(process);
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setId("i1");
