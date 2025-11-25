@@ -82,7 +82,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsSubmitResult checkDocumentUpload(OwnerId ownerId, DocumentVerificationEntity document) {
-        logger.info("provider: microblink, action: checkDocumentUpload, state: unsupported, ownerId={}", ownerId);
+        logger.info("action: checkDocumentUpload, state: unsupported, provider: microblink, ownerId: {}", ownerId);
         throw new UnsupportedOperationException("Method checkDocumentUpload is not supported by Microblink provider.");
     }
 
@@ -93,7 +93,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(SubmittedDocument::getDocumentId)
                 .toList();
 
-        logger.info("provider: microblink, action: submitDocuments, state: initiated, ownerId: {}, documentIds: {}", ownerId, documentIds);
+        logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentIds: {}", ownerId, documentIds);
 
         var microblinkVerificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
 
@@ -147,13 +147,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         result.setResults(results);
         result.setExtractedPhotoId(microblinkVerificationData.facePhotoId());
 
-        logger.info("provider: microblink, action: submitDocuments, state: succeeded, result: {}", result);
+        logger.info("action: submitDocuments, state: succeeded, provider: microblink, result: {}", result);
         return result;
     }
 
     @Override
     public boolean shouldStoreSelfie() {
-        logger.info("provider: microblink, action: shouldStoreSelfie, state: succeeded, result: false");
+        logger.info("action: shouldStoreSelfie, state: succeeded, provider: microblink, result: false");
         return false;
     }
 
@@ -163,7 +163,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var verificationId = UUID.randomUUID().toString();
 
             logger.info(
-                    "provider: microblink, action: verifyDocuments, state: initiated, ownerId: {}, uploadIds: [{}], verificationId: {}",
+                    "action: verifyDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}, verificationId: {}",
                     ownerId,
                     String.join(",", uploadIds),
                     verificationId
@@ -171,10 +171,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var result = verifyDocuments(ownerId, uploadIds, verificationId);
 
-            logger.info("provider: microblink, action: verifyDocuments, state: succeeded, result: {}", result);
+            logger.info("action: verifyDocuments, state: succeeded, provider: microblink, result: {}", result);
             return result;
         } catch (final RemoteCommunicationException | DocumentVerificationException e) {
-            logger.info("provider: microblink, action: verifyDocuments, state: failed, error: {}", e.getMessage());
+            logger.info("action: verifyDocuments, state: failed, provider: microblink, error: {}", e.getMessage());
             throw e;
         }
     }
@@ -230,7 +230,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
                 final var facePhotoId = verificationData.facePhotoId();
                 photoCache.put(facePhotoId, faceImageBase64);
-                logger.info("Face photo stored in cache with id={}", facePhotoId);
+                logger.info("Face photo stored in cache with id: {}", facePhotoId);
             }
 
             final var documentsVerificationResult = buildDocumentVerificationResults(documentFront.uploadId(), documentBack.uploadId(), parsedResponse);
@@ -251,14 +251,14 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsVerificationResult getVerificationResult(OwnerId ownerId, String verificationId) {
-        logger.info("provider: microblink, action: getVerificationResult, state: unsupported, ownerId: {}, verificationId: {}", ownerId, verificationId);
+        logger.info("action: getVerificationResult, state: unsupported, provider: microblink, ownerId: {}, verificationId: {}", ownerId, verificationId);
         throw new UnsupportedOperationException("Method getVerificationResult is not supported by Microblink provider.");
     }
 
     @Override
     public Image getPhoto(String photoId) throws DocumentVerificationException {
         try {
-            logger.info("provider: microblink, action: getPhoto, state: initiated, photoId: {}", photoId);
+            logger.info("action: getPhoto, state: initiated, provider: microblink, photoId: {}", photoId);
 
             final var photoBase64 = Optional.ofNullable(photoCache.get(photoId, String.class))
                     .orElseThrow(() -> new DocumentVerificationException("Photo with id %s not found".formatted(photoId)));
@@ -268,17 +268,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .data(Base64.getDecoder().decode(photoBase64))
                     .build();
 
-            logger.info("provider: microblink, action: getPhoto, state: succeeded");
+            logger.info("action: getPhoto, state: succeeded, provider: microblink");
             return image;
         } catch (final DocumentVerificationException e) {
-            logger.info("provider: microblink, action: getPhoto, state: failed, error: {}", e.getMessage());
+            logger.info("action: getPhoto, state: failed, provider: microblink, error: {}", e.getMessage());
             throw e;
         }
     }
 
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
-        logger.info("provider: microblink, action: cleanupDocuments, state: initiated, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
+        logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
 
         final var activationId = ownerId.getActivationId();
         final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
@@ -297,24 +297,24 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             logger.debug("Record in cache after cleanup: {}", updatedVerificationData);
         }
 
-        logger.info("provider: microblink, action: cleanupDocuments, state: succeeded");
+        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");
     }
 
     @Override
     public List<String> parseRejectionReasons(DocumentResultEntity docResult) {
-        logger.info("provider: microblink, action: parseRejectionReasons, state: initiated, documentResultId: {}", docResult.getId());
+        logger.info("action: parseRejectionReasons, state: initiated, provider: microblink, documentResultId: {}", docResult.getId());
 
         final var result = List.of(docResult.getVerificationResult());
 
-        logger.info("provider: microblink, action: parseRejectionReasons, state: succeeded, rejectionReasons: [{}]", String.join(",", result));
+        logger.info("action: parseRejectionReasons, state: succeeded, provider: microblink, rejectionReasons: {}", String.join(",", result));
         return result;
     }
 
     @Override
     public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes) throws RemoteCommunicationException {
-        try {
-            logger.info("provider: microblink, action: initVerificationSdk, state: initiated, ownerId: {}, initAttributes: {}", ownerId, initAttributes);
+        logger.info("action: initVerificationSdk, state: initiated, provider: microblink, ownerId: {}, initAttributes: {}", ownerId, initAttributes);
 
+        try {
             final var activationId = ownerId.getActivationId();
             var mobilePlatform = initAttributes.getOrDefault("platform", null);
 
@@ -327,10 +327,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(licenseKey -> new VerificationSdkInfo(Map.of("license-key", licenseKey)))
                     .orElseGet(VerificationSdkInfo::new);
 
-            logger.info("provider: microblink, action: initVerificationSdk, state: succeeded, sdkInfo: {}", MicroblinkLogSanitizationUtils.sanitizeSdkInfo(sdkInfo));
+            logger.info("action: initVerificationSdk, state: succeeded, provider: microblink, sdkInfo: {}", MicroblinkLogSanitizationUtils.sanitizeSdkInfo(sdkInfo));
             return sdkInfo;
         } catch (final RemoteCommunicationException e) {
-            logger.info("provider: microblink, action: initVerificationSdk, state: failed, error: {}", e.getMessage());
+            logger.info("action: initVerificationSdk, state: failed, provider: microblink, error: {}", e.getMessage());
             throw e;
         }
     }
@@ -387,7 +387,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
 
             final var parsedResponse =  responseParser.parseResponse(body);
-            logger.info("Response traceId={}, verificationResult={}", parsedResponse.runtime().traceId(), parsedResponse.verificationJson());
+            logger.info("Response traceId: {}, verificationResult: {}", parsedResponse.runtime().traceId(), parsedResponse.verificationJson());
             logger.debug("Response body: {}", (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationResponseJson(body));
 
             return parsedResponse;
@@ -543,7 +543,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private String fetchMobilePlatform(final String activationId) throws RemoteCommunicationException {
         try {
-            logger.debug("Fetching mobile platform for activationId={}", activationId);
+            logger.debug("Fetching mobile platform for activationId: {}", activationId);
 
             final var response = powerAuthClient.getActivationStatus(activationId);
             final var platform = response.getPlatform();
