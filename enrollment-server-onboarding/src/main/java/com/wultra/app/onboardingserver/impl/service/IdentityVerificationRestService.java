@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
+import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -59,7 +60,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service implementing REST API methods for identity document verification.
@@ -86,6 +88,8 @@ public class IdentityVerificationRestService {
 
     private final OnboardingServiceImpl onboardingService;
 
+    private final DataExtractionService dataExtractionService;
+
     /**
      * Configuration data for client integration
      */
@@ -103,6 +107,7 @@ public class IdentityVerificationRestService {
      * @param onboardingService                 Onboarding service.
      * @param presenceCheckService              Presence check service.
      * @param stateMachineService               State machine service.
+     * @param dataExtractionService             Dta extraction service for uploaded documents.
      */
     @Autowired
     public IdentityVerificationRestService(
@@ -114,7 +119,8 @@ public class IdentityVerificationRestService {
             IdentityVerificationOtpService identityVerificationOtpService,
             OnboardingServiceImpl onboardingService,
             PresenceCheckService presenceCheckService,
-            StateMachineService stateMachineService) {
+            StateMachineService stateMachineService,
+            DataExtractionService dataExtractionService) {
         this.identityVerificationConfig = identityVerificationConfig;
 
         this.documentProcessingService = documentProcessingService;
@@ -128,6 +134,8 @@ public class IdentityVerificationRestService {
         this.integrationConfigDto = new ConfigurationDataDto();
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
         integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
+
+        this.dataExtractionService = dataExtractionService;
     }
 
     /**
@@ -193,6 +201,35 @@ public class IdentityVerificationRestService {
     }
 
     /**
+     * Submit identity-related documents for verification V2.
+     * @param request Document submit request.
+     * @param encryptionContext Encryption context.
+     * @return Document submit response.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     * @throws DocumentSubmitException Thrown when document submission fails.
+     * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @throws IdentityVerificationLimitException Thrown in case document upload limit is reached.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @throws IdentityVerificationException Thrown in case identity verification is invalid.
+     * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
+     */
+    @Transactional
+    public Response submitDocumentsV2(
+            final ObjectRequest<DocumentSubmitV2Request> request,
+            final EncryptionContext encryptionContext,
+            final PowerAuthApiAuthentication apiAuthentication
+    ) throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+        final var operationDescription = "submitting documents for verification V2";
+
+        checkApiAuthentication(apiAuthentication, operationDescription);
+        checkEncryptionContext(encryptionContext, operationDescription);
+        checkRequestObject(request, operationDescription);
+
+        return submitDocuments(request.getRequestObject(), encryptionContext);
+    }
+
+    /**
      * Submit identity-related documents for verification.
      * @param request Document submit request.
      * @param encryptionContext Encryption context.
@@ -207,24 +244,84 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @Transactional
-    public Response submitDocuments(ObjectRequest<DocumentSubmitRequest> request,
-                                                                  EncryptionContext encryptionContext,
-                                                                  PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+    public Response submitDocuments(
+            final ObjectRequest<DocumentSubmitRequest> request,
+            final EncryptionContext encryptionContext,
+            final PowerAuthApiAuthentication apiAuthentication
+    ) throws PowerAuthEncryptionException, PowerAuthAuthenticationException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, IdentityVerificationException, OnboardingProcessLimitException {
+        final var operationDescription = "submitting documents for verification";
 
-        final String operationDescription = "submitting documents for verification";
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkEncryptionContext(encryptionContext, operationDescription);
         checkRequestObject(request, operationDescription);
 
+        final var requestObject = request.getRequestObject();
+        final var documentsById = getDocumentsById(encryptionContext.getActivationId(), requestObject);
+
+        final var documentsV2 = buildDocumentsV2(requestObject, documentsById);
+
+        final var requestV2 = DocumentSubmitV2Request.builder()
+                .processId(requestObject.getProcessId())
+                .documents(documentsV2)
+                .build();
+
+        return submitDocuments(requestV2, encryptionContext);
+    }
+
+    private Map<String, Document> getDocumentsById(final String activationId, final DocumentSubmitRequest request) {
+        final var documentsById = new HashMap<String, Document>();
+
+        if (request.getData() != null) {
+            try {
+                final var extractedDocuments = dataExtractionService.extractDocuments(request.getData())
+                        .stream()
+                        .collect(Collectors.toMap(Document::getId, document -> document));
+
+                documentsById.putAll(extractedDocuments);
+            } catch (final DocumentVerificationException e) {
+                logger.error("Unable to extract documents from {}, activationId: {}", request, activationId);
+            }
+        }
+
+        return documentsById;
+    }
+
+    private static List<DocumentSubmitV2Request.Document> buildDocumentsV2(final DocumentSubmitRequest request, final Map<String, Document> documentsById) {
+        final var documentsV2 = new ArrayList<DocumentSubmitV2Request.Document>();
+
+        for (final var document : request.getDocuments()) {
+            final var filename = document.getFilename();
+            final var data = Optional.ofNullable(documentsById.getOrDefault(filename, null))
+                    .map(d -> Base64.getEncoder().encodeToString(d.getData()))
+                    .orElse(null);
+
+            final var documentV2 = DocumentSubmitV2Request.Document.builder()
+                    .filename(filename)
+                    .type(document.getType())
+                    .side(document.getSide())
+                    .originalDocumentId(document.getOriginalDocumentId())
+                    .data(data)
+                    .build();
+
+            documentsV2.add(documentV2);
+        }
+
+        return documentsV2;
+    }
+
+    private Response submitDocuments(
+            final DocumentSubmitV2Request request,
+            final EncryptionContext encryptionContext
+    ) throws DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+
         // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(encryptionContext);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.processId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        identityVerificationService.submitDocuments(request.getRequestObject(), ownerId);
+        identityVerificationService.submitDocuments(request, ownerId);
 
         return new Response();
     }

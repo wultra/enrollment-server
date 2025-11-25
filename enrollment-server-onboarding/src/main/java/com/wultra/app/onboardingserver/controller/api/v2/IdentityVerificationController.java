@@ -1,0 +1,73 @@
+/*
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2025 Wultra s.r.o.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.wultra.app.onboardingserver.controller.api.v2;
+
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
+import com.wultra.core.rest.model.base.request.ObjectRequest;
+import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
+import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
+import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
+import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
+import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
+import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Parameter;
+import lombok.AllArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * Identity Verification V2 REST API Controller.
+ *
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
+ */
+@ConditionalOnProperty(
+        value = "enrollment-server-onboarding.identity-verification.enabled",
+        havingValue = "true"
+)
+@RestController
+@AllArgsConstructor
+@RequestMapping(value = "api/v2/identity")
+class IdentityVerificationController {
+
+    private final IdentityVerificationRestService identityVerificationRestService;
+
+    @PostMapping("document/submit")
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
+    @PowerAuthToken(authenticationCodeType = {
+            PowerAuthCodeType.POSSESSION
+    })
+    public Response submitDocuments(
+            @EncryptedRequestBody ObjectRequest<DocumentSubmitV2Request> request,
+            @Parameter(hidden = true) EncryptionContext encryptionContext,
+            @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication
+    ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
+
+        return identityVerificationRestService.submitDocumentsV2(request, encryptionContext, apiAuthentication);
+    }
+}
