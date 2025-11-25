@@ -97,6 +97,7 @@
         <swagger-annotations-jakarta.version>2.2.40</swagger-annotations-jakarta.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.8.14</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.5</moneta.version>
+        <central.publishing.plugin.version>0.9.0</central.publishing.plugin.version>
 
         <wultra-core.version>2.0.0-SNAPSHOT</wultra-core.version>
         <powerauth-crypto.version>2.0.0-SNAPSHOT</powerauth-crypto.version>
@@ -274,6 +275,11 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>${central.publishing.plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>io.github.git-commit-id</groupId>
                     <artifactId>git-commit-id-maven-plugin</artifactId>
                     <version>${git-commit-id-maven-plugin.version}</version>
@@ -440,8 +446,6 @@
                     <name>!useInternalRepo</name>
                 </property>
             </activation>
-            <properties>
-            </properties>
             <distributionManagement>
                 <snapshotRepository>
                     <id>central-portal-snapshots-distribution</id>
@@ -452,6 +456,23 @@
                     <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
+            <properties>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>${env.server_id}</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <waitMaxTime>${env.wait_max_time}</waitMaxTime>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
