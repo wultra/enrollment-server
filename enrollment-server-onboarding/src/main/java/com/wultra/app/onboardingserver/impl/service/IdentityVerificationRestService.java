@@ -256,26 +256,27 @@ public class IdentityVerificationRestService {
         checkRequestObject(request, operationDescription);
 
         final var requestObject = request.getRequestObject();
-        final var documentsById = getDocumentsById(encryptionContext.getActivationId(), requestObject);
+        final var documentsByFilename = getDocumentsByFilename(encryptionContext.getActivationId(), requestObject);
 
-        final var documentsV2 = buildDocumentsV2(requestObject, documentsById);
+        final var documentsV2 = buildDocumentsV2(requestObject, documentsByFilename);
 
         final var requestV2 = DocumentSubmitV2Request.builder()
                 .processId(requestObject.getProcessId())
                 .documents(documentsV2)
+                .resubmit(requestObject.isResubmit())
                 .build();
 
         return submitDocuments(requestV2, encryptionContext);
     }
 
-    private Map<String, Document> getDocumentsById(final String activationId, final DocumentSubmitRequest request) {
+    private Map<String, Document> getDocumentsByFilename(final String activationId, final DocumentSubmitRequest request) {
         final var documentsById = new HashMap<String, Document>();
 
         if (request.getData() != null) {
             try {
                 final var extractedDocuments = dataExtractionService.extractDocuments(request.getData())
                         .stream()
-                        .collect(Collectors.toMap(Document::getId, document -> document));
+                        .collect(Collectors.toMap(Document::getFilename, document -> document));
 
                 documentsById.putAll(extractedDocuments);
             } catch (final DocumentVerificationException e) {
@@ -286,12 +287,12 @@ public class IdentityVerificationRestService {
         return documentsById;
     }
 
-    private static List<DocumentSubmitV2Request.Document> buildDocumentsV2(final DocumentSubmitRequest request, final Map<String, Document> documentsById) {
+    private static List<DocumentSubmitV2Request.Document> buildDocumentsV2(final DocumentSubmitRequest request, final Map<String, Document> documentsByFilename) {
         final var documentsV2 = new ArrayList<DocumentSubmitV2Request.Document>();
 
         for (final var document : request.getDocuments()) {
             final var filename = document.getFilename();
-            final var data = Optional.ofNullable(documentsById.getOrDefault(filename, null))
+            final var data = Optional.ofNullable(documentsByFilename.getOrDefault(filename, null))
                     .map(d -> Base64.getEncoder().encodeToString(d.getData()))
                     .orElse(null);
 
@@ -300,6 +301,7 @@ public class IdentityVerificationRestService {
                     .type(document.getType())
                     .side(document.getSide())
                     .originalDocumentId(document.getOriginalDocumentId())
+                    .uploadId(document.getUploadId())
                     .data(data)
                     .build();
 
@@ -313,8 +315,6 @@ public class IdentityVerificationRestService {
             final DocumentSubmitV2Request request,
             final EncryptionContext encryptionContext
     ) throws DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
-
-        // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(encryptionContext);
         final String processId = request.processId();
 
