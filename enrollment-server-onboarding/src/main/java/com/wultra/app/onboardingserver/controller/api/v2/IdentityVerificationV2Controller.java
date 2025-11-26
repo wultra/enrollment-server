@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
+import com.wultra.core.rest.model.base.response.ErrorResponse;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequestBody;
@@ -33,12 +34,19 @@ import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContex
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 /**
  * Identity Verification V2 REST API Controller.
@@ -52,10 +60,36 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "api/v2/identity")
+@Slf4j
 class IdentityVerificationV2Controller {
 
     private final IdentityVerificationRestService identityVerificationRestService;
 
+    @Operation(
+            summary = "Submit identity verification documents (V2)",
+            description = "Submit documents for identity verification process or re-submit previously submitted documents.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Documents successfully submitted"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid request",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "429",
+                            description = "Reached limit for onboarding processes",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Unknown server error while processing request",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+            }
+    )
     @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuthToken(authenticationCodeType = {
@@ -66,7 +100,21 @@ class IdentityVerificationV2Controller {
             @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication
     ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
+        final var processId = Optional.ofNullable(request)
+                .map(ObjectRequest::getRequestObject)
+                .map(DocumentSubmitV2Request::processId)
+                .orElse(null);
 
-        return identityVerificationRestService.submitDocumentsV2(request, encryptionContext, apiAuthentication);
+        logger.info("action: submitDocumentsV2, state: initiated, processId: {}", processId);
+
+        try {
+            final var response = identityVerificationRestService.submitDocumentsV2(request, encryptionContext, apiAuthentication);
+
+            logger.info("action: submitDocumentsV2, state: succeeded");
+            return response;
+        } catch (final Exception e) {
+            logger.error("action: submitDocumentsV2, state: failed, error: {}", e.getMessage());
+            throw e;
+        }
     }
 }

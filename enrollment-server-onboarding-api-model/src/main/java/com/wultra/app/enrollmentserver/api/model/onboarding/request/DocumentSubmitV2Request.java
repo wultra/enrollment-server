@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -30,20 +31,38 @@ import java.util.List;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
+@Schema(description = "REST API request body of submit documents V2")
 @Builder
 public record DocumentSubmitV2Request(
+        @Schema(description = "Process ID", example = "c3c6a4f4-9c53-4f4b-bc89-0c6c8e4dfb4a")
         String processId,
+
+        @Schema(description = "List of documents to be submitted")
         List<Document> documents,
+
+        @Schema(description = "Indicates whether documents in this request are re-submitted", example = "true", defaultValue = "false")
         boolean resubmit
 ) {
 
+    @Schema(description = "Document to be submitted")
     @Builder
     public record Document(
+            @Schema(description = "Original document ID. Required in case of re-submit", example = "f3b0c6c2-0f8a-4f2c-9e2c-b0d6c0b84e52")
             String originalDocumentId,
+
+            @Schema(description = "Upload ID", example = "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6")
             String uploadId,
+
+            @Schema(description = "Document image filename", example = "id_card_front.jpg")
             String filename,
+
+            @Schema(description = "Document type", example = "ID_CARD")
             DocumentType type,
+
+            @Schema(description = "Card side", example = "FRONT")
             CardSide side,
+
+            @Schema(description = "Document image", example = "iVBORw0KGgoAAAANSUhEUgAA...", format = "byte")
             String data
     ) {
 
