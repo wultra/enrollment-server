@@ -21,6 +21,7 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Builder;
+import lombok.NonNull;
 
 import java.util.List;
 
@@ -33,16 +34,30 @@ import java.util.List;
 public record DocumentSubmitV2Request(
         String processId,
         List<Document> documents,
-        boolean resubmit // TODO: is it needed
+        boolean resubmit
 ) {
 
     @Builder
     public record Document(
-            String originalDocumentId, // TODO: is it needed
+            String originalDocumentId,
             String uploadId,
             String filename,
             DocumentType type,
             CardSide side,
-            String data // TODO: Exclude from toString
-    ) {}
+            String data
+    ) {
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "Document[originalDocumentId=%s, uploadId=%s, filename=%s, type=%s, side=%s, data=%s]".formatted(
+                    originalDocumentId,
+                    uploadId,
+                    filename,
+                    type,
+                    side,
+                    data != null ? "length:" + data.length() : "null"
+            );
+        }
+    }
 }
