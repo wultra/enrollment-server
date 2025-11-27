@@ -107,7 +107,7 @@ public class IdentityVerificationRestService {
      * @param onboardingService                 Onboarding service.
      * @param presenceCheckService              Presence check service.
      * @param stateMachineService               State machine service.
-     * @param dataExtractionService             Dta extraction service for uploaded documents.
+     * @param dataExtractionService             Data extraction service for uploaded documents.
      */
     @Autowired
     public IdentityVerificationRestService(
@@ -219,7 +219,7 @@ public class IdentityVerificationRestService {
             final ObjectRequest<DocumentSubmitV2Request> request,
             final EncryptionContext encryptionContext,
             final PowerAuthApiAuthentication apiAuthentication
-    ) throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
+    ) throws PowerAuthTokenInvalidException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
         final var operationDescription = "submitting documents for verification V2";
 
         checkApiAuthentication(apiAuthentication, operationDescription);
@@ -270,7 +270,7 @@ public class IdentityVerificationRestService {
     }
 
     private Map<String, Document> getDocumentsByFilename(final String activationId, final DocumentSubmitRequest request) {
-        final var documentsById = new HashMap<String, Document>();
+        final var documentsByFilename = new HashMap<String, Document>();
 
         if (request.getData() != null) {
             try {
@@ -278,13 +278,13 @@ public class IdentityVerificationRestService {
                         .stream()
                         .collect(Collectors.toMap(Document::getFilename, document -> document));
 
-                documentsById.putAll(extractedDocuments);
+                documentsByFilename.putAll(extractedDocuments);
             } catch (final DocumentVerificationException e) {
                 logger.error("Unable to extract documents from {}, activationId: {}", request, activationId);
             }
         }
 
-        return documentsById;
+        return documentsByFilename;
     }
 
     private static List<DocumentSubmitV2Request.Document> buildDocumentsV2(final DocumentSubmitRequest request, final Map<String, Document> documentsByFilename) {

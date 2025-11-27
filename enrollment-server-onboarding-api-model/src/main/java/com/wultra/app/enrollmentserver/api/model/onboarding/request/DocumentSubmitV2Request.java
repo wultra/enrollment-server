@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.extern.jackson.Jacksonized;
 
 import java.util.List;
 
@@ -33,8 +34,9 @@ import java.util.List;
  */
 @Schema(description = "REST API request body of submit documents V2")
 @Builder
+@Jacksonized
 public record DocumentSubmitV2Request(
-        @Schema(description = "Process ID", example = "c3c6a4f4-9c53-4f4b-bc89-0c6c8e4dfb4a")
+        @Schema(description = "Process ID", example = "c3c6a4f4-9c53-4f4b-bc89-0c6c8e4dfb4a", format = "uuid")
         String processId,
 
         @Schema(description = "List of documents to be submitted")
@@ -46,11 +48,12 @@ public record DocumentSubmitV2Request(
 
     @Schema(description = "Document to be submitted")
     @Builder
+    @Jacksonized
     public record Document(
             @Schema(description = "Original document ID. Required in case of re-submit", example = "f3b0c6c2-0f8a-4f2c-9e2c-b0d6c0b84e52")
             String originalDocumentId,
 
-            @Schema(description = "Upload ID", example = "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6")
+            @Schema(description = "Upload ID. Required in case of re-submit", example = "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6")
             String uploadId,
 
             @Schema(description = "Document image filename", example = "id_card_front.jpg")

@@ -136,7 +136,7 @@ public class DocumentProcessingService {
      * @param documents submitted documents.
      * @param idVerification Identity verification entity.
      * @param ownerId Owner identification.
-     * @return
+     * @return documents verification results
      */
     private List<DocumentVerificationEntity> submitDocument(
             final List<DocumentSubmitV2Request.Document> documents,
