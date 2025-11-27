@@ -7,7 +7,7 @@ on:
         type: boolean
         default: false
         description: Publish to registry?
-      products_to_push:
+      products_to_build:
         description: Array of product names for which build will be done.
         type: string
         default: '["enrollment-server-onboarding-adapter-mock"]'
@@ -28,17 +28,8 @@ jobs:
   set-environment:
     runs-on: ubuntu-latest
     outputs:
-      products_to_push: ${{ steps.set-products-list.outputs.products_to_push }}
       should_push: ${{ steps.set-cond.outputs.should_push }}
     steps:
-      - name: Set products list
-        id: set-products-list
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.products_to_push }}" ]; then
-            echo 'products_to_push=${{ inputs.products_to_push }}' >> $GITHUB_OUTPUT
-          else
-            echo 'products_to_push=["enrollment-server-onboarding-adapter-mock"]' >> $GITHUB_OUTPUT
-          fi
       - name: Set condition
         id: set-cond
         run: |
@@ -61,7 +52,7 @@ jobs:
       INTERNAL_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
     strategy:
       matrix:
-        app: ${{ fromJSON(needs.set-environment.outputs.products_to_push)}}
+        app: ${{ fromJSON(github.event.inputs.products_to_build || '["enrollment-server-onboarding-adapter-mock"]') }}
     steps:
       - uses: actions/checkout@v5
       - name: Get ${{ matrix.app }} Server version
