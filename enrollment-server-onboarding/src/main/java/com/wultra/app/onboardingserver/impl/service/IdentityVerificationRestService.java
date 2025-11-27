@@ -280,7 +280,8 @@ public class IdentityVerificationRestService {
 
                 documentsByFilename.putAll(extractedDocuments);
             } catch (final DocumentVerificationException e) {
-                logger.error("Unable to extract documents from {}, activationId: {}", request, activationId);
+                logger.error("Unable to extract documents from {}, activationId: {}, error: {}", request, activationId, e.getMessage());
+                logger.debug("Exception when extracting documents", e);
             }
         }
 
