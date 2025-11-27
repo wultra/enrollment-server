@@ -53,9 +53,6 @@ public record DocumentSubmitV2Request(
             @Schema(description = "Original document ID. Required in case of re-submit", example = "f3b0c6c2-0f8a-4f2c-9e2c-b0d6c0b84e52")
             String originalDocumentId,
 
-            @Schema(description = "Upload ID. Required in case of re-submit", example = "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6")
-            String uploadId,
-
             @Schema(description = "Document image filename", example = "id_card_front.jpg")
             String filename,
 
@@ -72,9 +69,8 @@ public record DocumentSubmitV2Request(
         @Override
         @NonNull
         public String toString() {
-            return "Document[originalDocumentId=%s, uploadId=%s, filename=%s, type=%s, side=%s, data=%s]".formatted(
+            return "Document[originalDocumentId=%s, filename=%s, type=%s, side=%s, data=%s]".formatted(
                     originalDocumentId,
-                    uploadId,
                     filename,
                     type,
                     side,

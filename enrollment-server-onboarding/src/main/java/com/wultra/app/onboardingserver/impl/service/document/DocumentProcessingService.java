@@ -171,15 +171,6 @@ public class DocumentProcessingService {
         final DocumentsSubmitResult results = submitDocumentToProvider(submittedDocuments, docVerificationsList, idVerification, ownerId);
         processSubmitResults(results, docVerificationById, ownerId);
 
-        docVerificationsList.stream()
-                .filter(doc -> StringUtils.isNotBlank(doc.getUploadId()))
-                .map(doc -> documentByVerificationId.get(doc.getId()).uploadId())
-                .filter(StringUtils::isNotBlank)
-                .forEach(fileUploadId -> {
-                    documentDataRepository.deleteById(fileUploadId);
-                    logger.info("Deleted stored document data with id={}, {}", fileUploadId, ownerId);
-                });
-
         return docVerificationsList;
     }
 
@@ -466,23 +457,10 @@ public class DocumentProcessingService {
         submittedDoc.setSide(document.side());
         submittedDoc.setType(document.type());
 
-        byte[] documentData;
-        if (document.uploadId() == null) {
-            documentData = Optional.ofNullable(document.data())
-                    .map(d -> Base64.getDecoder().decode(d))
-                    .orElseThrow(() ->
-                            new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
-        } else {
-            final DocumentDataEntity storedDocument = documentDataRepository.findById(document.uploadId())
-                    .orElseThrow(() ->
-                            new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
-            if (!ownerId.getActivationId().equals(storedDocument.getActivationId())) {
-                throw new DocumentSubmitException(
-                        String.format("The referenced document data uploadId=%s are from different activation, %s", document, ownerId));
-            }
+        final var documentData = Optional.ofNullable(document.data())
+                .map(d -> Base64.getDecoder().decode(d))
+                .orElseThrow(() ->new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
 
-            documentData = storedDocument.getData();
-        }
         photo.setData(documentData);
 
         return submittedDoc;

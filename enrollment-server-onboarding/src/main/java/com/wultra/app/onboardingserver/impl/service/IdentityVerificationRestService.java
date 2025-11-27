@@ -302,7 +302,6 @@ public class IdentityVerificationRestService {
                     .type(document.getType())
                     .side(document.getSide())
                     .originalDocumentId(document.getOriginalDocumentId())
-                    .uploadId(document.getUploadId())
                     .data(data)
                     .build();
 

@@ -65,11 +65,9 @@ class IdentityVerificationRestServiceTest {
 
     private static final String ID_CARD_FRONT_FILENAME = "id_card_front.jpg";
     private static final String ID_CARD_FRONT_ORIGINAL_ID = "e2c4a1ff-6fe2-4a3b-8e11-1c3d98b88b65";
-    private static final String ID_CARD_FRONT_UPLOAD_ID = "97a8cbd9-3f02-4b4c-8f0d-9b3c2e358c43";
 
     private static final String ID_CARD_BACK_FILENAME = "id_card_back.jpg";
     private static final String ID_CARD_BACK_ORIGINAL_ID = "4df93751-12ad-4f67-ac88-b3bc4af02e2b";
-    private static final String ID_CARD_BACK_UPLOAD_ID = "b0b3fae5-c4a4-4f52-8e66-4d6b12bfa5df";
 
     @Mock
     private IdentityVerificationConfig identityVerificationConfig;
@@ -138,14 +136,12 @@ class IdentityVerificationRestServiceTest {
     private static ObjectRequest<DocumentSubmitRequest> buildRequestObject() {
         final var idCardFrontMetadata = new DocumentSubmitRequest.DocumentMetadata();
         idCardFrontMetadata.setOriginalDocumentId(ID_CARD_FRONT_ORIGINAL_ID);
-        idCardFrontMetadata.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
         idCardFrontMetadata.setType(DocumentType.ID_CARD);
         idCardFrontMetadata.setSide(CardSide.FRONT);
         idCardFrontMetadata.setFilename(ID_CARD_FRONT_FILENAME);
 
         final var idCardBackMetadata = new DocumentSubmitRequest.DocumentMetadata();
         idCardBackMetadata.setOriginalDocumentId(ID_CARD_BACK_ORIGINAL_ID);
-        idCardBackMetadata.setUploadId(ID_CARD_BACK_UPLOAD_ID);
         idCardBackMetadata.setType(DocumentType.ID_CARD);
         idCardBackMetadata.setSide(CardSide.BACK);
         idCardBackMetadata.setFilename(ID_CARD_BACK_FILENAME);
@@ -166,7 +162,6 @@ class IdentityVerificationRestServiceTest {
                 .documents(List.of(
                         DocumentSubmitV2Request.Document.builder()
                                 .originalDocumentId(ID_CARD_FRONT_ORIGINAL_ID)
-                                .uploadId(ID_CARD_FRONT_UPLOAD_ID)
                                 .type(DocumentType.ID_CARD)
                                 .side(CardSide.FRONT)
                                 .filename(ID_CARD_FRONT_FILENAME)
@@ -174,7 +169,6 @@ class IdentityVerificationRestServiceTest {
                                 .build(),
                         DocumentSubmitV2Request.Document.builder()
                                 .originalDocumentId(ID_CARD_BACK_ORIGINAL_ID)
-                                .uploadId(ID_CARD_BACK_UPLOAD_ID)
                                 .type(DocumentType.ID_CARD)
                                 .side(CardSide.BACK)
                                 .filename(ID_CARD_BACK_FILENAME)

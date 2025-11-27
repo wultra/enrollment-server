@@ -93,7 +93,6 @@ class IdentityVerificationRestServiceIntTest {
                 .resubmit(true)
                 .documents(List.of(
                         DocumentSubmitV2Request.Document.builder()
-                                .uploadId("fa709f49-ac67-4974-9d45-6f946ffdfb63")
                                 .originalDocumentId("bc8b0f4a-8a6f-4dc7-ae2b-05d6ca059e33")
                                 .type(DocumentType.ID_CARD)
                                 .side(CardSide.FRONT)
@@ -101,7 +100,6 @@ class IdentityVerificationRestServiceIntTest {
                                 .data(Base64.getEncoder().encodeToString(new byte[] { 1 }))
                                 .build(),
                         DocumentSubmitV2Request.Document.builder()
-                                .uploadId("79ae47a3-40c3-42a2-b722-1282ff2d7679")
                                 .originalDocumentId("8f3a3887-6f7a-4d84-b907-3bdf257cbb46")
                                 .type(DocumentType.ID_CARD)
                                 .side(CardSide.BACK)
