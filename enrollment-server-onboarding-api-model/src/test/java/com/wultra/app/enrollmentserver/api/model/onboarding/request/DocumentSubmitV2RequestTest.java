@@ -43,7 +43,6 @@ class DocumentSubmitV2RequestTest {
                         List.of(
                                 DocumentSubmitV2Request.Document.builder()
                                         .originalDocumentId("doc-1")
-                                        .uploadId("upload-1")
                                         .filename("file1.jpg")
                                         .type(DocumentType.ID_CARD)
                                         .side(CardSide.FRONT)
@@ -57,7 +56,7 @@ class DocumentSubmitV2RequestTest {
 
         // then
         assertEquals(
-                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, uploadId=upload-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=null]], resubmit=true]",
+                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=null]], resubmit=true]",
                 requestAsString
         );
     }
@@ -72,7 +71,6 @@ class DocumentSubmitV2RequestTest {
                         List.of(
                                 DocumentSubmitV2Request.Document.builder()
                                         .originalDocumentId("doc-1")
-                                        .uploadId("upload-1")
                                         .filename("file1.jpg")
                                         .type(DocumentType.ID_CARD)
                                         .side(CardSide.FRONT)
@@ -87,7 +85,7 @@ class DocumentSubmitV2RequestTest {
 
         // then
         assertEquals(
-                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, uploadId=upload-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=length:11]], resubmit=true]",
+                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=length:11]], resubmit=true]",
                 requestAsString
         );
     }
