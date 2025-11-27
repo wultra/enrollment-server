@@ -117,6 +117,10 @@ public class IdentityVerificationController {
 
     /**
      * Submit identity-related documents for verification.
+     *
+     * @deprecated
+     * Use {@code /api/v2/identity/document/submit} instead.
+     *
      * @param request Document submit request.
      * @param encryptionContext Encryption context.
      * @return Document submit response.
@@ -129,6 +133,7 @@ public class IdentityVerificationController {
      * @throws IdentityVerificationException Thrown in case identity verification is invalid.
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
+    @Deprecated(since = "2.0.0")
     @PostMapping("document/submit")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuthToken(authenticationCodeType = {
