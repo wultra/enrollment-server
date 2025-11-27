@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -96,7 +97,7 @@ class IdentityVerificationV2Controller {
             PowerAuthCodeType.POSSESSION
     })
     public Response submitDocuments(
-            @EncryptedRequestBody ObjectRequest<DocumentSubmitV2Request> request,
+            @EncryptedRequestBody @Valid ObjectRequest<DocumentSubmitV2Request> request,
             @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication
     ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {

@@ -21,6 +21,7 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
@@ -37,9 +38,11 @@ import java.util.List;
 @Jacksonized
 public record DocumentSubmitV2Request(
         @Schema(description = "Process ID", example = "c3c6a4f4-9c53-4f4b-bc89-0c6c8e4dfb4a", format = "uuid")
+        @NotEmpty
         String processId,
 
         @Schema(description = "List of documents to be submitted")
+        @NotEmpty
         List<Document> documents,
 
         @Schema(description = "Indicates whether documents in this request are re-submitted", example = "true", defaultValue = "false")
@@ -54,15 +57,19 @@ public record DocumentSubmitV2Request(
             String originalDocumentId,
 
             @Schema(description = "Document image filename", example = "id_card_front.jpg")
+            @NotEmpty
             String filename,
 
             @Schema(description = "Document type", example = "ID_CARD")
+            @NotEmpty
             DocumentType type,
 
             @Schema(description = "Card side", example = "FRONT")
+            @NotEmpty
             CardSide side,
 
             @Schema(description = "Document image", example = "iVBORw0KGgoAAAANSUhEUgAA...", format = "byte")
+            @NotEmpty
             String data
     ) {
 
