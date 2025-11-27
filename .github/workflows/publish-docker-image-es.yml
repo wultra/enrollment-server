@@ -1,0 +1,24 @@
+name: Build and deploy docker image for ES
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_to_registry:
+        type: boolean
+        default: false
+        description: Publish to registry?
+      environment:
+        type: string
+        default: docker-internal
+        description: Select the environment
+  pull_request:
+    branches: [ 'develop', 'master', 'releases/*' ]
+    paths: [ 'enrollment-server/**', '!docs/**', 'docs/db/**']
+
+jobs:
+  call-publish-docker-image:
+    uses: ./.github/workflows/publish-docker-image.yml
+    with:
+      push_to_registry: ${{ github.event.inputs.push_to_registry || false }}
+      environment: ${{ github.event.inputs.environment || 'docker-internal' }}
+      products_to_build: '["enrollment-server"]'
