@@ -504,6 +504,7 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
+    @Transactional
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final ObjectRequest<OnboardingConsentTextRequest> request,
             final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthTokenInvalidException {
@@ -533,6 +534,7 @@ public class IdentityVerificationRestService {
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
+    @Transactional
     public Response approveConsent(
             final ObjectRequest<OnboardingConsentApprovalRequest> request,
             final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
