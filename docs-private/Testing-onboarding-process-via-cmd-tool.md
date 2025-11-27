@@ -95,6 +95,64 @@ Request body:
 ```
 
 
+## Get consent text
+
+```shell
+java -jar powerauth-java-cmd-1.10.0.jar \
+    --url "http://localhost:8083/enrollment-server-onboarding/api/identity/consent/text" \
+    --base-url "http://localhost:8081/enrollment-server" \
+    --status-file "./device_status.json" \
+    --config-file "./sdk_config.json" \
+    --method "validate-token" \
+    --http-method "POST" \
+    --resource-id "/api/identity/consent/text" \
+    --data-file "./onboarding/9_consentText.json" \
+    --version "3.3" \
+    --token-id "bac3a94c-21c1-40c0-9684-50c711026ea5" \
+    --token-secret "XBvTUDULLPehlw0WhxWRpg==" \
+    --password "1234"
+```
+
+Request body:
+
+```json
+{
+  "requestObject": {
+    "processId": "6b5cd219-4330-457e-84ca-5a7c96aa2d98",
+    "consentType": "GDPR"
+  }
+}
+```
+
+## Approve consent
+
+```shell
+java -jar powerauth-java-cmd-1.10.0.jar \
+    --url "http://localhost:8083/enrollment-server-onboarding/api/identity/consent/approve" \
+    --base-url "http://localhost:8081/enrollment-server" \
+    --status-file "./device_status.json" \
+    --config-file "./sdk_config.json" \
+    --method "sign" \
+    --http-method "POST" \
+    --resource-id "/api/identity/consent/approve" \
+    --signature-type "possession" \
+    --data-file "./onboarding/10_consentApprove.json" \
+    --version "3.3" \
+    --password "1234"
+```
+
+Request body:
+
+```json
+{
+  "requestObject": {
+    "processId": "6b5cd219-4330-457e-84ca-5a7c96aa2d98",
+    "consentType": "GDPR",
+    "approved": true
+  }
+}
+```
+
 ## Init process
 
 ```shell
