@@ -18,7 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentStatusRequest;
-import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.DocumentStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
@@ -26,6 +26,8 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
@@ -38,11 +40,9 @@ import com.wultra.app.onboardingserver.common.service.IdentityVerificationLimitS
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoundException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -193,14 +193,14 @@ public class IdentityVerificationService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public void submitDocuments(final DocumentSubmitRequest request, final OwnerId ownerId)
+    public void submitDocuments(final DocumentSubmitV2Request request, final OwnerId ownerId)
             throws DocumentSubmitException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
 
         final IdentityVerificationEntity idVerification = findByOptional(ownerId).orElseThrow(() ->
                 new DocumentSubmitException("Identity verification has not been initialized, " + ownerId));
 
         String processId = idVerification.getProcessId();
-        if (!processId.equals(request.getProcessId())) {
+        if (!processId.equals(request.processId())) {
             throw new DocumentSubmitException("Invalid process ID: " + processId);
         }
 

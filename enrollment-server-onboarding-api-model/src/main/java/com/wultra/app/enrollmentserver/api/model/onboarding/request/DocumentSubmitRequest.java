@@ -26,9 +26,13 @@ import java.util.List;
 /**
  * Request class used when submitting documents for identity verification.
  *
+ * @deprecated
+ * Use {@link DocumentSubmitV2Request} instead.
+ *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@Deprecated(since = "2.0.0")
 public class DocumentSubmitRequest {
 
     private String processId;

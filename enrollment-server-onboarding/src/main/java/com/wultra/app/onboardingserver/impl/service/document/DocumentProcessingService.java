@@ -17,11 +17,13 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
@@ -32,9 +34,7 @@ import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,48 +114,48 @@ public class DocumentProcessingService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<DocumentVerificationEntity> submitDocuments(
-            IdentityVerificationEntity idVerification,
-            DocumentSubmitRequest request,
-            OwnerId ownerId) throws DocumentSubmitException {
+            final IdentityVerificationEntity idVerification,
+            final DocumentSubmitV2Request request,
+            final OwnerId ownerId
+    ) throws DocumentSubmitException {
 
         checkDocumentResubmit(ownerId, request);
-        final List<Document> documents = getDocuments(ownerId, request);
-        final var documentsByType = request.getDocuments().stream()
-                .collect(groupingBy(DocumentSubmitRequest.DocumentMetadata::getType));
+        final var documentsByType = request.documents()
+                .stream()
+                .collect(groupingBy(DocumentSubmitV2Request.Document::type));
 
         final List<DocumentVerificationEntity> docVerifications = new ArrayList<>();
-        for (var docMetadataList : documentsByType.values()) {
-            docVerifications.addAll(submitDocument(docMetadataList, documents, idVerification, ownerId));
+        for (var documentsOfSameType : documentsByType.values()) {
+            docVerifications.addAll(submitDocument(documentsOfSameType, idVerification, ownerId));
         }
         return docVerifications;
     }
 
     /**
      * Submit pages of a document to document verify provider.
-     * @param pagesMetadata Pages metadata from request.
-     * @param pagesData Pages data.
+     * @param documents submitted documents.
      * @param idVerification Identity verification entity.
      * @param ownerId Owner identification.
-     * @return
+     * @return documents verification results
      */
-    private List<DocumentVerificationEntity> submitDocument(final List<DocumentSubmitRequest.DocumentMetadata> pagesMetadata,
-                                                            final List<Document> pagesData,
-                                                            final IdentityVerificationEntity idVerification,
-                                                            final OwnerId ownerId) {
-
-        // Maps are used to associate DocumentsSubmitResult - DocumentVerificationEntities - DocumentMetadata
-        final Map<String, DocumentVerificationEntity> docVerifications = new HashMap<>();
-        final Map<String, DocumentSubmitRequest.DocumentMetadata> docMetadataMap = new HashMap<>();
+    private List<DocumentVerificationEntity> submitDocument(
+            final List<DocumentSubmitV2Request.Document> documents,
+            final IdentityVerificationEntity idVerification,
+            final OwnerId ownerId
+    ) {
+        final var docVerificationById = new HashMap<String, DocumentVerificationEntity>();
+        final var documentByVerificationId = new HashMap<String, DocumentSubmitV2Request.Document>();
 
         final List<SubmittedDocument> submittedDocuments = new ArrayList<>();
-        for (var metadata : pagesMetadata) {
-            final DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, metadata);
-            docVerifications.put(docVerification.getId(), docVerification);
-            docMetadataMap.put(docVerification.getId(), metadata);
-            handleResubmit(ownerId, metadata.getOriginalDocumentId(), docVerification);
+        for (var document : documents) {
+            final DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, document);
+
+            docVerificationById.put(docVerification.getId(), docVerification);
+            documentByVerificationId.put(docVerification.getId(), document);
+            handleResubmit(ownerId, document.originalDocumentId(), docVerification);
 
             try {
-                submittedDocuments.add(createSubmittedDocument(ownerId, metadata, pagesData, docVerification));
+                submittedDocuments.add(createSubmittedDocument(ownerId, document, docVerification));
             } catch (DocumentSubmitException e) {
                 logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
                 logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
@@ -163,22 +163,13 @@ public class DocumentProcessingService {
                 docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
                 auditService.audit(docVerification, "Document verification failed for user: {}", ownerId.getUserId());
-                return docVerifications.values().stream().toList();
+                return docVerificationById.values().stream().toList();
             }
         }
 
-        final List<DocumentVerificationEntity> docVerificationsList = docVerifications.values().stream().toList();
+        final List<DocumentVerificationEntity> docVerificationsList = docVerificationById.values().stream().toList();
         final DocumentsSubmitResult results = submitDocumentToProvider(submittedDocuments, docVerificationsList, idVerification, ownerId);
-        processSubmitResults(results, docVerifications, ownerId);
-
-        docVerificationsList.stream()
-                .filter(doc -> StringUtils.isNotBlank(doc.getUploadId()))
-                .map(doc -> docMetadataMap.get(doc.getId()).getUploadId())
-                .filter(StringUtils::isNotBlank)
-                .forEach(fileUploadId -> {
-                    documentDataRepository.deleteById(fileUploadId);
-                    logger.info("Deleted stored document data with id={}, {}", fileUploadId, ownerId);
-                });
+        processSubmitResults(results, docVerificationById, ownerId);
 
         return docVerificationsList;
     }
@@ -217,15 +208,15 @@ public class DocumentProcessingService {
      * @param request Request body.
      * @throws DocumentSubmitException If request is resubmit without original document ID, or is not resubmit with original document ID
      */
-    private void checkDocumentResubmit(final OwnerId ownerId, final DocumentSubmitRequest request) throws DocumentSubmitException {
-        final boolean isResubmit = request.isResubmit();
-        for (var metadata : request.getDocuments()) {
-            final String originalDocumentId = metadata.getOriginalDocumentId();
+    private void checkDocumentResubmit(final OwnerId ownerId, final DocumentSubmitV2Request request) throws DocumentSubmitException {
+        final boolean isResubmit = request.resubmit();
+        for (var document : request.documents()) {
+            final String originalDocumentId = document.originalDocumentId();
             if (isResubmit && StringUtils.isBlank(originalDocumentId)) {
-                logger.debug("Request has resubmit flag but misses originalDocumentId {}, {}", metadata, ownerId);
+                logger.debug("Request has resubmit flag but misses originalDocumentId {}, {}", document, ownerId);
                 throw new DocumentSubmitException("Detected a resubmit request without specified originalDocumentId, %s".formatted(ownerId));
             } else if (!isResubmit && StringUtils.isNotBlank(originalDocumentId)) {
-                logger.debug("Request has originalDocumentId but is not flagged as resubmit {}, {}", metadata, ownerId);
+                logger.debug("Request has originalDocumentId but is not flagged as resubmit {}, {}", document, ownerId);
                 throw new DocumentSubmitException("Detected a submit request with specified originalDocumentId=%s, %s".formatted(originalDocumentId, ownerId));
             }
         }
@@ -435,14 +426,14 @@ public class DocumentProcessingService {
         return entity;
     }
 
-    private DocumentVerificationEntity createDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification, DocumentSubmitRequest.DocumentMetadata docMetadata) {
+    private DocumentVerificationEntity createDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification, DocumentSubmitV2Request.Document document) {
         DocumentVerificationEntity entity = new DocumentVerificationEntity();
         entity.setActivationId(ownerId.getActivationId());
         entity.setIdentityVerification(identityVerification);
-        entity.setFilename(docMetadata.getFilename());
-        entity.setOriginalDocumentId(docMetadata.getOriginalDocumentId());
-        entity.setSide(docMetadata.getSide());
-        entity.setType(docMetadata.getType());
+        entity.setFilename(document.filename());
+        entity.setOriginalDocumentId(document.originalDocumentId());
+        entity.setSide(document.side());
+        entity.setType(document.type());
         entity.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);
@@ -454,52 +445,25 @@ public class DocumentProcessingService {
 
     private SubmittedDocument createSubmittedDocument(
             OwnerId ownerId,
-            DocumentSubmitRequest.DocumentMetadata docMetadata,
-            List<Document> docs,
+            DocumentSubmitV2Request.Document document,
             DocumentVerificationEntity docVerification) throws DocumentSubmitException {
         final Image photo = Image.builder()
-                .filename(docMetadata.getFilename())
+                .filename(document.filename())
                 .build();
 
         SubmittedDocument submittedDoc = new SubmittedDocument();
         submittedDoc.setDocumentId(docVerification.getId());
         submittedDoc.setPhoto(photo);
-        submittedDoc.setSide(docMetadata.getSide());
-        submittedDoc.setType(docMetadata.getType());
+        submittedDoc.setSide(document.side());
+        submittedDoc.setType(document.type());
 
-        if (docMetadata.getUploadId() == null) {
-            final Document document = docs.stream()
-                    .filter(doc -> doc.getFilename().equals(docMetadata.getFilename()))
-                    .findFirst()
-                    .orElseThrow(() ->
-                            new DocumentSubmitException(String.format("Missing %s in data, %s", docMetadata, ownerId)));
-            photo.setData(document.getData());
-        } else {
-            final DocumentDataEntity documentData = documentDataRepository.findById(docMetadata.getUploadId())
-                    .orElseThrow(() ->
-                            new DocumentSubmitException(String.format("Missing %s in data, %s", docMetadata, ownerId)));
-            if (!ownerId.getActivationId().equals(documentData.getActivationId())) {
-                throw new DocumentSubmitException(
-                        String.format("The referenced document data uploadId=%s are from different activation, %s", docMetadata, ownerId));
-            }
-            photo.setData(documentData.getData());
-        }
+        final var documentData = Optional.ofNullable(document.data())
+                .map(d -> Base64.getDecoder().decode(d))
+                .orElseThrow(() ->new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
+
+        photo.setData(documentData);
+
         return submittedDoc;
-    }
-
-    private List<Document> getDocuments(OwnerId ownerId, DocumentSubmitRequest request) {
-        List<Document> documents;
-        if (request.getData() == null) {
-            documents = Collections.emptyList();
-        } else {
-            try {
-                documents = dataExtractionService.extractDocuments(request.getData());
-            } catch (DocumentVerificationException e) {
-                logger.error("Unable to extract documents from {}, {}", request, ownerId);
-                documents = Collections.emptyList();
-            }
-        }
-        return documents;
     }
 
     private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
