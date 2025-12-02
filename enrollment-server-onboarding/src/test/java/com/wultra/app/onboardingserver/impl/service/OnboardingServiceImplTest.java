@@ -205,7 +205,7 @@ class OnboardingServiceImplTest {
     }
 
     @Test
-    void testGetStatus_synchronizeWithPAS() throws Exception {
+    void testGetStatus_synchronizeWithPowerAuthServer() throws Exception {
         final OnboardingStatusRequest request = new OnboardingStatusRequest();
         request.setProcessId("11111111-df91-4053-bb3d-3970979baf5d");
 
