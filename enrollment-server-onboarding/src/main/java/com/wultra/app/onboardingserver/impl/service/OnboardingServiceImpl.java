@@ -57,10 +57,13 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
+import com.wultra.security.powerauth.rest.api.model.entity.ActivationType;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
+import com.wultra.security.powerauth.rest.api.spring.provider.CustomActivationProvider;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -261,6 +264,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @param request Onboarding status request.
      * @return Onboarding status response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     * @implNote This method performs a synchronization with the PowerAuth server.
+     *           If the activation is confirmed externally, this method changes the process status to {@code VERIFICATION_IN_PROGRESS} as a side effect.
      */
     @Transactional
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
@@ -276,9 +281,41 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             return response;
         }
 
+        synchronizeStateWithPowerAuth(process);
+
         response.setOnboardingStatus(process.getStatus());
         response.setConfig(integrationConfigDto);
         return response;
+    }
+
+    /**
+     * Synchronize the onboarding process state if needed.
+     * <p>
+     * If the process state is {@code ACTIVATION_IN_PROGRESS}, fetch the activation state and if {@code ACTIVE}, move the process to {@code VERIFICATION_IN_PROGRESS}.
+     * Not needed for custom activation, where the state changes in {@link CustomActivationProvider#activationWasCommitted(Map, Map, String, String, String, ActivationType, Map)}.
+     *
+     * @param process Onboarding process.
+     * @implNote using polling; callbacks would require more complex configuration and are not as reliable
+     */
+    private void synchronizeStateWithPowerAuth(final OnboardingProcessEntity process) {
+        final String processId = process.getId();
+        final String activationId = process.getActivationId();
+
+        if (process.getStatus() == OnboardingStatus.ACTIVATION_IN_PROGRESS && activationId != null) {
+            try {
+                final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
+                if (activationStatus == ActivationStatus.ACTIVE) {
+                    logger.info("Activation activated externally, moving process ID : {} to VERIFICATION_IN_PROGRESS", processId);
+                    process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
+                    process.setTimestampLastUpdated(new Date());
+                    onboardingProcessRepository.save(process);
+                }
+            } catch (RemoteCommunicationException e) {
+                logger.warn("Unable to check activation status for process ID: {}, activation ID: {}", processId, activationId, e);
+            }
+        } else {
+            logger.debug("State synchronization skipped for process ID: {}, status: {}, activation ID: {}", processId, process.getStatus(), activationId);
+        }
     }
 
     /**
