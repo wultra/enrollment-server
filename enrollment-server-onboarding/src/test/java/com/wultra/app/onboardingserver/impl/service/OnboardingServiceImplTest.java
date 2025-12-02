@@ -18,7 +18,9 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingStartRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingStatusRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -28,9 +30,11 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
+import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
@@ -188,5 +192,45 @@ class OnboardingServiceImplTest {
         final OnboardingProcessException result = assertThrows(OnboardingProcessException.class, () -> tested.startOnboarding(request, context, encryptionContext));
 
         assertEquals("No configuration found for process type: non-existing", result.getMessage());
+    }
+
+    @Test
+    void testGetStatus_activationInProgress() throws Exception {
+        final OnboardingStatusRequest request = new OnboardingStatusRequest();
+        request.setProcessId("00000000-df91-4053-bb3d-3970979baf5d");
+
+        final OnboardingStatusResponse result = tested.getStatus(request);
+
+        assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.getOnboardingStatus());
+    }
+
+    @Test
+    void testGetStatus_synchronizeWithPowerAuthServer() throws Exception {
+        final OnboardingStatusRequest request = new OnboardingStatusRequest();
+        request.setProcessId("11111111-df91-4053-bb3d-3970979baf5d");
+
+        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
+        activationStatusResponse.setActivationStatus(ActivationStatus.ACTIVE);
+
+        when(powerAuthClient.getActivationStatus(any(), any(), any()))
+                .thenReturn(activationStatusResponse);
+
+        final OnboardingStatusResponse result = tested.getStatus(request);
+
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result.getOnboardingStatus());
+
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(request.getProcessId());
+        assertTrue(process.isPresent());
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, process.get().getStatus());
+    }
+
+    @Test
+    void testGetStatus_verificationInProgress() throws Exception {
+        final OnboardingStatusRequest request = new OnboardingStatusRequest();
+        request.setProcessId("22222222-df91-4053-bb3d-3970979baf5d");
+
+        final OnboardingStatusResponse result = tested.getStatus(request);
+
+        assertEquals(OnboardingStatus.VERIFICATION_IN_PROGRESS, result.getOnboardingStatus());
     }
 }
