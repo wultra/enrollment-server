@@ -305,7 +305,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             try {
                 final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
                 if (activationStatus == ActivationStatus.ACTIVE) {
-                    logger.info("Activation activated externally, moving process ID : {} to VERIFICATION_IN_PROGRESS", processId);
+                    logger.info("Activation activated externally, moving process ID: {} to VERIFICATION_IN_PROGRESS", processId);
                     process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
                     process.setTimestampLastUpdated(new Date());
                     onboardingProcessRepository.save(process);
