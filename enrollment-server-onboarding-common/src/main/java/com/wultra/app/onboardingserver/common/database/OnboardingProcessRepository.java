@@ -85,8 +85,10 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * @return Optional onboarding process.
      */
     @Query("""
-            SELECT p FROM OnboardingProcessEntity p WHERE p.status in :statuses
-            AND p.activationId = :activationId
+            SELECT p
+            FROM OnboardingProcessEntity p
+            WHERE p.status in :statuses
+              AND p.activationId = :activationId
             ORDER BY p.timestampCreated DESC""")
     Optional<OnboardingProcessEntity> findByActivationIdAndStatuses(String activationId, Collection<OnboardingStatus> statuses);
 
