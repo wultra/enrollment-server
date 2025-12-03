@@ -50,7 +50,7 @@ public record OnboardingStartResponse(
 
         @Schema(description = """
             Activation code used during the activation process.
-            For `activationType=IDENTITY` not present, the activation is created later on in the onboarding process.
+            For `activationType=IDENTITY`, `activationCode` is not present; the activation is created later on in the onboarding process.
             Uses 4x5 characters in Base32 encoding separated by a `-` character.""", example = "KA4PD-RTIE2-KOP3U-H53EA", minLength = 23, maxLength = 23)
         String activationCode,
 
