@@ -193,6 +193,10 @@ public class IdentityVerificationRestService {
             throw new OnboardingProcessException(
                     String.format("Onboarding process is in state: %s, %s, %s", process.getStatus(), processId, ownerId));
         }
+        if (!process.getActivationId().equals(ownerId.getActivationId())) {
+            throw new OnboardingProcessException(
+                    String.format("Activation ID mismatch for process ID: %s, %s", processId, ownerId));
+        }
     }
 
     /**
