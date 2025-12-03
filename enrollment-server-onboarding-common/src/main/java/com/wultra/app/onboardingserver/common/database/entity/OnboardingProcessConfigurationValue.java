@@ -37,7 +37,8 @@ public record OnboardingProcessConfigurationValue(
         boolean enabled,
         boolean otpForIdentification,
         boolean otpForIdentityVerification,
-        Documents documents
+        Documents documents,
+        ActivationType activationType
 ) {
     public static class OnboardingProcessConfigurationValueBuilder {
         OnboardingProcessConfigurationValueBuilder() {
@@ -45,6 +46,7 @@ public record OnboardingProcessConfigurationValue(
             otpForIdentification = false;
             otpForIdentityVerification = false;
             documents = new Documents((byte) 0, List.of());
+            activationType = ActivationType.IDENTITY;
         }
     }
 
@@ -74,5 +76,17 @@ public record OnboardingProcessConfigurationValue(
         ID_CARD,
         PASSPORT,
         DRIVING_LICENCE
+    }
+
+    public enum ActivationType {
+        /**
+         * Activation is initialized by the onboarding server and the activation code is returned when the process starts.
+         */
+        CODE,
+
+        /**
+         * Activation is initialized by SDK.
+         */
+        IDENTITY
     }
 }

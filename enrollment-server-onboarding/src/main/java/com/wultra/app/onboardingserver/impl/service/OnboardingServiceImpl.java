@@ -28,6 +28,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingC
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
+import com.wultra.app.enrollmentserver.model.enumeration.ActivationType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -35,6 +36,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessConfigurationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -201,7 +203,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .userId(userId)
                 .build();
 
-        final InitActivationResponse initActivationResponse = initActivation(initActivationContext);
+        final var activationType = process.getProcessConfiguration().getConfiguration().activationType();
+        final InitActivationResponse initActivationResponse = initActivation(initActivationContext, activationType);
         process.setActivationId(initActivationResponse.getActivationId());
         onboardingProcessRepository.save(process);
 
@@ -210,11 +213,25 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
                 .activationCode(initActivationResponse.getActivationCode())
+                .activationType(convert(activationType))
                 .build();
     }
 
-    private InitActivationResponse initActivation(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
-        if (request.userId() != null) {
+    private static ActivationType convert(final OnboardingProcessConfigurationValue.ActivationType source) {
+        return switch(source) {
+            case CODE -> ActivationType.CODE;
+            case IDENTITY -> ActivationType.IDENTITY;
+        };
+    }
+
+    private InitActivationResponse initActivation(
+            final ActivationService.InitActivationContext request,
+            final OnboardingProcessConfigurationValue.ActivationType activationType) throws RemoteCommunicationException {
+
+        if (activationType == OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
+            logger.info("ActivationCode is not generated for activationType=IDENTITY");
+            return new InitActivationResponse();
+        } else if (activationType == OnboardingProcessConfigurationValue.ActivationType.CODE && request.userId() != null) {
             return activationService.initActivation(request);
         } else {
             logger.info("User ID is null, generating fake activationCode");

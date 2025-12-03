@@ -234,6 +234,7 @@ The configuration is stored as JSON. See the following example:
 ```json
 {
   "enabled": true,
+  "activationType":"CODE",
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
   "documents": {
