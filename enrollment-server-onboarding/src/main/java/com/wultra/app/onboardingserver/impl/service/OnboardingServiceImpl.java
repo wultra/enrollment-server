@@ -263,7 +263,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Onboarding status response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
         final OnboardingProcessEntity process = findProcess(request.getProcessId());
