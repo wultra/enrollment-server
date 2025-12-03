@@ -100,7 +100,7 @@ public class MobileTokenConverter {
             final Operation operation = new Operation();
             operation.setId(operationDetail.getId());
             operation.setName(operationDetail.getOperationType());
-            operation.setAllowedSignatureType(convert(operationDetail.getAuthenticationCodeType()));
+            operation.setAllowedSignatureType(convert(operationDetail.getAuthenticationCodeTypes()));
             operation.setData(operationDetail.getData());
             operation.setOperationCreated(operationDetail.getTimestampCreated());
             operation.setOperationExpires(operationDetail.getTimestampExpires());
