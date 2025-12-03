@@ -20,9 +20,11 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationInitRequest;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -31,8 +33,15 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
+import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
@@ -42,14 +51,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.statemachine.ExtendedState;
+import org.springframework.statemachine.StateMachine;
 
 import java.util.Base64;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link IdentityVerificationRestService}.
@@ -99,6 +113,9 @@ class IdentityVerificationRestServiceTest {
     @Mock
     private DataExtractionService dataExtractionService;
 
+    @Mock
+    private ActivationService activationService;
+
     @InjectMocks
     private IdentityVerificationRestService tested;
 
@@ -131,6 +148,96 @@ class IdentityVerificationRestServiceTest {
         // then
         final var expectedRequest = buildDocumentSubmitV2Request();
         verify(identityVerificationService).submitDocuments(eq(expectedRequest), any(OwnerId.class));
+    }
+
+    @Test
+    void testInitializeIdentityVerification_alreadyVerificationInProgress() throws Exception {
+        final IdentityVerificationInitRequest requestObject = new IdentityVerificationInitRequest();
+        requestObject.setProcessId(PROCESS_ID);
+
+        final ObjectRequest<IdentityVerificationInitRequest> request = new ObjectRequest<>(requestObject);
+
+        final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
+        final PowerAuthActivation activationContext = mock(PowerAuthActivation.class);
+        when(apiAuthentication.getActivationContext()).thenReturn(activationContext);
+        when(activationContext.getActivationId()).thenReturn(ACTIVATION_ID);
+        when(activationContext.getUserId()).thenReturn(USER_ID);
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setId(PROCESS_ID);
+        process.setActivationId(ACTIVATION_ID);
+        process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS); // synchronization is not needed, state changed in custom activation provider
+
+        when(onboardingService.findProcessWithLock(PROCESS_ID)).thenReturn(process);
+
+        @SuppressWarnings("unchecked")
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = mock(StateMachine.class);
+        final ExtendedState extendedState = mock(ExtendedState.class);
+        final Response response = new Response();
+
+        when(stateMachine.getExtendedState()).thenReturn(extendedState);
+        when(extendedState.get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class)).thenReturn(response);
+        when(extendedState.get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class)).thenReturn(HttpStatus.OK);
+
+        when(stateMachineService.processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT)))
+                .thenReturn(stateMachine);
+
+        final ResponseEntity<Response> result = tested.initializeIdentityVerification(request, apiAuthentication);
+
+        assertNotNull(result);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+
+        verify(onboardingService).findProcessWithLock(PROCESS_ID);
+        verify(stateMachineService).processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT));
+    }
+
+    @Test
+    void testInitializeIdentityVerification_synchronizeStateWithPowerAuth() throws Exception {
+        final IdentityVerificationInitRequest requestObject = new IdentityVerificationInitRequest();
+        requestObject.setProcessId(PROCESS_ID);
+
+        final ObjectRequest<IdentityVerificationInitRequest> request = new ObjectRequest<>(requestObject);
+
+        final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
+        final PowerAuthActivation activationContext = mock(PowerAuthActivation.class);
+        when(apiAuthentication.getActivationContext()).thenReturn(activationContext);
+        when(activationContext.getActivationId()).thenReturn(ACTIVATION_ID);
+        when(activationContext.getUserId()).thenReturn(USER_ID);
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setId(PROCESS_ID);
+        process.setActivationId(ACTIVATION_ID);
+        process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS); // we do not know about finished activation yet
+
+        when(onboardingService.findProcessWithLock(PROCESS_ID)).thenReturn(process);
+
+        when(activationService.fetchActivationStatus(ACTIVATION_ID))
+                .thenReturn(ActivationStatus.ACTIVE);
+
+        @SuppressWarnings("unchecked")
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = mock(StateMachine.class);
+        final ExtendedState extendedState = mock(ExtendedState.class);
+        final Response response = new Response();
+
+        when(stateMachine.getExtendedState()).thenReturn(extendedState);
+        when(extendedState.get(ExtendedStateVariable.RESPONSE_OBJECT, Response.class)).thenReturn(response);
+        when(extendedState.get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class)).thenReturn(HttpStatus.OK);
+
+        when(stateMachineService.processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT)))
+                .thenReturn(stateMachine);
+
+        final ResponseEntity<Response> result = tested.initializeIdentityVerification(request, apiAuthentication);
+
+        assertNotNull(result);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+
+        verify(onboardingService).findProcessWithLock(PROCESS_ID);
+        verify(stateMachineService).processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT));
+        verify(onboardingService).updateProcess(argThat((OnboardingProcessEntity p) ->
+                p.getId().equals(PROCESS_ID) && p.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS
+        ));
     }
 
     private static ObjectRequest<DocumentSubmitRequest> buildRequestObject() {

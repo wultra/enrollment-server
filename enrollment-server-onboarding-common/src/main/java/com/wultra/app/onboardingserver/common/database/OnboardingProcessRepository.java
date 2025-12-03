@@ -77,6 +77,20 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     Optional<OnboardingProcessEntity> findByActivationIdAndStatus(String activationId, OnboardingStatus status);
 
     /**
+     * Find an existing process by activation identifier and process statuses. The process is not locked.
+     *
+     * @see #findByActivationIdAndStatusWithLock(String, OnboardingStatus) - alternative method with lock
+     * @param activationId Activation identifier.
+     * @param statuses Onboarding process statuses.
+     * @return Optional onboarding process.
+     */
+    @Query("""
+            SELECT p FROM OnboardingProcessEntity p WHERE p.status in :statuses
+            AND p.activationId = :activationId
+            ORDER BY p.timestampCreated DESC""")
+    Optional<OnboardingProcessEntity> findByActivationIdAndStatuses(String activationId, Collection<OnboardingStatus> statuses);
+
+    /**
      * Find an existing process by activation identifier and process status. Lock this process using PESSIMISTIC_WRITE
      * lock until the end of the transaction.
      *

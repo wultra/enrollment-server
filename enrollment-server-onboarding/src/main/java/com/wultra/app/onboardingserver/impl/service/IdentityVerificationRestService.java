@@ -44,11 +44,14 @@ import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.rest.api.model.entity.ActivationType;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import com.wultra.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
+import com.wultra.security.powerauth.rest.api.spring.provider.CustomActivationProvider;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +93,8 @@ public class IdentityVerificationRestService {
 
     private final DataExtractionService dataExtractionService;
 
+    private final ActivationService activationService;
+
     /**
      * Configuration data for client integration
      */
@@ -120,7 +125,9 @@ public class IdentityVerificationRestService {
             OnboardingServiceImpl onboardingService,
             PresenceCheckService presenceCheckService,
             StateMachineService stateMachineService,
-            DataExtractionService dataExtractionService) {
+            DataExtractionService dataExtractionService,
+            ActivationService activationService) {
+
         this.identityVerificationConfig = identityVerificationConfig;
 
         this.documentProcessingService = documentProcessingService;
@@ -130,6 +137,7 @@ public class IdentityVerificationRestService {
         this.onboardingService = onboardingService;
         this.presenceCheckService = presenceCheckService;
         this.stateMachineService = stateMachineService;
+        this.activationService = activationService;
 
         this.integrationConfigDto = new ConfigurationDataDto();
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
@@ -147,6 +155,8 @@ public class IdentityVerificationRestService {
      * @throws PowerAuthEncryptionException Thrown when encryption fails.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
+     * @implNote This method performs a synchronization with the PowerAuth server.
+     *           If the activation is confirmed externally, this method changes the process status to {@code VERIFICATION_IN_PROGRESS} as a side effect.
      */
     @Transactional
     public ResponseEntity<Response> initializeIdentityVerification(ObjectRequest<IdentityVerificationInitRequest> request,
@@ -162,12 +172,57 @@ public class IdentityVerificationRestService {
         final String processId = request.getRequestObject().getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
-        onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        final OnboardingProcessEntity process = onboardingService.findProcessWithLock(processId);
+        verifyProcess(process, processId, ownerId);
+        synchronizeStateWithPowerAuth(process);
 
         StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
 
         return createResponseEntity(stateMachine);
+    }
+
+    private static void verifyProcess(final OnboardingProcessEntity process, final String processId, final OwnerId ownerId) throws OnboardingProcessException {
+        final String expectedProcessId = process.getId();
+
+        if (!expectedProcessId.equals(processId)) {
+            throw new OnboardingProcessException(
+                    String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
+        }
+        if (!OnboardingStatus.NOT_YET_COMPLETED.contains(process.getStatus())) {
+            throw new OnboardingProcessException(
+                    String.format("Onboarding process is in state: %s, %s, %s", process.getStatus(), processId, ownerId));
+        }
+    }
+
+    /**
+     * Synchronize the onboarding process state if needed.
+     * <p>
+     * If the process state is {@code ACTIVATION_IN_PROGRESS}, fetch the activation state and if {@code ACTIVE}, move the process to {@code VERIFICATION_IN_PROGRESS}.
+     * Not needed for custom activation, where the state changes in {@link CustomActivationProvider#activationWasCommitted(Map, Map, String, String, String, ActivationType, Map)}.
+     *
+     * @param process Onboarding process.
+     * @implNote using polling; callbacks would require more complex configuration and are not as reliable
+     */
+    private void synchronizeStateWithPowerAuth(final OnboardingProcessEntity process) {
+        final String processId = process.getId();
+        final String activationId = process.getActivationId();
+
+        if (process.getStatus() == OnboardingStatus.ACTIVATION_IN_PROGRESS && activationId != null) {
+            try {
+                final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
+                if (activationStatus == ActivationStatus.ACTIVE) {
+                    logger.info("Activation activated externally, moving process ID: {} to VERIFICATION_IN_PROGRESS", processId);
+                    process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
+                    process.setTimestampLastUpdated(new Date());
+                    onboardingService.updateProcess(process);
+                }
+            } catch (RemoteCommunicationException e) {
+                logger.warn("Unable to check activation status for process ID: {}, activation ID: {}", processId, activationId, e);
+            }
+        } else {
+            logger.debug("State synchronization skipped for process ID: {}, status: {}, activation ID: {}", processId, process.getStatus(), activationId);
+        }
     }
 
     /**
@@ -617,7 +672,7 @@ public class IdentityVerificationRestService {
         final String processId = requestObject.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
-        onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.NOT_YET_COMPLETED);
 
         return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject));
     }
@@ -648,7 +703,7 @@ public class IdentityVerificationRestService {
         final String processId = requestObject.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
-        onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
+        onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.NOT_YET_COMPLETED);
 
         onboardingService.approveConsent(requestObject);
         return new Response();
