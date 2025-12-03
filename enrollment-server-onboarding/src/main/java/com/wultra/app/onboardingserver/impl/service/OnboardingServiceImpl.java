@@ -57,13 +57,10 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentRes
 import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
-import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.crypto.lib.generator.IdentifierGenerator;
 import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
-import com.wultra.security.powerauth.rest.api.model.entity.ActivationType;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
-import com.wultra.security.powerauth.rest.api.spring.provider.CustomActivationProvider;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -75,6 +72,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -264,13 +262,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @param request Onboarding status request.
      * @return Onboarding status response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     * @implNote This method performs a synchronization with the PowerAuth server.
-     *           If the activation is confirmed externally, this method changes the process status to {@code VERIFICATION_IN_PROGRESS} as a side effect.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
-        final OnboardingProcessEntity process = findProcessWithLock(request.getProcessId());
+        final OnboardingProcessEntity process = findProcess(request.getProcessId());
         OnboardingStatusResponse response = new OnboardingStatusResponse();
         response.setProcessId(processId);
 
@@ -280,41 +276,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             return response;
         }
 
-        synchronizeStateWithPowerAuth(process);
-
         response.setOnboardingStatus(process.getStatus());
         response.setConfig(integrationConfigDto);
         return response;
-    }
-
-    /**
-     * Synchronize the onboarding process state if needed.
-     * <p>
-     * If the process state is {@code ACTIVATION_IN_PROGRESS}, fetch the activation state and if {@code ACTIVE}, move the process to {@code VERIFICATION_IN_PROGRESS}.
-     * Not needed for custom activation, where the state changes in {@link CustomActivationProvider#activationWasCommitted(Map, Map, String, String, String, ActivationType, Map)}.
-     *
-     * @param process Onboarding process.
-     * @implNote using polling; callbacks would require more complex configuration and are not as reliable
-     */
-    private void synchronizeStateWithPowerAuth(final OnboardingProcessEntity process) {
-        final String processId = process.getId();
-        final String activationId = process.getActivationId();
-
-        if (process.getStatus() == OnboardingStatus.ACTIVATION_IN_PROGRESS && activationId != null) {
-            try {
-                final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
-                if (activationStatus == ActivationStatus.ACTIVE) {
-                    logger.info("Activation activated externally, moving process ID: {} to VERIFICATION_IN_PROGRESS", processId);
-                    process.setStatus(OnboardingStatus.VERIFICATION_IN_PROGRESS);
-                    process.setTimestampLastUpdated(new Date());
-                    onboardingProcessRepository.save(process);
-                }
-            } catch (RemoteCommunicationException e) {
-                logger.warn("Unable to check activation status for process ID: {}, activation ID: {}", processId, activationId, e);
-            }
-        } else {
-            logger.debug("State synchronization skipped for process ID: {}, status: {}, activation ID: {}", processId, process.getStatus(), activationId);
-        }
     }
 
     /**
@@ -374,6 +338,24 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     public void verifyProcessId(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), onboardingStatus)
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
+        final String expectedProcessId = process.getId();
+
+        if (!expectedProcessId.equals(processId)) {
+            throw new OnboardingProcessException(
+                    String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
+        }
+    }
+
+    /**
+     * Verify process identifier.
+     * @param ownerId Owner identification.
+     * @param processId Process identifier from request.
+     * @param onboardingStatuses Onboarding process statuses.
+     * @throws OnboardingProcessException Thrown in case process identifier is invalid.
+     */
+    public void verifyProcessId(OwnerId ownerId, String processId, Collection<OnboardingStatus> onboardingStatuses) throws OnboardingProcessException {
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatuses(ownerId.getActivationId(), onboardingStatuses)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
         final String expectedProcessId = process.getId();
 
