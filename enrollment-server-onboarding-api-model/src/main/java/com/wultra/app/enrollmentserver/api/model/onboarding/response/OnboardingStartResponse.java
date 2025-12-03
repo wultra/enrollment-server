@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.Config
 import com.wultra.app.enrollmentserver.model.enumeration.ActivationType;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -56,6 +57,11 @@ public record OnboardingStartResponse(
         @Schema(description = "Activation type. When `CODE`, `activationCode` has to be present.")
         @NotNull
         ActivationType activationType) {
+
+    @AssertTrue(message = "activationCode must be present when activationType is CODE")
+    private boolean isActivationCodeValid() {
+        return activationType != ActivationType.CODE || activationCode != null && !activationCode.trim().isEmpty();
+    }
 
     @Override
     public String toString() {
