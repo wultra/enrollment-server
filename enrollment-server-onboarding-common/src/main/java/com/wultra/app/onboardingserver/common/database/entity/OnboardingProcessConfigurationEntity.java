@@ -42,7 +42,7 @@ public class OnboardingProcessConfigurationEntity {
     @Column(name = "process_type", nullable = false)
     private String processType;
 
-    @Column(name = "config", nullable = false)
+    @Column(name = "config", nullable = false, columnDefinition = "TEXT")
     @Convert(converter = OnboardingProcessConfigurationValueConverter.class)
     private OnboardingProcessConfigurationValue configuration;
 

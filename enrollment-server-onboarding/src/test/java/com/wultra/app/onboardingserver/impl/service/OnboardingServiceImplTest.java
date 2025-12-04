@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.OnboardingStartRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
+import com.wultra.app.enrollmentserver.model.enumeration.ActivationType;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -107,6 +108,7 @@ class OnboardingServiceImplTest {
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNotNull(result.activationCode());
         assertEquals("mock_activation_code", result.activationCode());
+        assertEquals(ActivationType.CODE, result.activationType());
 
         final ArgumentCaptor<InitActivationRequest> requestCaptor = ArgumentCaptor.forClass(InitActivationRequest.class);
         verify(powerAuthClient).initActivation(requestCaptor.capture(), any(), any());
@@ -150,7 +152,8 @@ class OnboardingServiceImplTest {
         assertNotNull(result);
         assertNotNull(result.processId());
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
-        assertNotNull(result.activationCode());
+        assertNull(result.activationCode());
+        assertEquals(ActivationType.IDENTITY, result.activationType());
     }
 
     @Test

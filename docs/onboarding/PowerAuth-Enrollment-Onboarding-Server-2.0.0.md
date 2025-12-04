@@ -29,7 +29,7 @@ You have to insert at least one row into the table `es_onboarding_process_config
 The following changes were made to the onboarding start endpoint:
 
 - Added a new optional request field `processType` to specify which onboarding process type should be used.
-- Added a new optional response field `activationCode` to return activation code.
+- Added a new optional response field `activationCode` to return activation code and a mandatory field `activationType`.
 
 
 ## External Onboarding Services Changes
