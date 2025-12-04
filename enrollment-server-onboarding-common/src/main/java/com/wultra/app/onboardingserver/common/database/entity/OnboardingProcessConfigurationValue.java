@@ -20,6 +20,8 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -39,7 +41,11 @@ public record OnboardingProcessConfigurationValue(
         boolean otpForIdentityVerification,
         Documents documents,
         ActivationType activationType
-) {
+) implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1995035336074261422L;
+
     public static class OnboardingProcessConfigurationValueBuilder {
         OnboardingProcessConfigurationValueBuilder() {
             enabled = false;
@@ -56,7 +62,10 @@ public record OnboardingProcessConfigurationValue(
     public record Documents(
             byte requiredDocumentsCount,
             List<Document> items
-    ) {
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1968756136278137531L;
     }
 
     /**
@@ -69,7 +78,10 @@ public record OnboardingProcessConfigurationValue(
             DocumentType type,
             boolean mandatory,
             byte sideCount
-    ) {
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 191805503079489928L;
     }
 
     public enum DocumentType {
