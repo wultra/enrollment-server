@@ -190,13 +190,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
-        final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
-        if (userId == null) {
-            logger.info("User ID is null, OTP is not sent");
-        } else {
-            logger.debug("Sending OTP for user ID: {}", userId);
-            sendOtp(process, otpCode);
-        }
+        createAndSendOtp(process, userId);
 
         final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
                 .applicationKey(encryptionContext.getApplicationKey())
@@ -215,6 +209,25 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .activationCode(initActivationResponse.getActivationCode())
                 .activationType(convert(activationType))
                 .build();
+    }
+
+    private void createAndSendOtp(final OnboardingProcessEntity process, final String userId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+        if (isActivationOtpDisabled(process)) {
+            logger.info("Activation OTP is disabled for process type: {}", process.getProcessConfiguration().getProcessType());
+            return;
+        }
+
+        final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
+        if (userId == null) {
+            logger.info("User ID is null, OTP is not sent");
+        } else {
+            logger.debug("Sending OTP for user ID: {}", userId);
+            sendOtp(process, otpCode);
+        }
+    }
+
+    private static boolean isActivationOtpDisabled(final OnboardingProcessEntity process) {
+        return !process.getProcessConfiguration().getConfiguration().otpForIdentification();
     }
 
     private static ActivationType convert(final OnboardingProcessConfigurationValue.ActivationType source) {
@@ -260,6 +273,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     public Response resendOtp(final OnboardingOtpResendRequest request) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         final String processId = request.getProcessId();
         final OnboardingProcessEntity process = findProcessWithLock(processId);
+        if (isActivationOtpDisabled(process)) {
+            logger.warn("OTP is disabled for process type: {}", process.getProcessConfiguration().getProcessType());
+            return new Response();
+        }
+
         final String userId = process.getUserId();
 
         final String otpCode = otpService.createOtpCodeForResend(process, OtpType.ACTIVATION);

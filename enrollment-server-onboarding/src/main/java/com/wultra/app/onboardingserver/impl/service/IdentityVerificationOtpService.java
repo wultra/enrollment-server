@@ -233,6 +233,11 @@ public class IdentityVerificationOtpService {
         final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
                 new OnboardingProcessException("Onboarding process not found: " + processId));
 
+        if (isVerificationOtpDisabled(process)) {
+            logger.info("Verification OTP is disabled for process type: {}", process.getProcessConfiguration().getProcessType());
+            return;
+        }
+
         final String otpCode = createOtpCode(isResend, process);
         final String userId = process.getUserId();
         final SendOtpCodeRequest request = SendOtpCodeRequest.builder()
@@ -252,6 +257,10 @@ public class IdentityVerificationOtpService {
 
         final String resentPrefix = isResend ? "Resent" : "Sent";
         auditService.auditOnboardingProvider(process, "{} user verification OTP for user: {}", resentPrefix, userId);
+    }
+
+    private static boolean isVerificationOtpDisabled(final OnboardingProcessEntity process) {
+        return !process.getProcessConfiguration().getConfiguration().otpForIdentityVerification();
     }
 
     private String createOtpCode(final boolean isResend, final OnboardingProcessEntity process) throws OnboardingOtpDeliveryException, OnboardingProcessException {
