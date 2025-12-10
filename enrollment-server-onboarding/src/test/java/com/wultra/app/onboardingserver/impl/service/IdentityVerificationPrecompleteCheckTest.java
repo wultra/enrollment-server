@@ -22,11 +22,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
@@ -71,6 +69,9 @@ class IdentityVerificationPrecompleteCheckTest {
     @Mock
     private ScaResultRepository scaResultRepository;
 
+    @Mock
+    private OnboardingProcessRepository onboardingProcessRepository;
+
     @InjectMocks
     private IdentityVerificationPrecompleteCheck tested;
 
@@ -87,8 +88,8 @@ class IdentityVerificationPrecompleteCheckTest {
 
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
-        when(identityVerificationConfig.isVerificationOtpEnabled())
-                .thenReturn(true);
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration());
 
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
                 .thenReturn(Optional.of(createOtp()));
@@ -104,12 +105,28 @@ class IdentityVerificationPrecompleteCheckTest {
         assertTrue(result.isSuccessful());
     }
 
+    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration() {
+        return createProcessWithConfiguration(true);
+    }
+
+    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration(final boolean otpForIdentityVerification) {
+        final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
+        configuration.setConfiguration(OnboardingProcessConfigurationValue.builder()
+                        .otpForIdentityVerification(otpForIdentityVerification)
+                        .otpForIdentification(true)
+                .build());
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(configuration);
+        return Optional.of(process);
+    }
+
     @Test
     void testProcessDocumentVerificationResult_invalidVerificationOtp() throws Exception {
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
-        when(identityVerificationConfig.isVerificationOtpEnabled())
-                .thenReturn(true);
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration());
 
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
                 .thenReturn(Optional.of(createFailedOtp()));
@@ -129,7 +146,8 @@ class IdentityVerificationPrecompleteCheckTest {
     void testProcessDocumentVerificationResult_invalidActivationOtp() throws Exception {
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
-
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration(false));
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createFailedOtp()));
 
@@ -162,7 +180,8 @@ class IdentityVerificationPrecompleteCheckTest {
                 .thenReturn(ActivationStatus.ACTIVE);
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
-
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration(false));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
                 .thenReturn(Optional.of(scaResult));
 
@@ -190,6 +209,8 @@ class IdentityVerificationPrecompleteCheckTest {
                 .thenReturn(Optional.of(createOtp()));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
                 .thenReturn(Optional.of(scaResult));
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration(false));
 
         final var result = tested.evaluate(idVerification);
 
@@ -204,6 +225,8 @@ class IdentityVerificationPrecompleteCheckTest {
                 .thenReturn(ActivationStatus.REMOVED);
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration(false));
 
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
@@ -280,8 +303,8 @@ class IdentityVerificationPrecompleteCheckTest {
 
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
-        when(identityVerificationConfig.isVerificationOtpEnabled())
-                .thenReturn(true);
+        when(onboardingProcessRepository.findById("process-1"))
+                .thenReturn(createProcessWithConfiguration());
 
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.USER_VERIFICATION))
                 .thenReturn(Optional.of(createOtp()));
