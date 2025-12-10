@@ -25,6 +25,9 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
@@ -132,8 +135,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
 
-        when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
-
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
@@ -143,6 +144,9 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
         }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
+
+        when(onboardingProcessRepository.findById(PROCESS_ID))
+                .thenReturn(createProcessWithConfiguration());
 
         final Message<OnboardingEvent> presenceCheckSubmittedMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
@@ -159,6 +163,18 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         verify(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
     }
 
+    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration() {
+        final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
+        configuration.setConfiguration(OnboardingProcessConfigurationValue.builder()
+                .otpForIdentityVerification(true)
+                .otpForIdentification(true)
+                .build());
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(configuration);
+        return Optional.of(process);
+    }
+
     @Test
     void testPresenceCheckAcceptedOtpDisabled() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
@@ -167,8 +183,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
         PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
         presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
-
-        when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
