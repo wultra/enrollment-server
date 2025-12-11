@@ -71,11 +71,14 @@ public record OnboardingProcessConfigurationValue(
     }
 
     /**
+     * Configuration of a single documentation type.
      *
      * @param type      document type
      * @param obligation whether the document is mandatory, primary or secondary (in case of empty set)
      * @param sideCount info if the document contains one or two sides
      */
+    @Jacksonized
+    @Builder
     public record Document(
             DocumentType type,
             Set<DocumentObligation> obligation,
@@ -84,6 +87,13 @@ public record OnboardingProcessConfigurationValue(
 
         @Serial
         private static final long serialVersionUID = 191805503079489928L;
+
+        public static class DocumentBuilder {
+            DocumentBuilder() {
+                sideCount = 0;
+                obligation = Set.of();
+            }
+        }
     }
 
     public enum DocumentType {

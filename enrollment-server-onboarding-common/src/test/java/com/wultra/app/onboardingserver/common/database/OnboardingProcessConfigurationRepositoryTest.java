@@ -26,6 +26,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -53,16 +55,17 @@ class OnboardingProcessConfigurationRepositoryTest {
         final var documents = result.documents();
         assertNotNull(documents);
         assertEquals(2, documents.requiredTotalDocumentsCount());
+        assertEquals(1, documents.requiredPrimaryDocumentsCount());
 
         final var document1 = documents.items().get(0);
         assertEquals("ID_CARD", document1.type().name());
         assertEquals(2, document1.sideCount());
-        assertTrue(document1.mandatory());
+        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY), document1.obligation());
 
         final var document2 = documents.items().get(1);
         assertEquals("DRIVING_LICENCE", document2.type().name());
         assertEquals(1, document2.sideCount());
-        assertFalse(document2.mandatory());
+        assertEquals(Set.of(), document2.obligation());
         assertEquals(OnboardingProcessConfigurationValue.ActivationType.CODE, result.activationType());
     }
 
