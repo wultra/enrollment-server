@@ -21,6 +21,7 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -124,9 +125,12 @@ public class OnboardingProcessEntity implements Serializable {
     @ToString.Exclude
     private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
 
+    /**
+     * @implNote nullable for the backward compatibility, but for not-null the new records
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_config_id", referencedColumnName = "id", updatable = false)
-    // TODO (racansky, 2025-11-11) nullable for the backward compatibility, make it not-null
+    @NotNull
     private OnboardingProcessConfigurationEntity processConfiguration;
 
     @Override
