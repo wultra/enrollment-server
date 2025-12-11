@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represent JSON with the configuration stored in {@link OnboardingProcessConfigurationEntity#getConfiguration()}.
@@ -44,15 +45,16 @@ public record OnboardingProcessConfigurationValue(
             enabled = false;
             otpForIdentification = false;
             otpForIdentityVerification = false;
-            documents = new Documents((byte) 0, List.of());
+            documents = new Documents((byte) 0, (byte) 0, List.of());
         }
     }
 
     /**
-     * @param requiredDocumentsCount Number of required documents to submit.
+     * @param requiredTotalDocumentsCount Number of required documents to submit.
      */
     public record Documents(
-            byte requiredDocumentsCount,
+            byte requiredTotalDocumentsCount,
+            byte requiredPrimaryDocumentsCount,
             List<Document> items
     ) {
     }
@@ -60,12 +62,12 @@ public record OnboardingProcessConfigurationValue(
     /**
      *
      * @param type      document type
-     * @param mandatory whether the document is mandatory
+     * @param obligation whether the document is mandatory, primary or secondary (in case of empty set)
      * @param sideCount info if the document contains one or two sides
      */
     public record Document(
             DocumentType type,
-            boolean mandatory,
+            Set<DocumentObligation> obligation,
             byte sideCount
     ) {
     }
@@ -74,5 +76,10 @@ public record OnboardingProcessConfigurationValue(
         ID_CARD,
         PASSPORT,
         DRIVING_LICENCE
+    }
+
+    public enum DocumentObligation {
+        MANDATORY,
+        PRIMARY
     }
 }

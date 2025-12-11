@@ -52,7 +52,7 @@ class OnboardingProcessConfigurationRepositoryTest {
 
         final var documents = result.documents();
         assertNotNull(documents);
-        assertEquals(2, documents.requiredDocumentsCount());
+        assertEquals(2, documents.requiredTotalDocumentsCount());
 
         final var document1 = documents.items().get(0);
         assertEquals("ID_CARD", document1.type().name());
@@ -76,7 +76,7 @@ class OnboardingProcessConfigurationRepositoryTest {
 
         final var documents = result.documents();
         assertNotNull(documents);
-        assertEquals(0, documents.requiredDocumentsCount());
+        assertEquals(0, documents.requiredTotalDocumentsCount());
         assertEquals(0, documents.items().size());
     }
 }

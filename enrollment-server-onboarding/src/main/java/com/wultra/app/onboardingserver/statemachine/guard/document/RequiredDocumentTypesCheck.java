@@ -19,13 +19,16 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurationService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 
@@ -38,86 +41,163 @@ import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
  */
 // TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
-@EnableConfigurationProperties(RequiredDocumentConfiguration.class)
+@AllArgsConstructor
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
-    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(ID_CARD, PASSPORT, DRIVING_LICENSE);
+    private static final List<DocumentCheck> DOCUMENT_CHECKS = List.of(
+            new MandatoryDocumentsPresentCheck(),
+            new PrimaryDocumentsPresentCheck(),
+            new AllDocumentSidesPresentCheck(),
+            new NumberOfDocumentsPresentCheck()
+    );
 
-    private final RequiredDocumentConfiguration requiredDocumentConfiguration;
-
-    @Autowired
-    RequiredDocumentTypesCheck(final RequiredDocumentConfiguration requiredDocumentConfiguration) {
-        this.requiredDocumentConfiguration = requiredDocumentConfiguration;
-    }
+    private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
     /**
      * Evaluate all required document types to be present and accepted.
      *
      * @param documentVerifications document verifications to evaluate
-     * @param identityVerificationId identity verification ID to log
+     * @param processId onboarding process identification
      * @return true when all required document types present and accepted
      */
-    public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
-        final Collection<DocumentVerificationEntity> acceptedDocumentVerifications = documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .toList();
+    public boolean evaluate(
+            final Collection<DocumentVerificationEntity> documentVerifications,
+            final String processId
+    ) {
+        final var processConfig = onboardingProcessConfigurationService.findConfigByProcessId(processId);
 
-        if (!areDistinctDocumentsPresent(acceptedDocumentVerifications)) {
-            logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);
-            return false;
-        } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
-            logger.debug("There is no accepted primary document yet for identity verification ID: {}", identityVerificationId);
-            return false;
-        } else if (!containsSecondDocument(acceptedDocumentVerifications)) {
-            logger.debug("There is no accepted secondary document yet for identity verification ID: {}", identityVerificationId);
-            return false;
-        } else {
-            logger.debug("All required documents accepted for identity verification ID: {}", identityVerificationId);
-            return true;
+        final var documentVerificationsByType = documentVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+                .collect(Collectors.groupingBy(DocumentVerificationEntity::getType));
+
+        for (final var check : DOCUMENT_CHECKS) {
+            final var checkPassed = check.evaluate(documentVerificationsByType, processConfig);
+
+            if (!checkPassed) {
+                logger.debug("Check '{}' failed for onboarding process: {}", check.getName(), processId);
+                return false;
+            }
+        }
+
+        logger.debug("All required documents accepted for onboarding process: {}", processId);
+        return true;
+    }
+
+    private static DocumentType convertDocumentType(final OnboardingProcessConfigurationValue.DocumentType documentType) {
+        return switch (documentType) {
+            case ID_CARD -> ID_CARD;
+            case PASSPORT -> PASSPORT;
+            case DRIVING_LICENCE -> DRIVING_LICENSE;
+        };
+    }
+
+    private interface DocumentCheck {
+        boolean evaluate(
+                Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+                OnboardingProcessConfigurationValue processConfig
+        );
+
+        String getName();
+    }
+
+    private static class MandatoryDocumentsPresentCheck implements DocumentCheck {
+
+        @Override
+        public boolean evaluate(
+                final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+                OnboardingProcessConfigurationValue processConfig
+        ) {
+            final var presentDocumentTypes = documentVerificationsByType.keySet();
+            final var mandatoryDocumentTypes = processConfig.documents().items()
+                    .stream()
+                    .filter(d -> d.obligation().contains(OnboardingProcessConfigurationValue.DocumentObligation.MANDATORY))
+                    .map(i -> convertDocumentType(i.type()))
+                    .collect(Collectors.toSet());
+
+            return presentDocumentTypes.containsAll(mandatoryDocumentTypes);
+        }
+
+        @Override
+        public String getName() {
+            return "MandatoryDocumentsPresentCheck";
         }
     }
 
-    private boolean areDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return requiredDocumentConfiguration.getCount() == documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .filter(PHYSICAL_DOCUMENTS::contains)
-                .distinct()
-                .count();
+    private static class PrimaryDocumentsPresentCheck implements DocumentCheck {
+
+        @Override
+        public boolean evaluate(
+                final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+                OnboardingProcessConfigurationValue processConfig
+        ) {
+            final var presentDocumentTypes = documentVerificationsByType.keySet();
+            final var primaryDocumentTypes = processConfig.documents().items()
+                    .stream()
+                    .filter(d -> d.obligation().contains(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY))
+                    .map(i -> convertDocumentType(i.type()))
+                    .collect(Collectors.toSet());
+            final var requiredPrimaryDocumentsCount = processConfig.documents().requiredPrimaryDocumentsCount();
+
+            return presentDocumentTypes.stream()
+                    .filter(primaryDocumentTypes::contains)
+                    .count() >= requiredPrimaryDocumentsCount;
+        }
+
+        @Override
+        public String getName() {
+            return "MandatoryDocumentsPresentCheck";
+        }
     }
 
-    private boolean containsPrimaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return (isConfiguredAsPrimary(ID_CARD) && containsBothSidesOfId(documentVerifications)) ||
-                (isConfiguredAsPrimary(PASSPORT) && containsPassport(documentVerifications));
+    private static class AllDocumentSidesPresentCheck implements DocumentCheck {
+
+        @Override
+        public boolean evaluate(
+                final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+                OnboardingProcessConfigurationValue processConfig
+        ) {
+            final var presentDocumentSidesCountByType = documentVerificationsByType.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            i -> i.getValue().stream()
+                                    .map(DocumentVerificationEntity::getSide)
+                                    .distinct()
+                                    .count())
+                    );
+
+            final var requiredDocumentSidesCountByType = processConfig.documents().items()
+                    .stream()
+                    .collect(Collectors.toMap(i -> convertDocumentType(i.type()), OnboardingProcessConfigurationValue.Document::sideCount));
+
+            return presentDocumentSidesCountByType.entrySet()
+                    .stream()
+                    .allMatch(i -> i.getValue() >= requiredDocumentSidesCountByType.getOrDefault(i.getKey(), (byte) 0));
+        }
+
+        @Override
+        public String getName() {
+            return "AllDocumentSidesPresentCheck";
+        }
     }
 
-    private boolean isConfiguredAsPrimary(final DocumentType type) {
-        return requiredDocumentConfiguration.getPrimaryDocuments().contains(type);
-    }
+    private static class NumberOfDocumentsPresentCheck implements DocumentCheck {
 
-    private static boolean containsBothSidesOfId(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return 2 == documentVerifications.stream()
-                .filter(it -> it.getType() == ID_CARD)
-                .map(DocumentVerificationEntity::getSide)
-                .distinct()
-                .count();
-    }
+        @Override
+        public boolean evaluate(
+                final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+                OnboardingProcessConfigurationValue processConfig
+        ) {
+            final var requiredDocumentCount = processConfig.documents().requiredTotalDocumentsCount();
+            final var presentDocumentCount = documentVerificationsByType.size();
 
-    private static boolean containsPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == PASSPORT);
-    }
+            return presentDocumentCount >= requiredDocumentCount;
+        }
 
-    private static boolean containsSecondDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return containsDrivingLicence(documentVerifications)
-                || containsPassport(documentVerifications)
-                || containsBothSidesOfId(documentVerifications);
-    }
-
-    private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == DRIVING_LICENSE);
+        @Override
+        public String getName() {
+            return "NumberOfDocumentsPresentCheck";
+        }
     }
 }

@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Configuration response.
@@ -45,8 +46,13 @@ public record ConfigurationResponse(
 
     @Builder
     public record Documents(
+
             @Schema(description = "Number of required documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
-            int requiredDocumentsCount,
+            int requiredTotalDocumentsCount,
+
+            @Schema(description = "Number of required primary documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED)
+            int requiredPrimaryDocumentsCount,
+
             List<Document> items
     ) {
     }
@@ -57,8 +63,8 @@ public record ConfigurationResponse(
             @Schema(description = "Document type.", requiredMode = Schema.RequiredMode.REQUIRED)
             DocumentType type,
 
-            @Schema(description = "Whether the document is mandatory.", requiredMode = Schema.RequiredMode.REQUIRED)
-            boolean mandatory,
+            @Schema(description = "Set of obligation of document", requiredMode = Schema.RequiredMode.REQUIRED)
+            Set<DocumentObligation> obligation,
 
             @Schema(description = "Number of document sides.", requiredMode = Schema.RequiredMode.REQUIRED)
             byte sideCount
@@ -69,5 +75,15 @@ public record ConfigurationResponse(
         ID_CARD,
         PASSPORT,
         DRIVING_LICENCE
+    }
+
+    @Schema(description = "Obligation of document")
+    public enum DocumentObligation {
+
+        @Schema(description = "Document is mandatory and must be present for successful verification.")
+        MANDATORY,
+
+        @Schema(description = "Document is one of primary. For successful verification min count of primary documents specified in `` must be present.")
+        PRIMARY
     }
 }

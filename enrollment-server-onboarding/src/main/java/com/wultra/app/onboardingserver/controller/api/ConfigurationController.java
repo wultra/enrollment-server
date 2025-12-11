@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Configuration controller.
@@ -101,7 +102,8 @@ public class ConfigurationController {
         }
 
         return ConfigurationResponse.Documents.builder()
-                .requiredDocumentsCount(source.requiredDocumentsCount())
+                .requiredTotalDocumentsCount(source.requiredTotalDocumentsCount())
+                .requiredPrimaryDocumentsCount(source.requiredPrimaryDocumentsCount())
                 .items(convert(source.items()))
                 .build();
     }
@@ -117,9 +119,14 @@ public class ConfigurationController {
     }
 
     private static ConfigurationResponse.Document convert(final OnboardingProcessConfigurationValue.Document source) {
+        final var obligation = source.obligation()
+                .stream()
+                .map(ConfigurationController::convert)
+                .collect(Collectors.toSet());
+
         return ConfigurationResponse.Document.builder()
                 .type(convert(source.type()))
-                .mandatory(source.mandatory())
+                .obligation(obligation)
                 .sideCount(source.sideCount())
                 .build();
     }
@@ -129,6 +136,13 @@ public class ConfigurationController {
             case ID_CARD -> ConfigurationResponse.DocumentType.ID_CARD;
             case PASSPORT -> ConfigurationResponse.DocumentType.PASSPORT;
             case DRIVING_LICENCE -> ConfigurationResponse.DocumentType.DRIVING_LICENCE;
+        };
+    }
+
+    private static ConfigurationResponse.DocumentObligation convert(final OnboardingProcessConfigurationValue.DocumentObligation source) {
+        return switch (source) {
+            case MANDATORY -> ConfigurationResponse.DocumentObligation.MANDATORY;
+            case PRIMARY -> ConfigurationResponse.DocumentObligation.PRIMARY;
         };
     }
 }
