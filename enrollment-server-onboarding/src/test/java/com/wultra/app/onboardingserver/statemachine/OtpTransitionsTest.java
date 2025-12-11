@@ -22,6 +22,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
@@ -67,7 +70,8 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     void testOtpResend() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification();
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
-        when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
+        when(onboardingProcessRepository.findById(PROCESS_ID))
+                .thenReturn(createProcessWithConfiguration());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.OTP_VERIFICATION_RESEND);
@@ -83,6 +87,18 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
         expected.test();
 
         verify(identityVerificationOtpService).resendOtp(idVerification);
+    }
+
+    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration() {
+        final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
+        configuration.setConfiguration(OnboardingProcessConfigurationValue.builder()
+                .otpForIdentityVerification(true)
+                .otpForIdentification(true)
+                .build());
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(configuration);
+        return Optional.of(process);
     }
 
     @Test

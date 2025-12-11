@@ -16,10 +16,15 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.otp;
 
-import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
@@ -30,18 +35,20 @@ import org.springframework.stereotype.Component;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@AllArgsConstructor
 public class OtpVerificationEnabledGuard implements Guard<OnboardingState, OnboardingEvent> {
 
-    private final IdentityVerificationConfig identityVerificationConfig;
-
-    @Autowired
-    public OtpVerificationEnabledGuard(IdentityVerificationConfig identityVerificationConfig) {
-        this.identityVerificationConfig = identityVerificationConfig;
-    }
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     @Override
     public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
-        return identityVerificationConfig.isVerificationOtpEnabled();
+        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final String processId = identityVerification.getProcessId();
+        return onboardingProcessRepository.findById(processId)
+                .map(OnboardingProcessEntity::getProcessConfiguration)
+                .map(OnboardingProcessConfigurationEntity::getConfiguration)
+                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
+                .isPresent();
     }
 
 }

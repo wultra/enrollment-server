@@ -57,3 +57,11 @@ The following changes were made to the onboarding start endpoint:
 ### Process Type
 
 For external onboarding services, the `processType` field has been added to the request body.
+
+
+## Configuration
+
+
+### OTP Configuration
+
+The property `enrollment-server-onboarding.identity-verification.otp.enabled` has been removed in favor of the [database changes](#database-changes), see the table `es_onboarding_process_configuration`.

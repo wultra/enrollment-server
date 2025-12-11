@@ -20,9 +20,7 @@ package com.wultra.app.onboardingserver.configuration;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 
-import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 
 /**
@@ -58,9 +56,6 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:1h}")
     private Duration verificationExpirationTime;
 
-    @Value("${enrollment-server-onboarding.identity-verification.otp.enabled:true}")
-    private boolean verificationOtpEnabled;
-
     @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts:5}")
     private int verificationMaxFailedAttempts;
 
@@ -81,10 +76,4 @@ public class IdentityVerificationConfig {
 
     @Value("${enrollment-server-onboarding.client-evaluation.include-extracted-data:false}")
     private boolean sendingExtractedDataEnabled;
-
-    @PostConstruct
-    void validate() {
-        // Once in the future, we may replace OTP in SCA by NFC document reading
-        Assert.state(presenceCheckEnabled == verificationOtpEnabled, "Presence check and OTP verification have to be both disabled or both enabled");
-    }
 }

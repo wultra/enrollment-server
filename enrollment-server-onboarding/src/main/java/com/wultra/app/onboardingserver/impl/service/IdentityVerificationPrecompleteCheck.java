@@ -20,11 +20,9 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
@@ -64,6 +62,8 @@ class IdentityVerificationPrecompleteCheck {
     private final ScaResultRepository scaResultRepository;
 
     private final DocumentVerificationRepository documentVerificationRepository;
+
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     private final ActivationService activationService;
 
@@ -121,10 +121,17 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
-        return scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification)
-                .map(ScaResultEntity::getScaResult)
-                .filter(it -> it == ScaResultEntity.Result.SUCCESS)
-                .isPresent();
+        final ScaResultEntity scaResultEntity = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification).orElse(null);
+        if (scaResultEntity == null) {
+            return false;
+        }
+
+        if (isVerificationOtpDisabled(idVerification)) {
+            logger.debug("OTP is disable, verifying only presence check result");
+            return scaResultEntity.getPresenceCheckResult() == ScaResultEntity.Result.SUCCESS;
+        }
+
+        return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
     private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
@@ -133,7 +140,7 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationOtpValid(final IdentityVerificationEntity idVerification) {
-        if (!identityVerificationConfig.isVerificationOtpEnabled()) {
+        if (isVerificationOtpDisabled(idVerification)) {
             logger.trace("OTP verification is disabled");
             return true;
         }
@@ -141,6 +148,10 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isActivationOtpValid(final IdentityVerificationEntity idVerification) {
+        if (isActivationOtpDisabled(idVerification)) {
+            logger.trace("OTP activation is disabled");
+            return true;
+        }
         return isOtpValid(idVerification, OtpType.ACTIVATION);
     }
 
@@ -154,9 +165,10 @@ class IdentityVerificationPrecompleteCheck {
     private boolean isPrecompletePhaseAndStateValid(final IdentityVerificationEntity idVerification) {
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
+        final boolean verificationOtpDisabled = isVerificationOtpDisabled(idVerification);
         return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
-                (phase == PRESENCE_CHECK && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled()) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && !identityVerificationConfig.isVerificationOtpEnabled() && !identityVerificationConfig.isPresenceCheckEnabled());
+                (phase == PRESENCE_CHECK && status == ACCEPTED && verificationOtpDisabled) ||
+                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled());
     }
 
     @Getter
@@ -177,5 +189,21 @@ class IdentityVerificationPrecompleteCheck {
                     .errorDetail(errorDetail)
                     .build();
         }
+    }
+
+    private boolean isVerificationOtpDisabled(final IdentityVerificationEntity idVerification) {
+        return onboardingProcessRepository.findById(idVerification.getProcessId())
+                .map(OnboardingProcessEntity::getProcessConfiguration)
+                .map(OnboardingProcessConfigurationEntity::getConfiguration)
+                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
+                .isEmpty();
+    }
+
+    private boolean isActivationOtpDisabled(final IdentityVerificationEntity idVerification) {
+        return onboardingProcessRepository.findById(idVerification.getProcessId())
+                .map(OnboardingProcessEntity::getProcessConfiguration)
+                .map(OnboardingProcessConfigurationEntity::getConfiguration)
+                .filter(OnboardingProcessConfigurationValue::otpForIdentification)
+                .isEmpty();
     }
 }
