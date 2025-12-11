@@ -47,10 +47,10 @@ public record ConfigurationResponse(
     @Builder
     public record Documents(
 
-            @Schema(description = "Number of required documents to submit. It is sum of all unique values from `mandatory`, `primary` and `secondary` sets.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
+            @Schema(description = "Minimum total number of different document types required to submit for successful verification.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
             int requiredTotalDocumentsCount,
 
-            @Schema(description = "Number of required `primary` documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED)
+            @Schema(description = "Number of required `primary` documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
             int requiredPrimaryDocumentsCount,
 
             @Schema(

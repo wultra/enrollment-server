@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 /**
- * TODO
+ * Service for onboarding process configuration.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
