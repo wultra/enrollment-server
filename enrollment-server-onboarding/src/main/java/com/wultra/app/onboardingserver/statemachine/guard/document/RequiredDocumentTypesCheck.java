@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 
@@ -49,7 +50,7 @@ public class RequiredDocumentTypesCheck {
             new MandatoryDocumentsPresentCheck(),
             new PrimaryDocumentsPresentCheck(),
             new AllDocumentSidesPresentCheck(),
-            new NumberOfDocumentsPresentCheck()
+            new TotalCountDocumentsPresentCheck()
     );
 
     private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
@@ -109,10 +110,9 @@ public class RequiredDocumentTypesCheck {
                 OnboardingProcessConfigurationValue processConfig
         ) {
             final var presentDocumentTypes = documentVerificationsByType.keySet();
-            final var mandatoryDocumentTypes = processConfig.documents().items()
+            final var mandatoryDocumentTypes = processConfig.documents().mandatory()
                     .stream()
-                    .filter(d -> d.obligation().contains(OnboardingProcessConfigurationValue.DocumentObligation.MANDATORY))
-                    .map(i -> convertDocumentType(i.type()))
+                    .map(RequiredDocumentTypesCheck::convertDocumentType)
                     .collect(Collectors.toSet());
 
             return presentDocumentTypes.containsAll(mandatoryDocumentTypes);
@@ -132,10 +132,9 @@ public class RequiredDocumentTypesCheck {
                 OnboardingProcessConfigurationValue processConfig
         ) {
             final var presentDocumentTypes = documentVerificationsByType.keySet();
-            final var primaryDocumentTypes = processConfig.documents().items()
+            final var primaryDocumentTypes = processConfig.documents().primary()
                     .stream()
-                    .filter(d -> d.obligation().contains(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY))
-                    .map(i -> convertDocumentType(i.type()))
+                    .map(RequiredDocumentTypesCheck::convertDocumentType)
                     .collect(Collectors.toSet());
             final var requiredPrimaryDocumentsCount = processConfig.documents().requiredPrimaryDocumentsCount();
 
@@ -182,22 +181,30 @@ public class RequiredDocumentTypesCheck {
         }
     }
 
-    private static class NumberOfDocumentsPresentCheck implements DocumentCheck {
+    private static class TotalCountDocumentsPresentCheck implements DocumentCheck {
 
         @Override
         public boolean evaluate(
                 final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
                 OnboardingProcessConfigurationValue processConfig
         ) {
-            final var requiredDocumentCount = processConfig.documents().requiredTotalDocumentsCount();
-            final var presentDocumentCount = documentVerificationsByType.size();
+            final var documentsConfig = processConfig.documents();
+            final var allowedDocumentTypes = Stream.of(documentsConfig.mandatory(), documentsConfig.primary(), documentsConfig.secondary())
+                    .flatMap(Collection::stream)
+                    .map(RequiredDocumentTypesCheck::convertDocumentType)
+                    .collect(Collectors.toSet());
 
-            return presentDocumentCount >= requiredDocumentCount;
+            final var presentDocumentCount = documentVerificationsByType.keySet()
+                    .stream()
+                    .filter(allowedDocumentTypes::contains)
+                    .count();
+
+            return presentDocumentCount >= documentsConfig.requiredTotalDocumentsCount();
         }
 
         @Override
         public String getName() {
-            return "NumberOfDocumentsPresentCheck";
+            return "TotalCountDocumentsPresentCheck";
         }
     }
 }

@@ -55,20 +55,19 @@ class RequiredDocumentTypesCheckTest {
     @BeforeEach
     void setUp() {
         processConfig = OnboardingProcessConfigurationValue.builder()
-                .documents(new OnboardingProcessConfigurationValue.Documents(
-                        (byte) 2,
-                        (byte) 1,
-                        List.of(
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .requiredTotalDocumentsCount((byte) 2)
+                        .requiredPrimaryDocumentsCount((byte) 1)
+                        .primary(Set.of(OnboardingProcessConfigurationValue.DocumentType.ID_CARD))
+                        .items(List.of(
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
-                                        Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY),
                                         (byte) 2),
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE,
-                                        Set.of(),
                                         (byte) 1)
-                        )
-                ))
+                        ))
+                        .build())
                 .build();
     }
 
@@ -130,20 +129,19 @@ class RequiredDocumentTypesCheckTest {
     void testOnlyIdCardSuccessful() {
         // given
         processConfig = OnboardingProcessConfigurationValue.builder()
-                .documents(new OnboardingProcessConfigurationValue.Documents(
-                        (byte) 1,
-                        (byte) 1,
-                        List.of(
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .requiredTotalDocumentsCount((byte) 1)
+                        .requiredPrimaryDocumentsCount((byte) 1)
+                        .primary(Set.of(OnboardingProcessConfigurationValue.DocumentType.ID_CARD))
+                        .items(List.of(
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
-                                        Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY),
                                         (byte) 2),
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE,
-                                        Set.of(),
                                         (byte) 1)
-                        )
-                ))
+                        ))
+                        .build())
                 .build();
 
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
@@ -213,20 +211,21 @@ class RequiredDocumentTypesCheckTest {
     void testTravelPassportAndDrivingLicenceSuccessful() {
         // given
         processConfig = OnboardingProcessConfigurationValue.builder()
-                .documents(new OnboardingProcessConfigurationValue.Documents(
-                        (byte) 2,
-                        (byte) 1,
-                        List.of(
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .requiredTotalDocumentsCount((byte) 2)
+                        .requiredPrimaryDocumentsCount((byte) 1)
+                        .primary(Set.of(
+                                OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
+                                OnboardingProcessConfigurationValue.DocumentType.PASSPORT))
+                        .items(List.of(
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
-                                        Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY),
                                         (byte) 2),
                                 new OnboardingProcessConfigurationValue.Document(
                                         OnboardingProcessConfigurationValue.DocumentType.PASSPORT,
-                                        Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY),
                                         (byte) 1)
-                        )
-                ))
+                        ))
+                        .build())
                 .build();
 
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);

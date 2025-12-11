@@ -47,11 +47,28 @@ public record ConfigurationResponse(
     @Builder
     public record Documents(
 
-            @Schema(description = "Number of required documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
+            @Schema(description = "Number of required documents to submit. It is sum of all unique values from `mandatory`, `primary` and `secondary` sets.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
             int requiredTotalDocumentsCount,
 
-            @Schema(description = "Number of required primary documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED)
+            @Schema(description = "Number of required `primary` documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED)
             int requiredPrimaryDocumentsCount,
+
+            @Schema(
+                    description = "Document types that must be always provided for successful verification.",
+                    requiredMode = Schema.RequiredMode.REQUIRED,
+                    defaultValue = "[]")
+            Set<DocumentType> mandatory,
+
+            @Schema(
+                    description = "Primary document types. Minimum number of documents from this set for successful verification is set in `requiredPrimaryDocumentsCount`.",
+                    requiredMode = Schema.RequiredMode.REQUIRED,
+                    defaultValue = "[]")
+            Set<DocumentType> primary,
+
+            @Schema(description = "Secondary document types which are allowed for verification.",
+                    requiredMode = Schema.RequiredMode.REQUIRED,
+                    defaultValue = "all values from `DocumentType` enum")
+            Set<DocumentType> secondary,
 
             List<Document> items
     ) {
@@ -63,9 +80,6 @@ public record ConfigurationResponse(
             @Schema(description = "Document type.", requiredMode = Schema.RequiredMode.REQUIRED)
             DocumentType type,
 
-            @Schema(description = "Set of obligation of document", requiredMode = Schema.RequiredMode.REQUIRED)
-            Set<DocumentObligation> obligation,
-
             @Schema(description = "Number of document sides.", requiredMode = Schema.RequiredMode.REQUIRED)
             byte sideCount
     ) {
@@ -75,15 +89,5 @@ public record ConfigurationResponse(
         ID_CARD,
         PASSPORT,
         DRIVING_LICENCE
-    }
-
-    @Schema(description = "Obligation of document")
-    public enum DocumentObligation {
-
-        @Schema(description = "Document is mandatory and must be present for successful verification.")
-        MANDATORY,
-
-        @Schema(description = "Document is one of primary. For successful verification min count of primary documents specified in `` must be present.")
-        PRIMARY
     }
 }

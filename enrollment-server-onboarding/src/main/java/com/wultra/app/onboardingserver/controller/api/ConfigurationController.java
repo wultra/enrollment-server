@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -104,6 +105,9 @@ public class ConfigurationController {
         return ConfigurationResponse.Documents.builder()
                 .requiredTotalDocumentsCount(source.requiredTotalDocumentsCount())
                 .requiredPrimaryDocumentsCount(source.requiredPrimaryDocumentsCount())
+                .mandatory(convert(source.mandatory()))
+                .primary(convert(source.primary()))
+                .secondary(convert(source.secondary()))
                 .items(convert(source.items()))
                 .build();
     }
@@ -119,16 +123,20 @@ public class ConfigurationController {
     }
 
     private static ConfigurationResponse.Document convert(final OnboardingProcessConfigurationValue.Document source) {
-        final var obligation = source.obligation()
-                .stream()
-                .map(ConfigurationController::convert)
-                .collect(Collectors.toSet());
-
         return ConfigurationResponse.Document.builder()
                 .type(convert(source.type()))
-                .obligation(obligation)
                 .sideCount(source.sideCount())
                 .build();
+    }
+
+    private static Set<ConfigurationResponse.DocumentType> convert(final Set<OnboardingProcessConfigurationValue.DocumentType> source) {
+        if (source == null) {
+            return Set.of();
+        }
+
+        return source.stream()
+                .map(ConfigurationController::convert)
+                .collect(Collectors.toSet());
     }
 
     private static ConfigurationResponse.DocumentType convert(final OnboardingProcessConfigurationValue.DocumentType source) {
@@ -136,13 +144,6 @@ public class ConfigurationController {
             case ID_CARD -> ConfigurationResponse.DocumentType.ID_CARD;
             case PASSPORT -> ConfigurationResponse.DocumentType.PASSPORT;
             case DRIVING_LICENCE -> ConfigurationResponse.DocumentType.DRIVING_LICENCE;
-        };
-    }
-
-    private static ConfigurationResponse.DocumentObligation convert(final OnboardingProcessConfigurationValue.DocumentObligation source) {
-        return switch (source) {
-            case MANDATORY -> ConfigurationResponse.DocumentObligation.MANDATORY;
-            case PRIMARY -> ConfigurationResponse.DocumentObligation.PRIMARY;
         };
     }
 }

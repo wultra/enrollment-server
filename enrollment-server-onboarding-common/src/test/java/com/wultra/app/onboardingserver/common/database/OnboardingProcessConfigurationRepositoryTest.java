@@ -56,16 +56,17 @@ class OnboardingProcessConfigurationRepositoryTest {
         assertNotNull(documents);
         assertEquals(2, documents.requiredTotalDocumentsCount());
         assertEquals(1, documents.requiredPrimaryDocumentsCount());
+        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.ID_CARD), documents.mandatory());
+        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.PASSPORT), documents.primary());
+        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE), documents.secondary());
 
         final var document1 = documents.items().get(0);
         assertEquals("ID_CARD", document1.type().name());
         assertEquals(2, document1.sideCount());
-        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentObligation.PRIMARY), document1.obligation());
 
         final var document2 = documents.items().get(1);
         assertEquals("DRIVING_LICENCE", document2.type().name());
         assertEquals(1, document2.sideCount());
-        assertEquals(Set.of(), document2.obligation());
         assertEquals(OnboardingProcessConfigurationValue.ActivationType.CODE, result.activationType());
     }
 
@@ -81,6 +82,10 @@ class OnboardingProcessConfigurationRepositoryTest {
         final var documents = result.documents();
         assertNotNull(documents);
         assertEquals(0, documents.requiredTotalDocumentsCount());
+        assertEquals(0, documents.requiredPrimaryDocumentsCount());
+        assertEquals(Set.of(), documents.mandatory());
+        assertEquals(Set.of(), documents.primary());
+        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.values()), documents.secondary());
         assertEquals(0, documents.items().size());
         assertEquals(OnboardingProcessConfigurationValue.ActivationType.IDENTITY, result.activationType());
     }

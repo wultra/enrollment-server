@@ -52,7 +52,7 @@ public record OnboardingProcessConfigurationValue(
             enabled = false;
             otpForIdentification = false;
             otpForIdentityVerification = false;
-            documents = new Documents((byte) 0, (byte) 0, List.of());
+            documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
         }
     }
@@ -60,40 +60,48 @@ public record OnboardingProcessConfigurationValue(
     /**
      * @param requiredTotalDocumentsCount Number of required documents to submit.
      */
+    @Jacksonized
+    @Builder
     public record Documents(
             byte requiredTotalDocumentsCount,
             byte requiredPrimaryDocumentsCount,
+            Set<DocumentType> mandatory,
+            Set<DocumentType> primary,
+            Set<DocumentType> secondary,
             List<Document> items
     ) implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 1968756136278137531L;
+
+        public static class DocumentsBuilder {
+            DocumentsBuilder() {
+                requiredTotalDocumentsCount = 0;
+                requiredPrimaryDocumentsCount = 0;
+                mandatory = Set.of();
+                primary = Set.of();
+                secondary = Set.of(DocumentType.values());
+                items = List.of();
+            }
+        }
     }
 
     /**
      * Configuration of a single documentation type.
      *
      * @param type      document type
-     * @param obligation whether the document is mandatory, primary or secondary (in case of empty set)
      * @param sideCount info if the document contains one or two sides
      */
     @Jacksonized
     @Builder
     public record Document(
             DocumentType type,
-            Set<DocumentObligation> obligation,
             byte sideCount
     ) implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 191805503079489928L;
 
-        public static class DocumentBuilder {
-            DocumentBuilder() {
-                sideCount = 0;
-                obligation = Set.of();
-            }
-        }
     }
 
     public enum DocumentType {
@@ -112,17 +120,5 @@ public record OnboardingProcessConfigurationValue(
          * Activation is initialized by SDK.
          */
         IDENTITY
-    }
-
-    public enum DocumentObligation {
-        /**
-         * Document must be present for successful verification.
-         */
-        MANDATORY,
-
-        /**
-         * Document is one of primary. Minimum count of primary documents for successful verification is configured in {@link Documents#requiredPrimaryDocumentsCount()}
-         */
-        PRIMARY
     }
 }
