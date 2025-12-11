@@ -22,6 +22,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
@@ -118,12 +121,13 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
-        when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(true);
         doAnswer(args -> {
             idVerification.setPhase(IdentityVerificationPhase.OTP_VERIFICATION);
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
         }).when(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
+        when(onboardingProcessRepository.findById(PROCESS_ID))
+                .thenReturn(createProcessWithConfiguration());
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
@@ -140,13 +144,24 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         verify(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
     }
 
+    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration() {
+        final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
+        configuration.setConfiguration(OnboardingProcessConfigurationValue.builder()
+                .otpForIdentityVerification(true)
+                .otpForIdentification(true)
+                .build());
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setProcessConfiguration(configuration);
+        return Optional.of(process);
+    }
+
     @Test
     void testDocumentVerificationTransitionCompleted() throws Exception {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(false);
-        when(identityVerificationConfig.isVerificationOtpEnabled()).thenReturn(false);
         doAnswer(args -> {
             IdentityVerificationEntity identityVerification = args.getArgument(0, StateContext.class)
                     .getExtendedState()
