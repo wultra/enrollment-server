@@ -121,10 +121,17 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
-        return scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification)
-                .map(ScaResultEntity::getScaResult)
-                .filter(it -> it == ScaResultEntity.Result.SUCCESS)
-                .isPresent();
+        final ScaResultEntity scaResultEntity = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification).orElse(null);
+        if (scaResultEntity == null) {
+            return false;
+        }
+
+        if (isVerificationOtpDisabled(idVerification)) {
+            logger.debug("OTP is disable, verifying only presence check result");
+            return scaResultEntity.getPresenceCheckResult() == ScaResultEntity.Result.SUCCESS;
+        }
+
+        return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
     private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {

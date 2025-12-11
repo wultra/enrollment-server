@@ -172,7 +172,7 @@ class IdentityVerificationPrecompleteCheckTest {
         idVerification.setActivationId("activation-1");
 
         final ScaResultEntity scaResult = new ScaResultEntity();
-        scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
+        scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
 
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
@@ -199,7 +199,7 @@ class IdentityVerificationPrecompleteCheckTest {
         idVerification.setStatus(ACCEPTED);
 
         final ScaResultEntity scaResult = new ScaResultEntity();
-        scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
+        scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
 
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
