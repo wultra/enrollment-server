@@ -70,7 +70,7 @@ jobs:
       matrix:
         app: ${{ fromJSON(github.event.inputs.products_to_build || '["enrollment-server", "enrollment-server-onboarding"]') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         with:
           java-version: '21'

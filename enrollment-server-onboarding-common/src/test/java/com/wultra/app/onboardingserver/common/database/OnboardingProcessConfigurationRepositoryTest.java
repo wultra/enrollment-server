@@ -63,6 +63,7 @@ class OnboardingProcessConfigurationRepositoryTest {
         assertEquals("DRIVING_LICENCE", document2.type().name());
         assertEquals(1, document2.sideCount());
         assertFalse(document2.mandatory());
+        assertEquals(OnboardingProcessConfigurationValue.ActivationType.CODE, result.activationType());
     }
 
     @Test
@@ -78,5 +79,6 @@ class OnboardingProcessConfigurationRepositoryTest {
         assertNotNull(documents);
         assertEquals(0, documents.requiredTotalDocumentsCount());
         assertEquals(0, documents.items().size());
+        assertEquals(OnboardingProcessConfigurationValue.ActivationType.IDENTITY, result.activationType());
     }
 }

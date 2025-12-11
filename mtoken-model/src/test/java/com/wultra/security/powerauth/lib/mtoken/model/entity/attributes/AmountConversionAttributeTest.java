@@ -70,7 +70,11 @@ class AmountConversionAttributeTest {
 
         final String result = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(tested);
 
-        assertEquals(expectedResult, result);
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(
+                mapper.readTree(expectedResult),
+                mapper.readTree(result)
+        );
     }
 
     @Test

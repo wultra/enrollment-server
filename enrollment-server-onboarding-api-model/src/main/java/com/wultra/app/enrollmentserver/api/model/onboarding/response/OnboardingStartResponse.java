@@ -18,8 +18,10 @@
 package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
+import com.wultra.app.enrollmentserver.model.enumeration.ActivationType;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -46,8 +48,20 @@ public record OnboardingStartResponse(
         @NotNull
         ConfigurationDataDto config,
 
-        @Schema(description = "Activation code used during the activation process. If not present, the activation is created later on in the onboarding process. Uses 4x5 characters in Base32 encoding separated by a `-` character.", example = "KA4PD-RTIE2-KOP3U-H53EA", minLength = 23, maxLength = 23)
-        String activationCode) {
+        @Schema(description = """
+            Activation code used during the activation process.
+            For `activationType=IDENTITY`, `activationCode` is not present; the activation is created later on in the onboarding process.
+            Uses 4x5 characters in Base32 encoding separated by a `-` character.""", example = "KA4PD-RTIE2-KOP3U-H53EA", minLength = 23, maxLength = 23)
+        String activationCode,
+
+        @Schema(description = "Activation type. When `CODE`, `activationCode` has to be present.")
+        @NotNull
+        ActivationType activationType) {
+
+    @AssertTrue(message = "activationCode must be present when activationType is CODE")
+    private boolean isActivationCodeValid() {
+        return activationType != ActivationType.CODE || activationCode != null && !activationCode.trim().isEmpty();
+    }
 
     @Override
     public String toString() {
@@ -55,6 +69,7 @@ public record OnboardingStartResponse(
                 "processId='" + processId + '\'' +
                 ", onboardingStatus=" + onboardingStatus +
                 ", config=" + config +
+                ", activationType=" + activationType +
                 '}';
     }
 }

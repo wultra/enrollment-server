@@ -144,14 +144,12 @@ public class DocumentProcessingService {
             final OwnerId ownerId
     ) {
         final var docVerificationById = new HashMap<String, DocumentVerificationEntity>();
-        final var documentByVerificationId = new HashMap<String, DocumentSubmitV2Request.Document>();
 
         final List<SubmittedDocument> submittedDocuments = new ArrayList<>();
         for (var document : documents) {
             final DocumentVerificationEntity docVerification = createDocumentVerification(ownerId, idVerification, document);
 
             docVerificationById.put(docVerification.getId(), docVerification);
-            documentByVerificationId.put(docVerification.getId(), document);
             handleResubmit(ownerId, document.originalDocumentId(), docVerification);
 
             try {

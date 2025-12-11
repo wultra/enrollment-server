@@ -1044,7 +1044,7 @@ class MobileTokenConverterTest {
 
     private static OperationDetailResponse createOperationDetailResponse() {
         final OperationDetailResponse operationDetail = new OperationDetailResponse();
-        operationDetail.setAuthenticationCodeType(List.of(AuthenticationCodeType.KNOWLEDGE));
+        operationDetail.setAuthenticationCodeTypes(List.of(AuthenticationCodeType.KNOWLEDGE));
         operationDetail.setStatus(OperationStatus.APPROVED);
         return operationDetail;
     }

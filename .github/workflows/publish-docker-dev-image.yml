@@ -54,7 +54,7 @@ jobs:
       matrix:
         app: ${{ fromJSON(github.event.inputs.products_to_build || '["enrollment-server-onboarding-adapter-mock"]') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Get ${{ matrix.app }} Server version
         run: |
           cd ${{ matrix.app }}

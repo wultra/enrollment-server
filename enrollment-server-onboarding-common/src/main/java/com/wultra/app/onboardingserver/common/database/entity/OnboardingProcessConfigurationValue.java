@@ -20,6 +20,8 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -38,14 +40,20 @@ public record OnboardingProcessConfigurationValue(
         boolean enabled,
         boolean otpForIdentification,
         boolean otpForIdentityVerification,
-        Documents documents
-) {
+        Documents documents,
+        ActivationType activationType
+) implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1995035336074261422L;
+
     public static class OnboardingProcessConfigurationValueBuilder {
         OnboardingProcessConfigurationValueBuilder() {
             enabled = false;
             otpForIdentification = false;
             otpForIdentityVerification = false;
             documents = new Documents((byte) 0, (byte) 0, List.of());
+            activationType = ActivationType.IDENTITY;
         }
     }
 
@@ -56,7 +64,10 @@ public record OnboardingProcessConfigurationValue(
             byte requiredTotalDocumentsCount,
             byte requiredPrimaryDocumentsCount,
             List<Document> items
-    ) {
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1968756136278137531L;
     }
 
     /**
@@ -69,7 +80,10 @@ public record OnboardingProcessConfigurationValue(
             DocumentType type,
             Set<DocumentObligation> obligation,
             byte sideCount
-    ) {
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 191805503079489928L;
     }
 
     public enum DocumentType {
@@ -78,8 +92,27 @@ public record OnboardingProcessConfigurationValue(
         DRIVING_LICENCE
     }
 
+    public enum ActivationType {
+        /**
+         * Activation is initialized by the onboarding server and the activation code is returned when the process starts.
+         */
+        CODE,
+
+        /**
+         * Activation is initialized by SDK.
+         */
+        IDENTITY
+    }
+
     public enum DocumentObligation {
+        /**
+         * Document must be present for successful verification.
+         */
         MANDATORY,
+
+        /**
+         * Document is one of primary. Minimum count of primary documents for successful verification is configured in {@link Documents#requiredPrimaryDocumentsCount()}
+         */
         PRIMARY
     }
 }

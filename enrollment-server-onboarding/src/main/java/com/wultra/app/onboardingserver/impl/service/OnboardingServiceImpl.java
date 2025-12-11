@@ -28,6 +28,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingC
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStatusResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
+import com.wultra.app.enrollmentserver.model.enumeration.ActivationType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
@@ -35,6 +36,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessConfigurationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
@@ -72,6 +74,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -200,7 +203,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .userId(userId)
                 .build();
 
-        final InitActivationResponse initActivationResponse = initActivation(initActivationContext);
+        final var activationType = process.getProcessConfiguration().getConfiguration().activationType();
+        final InitActivationResponse initActivationResponse = initActivation(initActivationContext, activationType);
         process.setActivationId(initActivationResponse.getActivationId());
         onboardingProcessRepository.save(process);
 
@@ -209,11 +213,25 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .onboardingStatus(process.getStatus())
                 .config(integrationConfigDto)
                 .activationCode(initActivationResponse.getActivationCode())
+                .activationType(convert(activationType))
                 .build();
     }
 
-    private InitActivationResponse initActivation(final ActivationService.InitActivationContext request) throws RemoteCommunicationException {
-        if (request.userId() != null) {
+    private static ActivationType convert(final OnboardingProcessConfigurationValue.ActivationType source) {
+        return switch(source) {
+            case CODE -> ActivationType.CODE;
+            case IDENTITY -> ActivationType.IDENTITY;
+        };
+    }
+
+    private InitActivationResponse initActivation(
+            final ActivationService.InitActivationContext request,
+            final OnboardingProcessConfigurationValue.ActivationType activationType) throws RemoteCommunicationException {
+
+        if (activationType == OnboardingProcessConfigurationValue.ActivationType.IDENTITY) {
+            logger.info("ActivationCode is not generated for activationType=IDENTITY");
+            return new InitActivationResponse();
+        } else if (activationType == OnboardingProcessConfigurationValue.ActivationType.CODE && request.userId() != null) {
             return activationService.initActivation(request);
         } else {
             logger.info("User ID is null, generating fake activationCode");
@@ -262,11 +280,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @return Onboarding status response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public OnboardingStatusResponse getStatus(OnboardingStatusRequest request) throws OnboardingProcessException {
         final String processId = request.getProcessId();
-        final OnboardingProcessEntity process = onboardingProcessRepository.findById(processId).orElseThrow(() ->
-                new OnboardingProcessException("Onboarding process not found, process ID: " + processId));
+        final OnboardingProcessEntity process = findProcess(request.getProcessId());
         OnboardingStatusResponse response = new OnboardingStatusResponse();
         response.setProcessId(processId);
 
@@ -338,6 +355,24 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     public void verifyProcessId(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatus(ownerId.getActivationId(), onboardingStatus)
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
+        final String expectedProcessId = process.getId();
+
+        if (!expectedProcessId.equals(processId)) {
+            throw new OnboardingProcessException(
+                    String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
+        }
+    }
+
+    /**
+     * Verify process identifier.
+     * @param ownerId Owner identification.
+     * @param processId Process identifier from request.
+     * @param onboardingStatuses Onboarding process statuses.
+     * @throws OnboardingProcessException Thrown in case process identifier is invalid.
+     */
+    public void verifyProcessId(OwnerId ownerId, String processId, Collection<OnboardingStatus> onboardingStatuses) throws OnboardingProcessException {
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatuses(ownerId.getActivationId(), onboardingStatuses)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
         final String expectedProcessId = process.getId();
 
