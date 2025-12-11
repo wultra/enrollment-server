@@ -20,25 +20,6 @@ Also added a foreign key `process_config_id` to the table `es_onboarding_process
 
 You have to insert at least one row into the table `es_onboarding_process_configuration`, and configure property `enrollment-server-onboarding.onboarding-process.default-type` (or ENV `ONBOARDING_PROCESS_DEFAULT_TYPE`) to work as a default process type.
 
-Following configuration properties were removed:
-
-```
-enrollment-server-onboarding.document-verification.required.primaryDocuments
-enrollment-server-onboarding.document-verification.required.count
-```
-
-New logic works in this way:
-
-Field `documents.mandatory` - all document types from this list are mandatory. Verification process won't pass if any of these is missing. Empty by default.
-
-Field `documents.primary` - list of primary document types. Minimum count of provided documents from this list is specified in field `documents.requiredPrimaryDocumentsCount`. Empty by default.
-
-Field `documents.secondary` - list of secondary document types. Complement to primary documents in order to reach `documents.requiredTotalDocumentsCount`. Contains all supported document types by default.
-
-Field `documents.requiredTotalDocumentsCount` - total minimum count of documents required for verification. It is sum of all unique values (document types) from `documents.mandatory`, `documents.primary` and `documents.secondary`. Default is `0`.
-
-Field `documents.requiredPrimaryDocumentsCount` - minimum count of primary documents required for verification. Default is `0`.
-
 
 ## REST API Changes
 
@@ -65,3 +46,25 @@ For external onboarding services, the `processType` field has been added to the 
 ### OTP Configuration
 
 The property `enrollment-server-onboarding.identity-verification.otp.enabled` has been removed in favor of the [database changes](#database-changes), see the table `es_onboarding_process_configuration`.
+
+
+### Documents configuration
+
+Following configuration properties were removed:
+
+```
+enrollment-server-onboarding.document-verification.required.primaryDocuments
+enrollment-server-onboarding.document-verification.required.count
+```
+
+New logic works in this way:
+
+Field `documents.mandatory` - all document types from this list are mandatory. Verification process won't pass if any of these is missing. Empty by default.
+
+Field `documents.primary` - list of primary document types. Minimum count of provided documents from this list is specified in field `documents.requiredPrimaryDocumentsCount`. Empty by default.
+
+Field `documents.secondary` - list of secondary document types. Complement to primary documents in order to reach `documents.requiredTotalDocumentsCount`. Contains all supported document types by default.
+
+Field `documents.requiredTotalDocumentsCount` - total minimum count of documents required for verification. It is sum of all unique values (document types) from `documents.mandatory`, `documents.primary` and `documents.secondary`. Default is `0`.
+
+Field `documents.requiredPrimaryDocumentsCount` - minimum count of primary documents required for verification. Default is `0`.

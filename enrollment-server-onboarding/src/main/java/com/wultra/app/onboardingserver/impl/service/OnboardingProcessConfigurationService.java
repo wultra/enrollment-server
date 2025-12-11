@@ -21,10 +21,9 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 /**
  * Service for onboarding process configuration.
@@ -38,10 +37,8 @@ public class OnboardingProcessConfigurationService {
     private final OnboardingProcessRepository onboardingProcessRepository;
 
     public OnboardingProcessConfigurationValue findConfigByProcessId(final String processId) {
-        final var onboardingProcess = onboardingProcessRepository.findById(processId)
-                .orElseThrow(() -> new IllegalArgumentException("Onboarding process not found for id: " + processId));
-
-        return Optional.ofNullable(onboardingProcess.getProcessConfiguration())
+        return onboardingProcessRepository.findById(processId)
+                .map(OnboardingProcessEntity::getProcessConfiguration)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
                 .orElseThrow(() -> new IllegalArgumentException("Onboarding process configuration not found for process id: " + processId));
     }
