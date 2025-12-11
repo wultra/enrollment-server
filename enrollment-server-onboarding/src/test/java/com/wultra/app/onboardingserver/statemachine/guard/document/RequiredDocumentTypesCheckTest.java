@@ -345,6 +345,77 @@ class RequiredDocumentTypesCheckTest {
         assertFalse(result);
     }
 
+    @Test
+    void testEvaluate_allConfigPropertiesAreSpecifiedAndMatched_returnsTrue() {
+        // given
+        processConfig = OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .requiredTotalDocumentsCount((byte) 3)
+                        .requiredPrimaryDocumentsCount((byte) 1)
+                        .mandatory(Set.of(OnboardingProcessConfigurationValue.DocumentType.ID_CARD))
+                        .primary(Set.of(OnboardingProcessConfigurationValue.DocumentType.PASSPORT))
+                        .secondary(Set.of(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE))
+                        .items(List.of(
+                                new OnboardingProcessConfigurationValue.Document(
+                                        OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
+                                        (byte) 2),
+                                new OnboardingProcessConfigurationValue.Document(
+                                        OnboardingProcessConfigurationValue.DocumentType.PASSPORT,
+                                        (byte) 1),
+                                new OnboardingProcessConfigurationValue.Document(
+                                        OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE,
+                                        (byte) 1)
+                        ))
+                        .build())
+                .build();
+
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
+                createDocumentVerification(DocumentType.PASSPORT),
+                createDocumentVerification(DocumentType.DRIVING_LICENSE)
+        );
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertTrue(result);
+    }
+
+    @Test
+    void testEvaluate_anyMandatoryDocumentMissing_returnsFalse() {
+        // given
+        processConfig = OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .requiredTotalDocumentsCount((byte) 2)
+                        .mandatory(Set.of(
+                                OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
+                                OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE))
+                        .items(List.of(
+                                new OnboardingProcessConfigurationValue.Document(
+                                        OnboardingProcessConfigurationValue.DocumentType.ID_CARD,
+                                        (byte) 2),
+                                new OnboardingProcessConfigurationValue.Document(
+                                        OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE,
+                                        (byte) 1)
+                        ))
+                        .build())
+                .build();
+
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var documentVerifications = List.of(createDocumentVerification(DocumentType.ID_CARD));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertFalse(result);
+    }
+
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {
         return createDocumentVerification(type, null);
     }
