@@ -1,4 +1,4 @@
-INSERT INTO es_onboarding_process_configuration (id, process_type, config) VALUES
+insert into es_onboarding_process_configuration (id, process_type, config) values
     (1, 'onboarding', '{}');
 
 -- test testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk
