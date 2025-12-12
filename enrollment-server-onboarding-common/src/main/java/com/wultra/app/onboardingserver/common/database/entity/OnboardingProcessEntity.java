@@ -126,7 +126,7 @@ public class OnboardingProcessEntity implements Serializable {
     private Set<OnboardingOtpEntity> otps = new LinkedHashSet<>();
 
     /**
-     * @implNote nullable for the backward compatibility, but for not-null the new records
+     * @implNote The database column allows NULL values for backward compatibility with existing records, but new records must have a non-null value.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_config_id", referencedColumnName = "id", updatable = false)
