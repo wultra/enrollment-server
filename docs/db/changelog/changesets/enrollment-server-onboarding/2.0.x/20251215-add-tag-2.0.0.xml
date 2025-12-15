@@ -3,7 +3,8 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
 
-    <include file="20251111-process-configuration.xml" relativeToChangelogFile="true" />
-    <include file="20251215-add-tag-2.0.0.xml" relativeToChangelogFile="true" />
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.0.x/20251215-add-tag-2.0.0.xml" author="Lubos Racansky">
+        <tagDatabase tag="enrollment-server-onboarding/2.0.0"/>
+    </changeSet>
 
 </databaseChangeLog>
