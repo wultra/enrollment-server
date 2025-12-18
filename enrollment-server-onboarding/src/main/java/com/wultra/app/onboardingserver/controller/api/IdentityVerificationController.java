@@ -41,6 +41,7 @@ import com.wultra.security.powerauth.rest.api.spring.exception.authentication.Po
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -368,8 +369,6 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws OnboardingProcessException Thrown when the onboarding process is not found.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @PostMapping("activation")
     @Operation(
@@ -380,11 +379,10 @@ public class IdentityVerificationController {
     @PowerAuthToken(authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ObjectResponse<CreateTargetActivationResponse> createTargetActivation(
             final @EncryptedRequestBody @Valid ObjectRequest<CreateTargetActivationRequest> request,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+            final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException {
 
         logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
-        // TODO Lubos
-        final CreateTargetActivationResponse response = CreateTargetActivationResponse.builder().build();
+        final CreateTargetActivationResponse response = identityVerificationRestService.createTargetActivation(request.getRequestObject(), apiAuthentication);
         logger.info("action: createTargetActivation, state: succeeded");
 
         return new ObjectResponse<>(response);
