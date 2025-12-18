@@ -237,6 +237,7 @@ The configuration is stored as JSON. See the following example:
   "activationType":"CODE",
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
+  "useTemporaryActivation": true,
   "documents": {
     "requiredDocumentsCount": 2,
     "items": [

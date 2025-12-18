@@ -49,6 +49,7 @@ class OnboardingProcessConfigurationRepositoryTest {
         assertTrue(result.enabled());
         assertTrue(result.otpForIdentification());
         assertTrue(result.otpForIdentityVerification());
+        assertTrue(result.useTemporaryActivation());
 
         final var documents = result.documents();
         assertNotNull(documents);
@@ -74,6 +75,7 @@ class OnboardingProcessConfigurationRepositoryTest {
         assertFalse(result.enabled());
         assertFalse(result.otpForIdentification());
         assertFalse(result.otpForIdentityVerification());
+        assertFalse(result.useTemporaryActivation());
 
         final var documents = result.documents();
         assertNotNull(documents);
