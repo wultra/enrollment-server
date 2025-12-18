@@ -19,10 +19,10 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
-import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
@@ -40,7 +40,9 @@ import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncrypti
 import com.wultra.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,18 +61,11 @@ import org.springframework.web.bind.annotation.RestController;
 )
 @RestController
 @RequestMapping(value = "api/identity")
+@AllArgsConstructor
+@Slf4j
 public class IdentityVerificationController {
 
     private final IdentityVerificationRestService identityVerificationRestService;
-
-    /**
-     * Controller constructor.
-     * @param identityVerificationRestService  Identity verification entry service.
-     */
-    @Autowired
-    public IdentityVerificationController(IdentityVerificationRestService identityVerificationRestService) {
-        this.identityVerificationRestService = identityVerificationRestService;
-    }
 
     /**
      * Initialize identity verification.
@@ -366,4 +361,32 @@ public class IdentityVerificationController {
         return identityVerificationRestService.approveConsent(request, apiAuthentication);
     }
 
+    /**
+     * Create a target activation.
+     *
+     * @param request Request.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Response.
+     * @throws OnboardingProcessException Thrown when the onboarding process is not found.
+     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
+     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
+     */
+    @PostMapping("activation")
+    @Operation(
+            summary = "Create a target activation",
+            description = "Create a target activation. The identity verification status has to be `ACTIVATION_FINISH`."
+    )
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
+    @PowerAuthToken(authenticationCodeType = PowerAuthCodeType.POSSESSION)
+    public ObjectResponse<CreateTargetActivationResponse> createTargetActivation(
+            final @EncryptedRequestBody @Valid ObjectRequest<CreateTargetActivationRequest> request,
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+
+        logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
+        // TODO Lubos
+        final CreateTargetActivationResponse response = CreateTargetActivationResponse.builder().build();
+        logger.info("action: createTargetActivation, state: succeeded");
+
+        return new ObjectResponse<>(response);
+    }
 }
