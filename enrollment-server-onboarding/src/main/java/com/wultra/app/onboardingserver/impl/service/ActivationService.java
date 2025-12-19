@@ -30,6 +30,7 @@ import com.wultra.security.powerauth.client.model.request.RemoveActivationReques
 import com.wultra.security.powerauth.client.model.request.v3.GetActivationStatusRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
+import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.AllArgsConstructor;
@@ -110,12 +111,22 @@ public class ActivationService {
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     public ActivationStatus fetchActivationStatus(final String activationId) throws RemoteCommunicationException {
+        return fetchActivationStatusResponse(activationId).getActivationStatus();
+    }
+
+    /**
+     * Return activation status response.
+     *
+     * @param activationId Activation ID.
+     * @return activation status response
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    public GetActivationStatusResponse fetchActivationStatusResponse(final String activationId) throws RemoteCommunicationException {
         final GetActivationStatusRequest request = new GetActivationStatusRequest();
         request.setActivationId(activationId);
 
         try {
-            return powerAuthClient.getActivationStatus(request, httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders())
-                    .getActivationStatus();
+            return powerAuthClient.getActivationStatus(request, httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
         }
