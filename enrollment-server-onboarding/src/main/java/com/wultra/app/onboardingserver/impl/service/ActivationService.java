@@ -39,8 +39,6 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 /**
  * Service for working with activations.
  *
@@ -106,7 +104,6 @@ public class ActivationService {
             initActivationRequest.setParentActivationId(request.parentActivationId());
             initActivationRequest.setTransferType(transferType);
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
-            initActivationRequest.setAdditionalData(Map.of("transferType", transferType));
 
             return powerAuthClient.initActivation(
                     initActivationRequest,

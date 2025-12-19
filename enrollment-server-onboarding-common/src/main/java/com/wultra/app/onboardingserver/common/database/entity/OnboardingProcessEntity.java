@@ -88,7 +88,7 @@ public class OnboardingProcessEntity implements Serializable {
     private String activationId;
 
     /**
-     * If the onboarding process uses two activations, this one is permament and {@link #activationId} is temporary one.
+     * If the onboarding process uses two activations, this one is permanent and {@link #activationId} is temporary one.
      */
     @Column(name = "target_activation_id")
     private String targetActivationId;

@@ -30,7 +30,7 @@ import java.util.List;
  * @param enabled                    Whether the process type is enabled.
  * @param otpForIdentification       Whether the OTP is required for the initial identification of the user.
  * @param otpForIdentityVerification Whether the OTP is required for identity verification - request OTP for the next process step.
- * @param useTemporaryActivation     Whether the onboarding process should use two activation, and exchange the temporary one for the permanent one.
+ * @param useTemporaryActivation     Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.
  * @param documents                  List of documents.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
