@@ -793,4 +793,5 @@ public class IdentityVerificationRestService {
         Assert.state(response != null && status != null, "Missing one of important values to generate response entity, response=%s, status=%s".formatted(response, status));
         return new ResponseEntity<>(response, status);
     }
+
 }
