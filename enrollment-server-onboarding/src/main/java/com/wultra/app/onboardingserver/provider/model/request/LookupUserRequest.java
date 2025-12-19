@@ -38,7 +38,6 @@ import java.util.Map;
 @PublicApi
 public final class LookupUserRequest {
 
-    @NonNull
     private Map<String, Object> identification;
 
     @NonNull

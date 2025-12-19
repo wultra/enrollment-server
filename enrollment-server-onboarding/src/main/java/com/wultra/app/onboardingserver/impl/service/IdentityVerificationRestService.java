@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.ConfigurationDataDto;
 import com.wultra.app.enrollmentserver.model.Document;
 import com.wultra.app.enrollmentserver.model.DocumentMetadata;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
@@ -793,31 +792,5 @@ public class IdentityVerificationRestService {
         final HttpStatus status = stateMachine.getExtendedState().get(ExtendedStateVariable.RESPONSE_STATUS, HttpStatus.class);
         Assert.state(response != null && status != null, "Missing one of important values to generate response entity, response=%s, status=%s".formatted(response, status));
         return new ResponseEntity<>(response, status);
-    }
-
-    @Transactional
-    public CreateTargetActivationResponse createTargetActivation(final CreateTargetActivationRequest request, final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException {
-        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.processId();
-
-        onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
-        validateIdentityVerificationPhase(ownerId);
-
-        // TODO Lubos - lookup user
-        // TODO Lubos - create activation
-
-        return CreateTargetActivationResponse.builder()
-                .activationCode("TODO") // TODO Lubos
-                .build();
-    }
-
-    private void validateIdentityVerificationPhase(final OwnerId ownerId) throws OnboardingProcessException {
-        final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId)
-                .orElseThrow(() -> new OnboardingProcessException("Unable to find identity verification for " + ownerId));
-
-        if (identityVerification.getPhase() != IdentityVerificationPhase.ACTIVATION_FINISH) {
-            throw new OnboardingProcessException("Identity verification ID: %s is phase of %s but expected ACTIVATION_FINISH"
-                    .formatted(identityVerification.getId(), identityVerification.getPhase()));
-        }
     }
 }

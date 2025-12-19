@@ -53,10 +53,8 @@ import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequest;
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
-import com.wultra.app.onboardingserver.provider.model.request.LookupUserRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
-import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
@@ -97,6 +95,8 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
     private final ActivationService activationService;
 
+    private final LookupUserService lookupUserService;
+
     /**
      * Configuration data for client integration
      */
@@ -134,6 +134,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             final OtpServiceImpl otpService,
             final ActivationService activationService,
             final OnboardingProvider onboardingProvider,
+            final LookupUserService lookupUserService,
             final AuditService auditService) {
 
         super(onboardingProcessRepository, auditService);
@@ -142,6 +143,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         this.otpService = otpService;
         this.activationService = activationService;
         this.onboardingProvider = onboardingProvider;
+        this.lookupUserService = lookupUserService;
         this.integrationConfigDto = new ConfigurationDataDto();
         this.onboardingProcessConfigurationRepository = onboardingProcessConfigurationRepository;
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
@@ -353,7 +355,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * @param onboardingStatus Expected onboarding process status.
      * @throws OnboardingProcessException Thrown in case process identifier is invalid.
      */
-    public void verifyProcessIdAndLock(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
+    public OnboardingProcessEntity verifyProcessIdAndLock(OwnerId ownerId, String processId, OnboardingStatus onboardingStatus) throws OnboardingProcessException {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, process ID: {}", processId);
         final OnboardingProcessEntity process = onboardingProcessRepository.findByActivationIdAndStatusWithLock(ownerId.getActivationId(), onboardingStatus)
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found, activation ID: " + ownerId.getActivationId()));
@@ -363,6 +365,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new OnboardingProcessException(
                     String.format("Invalid process ID received in request: %s, %s", processId, ownerId));
         }
+        return process;
     }
 
     /**
@@ -512,31 +515,6 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return onboardingProcess.getTimestampCreated().before(createdDateExpirationProcess);
     }
 
-    private String lookupUser(final OnboardingProcessEntity process, final Map<String, Object> identification) {
-        try {
-            final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
-                    .identification(identification)
-                    .processId(process.getId())
-                    .processType(process.getProcessConfiguration().getProcessType())
-                    .build();
-            final LookupUserResponse response = onboardingProvider.lookupUser(lookupUserRequest);
-            auditService.auditOnboardingProvider(process, "Looked up user: {}", response.getUserId());
-            if (response.isErrorOccurred()) {
-                logger.warn("Business logic error occurred during user lookup, process ID: {}, error detail: {}", process.getId(), response.getErrorDetail());
-                process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
-                process.setErrorDetail(OnboardingProcessEntity.ERROR_USER_LOOKUP);
-                process.setTimestampLastUpdated(new Date());
-                onboardingProcessRepository.save(process);
-                auditService.auditOnboardingProvider(process, "Error to look up user: {}, {}", response.getUserId(), response.getErrorDetail());
-            }
-            return response.getUserId();
-        } catch (OnboardingProviderException e) {
-            logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
-            logger.debug("User lookup failed, using null user ID", e);
-            return null;
-        }
-    }
-
     @SneakyThrows(OnboardingProcessException.class)
     private OnboardingProcessEntity createNewProcessAndLookupUser(
             final OnboardingStartRequest request,
@@ -545,7 +523,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUser(process, request.identification());
+        final String userId = lookupUserService.lookupUser(process, request.identification()).orElse(null);
         process.setUserId(userId);
         auditService.audit(process, "Process started for user: {}", userId);
         return process;
@@ -599,7 +577,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
         setProcessCustomData(process, fdsData, requestContext);
-        final String userId = lookupUser(process, identification);
+        final String userId = lookupUserService.lookupUser(process, identification).orElse(null);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
                     String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",

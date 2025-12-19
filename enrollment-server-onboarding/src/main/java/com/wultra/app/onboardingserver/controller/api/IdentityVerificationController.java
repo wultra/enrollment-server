@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
@@ -67,6 +68,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class IdentityVerificationController {
 
     private final IdentityVerificationRestService identityVerificationRestService;
+
+    private final IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     /**
      * Initialize identity verification.
@@ -382,7 +385,7 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException {
 
         logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
-        final CreateTargetActivationResponse response = identityVerificationRestService.createTargetActivation(request.getRequestObject(), apiAuthentication);
+        final CreateTargetActivationResponse response = identityVerificationTargetActivationService.createTargetActivation(request.getRequestObject(), apiAuthentication);
         logger.info("action: createTargetActivation, state: succeeded");
 
         return new ObjectResponse<>(response);
