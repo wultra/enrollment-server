@@ -372,6 +372,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws OnboardingProcessException Thrown when the onboarding process is not found.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @PostMapping("activation")
     @Operation(
@@ -382,7 +383,7 @@ public class IdentityVerificationController {
     @PowerAuthToken(authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ObjectResponse<CreateTargetActivationResponse> createTargetActivation(
             final @EncryptedRequestBody @Valid ObjectRequest<CreateTargetActivationRequest> request,
-            final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException {
+            final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, RemoteCommunicationException {
 
         logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
         final CreateTargetActivationResponse response = identityVerificationTargetActivationService.createTargetActivation(request.getRequestObject(), apiAuthentication);

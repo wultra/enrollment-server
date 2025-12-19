@@ -22,6 +22,7 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationTransferType;
 import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
@@ -37,6 +38,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * Service for working with activations.
@@ -76,6 +79,34 @@ public class ActivationService {
             initActivationRequest.setUserId(request.userId());
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initActivationRequest.setFlags(activationFlagService.fetchInitialActivationFlags());
+
+            return powerAuthClient.initActivation(
+                    initActivationRequest,
+                    httpCustomizationService.getQueryParams(),
+                    httpCustomizationService.getHttpHeaders());
+        } catch (PowerAuthClientException e) {
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Init target activation.
+     *
+     * @param request Init activation context.
+     * @return Init activation response.
+     * @throws RemoteCommunicationException if communication with PowerAuth server fails
+     */
+    public InitActivationResponse initTargetActivation(final InitTargetActivationContext request) throws RemoteCommunicationException {
+        try {
+            final ActivationTransferType transferType = ActivationTransferType.MOVE;
+
+            final InitActivationRequest initActivationRequest = new InitActivationRequest();
+            initActivationRequest.setApplicationId(request.applicationId());
+            initActivationRequest.setUserId(request.userId());
+            initActivationRequest.setParentActivationId(request.parentActivationId());
+            initActivationRequest.setTransferType(transferType);
+            initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
+            initActivationRequest.setAdditionalData(Map.of("transferType", transferType));
 
             return powerAuthClient.initActivation(
                     initActivationRequest,
@@ -134,4 +165,7 @@ public class ActivationService {
 
     @Builder
     public record InitActivationContext(String userId, String applicationKey) {}
+
+    @Builder
+    public record InitTargetActivationContext(String userId, String applicationId, String parentActivationId) {}
 }

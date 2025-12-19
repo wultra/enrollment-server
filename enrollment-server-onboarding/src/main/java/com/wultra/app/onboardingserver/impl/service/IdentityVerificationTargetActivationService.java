@@ -26,7 +26,12 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
+import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +54,10 @@ public class IdentityVerificationTargetActivationService {
 
     private final LookupUserService lookupUserService;
 
+    private final ActivationService activationService;
+
+    private final AuditService auditService;
+
     /**
      * Create target activation.
      *
@@ -58,7 +67,7 @@ public class IdentityVerificationTargetActivationService {
      * @throws OnboardingProcessException in case of any business error
      */
     @Transactional
-    public CreateTargetActivationResponse createTargetActivation(final CreateTargetActivationRequest request, final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException {
+    public CreateTargetActivationResponse createTargetActivation(final CreateTargetActivationRequest request, final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, RemoteCommunicationException {
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = request.processId();
 
@@ -72,11 +81,47 @@ public class IdentityVerificationTargetActivationService {
         process.setUserId(userId);
         onboardingService.updateProcess(process);
 
-        // TODO Lubos - create activation
+        final var initActivationContext = ActivationService.InitTargetActivationContext.builder()
+                .applicationId(apiAuthentication.getApplicationId())
+                .userId(userId)
+                .parentActivationId(apiAuthentication.getActivationContext().getActivationId())
+                .build();
+
+        final String activationCode = fetchActivationCode(process, initActivationContext);
 
         return CreateTargetActivationResponse.builder()
-                .activationCode("TODO") // TODO Lubos
+                .activationCode(activationCode)
                 .build();
+    }
+
+    private String fetchActivationCode(final OnboardingProcessEntity process, final ActivationService.InitTargetActivationContext initActivationContext) throws OnboardingProcessException, RemoteCommunicationException {
+        final String targetActivationId = process.getTargetActivationId();
+        if (targetActivationId == null) {
+            return createActivationAndUpdateProcess(initActivationContext, process);
+        } else {
+            final GetActivationStatusResponse activationStatusResponse = activationService.fetchActivationStatusResponse(targetActivationId);
+            final ActivationStatus activationStatus = activationStatusResponse.getActivationStatus();
+            if (activationStatus == ActivationStatus.CREATED) {
+                return activationStatusResponse.getActivationCode();
+            } else if (activationStatus == ActivationStatus.REMOVED) {
+                return createActivationAndUpdateProcess(initActivationContext, process);
+            } else if (activationStatus == ActivationStatus.PENDING_COMMIT) {
+                logger.info("Target activation ID: {} is in PENDING_COMMIT state, removing it and creating a new one", targetActivationId);
+                activationService.removeActivation(targetActivationId);
+                auditService.auditActivation(process, "Remove activation for user: {}", activationStatusResponse.getUserId());
+                return createActivationAndUpdateProcess(initActivationContext, process);
+            } else {
+                throw new OnboardingProcessException("Unexpected activation status: " + activationStatus);
+            }
+        }
+    }
+
+    private String createActivationAndUpdateProcess(final ActivationService.InitTargetActivationContext initActivationContext, final OnboardingProcessEntity process) throws RemoteCommunicationException {
+        final InitActivationResponse response = activationService.initTargetActivation(initActivationContext);
+        process.setTargetActivationId(response.getActivationId());
+        onboardingService.updateProcess(process);
+        auditService.auditActivation(process, "Create target activation for user: {}", process.getUserId());
+        return response.getActivationCode();
     }
 
     private void validateIdentityVerificationPhase(final OwnerId ownerId) throws OnboardingProcessException {
