@@ -111,7 +111,7 @@ jobs:
       - name: Prepare wars and libs
         run: |
           mkdir -p ./${{ matrix.app }}/docker/images-and-libs
-          mvn -B -U -pl ${{ matrix.app }} -DuseInternalRepo=true -Dmaven.test.skip=true --no-transfer-progress package
+          mvn -B -U -am -pl ${{ matrix.app }} -DuseInternalRepo=true -Dmaven.test.skip=true --no-transfer-progress package
           cp ./${{ matrix.app }}/target/${{ matrix.app }}-${{ env.REVISION }}.war ./${{ matrix.app }}/docker/images-and-libs/${{ matrix.app }}.war
       - name: Prepare SBOM files
         run: |
