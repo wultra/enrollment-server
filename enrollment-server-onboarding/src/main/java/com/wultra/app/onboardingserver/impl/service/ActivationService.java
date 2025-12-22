@@ -96,13 +96,11 @@ public class ActivationService {
      */
     public InitActivationResponse initTargetActivation(final InitTargetActivationContext request) throws RemoteCommunicationException {
         try {
-            final ActivationTransferType transferType = ActivationTransferType.MOVE;
-
             final InitActivationRequest initActivationRequest = new InitActivationRequest();
             initActivationRequest.setApplicationId(request.applicationId());
             initActivationRequest.setUserId(request.userId());
             initActivationRequest.setParentActivationId(request.parentActivationId());
-            initActivationRequest.setTransferType(transferType);
+            initActivationRequest.setTransferType(ActivationTransferType.MOVE);
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
 
             return powerAuthClient.initActivation(
