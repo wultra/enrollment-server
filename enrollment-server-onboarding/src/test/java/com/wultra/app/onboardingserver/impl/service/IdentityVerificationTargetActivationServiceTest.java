@@ -23,7 +23,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
+import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
@@ -108,7 +110,38 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_created() throws Exception {
-        fail("TODO"); // TODO Lubos
+        final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
+        apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
+
+        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
+                .build();
+
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
+
+        when(identityVerificationService.findByOptional(any())).
+                thenReturn(Optional.of(identityVerification));
+        when(lookupUserService.lookupUser(any(), any()))
+                .thenReturn(Optional.of("user1"));
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("activation-1");
+        when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
+                .thenReturn(process);
+
+        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
+        activationStatusResponse.setActivationStatus(ActivationStatus.CREATED);
+        activationStatusResponse.setActivationCode("KA4PD-RTIE2-KOP3U-H53EA");
+        when(activationService.fetchActivationStatusResponse("activation-1"))
+                .thenReturn(activationStatusResponse);
+
+        final CreateTargetActivationResponse result = tested.createTargetActivation(request, apiAuthentication);
+
+        assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
+
+        verify(auditService, never()).auditActivation(any(), any(), any());
+
+        verify(onboardingService).updateProcess(process);
     }
 
     @Test
