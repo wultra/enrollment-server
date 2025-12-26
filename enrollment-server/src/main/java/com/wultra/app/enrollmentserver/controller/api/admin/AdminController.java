@@ -73,6 +73,7 @@ public class AdminController {
                 .language(source.getLanguage())
                 .attributes(convert(source.getAttributes()))
                 .resultTexts(convertResultTexts(source.getResultTexts()))
+                .ui(source.getUi())
                 .build();
     }
 
