@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
@@ -30,7 +31,6 @@ import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatu
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,7 +40,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -72,14 +73,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_notExisting() throws Exception {
-        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
-                .build();
-
-        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
-        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
-
-        when(identityVerificationService.findByOptional(any())).
-                thenReturn(Optional.of(identityVerification));
+        mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
                 .thenReturn(Optional.of("user1"));
 
@@ -93,7 +87,7 @@ class IdentityVerificationTargetActivationServiceTest {
         when(activationService.initTargetActivation(any()))
                 .thenReturn(initActivationResponse);
 
-        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
+        final CreateTargetActivationResponse result = tested.createTargetActivation(createRequest(), createPowerAuthApiAuthentication());
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
@@ -108,14 +102,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_created() throws Exception {
-        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
-                .build();
-
-        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
-        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
-
-        when(identityVerificationService.findByOptional(any())).
-                thenReturn(Optional.of(identityVerification));
+        mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
                 .thenReturn(Optional.of("user1"));
 
@@ -124,13 +111,9 @@ class IdentityVerificationTargetActivationServiceTest {
         when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
                 .thenReturn(process);
 
-        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
-        activationStatusResponse.setActivationStatus(ActivationStatus.CREATED);
-        activationStatusResponse.setActivationCode("KA4PD-RTIE2-KOP3U-H53EA");
-        when(activationService.fetchActivationStatusResponse("activation-1"))
-                .thenReturn(activationStatusResponse);
+        mockActivationStatus(ActivationStatus.CREATED, "KA4PD-RTIE2-KOP3U-H53EA");
 
-        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
+        final CreateTargetActivationResponse result = tested.createTargetActivation(createRequest(), createPowerAuthApiAuthentication());
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
@@ -141,14 +124,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_removed() throws Exception {
-        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
-                .build();
-
-        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
-        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
-
-        when(identityVerificationService.findByOptional(any())).
-                thenReturn(Optional.of(identityVerification));
+        mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
                 .thenReturn(Optional.of("user1"));
 
@@ -157,10 +133,7 @@ class IdentityVerificationTargetActivationServiceTest {
         when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
                 .thenReturn(process);
 
-        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
-        activationStatusResponse.setActivationStatus(ActivationStatus.REMOVED);
-        when(activationService.fetchActivationStatusResponse("activation-1"))
-                .thenReturn(activationStatusResponse);
+        mockActivationStatus(ActivationStatus.REMOVED);
 
         final InitActivationResponse initActivationResponse = new InitActivationResponse();
         initActivationResponse.setActivationId("activation-1");
@@ -168,7 +141,7 @@ class IdentityVerificationTargetActivationServiceTest {
         when(activationService.initTargetActivation(any()))
                 .thenReturn(initActivationResponse);
 
-        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
+        final CreateTargetActivationResponse result = tested.createTargetActivation(createRequest(), createPowerAuthApiAuthentication());
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
@@ -183,19 +156,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_pendingCommit() throws Exception {
-        fail("TODO"); // TODO Lubos
-    }
-
-    @Test
-    void testCreateTargetActivation_blocked() throws Exception {
-        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
-                .build();
-
-        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
-        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
-
-        when(identityVerificationService.findByOptional(any())).
-                thenReturn(Optional.of(identityVerification));
+        mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
                 .thenReturn(Optional.of("user1"));
 
@@ -204,13 +165,45 @@ class IdentityVerificationTargetActivationServiceTest {
         when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
                 .thenReturn(process);
 
-        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
-        activationStatusResponse.setActivationStatus(ActivationStatus.BLOCKED);
-        when(activationService.fetchActivationStatusResponse("activation-1"))
-                .thenReturn(activationStatusResponse);
+        mockActivationStatus(ActivationStatus.PENDING_COMMIT);
+
+        final InitActivationResponse initActivationResponse = new InitActivationResponse();
+        initActivationResponse.setActivationId("activation-1");
+        initActivationResponse.setActivationCode("KA4PD-RTIE2-KOP3U-H53EA");
+        when(activationService.initTargetActivation(any()))
+                .thenReturn(initActivationResponse);
+
+        final CreateTargetActivationResponse result = tested.createTargetActivation(createRequest(), createPowerAuthApiAuthentication());
+
+        assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
+
+        verify(auditService).auditActivation(process, "Remove activation for user: {}", "user1");
+        verify(auditService).auditActivation(process, "Create target activation for user: {}", "user1");
+
+        final var processCaptor = ArgumentCaptor.forClass(OnboardingProcessEntity.class);
+        verify(onboardingService, times(2)).updateProcess(processCaptor.capture());
+
+        verify(activationService).removeActivation("activation-1");
+
+        final var capturedProcesses = processCaptor.getAllValues();
+        assertEquals("activation-1", capturedProcesses.get(1).getTargetActivationId());
+    }
+
+    @Test
+    void testCreateTargetActivation_blocked() throws Exception {
+        mockIdentityVerification();
+        when(lookupUserService.lookupUser(any(), any()))
+                .thenReturn(Optional.of("user1"));
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("activation-1");
+        when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
+                .thenReturn(process);
+
+        mockActivationStatus(ActivationStatus.BLOCKED);
 
         var result = assertThrows(OnboardingProcessException.class, () ->
-                tested.createTargetActivation(request, createPowerAuthApiAuthentication()));
+                tested.createTargetActivation(createRequest(), createPowerAuthApiAuthentication()));
 
         assertEquals("Unexpected activation status: BLOCKED", result.getMessage());
 
@@ -219,7 +212,32 @@ class IdentityVerificationTargetActivationServiceTest {
         verify(onboardingService, times(1)).updateProcess(any(OnboardingProcessEntity.class));
     }
 
-    private static @NonNull PowerAuthApiAuthentication createPowerAuthApiAuthentication() {
+    private static CreateTargetActivationRequest createRequest() {
+        return CreateTargetActivationRequest.builder().build();
+    }
+
+    private void mockIdentityVerification() {
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
+
+        when(identityVerificationService.findByOptional(any())).
+                thenReturn(Optional.of(identityVerification));
+    }
+
+    private void mockActivationStatus(final ActivationStatus status) throws RemoteCommunicationException {
+        mockActivationStatus(status, null);
+    }
+
+    private void mockActivationStatus(final ActivationStatus status, final String activationCode) throws RemoteCommunicationException {
+        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
+        activationStatusResponse.setActivationStatus(status);
+        activationStatusResponse.setActivationCode(activationCode);
+
+        when(activationService.fetchActivationStatusResponse("activation-1"))
+                .thenReturn(activationStatusResponse);
+    }
+
+    private static PowerAuthApiAuthentication createPowerAuthApiAuthentication() {
         final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
         apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
         return apiAuthentication;

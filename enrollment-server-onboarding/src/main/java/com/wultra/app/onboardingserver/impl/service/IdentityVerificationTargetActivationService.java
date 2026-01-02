@@ -108,7 +108,7 @@ public class IdentityVerificationTargetActivationService {
             } else if (activationStatus == ActivationStatus.PENDING_COMMIT) {
                 logger.info("Target activation ID: {} is in PENDING_COMMIT state, removing it and creating a new one", targetActivationId);
                 activationService.removeActivation(targetActivationId);
-                auditService.auditActivation(process, "Remove activation for user: {}", activationStatusResponse.getUserId());
+                auditService.auditActivation(process, "Remove activation for user: {}", process.getUserId());
                 return createActivationAndUpdateProcess(initActivationContext, process);
             } else {
                 throw new OnboardingProcessException("Unexpected activation status: " + activationStatus);
