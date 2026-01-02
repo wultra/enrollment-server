@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.CreateTarge
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
@@ -39,8 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -188,7 +188,35 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_blocked() throws Exception {
-        fail("TODO"); // TODO Lubos
+        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
+                .build();
+
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
+
+        when(identityVerificationService.findByOptional(any())).
+                thenReturn(Optional.of(identityVerification));
+        when(lookupUserService.lookupUser(any(), any()))
+                .thenReturn(Optional.of("user1"));
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("activation-1");
+        when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
+                .thenReturn(process);
+
+        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
+        activationStatusResponse.setActivationStatus(ActivationStatus.BLOCKED);
+        when(activationService.fetchActivationStatusResponse("activation-1"))
+                .thenReturn(activationStatusResponse);
+
+        var result = assertThrows(OnboardingProcessException.class, () ->
+                tested.createTargetActivation(request, createPowerAuthApiAuthentication()));
+
+        assertEquals("Unexpected activation status: BLOCKED", result.getMessage());
+
+        verify(auditService, never()).auditActivation(any(), any(), any());
+
+        verify(onboardingService, times(1)).updateProcess(any(OnboardingProcessEntity.class));
     }
 
     private static @NonNull PowerAuthApiAuthentication createPowerAuthApiAuthentication() {
