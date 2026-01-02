@@ -15,4 +15,4 @@ For manual changes use SQL scripts:
 
 ### Onboarding Process
 
-Also added a new column `target_activation_id` to the table `es_onboarding_process`.
+Added a new column `target_activation_id` to the table `es_onboarding_process`.
