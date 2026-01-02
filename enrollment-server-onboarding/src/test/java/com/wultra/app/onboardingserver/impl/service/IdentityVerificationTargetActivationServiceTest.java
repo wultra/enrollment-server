@@ -29,6 +29,7 @@ import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatu
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -71,9 +72,6 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_notExisting() throws Exception {
-        final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
-        apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
-
         final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
                 .build();
 
@@ -95,7 +93,7 @@ class IdentityVerificationTargetActivationServiceTest {
         when(activationService.initTargetActivation(any()))
                 .thenReturn(initActivationResponse);
 
-        final CreateTargetActivationResponse result = tested.createTargetActivation(request, apiAuthentication);
+        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
@@ -110,9 +108,6 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_created() throws Exception {
-        final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
-        apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
-
         final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
                 .build();
 
@@ -135,7 +130,7 @@ class IdentityVerificationTargetActivationServiceTest {
         when(activationService.fetchActivationStatusResponse("activation-1"))
                 .thenReturn(activationStatusResponse);
 
-        final CreateTargetActivationResponse result = tested.createTargetActivation(request, apiAuthentication);
+        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
@@ -146,7 +141,44 @@ class IdentityVerificationTargetActivationServiceTest {
 
     @Test
     void testCreateTargetActivation_removed() throws Exception {
-        fail("TODO"); // TODO Lubos
+        final CreateTargetActivationRequest request = CreateTargetActivationRequest.builder()
+                .build();
+
+        final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
+        identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
+
+        when(identityVerificationService.findByOptional(any())).
+                thenReturn(Optional.of(identityVerification));
+        when(lookupUserService.lookupUser(any(), any()))
+                .thenReturn(Optional.of("user1"));
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("activation-1");
+        when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
+                .thenReturn(process);
+
+        final GetActivationStatusResponse activationStatusResponse = new GetActivationStatusResponse();
+        activationStatusResponse.setActivationStatus(ActivationStatus.REMOVED);
+        when(activationService.fetchActivationStatusResponse("activation-1"))
+                .thenReturn(activationStatusResponse);
+
+        final InitActivationResponse initActivationResponse = new InitActivationResponse();
+        initActivationResponse.setActivationId("activation-1");
+        initActivationResponse.setActivationCode("KA4PD-RTIE2-KOP3U-H53EA");
+        when(activationService.initTargetActivation(any()))
+                .thenReturn(initActivationResponse);
+
+        final CreateTargetActivationResponse result = tested.createTargetActivation(request, createPowerAuthApiAuthentication());
+
+        assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
+
+        verify(auditService).auditActivation(process, "Create target activation for user: {}", "user1");
+
+        final var processCaptor = ArgumentCaptor.forClass(OnboardingProcessEntity.class);
+        verify(onboardingService, times(2)).updateProcess(processCaptor.capture());
+
+        final var capturedProcesses = processCaptor.getAllValues();
+        assertEquals("activation-1", capturedProcesses.get(1).getTargetActivationId());
     }
 
     @Test
@@ -157,5 +189,11 @@ class IdentityVerificationTargetActivationServiceTest {
     @Test
     void testCreateTargetActivation_blocked() throws Exception {
         fail("TODO"); // TODO Lubos
+    }
+
+    private static @NonNull PowerAuthApiAuthentication createPowerAuthApiAuthentication() {
+        final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
+        apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
+        return apiAuthentication;
     }
 }
