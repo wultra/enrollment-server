@@ -129,7 +129,7 @@ public class IdentityVerificationTargetActivationService {
                 .orElseThrow(() -> new OnboardingProcessException("Unable to find identity verification for " + ownerId));
 
         if (identityVerification.getPhase() != IdentityVerificationPhase.ACTIVATION_FINISH) {
-            throw new OnboardingProcessException("Identity verification ID: %s is phase of %s but expected ACTIVATION_FINISH"
+            throw new OnboardingProcessException("Identity verification ID: %s is in phase %s but expected ACTIVATION_FINISH"
                     .formatted(identityVerification.getId(), identityVerification.getPhase()));
         }
     }
