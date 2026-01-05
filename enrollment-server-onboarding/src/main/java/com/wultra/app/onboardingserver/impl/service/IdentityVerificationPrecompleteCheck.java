@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
@@ -107,7 +108,7 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Not valid activation OTP");
         }
 
-        if (!isActivationValid(idVerification)) {
+        if (!isActivationValid(idVerification.getActivationId())) {
             logger.debug("Activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Activation is not valid");
         }
@@ -117,7 +118,31 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Did not pass SCA");
         }
 
+        if (!isTargetActivationFinished(idVerification)) {
+            logger.debug("Target activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
+            return Result.failed("Target activation is not valid");
+        }
+
         return Result.successful();
+    }
+
+    private boolean isTargetActivationFinished(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+        if (isTemporaryActivationDisabled(idVerification)) {
+            logger.trace("Temporary activation is disabled");
+            return true;
+        }
+
+        final String targetActivationId = onboardingProcessRepository.findById(idVerification.getProcessId())
+                // TODO Lubos targetActivationId should be moved to IdentityVerificationEntity
+                .map(OnboardingProcessEntity::getTargetActivationId)
+                .orElse(null);
+
+        if (targetActivationId == null) {
+            logger.debug("Target activation ID is null for processId: {}", idVerification.getProcessId());
+            return false;
+        }
+
+        return isActivationValid(targetActivationId);
     }
 
     private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
@@ -134,8 +159,8 @@ class IdentityVerificationPrecompleteCheck {
         return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
-    private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        final ActivationStatus activationStatus = activationService.fetchActivationStatus(idVerification.getActivationId());
+    private boolean isActivationValid(final String activationId) throws RemoteCommunicationException {
+        final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
         return activationStatus == ActivationStatus.ACTIVE;
     }
 
@@ -192,18 +217,25 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationOtpDisabled(final IdentityVerificationEntity idVerification) {
-        return onboardingProcessRepository.findById(idVerification.getProcessId())
-                .map(OnboardingProcessEntity::getProcessConfiguration)
-                .map(OnboardingProcessConfigurationEntity::getConfiguration)
-                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
-                .isEmpty();
+        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentityVerification);
     }
 
     private boolean isActivationOtpDisabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentification);
+    }
+
+    private boolean isTemporaryActivationDisabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::useTemporaryActivation);
+    }
+
+    private boolean isConfigurationDisabled(
+            final IdentityVerificationEntity idVerification,
+            final Predicate<OnboardingProcessConfigurationValue> predicate) {
+
         return onboardingProcessRepository.findById(idVerification.getProcessId())
                 .map(OnboardingProcessEntity::getProcessConfiguration)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
-                .filter(OnboardingProcessConfigurationValue::otpForIdentification)
+                .filter(predicate)
                 .isEmpty();
     }
 }

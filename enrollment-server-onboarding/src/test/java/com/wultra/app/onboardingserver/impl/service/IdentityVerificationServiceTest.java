@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -35,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Set;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.OTP_VERIFICATION;
@@ -70,7 +68,7 @@ class IdentityVerificationServiceTest {
     private IdentityVerificationService tested;
 
     @Test
-    void testProcessDocumentVerificationResult_valid() throws Exception {
+    void testProcessVerificationResult_valid() throws Exception {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setPhase(OTP_VERIFICATION);
         idVerification.setStatus(ACCEPTED);
@@ -78,7 +76,7 @@ class IdentityVerificationServiceTest {
         when(identityVerificationPrecompleteCheck.evaluate(idVerification))
                 .thenReturn(IdentityVerificationPrecompleteCheck.Result.successful());
 
-        tested.processDocumentVerificationResult(new OwnerId(), idVerification);
+        tested.processVerificationResult(new OwnerId(), idVerification);
 
         final ArgumentCaptor<IdentityVerificationEntity> argumentCaptor = ArgumentCaptor.forClass(IdentityVerificationEntity.class);
         verify(identityVerificationRepository, atLeastOnce()).save(argumentCaptor.capture());
@@ -89,7 +87,7 @@ class IdentityVerificationServiceTest {
     }
 
     @Test
-    void testProcessDocumentVerificationResult_invalidPrecompleteGuard() throws Exception {
+    void testProcessVerificationResult_invalidPrecompleteGuard() throws Exception {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setPhase(OTP_VERIFICATION);
         idVerification.setStatus(ACCEPTED);
@@ -97,7 +95,7 @@ class IdentityVerificationServiceTest {
         when(identityVerificationPrecompleteCheck.evaluate(idVerification))
                 .thenReturn(IdentityVerificationPrecompleteCheck.Result.failed("Not valid OTP"));
 
-        tested.processDocumentVerificationResult(new OwnerId(), idVerification);
+        tested.processVerificationResult(new OwnerId(), idVerification);
 
         final ArgumentCaptor<IdentityVerificationEntity> argumentCaptor = ArgumentCaptor.forClass(IdentityVerificationEntity.class);
         verify(identityVerificationRepository, atLeastOnce()).save(argumentCaptor.capture());

@@ -24,8 +24,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class VerificationResultService {
-
-    private static final Logger logger = LoggerFactory.getLogger(VerificationResultService.class);
 
     private final IdentityVerificationService identityVerificationService;
 
@@ -53,7 +49,7 @@ public class VerificationResultService {
     }
 
     /**
-     * Process documents verification result.
+     * Process verification result.
      * When accepted, finishes the verification.
      *
      * @param ownerId Owner identification.
@@ -65,7 +61,7 @@ public class VerificationResultService {
     @Transactional
     public void processVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification)
             throws IdentityVerificationException, OnboardingProcessException, RemoteCommunicationException {
-        identityVerificationService.processDocumentVerificationResult(ownerId, identityVerification);
+        identityVerificationService.processVerificationResult(ownerId, identityVerification);
         if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
                 identityVerificationFinishService.finishIdentityVerification(ownerId);
         }
