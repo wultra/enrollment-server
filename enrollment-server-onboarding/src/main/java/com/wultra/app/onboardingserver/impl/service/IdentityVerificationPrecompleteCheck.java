@@ -133,7 +133,6 @@ class IdentityVerificationPrecompleteCheck {
         }
 
         final String targetActivationId = onboardingProcessRepository.findById(idVerification.getProcessId())
-                // TODO Lubos targetActivationId should be moved to IdentityVerificationEntity
                 .map(OnboardingProcessEntity::getTargetActivationId)
                 .orElse(null);
 
