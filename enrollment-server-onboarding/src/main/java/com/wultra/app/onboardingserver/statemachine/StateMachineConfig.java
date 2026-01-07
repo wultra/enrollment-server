@@ -36,8 +36,8 @@ import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedG
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,10 +65,10 @@ import java.util.EnumSet;
         havingValue = "true"
 )
 @Configuration
+@AllArgsConstructor
+@Slf4j
 @EnableStateMachineFactory(name = "enrollmentStateMachine")
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OnboardingState, OnboardingEvent> {
-
-    private static final Logger logger = LoggerFactory.getLogger(StateMachineConfig.class);
 
     private final ClientEvaluationInitAction clientEvaluationInitAction;
 
@@ -117,64 +117,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private final StatusInProgressGuard statusInProgressGuard;
 
     private final StatusRejectedGuard statusRejectedGuard;
-
-    public StateMachineConfig(
-            final ClientEvaluationInitAction clientEvaluationInitAction,
-            final ClientEvaluationAction clientEvaluationAction,
-            final OtpVerificationResendAction otpVerificationResendAction,
-            final OtpVerificationSendAction otpVerificationSendAction,
-            final PresenceCheckInitAction presenceCheckInitAction,
-            final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction,
-            final PresenceCheckVerificationAction presenceCheckVerificationAction,
-            final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction,
-            final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction,
-            final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction,
-            final DocumentsVerificationPendingGuard documentsVerificationPendingGuard,
-            final VerificationDocumentStartAction verificationDocumentStartAction,
-            final VerificationInitAction verificationInitAction,
-            final VerificationProcessResultAction verificationProcessResultAction,
-            final DocumentVerificationFinalAction documentVerificationFinalAction,
-            final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard,
-            final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
-            final OtpVerifiedGuard otpVerifiedGuard,
-            final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
-            final ProcessIdentifierGuard processIdentifierGuard,
-            final StatusAcceptedGuard statusAcceptedGuard,
-            final StatusFailedGuard statusFailedGuard,
-            final StatusInProgressGuard statusInProgressGuard,
-            final StatusRejectedGuard statusRejectedGuard) {
-        this.clientEvaluationInitAction = clientEvaluationInitAction;
-        this.clientEvaluationAction = clientEvaluationAction;
-        this.otpVerificationResendAction = otpVerificationResendAction;
-        this.otpVerificationSendAction = otpVerificationSendAction;
-
-        this.presenceCheckInitAction = presenceCheckInitAction;
-        this.presenceCheckNotInitializedAction = presenceCheckNotInitializedAction;
-        this.presenceCheckVerificationAction = presenceCheckVerificationAction;
-
-        this.moveToPresenceCheckVerificationPendingAction = moveToPresenceCheckVerificationPendingAction;
-        this.moveToDocumentVerificationFinalInProgressAction = moveToDocumentVerificationFinalInProgressAction;
-        this.moveToDocumentUploadVerificationPendingAction = moveToDocumentUploadVerificationPendingAction;
-        this.documentsVerificationPendingGuard = documentsVerificationPendingGuard;
-        this.verificationDocumentStartAction = verificationDocumentStartAction;
-        this.verificationInitAction = verificationInitAction;
-        this.verificationProcessResultAction = verificationProcessResultAction;
-        this.documentVerificationFinalAction = documentVerificationFinalAction;
-
-        this.documentUploadVerificationPendingGuard = documentUploadVerificationPendingGuard;
-
-        this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
-        this.otpVerifiedGuard = otpVerifiedGuard;
-
-        this.presenceCheckEnabledGuard = presenceCheckEnabledGuard;
-
-        this.processIdentifierGuard = processIdentifierGuard;
-
-        this.statusAcceptedGuard = statusAcceptedGuard;
-        this.statusFailedGuard = statusFailedGuard;
-        this.statusInProgressGuard = statusInProgressGuard;
-        this.statusRejectedGuard = statusRejectedGuard;
-    }
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
