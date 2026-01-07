@@ -28,7 +28,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test for {@link OnboardingProcessConfigurationRepository}.
@@ -47,46 +47,70 @@ class OnboardingProcessConfigurationRepositoryTest {
     void testJsonMapping() {
         final OnboardingProcessConfigurationEntity entity = tested.findByProcessType("reactivation").orElseThrow(AssertionFailedError::new);
         final OnboardingProcessConfigurationValue result = entity.getConfiguration();
+        final var expectedConfiguration = buildExpectedConfiguration();
 
-        assertTrue(result.enabled());
-        assertTrue(result.otpForIdentification());
-        assertTrue(result.otpForIdentityVerification());
-
-        final var documents = result.documents();
-        assertNotNull(documents);
-        assertEquals(2, documents.requiredTotalDocumentsCount());
-        assertEquals(1, documents.requiredPrimaryDocumentsCount());
-        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.ID_CARD), documents.mandatory());
-        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.PASSPORT), documents.primary());
-        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE), documents.secondary());
-
-        final var document1 = documents.items().get(0);
-        assertEquals("ID_CARD", document1.type().name());
-        assertEquals(2, document1.sideCount());
-
-        final var document2 = documents.items().get(1);
-        assertEquals("DRIVING_LICENCE", document2.type().name());
-        assertEquals(1, document2.sideCount());
-        assertEquals(OnboardingProcessConfigurationValue.ActivationType.CODE, result.activationType());
+        assertEquals(expectedConfiguration, result);
     }
 
     @Test
     void testJsonMapping_defaultValues() {
         final OnboardingProcessConfigurationEntity entity = tested.findByProcessType("onboarding").orElseThrow(AssertionFailedError::new);
         final OnboardingProcessConfigurationValue result = entity.getConfiguration();
+        final var expectedConfiguration = buildExpectedEmptyConfiguration();
 
-        assertFalse(result.enabled());
-        assertFalse(result.otpForIdentification());
-        assertFalse(result.otpForIdentityVerification());
+        assertEquals(expectedConfiguration, result);
+    }
 
-        final var documents = result.documents();
-        assertNotNull(documents);
-        assertEquals(0, documents.requiredTotalDocumentsCount());
-        assertEquals(0, documents.requiredPrimaryDocumentsCount());
-        assertEquals(Set.of(), documents.mandatory());
-        assertEquals(Set.of(), documents.primary());
-        assertEquals(Set.of(OnboardingProcessConfigurationValue.DocumentType.values()), documents.secondary());
-        assertEquals(0, documents.items().size());
-        assertEquals(OnboardingProcessConfigurationValue.ActivationType.IDENTITY, result.activationType());
+    private static OnboardingProcessConfigurationValue buildExpectedConfiguration() {
+        return OnboardingProcessConfigurationValue.builder()
+                .enabled(true)
+                .activationType(OnboardingProcessConfigurationValue.ActivationType.CODE)
+                .otpForIdentification(true)
+                .otpForIdentityVerification(true)
+                .documents(
+                        OnboardingProcessConfigurationValue.Documents.builder()
+                                .totalRequiredDocumentsCount((byte) 2)
+                                .groups(
+                                        Set.of(
+                                                OnboardingProcessConfigurationValue.Group.builder()
+                                                        .requiredDocumentsCount((byte) 1)
+                                                        .items(Set.of(
+                                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                                        .sideCount((byte) 2)
+                                                                        .build(),
+                                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.PASSPORT)
+                                                                        .sideCount((byte) 1)
+                                                                        .build()
+                                                        ))
+                                                        .build(),
+                                                OnboardingProcessConfigurationValue.Group.builder()
+                                                        .items(Set.of(
+                                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                                        .sideCount((byte) 1)
+                                                                        .build()
+                                                        ))
+                                                        .build()
+                                        ))
+                                .build()
+                )
+                .build();
+    }
+
+    private static OnboardingProcessConfigurationValue buildExpectedEmptyConfiguration() {
+        return OnboardingProcessConfigurationValue.builder()
+                .enabled(false)
+                .activationType(OnboardingProcessConfigurationValue.ActivationType.IDENTITY)
+                .otpForIdentification(false)
+                .otpForIdentityVerification(false)
+                .documents(
+                        OnboardingProcessConfigurationValue.Documents.builder()
+                                .totalRequiredDocumentsCount((byte) 0)
+                                .groups(Set.of())
+                                .build()
+                )
+                .build();
     }
 }

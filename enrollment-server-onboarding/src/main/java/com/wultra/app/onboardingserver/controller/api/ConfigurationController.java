@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -102,41 +102,44 @@ public class ConfigurationController {
             return null;
         }
 
+        final var groups = Optional.ofNullable(source.groups())
+                .orElse(Set.of())
+                .stream()
+                .map(ConfigurationController::convert)
+                .collect(Collectors.toSet());
+
         return ConfigurationResponse.Documents.builder()
-                .requiredTotalDocumentsCount(source.requiredTotalDocumentsCount())
-                .requiredPrimaryDocumentsCount(source.requiredPrimaryDocumentsCount())
-                .mandatory(convert(source.mandatory()))
-                .primary(convert(source.primary()))
-                .secondary(convert(source.secondary()))
-                .items(convert(source.items()))
+                .totalRequiredDocumentsCount(source.totalRequiredDocumentsCount())
+                .groups(groups)
                 .build();
     }
 
-    private static List<ConfigurationResponse.Document> convert(final List<OnboardingProcessConfigurationValue.Document> source) {
+    private static ConfigurationResponse.Group convert(final OnboardingProcessConfigurationValue.Group source) {
         if (source == null) {
             return null;
         }
 
-        return source.stream()
+        final var items = Optional.ofNullable(source.items())
+                .orElse(Set.of())
+                .stream()
                 .map(ConfigurationController::convert)
-                .toList();
+                .collect(Collectors.toSet());
+
+        return ConfigurationResponse.Group.builder()
+                .requiredDocumentsCount(source.requiredDocumentsCount())
+                .items(items)
+                .build();
     }
 
     private static ConfigurationResponse.Document convert(final OnboardingProcessConfigurationValue.Document source) {
+        if (source == null) {
+            return null;
+        }
+
         return ConfigurationResponse.Document.builder()
                 .type(convert(source.type()))
                 .sideCount(source.sideCount())
                 .build();
-    }
-
-    private static Set<ConfigurationResponse.DocumentType> convert(final Set<OnboardingProcessConfigurationValue.DocumentType> source) {
-        if (source == null) {
-            return Set.of();
-        }
-
-        return source.stream()
-                .map(ConfigurationController::convert)
-                .collect(Collectors.toSet());
     }
 
     private static ConfigurationResponse.DocumentType convert(final OnboardingProcessConfigurationValue.DocumentType source) {

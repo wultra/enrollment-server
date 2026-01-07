@@ -22,7 +22,6 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -58,17 +57,16 @@ public record OnboardingProcessConfigurationValue(
     }
 
     /**
-     * @param requiredTotalDocumentsCount Number of required documents to submit.
+     * Configuration of required documents.
+     *
+     * @param totalRequiredDocumentsCount Number of required documents to submit.
+     * @param groups                      Set of document groups.
      */
     @Jacksonized
     @Builder
     public record Documents(
-            byte requiredTotalDocumentsCount,
-            byte requiredPrimaryDocumentsCount,
-            Set<DocumentType> mandatory,
-            Set<DocumentType> primary,
-            Set<DocumentType> secondary,
-            List<Document> items
+            byte totalRequiredDocumentsCount,
+            Set<Group> groups
     ) implements Serializable {
 
         @Serial
@@ -76,12 +74,32 @@ public record OnboardingProcessConfigurationValue(
 
         public static class DocumentsBuilder {
             DocumentsBuilder() {
-                requiredTotalDocumentsCount = 0;
-                requiredPrimaryDocumentsCount = 0;
-                mandatory = Set.of();
-                primary = Set.of();
-                secondary = Set.of(DocumentType.values());
-                items = List.of();
+                totalRequiredDocumentsCount = 0;
+                groups = Set.of();
+            }
+        }
+    }
+
+    /**
+     * Configuration of a document group.
+     *
+     * @param requiredDocumentsCount Number of required documents from this group.
+     * @param items                  Set of document configurations.
+     */
+    @Jacksonized
+    @Builder
+    public record Group(
+            byte requiredDocumentsCount,
+            Set<Document> items
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 5873241902384756123L;
+
+        public static class GroupBuilder {
+            GroupBuilder() {
+                requiredDocumentsCount = 0;
+                items = Set.of();
             }
         }
     }
@@ -102,6 +120,11 @@ public record OnboardingProcessConfigurationValue(
         @Serial
         private static final long serialVersionUID = 191805503079489928L;
 
+        public static class DocumentBuilder {
+            DocumentBuilder() {
+                sideCount = 1;
+            }
+        }
     }
 
     public enum DocumentType {

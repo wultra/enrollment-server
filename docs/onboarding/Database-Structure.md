@@ -238,25 +238,29 @@ The configuration is stored as JSON. See the following example:
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
   "documents": {
-    "requiredTotalDocumentsCount": 2,
-    "requiredPrimaryDocumentsCount": 1,
-    "mandatory": [
-      "ID_CARD"
-    ],
-    "primary": [
-      "PASSPORT"
-    ],
-    "secondary": [
-      "DRIVING_LICENCE"
-    ],
-    "items": [
+    "totalRequiredDocumentsCount": 2,
+    "groups": [
       {
-        "type": "ID_CARD",
-        "sideCount": 2
+        "requiredDocumentsCount": 1,
+        "items": [
+          {
+            "type": "ID_CARD",
+            "sideCount": 2
+          },
+          {
+            "type": "PASSPORT",
+            "sideCount": 1
+          }
+        ]
       },
       {
-        "type": "DRIVING_LICENCE",
-        "sideCount": 1
+        "requiredDocumentsCount": 0,
+        "items": [
+          {
+            "type": "DRIVING_LICENCE",
+            "sideCount": 1
+          }
+        ]
       }
     ]
   }

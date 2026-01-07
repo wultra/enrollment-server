@@ -59,12 +59,48 @@ enrollment-server-onboarding.document-verification.required.count
 
 New logic works in this way:
 
-Field `documents.mandatory` - all document types from this list are mandatory. Verification process won't pass if any of these is missing. Empty by default.
+Field `documents.totalRequiredDocumentsCount` - specifies min count of unique document types required for verification.
 
-Field `documents.primary` - list of primary document types. Minimum count of provided documents from this list is specified in field `documents.requiredPrimaryDocumentsCount`. Empty by default.
+Field `documents.groups` - group specifies more rules for set of document types:
+- `requiredDocumentsCount` - specifies min count of unique document types required from this group
+- `items` - set of documents. Each item specifies document `type` and `sideCount`
 
-Field `documents.secondary` - list of secondary document types. Complement to primary documents in order to reach `documents.requiredTotalDocumentsCount`. Contains all supported document types by default.
+EXAMPLE:
 
-Field `documents.requiredTotalDocumentsCount` - total minimum count of documents required for verification. It is sum of all unique values (document types) from `documents.mandatory`, `documents.primary` and `documents.secondary`. Default is `0`.
+```json
+{
+  "documents": {
+    "totalRequiredDocumentsCount": 2,
+    "groups": [
+      {
+        "requiredDocumentsCount": 1,
+        "items": [
+          {
+            "type": "ID_CARD",
+            "sideCount": 2
+          },
+          {
+            "type": "PASSPORT",
+            "sideCount": 1
+          }
+        ]
+      },
+      {
+        "requiredDocumentsCount": 0,
+        "items": [
+          {
+            "type": "DRIVING_LICENCE",
+            "sideCount": 1
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
-Field `documents.requiredPrimaryDocumentsCount` - minimum count of primary documents required for verification. Default is `0`.
+For this configuration in total at least 2 unique document types must be submitted for verification. Acceptable combinations:
+- `ID_CARD` (2 sides) + `PASSPORT` (1 side)
+- `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
+- `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)
+- `ID_CARD` (2 sides) + `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)

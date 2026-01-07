@@ -20,7 +20,6 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -47,32 +46,22 @@ public record ConfigurationResponse(
     @Builder
     public record Documents(
 
-            @Schema(description = "Minimum total number of different document types required to submit for successful verification.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
-            int requiredTotalDocumentsCount,
+            @Schema(description = "Minimum number of different documents required for successful verification.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
+            int totalRequiredDocumentsCount,
 
-            @Schema(description = "Number of required `primary` documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
-            int requiredPrimaryDocumentsCount,
+            @Schema(description = "Groups defining per-group document requirements.", requiredMode = Schema.RequiredMode.REQUIRED)
+            Set<Group> groups
+    ) {}
 
-            @Schema(
-                    description = "Document types that must be always provided for successful verification.",
-                    requiredMode = Schema.RequiredMode.REQUIRED,
-                    defaultValue = "[]")
-            Set<DocumentType> mandatory,
+    @Builder
+    public record Group(
 
-            @Schema(
-                    description = "Primary document types. Minimum number of documents from this set for successful verification is set in `requiredPrimaryDocumentsCount`.",
-                    requiredMode = Schema.RequiredMode.REQUIRED,
-                    defaultValue = "[]")
-            Set<DocumentType> primary,
+            @Schema(description = "Minimum number of documents required from this group", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
+            int requiredDocumentsCount,
 
-            @Schema(description = "Secondary document types which are allowed for verification.",
-                    requiredMode = Schema.RequiredMode.REQUIRED,
-                    defaultValue = "all values from `DocumentType` enum")
-            Set<DocumentType> secondary,
-
-            List<Document> items
-    ) {
-    }
+            @Schema(description = "List of documents specification.", requiredMode = Schema.RequiredMode.REQUIRED)
+            Set<Document> items
+    ) {}
 
     @Builder
     public record Document(
