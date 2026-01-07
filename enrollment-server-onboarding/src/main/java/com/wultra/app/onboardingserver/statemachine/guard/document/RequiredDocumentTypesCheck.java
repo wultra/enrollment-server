@@ -119,7 +119,7 @@ public class RequiredDocumentTypesCheck {
         final var requiredCount = group.requiredDocumentsCount();
 
         if (providedCount < requiredCount) {
-            logger.debug("Minimal document count from group not provided. Required: {}, provided: {}", requiredCount, providedCount);
+            logger.debug("Minimal document count from group {} not provided. Required: {}, provided: {}", groupDocumentTypes, requiredCount, providedCount);
             return false;
         }
 
