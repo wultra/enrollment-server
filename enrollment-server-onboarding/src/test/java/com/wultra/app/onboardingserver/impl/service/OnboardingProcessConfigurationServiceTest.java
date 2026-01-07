@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ExtendWith(MockitoExtension.class)
-class OnboardingProcessConfigurationValueTest {
+class OnboardingProcessConfigurationServiceTest {
 
     @Mock
     private OnboardingProcessRepository onboardingProcessRepository;

@@ -36,6 +36,13 @@ public class OnboardingProcessConfigurationService {
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
+    /**
+     * Find onboarding process configuration by process ID.
+     *
+     * @param processId the process ID
+     * @return process configuration
+     * @throws IllegalArgumentException when process with given ID does not exist
+     */
     public OnboardingProcessConfigurationValue findConfigByProcessId(final String processId) {
         return onboardingProcessRepository.findById(processId)
                 .map(OnboardingProcessEntity::getProcessConfiguration)
