@@ -48,7 +48,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-// TODO (racansky, 2022-10-14) consider make it Guard for Spring State Machine
+// TODO (racansky, 2022-10-14, #1458) consider make it Guard for Spring State Machine
 @Component
 @Slf4j
 @AllArgsConstructor
