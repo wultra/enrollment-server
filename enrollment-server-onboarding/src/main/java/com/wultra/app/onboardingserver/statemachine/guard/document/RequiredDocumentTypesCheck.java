@@ -19,13 +19,14 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurationService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 
@@ -38,86 +39,136 @@ import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
  */
 // TODO (racansky, 2022-09-09) should be Guard for Spring State Machine, but called from job so far
 @Component
-@EnableConfigurationProperties(RequiredDocumentConfiguration.class)
+@AllArgsConstructor
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
-    private static final List<DocumentType> PHYSICAL_DOCUMENTS = List.of(ID_CARD, PASSPORT, DRIVING_LICENSE);
-
-    private final RequiredDocumentConfiguration requiredDocumentConfiguration;
-
-    @Autowired
-    RequiredDocumentTypesCheck(final RequiredDocumentConfiguration requiredDocumentConfiguration) {
-        this.requiredDocumentConfiguration = requiredDocumentConfiguration;
-    }
+    private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
     /**
-     * Evaluate all required document types to be present and accepted.
+     * Evaluate whether the provided documents meet all requirements defined in {@link OnboardingProcessConfigurationValue#documents()}.
+     *
+     * Following checks are performed:
+     * - Minimal total document count is provided
+     * - Each document has required sides count
+     * - Minimal document count from each group is provided
      *
      * @param documentVerifications document verifications to evaluate
-     * @param identityVerificationId identity verification ID to log
-     * @return true when all required document types present and accepted
+     * @param processId onboarding process identification
+     * @return true when all requirements are met
      */
-    public boolean evaluate(final Collection<DocumentVerificationEntity> documentVerifications, final String identityVerificationId) {
-        final Collection<DocumentVerificationEntity> acceptedDocumentVerifications = documentVerifications.stream()
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .toList();
+    public boolean evaluate(
+            final Collection<DocumentVerificationEntity> documentVerifications,
+            final String processId
+    ) {
+        final var processConfig = onboardingProcessConfigurationService.findConfigByProcessId(processId);
 
-        if (!areDistinctDocumentsPresent(acceptedDocumentVerifications)) {
-            logger.debug("There is not enough accepted document yet for identity verification ID: {}", identityVerificationId);
+        final var documentVerificationsByType = documentVerifications.stream()
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+                .collect(Collectors.groupingBy(DocumentVerificationEntity::getType));
+
+        if (!isMinimalDocumentCountProvided(documentVerificationsByType, processConfig)) {
             return false;
-        } else if (!containsPrimaryDocument(acceptedDocumentVerifications)) {
-            logger.debug("There is no accepted primary document yet for identity verification ID: {}", identityVerificationId);
+        }
+
+        final var groupChecksPassed = processConfig.documents().groups().stream()
+                .allMatch(group ->
+                        isMinimalDocumentCountFromGroupProvided(documentVerificationsByType, group)
+                                && areAllDocumentsSidesProvided(documentVerificationsByType, group)
+                );
+
+        if (!groupChecksPassed) {
             return false;
-        } else if (!containsSecondDocument(acceptedDocumentVerifications)) {
-            logger.debug("There is no accepted secondary document yet for identity verification ID: {}", identityVerificationId);
+        }
+
+        logger.debug("All required documents accepted for onboarding process: {}", processId);
+        return true;
+    }
+
+    private static boolean isMinimalDocumentCountProvided(
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+            final OnboardingProcessConfigurationValue processConfig
+    ) {
+        final var providedCount = documentVerificationsByType.size();
+        final var requiredCount = processConfig.documents().totalRequiredDocumentsCount();
+
+        if (providedCount < requiredCount) {
+            logger.debug("Minimal document count not provided. Required: {}, provided: {}", requiredCount, providedCount);
             return false;
-        } else {
-            logger.debug("All required documents accepted for identity verification ID: {}", identityVerificationId);
+        }
+
+        return true;
+    }
+
+    private static boolean isMinimalDocumentCountFromGroupProvided(
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+            final OnboardingProcessConfigurationValue.Group group
+    ) {
+        final var providedDocumentTypes = documentVerificationsByType.keySet();
+
+        final var groupDocumentTypes = group.items()
+                .stream()
+                .map(OnboardingProcessConfigurationValue.Document::type)
+                .map(RequiredDocumentTypesCheck::convertDocumentType)
+                .collect(Collectors.toSet());
+
+        final var providedCount = providedDocumentTypes.stream()
+                .filter(groupDocumentTypes::contains)
+                .count();
+
+        final var requiredCount = group.requiredDocumentsCount();
+
+        if (providedCount < requiredCount) {
+            logger.debug("Minimal document count from group {} not provided. Required: {}, provided: {}", groupDocumentTypes, requiredCount, providedCount);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean areAllDocumentsSidesProvided(
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
+            final OnboardingProcessConfigurationValue.Group group
+    ) {
+        final var requiredDocumentTypeToSideCount = group.items()
+                .stream()
+                .collect(Collectors.toMap(
+                        item -> convertDocumentType(item.type()),
+                        OnboardingProcessConfigurationValue.Document::sideCount
+                ));
+
+        return requiredDocumentTypeToSideCount.entrySet().stream()
+                .allMatch(i -> areAllDocumentSidesProvided(i.getKey(), i.getValue(), documentVerificationsByType));
+    }
+
+    private static boolean areAllDocumentSidesProvided(
+            final DocumentType documentType,
+            final byte requiredSideCount,
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType
+    ) {
+        if (!documentVerificationsByType.containsKey(documentType)) {
             return true;
         }
-    }
 
-    private boolean areDistinctDocumentsPresent(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return requiredDocumentConfiguration.getCount() == documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .filter(PHYSICAL_DOCUMENTS::contains)
-                .distinct()
-                .count();
-    }
-
-    private boolean containsPrimaryDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return (isConfiguredAsPrimary(ID_CARD) && containsBothSidesOfId(documentVerifications)) ||
-                (isConfiguredAsPrimary(PASSPORT) && containsPassport(documentVerifications));
-    }
-
-    private boolean isConfiguredAsPrimary(final DocumentType type) {
-        return requiredDocumentConfiguration.getPrimaryDocuments().contains(type);
-    }
-
-    private static boolean containsBothSidesOfId(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return 2 == documentVerifications.stream()
-                .filter(it -> it.getType() == ID_CARD)
+        final var providedSideCount = documentVerificationsByType.get(documentType)
+                .stream()
                 .map(DocumentVerificationEntity::getSide)
                 .distinct()
                 .count();
+
+        if (providedSideCount < requiredSideCount) {
+            logger.debug("Not all sides provided for document type: {}. Required sides: {}, provided sides: {}", documentType, requiredSideCount, providedSideCount);
+            return false;
+        }
+
+        return true;
     }
 
-    private static boolean containsPassport(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == PASSPORT);
-    }
-
-    private static boolean containsSecondDocument(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return containsDrivingLicence(documentVerifications)
-                || containsPassport(documentVerifications)
-                || containsBothSidesOfId(documentVerifications);
-    }
-
-    private static boolean containsDrivingLicence(final Collection<DocumentVerificationEntity> documentVerifications) {
-        return documentVerifications.stream()
-                .map(DocumentVerificationEntity::getType)
-                .anyMatch(it -> it == DRIVING_LICENSE);
+    private static DocumentType convertDocumentType(final OnboardingProcessConfigurationValue.DocumentType documentType) {
+        return switch (documentType) {
+            case ID_CARD -> ID_CARD;
+            case PASSPORT -> PASSPORT;
+            case DRIVING_LICENCE -> DRIVING_LICENSE;
+        };
     }
 }

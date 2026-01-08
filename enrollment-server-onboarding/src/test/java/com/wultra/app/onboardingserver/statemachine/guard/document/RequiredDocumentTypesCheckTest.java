@@ -20,142 +20,279 @@ import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurationService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link RequiredDocumentTypesCheck}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
+@ExtendWith(MockitoExtension.class)
 class RequiredDocumentTypesCheckTest {
 
-    private final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(new RequiredDocumentConfiguration());
+    @Mock
+    private OnboardingProcessConfigurationService onboardingProcessConfigurationService;
+
+    @InjectMocks
+    private RequiredDocumentTypesCheck tested;
+
+    @Test
+    void testProcessIdNotFound() {
+        // given
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenThrow(new IllegalArgumentException("process not found test exception"));
+
+        // when
+        final var exception = assertThrows(IllegalArgumentException.class, () -> tested.evaluate(List.of(), "1"));
+
+        // then
+        assertEquals("process not found test exception", exception.getMessage());
+    }
 
     @Test
     void testEmptyCollection() {
-        boolean result = tested.evaluate(Collections.emptyList(), "1");
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        // when
+        final var result = tested.evaluate(Collections.emptyList(), "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testOnlyDrivingLicence() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testOnlyIdCardFailed() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testOnlyIdCardSuccessful() {
-        final var configuration = new RequiredDocumentConfiguration();
-        configuration.setCount(1);
-        final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(configuration);
+        // given
+        final var processConfig = OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .totalRequiredDocumentsCount((byte) 1)
+                        .groups(Set.of(
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .requiredDocumentsCount((byte) 1)
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                        .sideCount((byte) 2)
+                                                        .build(),
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                        .sideCount((byte) 1)
+                                                        .build()
+                                        ))
+                                        .build()
+                        ))
+                        .build())
+                .build();
+
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertTrue(result);
     }
 
     @Test
     void testIdCardAndDrivingLicence() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertTrue(result);
     }
 
     @Test
     void testIdCardOneSideOnlyAndDrivingLicence() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testIdCardSameSidesAndDrivingLicence() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testTravelPassportAndDrivingLicenceSuccessful() {
-        final var configuration = new RequiredDocumentConfiguration();
-        configuration.setPrimaryDocuments(List.of(DocumentType.ID_CARD, DocumentType.PASSPORT));
-        final RequiredDocumentTypesCheck tested = new RequiredDocumentTypesCheck(configuration);
+        // given
+        final var processConfig = OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                                .totalRequiredDocumentsCount((byte) 2)
+                                .groups(Set.of(
+                                        OnboardingProcessConfigurationValue.Group.builder()
+                                                .requiredDocumentsCount((byte) 1)
+                                                .items(Set.of(
+                                                        OnboardingProcessConfigurationValue.Document.builder()
+                                                                .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                                .sideCount((byte) 2)
+                                                                .build(),
+                                                        OnboardingProcessConfigurationValue.Document.builder()
+                                                                .type(OnboardingProcessConfigurationValue.DocumentType.PASSPORT)
+                                                                .sideCount((byte) 1)
+                                                                .build()
+                                                ))
+                                                .build()
+                                ))
+                        .build())
+                .build();
+
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.PASSPORT),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertTrue(result);
     }
 
     @Test
     void testTravelPassportAndDrivingLicenceFailed() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.PASSPORT),
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testIdCardAndTravelPassport() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
                 createDocumentVerification(DocumentType.PASSPORT));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertTrue(result);
     }
 
     @Test
     void testTwoIdCards() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testOtherDocumentsCards() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
                 createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK),
@@ -163,29 +300,46 @@ class RequiredDocumentTypesCheckTest {
                 createDocumentVerification(DocumentType.UNKNOWN),
                 createDocumentVerification(DocumentType.SELFIE_PHOTO));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertTrue(result);
     }
 
     @Test
     void testTwoTravelPassports() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final var documentVerifications = List.of(
                 createDocumentVerification(DocumentType.PASSPORT),
                 createDocumentVerification(DocumentType.PASSPORT));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
     @Test
     void testTravelPassportAndDrivingLicenceButInvalidStatus() {
+        // given
+        final var processConfig = buildProcessConfiguration();
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
         final DocumentVerificationEntity travelPassport = createDocumentVerification(DocumentType.PASSPORT);
         travelPassport.setStatus(DocumentStatus.VERIFICATION_IN_PROGRESS);
         final var documentVerifications = List.of(
                 travelPassport,
                 createDocumentVerification(DocumentType.DRIVING_LICENSE));
 
+        // when
         boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
         assertFalse(result);
     }
 
@@ -199,5 +353,36 @@ class RequiredDocumentTypesCheckTest {
         documentVerification.setSide(side);
         documentVerification.setStatus(DocumentStatus.ACCEPTED);
         return documentVerification;
+    }
+
+    private static OnboardingProcessConfigurationValue buildProcessConfiguration() {
+        return OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .totalRequiredDocumentsCount((byte) 2)
+                        .groups(Set.of(
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .requiredDocumentsCount((byte) 1)
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                        .sideCount((byte) 2)
+                                                        .build()
+                                        ))
+                                        .build(),
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                        .sideCount((byte) 1)
+                                                        .build(),
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.PASSPORT)
+                                                        .sideCount((byte) 1)
+                                                        .build()
+                                        ))
+                                        .build()
+                        ))
+                        .build())
+                .build();
     }
 }

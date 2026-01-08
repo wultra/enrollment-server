@@ -20,7 +20,7 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Configuration response.
@@ -45,20 +45,29 @@ public record ConfigurationResponse(
 
     @Builder
     public record Documents(
-            @Schema(description = "Number of required documents to submit.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "1")
+
+            @Schema(description = "Minimum number of different documents required for successful verification.", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
+            int totalRequiredDocumentsCount,
+
+            @Schema(description = "Groups defining per-group document requirements.", requiredMode = Schema.RequiredMode.REQUIRED)
+            Set<Group> groups
+    ) {}
+
+    @Builder
+    public record Group(
+
+            @Schema(description = "Minimum number of documents required from this group", requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0")
             int requiredDocumentsCount,
-            List<Document> items
-    ) {
-    }
+
+            @Schema(description = "List of documents specification.", requiredMode = Schema.RequiredMode.REQUIRED)
+            Set<Document> items
+    ) {}
 
     @Builder
     public record Document(
 
             @Schema(description = "Document type.", requiredMode = Schema.RequiredMode.REQUIRED)
             DocumentType type,
-
-            @Schema(description = "Whether the document is mandatory.", requiredMode = Schema.RequiredMode.REQUIRED)
-            boolean mandatory,
 
             @Schema(description = "Number of document sides.", requiredMode = Schema.RequiredMode.REQUIRED)
             byte sideCount
