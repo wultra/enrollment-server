@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
@@ -31,6 +32,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -67,6 +69,10 @@ class IdentityVerificationPrecompleteCheck {
     private final OnboardingProcessRepository onboardingProcessRepository;
 
     private final ActivationService activationService;
+
+    // TODO (racansky, 2022-10-14, #1458) when changed to a guard, there is no reference IdentityVerificationService -> PrecompleteCheck anymore
+    @Lazy // break circular reference of constructor injection
+    private final IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     /**
      * Evaluate all precomplete conditions.
@@ -127,21 +133,20 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isTargetActivationFinished(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        if (isTemporaryActivationDisabled(idVerification)) {
-            logger.trace("Temporary activation is disabled");
-            return true;
-        }
+        final String processId = idVerification.getProcessId();
 
-        final String targetActivationId = onboardingProcessRepository.findById(idVerification.getProcessId())
-                .map(OnboardingProcessEntity::getTargetActivationId)
-                .orElse(null);
-
-        if (targetActivationId == null) {
-            logger.debug("Target activation ID is null for processId: {}", idVerification.getProcessId());
+        try {
+            final boolean isTemporaryActivationDisabled = !identityVerificationTargetActivationService.isTargetActivationEnabled(processId);
+            if (isTemporaryActivationDisabled) {
+                logger.trace("Temporary activation is disabled");
+                return true;
+            }
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to find process ID: {}", processId, e);
             return false;
         }
 
-        return isActivationValid(targetActivationId);
+        return identityVerificationTargetActivationService.isTargetActivationFinished(processId);
     }
 
     private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
@@ -221,10 +226,6 @@ class IdentityVerificationPrecompleteCheck {
 
     private boolean isActivationOtpDisabled(final IdentityVerificationEntity idVerification) {
         return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentification);
-    }
-
-    private boolean isTemporaryActivationDisabled(final IdentityVerificationEntity idVerification) {
-        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::useTemporaryActivation);
     }
 
     private boolean isConfigurationDisabled(

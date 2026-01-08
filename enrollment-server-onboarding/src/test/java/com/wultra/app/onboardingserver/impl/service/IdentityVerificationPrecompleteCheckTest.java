@@ -73,6 +73,9 @@ class IdentityVerificationPrecompleteCheckTest {
     @Mock
     private OnboardingProcessRepository onboardingProcessRepository;
 
+    @Mock
+    private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
+
     @InjectMocks
     private IdentityVerificationPrecompleteCheck tested;
 
@@ -246,8 +249,10 @@ class IdentityVerificationPrecompleteCheckTest {
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
-        when(activationService.fetchActivationStatus("target-activation-1"))
-                .thenReturn(ActivationStatus.ACTIVE);
+        when(identityVerificationTargetActivationService.isTargetActivationEnabled("process-1"))
+                .thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished("process-1"))
+                .thenReturn(true);
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))

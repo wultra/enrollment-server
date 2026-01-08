@@ -40,8 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -210,6 +209,36 @@ class IdentityVerificationTargetActivationServiceTest {
         verify(auditService, never()).auditActivation(any(), any(), any());
 
         verify(onboardingService, times(1)).updateProcess(any(OnboardingProcessEntity.class));
+    }
+
+    @Test
+    void testIsTargetActivationFinished_success() throws Exception {
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("target-activation-1");
+
+        when(onboardingService.findProcess("process-1"))
+                .thenReturn(process);
+        when(activationService.fetchActivationStatus("target-activation-1"))
+                .thenReturn(ActivationStatus.ACTIVE);
+
+        final boolean result = tested.isTargetActivationFinished("process-1");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testIsTargetActivationFinished_faild() throws Exception {
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setTargetActivationId("target-activation-1");
+
+        when(onboardingService.findProcess("process-1"))
+                .thenReturn(process);
+        when(activationService.fetchActivationStatus("target-activation-1"))
+                .thenReturn(ActivationStatus.CREATED);
+
+        final boolean result = tested.isTargetActivationFinished("process-1");
+
+        assertFalse(result);
     }
 
     private static CreateTargetActivationRequest createRequest() {

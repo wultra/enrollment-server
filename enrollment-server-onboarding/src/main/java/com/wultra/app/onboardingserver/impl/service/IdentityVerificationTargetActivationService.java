@@ -133,4 +133,49 @@ public class IdentityVerificationTargetActivationService {
                     .formatted(identityVerification.getId(), identityVerification.getPhase()));
         }
     }
+
+    /**
+     * Check if target activation is finished for the given process ID.
+     *
+     * @param processId Process ID.
+     * @return whether target activation is finished for the given process ID
+     * @throws RemoteCommunicationException Thrown when communication with the PowerAuth server fails.
+     */
+    @Transactional(readOnly = true)
+    public boolean isTargetActivationFinished(final String processId) throws RemoteCommunicationException {
+        final String targetActivationId;
+        try {
+            targetActivationId = onboardingService.findProcess(processId).getTargetActivationId();
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to find process ID: {}", processId, e);
+            return false;
+        }
+
+        if (targetActivationId == null) {
+            logger.debug("Target activation ID is null for processId: {}", processId);
+            return false;
+        }
+
+        return isActivationValid(targetActivationId);
+    }
+
+    private boolean isActivationValid(final String activationId) throws RemoteCommunicationException {
+        final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
+        return activationStatus == ActivationStatus.ACTIVE;
+    }
+
+    /**
+     * Check if target activation is finished for the given process ID.
+     *
+     * @param processId Process ID.
+     * @return whether target activation is finished for the given process ID
+     * @throws OnboardingProcessException in case of any business error.
+     */
+    @Transactional(readOnly = true)
+    public boolean isTargetActivationEnabled(final String processId) throws OnboardingProcessException {
+        return onboardingService.findProcess(processId)
+                .getProcessConfiguration()
+                .getConfiguration()
+                .useTemporaryActivation();
+    }
 }
