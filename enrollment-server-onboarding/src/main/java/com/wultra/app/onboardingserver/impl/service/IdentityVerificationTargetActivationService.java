@@ -165,11 +165,12 @@ public class IdentityVerificationTargetActivationService {
     }
 
     /**
-     * Check if target activation is finished for the given process ID.
+     * Check if target activation is enabled for the given process ID.
      *
      * @param processId Process ID.
-     * @return whether target activation is finished for the given process ID
-     * @throws OnboardingProcessException in case of any business error.
+     * @return {@code true} if the temporary target activation feature is enabled in the process configuration,
+     *         {@code false} otherwise
+     * @throws OnboardingProcessException if the onboarding process cannot be found or its configuration cannot be read.
      */
     @Transactional(readOnly = true)
     public boolean isTargetActivationEnabled(final String processId) throws OnboardingProcessException {
