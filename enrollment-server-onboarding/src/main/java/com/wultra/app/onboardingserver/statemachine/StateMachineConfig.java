@@ -102,7 +102,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final DocumentVerificationFinalAction documentVerificationFinalAction;
 
-    private final MoveToActivationFinishInActionAction moveToActivationFinishInActionAction;
+    private final MoveToActivationFinishInAction moveToActivationFinishInAction;
 
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
@@ -291,7 +291,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInActionAction)
+                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInAction)
                 .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
     }
 
@@ -336,7 +336,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                         createCompositeGuard(otpVerificationEnabledGuard, statusAcceptedGuard),
                         otpVerificationSendAction
                 )
-                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInActionAction)
+                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInAction)
                 .then(OnboardingState.CHOICE_COMPLETED_STATE,
                         context -> !otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         verificationProcessResultAction
@@ -377,7 +377,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_OTP_VERIFICATION)
-                .first(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, createCompositeGuard(otpVerifiedGuard, targetActivationEnabledGuard), moveToActivationFinishInActionAction)
+                .first(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, createCompositeGuard(otpVerifiedGuard, targetActivationEnabledGuard), moveToActivationFinishInAction)
                 .then(OnboardingState.CHOICE_COMPLETED_STATE, otpVerifiedGuard, verificationProcessResultAction)
                 .last(OnboardingState.OTP_VERIFICATION_PENDING);
     }

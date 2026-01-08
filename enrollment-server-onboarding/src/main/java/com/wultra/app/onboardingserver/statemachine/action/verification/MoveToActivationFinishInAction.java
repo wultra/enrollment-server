@@ -32,10 +32,10 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
-public class MoveToActivationFinishInActionAction extends MoveActionAdapter {
+public class MoveToActivationFinishInAction extends MoveActionAdapter {
 
     @Autowired
-    public MoveToActivationFinishInActionAction(final IdentityVerificationService identityVerificationService) {
+    public MoveToActivationFinishInAction(final IdentityVerificationService identityVerificationService) {
         super(identityVerificationService);
     }
 
