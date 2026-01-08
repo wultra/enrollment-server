@@ -400,7 +400,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withChoice()
                 .source(OnboardingState.CHOICE_COMPLETED_STATE)
-                .then(OnboardingState.COMPLETED_ACCEPTED, statusAcceptedGuard)
+                .first(OnboardingState.COMPLETED_ACCEPTED, statusAcceptedGuard)
                 .then(OnboardingState.COMPLETED_REJECTED, statusRejectedGuard)
                 .then(OnboardingState.COMPLETED_FAILED, statusFailedGuard)
                 .last(OnboardingState.UNEXPECTED_STATE);
