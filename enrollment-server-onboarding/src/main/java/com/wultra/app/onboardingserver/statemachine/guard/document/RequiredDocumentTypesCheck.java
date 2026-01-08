@@ -71,15 +71,14 @@ public class RequiredDocumentTypesCheck {
             return false;
         }
 
-        for (final var group : processConfig.documents().groups()) {
+        final var groupChecksPassed = processConfig.documents().groups().stream()
+                .allMatch(group ->
+                        isMinimalDocumentCountFromGroupProvided(documentVerificationsByType, group)
+                                && areAllDocumentsSidesProvided(documentVerificationsByType, group)
+                );
 
-            if (!isMinimalDocumentCountFromGroupProvided(documentVerificationsByType, group)) {
-                return false;
-            }
-
-            if (!areAllDocumentSidesProvided(documentVerificationsByType, group)) {
-                return false;
-            }
+        if (!groupChecksPassed) {
+            return false;
         }
 
         logger.debug("All required documents accepted for onboarding process: {}", processId);
@@ -127,7 +126,7 @@ public class RequiredDocumentTypesCheck {
         return true;
     }
 
-    private static boolean areAllDocumentSidesProvided(
+    private static boolean areAllDocumentsSidesProvided(
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
             final OnboardingProcessConfigurationValue.Group group
     ) {
@@ -138,29 +137,32 @@ public class RequiredDocumentTypesCheck {
                         OnboardingProcessConfigurationValue.Document::sideCount
                 ));
 
-        for (final var entry : requiredDocumentTypeToSideCount.entrySet()) {
-            final var documentType = entry.getKey();
-            final var requiredSideCount = entry.getValue();
+        return requiredDocumentTypeToSideCount.entrySet().stream()
+                .allMatch(i -> areAllDocumentSidesProvided(i.getKey(), i.getValue(), documentVerificationsByType));
+    }
 
-            if (!documentVerificationsByType.containsKey(documentType)) {
-                continue;
-            }
+    private static boolean areAllDocumentSidesProvided(
+            final DocumentType documentType,
+            final byte requiredSideCount,
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType
+    ) {
+        if (!documentVerificationsByType.containsKey(documentType)) {
+            return true;
+        }
 
-            final var providedSideCount = documentVerificationsByType.get(documentType)
-                    .stream()
-                    .map(DocumentVerificationEntity::getSide)
-                    .distinct()
-                    .count();
+        final var providedSideCount = documentVerificationsByType.get(documentType)
+                .stream()
+                .map(DocumentVerificationEntity::getSide)
+                .distinct()
+                .count();
 
-            if (providedSideCount < requiredSideCount) {
-                logger.debug("Not all sides provided for document type: {}. Required sides: {}, provided sides: {}", documentType, requiredSideCount, providedSideCount);
-                return false;
-            }
+        if (providedSideCount < requiredSideCount) {
+            logger.debug("Not all sides provided for document type: {}. Required sides: {}, provided sides: {}", documentType, requiredSideCount, providedSideCount);
+            return false;
         }
 
         return true;
     }
-
 
     private static DocumentType convertDocumentType(final OnboardingProcessConfigurationValue.DocumentType documentType) {
         return switch (documentType) {
