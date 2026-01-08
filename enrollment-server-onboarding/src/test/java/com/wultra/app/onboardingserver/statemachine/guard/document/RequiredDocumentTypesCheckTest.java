@@ -50,40 +50,6 @@ class RequiredDocumentTypesCheckTest {
     @InjectMocks
     private RequiredDocumentTypesCheck tested;
 
-    private OnboardingProcessConfigurationValue processConfig;
-
-    @BeforeEach
-    void setUp() {
-        processConfig = OnboardingProcessConfigurationValue.builder()
-                .documents(OnboardingProcessConfigurationValue.Documents.builder()
-                        .totalRequiredDocumentsCount((byte) 2)
-                        .groups(Set.of(
-                                OnboardingProcessConfigurationValue.Group.builder()
-                                        .requiredDocumentsCount((byte) 1)
-                                        .items(Set.of(
-                                                OnboardingProcessConfigurationValue.Document.builder()
-                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
-                                                        .sideCount((byte) 2)
-                                                        .build()
-                                                ))
-                                        .build(),
-                                OnboardingProcessConfigurationValue.Group.builder()
-                                        .items(Set.of(
-                                                OnboardingProcessConfigurationValue.Document.builder()
-                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
-                                                        .sideCount((byte) 1)
-                                                        .build(),
-                                                OnboardingProcessConfigurationValue.Document.builder()
-                                                        .type(OnboardingProcessConfigurationValue.DocumentType.PASSPORT)
-                                                        .sideCount((byte) 1)
-                                                        .build()
-                                        ))
-                                        .build()
-                                ))
-                        .build())
-                .build();
-    }
-
     @Test
     void testProcessIdNotFound() {
         // given
@@ -99,6 +65,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testEmptyCollection() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         // when
@@ -111,6 +78,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testOnlyDrivingLicence() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(createDocumentVerification(DocumentType.DRIVING_LICENSE));
@@ -125,6 +93,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testOnlyIdCardFailed() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -141,7 +110,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testOnlyIdCardSuccessful() {
         // given
-        processConfig = OnboardingProcessConfigurationValue.builder()
+        final var processConfig = OnboardingProcessConfigurationValue.builder()
                 .documents(OnboardingProcessConfigurationValue.Documents.builder()
                         .totalRequiredDocumentsCount((byte) 1)
                         .groups(Set.of(
@@ -178,6 +147,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testIdCardAndDrivingLicence() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -195,6 +165,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testIdCardOneSideOnlyAndDrivingLicence() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -211,6 +182,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testIdCardSameSidesAndDrivingLicence() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -228,7 +200,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testTravelPassportAndDrivingLicenceSuccessful() {
         // given
-        processConfig = OnboardingProcessConfigurationValue.builder()
+        final var processConfig = OnboardingProcessConfigurationValue.builder()
                 .documents(OnboardingProcessConfigurationValue.Documents.builder()
                                 .totalRequiredDocumentsCount((byte) 2)
                                 .groups(Set.of(
@@ -265,6 +237,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testTravelPassportAndDrivingLicenceFailed() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -281,6 +254,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testIdCardAndTravelPassport() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -298,6 +272,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testTwoIdCards() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -316,6 +291,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testOtherDocumentsCards() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -335,6 +311,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testTwoTravelPassports() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final var documentVerifications = List.of(
@@ -351,6 +328,7 @@ class RequiredDocumentTypesCheckTest {
     @Test
     void testTravelPassportAndDrivingLicenceButInvalidStatus() {
         // given
+        final var processConfig = buildProcessConfiguration();
         when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
 
         final DocumentVerificationEntity travelPassport = createDocumentVerification(DocumentType.PASSPORT);
@@ -376,5 +354,36 @@ class RequiredDocumentTypesCheckTest {
         documentVerification.setSide(side);
         documentVerification.setStatus(DocumentStatus.ACCEPTED);
         return documentVerification;
+    }
+
+    private static OnboardingProcessConfigurationValue buildProcessConfiguration() {
+        return OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .totalRequiredDocumentsCount((byte) 2)
+                        .groups(Set.of(
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .requiredDocumentsCount((byte) 1)
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                        .sideCount((byte) 2)
+                                                        .build()
+                                        ))
+                                        .build(),
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                        .sideCount((byte) 1)
+                                                        .build(),
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.PASSPORT)
+                                                        .sideCount((byte) 1)
+                                                        .build()
+                                        ))
+                                        .build()
+                        ))
+                        .build())
+                .build();
     }
 }

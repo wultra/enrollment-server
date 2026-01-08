@@ -103,4 +103,3 @@ For this configuration in total at least 2 unique document types must be submitt
 - `ID_CARD` (2 sides) + `PASSPORT` (1 side)
 - `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
 - `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)
-- `ID_CARD` (2 sides) + `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)

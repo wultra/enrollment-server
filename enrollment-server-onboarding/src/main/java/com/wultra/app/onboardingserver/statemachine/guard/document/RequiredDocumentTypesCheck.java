@@ -109,7 +109,8 @@ public class RequiredDocumentTypesCheck {
 
         final var groupDocumentTypes = group.items()
                 .stream()
-                .map(i -> convertDocumentType(i.type()))
+                .map(OnboardingProcessConfigurationValue.Document::type)
+                .map(RequiredDocumentTypesCheck::convertDocumentType)
                 .collect(Collectors.toSet());
 
         final var providedCount = providedDocumentTypes.stream()
