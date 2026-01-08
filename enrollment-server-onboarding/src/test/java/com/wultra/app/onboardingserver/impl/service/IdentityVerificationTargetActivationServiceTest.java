@@ -227,7 +227,7 @@ class IdentityVerificationTargetActivationServiceTest {
     }
 
     @Test
-    void testIsTargetActivationFinished_faild() throws Exception {
+    void testIsTargetActivationFinished_failed() throws Exception {
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setTargetActivationId("target-activation-1");
 
