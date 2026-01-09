@@ -336,7 +336,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                         createCompositeGuard(otpVerificationEnabledGuard, statusAcceptedGuard),
                         otpVerificationSendAction
                 )
-                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInAction)
+                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, createCompositeGuard(statusAcceptedGuard, targetActivationEnabledGuard), moveToActivationFinishInAction)
                 .then(OnboardingState.CHOICE_COMPLETED_STATE,
                         context -> !otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         verificationProcessResultAction
