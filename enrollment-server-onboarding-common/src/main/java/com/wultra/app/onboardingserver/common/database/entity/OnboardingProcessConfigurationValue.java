@@ -22,7 +22,7 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Represent JSON with the configuration stored in {@link OnboardingProcessConfigurationEntity#getConfiguration()}.
@@ -54,37 +54,80 @@ public record OnboardingProcessConfigurationValue(
             otpForIdentification = false;
             otpForIdentityVerification = false;
             useTemporaryActivation = false;
-            documents = new Documents((byte) 0, List.of());
+            documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
         }
     }
 
     /**
-     * @param requiredDocumentsCount Number of required documents to submit.
+     * Configuration of required documents.
+     *
+     * @param totalRequiredDocumentsCount Number of required documents to submit.
+     * @param groups                      Set of document groups.
      */
+    @Jacksonized
+    @Builder
     public record Documents(
-            byte requiredDocumentsCount,
-            List<Document> items
+            byte totalRequiredDocumentsCount,
+            Set<Group> groups
     ) implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 1968756136278137531L;
+
+        public static class DocumentsBuilder {
+            DocumentsBuilder() {
+                totalRequiredDocumentsCount = 0;
+                groups = Set.of();
+            }
+        }
     }
 
     /**
+     * Configuration of a document group.
+     *
+     * @param requiredDocumentsCount Number of required documents from this group.
+     * @param items                  Set of document configurations.
+     */
+    @Jacksonized
+    @Builder
+    public record Group(
+            byte requiredDocumentsCount,
+            Set<Document> items
+    ) implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 5873241902384756123L;
+
+        public static class GroupBuilder {
+            GroupBuilder() {
+                requiredDocumentsCount = 0;
+                items = Set.of();
+            }
+        }
+    }
+
+    /**
+     * Configuration of a single documentation type.
      *
      * @param type      document type
-     * @param mandatory whether the document is mandatory
      * @param sideCount info if the document contains one or two sides
      */
+    @Jacksonized
+    @Builder
     public record Document(
             DocumentType type,
-            boolean mandatory,
             byte sideCount
     ) implements Serializable {
 
         @Serial
         private static final long serialVersionUID = 191805503079489928L;
+
+        public static class DocumentBuilder {
+            DocumentBuilder() {
+                sideCount = 1;
+            }
+        }
     }
 
     public enum DocumentType {

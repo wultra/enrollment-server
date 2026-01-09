@@ -39,7 +39,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Configuration controller.
@@ -100,26 +102,42 @@ public class ConfigurationController {
             return null;
         }
 
+        final var groups = Optional.ofNullable(source.groups())
+                .orElse(Set.of())
+                .stream()
+                .map(ConfigurationController::convert)
+                .collect(Collectors.toSet());
+
         return ConfigurationResponse.Documents.builder()
-                .requiredDocumentsCount(source.requiredDocumentsCount())
-                .items(convert(source.items()))
+                .totalRequiredDocumentsCount(source.totalRequiredDocumentsCount())
+                .groups(groups)
                 .build();
     }
 
-    private static List<ConfigurationResponse.Document> convert(final List<OnboardingProcessConfigurationValue.Document> source) {
+    private static ConfigurationResponse.Group convert(final OnboardingProcessConfigurationValue.Group source) {
         if (source == null) {
             return null;
         }
 
-        return source.stream()
+        final var items = Optional.ofNullable(source.items())
+                .orElse(Set.of())
+                .stream()
                 .map(ConfigurationController::convert)
-                .toList();
+                .collect(Collectors.toSet());
+
+        return ConfigurationResponse.Group.builder()
+                .requiredDocumentsCount(source.requiredDocumentsCount())
+                .items(items)
+                .build();
     }
 
     private static ConfigurationResponse.Document convert(final OnboardingProcessConfigurationValue.Document source) {
+        if (source == null) {
+            return null;
+        }
+
         return ConfigurationResponse.Document.builder()
                 .type(convert(source.type()))
-                .mandatory(source.mandatory())
                 .sideCount(source.sideCount())
                 .build();
     }

@@ -46,3 +46,60 @@ For external onboarding services, the `processType` field has been added to the 
 ### OTP Configuration
 
 The property `enrollment-server-onboarding.identity-verification.otp.enabled` has been removed in favor of the [database changes](#database-changes), see the table `es_onboarding_process_configuration`.
+
+
+### Documents configuration
+
+Following configuration properties were removed:
+
+```
+enrollment-server-onboarding.document-verification.required.primaryDocuments
+enrollment-server-onboarding.document-verification.required.count
+```
+
+New logic works in this way:
+
+Field `documents.totalRequiredDocumentsCount` - specifies min count of unique document types required for verification.
+
+Field `documents.groups` - group specifies more rules for set of document types:
+- `requiredDocumentsCount` - specifies min count of unique document types required from this group
+- `items` - set of documents. Each item specifies document `type` and `sideCount`
+
+EXAMPLE:
+
+```json
+{
+  "documents": {
+    "totalRequiredDocumentsCount": 2,
+    "groups": [
+      {
+        "requiredDocumentsCount": 1,
+        "items": [
+          {
+            "type": "ID_CARD",
+            "sideCount": 2
+          },
+          {
+            "type": "PASSPORT",
+            "sideCount": 1
+          }
+        ]
+      },
+      {
+        "requiredDocumentsCount": 0,
+        "items": [
+          {
+            "type": "DRIVING_LICENCE",
+            "sideCount": 1
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For this configuration in total at least 2 unique document types must be submitted for verification. Acceptable combinations:
+- `ID_CARD` (2 sides) + `PASSPORT` (1 side)
+- `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
+- `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)

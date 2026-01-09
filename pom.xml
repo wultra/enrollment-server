@@ -89,7 +89,7 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.17.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.18.0</openapi-generator-maven-plugin.version>
 
         <okhttp3.version>5.3.2</okhttp3.version>
         <shedlock.version>6.10.0</shedlock.version>
@@ -99,7 +99,7 @@
         <moneta.version>1.4.5</moneta.version>
         <central.publishing.plugin.version>0.9.0</central.publishing.plugin.version>
 
-        <wultra-core.version>2.0.0-SNAPSHOT</wultra-core.version>
+        <wultra-core.version>2.0.0</wultra-core.version>
         <powerauth-crypto.version>2.0.1-SNAPSHOT</powerauth-crypto.version>
         <powerauth-restful-integration.version>2.0.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>2.0.0-SNAPSHOT</powerauth-push.version>
