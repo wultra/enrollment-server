@@ -40,6 +40,7 @@ import java.util.Optional;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -86,7 +87,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
 
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(createProcessWithConfiguration());
@@ -123,7 +124,7 @@ class IdentityVerificationPrecompleteCheckTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidVerificationOtp() throws Exception {
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(createProcessWithConfiguration());
@@ -144,7 +145,7 @@ class IdentityVerificationPrecompleteCheckTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidActivationOtp() throws Exception {
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(createProcessWithConfiguration(false));
@@ -174,7 +175,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
 
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
@@ -201,7 +202,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
 
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.ACTIVE);
@@ -219,7 +220,7 @@ class IdentityVerificationPrecompleteCheckTest {
 
     @Test
     void testProcessDocumentVerificationResult_invalidActivation() throws Exception {
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
                 .thenReturn(ActivationStatus.REMOVED);
@@ -301,7 +302,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setScaResult(ScaResultEntity.Result.FAILED);
 
-        when(requiredDocumentTypesCheck.evaluate(any(), any()))
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(createProcessWithConfiguration());
