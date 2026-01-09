@@ -94,7 +94,7 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Some documents not accepted");
         }
 
-        if (!requiredDocumentTypesCheck.evaluate(documentVerifications, identityVerificationId)) {
+        if (!requiredDocumentTypesCheck.evaluate(documentVerifications, processId)) {
             logger.debug("Not all required documents are present for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Required documents not present");
         }

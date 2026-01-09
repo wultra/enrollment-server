@@ -346,10 +346,11 @@ public class IdentityVerificationService {
             final OwnerId ownerId) {
 
         final String identityVerificationId = idVerification.getId();
+        final var processId = idVerification.getProcessId();
         // docVerificationsToProcess have been modified, so idVerification.getDocumentVerifications() must be reloaded to reflect these modifications
         final List<DocumentVerificationEntity> allDocumentVerifications = documentVerificationRepository.findAllUsedForVerification(idVerification);
 
-        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, identityVerificationId);
+        final boolean allRequiredDocumentsChecked = requiredDocumentTypesCheck.evaluate(allDocumentVerifications, processId);
         if (!allRequiredDocumentsChecked) {
             logger.debug("Not all required document types are present yet for identity verification ID: {}", identityVerificationId);
         } else {
