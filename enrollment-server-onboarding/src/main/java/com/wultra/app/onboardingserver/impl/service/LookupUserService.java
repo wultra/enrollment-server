@@ -77,7 +77,7 @@ public class LookupUserService {
                 auditService.auditOnboardingProvider(process, "Error to look up user: {}, {}", response.getUserId(), response.getErrorDetail());
             }
             return Optional.of(response.getUserId());
-        } catch (OnboardingProviderException e) {
+        } catch (final OnboardingProviderException e) {
             logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
             logger.debug("User lookup failed, using null user ID", e);
             return Optional.empty();
