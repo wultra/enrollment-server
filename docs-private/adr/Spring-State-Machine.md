@@ -23,4 +23,4 @@ Unfortunately, it happened at the late stage of the project with not enough time
 So the state is still represented in the database as a combination of two columns.
 Moreover, the state is not persisted by the library, although it supports that feature thanks to `JpaStateMachineRepository`.
 
-Currently, the state is changed and persisted in action beans, which may look as an unnecessary side effect.
+Currently, the state is changed and persisted in action beans, which may look like an unnecessary side effect.
