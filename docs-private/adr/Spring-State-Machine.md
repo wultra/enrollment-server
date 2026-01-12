@@ -14,7 +14,7 @@ The states were persisted in the database in Identity Verification entity as `ph
 
 ## Decision
 
-The decision was made to migrate to Spring State Machine library to simplify the state management and transitions logic and to prefer a declarative approach.
+The decision was made to migrate to [Spring State Machine](https://spring.io/projects/spring-statemachine) library to simplify the state management and transitions logic and to prefer a declarative approach.
 
 
 ## Consequences
