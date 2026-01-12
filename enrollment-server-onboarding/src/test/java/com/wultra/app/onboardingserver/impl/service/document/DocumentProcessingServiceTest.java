@@ -300,6 +300,40 @@ class DocumentProcessingServiceTest {
         assertEquals("Detected a submit request with specified originalDocumentId=original1, %s".formatted(ownerId), exception.getMessage());
     }
 
+    @Test
+    void testSubmitDocuments_invalidDocumentData_exceptionIsThrown() {
+        // given
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final OwnerId ownerId = createOwnerId();
+
+        final var request = DocumentSubmitV2Request.builder()
+                .processId("p1")
+                .documents(List.of(
+                        DocumentSubmitV2Request.Document.builder()
+                                .filename("id_card_front.png")
+                                .data("###invalid-base64###")
+                                .type(DocumentType.ID_CARD)
+                                .side(CardSide.FRONT)
+                                .build(),
+                        DocumentSubmitV2Request.Document.builder()
+                                .filename("id_card_back.png")
+                                .type(DocumentType.ID_CARD)
+                                .side(CardSide.BACK)
+                                .data("###invalid-base64###")
+                                .build()
+                ))
+                .build();
+
+        // when
+        final var exception = assertThrows(IllegalArgumentException.class,
+                () -> tested.submitDocuments(identityVerification, request, ownerId));
+
+        // then
+        assertEquals("Invalid base64 data", exception.getMessage());
+    }
+
     private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {
         final DocumentSubmitRequest.DocumentMetadata page1 = new DocumentSubmitRequest.DocumentMetadata();
         page1.setFilename("id_card_front.png");

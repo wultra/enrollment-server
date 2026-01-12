@@ -456,12 +456,20 @@ public class DocumentProcessingService {
         submittedDoc.setType(document.type());
 
         final var documentData = Optional.ofNullable(document.data())
-                .map(d -> Base64.getDecoder().decode(d))
+                .map(DocumentProcessingService::decodeBase64Data)
                 .orElseThrow(() ->new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
 
         photo.setData(documentData);
 
         return submittedDoc;
+    }
+
+    private static byte[] decodeBase64Data(final String base64Data) {
+        try {
+            return Base64.getDecoder().decode(base64Data);
+        } catch (final RuntimeException e) {
+            throw new IllegalArgumentException("Invalid base64 data", e);
+        }
     }
 
     private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,

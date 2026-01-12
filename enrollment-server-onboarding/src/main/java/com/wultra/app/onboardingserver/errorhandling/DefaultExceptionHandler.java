@@ -251,4 +251,18 @@ public class DefaultExceptionHandler {
         logger.debug("Exception detail: ", e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
     }
+
+    /**
+     * Exception handler for illegal argument exception.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
+        logger.warn("Illegal argument exception: {}", e.getMessage());
+        logger.debug("Exception detail: ", e);
+        return new ErrorResponse("INVALID_REQUEST", e.getMessage());
+    }
 }
