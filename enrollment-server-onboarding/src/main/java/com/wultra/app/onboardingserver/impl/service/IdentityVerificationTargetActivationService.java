@@ -106,7 +106,7 @@ public class IdentityVerificationTargetActivationService {
             } else if (activationStatus == ActivationStatus.REMOVED) {
                 return createActivationAndUpdateProcess(initActivationContext, process);
             } else if (activationStatus == ActivationStatus.PENDING_COMMIT) {
-                logger.info("Target activation ID: {} is in PENDING_COMMIT state, removing it and creating a new one", targetActivationId);
+                logger.info("Target activationId: {} is in PENDING_COMMIT state, removing it and creating a new one", targetActivationId);
                 activationService.removeActivation(targetActivationId);
                 auditService.auditActivation(process, "Remove activation for user: {}", process.getUserId());
                 return createActivationAndUpdateProcess(initActivationContext, process);
@@ -147,7 +147,7 @@ public class IdentityVerificationTargetActivationService {
         try {
             targetActivationId = onboardingService.findProcess(processId).getTargetActivationId();
         } catch (OnboardingProcessException e) {
-            logger.warn("Unable to find process ID: {}", processId, e);
+            logger.warn("Unable to find processId: {}", processId, e);
             return false;
         }
 
