@@ -39,8 +39,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 
 /**
  * Validate all critical conditions were met before finishing the onboarding.
@@ -197,7 +196,8 @@ class IdentityVerificationPrecompleteCheck {
         final boolean verificationOtpDisabled = isVerificationOtpDisabled(idVerification);
         return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
                 (phase == PRESENCE_CHECK && status == ACCEPTED && verificationOtpDisabled) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled());
+                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled()) ||
+                (phase == ACTIVATION_FINISH && status == IN_PROGRESS);
     }
 
     @Getter
