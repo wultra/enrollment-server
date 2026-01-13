@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.junit.jupiter.api.Test;
@@ -327,11 +328,12 @@ class DocumentProcessingServiceTest {
                 .build();
 
         // when
-        final var exception = assertThrows(IllegalArgumentException.class,
+        final var exception = assertThrows(Base64DeserializationException.class,
                 () -> tested.submitDocuments(identityVerification, request, ownerId));
 
         // then
         assertEquals("Invalid base64 data", exception.getMessage());
+        assertNotNull(exception.getCause());
     }
 
     private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {
