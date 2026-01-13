@@ -253,16 +253,16 @@ public class DefaultExceptionHandler {
     }
 
     /**
-     * Exception handler for illegal argument exception.
+     * Exception handler for base64 deserialization exception.
      *
      * @param e Exception.
      * @return Response with error details.
      */
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(Base64DeserializationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
+    public @ResponseBody ErrorResponse handleBase64DeserializationException(final Base64DeserializationException e) {
         logger.warn("Illegal argument exception: {}", e.getMessage());
         logger.debug("Exception detail: ", e);
-        return new ErrorResponse("INVALID_REQUEST", e.getMessage());
+        return new ErrorResponse("INVALID_REQUEST", "Deserialization of base64 value failed.");
     }
 }

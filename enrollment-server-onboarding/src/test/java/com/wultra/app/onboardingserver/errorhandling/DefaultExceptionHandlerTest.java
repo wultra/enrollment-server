@@ -39,16 +39,16 @@ class DefaultExceptionHandlerTest {
     @Test
     void testHandleIllegalArgumentException_expectedResponseIsReturned() {
         // given
-        final var exception = new IllegalArgumentException("Test exception");
+        final var exception = new Base64DeserializationException("Test exception", new RuntimeException());
 
         // when
-        final var response = tested.handleIllegalArgumentException(exception);
+        final var response = tested.handleBase64DeserializationException(exception);
 
         // then
         assertEquals("ERROR", response.getStatus());
 
         final var responseObject = response.getResponseObject();
-        assertEquals("Test exception", responseObject.getMessage());
+        assertEquals("Deserialization of base64 value failed.", responseObject.getMessage());
         assertEquals("INVALID_REQUEST", responseObject.getCode());
     }
 }
