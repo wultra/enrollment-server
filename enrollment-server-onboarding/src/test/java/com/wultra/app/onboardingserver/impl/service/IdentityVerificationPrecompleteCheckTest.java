@@ -249,7 +249,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(requiredDocumentTypesCheck.evaluate(any(), any()))
                 .thenReturn(true);
         when(activationService.fetchActivationStatus("activation-1"))
-                .thenReturn(ActivationStatus.ACTIVE);
+                .thenReturn(ActivationStatus.REMOVED);
         when(identityVerificationTargetActivationService.isTargetActivationEnabled("process-1"))
                 .thenReturn(true);
         when(identityVerificationTargetActivationService.isTargetActivationFinished("process-1"))

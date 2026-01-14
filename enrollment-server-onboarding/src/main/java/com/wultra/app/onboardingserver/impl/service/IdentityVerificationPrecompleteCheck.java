@@ -113,7 +113,7 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Not valid activation OTP");
         }
 
-        if (!isActivationValid(idVerification.getActivationId())) {
+        if (!isActivationValid(idVerification)) {
             logger.debug("Activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
             return Result.failed("Activation is not valid");
         }
@@ -141,7 +141,7 @@ class IdentityVerificationPrecompleteCheck {
                 return true;
             }
         } catch (OnboardingProcessException e) {
-            logger.warn("Unable to find process ID: {}", processId, e);
+            logger.warn("Unable to find processId: {}", processId, e);
             return false;
         }
 
@@ -162,9 +162,26 @@ class IdentityVerificationPrecompleteCheck {
         return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
-    private boolean isActivationValid(final String activationId) throws RemoteCommunicationException {
+    private boolean isActivationValid(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+        final String processId = idVerification.getProcessId();
+        final String activationId = idVerification.getActivationId();
+
         final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
-        return activationStatus == ActivationStatus.ACTIVE;
+        final boolean isTemporaryActivationEnabled;
+
+        try {
+            isTemporaryActivationEnabled = identityVerificationTargetActivationService.isTargetActivationEnabled(processId);
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to find processId: {}", processId, e);
+            return false;
+        }
+
+        logger.debug("Verifying activationId: {}, status: {}, isTemporaryActivationEnabled: {}", activationId, activationStatus, isTemporaryActivationEnabled);
+        if (isTemporaryActivationEnabled) {
+            return activationStatus == ActivationStatus.REMOVED;
+        } else {
+            return activationStatus == ActivationStatus.ACTIVE;
+        }
     }
 
     private boolean isVerificationOtpValid(final IdentityVerificationEntity idVerification) {
