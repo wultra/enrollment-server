@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepos
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.junit.jupiter.api.Test;
@@ -298,6 +299,41 @@ class DocumentProcessingServiceTest {
         final DocumentSubmitException exception = assertThrows(DocumentSubmitException.class,
                 () -> tested.submitDocuments(identityVerification, request, ownerId));
         assertEquals("Detected a submit request with specified originalDocumentId=original1, %s".formatted(ownerId), exception.getMessage());
+    }
+
+    @Test
+    void testSubmitDocuments_invalidDocumentData_exceptionIsThrown() {
+        // given
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final OwnerId ownerId = createOwnerId();
+
+        final var request = DocumentSubmitV2Request.builder()
+                .processId("p1")
+                .documents(List.of(
+                        DocumentSubmitV2Request.Document.builder()
+                                .filename("id_card_front.png")
+                                .data("###invalid-base64###")
+                                .type(DocumentType.ID_CARD)
+                                .side(CardSide.FRONT)
+                                .build(),
+                        DocumentSubmitV2Request.Document.builder()
+                                .filename("id_card_back.png")
+                                .type(DocumentType.ID_CARD)
+                                .side(CardSide.BACK)
+                                .data("###invalid-base64###")
+                                .build()
+                ))
+                .build();
+
+        // when
+        final var exception = assertThrows(Base64DeserializationException.class,
+                () -> tested.submitDocuments(identityVerification, request, ownerId));
+
+        // then
+        assertEquals("Invalid base64 data", exception.getMessage());
+        assertNotNull(exception.getCause());
     }
 
     private List<DocumentSubmitRequest.DocumentMetadata> createIdCardMetadata() {

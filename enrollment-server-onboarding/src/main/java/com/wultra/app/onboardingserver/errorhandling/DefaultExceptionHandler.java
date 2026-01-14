@@ -251,4 +251,18 @@ public class DefaultExceptionHandler {
         logger.debug("Exception detail: ", e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
     }
+
+    /**
+     * Exception handler for base64 deserialization exception.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler(Base64DeserializationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleBase64DeserializationException(final Base64DeserializationException e) {
+        logger.warn("Base64 deserialization exception: {}", e.getMessage());
+        logger.debug("Exception detail: ", e);
+        return new ErrorResponse("INVALID_REQUEST", "Deserialization of base64 value failed.");
+    }
 }

@@ -33,6 +33,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
 import org.apache.commons.lang3.StringUtils;
@@ -456,12 +457,20 @@ public class DocumentProcessingService {
         submittedDoc.setType(document.type());
 
         final var documentData = Optional.ofNullable(document.data())
-                .map(d -> Base64.getDecoder().decode(d))
+                .map(DocumentProcessingService::decodeBase64Data)
                 .orElseThrow(() ->new DocumentSubmitException(String.format("Missing %s in data, %s", document, ownerId)));
 
         photo.setData(documentData);
 
         return submittedDoc;
+    }
+
+    private static byte[] decodeBase64Data(final String base64Data) {
+        try {
+            return Base64.getDecoder().decode(base64Data);
+        } catch (final RuntimeException e) {
+            throw new Base64DeserializationException("Invalid base64 data", e);
+        }
     }
 
     private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
