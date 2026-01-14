@@ -61,6 +61,10 @@ public enum IdentityVerificationPhase {
     /**
      * The identity verification is in the final state.
      */
-    COMPLETED
+    COMPLETED,
 
+    /**
+     * Exchanging the temporary activation for the permanent one.
+     */
+    ACTIVATION_FINISH
 }

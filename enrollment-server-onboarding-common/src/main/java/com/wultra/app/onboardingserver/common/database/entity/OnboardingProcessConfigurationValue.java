@@ -30,6 +30,7 @@ import java.util.Set;
  * @param enabled                    Whether the process type is enabled.
  * @param otpForIdentification       Whether the OTP is required for the initial identification of the user.
  * @param otpForIdentityVerification Whether the OTP is required for identity verification - request OTP for the next process step.
+ * @param useTemporaryActivation     Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.
  * @param documents                  List of documents.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -39,6 +40,7 @@ public record OnboardingProcessConfigurationValue(
         boolean enabled,
         boolean otpForIdentification,
         boolean otpForIdentityVerification,
+        boolean useTemporaryActivation,
         Documents documents,
         ActivationType activationType
 ) implements Serializable {
@@ -51,6 +53,7 @@ public record OnboardingProcessConfigurationValue(
             enabled = false;
             otpForIdentification = false;
             otpForIdentityVerification = false;
+            useTemporaryActivation = false;
             documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
         }

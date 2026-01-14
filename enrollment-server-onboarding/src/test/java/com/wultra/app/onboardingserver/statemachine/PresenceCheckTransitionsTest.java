@@ -19,8 +19,6 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
-import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -32,6 +30,7 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
+import com.wultra.app.onboardingserver.statemachine.action.verification.MoveToActivationFinishInAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -46,6 +45,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.mockito.Mockito.*;
 
@@ -74,6 +74,9 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
+
+    @MockitoBean
+    private MoveToActivationFinishInAction moveToActivationFinishInAction;
 
     @Test
     void testPresenceCheckInit() throws Exception {
@@ -107,9 +110,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
-        presenceCheckResult.setStatus(PresenceCheckStatus.IN_PROGRESS);
-
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
             return null;
@@ -132,9 +132,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
-        PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
-        presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
-
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);
             return null;
@@ -145,8 +142,9 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(true));
         when(onboardingProcessRepository.findById(PROCESS_ID))
-                .thenReturn(createProcessWithConfiguration());
+                .thenReturn(Optional.of(process));
 
         final Message<OnboardingEvent> presenceCheckSubmittedMessage =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
@@ -163,16 +161,47 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         verify(identityVerificationOtpService).sendOtp(idVerification, OWNER_ID);
     }
 
-    private static Optional<OnboardingProcessEntity> createProcessWithConfiguration() {
+    @Test
+    void testPresenceCheckAcceptedActivationFinishInProgress() throws Exception {
+        final IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.VERIFICATION_PENDING);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
+
+        doAnswer(args -> {
+            idVerification.setStatus(IdentityVerificationStatus.ACCEPTED);
+            return null;
+        }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
+
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.useTemporaryActivation(true));
+        when(onboardingProcessRepository.findById(PROCESS_ID))
+                .thenReturn(Optional.of(process));
+
+        final Message<OnboardingEvent> nextEventMessage =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+
+        prepareTest(stateMachine)
+                .sendEvent(nextEventMessage)
+                .expectState(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS)
+                .and()
+                .build()
+                .test();
+
+        verify(moveToActivationFinishInAction).execute(any());
+    }
+
+    private static OnboardingProcessEntity createProcessWithConfiguration(
+            final Consumer<OnboardingProcessConfigurationValue.OnboardingProcessConfigurationValueBuilder> configurator) {
+
+        final var builder = OnboardingProcessConfigurationValue.builder()
+                .otpForIdentification(true);
+
+        configurator.accept(builder);
+
         final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
-        configuration.setConfiguration(OnboardingProcessConfigurationValue.builder()
-                .otpForIdentityVerification(true)
-                .otpForIdentification(true)
-                .build());
+        configuration.setConfiguration(builder.build());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setProcessConfiguration(configuration);
-        return Optional.of(process);
+        return process;
     }
 
     @Test
@@ -180,9 +209,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
         IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
         idVerification.setSessionInfo("{}");
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
-
-        PresenceCheckResult presenceCheckResult = new PresenceCheckResult();
-        presenceCheckResult.setStatus(PresenceCheckStatus.ACCEPTED);
 
         doAnswer(args -> {
             idVerification.setStatus(IdentityVerificationStatus.VERIFICATION_PENDING);

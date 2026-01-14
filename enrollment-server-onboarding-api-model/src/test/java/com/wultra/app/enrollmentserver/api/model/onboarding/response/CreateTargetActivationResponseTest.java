@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2025 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,35 +14,28 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
-package com.wultra.app.onboardingserver.provider.model.request;
+package com.wultra.app.enrollmentserver.api.model.onboarding.response;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.core.annotations.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import org.junit.jupiter.api.Test;
 
-import java.util.Map;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Request object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Test for {@link CreateTargetActivationResponse}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@ToString
-@PublicApi
-public final class LookupUserRequest {
+class CreateTargetActivationResponseTest {
 
-    private Map<String, Object> identification;
+    @Test
+    void testToString() {
+        final var tested = CreateTargetActivationResponse.builder()
+                .activationCode("top secret")
+                .build();
 
-    @NonNull
-    private String processId;
+        final var result = tested.toString();
 
-    @NonNull
-    private String processType;
+        assertFalse(result.contains("top secret"), "activationCode must not be present at " + result);
+    }
 }
