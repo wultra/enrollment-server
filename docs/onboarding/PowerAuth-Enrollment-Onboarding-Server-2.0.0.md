@@ -21,6 +21,11 @@ Also added a foreign key `process_config_id` to the table `es_onboarding_process
 You have to insert at least one row into the table `es_onboarding_process_configuration`, and configure property `enrollment-server-onboarding.onboarding-process.default-type` (or ENV `ONBOARDING_PROCESS_DEFAULT_TYPE`) to work as a default process type.
 
 
+### Onboarding Process
+
+Added a new column `target_activation_id` to the table `es_onboarding_process`.
+
+
 ## REST API Changes
 
 
