@@ -672,7 +672,7 @@ public class IdentityVerificationRestService {
         logger.debug("Returning consent for {}", requestObject);
         OnboardingConsentTextRequestValidator.validate(requestObject);
 
-        final OwnerId ownerId = extractOwnerId(apiAuthentication);
+        final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
         final String processId = requestObject.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
