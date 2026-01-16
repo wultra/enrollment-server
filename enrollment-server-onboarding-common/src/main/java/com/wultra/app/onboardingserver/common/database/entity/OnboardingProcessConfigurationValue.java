@@ -42,7 +42,8 @@ public record OnboardingProcessConfigurationValue(
         boolean otpForIdentityVerification,
         boolean useTemporaryActivation,
         Documents documents,
-        ActivationType activationType
+        ActivationType activationType,
+        OnboardingApprovalType approvalType
 ) implements Serializable {
 
     @Serial
@@ -56,6 +57,7 @@ public record OnboardingProcessConfigurationValue(
             useTemporaryActivation = false;
             documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
+            approvalType = OnboardingApprovalType.NONE;
         }
     }
 
@@ -146,5 +148,23 @@ public record OnboardingProcessConfigurationValue(
          * Activation is initialized by SDK.
          */
         IDENTITY
+    }
+
+    public enum OnboardingApprovalType {
+
+        /**
+         * Do NOT call bank systems to approve.
+         */
+        NONE,
+
+        /**
+         * Call bank systems to approve synchronously.
+         */
+        SYNC,
+
+        /**
+         * Call bank systems to approve asynchronously.
+         */
+        ASYNC
     }
 }
