@@ -24,6 +24,8 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationSta
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
@@ -35,8 +37,7 @@ import com.wultra.core.rest.client.base.RestClientException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.CollectionUtils;
@@ -45,6 +46,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Implementation of the {@link DocumentVerificationProvider} with <a href="https://www.microblink.com/">Microblink</a>.
@@ -54,22 +56,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
-    private final Cache verificationDataCache;
-    private final Cache photoCache;
     private final RestClient microblinkRestClient;
     private final DocumentVerificationResponseParser responseParser;
     private final Map<String, String> mobileSdkLicenseKeyByPlatform;
     private final PowerAuthClient powerAuthClient;
+    private final DocumentDataRepository documentDataRepository;
 
     public MicroblinkDocumentVerificationProvider(
-            CacheManager cacheManager,
             RestClient microblinkRestClient,
             DocumentVerificationResponseParser responseParser,
             Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys,
-            PowerAuthClient powerAuthClient
+            PowerAuthClient powerAuthClient,
+            DocumentDataRepository documentDataRepository
     ) {
-        this.verificationDataCache = cacheManager.getCache(MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME);
-        this.photoCache = cacheManager.getCache(MicroblinkConfigProperties.PHOTO_CACHE_NAME);
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
 
@@ -78,6 +77,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
 
         this.powerAuthClient = powerAuthClient;
+        this.documentDataRepository = documentDataRepository;
     }
 
     @Override
@@ -88,64 +88,37 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) {
-        final var activationId = ownerId.getActivationId();
         final var documentIds = submittedDocuments.stream()
                 .map(SubmittedDocument::getDocumentId)
                 .toList();
 
         logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentIds: {}", ownerId, documentIds);
 
-        var microblinkVerificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
+        final var documentsData = new ArrayList<DocumentDataEntity>();
+        final var documentResults = new ArrayList<DocumentSubmitResult>();
 
-        final var addedDocuments = submittedDocuments.stream()
-                .map(MicroblinkDocumentVerificationProvider::buildMicroblinkVerificationDocument)
-                .toList();
+        for (final var submittedDocument : submittedDocuments) {
+            final var documentData = new DocumentDataEntity();
+            documentData.setId(UUID.randomUUID().toString());
+            documentData.setData(submittedDocument.getPhoto().getData());
 
-        if (microblinkVerificationData == null) {
-            logger.debug("Creating new record in cache");
+            documentsData.add(documentData);
 
-            microblinkVerificationData = MicroblinkVerificationData.builder()
-                    .documents(addedDocuments)
-                    .facePhotoId(UUID.randomUUID().toString())
-                    .build();
-        } else {
-            logger.debug("Updating existing record in cache");
+            final var documentResult = new DocumentSubmitResult();
+            documentResult.setDocumentId(submittedDocument.getDocumentId());
+            documentResult.setUploadId(documentData.getId());
+            // Setting the extracted data to an empty JSON object is important here. Leaving it null will prevent
+            // the document from being passed to the next step and verified. See DocumentProcessingService::processDocsSubmitResults.
+            documentResult.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
 
-            final var submittedDocumentIds = submittedDocuments.stream()
-                    .map(SubmittedDocument::getDocumentId)
-                    .collect(Collectors.toSet());
-
-            var newDocuments = new ArrayList<>(microblinkVerificationData.documents()
-                    .stream()
-                    .filter(document -> !submittedDocumentIds.contains(document.documentId()))
-                    .toList());
-
-            newDocuments.addAll(addedDocuments);
-
-            microblinkVerificationData = microblinkVerificationData.toBuilder()
-                    .documents(newDocuments)
-                    .build();
+            documentResults.add(documentResult);
         }
 
-        verificationDataCache.put(ownerId.getActivationId(), microblinkVerificationData);
-
-        logger.info("Documents stored in cache. Record: {}", microblinkVerificationData);
-
-        final var results = addedDocuments.stream()
-                .map(document -> {
-                    final var result = new DocumentSubmitResult();
-                    result.setDocumentId(document.documentId());
-                    result.setUploadId(document.uploadId());
-                    // Setting the extracted data to an empty JSON object is important here. Leaving it null will prevent
-                    // the document from being passed to the next step and verified. See DocumentProcessingService::processDocsSubmitResults.
-                    result.setExtractedData(DocumentSubmitResult.NO_DATA_EXTRACTED);
-                    return result;
-                })
-                .toList();
+        documentDataRepository.saveAll(documentsData);
 
         final var result = new DocumentsSubmitResult();
-        result.setResults(results);
-        result.setExtractedPhotoId(microblinkVerificationData.facePhotoId());
+        result.setResults(documentResults);
+        result.setExtractedPhotoId(UUID.randomUUID().toString());
 
         logger.info("action: submitDocuments, state: succeeded, provider: microblink, result: {}", result);
         return result;
@@ -165,11 +138,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             logger.info(
                     "action: verifyDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}, verificationId: {}",
                     ownerId,
-                    String.join(",", uploadIds),
+                    uploadIds,
                     verificationId
             );
 
-            final var result = verifyDocuments(ownerId, uploadIds, verificationId);
+            final var result = verifyDocuments(uploadIds, verificationId);
 
             logger.info("action: verifyDocuments, state: succeeded, provider: microblink, result: {}", result);
             return result;
@@ -179,20 +152,16 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds, String verificationId) throws DocumentVerificationException, RemoteCommunicationException {
-        final var activationId = ownerId.getActivationId();
+    private DocumentsVerificationResult verifyDocuments(List<String> uploadIds, String verificationId) throws DocumentVerificationException, RemoteCommunicationException {
+        final var documentsData = StreamSupport.stream(documentDataRepository.findAllById(uploadIds).spliterator(), false)
+                .toList();
 
-        final var verificationData = Optional.ofNullable(verificationDataCache.get(activationId, MicroblinkVerificationData.class))
-                .orElseThrow(() -> new DocumentVerificationException("Verification data not found"));
-
-        final var allDocuments = verificationData.documents();
-        if (CollectionUtils.isEmpty(allDocuments)) {
+        if (CollectionUtils.isEmpty(documentsData)) {
             throw new DocumentVerificationException("Verification data without documents");
         }
 
-        final var documents = filterDocumentsByUploadId(allDocuments, uploadIds);
+        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsData);
 
-        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documents);
         final var facePhotoExtractionDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(documentsByTypeAndSide::containsKey)
                 .findFirst()
@@ -219,21 +188,26 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var overallExtraction = parsedResponse.extraction().overall();
             putDocumentCrosscheckData(overallExtraction, documentsCrosscheckData);
 
-            if (documentType == facePhotoExtractionDocumentType) {
-                final var faceImageBase64 = Optional.ofNullable(parsedResponse.images())
-                        .orElse(Collections.emptyList())
-                        .stream()
-                        .filter(image -> image.name().equals("FaceImage"))
-                        .findFirst()
-                        .map(DocumentVerificationParsedResponse.Image::base64)
-                        .orElseThrow(() -> new DocumentVerificationException("Face image not extracted from document of type %s".formatted(documentType)));
+// TODO: store face photo into DB
+//            if (documentType == facePhotoExtractionDocumentType) {
+//                final var faceImageBase64 = Optional.ofNullable(parsedResponse.images())
+//                        .orElse(Collections.emptyList())
+//                        .stream()
+//                        .filter(image -> image.name().equals("FaceImage"))
+//                        .findFirst()
+//                        .map(DocumentVerificationParsedResponse.Image::base64)
+//                        .orElseThrow(() -> new DocumentVerificationException("Face image not extracted from document of type %s".formatted(documentType)));
+//
+//                final var facePhotoId = Optional.ofNullable(documentFront)
+//                        .map(i -> i.getDocumentVerification().getPhotoId())
+//                        .orElse(documentBack.getDocumentVerification().getPhotoId());
+//
+//
+//                photoCache.put(facePhotoId, faceImageBase64);
+//                logger.info("Face photo stored in cache with id: {}", facePhotoId);
+//            }
 
-                final var facePhotoId = verificationData.facePhotoId();
-                photoCache.put(facePhotoId, faceImageBase64);
-                logger.info("Face photo stored in cache with id: {}", facePhotoId);
-            }
-
-            final var documentsVerificationResult = buildDocumentVerificationResults(documentFront.uploadId(), documentBack.uploadId(), parsedResponse);
+            final var documentsVerificationResult = buildDocumentVerificationResults(documentFront.getId(), documentBack.getId(), parsedResponse);
             documentVerificationResults.addAll(documentsVerificationResult);
         }
 
@@ -260,16 +234,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             logger.info("action: getPhoto, state: initiated, provider: microblink, photoId: {}", photoId);
 
-            final var photoBase64 = Optional.ofNullable(photoCache.get(photoId, String.class))
-                    .orElseThrow(() -> new DocumentVerificationException("Photo with id %s not found".formatted(photoId)));
-
-            final var image = Image.builder()
-                    .filename("FaceImage.jpg")
-                    .data(Base64.getDecoder().decode(photoBase64))
-                    .build();
-
-            logger.info("action: getPhoto, state: succeeded, provider: microblink");
-            return image;
+            // TODO: Load image from DB
+            throw new DocumentVerificationException("Not implemented yet");
+//            final var photoBase64 = Optional.ofNullable(photoCache.get(photoId, String.class))
+//                    .orElseThrow(() -> new DocumentVerificationException("Photo with id %s not found".formatted(photoId)));
+//
+//            final var image = Image.builder()
+//                    .filename("FaceImage.jpg")
+//                    .data(Base64.getDecoder().decode(photoBase64))
+//                    .build();
+//
+//            logger.info("action: getPhoto, state: succeeded, provider: microblink");
+//            return image;
         } catch (final DocumentVerificationException e) {
             logger.info("action: getPhoto, state: failed, provider: microblink, error: {}", e.getMessage());
             throw e;
@@ -280,24 +256,27 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
         logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
 
-        final var activationId = ownerId.getActivationId();
-        final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
-        logger.debug("Record in cache before cleanup: {}", verificationData);
+        // TODO: Remove documents
+        throw new NotImplementedException("Not implemented yet");
 
-        if (verificationData != null) {
-            final var documents = verificationData.documents().stream()
-                    .filter(d -> !uploadIds.contains(d.uploadId()))
-                    .toList();
-
-            final var updatedVerificationData = verificationData.toBuilder()
-                    .documents(documents)
-                    .build();
-
-            verificationDataCache.put(activationId, updatedVerificationData);
-            logger.debug("Record in cache after cleanup: {}", updatedVerificationData);
-        }
-
-        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");
+//        final var activationId = ownerId.getActivationId();
+//        final var verificationData = verificationDataCache.get(activationId, MicroblinkVerificationData.class);
+//        logger.debug("Record in cache before cleanup: {}", verificationData);
+//
+//        if (verificationData != null) {
+//            final var documents = verificationData.documents().stream()
+//                    .filter(d -> !uploadIds.contains(d.uploadId()))
+//                    .toList();
+//
+//            final var updatedVerificationData = verificationData.toBuilder()
+//                    .documents(documents)
+//                    .build();
+//
+//            verificationDataCache.put(activationId, updatedVerificationData);
+//            logger.debug("Record in cache after cleanup: {}", updatedVerificationData);
+//        }
+//
+//        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");
     }
 
     @Override
@@ -335,17 +314,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static DocumentVerificationImageSource buildImageSource(final Image image) {
-        final var imageBase64 = Base64.getEncoder().encodeToString(image.getData());
+    private static DocumentVerificationImageSource buildImageSource(final byte[] data) {
+        final var imageBase64 = Base64.getEncoder().encodeToString(data);
 
         final var imageSource = new DocumentVerificationImageSource();
         imageSource.setBase64(imageBase64);
         return imageSource;
     }
 
-    private static DocumentVerificationRequest buildRequest(final MicroblinkVerificationData.Document frontDocument, final MicroblinkVerificationData.Document backDocument) {
-        final var frontImageSource = buildImageSource(frontDocument.image());
-        final var backImageSource = buildImageSource(backDocument.image());
+    private static DocumentVerificationRequest buildRequest(final DocumentDataEntity frontDocument, final DocumentDataEntity backDocument) {
+        final var frontImageSource = buildImageSource(frontDocument.getData());
+        final var backImageSource = buildImageSource(backDocument.getData());
 
         final var options = new DocumentVerificationProcessingOptions();
         options.setReturnImageFormat(ImageFormat.JPG);
@@ -361,19 +340,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static MicroblinkVerificationData.Document buildMicroblinkVerificationDocument(final SubmittedDocument submittedDocument) {
-        return MicroblinkVerificationData.Document.builder()
-                .documentId(submittedDocument.getDocumentId())
-                .uploadId(UUID.randomUUID().toString())
-                .type(submittedDocument.getType())
-                .side(submittedDocument.getSide())
-                .image(submittedDocument.getPhoto())
-                .build();
-    }
-
     private DocumentVerificationParsedResponse sendApiRequest(
-            final MicroblinkVerificationData.Document frontDocument,
-            final MicroblinkVerificationData.Document backDocument
+            final DocumentDataEntity frontDocument,
+            final DocumentDataEntity backDocument
     ) throws DocumentVerificationException, RemoteCommunicationException {
         logger.info("Sending request to Microblink REST API for documents: {}, {}", frontDocument, backDocument);
 
@@ -404,47 +373,28 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static List<MicroblinkVerificationData.Document> filterDocumentsByUploadId(
-            final List<MicroblinkVerificationData.Document> documents,
-            final List<String> uploadIds
+    private static Map<DocumentType, Map<CardSide, DocumentDataEntity>> groupDocumentsByTypeAndSide(
+            final List<DocumentDataEntity> documentsData
     ) throws DocumentVerificationException {
-        final var uploadIdSet = new HashSet<>(uploadIds);
+        final var documentsByTypeAndSide = new EnumMap<DocumentType, Map<CardSide, DocumentDataEntity>>(DocumentType.class);
+        for (final var documentData : documentsData) {
+            final var documentVerification = Optional.ofNullable(documentData.getDocumentVerification())
+                    .orElseThrow(() -> new DocumentVerificationException("Missing document verification for document data id: %s".formatted(documentData.getId())));
 
-        final var filteredDocuments = new ArrayList<MicroblinkVerificationData.Document>();
-        for (final var document : documents) {
-            final var uploadId = document.uploadId();
+            final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(documentVerification.getType(), k -> new EnumMap<>(CardSide.class));
 
-            if (uploadIdSet.remove(uploadId)) {
-                filteredDocuments.add(document);
-            }
-        }
-
-        if (!uploadIdSet.isEmpty()) {
-            throw new DocumentVerificationException("Documents with uploadIds %s not found".formatted(String.join(",", uploadIdSet)));
-        }
-
-        return filteredDocuments;
-    }
-
-    private static Map<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>> groupDocumentsByTypeAndSide(
-            final List<MicroblinkVerificationData.Document> documents
-    ) throws DocumentVerificationException {
-        final var documentsByTypeAndSide = new EnumMap<DocumentType, Map<CardSide, MicroblinkVerificationData.Document>>(DocumentType.class);
-        for (final var document : documents) {
-            final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(document.type(), k -> new EnumMap<>(CardSide.class));
-
-            final var documentOfSameSide = documentsOfSameType.getOrDefault(document.side(), null);
+            final var documentOfSameSide = documentsOfSameType.getOrDefault(documentVerification.getSide(), null);
             if (documentOfSameSide != null) {
                 throw new DocumentVerificationException(
-                        "Multiple documents of type %s and side %s found. Document ids: %s".formatted(
-                                document.type(),
-                                document.side(),
-                                String.join(",", List.of(documentOfSameSide.documentId(), document.documentId()))
+                        "Multiple documents of type %s and side %s found. Document data ids: %s".formatted(
+                                documentVerification.getType(),
+                                documentVerification.getSide(),
+                                List.of(documentOfSameSide.getId(), documentData.getId())
                         )
                 );
             }
 
-            documentsOfSameType.put(document.side(), document);
+            documentsOfSameType.put(documentVerification.getSide(), documentData);
         }
 
         return documentsByTypeAndSide;

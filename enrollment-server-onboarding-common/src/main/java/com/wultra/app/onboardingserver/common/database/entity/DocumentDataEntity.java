@@ -28,7 +28,6 @@ import org.hibernate.annotations.UuidGenerator;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * Entity representing document data.
@@ -52,36 +51,28 @@ public class DocumentDataEntity implements Serializable {
     @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "activation_id", nullable = false)
-    private String activationId;
-
-    /**
-     * Identifier of the related identity verification entity
-     */
-    @ManyToOne
-    @JoinColumn(name = "identity_verification_id", referencedColumnName = "id", updatable = false, nullable = false)
-    private IdentityVerificationEntity identityVerification;
-
-    @Column(name = "filename", nullable = false)
-    private String filename;
-
     @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof final DocumentDataEntity that)) return false;
-        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
-    }
+    @ManyToOne
+    @JoinColumn(name = "upload_id", referencedColumnName = "upload_id")
+    private DocumentVerificationEntity documentVerification;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(filename, timestampCreated);
-    }
+
+//    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (!(o instanceof final DocumentDataEntity that)) return false;
+//        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(filename, timestampCreated);
+//    }
 
 }
 

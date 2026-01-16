@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.microblink;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
@@ -70,37 +71,20 @@ class MicroblinkConfig {
         return new DocumentVerificationResponseParser(objectMapper);
     }
 
-    @Bean("microblinkCacheManager")
-    public CacheManager cacheManager(final MicroblinkConfigProperties properties) {
-        logger.info("Registering Microblink CacheManager");
-
-        final var caffeineBuilder = Caffeine.newBuilder()
-                .expireAfterWrite(properties.getCacheRecordTTL());
-
-        final var cacheManager = new CaffeineCacheManager(
-                MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME,
-                MicroblinkConfigProperties.PHOTO_CACHE_NAME
-        );
-
-        cacheManager.setCaffeine(caffeineBuilder);
-
-        return cacheManager;
-    }
-
     @Bean
     public MicroblinkDocumentVerificationProvider microblinkDocumentVerificationProvider(
-            @Qualifier("microblinkCacheManager") CacheManager cacheManager,
             @Qualifier("microblinkRestClient") RestClient restClient,
             @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
             MicroblinkConfigProperties properties,
-            PowerAuthClient powerAuthClient
+            PowerAuthClient powerAuthClient,
+            DocumentDataRepository documentDataRepository
     ) {
         return new MicroblinkDocumentVerificationProvider(
-                cacheManager,
                 restClient,
                 responseParser,
                 properties.getMobileSdkLicenseKeys(),
-                powerAuthClient
+                powerAuthClient,
+                documentDataRepository
         );
     }
 }
