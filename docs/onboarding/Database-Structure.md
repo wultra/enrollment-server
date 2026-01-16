@@ -235,10 +235,11 @@ The configuration is stored as JSON. See the following example:
 ```json
 {
   "enabled": true,
-  "activationType":"CODE",
+  "activationType": "CODE",
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
   "useTemporaryActivation": true,
+  "approvalType": "SYNC",
   "documents": {
     "totalRequiredDocumentsCount": 2,
     "groups": [
