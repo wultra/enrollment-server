@@ -19,10 +19,7 @@ package com.wultra.app.onboardingserver.provider;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.model.request.*;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
-import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import com.wultra.app.onboardingserver.provider.model.response.*;
 
 /**
  * Implementation of {@link OnboardingProvider} throwing an exception for each method.
@@ -58,6 +55,11 @@ class EmptyOnboardingProvider implements OnboardingProvider {
 
     @Override
     public ProcessEventResponse processEvent(ProcessEventRequest request) throws OnboardingProviderException {
+        throw createException();
+    }
+
+    @Override
+    public ApproveClientResponse approveClient(final ApproveClientRequest request) throws OnboardingProviderException {
         throw createException();
     }
 
