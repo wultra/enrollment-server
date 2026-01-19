@@ -24,7 +24,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
@@ -209,6 +208,14 @@ public class DocumentVerificationEntity implements Serializable {
     @OneToMany(mappedBy = "documentVerification", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated desc")
     private Set<DocumentResultEntity> results = new LinkedHashSet<>();
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "upload_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = "es_document_verification_upload_id_fk")
+    )
+    private DocumentDataEntity documentData;
 
     @Override
     public boolean equals(Object o) {

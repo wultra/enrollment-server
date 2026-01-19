@@ -1,6 +1,8 @@
+package com.wultra.app.onboardingserver.common.database.entity;
+
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -16,8 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.onboardingserver.common.database.entity;
-
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,20 +31,20 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Entity representing document data.
+ * Entity representing document data processed by provider.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @Entity
-@Table(name = "es_document_data")
-public class DocumentDataEntity implements Serializable {
+@Table(name = "es_processed_document_data")
+public class ProcessedDocumentDataEntity implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 7685715667785423079L;
+    private static final long serialVersionUID = 7685715667785423080L;
 
     @Id
     @GeneratedValue
@@ -54,23 +55,10 @@ public class DocumentDataEntity implements Serializable {
     @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
+    @Column(name = "data_type", nullable = false)
+    private ProcessedDocumentDataType dataType;
+
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
-    @OneToOne(mappedBy = "documentData", fetch = FetchType.EAGER)
-    private DocumentVerificationEntity documentVerification;
-
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (!(o instanceof final DocumentDataEntity that)) return false;
-//        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(filename, timestampCreated);
-//    }
-
 }
-
