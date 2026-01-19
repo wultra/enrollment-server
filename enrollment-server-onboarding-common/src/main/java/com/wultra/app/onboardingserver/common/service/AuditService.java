@@ -37,6 +37,7 @@ public class AuditService {
     private static final String IDENTITY_VERIFICATION_ID = "identityVerificationId";
     private static final String PROCESS_ID = "processId";
     private static final String ACTIVATION_ID = "activationId";
+    private static final String TARGET_ACTIVATION_ID = "targetActivationId";
     private static final String USER_ID = "userId";
     private static final String OTP_ID = "otpId";
     private static final String DOCUMENT_ID = "documentId";
@@ -276,6 +277,11 @@ public class AuditService {
         final String activationId = process.getActivationId();
         if (activationId != null) {
             builder.param(ACTIVATION_ID, activationId);
+        }
+
+        final String targetActivationId = process.getTargetActivationId();
+        if (targetActivationId != null) {
+            builder.param(TARGET_ACTIVATION_ID, targetActivationId);
         }
 
         final String userId = process.getUserId();

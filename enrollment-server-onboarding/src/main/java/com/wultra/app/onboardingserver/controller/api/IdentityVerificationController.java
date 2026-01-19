@@ -19,11 +19,12 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
-import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
+import com.wultra.app.onboardingserver.common.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationRestService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
@@ -40,7 +41,10 @@ import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncrypti
 import com.wultra.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,18 +63,13 @@ import org.springframework.web.bind.annotation.RestController;
 )
 @RestController
 @RequestMapping(value = "api/identity")
+@AllArgsConstructor
+@Slf4j
 public class IdentityVerificationController {
 
     private final IdentityVerificationRestService identityVerificationRestService;
 
-    /**
-     * Controller constructor.
-     * @param identityVerificationRestService  Identity verification entry service.
-     */
-    @Autowired
-    public IdentityVerificationController(IdentityVerificationRestService identityVerificationRestService) {
-        this.identityVerificationRestService = identityVerificationRestService;
-    }
+    private final IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     /**
      * Initialize identity verification.
@@ -366,4 +365,30 @@ public class IdentityVerificationController {
         return identityVerificationRestService.approveConsent(request, apiAuthentication);
     }
 
+    /**
+     * Create a target activation.
+     *
+     * @param request Request.
+     * @param apiAuthentication PowerAuth authentication.
+     * @return Response.
+     * @throws OnboardingProcessException Thrown when the onboarding process is not found.
+     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     */
+    @PostMapping("activation")
+    @Operation(
+            summary = "Create a target activation",
+            description = "Create a target activation. The identity verification status has to be `ACTIVATION_FINISH`."
+    )
+    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
+    @PowerAuthToken(authenticationCodeType = PowerAuthCodeType.POSSESSION)
+    public ObjectResponse<CreateTargetActivationResponse> createTargetActivation(
+            final @EncryptedRequestBody @Valid ObjectRequest<CreateTargetActivationRequest> request,
+            final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, RemoteCommunicationException {
+
+        logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
+        final CreateTargetActivationResponse response = identityVerificationTargetActivationService.createTargetActivation(request.getRequestObject(), apiAuthentication);
+        logger.info("action: createTargetActivation, state: succeeded");
+
+        return new ObjectResponse<>(response);
+    }
 }

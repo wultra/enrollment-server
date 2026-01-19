@@ -239,3 +239,7 @@ CREATE TABLE es_onboarding_process_configuration (id BIGINT DEFAULT nextval('es_
 ALTER TABLE es_onboarding_process ADD process_config_id BIGINT;
 
 ALTER TABLE es_onboarding_process ADD CONSTRAINT es_onboarding_process_process_config_id_fk FOREIGN KEY (process_config_id) REFERENCES es_onboarding_process_configuration (id);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20251219-process-target-activation-id.xml::1::Lubos Racansky
+-- Create a new column target_activation_id to es_onboarding_process
+ALTER TABLE es_onboarding_process ADD target_activation_id VARCHAR(36);

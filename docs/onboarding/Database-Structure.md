@@ -50,6 +50,7 @@ Stores onboarding processes created for tracking status of user onboarding.
 | `custom_data`            | `VARCHAR(1024)` | `NOT NULL`                           | Custom data as JSON.                                                                                                                             |
 | `user_id`                | `VARCHAR(256)`  |                                      | Resolved user identifier.                                                                                                                        |
 | `activation_id`          | `VARCHAR(36)`   |                                      | Identifier of created activation.                                                                                                                |
+| `target_activation_id`   | `VARCHAR(36)`   |                                      | If the onboarding process uses two activations, this one is permanent and `activation_id` is temporary one.                                      |
 | `status`                 | `VARCHAR(32)`   | `NOT NULL`                           | Status of onboarding process (`ACTIVATION_IN_PROGRESS`, `VERIFICATION_IN_PROGRESS`, `FINISHED`, `FAILED`).                                       |
 | `activation_removed`     | `BOOLEAN`       | `DEFAULT FALSE`                      | Whether activation was removed in PowerAuth server for a failed process.                                                                         |
 | `error_detail`           | `VARCHAR(256)`  |                                      | Detail of error (e.g. information about timeout or non-existent user).                                                                           |
@@ -237,6 +238,7 @@ The configuration is stored as JSON. See the following example:
   "activationType":"CODE",
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
+  "useTemporaryActivation": true,
   "documents": {
     "totalRequiredDocumentsCount": 2,
     "groups": [

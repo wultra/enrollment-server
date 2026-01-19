@@ -29,6 +29,8 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationEnabledGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
@@ -36,8 +38,8 @@ import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedG
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,10 +67,10 @@ import java.util.EnumSet;
         havingValue = "true"
 )
 @Configuration
+@AllArgsConstructor
+@Slf4j
 @EnableStateMachineFactory(name = "enrollmentStateMachine")
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OnboardingState, OnboardingEvent> {
-
-    private static final Logger logger = LoggerFactory.getLogger(StateMachineConfig.class);
 
     private final ClientEvaluationInitAction clientEvaluationInitAction;
 
@@ -100,6 +102,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final DocumentVerificationFinalAction documentVerificationFinalAction;
 
+    private final MoveToActivationFinishInAction moveToActivationFinishInAction;
+
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
@@ -118,63 +122,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final StatusRejectedGuard statusRejectedGuard;
 
-    public StateMachineConfig(
-            final ClientEvaluationInitAction clientEvaluationInitAction,
-            final ClientEvaluationAction clientEvaluationAction,
-            final OtpVerificationResendAction otpVerificationResendAction,
-            final OtpVerificationSendAction otpVerificationSendAction,
-            final PresenceCheckInitAction presenceCheckInitAction,
-            final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction,
-            final PresenceCheckVerificationAction presenceCheckVerificationAction,
-            final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction,
-            final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction,
-            final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction,
-            final DocumentsVerificationPendingGuard documentsVerificationPendingGuard,
-            final VerificationDocumentStartAction verificationDocumentStartAction,
-            final VerificationInitAction verificationInitAction,
-            final VerificationProcessResultAction verificationProcessResultAction,
-            final DocumentVerificationFinalAction documentVerificationFinalAction,
-            final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard,
-            final OtpVerificationEnabledGuard otpVerificationEnabledGuard,
-            final OtpVerifiedGuard otpVerifiedGuard,
-            final PresenceCheckEnabledGuard presenceCheckEnabledGuard,
-            final ProcessIdentifierGuard processIdentifierGuard,
-            final StatusAcceptedGuard statusAcceptedGuard,
-            final StatusFailedGuard statusFailedGuard,
-            final StatusInProgressGuard statusInProgressGuard,
-            final StatusRejectedGuard statusRejectedGuard) {
-        this.clientEvaluationInitAction = clientEvaluationInitAction;
-        this.clientEvaluationAction = clientEvaluationAction;
-        this.otpVerificationResendAction = otpVerificationResendAction;
-        this.otpVerificationSendAction = otpVerificationSendAction;
+    private final TargetActivationFinishedGuard targetActivationFinishedGuard;
 
-        this.presenceCheckInitAction = presenceCheckInitAction;
-        this.presenceCheckNotInitializedAction = presenceCheckNotInitializedAction;
-        this.presenceCheckVerificationAction = presenceCheckVerificationAction;
-
-        this.moveToPresenceCheckVerificationPendingAction = moveToPresenceCheckVerificationPendingAction;
-        this.moveToDocumentVerificationFinalInProgressAction = moveToDocumentVerificationFinalInProgressAction;
-        this.moveToDocumentUploadVerificationPendingAction = moveToDocumentUploadVerificationPendingAction;
-        this.documentsVerificationPendingGuard = documentsVerificationPendingGuard;
-        this.verificationDocumentStartAction = verificationDocumentStartAction;
-        this.verificationInitAction = verificationInitAction;
-        this.verificationProcessResultAction = verificationProcessResultAction;
-        this.documentVerificationFinalAction = documentVerificationFinalAction;
-
-        this.documentUploadVerificationPendingGuard = documentUploadVerificationPendingGuard;
-
-        this.otpVerificationEnabledGuard = otpVerificationEnabledGuard;
-        this.otpVerifiedGuard = otpVerifiedGuard;
-
-        this.presenceCheckEnabledGuard = presenceCheckEnabledGuard;
-
-        this.processIdentifierGuard = processIdentifierGuard;
-
-        this.statusAcceptedGuard = statusAcceptedGuard;
-        this.statusFailedGuard = statusFailedGuard;
-        this.statusInProgressGuard = statusInProgressGuard;
-        this.statusRejectedGuard = statusRejectedGuard;
-    }
+    private final TargetActivationEnabledGuard targetActivationEnabledGuard;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
@@ -195,7 +145,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .choice(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
+                .choice(OnboardingState.CHOICE_COMPLETED_STATE)
                 .choice(OnboardingState.PRESENCE_CHECK_FAILED)
                 .choice(OnboardingState.PRESENCE_CHECK_REJECTED)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
@@ -217,6 +167,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         configureClientEvaluationTransitions(transitions);
         configurePresenceCheckTransitions(transitions);
         configureOtpTransitions(transitions);
+        configureActivationFinishTransitions(transitions);
         configureCompletedTransition(transitions);
     }
 
@@ -340,7 +291,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
+                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, moveToActivationFinishInAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
     }
 
     private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
@@ -384,7 +336,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                         createCompositeGuard(otpVerificationEnabledGuard, statusAcceptedGuard),
                         otpVerificationSendAction
                 )
-                .then(OnboardingState.CHOICE_VERIFICATION_PROCESSING,
+                .then(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, createCompositeGuard(statusAcceptedGuard, targetActivationEnabledGuard), moveToActivationFinishInAction)
+                .then(OnboardingState.CHOICE_COMPLETED_STATE,
                         context -> !otpVerificationEnabledGuard.evaluate(context) && statusAcceptedGuard.evaluate(context),
                         verificationProcessResultAction
                 )
@@ -396,13 +349,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.PRESENCE_CHECK_REJECTED)
                 .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
 
                 .and()
                 .withChoice()
                 .source(OnboardingState.PRESENCE_CHECK_FAILED)
                 .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_VERIFICATION_PROCESSING, verificationProcessResultAction);
+                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
     }
 
     private void configureOtpTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
@@ -424,7 +377,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_OTP_VERIFICATION)
-                .first(OnboardingState.CHOICE_VERIFICATION_PROCESSING, otpVerifiedGuard, verificationProcessResultAction)
+                .first(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, createCompositeGuard(otpVerifiedGuard, targetActivationEnabledGuard), moveToActivationFinishInAction)
+                .then(OnboardingState.CHOICE_COMPLETED_STATE, otpVerifiedGuard, verificationProcessResultAction)
                 .last(OnboardingState.OTP_VERIFICATION_PENDING);
     }
 
@@ -433,10 +387,19 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         return context -> Arrays.stream(guards).allMatch(it -> it.evaluate(context));
     }
 
+    private void configureActivationFinishTransitions(final StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
+        transitions.withExternal()
+                .source(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(targetActivationFinishedGuard)
+                .action(verificationProcessResultAction)
+                .target(OnboardingState.CHOICE_COMPLETED_STATE);
+    }
+
     private void configureCompletedTransition(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
                 .withChoice()
-                .source(OnboardingState.CHOICE_VERIFICATION_PROCESSING)
+                .source(OnboardingState.CHOICE_COMPLETED_STATE)
                 .first(OnboardingState.COMPLETED_ACCEPTED, statusAcceptedGuard)
                 .then(OnboardingState.COMPLETED_REJECTED, statusRejectedGuard)
                 .then(OnboardingState.COMPLETED_FAILED, statusFailedGuard)

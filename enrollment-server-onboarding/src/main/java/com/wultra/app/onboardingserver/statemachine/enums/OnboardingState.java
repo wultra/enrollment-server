@@ -69,6 +69,8 @@ public enum OnboardingState {
 
     OTP_VERIFICATION_PENDING(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING),
 
+    ACTIVATION_FINISH_IN_PROGRESS(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS),
+
     COMPLETED_ACCEPTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED),
     COMPLETED_FAILED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED),
     COMPLETED_REJECTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.REJECTED),
@@ -85,7 +87,7 @@ public enum OnboardingState {
 
     CHOICE_PRESENCE_CHECK_PROCESSING,
 
-    CHOICE_VERIFICATION_PROCESSING,
+    CHOICE_COMPLETED_STATE,
 
     UNEXPECTED_STATE;
 

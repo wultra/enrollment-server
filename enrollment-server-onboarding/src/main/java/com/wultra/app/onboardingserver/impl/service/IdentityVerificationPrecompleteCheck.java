@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
@@ -31,13 +32,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
 
 /**
  * Validate all critical conditions were met before finishing the onboarding.
@@ -47,7 +49,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-// TODO (racansky, 2022-10-14) consider make it Guard for Spring State Machine
+// TODO (racansky, 2022-10-14, #1458) consider make it Guard for Spring State Machine
 @Component
 @Slf4j
 @AllArgsConstructor
@@ -66,6 +68,10 @@ class IdentityVerificationPrecompleteCheck {
     private final OnboardingProcessRepository onboardingProcessRepository;
 
     private final ActivationService activationService;
+
+    // TODO (racansky, 2022-10-14, #1458) when changed to a guard, there is no reference IdentityVerificationService -> PrecompleteCheck anymore
+    @Lazy // break circular reference of constructor injection
+    private final IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     /**
      * Evaluate all precomplete conditions.
@@ -117,7 +123,29 @@ class IdentityVerificationPrecompleteCheck {
             return Result.failed("Did not pass SCA");
         }
 
+        if (!isTargetActivationFinished(idVerification)) {
+            logger.debug("Target activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
+            return Result.failed("Target activation is not valid");
+        }
+
         return Result.successful();
+    }
+
+    private boolean isTargetActivationFinished(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+        final String processId = idVerification.getProcessId();
+
+        try {
+            final boolean isTemporaryActivationDisabled = !identityVerificationTargetActivationService.isTargetActivationEnabled(processId);
+            if (isTemporaryActivationDisabled) {
+                logger.trace("Temporary activation is disabled");
+                return true;
+            }
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to find processId: {}", processId, e);
+            return false;
+        }
+
+        return identityVerificationTargetActivationService.isTargetActivationFinished(processId);
     }
 
     private boolean isVerificationPassedSca(final IdentityVerificationEntity idVerification) {
@@ -134,9 +162,26 @@ class IdentityVerificationPrecompleteCheck {
         return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
-    private boolean isActivationValid(IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
-        final ActivationStatus activationStatus = activationService.fetchActivationStatus(idVerification.getActivationId());
-        return activationStatus == ActivationStatus.ACTIVE;
+    private boolean isActivationValid(final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+        final String processId = idVerification.getProcessId();
+        final String activationId = idVerification.getActivationId();
+
+        final ActivationStatus activationStatus = activationService.fetchActivationStatus(activationId);
+        final boolean isTemporaryActivationEnabled;
+
+        try {
+            isTemporaryActivationEnabled = identityVerificationTargetActivationService.isTargetActivationEnabled(processId);
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to find processId: {}", processId, e);
+            return false;
+        }
+
+        logger.debug("Verifying activationId: {}, status: {}, isTemporaryActivationEnabled: {}", activationId, activationStatus, isTemporaryActivationEnabled);
+        if (isTemporaryActivationEnabled) {
+            return activationStatus == ActivationStatus.REMOVED;
+        } else {
+            return activationStatus == ActivationStatus.ACTIVE;
+        }
     }
 
     private boolean isVerificationOtpValid(final IdentityVerificationEntity idVerification) {
@@ -168,7 +213,8 @@ class IdentityVerificationPrecompleteCheck {
         final boolean verificationOtpDisabled = isVerificationOtpDisabled(idVerification);
         return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
                 (phase == PRESENCE_CHECK && status == ACCEPTED && verificationOtpDisabled) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled());
+                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled()) ||
+                (phase == ACTIVATION_FINISH && status == IN_PROGRESS);
     }
 
     @Getter
@@ -192,18 +238,21 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationOtpDisabled(final IdentityVerificationEntity idVerification) {
-        return onboardingProcessRepository.findById(idVerification.getProcessId())
-                .map(OnboardingProcessEntity::getProcessConfiguration)
-                .map(OnboardingProcessConfigurationEntity::getConfiguration)
-                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
-                .isEmpty();
+        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentityVerification);
     }
 
     private boolean isActivationOtpDisabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentification);
+    }
+
+    private boolean isConfigurationDisabled(
+            final IdentityVerificationEntity idVerification,
+            final Predicate<OnboardingProcessConfigurationValue> predicate) {
+
         return onboardingProcessRepository.findById(idVerification.getProcessId())
                 .map(OnboardingProcessEntity::getProcessConfiguration)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
-                .filter(OnboardingProcessConfigurationValue::otpForIdentification)
+                .filter(predicate)
                 .isEmpty();
     }
 }

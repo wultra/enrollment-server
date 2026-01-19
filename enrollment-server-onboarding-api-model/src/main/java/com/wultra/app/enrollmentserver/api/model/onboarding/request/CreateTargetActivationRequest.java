@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2025 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,35 +14,29 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
-package com.wultra.app.onboardingserver.provider.model.request;
+package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.core.annotations.PublicApi;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 
 import java.util.Map;
 
 /**
- * Request object for {@link OnboardingProvider#lookupUser(LookupUserRequest)}.
+ * Request class used when creating a target activation.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
-@PublicApi
-public final class LookupUserRequest {
+@Jacksonized
+public record CreateTargetActivationRequest(
 
-    private Map<String, Object> identification;
+        @Schema(description = "The user identification. The structure of the identification is vendor specific.")
+        Map<String, Object> identification,
 
-    @NonNull
-    private String processId;
-
-    @NonNull
-    private String processType;
+        @NotEmpty
+        @Schema(description = "The process identification.")
+        String processId) {
 }

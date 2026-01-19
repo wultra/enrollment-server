@@ -310,13 +310,14 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Process identity verification result for document verifications which have already been previously processed.
+     * Process identity verification result, check the verifications which have already been previously processed.
+     *
      * @param ownerId Owner identification.
      * @param idVerification Identity verification entity.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public void processDocumentVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+    public void processVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
         final var result = identityVerificationPrecompleteCheck.evaluate(idVerification);
         if (result.isSuccessful()) {
             logger.debug("Final validation passed, {}", ownerId);
