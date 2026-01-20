@@ -1,7 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="EnrollmentServerOnboardingApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="dev" />
-    <option name="DEBUG_MODE" value="true" />
     <module name="enrollment-server-onboarding" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.wultra.app.onboardingserver.OnboardingServerApplication" />
     <option name="VM_PARAMETERS" value="-Dserver.servlet.context-path=/enrollment-server-onboarding -Dserver.port=8083" />

@@ -34,7 +34,6 @@ import lombok.extern.jackson.Jacksonized;
  * @param status Status of the identity verification process.
  * @param score Outcome confidence of the verification check on scale 0-10.
  * @param presenceCheckResult Result of the presence check.
- *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder

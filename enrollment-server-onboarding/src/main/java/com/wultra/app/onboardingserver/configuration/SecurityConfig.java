@@ -18,12 +18,16 @@
 
 package com.wultra.app.onboardingserver.configuration;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * Spring Security configuration.
@@ -32,14 +36,40 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class SecurityConfig {
+
+    @Value("${enrollment-server-onboarding.security.auth-type}")
+    private AuthType authType;
 
     @Bean
     public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
+        if (authType == AuthType.BASIC_AUTH) {
+            logger.info("Initializing HTTP basic authentication.");
+            http.httpBasic(withDefaults());
+        } else if (authType == AuthType.OIDC) {
+            logger.info("Initializing OIDC authentication.");
+            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()));
+        }
+
         return http
-                .httpBasic(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/private/**").authenticated()
+                        .anyRequest().permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
                 .build();
     }
 
+    enum AuthType {
+
+        /**
+         * Basic HTTP authentication.
+         */
+        BASIC_AUTH,
+
+        /**
+         * OpenID Connect.
+         */
+        OIDC
+    }
 }
