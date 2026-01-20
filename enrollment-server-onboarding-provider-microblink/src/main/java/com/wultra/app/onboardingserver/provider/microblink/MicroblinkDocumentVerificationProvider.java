@@ -107,6 +107,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var documentData = new DocumentDataEntity();
             documentData.setId(UUID.randomUUID().toString());
             documentData.setData(submittedDocument.getPhoto().getData());
+            documentData.setTimestampCreated(new Date());
 
             documentsData.add(documentData);
 
@@ -163,7 +164,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .toList();
 
         if (CollectionUtils.isEmpty(documentsData)) {
-            throw new DocumentVerificationException("Verification data without documents");
+            throw new DocumentVerificationException("No document data found for uploadIds: %s".formatted(uploadIds));
         }
 
         final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsData);
@@ -237,6 +238,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         facePhotoDocumentData.setId(facePhotoId);
         facePhotoDocumentData.setData(Base64.getDecoder().decode(faceImageBase64));
         facePhotoDocumentData.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
+        facePhotoDocumentData.setTimestampCreated(new Date());
 
         processedDocumentDataRepository.save(facePhotoDocumentData);
 
@@ -273,6 +275,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
         logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
+
+        for (DocumentDataEntity documentData : documentDataRepository.findAllById(uploadIds)) {
+            Optional.ofNullable(documentData)
+                    .map(DocumentDataEntity::getDocumentVerification)
+                    .ifPresent(documentVerification -> documentVerification.setDocumentData(null));
+        }
 
         documentDataRepository.deleteAllById(uploadIds);
 

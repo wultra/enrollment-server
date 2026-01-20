@@ -19,16 +19,19 @@ package com.wultra.app.onboardingserver.common.database.entity;
  */
 
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity representing document data processed by provider.
@@ -47,8 +50,6 @@ public class ProcessedDocumentDataEntity implements Serializable {
     private static final long serialVersionUID = 7685715667785423080L;
 
     @Id
-    @GeneratedValue
-    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -61,4 +62,15 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof final DocumentDataEntity that)) return false;
+        return id.equals(that.getId()) && timestampCreated.equals(that.getTimestampCreated());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, timestampCreated);
+    }
 }

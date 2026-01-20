@@ -28,10 +28,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Entity representing a document verification record.
@@ -40,7 +37,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@ToString(of = {"id", "type", "uploadId"})
+@ToString(of = {"id", "type"})
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_verification")
@@ -109,12 +106,6 @@ public class DocumentVerificationEntity implements Serializable {
      */
     @Column(name = "filename", nullable = false)
     private String filename;
-
-    /**
-     * Upload identifier in remote document verification system
-     */
-    @Column(name = "upload_id")
-    private String uploadId;
 
     /**
      * Verification identifier in remote document verification system
@@ -209,12 +200,11 @@ public class DocumentVerificationEntity implements Serializable {
     @OrderBy("timestampCreated desc")
     private Set<DocumentResultEntity> results = new LinkedHashSet<>();
 
+    /**
+     * Content of uploaded document.
+     */
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "upload_id",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "es_document_verification_upload_id_fk")
-    )
+    @JoinColumn(name = "upload_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "es_document_verification_upload_id_fk"))
     private DocumentDataEntity documentData;
 
     @Override

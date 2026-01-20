@@ -18,6 +18,8 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Test application for Microblink provider integration tests.
@@ -25,5 +27,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "com.wultra.app.onboardingserver.common.database")
+@EntityScan(basePackages = "com.wultra.app.onboardingserver.common.database.entity")
 class EnrollmentServerTestApplication {
 }

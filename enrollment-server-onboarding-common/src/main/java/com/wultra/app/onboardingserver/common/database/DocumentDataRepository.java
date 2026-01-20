@@ -35,9 +35,6 @@ import java.util.Date;
 public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
 
     @Modifying
-    int deleteAllByActivationId(String activationId);
-
-    @Modifying
     @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
     int cleanupDocumentData(Date dateCleanup);
 

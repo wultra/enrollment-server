@@ -23,11 +23,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity representing document data.
@@ -46,8 +46,6 @@ public class DocumentDataEntity implements Serializable {
     private static final long serialVersionUID = 7685715667785423079L;
 
     @Id
-    @GeneratedValue
-    @UuidGenerator
     @Column(name = "id", nullable = false)
     private String id;
 
@@ -57,20 +55,23 @@ public class DocumentDataEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
-    @OneToOne(mappedBy = "documentData", fetch = FetchType.EAGER)
+    @OneToOne(
+            mappedBy = "documentData",
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+    )
     private DocumentVerificationEntity documentVerification;
 
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (!(o instanceof final DocumentDataEntity that)) return false;
-//        return filename.equals(that.filename) && timestampCreated.equals(that.timestampCreated);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(filename, timestampCreated);
-//    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof final DocumentDataEntity that)) return false;
+        return id.equals(that.id) && timestampCreated.equals(that.timestampCreated);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, timestampCreated);
+    }
 
 }
 

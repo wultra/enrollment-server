@@ -19,8 +19,8 @@ package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
@@ -30,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -77,14 +75,16 @@ class MicroblinkConfig {
             @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
             MicroblinkConfigProperties properties,
             PowerAuthClient powerAuthClient,
-            DocumentDataRepository documentDataRepository
+            DocumentDataRepository documentDataRepository,
+            ProcessedDocumentDataRepository processedDocumentDataRepository
     ) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
                 properties.getMobileSdkLicenseKeys(),
                 powerAuthClient,
-                documentDataRepository
+                documentDataRepository,
+                processedDocumentDataRepository
         );
     }
 }
