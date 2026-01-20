@@ -117,7 +117,7 @@ Service for onboarding process approval.
 | `userId`                    | `String` | ID of a user stored on onboarding process.                                |
 | `identityVerificationId`    | `String` | ID of the identity verification subprocess.                               |
 | `provider`                  | `String` | Name of the configured external biometry provider. For example, `iProov`. |
-| `status`                    | `String` | Status of the identity verification process.                              |
+| `status`                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.      |
 | `score`                     | `Number` | Outcome confidence of the verification check on scale 0-10.               |
 | `presenceCheckResult.frame` | `String` | Photo/image from the biometry session, encoded in base64.                 |
 
