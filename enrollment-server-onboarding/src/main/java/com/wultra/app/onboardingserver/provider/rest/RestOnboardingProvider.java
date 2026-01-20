@@ -208,8 +208,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
                 .userId(source.userId())
                 .identityVerificationId(source.identityVerificationId())
                 .provider(source.provider())
-                .result(source.result())
-                .biometryData(source.biometryData())
+                .score(source.score())
+                .presenceCheckResult(new ApproveClientRequestDto.PresenceCheckResult(source.image()))
                 .build();
     }
 

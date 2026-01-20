@@ -31,8 +31,9 @@ import lombok.NonNull;
  * @param userId User ID.
  * @param identityVerificationId Identity verification ID.
  * @param provider Name of the configured external biometry provider. For example, {@code iProov}.
- * @param result Outcome of the verification check on scale 0-10.
- * @param biometryData Photo/image identifier from the biometry session, encoded in base64.
+ * @param status Status of the identity verification process.
+ * @param score Outcome confidence of the verification check on scale 0-10.
+ * @param image Photo/image from the biometry session, encoded in base64.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
@@ -43,7 +44,13 @@ public record ApproveClientRequest(
         @NonNull String userId,
         @NonNull String identityVerificationId,
         @NonNull String provider,
-        @NonNull Integer result,
-        @NonNull String biometryData
+        @NonNull Status status,
+        @NonNull Integer score,
+        @NonNull String image
 ) {
+
+    public enum Status {
+        SUCCESS,
+        FAILURE
+    }
 }

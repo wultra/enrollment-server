@@ -31,8 +31,10 @@ import lombok.extern.jackson.Jacksonized;
  * @param userId User ID.
  * @param identityVerificationId Identity verification ID.
  * @param provider Name of the configured external biometry provider. For example, {@code iProov}.
- * @param result Outcome of the verification check on scale 0-10.
- * @param biometryData Photo/image identifier from the biometry session, encoded in base64.
+ * @param status Status of the identity verification process.
+ * @param score Outcome confidence of the verification check on scale 0-10.
+ * @param presenceCheckResult Result of the presence check.
+ *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
@@ -43,7 +45,22 @@ record ApproveClientRequestDto(
         @NonNull String userId,
         @NonNull String identityVerificationId,
         @NonNull String provider,
-        @NonNull @Min(0) @Max(10) Integer result,
-        @NonNull String biometryData
+        @NonNull Status status,
+        @NonNull @Min(0) @Max(10) Integer score,
+        @NonNull PresenceCheckResult presenceCheckResult
 ) {
+
+    /**
+     * Result of the presence check.
+     *
+     * @param frame Photo/image from the biometry session, encoded in base64.
+     */
+    public record PresenceCheckResult(
+            @NonNull String frame
+    ) {}
+
+    public enum Status {
+        SUCCESS,
+        FAILURE
+    }
 }
