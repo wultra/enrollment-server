@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeApproveClientRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeApproveClientResponse;
+import com.wultra.app.onboardingserver.impl.AcknowledgeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 class PrivateClientController {
 
+    private final AcknowledgeService acknowledgeService;
+
     /**
      * Acknowledge client approval in the case of asynchronous mode.
      *
@@ -47,7 +50,7 @@ class PrivateClientController {
     public AcknowledgeApproveClientResponse acknowledgeApproveClient(final @Valid @RequestBody AcknowledgeApproveClientRequest request) {
         logger.info("action: acknowledgeApproveClient, state: initiated, processId: {}", request.processId());
 
-        final AcknowledgeApproveClientResponse response = null; // TODO Lubos
+        final AcknowledgeApproveClientResponse response = acknowledgeService.acknowledgeApproveClient(request);
 
         if (response.result() == AcknowledgeApproveClientResponse.Result.OK) {
             logger.info("action: acknowledgeApproveClient, state: succeeded");
