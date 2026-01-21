@@ -37,7 +37,7 @@ import java.util.*;
  */
 @Getter
 @Setter
-@ToString(of = {"id", "type"})
+@ToString(of = {"id", "type", "uploadId"})
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_verification")

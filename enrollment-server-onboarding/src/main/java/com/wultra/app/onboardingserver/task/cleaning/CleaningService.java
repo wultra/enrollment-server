@@ -150,7 +150,7 @@ class CleaningService {
      * Cleanup of large documents older than retention time.
      */
     @Transactional
-    public void cleanupLargeDocuments() {
+    public void cleanupDocumentData() {
         documentDataRepository.cleanupDocumentData(getDataRetentionTime());
     }
 

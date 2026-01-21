@@ -36,7 +36,6 @@ import java.util.Objects;
  */
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Entity
 @Table(name = "es_document_data")

@@ -90,11 +90,11 @@ class CleaningServiceTest {
 
     @Test
     @Sql
-    void testCleanupLargeDocuments() {
+    void testCleanupDocumentData() {
         final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
         final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
 
-        tested.cleanupLargeDocuments();
+        tested.cleanupDocumentData();
 
         assertNotNull(fetchDocumentData(id1));
         assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");

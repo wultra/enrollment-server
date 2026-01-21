@@ -37,6 +37,11 @@ The following changes were made to the onboarding start endpoint:
 - Added a new optional response field `activationCode` to return activation code and a mandatory field `activationType`.
 
 
+### Removing large file upload endpoint
+
+Endpoint `POST api/identity/document/upload` was removed because it was never used in production.
+
+
 ## External Onboarding Services Changes
 
 

@@ -147,30 +147,6 @@ public class IdentityVerificationController {
     }
 
     /**
-     * Upload a single document related to identity verification. This endpoint is used for upload of large documents.
-     * @param requestData Binary request data.
-     * @param encryptionContext Encryption context.
-     * @return Document upload response.
-     * @throws IdentityVerificationException Thrown when identity verification was not found.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
-     * @throws DocumentVerificationException Thrown when document is invalid.
-     * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
-     */
-    @PostMapping("document/upload")
-    @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    @PowerAuthToken(authenticationCodeType = {
-            PowerAuthCodeType.POSSESSION
-    })
-    public ObjectResponse<DocumentUploadResponse> uploadDocument(@EncryptedRequestBody byte[] requestData,
-                                                                 @Parameter(hidden = true) EncryptionContext encryptionContext,
-                                                                 @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
-
-        return identityVerificationRestService.uploadDocument(requestData, encryptionContext, apiAuthentication);
-    }
-
-    /**
      * Check status of document verification related to identity.
      * @param request Document status request.
      * @param apiAuthentication PowerAuth authentication.

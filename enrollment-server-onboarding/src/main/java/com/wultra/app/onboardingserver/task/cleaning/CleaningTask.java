@@ -96,7 +96,7 @@ public class CleaningTask {
     public void cleanupLargeDocuments() {
         LockAssert.assertLocked();
         logger.debug("cleanupLargeDocuments");
-        cleaningService.cleanupLargeDocuments();
+        cleaningService.cleanupDocumentData();
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
