@@ -108,6 +108,12 @@ public class DocumentVerificationEntity implements Serializable {
     private String filename;
 
     /**
+     * Upload identifier in remote document verification system
+     */
+    @Column(name = "upload_id")
+    private String uploadId;
+
+    /**
      * Verification identifier in remote document verification system
      */
     @Column(name = "verification_id")
@@ -199,13 +205,6 @@ public class DocumentVerificationEntity implements Serializable {
     @OneToMany(mappedBy = "documentVerification", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated desc")
     private Set<DocumentResultEntity> results = new LinkedHashSet<>();
-
-    /**
-     * Content of uploaded document.
-     */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "upload_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "es_document_verification_upload_id_fk"))
-    private DocumentDataEntity documentData;
 
     @Override
     public boolean equals(Object o) {

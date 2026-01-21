@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.microblink;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
@@ -76,7 +77,8 @@ class MicroblinkConfig {
             MicroblinkConfigProperties properties,
             PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
-            ProcessedDocumentDataRepository processedDocumentDataRepository
+            ProcessedDocumentDataRepository processedDocumentDataRepository,
+            DocumentVerificationRepository documentVerificationRepository
     ) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
@@ -84,7 +86,8 @@ class MicroblinkConfig {
                 properties.getMobileSdkLicenseKeys(),
                 powerAuthClient,
                 documentDataRepository,
-                processedDocumentDataRepository
+                processedDocumentDataRepository,
+                documentVerificationRepository
         );
     }
 }

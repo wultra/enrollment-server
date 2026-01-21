@@ -55,12 +55,6 @@ public class DocumentDataEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
-    @OneToOne(
-            mappedBy = "documentData",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
-    )
-    private DocumentVerificationEntity documentVerification;
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

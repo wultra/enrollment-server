@@ -28,25 +28,13 @@
 
     <changeSet id="2" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
-            <not>
-                <foreignKeyConstraintExists foreignKeyName="es_document_verification_upload_id_fk" />
-            </not>
-        </preConditions>
-        <comment>Create a new foreign key es_document_verification_upload_id_fk</comment>
-        <addForeignKeyConstraint baseTableName="es_document_verification" baseColumnNames="upload_id"
-                                 constraintName="es_document_verification_upload_id_fk" referencedTableName="es_document_data"
-                                 referencedColumnNames="id" />
-    </changeSet>
-
-    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
-        <preConditions onFail="MARK_RAN">
             <columnExists tableName="es_document_data" columnName="activation_id" />
         </preConditions>
         <comment>Remove column activation_id from es_document_data</comment>
         <dropColumn tableName="es_document_data" columnName="activation_id" />
     </changeSet>
 
-    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="es_document_data" foreignKeyName="es_document_data_identity_verification_id_fk"/>
         </preConditions>
@@ -59,7 +47,7 @@
         </rollback>
     </changeSet>
 
-    <changeSet id="5" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <columnExists tableName="es_document_data" columnName="identity_verification_id" />
         </preConditions>
@@ -67,7 +55,7 @@
         <dropColumn tableName="es_document_data" columnName="identity_verification_id" />
     </changeSet>
 
-    <changeSet id="6" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+    <changeSet id="5" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <columnExists tableName="es_document_data" columnName="filename" />
         </preConditions>

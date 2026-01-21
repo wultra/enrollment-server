@@ -26,6 +26,7 @@ import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
@@ -40,15 +41,16 @@ import com.wultra.core.rest.client.base.RestClientException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -65,6 +67,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final PowerAuthClient powerAuthClient;
     private final DocumentDataRepository documentDataRepository;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final DocumentVerificationRepository documentVerificationRepository;
 
     public MicroblinkDocumentVerificationProvider(
             RestClient microblinkRestClient,
@@ -72,7 +75,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys,
             PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
-            ProcessedDocumentDataRepository processedDocumentDataRepository
+            ProcessedDocumentDataRepository processedDocumentDataRepository,
+            DocumentVerificationRepository documentVerificationRepository
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
@@ -84,6 +88,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.powerAuthClient = powerAuthClient;
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
+        this.documentVerificationRepository = documentVerificationRepository;
     }
 
     @Override
@@ -163,11 +168,15 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var documentsData = StreamSupport.stream(documentDataRepository.findAllById(uploadIds).spliterator(), false)
                 .toList();
 
+        final var documentVerificationByUploadId = documentVerificationRepository.findAllByUploadIds(uploadIds)
+                .stream()
+                .collect(Collectors.toMap(DocumentVerificationEntity::getUploadId, Function.identity()));
+
         if (CollectionUtils.isEmpty(documentsData)) {
             throw new DocumentVerificationException("No document data found for uploadIds: %s".formatted(uploadIds));
         }
 
-        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsData);
+        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsData, documentVerificationByUploadId);
 
         final var facePhotoExtractionDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(documentsByTypeAndSide::containsKey)
@@ -182,10 +191,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         for (final var documentsOfSameType : documentsByTypeAndSide.entrySet()) {
             final var documentType = documentsOfSameType.getKey();
-            final var documentFront = documentsOfSameType.getValue().getOrDefault(CardSide.FRONT, null);
-            final var documentBack = documentsOfSameType.getValue().getOrDefault(CardSide.BACK, null);
+            final var documentDataFront = documentsOfSameType.getValue().getOrDefault(CardSide.FRONT, null);
+            final var documentDataBack = documentsOfSameType.getValue().getOrDefault(CardSide.BACK, null);
 
-            final var parsedResponse = sendApiRequest(documentFront, documentBack);
+            final var parsedResponse = sendApiRequest(documentDataFront, documentDataBack);
 
             documentCheckResults.add(parsedResponse.verification().result());
 
@@ -196,10 +205,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             putDocumentCrosscheckData(overallExtraction, documentsCrosscheckData);
 
             if (documentType == facePhotoExtractionDocumentType) {
-                storeFacePhoto(parsedResponse, documentFront, documentBack);
+                final var facePhotoId = findFacePhotoId(documentDataFront, documentDataBack, documentVerificationByUploadId);
+                storeFacePhoto(parsedResponse, facePhotoId);
             }
 
-            final var documentsVerificationResult = buildDocumentVerificationResults(documentFront.getId(), documentBack.getId(), parsedResponse);
+            final var documentsVerificationResult = buildDocumentVerificationResults(documentDataFront.getId(), documentDataBack.getId(), parsedResponse);
             documentVerificationResults.addAll(documentsVerificationResult);
         }
 
@@ -217,22 +227,15 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private void storeFacePhoto(
             final DocumentVerificationParsedResponse parsedResponse,
-            final DocumentDataEntity documentFront,
-            final DocumentDataEntity documentBack
+            final String facePhotoId
     ) throws DocumentVerificationException {
-        final var verificationEntity = Optional.ofNullable(documentFront)
-                .map(DocumentDataEntity::getDocumentVerification)
-                .orElse(documentBack.getDocumentVerification());
-
         final var faceImageBase64 = Optional.ofNullable(parsedResponse.images())
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(image -> image.name().equals("FaceImage"))
                 .findFirst()
                 .map(DocumentVerificationParsedResponse.Image::base64)
-                .orElseThrow(() -> new DocumentVerificationException("Face image not extracted from document of type %s".formatted(verificationEntity.getType())));
-
-        final var facePhotoId = verificationEntity.getPhotoId();
+                .orElseThrow(() -> new DocumentVerificationException("Face image not extracted for face photo id: %s".formatted(facePhotoId)));
 
         final var facePhotoDocumentData = new ProcessedDocumentDataEntity();
         facePhotoDocumentData.setId(facePhotoId);
@@ -276,12 +279,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
         logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
 
-        for (DocumentDataEntity documentData : documentDataRepository.findAllById(uploadIds)) {
-            Optional.ofNullable(documentData)
-                    .map(DocumentDataEntity::getDocumentVerification)
-                    .ifPresent(documentVerification -> documentVerification.setDocumentData(null));
-        }
+        final var documentVerifications = documentVerificationRepository.findAllByUploadIds(uploadIds);
+        documentVerifications.forEach(i -> i.setUploadId(null));
 
+        documentVerificationRepository.saveAll(documentVerifications);
         documentDataRepository.deleteAllById(uploadIds);
 
         logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");
@@ -382,11 +383,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private static Map<DocumentType, Map<CardSide, DocumentDataEntity>> groupDocumentsByTypeAndSide(
-            final List<DocumentDataEntity> documentsData
+            final List<DocumentDataEntity> documentsData,
+            final Map<String, DocumentVerificationEntity> documentVerificationByUploadId
     ) throws DocumentVerificationException {
         final var documentsByTypeAndSide = new EnumMap<DocumentType, Map<CardSide, DocumentDataEntity>>(DocumentType.class);
         for (final var documentData : documentsData) {
-            final var documentVerification = Optional.ofNullable(documentData.getDocumentVerification())
+            final var documentVerification = Optional.ofNullable(documentVerificationByUploadId.getOrDefault(documentData.getId(), null))
                     .orElseThrow(() -> new DocumentVerificationException("Missing document verification for document data id: %s".formatted(documentData.getId())));
 
             final var documentsOfSameType = documentsByTypeAndSide.computeIfAbsent(documentVerification.getType(), k -> new EnumMap<>(CardSide.class));
@@ -511,5 +513,23 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         } catch (PowerAuthClientException e) {
             throw new RemoteCommunicationException("Error when fetching mobile platform", e);
         }
+    }
+
+    private static String findFacePhotoId(
+            final DocumentDataEntity frontDocument,
+            final DocumentDataEntity backDocument,
+            final Map<String, DocumentVerificationEntity> documentVerificationByUploadId
+    ) throws DocumentVerificationException {
+        final var uploadIds = Stream.of(frontDocument, backDocument)
+                .filter(Objects::nonNull)
+                .map(DocumentDataEntity::getId)
+                .toList();
+
+        return uploadIds.stream()
+                .map(documentVerificationByUploadId::get)
+                .filter(Objects::nonNull)
+                .map(DocumentVerificationEntity::getPhotoId)
+                .filter(Objects::nonNull)
+                .findFirst().orElseThrow(() -> new DocumentVerificationException("Face photo id not found for upload ids %s".formatted(uploadIds)));
     }
 }

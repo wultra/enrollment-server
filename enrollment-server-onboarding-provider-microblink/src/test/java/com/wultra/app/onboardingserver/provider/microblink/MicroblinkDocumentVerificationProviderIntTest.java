@@ -32,6 +32,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import jakarta.persistence.EntityManager;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -107,6 +108,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Autowired
     private ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @MockitoBean
     private PowerAuthClient powerAuthClient;
@@ -469,7 +473,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
             assertEquals(documentResult.getUploadId(), documentData.getId());
             assertArrayEquals(submittedDocument.getPhoto().getData(), documentData.getData());
             assertEquals(new Date().getTime(), documentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
-            assertNull(documentData.getDocumentVerification());
         }
     }
 
@@ -478,13 +481,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
         idCardFrontDocumentData.setId(ID_CARD_FRONT_UPLOAD_ID);
         idCardFrontDocumentData.setData(new byte[] { 1, 2 });
         idCardFrontDocumentData.setTimestampCreated(new Date());
-        final var idCardFrontDocumentDataSaved = documentDataRepository.save(idCardFrontDocumentData);
+        documentDataRepository.save(idCardFrontDocumentData);
 
         final var idCardBackDocumentData = new DocumentDataEntity();
         idCardBackDocumentData.setId(ID_CARD_BACK_UPLOAD_ID);
         idCardBackDocumentData.setData(new byte[] { 3, 4 });
         idCardBackDocumentData.setTimestampCreated(new Date());
-        final var idCardBackDocumentDataSaved = documentDataRepository.save(idCardBackDocumentData);
+        documentDataRepository.save(idCardBackDocumentData);
 
         final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
 
@@ -496,13 +499,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
         idCardFrontVerification.setProviderName("microblink");
         idCardFrontVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
         idCardFrontVerification.setFilename("id_card_front.jpeg");
-        idCardFrontVerification.setDocumentData(idCardFrontDocumentDataSaved);
+        idCardFrontVerification.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
         idCardFrontVerification.setVerificationId(UUID.randomUUID().toString());
         idCardFrontVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
         idCardFrontVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
         idCardFrontVerification.setTimestampCreated(new Date());
 
-        idCardFrontDocumentDataSaved.setDocumentVerification(idCardFrontVerification);
+        //idCardFrontDocumentDataSaved.setDocumentVerification(idCardFrontVerification);
 
         documentVerificationRepository.save(idCardFrontVerification);
 
@@ -514,15 +517,18 @@ class MicroblinkDocumentVerificationProviderIntTest {
         idCardBackVerification.setProviderName("microblink");
         idCardBackVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
         idCardBackVerification.setFilename("id_card_back.jpeg");
-        idCardBackVerification.setDocumentData(idCardBackDocumentDataSaved);
+        idCardBackVerification.setUploadId(ID_CARD_BACK_UPLOAD_ID);
         idCardBackVerification.setVerificationId(UUID.randomUUID().toString());
         idCardBackVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
         idCardBackVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
         idCardBackVerification.setTimestampCreated(new Date());
 
-        idCardBackDocumentDataSaved.setDocumentVerification(idCardBackVerification);
+        //idCardBackDocumentDataSaved.setDocumentVerification(idCardBackVerification);
 
         documentVerificationRepository.save(idCardBackVerification);
+
+        entityManager.flush();
+        entityManager.clear();
     }
 
     private void preparePhotoInDatabase() {

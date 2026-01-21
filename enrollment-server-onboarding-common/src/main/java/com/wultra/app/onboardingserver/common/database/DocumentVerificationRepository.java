@@ -71,6 +71,16 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.usedForVerification = true")
     List<DocumentVerificationEntity> findAllUsedForVerification(IdentityVerificationEntity identityVerification);
 
+    /**
+     * Find all upload identifiers related to a verification.
+     * @param verificationId Identification of the verification at the provider side.
+     * @return List of remote uploadIds related to the specified verification id
+     */
+    @Query("SELECT d.uploadId " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.verificationId = :verificationId")
+    List<String> findAllUploadIds(String verificationId);
+
     @Query("SELECT d " +
             "FROM DocumentVerificationEntity d " +
             "WHERE d.identityVerification = :identityVerification " +
@@ -106,4 +116,9 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.id IN :ids")
     void terminate(Collection<String> ids, Date timestamp, String errorDetail, ErrorOrigin errorOrigin);
+
+    @Query("SELECT d " +
+            "FROM DocumentVerificationEntity d " +
+            "WHERE d.uploadId IN :uploadId")
+    List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadId);
 }
