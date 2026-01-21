@@ -19,14 +19,10 @@ package com.wultra.app.onboardingserver.common.database.entity;
  */
 
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -64,6 +60,7 @@ public class ProcessedDocumentDataEntity implements Serializable {
     /**
      * Type of the processed document data.
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "data_type", nullable = false)
     private ProcessedDocumentDataType dataType;
 
@@ -76,8 +73,8 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!(o instanceof final DocumentDataEntity that)) return false;
-        return id.equals(that.getId()) && timestampCreated.equals(that.getTimestampCreated());
+        if (!(o instanceof final ProcessedDocumentDataEntity that)) return false;
+        return id.equals(that.id) && timestampCreated.equals(that.timestampCreated);
     }
 
     @Override

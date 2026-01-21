@@ -505,8 +505,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
         idCardFrontVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
         idCardFrontVerification.setTimestampCreated(new Date());
 
-        //idCardFrontDocumentDataSaved.setDocumentVerification(idCardFrontVerification);
-
         documentVerificationRepository.save(idCardFrontVerification);
 
         final var idCardBackVerification = new DocumentVerificationEntity();
@@ -522,8 +520,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
         idCardBackVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
         idCardBackVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
         idCardBackVerification.setTimestampCreated(new Date());
-
-        //idCardBackDocumentDataSaved.setDocumentVerification(idCardBackVerification);
 
         documentVerificationRepository.save(idCardBackVerification);
 

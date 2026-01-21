@@ -26,6 +26,12 @@ You have to insert at least one row into the table `es_onboarding_process_config
 Added a new column `target_activation_id` to the table `es_onboarding_process`.
 
 
+### Removing columns from `es_document_data` table
+
+Columns `activation_id`, `identity_verification_id` and `filename` are removed. This should not cause any data loss because 
+the table was never used in production and all these metadata are stored in `es_document_verification` table and 
+linked to `es_document_data` records via `upload_id` column.
+
 ## REST API Changes
 
 
