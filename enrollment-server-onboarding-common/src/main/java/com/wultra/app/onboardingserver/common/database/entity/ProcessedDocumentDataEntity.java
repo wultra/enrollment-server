@@ -40,7 +40,6 @@ import java.util.Objects;
  */
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Entity
 @Table(name = "es_processed_document_data")
@@ -49,16 +48,28 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 7685715667785423080L;
 
+    /**
+     * ID of the processed document data.
+     */
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
+    /**
+     * Processed document binary data.
+     */
     @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
+    /**
+     * Type of the processed document data.
+     */
     @Column(name = "data_type", nullable = false)
     private ProcessedDocumentDataType dataType;
 
+    /**
+     * Timestamp when the processed document data was created.
+     */
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
@@ -72,5 +83,14 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(id, timestampCreated);
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessedDocumentDataEntity(" +
+                "id=" + id +
+                ", data=" + (data != null ? "byte[" + data.length + "]" : null) +
+                ", dataType=" + dataType +
+                ", timestampCreated=" + timestampCreated + ")";
     }
 }

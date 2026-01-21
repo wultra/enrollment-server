@@ -507,6 +507,8 @@ public class IdentityVerificationService {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
 
+        // Delete document data
+        documentDataRepository.deleteAllById(uploadIds);
         // Set status of all not finished document verifications to failed
         documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
         // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification

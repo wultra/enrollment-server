@@ -18,11 +18,13 @@
 
 package com.wultra.app.onboardingserver.common.database.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -30,7 +32,7 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing document data.
+ * Entity representing document data uploaded from mobile SDK.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -44,13 +46,22 @@ public class DocumentDataEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 7685715667785423079L;
 
+    /***
+     * Document data ID referenced as {@link DocumentVerificationEntity#uploadId}.
+     */
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
+    /**
+     * Document binary data.
+     */
     @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
+    /**
+     * Timestamp when the document data was created.
+     */
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
@@ -64,6 +75,14 @@ public class DocumentDataEntity implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(id, timestampCreated);
+    }
+
+    @Override
+    public String toString() {
+        return "DocumentDataEntity(" +
+                "id=" + id +
+                ", data=" + (data != null ? "byte[" + data.length + "]" : null) +
+                ", timestampCreated=" + timestampCreated + ")";
     }
 
 }
