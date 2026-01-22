@@ -152,6 +152,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_REJECTED)
+                .end(OnboardingState.ONBOARDING_APPROVAL_FAILED)
+                .end(OnboardingState.ONBOARDING_APPROVAL_REJECTED)
                 .end(OnboardingState.COMPLETED_ACCEPTED)
                 .end(OnboardingState.COMPLETED_FAILED)
                 .end(OnboardingState.COMPLETED_REJECTED)
