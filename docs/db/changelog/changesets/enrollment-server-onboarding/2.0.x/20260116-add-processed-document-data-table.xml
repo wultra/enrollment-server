@@ -63,4 +63,28 @@
         <dropColumn tableName="es_document_data" columnName="filename" />
     </changeSet>
 
+    <changeSet id="6" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_document_data" indexName="es_document_data_timestamp_created_idx"/>
+            </not>
+        </preConditions>
+        <comment>Add index for table es_document_data column timestamp_created</comment>
+        <createIndex tableName="es_document_data" indexName="es_document_data_timestamp_created_idx">
+            <column name="timestamp_created" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="7" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions>
+            <not>
+                <indexExists tableName="es_document_verification" indexName="es_document_verification_upload_id_idx"/>
+            </not>
+        </preConditions>
+        <comment>Add index for table es_document_verification column upload_id</comment>
+        <createIndex tableName="es_document_verification" indexName="es_document_verification_upload_id_idx">
+            <column name="upload_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

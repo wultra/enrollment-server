@@ -25,6 +25,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -67,14 +68,34 @@ public class DocumentDataEntity implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof final DocumentDataEntity that)) return false;
-        return id.equals(that.id) && timestampCreated.equals(that.timestampCreated);
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null) {
+            return false;
+        }
+
+        final var oEffectiveClass = o instanceof HibernateProxy oProxy ?
+                oProxy.getHibernateLazyInitializer().getPersistentClass() :
+                o.getClass();
+        final var thisEffectiveClass = this instanceof HibernateProxy thisProxy ?
+                thisProxy.getHibernateLazyInitializer().getPersistentClass() :
+                this.getClass();
+
+        if (thisEffectiveClass != oEffectiveClass) {
+            return false;
+        }
+
+        final var entity = (DocumentDataEntity) o;
+        return getId() != null && Objects.equals(getId(), entity.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, timestampCreated);
+        return this instanceof HibernateProxy proxy ?
+                proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() :
+                getClass().hashCode();
     }
 
     @Override

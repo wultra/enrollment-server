@@ -1,5 +1,3 @@
-package com.wultra.app.onboardingserver.common.database.entity;
-
 /*
  * PowerAuth Enrollment Server
  * Copyright (C) 2026 Wultra s.r.o.
@@ -18,11 +16,14 @@ package com.wultra.app.onboardingserver.common.database.entity;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package com.wultra.app.onboardingserver.common.database.entity;
+
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -72,14 +73,33 @@ public class ProcessedDocumentDataEntity implements Serializable {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof final ProcessedDocumentDataEntity that)) return false;
-        return id.equals(that.id) && timestampCreated.equals(that.timestampCreated);
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null) {
+            return false;
+        }
+
+        final var oEffectiveClass = o instanceof HibernateProxy oProxy ?
+                oProxy.getHibernateLazyInitializer().getPersistentClass() :
+                o.getClass();
+        final var thisEffectiveClass = this instanceof HibernateProxy thisProxy?
+                thisProxy.getHibernateLazyInitializer().getPersistentClass() :
+                this.getClass();
+
+        if (thisEffectiveClass != oEffectiveClass) {
+            return false;
+        }
+        final var entity = (ProcessedDocumentDataEntity) o;
+        return getId() != null && Objects.equals(getId(), entity.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, timestampCreated);
+        return this instanceof HibernateProxy proxy ?
+                proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() :
+                getClass().hashCode();
     }
 
     @Override
