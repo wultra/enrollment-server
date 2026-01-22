@@ -31,6 +31,11 @@
     <artifactId>enrollment-server-onboarding-provider-innovatrics</artifactId>
     <name>Enrollment Server Onboarding Provider Innovatrics</name>
 
+    <properties>
+        <skipPublishing>true</skipPublishing>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.wultra.security</groupId>

@@ -33,6 +33,11 @@
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <skipPublishing>true</skipPublishing>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.wultra.security</groupId>
