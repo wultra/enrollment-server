@@ -44,7 +44,7 @@ public class PersistTargetStateAction implements Action<OnboardingState, Onboard
         final OnboardingState targetState = context.getTarget().getId();
 
         if (targetState.isChoiceState()) {
-            throw new IllegalStateException("Cannot persist identity verification for a choice state: " + targetState);
+            throw new IllegalStateException("Choice states must not be persisted, " + targetState);
         }
 
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
