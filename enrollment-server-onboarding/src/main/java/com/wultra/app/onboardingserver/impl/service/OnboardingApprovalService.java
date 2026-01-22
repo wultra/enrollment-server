@@ -19,7 +19,9 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveClientRequest;
@@ -41,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class OnboardingApprovalService {
 
     private final OnboardingServiceImpl onboardingService;
+
+    private final IdentityVerificationConfig config;
 
     private final OnboardingProvider onboardingProvider;
 
@@ -71,23 +75,25 @@ public class OnboardingApprovalService {
     public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         // TODO Lubos fill request
         /*
-        @NonNull String processType,
-        @NonNull String provider,
         @NonNull Status status,
         @NonNull Integer score,
         @NonNull String image
          */
-        final ApproveClientRequest request = ApproveClientRequest.builder()
-                .processId(identityVerification.getProcessId())
-                .userId(identityVerification.getUserId())
-                .identityVerificationId(identityVerification.getId())
-                .build();
-
         try {
+            final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
+
+            final ApproveClientRequest request = ApproveClientRequest.builder()
+                    .processId(identityVerification.getProcessId())
+                    .processType(process.getProcessConfiguration().getProcessType())
+                    .provider(config.getPresenceCheckProvider())
+                    .userId(identityVerification.getUserId())
+                    .identityVerificationId(identityVerification.getId())
+                    .build();
+
             final ApproveClientResponse response = onboardingProvider.approveClient(request);
             // TODO Lubos audit
             return response.result();
-        } catch (OnboardingProviderException e) {
+        } catch (OnboardingProviderException | OnboardingProcessException e) {
             logger.warn("Failed to approve client: {}", e.getMessage(), e);
             // TODO Lubos audit
             return null;
