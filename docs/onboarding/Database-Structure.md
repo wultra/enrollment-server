@@ -239,7 +239,7 @@ The configuration is stored as JSON. See the following example:
   "otpForIdentification": true,
   "otpForIdentityVerification": true,
   "useTemporaryActivation": true,
-  "approvalType": "SYNC",
+  "approvalEnabled": true,
   "documents": {
     "totalRequiredDocumentsCount": 2,
     "groups": [
