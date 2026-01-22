@@ -388,7 +388,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS)
-                .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_SUCCESS)
+                .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE)
                 .target(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
                 .action(persistTargetStateAction)
 

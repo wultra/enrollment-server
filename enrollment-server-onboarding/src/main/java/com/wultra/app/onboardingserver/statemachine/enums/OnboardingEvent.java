@@ -36,7 +36,7 @@ public enum OnboardingEvent {
     /**
      * Onboarding approval acknowledged event, success. Used if the approval is in async mode.
      */
-    ONBOARDING_APPROVAL_ACKNOWLEDGED_SUCCESS,
+    ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE,
 
     /**
      * Onboarding approval acknowledged event, reject. Used if the approval is in async mode.

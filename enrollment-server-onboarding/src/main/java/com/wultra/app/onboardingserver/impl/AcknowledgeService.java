@@ -22,11 +22,16 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.Acknowledge
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
+import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,12 +42,15 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @AllArgsConstructor
+@Slf4j
 @Transactional
 public class AcknowledgeService {
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
     private final IdentityVerificationRepository identityVerificationRepository;
+
+    private final StateMachineService stateMachineService;
 
     /**
      * Acknowledge client approval.
@@ -75,14 +83,34 @@ public class AcknowledgeService {
                     .build();
         }
 
-        if (request.evaluationResult() == AcknowledgeApproveClientRequest.EvaluationResult.OK) {
-            // TODO Lubos, fire event?
-        } else {
-            // TODO Lubos, fire event?
+        try {
+            final OwnerId ownerId = convert(identityVerification);
+            final OnboardingEvent event = convert(request.evaluationResult());
+            stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
+        } catch (IdentityVerificationException e) {
+            logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
+            return AcknowledgeApproveClientResponse.builder()
+                    .result(AcknowledgeApproveClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .build();
         }
 
         return AcknowledgeApproveClientResponse.builder()
                 .result(AcknowledgeApproveClientResponse.Result.OK)
                 .build();
+    }
+
+    private OnboardingEvent convert(final AcknowledgeApproveClientRequest.EvaluationResult source) {
+        return switch (source) {
+            case OK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE;
+            case NOK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT;
+        };
+    }
+
+    private static OwnerId convert(final IdentityVerificationEntity source) {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId(source.getActivationId());
+        ownerId.setUserId(source.getUserId());
+        return ownerId;
     }
 }
