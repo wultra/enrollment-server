@@ -16,6 +16,8 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
+import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
+import com.wultra.app.onboardingserver.statemachine.action.PersistTargetStateAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
@@ -27,10 +29,7 @@ import com.wultra.app.onboardingserver.statemachine.action.presencecheck.Presenc
 import com.wultra.app.onboardingserver.statemachine.action.verification.*;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import com.wultra.app.onboardingserver.statemachine.guard.PresenceCheckEnabledGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationEnabledGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.*;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
@@ -44,6 +43,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -104,6 +104,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final MoveToActivationFinishInAction moveToActivationFinishInAction;
 
+    private final OnboardingApprovalAction onboardingApprovalAction;
+
+    private final PersistTargetStateAction persistTargetStateAction;
+
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
@@ -125,6 +129,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private final TargetActivationFinishedGuard targetActivationFinishedGuard;
 
     private final TargetActivationEnabledGuard targetActivationEnabledGuard;
+
+    private final OnboardingApprovalEnabledGuard onboardingApprovalEnabledGuard;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
@@ -148,6 +154,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_COMPLETED_STATE)
                 .choice(OnboardingState.PRESENCE_CHECK_FAILED)
                 .choice(OnboardingState.PRESENCE_CHECK_REJECTED)
+                .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
+                .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
@@ -168,6 +176,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         configureDocumentVerificationFinalTransitions(transitions);
         configureClientEvaluationTransitions(transitions);
         configurePresenceCheckTransitions(transitions);
+        configureOnboardingApproval(transitions);
         configureOtpTransitions(transitions);
         configureActivationFinishTransitions(transitions);
         configureCompletedTransition(transitions);
@@ -358,6 +367,55 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.PRESENCE_CHECK_FAILED)
                 .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
                 .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
+    }
+
+    private void configureOnboardingApproval(final StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
+        transitions
+                // TODO Lubos move to CHOICE_ONBOARDING_APPROVAL_ENABLED from somewhere
+                .withChoice()
+                .source(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
+                .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT, onboardingApprovalEnabledGuard, onboardingApprovalAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE) // TODO Lubos handle disabled approval
+
+                .and()
+                .withChoice()
+                .source(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
+                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.EvaluationResult.OK), persistTargetStateAction)
+                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.EvaluationResult.WAIT), persistTargetStateAction)
+                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.EvaluationResult.NOK), persistTargetStateAction)
+                .last(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistTargetStateAction)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS)
+                .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_SUCCESS)
+                .target(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
+                .action(persistTargetStateAction)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS)
+                .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT)
+                .target(OnboardingState.ONBOARDING_APPROVAL_REJECTED)
+                .action(persistTargetStateAction)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .target(OnboardingState.CHOICE_COMPLETED_STATE); // TODO Lubos continue to OTP
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isApprovalResult(ApproveClientResponse.EvaluationResult expectedResult) {
+        return context -> evaluateApprovalResult(context, expectedResult);
+    }
+
+    private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.EvaluationResult expectedResult) {
+        final Object result = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
+        if (!(result instanceof ApproveClientResponse.EvaluationResult)) {
+            return false;
+        }
+        return result == expectedResult;
     }
 
     private void configureOtpTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

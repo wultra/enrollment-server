@@ -92,6 +92,9 @@ public enum OnboardingState {
 
     CHOICE_PRESENCE_CHECK_PROCESSING,
 
+    CHOICE_ONBOARDING_APPROVAL_ENABLED,
+    CHOICE_ONBOARDING_APPROVAL_RESULT,
+
     CHOICE_COMPLETED_STATE,
 
     UNEXPECTED_STATE;
@@ -110,9 +113,4 @@ public enum OnboardingState {
         this.phase = phase;
         this.status = status;
     }
-
-    public boolean isChoiceState() {
-        return choiceState;
-    }
-
 }
