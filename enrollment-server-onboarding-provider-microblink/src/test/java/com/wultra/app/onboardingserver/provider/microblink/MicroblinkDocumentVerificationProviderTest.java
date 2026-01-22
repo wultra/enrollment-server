@@ -747,13 +747,8 @@ class MicroblinkDocumentVerificationProviderTest {
         provider.cleanupDocuments(ownerId, uploadIds);
 
         // then
-        verify(documentVerificationRepository).saveAll(documentVerificationsEntityCaptor.capture());
-        assertTrue(documentVerificationsEntityCaptor.getValue()
-                .stream()
-                .allMatch(i -> i.getUploadId() == null)
-        );
-
         verify(documentDataRepository).deleteAllById(uploadIds);
+        verify(processedDocumentDataRepository).deleteAllById(Set.of(FACE_PHOTO_ID));
     }
 
     @Test

@@ -408,16 +408,17 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testCleanupDocuments_verificationDataFound_onlyDocumentDataAreDeleted() {
+    void testCleanupDocuments_verificationDataFound_allDocumentDataAreDeleted() {
         // given
         prepareVerificationDataInDatabase();
+        preparePhotoInDatabase();
 
         // when
         microblinkDocumentVerificationProvider.cleanupDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
 
         // then
         assertEquals(0, documentDataRepository.count());
-        assertEquals(2, documentVerificationRepository.count());
+        assertEquals(0, processedDocumentDataRepository.count());
     }
 
     private List<SubmittedDocument> buildSubmittedDocuments(final List<MicroblinkVerificationData.Document> documents) {

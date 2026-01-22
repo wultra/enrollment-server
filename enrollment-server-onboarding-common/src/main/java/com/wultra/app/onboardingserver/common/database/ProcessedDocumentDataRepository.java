@@ -19,8 +19,12 @@
 package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.Date;
 
 /**
  * Repository for processed document data records.
@@ -30,4 +34,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProcessedDocumentDataRepository extends CrudRepository<ProcessedDocumentDataEntity, String> {
 
+    /**
+     * Deletes all records created before the specified date.
+     *
+     * @param dateCleanup Date to clean up records before
+     * @return Number of deleted records.
+     */
+    @Modifying
+    @Query("DELETE FROM ProcessedDocumentDataEntity p WHERE p.timestampCreated < :dateCleanup")
+    int cleanup(final Date dateCleanup);
 }

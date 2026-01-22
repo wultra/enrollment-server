@@ -280,9 +280,14 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
 
         final var documentVerifications = documentVerificationRepository.findAllByUploadIds(uploadIds);
-        documentVerifications.forEach(i -> i.setUploadId(null));
 
-        documentVerificationRepository.saveAll(documentVerifications);
+        final var facePhotoIds = documentVerifications.stream()
+                .map(DocumentVerificationEntity::getPhotoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        processedDocumentDataRepository.deleteAllById(facePhotoIds);
+
         documentDataRepository.deleteAllById(uploadIds);
 
         logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");

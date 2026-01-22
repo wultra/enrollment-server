@@ -44,6 +44,7 @@ import com.wultra.app.onboardingserver.errorhandling.IdentityVerificationNotFoun
 import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocumentTypesCheck;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 public class IdentityVerificationService {
 
     private final IdentityVerificationConfig identityVerificationConfig;
@@ -83,51 +85,6 @@ public class IdentityVerificationService {
     private final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
 
     private final AuditService auditService;
-
-    /**
-     * Service constructor.
-     * @param identityVerificationConfig Identity verification config.
-     * @param documentDataRepository Document data repository.
-     * @param documentVerificationRepository Document verification repository.
-     * @param identityVerificationRepository Identity verification repository.
-     * @param documentProcessingService Document processing service.
-     * @param verificationProcessingService Verification processing service.
-     * @param documentVerificationProvider Document verification provider.
-     * @param identityVerificationLimitService Identity verification limit service.
-     * @param processService Common onboarding process service.
-     * @param processLimitService Onboarding process limit service.
-     * @param auditService Audit service.
-     */
-    @Autowired
-    IdentityVerificationService(
-            final IdentityVerificationConfig identityVerificationConfig,
-            final DocumentDataRepository documentDataRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final DocumentProcessingService documentProcessingService,
-            final VerificationProcessingService verificationProcessingService,
-            final DocumentVerificationProvider documentVerificationProvider,
-            final IdentityVerificationLimitService identityVerificationLimitService,
-            final CommonOnboardingService processService,
-            final OnboardingProcessLimitService processLimitService,
-            final RequiredDocumentTypesCheck requiredDocumentTypesCheck,
-            final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck,
-            final AuditService auditService) {
-
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.documentDataRepository = documentDataRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.documentProcessingService = documentProcessingService;
-        this.verificationProcessingService = verificationProcessingService;
-        this.documentVerificationProvider = documentVerificationProvider;
-        this.identityVerificationLimitService = identityVerificationLimitService;
-        this.processService = processService;
-        this.processLimitService = processLimitService;
-        this.requiredDocumentTypesCheck = requiredDocumentTypesCheck;
-        this.identityVerificationPrecompleteCheck = identityVerificationPrecompleteCheck;
-        this.auditService = auditService;
-    }
 
     /**
      * Finds the current verification identity
@@ -507,10 +464,9 @@ public class IdentityVerificationService {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
 
-        // Delete document data
-        documentDataRepository.deleteAllById(uploadIds);
         // Set status of all not finished document verifications to failed
         documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
+
         // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification
         identityVerificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.CLEANUP, "reset due to cleanup");
     }
