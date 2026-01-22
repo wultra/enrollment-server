@@ -26,8 +26,8 @@ import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
  */
 @Service
 @Slf4j
+@AllArgsConstructor
 class CleaningService {
 
     /**
@@ -66,30 +67,11 @@ class CleaningService {
 
     private final DocumentDataRepository documentDataRepository;
 
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+
     private final OnboardingOtpRepository onboardingOtpRepository;
 
     private final AuditService auditService;
-
-    @Autowired
-    public CleaningService(
-            final OnboardingConfig onboardingConfig,
-            final IdentityVerificationConfig identityVerificationConfig,
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final DocumentDataRepository documentDataRepository,
-            final OnboardingOtpRepository onboardingOtpRepository,
-            final AuditService auditService) {
-
-        this.onboardingConfig = onboardingConfig;
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.documentDataRepository = documentDataRepository;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.auditService = auditService;
-    }
 
     /**
      * Terminate processes with expired activation.
@@ -150,8 +132,13 @@ class CleaningService {
      * Cleanup of large documents older than retention time.
      */
     @Transactional
-    public void cleanupLargeDocuments() {
-        documentDataRepository.cleanupDocumentData(getDataRetentionTime());
+    public int cleanupDocumentData() {
+        return documentDataRepository.cleanupDocumentData(getDataRetentionTime());
+    }
+
+    @Transactional
+    public int cleanupProcessedDocumentData() {
+        return processedDocumentDataRepository.cleanup(getDataRetentionTime());
     }
 
     /**

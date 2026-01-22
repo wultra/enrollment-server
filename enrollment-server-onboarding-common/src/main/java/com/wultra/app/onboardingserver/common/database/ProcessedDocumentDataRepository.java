@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,7 +18,7 @@
 
 package com.wultra.app.onboardingserver.common.database;
 
-import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -27,15 +27,20 @@ import org.springframework.stereotype.Repository;
 import java.util.Date;
 
 /**
- * Repository for document data records.
+ * Repository for processed document data records.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Repository
-public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
+public interface ProcessedDocumentDataRepository extends CrudRepository<ProcessedDocumentDataEntity, String> {
 
+    /**
+     * Deletes all records created before the specified date.
+     *
+     * @param dateCleanup Date to clean up records before
+     * @return Number of deleted records.
+     */
     @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
-
+    @Query("DELETE FROM ProcessedDocumentDataEntity p WHERE p.timestampCreated < :dateCleanup")
+    int cleanup(final Date dateCleanup);
 }

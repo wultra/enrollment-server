@@ -352,21 +352,6 @@ public class DocumentProcessingService {
     }
 
     /**
-     * Upload a single document related to identity verification.
-     * @param idVerification Identity verification entity.
-     * @param requestData Binary document data.
-     * @param ownerId Owner identification.
-     * @return Persisted document metadata of the uploaded document.
-     * @throws DocumentVerificationException Thrown when document is invalid.
-     */
-    @Transactional
-    public DocumentMetadata uploadDocument(IdentityVerificationEntity idVerification, byte[] requestData, OwnerId ownerId) throws DocumentVerificationException {
-        // TODO consider limiting the amount (count, space) of currently uploaded documents per ownerId
-        Document document = dataExtractionService.extractDocument(requestData);
-        return persistDocumentData(idVerification, ownerId, document);
-    }
-
-    /**
      * Pairs documents with two sides, front side will be linked to the back side and vice versa.
      * @param documents Documents to be checked on two sides linkin
      */
@@ -385,31 +370,6 @@ public class DocumentProcessingService {
                         documentVerificationRepository.setOtherDocumentSide(item.getId(), document.getId());
                     });
         }
-    }
-
-    /**
-     * Persist a document into database.
-     * @param idVerification Identity verification entity.
-     * @param ownerId Owner identification
-     * @param document Document to be persisted.
-     * @return Persisted document metadata.
-     */
-    private DocumentMetadata persistDocumentData(IdentityVerificationEntity idVerification, OwnerId ownerId, Document document) {
-        DocumentDataEntity entity = new DocumentDataEntity();
-        entity.setActivationId(ownerId.getActivationId());
-        entity.setIdentityVerification(idVerification);
-        entity.setFilename(document.getFilename());
-        entity.setData(document.getData());
-        entity.setTimestampCreated(ownerId.getTimestamp());
-        entity = documentDataRepository.save(entity);
-
-        document.setId(entity.getId());
-
-        // Return document metadata only
-        DocumentMetadata persistedDocument = new DocumentMetadata();
-        persistedDocument.setId(entity.getId());
-        persistedDocument.setFilename(entity.getFilename());
-        return persistedDocument;
     }
 
     private DocumentResultEntity createDocumentResult(

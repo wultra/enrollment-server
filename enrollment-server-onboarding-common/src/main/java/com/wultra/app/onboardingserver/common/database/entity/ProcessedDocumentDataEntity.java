@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2021 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,10 +18,8 @@
 
 package com.wultra.app.onboardingserver.common.database.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -33,41 +31,48 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * Entity representing document data uploaded from mobile SDK.
+ * Entity representing document data processed by provider.
  *
- * @author Roman Strobl, roman.strobl@wultra.com
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "es_document_data")
-public class DocumentDataEntity implements Serializable {
+@Table(name = "es_processed_document_data")
+public class ProcessedDocumentDataEntity implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 7685715667785423079L;
+    private static final long serialVersionUID = 7685715667785423080L;
 
-    /***
-     * Document data ID referenced as {@link DocumentVerificationEntity#uploadId}.
+    /**
+     * ID of the processed document data.
      */
     @Id
     @Column(name = "id", nullable = false)
     private String id;
 
     /**
-     * Document binary data.
+     * Processed document binary data.
      */
     @Column(name = "data", nullable = false, columnDefinition = "CLOB")
     private byte[] data;
 
     /**
-     * Timestamp when the document data was created.
+     * Type of the processed document data.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "data_type", nullable = false)
+    private ProcessedDocumentDataType dataType;
+
+    /**
+     * Timestamp when the processed document data was created.
      */
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -79,15 +84,14 @@ public class DocumentDataEntity implements Serializable {
         final var oEffectiveClass = o instanceof HibernateProxy oProxy ?
                 oProxy.getHibernateLazyInitializer().getPersistentClass() :
                 o.getClass();
-        final var thisEffectiveClass = this instanceof HibernateProxy thisProxy ?
+        final var thisEffectiveClass = this instanceof HibernateProxy thisProxy?
                 thisProxy.getHibernateLazyInitializer().getPersistentClass() :
                 this.getClass();
 
         if (thisEffectiveClass != oEffectiveClass) {
             return false;
         }
-
-        final var entity = (DocumentDataEntity) o;
+        final var entity = (ProcessedDocumentDataEntity) o;
         return getId() != null && Objects.equals(getId(), entity.getId());
     }
 
@@ -100,11 +104,10 @@ public class DocumentDataEntity implements Serializable {
 
     @Override
     public String toString() {
-        return "DocumentDataEntity(" +
+        return "ProcessedDocumentDataEntity(" +
                 "id=" + id +
                 ", data=" + (data != null ? "byte[" + data.length + "]" : null) +
+                ", dataType=" + dataType +
                 ", timestampCreated=" + timestampCreated + ")";
     }
-
 }
-

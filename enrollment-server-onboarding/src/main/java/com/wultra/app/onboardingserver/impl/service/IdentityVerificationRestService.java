@@ -386,42 +386,6 @@ public class IdentityVerificationRestService {
     }
 
     /**
-     * Upload a single document related to identity verification. This endpoint is used for upload of large documents.
-     * @param requestData Binary request data.
-     * @param encryptionContext Encryption context.
-     * @return Document upload response.
-     * @throws IdentityVerificationException Thrown when identity verification was not found.
-     * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
-     * @throws DocumentVerificationException Thrown when document is invalid.
-     * @throws OnboardingProcessException Thrown when finished onboarding process is not found.
-     */
-    public ObjectResponse<DocumentUploadResponse> uploadDocument(byte[] requestData,
-                                                                 EncryptionContext encryptionContext,
-                                                                 PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, OnboardingProcessException {
-
-        final String operationDescription = "uploading document for verification";
-        checkApiAuthentication(apiAuthentication, operationDescription);
-        checkEncryptionContext(encryptionContext, operationDescription);
-        checkRequest(requestData, operationDescription);
-
-        // Extract user ID from onboarding process for current activation
-        final OwnerId ownerId = extractOwnerId(encryptionContext);
-
-        logger.debug("Onboarding process will not be locked, {}", ownerId);
-        IdentityVerificationEntity idVerification = identityVerificationService.findBy(ownerId);
-
-        final DocumentMetadata uploadedDocument = documentProcessingService.uploadDocument(idVerification, requestData, ownerId);
-
-        final DocumentUploadResponse response = new DocumentUploadResponse();
-        response.setFilename(uploadedDocument.getFilename());
-        response.setId(uploadedDocument.getId());
-
-        return new ObjectResponse<>(response);
-    }
-
-    /**
      * Check status of document verification related to identity.
      * @param request Document status request.
      * @param apiAuthentication PowerAuth authentication.

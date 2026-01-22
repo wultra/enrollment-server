@@ -19,7 +19,9 @@ package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
@@ -29,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -70,37 +70,24 @@ class MicroblinkConfig {
         return new DocumentVerificationResponseParser(objectMapper);
     }
 
-    @Bean("microblinkCacheManager")
-    public CacheManager cacheManager(final MicroblinkConfigProperties properties) {
-        logger.info("Registering Microblink CacheManager");
-
-        final var caffeineBuilder = Caffeine.newBuilder()
-                .expireAfterWrite(properties.getCacheRecordTTL());
-
-        final var cacheManager = new CaffeineCacheManager(
-                MicroblinkConfigProperties.DOCUMENTS_CACHE_NAME,
-                MicroblinkConfigProperties.PHOTO_CACHE_NAME
-        );
-
-        cacheManager.setCaffeine(caffeineBuilder);
-
-        return cacheManager;
-    }
-
     @Bean
     public MicroblinkDocumentVerificationProvider microblinkDocumentVerificationProvider(
-            @Qualifier("microblinkCacheManager") CacheManager cacheManager,
             @Qualifier("microblinkRestClient") RestClient restClient,
             @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
             MicroblinkConfigProperties properties,
-            PowerAuthClient powerAuthClient
+            PowerAuthClient powerAuthClient,
+            DocumentDataRepository documentDataRepository,
+            ProcessedDocumentDataRepository processedDocumentDataRepository,
+            DocumentVerificationRepository documentVerificationRepository
     ) {
         return new MicroblinkDocumentVerificationProvider(
-                cacheManager,
                 restClient,
                 responseParser,
                 properties.getMobileSdkLicenseKeys(),
-                powerAuthClient
+                powerAuthClient,
+                documentDataRepository,
+                processedDocumentDataRepository,
+                documentVerificationRepository
         );
     }
 }
