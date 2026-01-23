@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * The guards whether the onboarding approval is enabled.
+ * The guard that checks whether the onboarding approval is enabled.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */

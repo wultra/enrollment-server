@@ -103,7 +103,7 @@ If configured, the system waits for the event from an external system to continu
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/api/onboarding/client/approve</code></td>
+        <td><code>/api/private/client/approve</code></td>
     </tr>
 </table>
 <!-- end -->
