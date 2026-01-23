@@ -151,8 +151,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .choice(OnboardingState.CHOICE_COMPLETED_STATE)
-                .choice(OnboardingState.PRESENCE_CHECK_FAILED)
-                .choice(OnboardingState.PRESENCE_CHECK_REJECTED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
                 .choice(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED)
@@ -348,16 +346,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .last(OnboardingState.UNEXPECTED_STATE)
 
                 .and()
-                .withChoice()
+                .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_REJECTED)
-                .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
+                .target(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
 
                 .and()
-                .withChoice()
+                .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_FAILED)
-                .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
+                .target(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED);
     }
 
     private void configureOnboardingApproval(final StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
