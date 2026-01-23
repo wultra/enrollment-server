@@ -17,9 +17,10 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -53,6 +54,8 @@ public class OnboardingApprovalService {
 
     private final OnboardingProvider onboardingProvider;
 
+    private final ScaResultRepository scaResultRepository;
+
     private final AuditService auditService;
 
     private final RetryTemplate retryTemplate = RetryTemplate.builder()
@@ -80,13 +83,16 @@ public class OnboardingApprovalService {
      * Call the onboarding provider to approve the client.
      *
      * @param identityVerification identity verification to process
-     * @param ownerId Owner identification.
      * @return approval result, may be {@code null} if the approval failed
      */
-    @Transactional
-    public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+    @Transactional(readOnly = true)
+    public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification) {
         try {
             final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
+
+            final ScaResultEntity.Result presenceCheckResult = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification)
+                    .orElseThrow(() -> new OnboardingProviderException("No SCA result found for identity verificationId: " + identityVerification.getId()))
+                    .getPresenceCheckResult();
 
             final ApproveClientRequest request = ApproveClientRequest.builder()
                     .processId(identityVerification.getProcessId())
@@ -94,9 +100,9 @@ public class OnboardingApprovalService {
                     .provider(config.getPresenceCheckProvider())
                     .userId(identityVerification.getUserId())
                     .identityVerificationId(identityVerification.getId())
-                    .status(ApproveClientRequest.Status.SUCCESS) // TODO Lubos
-                    .score(100) // TODO Lubos
-                    .image("TODO") // TODO Lubos
+                    .status(convert(presenceCheckResult))
+                    .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                    .image("TODO") // TODO Lubos fill image
                     .build();
 
             final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
@@ -123,5 +129,12 @@ public class OnboardingApprovalService {
         }
 
         return onboardingProvider.approveClient(request);
+    }
+
+    private static ApproveClientRequest.Status convert(final ScaResultEntity.Result source) {
+        return switch (source) {
+            case SUCCESS -> ApproveClientRequest.Status.SUCCESS;
+            case FAILED -> ApproveClientRequest.Status.FAILURE;
+        };
     }
 }

@@ -17,11 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
@@ -30,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,6 +52,9 @@ class OnboardingApprovalServiceTest {
 
     @MockitoBean
     private OnboardingProvider onboardingProvider;
+
+    @MockitoBean
+    private ScaResultRepository scaResultRepository;
 
     @Autowired
     private OnboardingApprovalService tested;
@@ -75,7 +81,12 @@ class OnboardingApprovalServiceTest {
                         .result(ApproveClientResponse.EvaluationResult.OK)
                         .build());
 
-        final ApproveClientResponse.EvaluationResult result = tested.approve(identityVerification, new OwnerId());
+        final ScaResultEntity scaResult = new ScaResultEntity();
+        scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
+        when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(any()))
+                .thenReturn(Optional.of(scaResult));
+
+        final ApproveClientResponse.EvaluationResult result = tested.approve(identityVerification);
 
         assertEquals(ApproveClientResponse.EvaluationResult.OK, result);
     }
