@@ -31,7 +31,7 @@ All error responses that are produced by the Onboarding Server have the followin
 
 ##  API Endpoints
 
-<!-- begin api POST /api/onboarding/client/evaluate -->
+<!-- begin api POST /api/private/client/evaluate -->
 ###  Client Evaluation
 
 If configured, the system waits for the event from an external system to continue with "client evaluation" phase. Use the endpoint bellow to proceed.
@@ -44,7 +44,7 @@ If configured, the system waits for the event from an external system to continu
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/api/onboarding/client/evaluate</code></td>
+        <td><code>/api/private/client/evaluate</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -90,7 +90,7 @@ If configured, the system waits for the event from an external system to continu
 | `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess). |
 <!-- end -->
 
-<!-- begin api POST /api/onboarding/client/approve -->
+<!-- begin api POST /api/private/client/approve -->
 ### Onboarding Approval
 
 If configured, the system waits for the event from an external system to continue with "onboarding approval" phase. Use the endpoint below to proceed.
