@@ -35,7 +35,7 @@ import lombok.NonNull;
 @PublicApi
 public record ApproveClientResponse(
         @NonNull EvaluationResult result,
-        @NonNull String resultReason
+        String resultReason
 ) {
     public enum EvaluationResult {
         OK,
