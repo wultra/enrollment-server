@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2025 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -28,8 +28,10 @@ import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
 import jakarta.annotation.Nullable;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +42,10 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OnboardingApprovalService {
+
+    private static final int MAX_ATTEMPTS = 3;
 
     private final OnboardingServiceImpl onboardingService;
 
@@ -50,6 +54,11 @@ public class OnboardingApprovalService {
     private final OnboardingProvider onboardingProvider;
 
     private final AuditService auditService;
+
+    private final RetryTemplate retryTemplate = RetryTemplate.builder()
+                .maxAttempts(MAX_ATTEMPTS)
+                .exponentialBackoff(200, 2.0, 2_000)
+                .build();
 
     /**
      * Check if onboarding approval is enabled for the given process ID.
@@ -76,12 +85,6 @@ public class OnboardingApprovalService {
      */
     @Transactional
     public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        // TODO Lubos fill request
-        /*
-        @NonNull Status status,
-        @NonNull Integer score,
-        @NonNull String image
-         */
         try {
             final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
 
@@ -91,9 +94,13 @@ public class OnboardingApprovalService {
                     .provider(config.getPresenceCheckProvider())
                     .userId(identityVerification.getUserId())
                     .identityVerificationId(identityVerification.getId())
+                    .status(ApproveClientRequest.Status.SUCCESS) // TODO Lubos
+                    .score(100) // TODO Lubos
+                    .image("TODO") // TODO Lubos
                     .build();
 
-            final ApproveClientResponse response = onboardingProvider.approveClient(request);
+            final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
+
             final ApproveClientResponse.EvaluationResult approvalResult = response.result();
             auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
             return approvalResult;
@@ -102,5 +109,19 @@ public class OnboardingApprovalService {
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
+    }
+
+    private ApproveClientResponse callApproveClient(final ApproveClientRequest request, final RetryContext context) throws OnboardingProviderException {
+        final int attempt = context.getRetryCount() + 1;
+
+        final Throwable lastThrowable = context.getLastThrowable();
+        if (lastThrowable != null) {
+            logger.warn("approveClient attempt {}/{}, processId: {}, previous failure: {}",
+                    attempt, MAX_ATTEMPTS, request.processId(), lastThrowable.getMessage(), lastThrowable);
+        } else {
+            logger.info("approveClient attempt {}/{}, processId: {}", attempt, MAX_ATTEMPTS, request.processId());
+        }
+
+        return onboardingProvider.approveClient(request);
     }
 }
