@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
@@ -47,6 +48,8 @@ public class OnboardingApprovalService {
     private final IdentityVerificationConfig config;
 
     private final OnboardingProvider onboardingProvider;
+
+    private final AuditService auditService;
 
     /**
      * Check if onboarding approval is enabled for the given process ID.
@@ -91,11 +94,12 @@ public class OnboardingApprovalService {
                     .build();
 
             final ApproveClientResponse response = onboardingProvider.approveClient(request);
-            // TODO Lubos audit
-            return response.result();
+            final ApproveClientResponse.EvaluationResult approvalResult = response.result();
+            auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
+            return approvalResult;
         } catch (OnboardingProviderException | OnboardingProcessException e) {
             logger.warn("Failed to approve client: {}", e.getMessage(), e);
-            // TODO Lubos audit
+            auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
     }

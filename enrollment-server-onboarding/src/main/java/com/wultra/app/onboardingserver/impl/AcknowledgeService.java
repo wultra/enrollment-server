@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import lombok.AllArgsConstructor;
@@ -51,6 +52,8 @@ public class AcknowledgeService {
     private final IdentityVerificationRepository identityVerificationRepository;
 
     private final StateMachineService stateMachineService;
+
+    private final AuditService auditService;
 
     /**
      * Acknowledge client approval.
@@ -87,6 +90,7 @@ public class AcknowledgeService {
             final OwnerId ownerId = convert(identityVerification);
             final OnboardingEvent event = convert(request.evaluationResult());
             stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
+            auditService.audit(identityVerification, "Acknowledged onboarding approval result: {}", request.evaluationResult());
         } catch (IdentityVerificationException e) {
             logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
             return AcknowledgeApproveClientResponse.builder()
