@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @AllArgsConstructor
+@Slf4j
 public class PersistTargetStateAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationService identityVerificationService;
@@ -44,7 +46,8 @@ public class PersistTargetStateAction implements Action<OnboardingState, Onboard
         final OnboardingState targetState = context.getTarget().getId();
 
         if (targetState.isChoiceState()) {
-            throw new IllegalStateException("Choice states must not be persisted, " + targetState);
+            logger.debug("Trying to persist choice state, skipping: {}", targetState);
+            return;
         }
 
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
