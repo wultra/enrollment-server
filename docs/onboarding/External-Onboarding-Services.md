@@ -100,23 +100,26 @@ Service for onboarding process approval.
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
-    "result": Number,
-    "biometryData": "String"
+    "status": "String",
+    "score": Number,
+    "presenceCheckResult": {
+      "frame": "String"
+    }
 }
 ```
 
 ##### Request Params
 
-| Attribute                | Type      | Description                                                                                                                            |
-|:-------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`              | `String`  | ID of an onboarding process.                                                                                                           |
-| `processType`            | `String`  | Type of the onboarding process.                                                                                                        |
-| `userId`                 | `String`  | ID of a user stored on onboarding process.                                                                                             |
-| `identityVerificationId` | `String`  | ID of the document verification subprocess.                                                                                            |
-| `evaluationResult`       | `String`  | The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation. |
-| `provider`               | `String`  | Name of the configured external biometry provider. Currently "iProov".                                                                 |
-| `result`                 | `Number` | Outcome of the verification check on scale 0-10.                                                                                       |
-| `biometryData`           | `String`  | Photo/image identifier from the biometry session, encoded in base64.                                                                   |
+| Attribute                   | Type     | Description                                                               |
+|:----------------------------|:---------|:--------------------------------------------------------------------------|
+| `processId`                 | `String` | ID of an onboarding process.                                              |
+| `processType`               | `String` | Type of the onboarding process.                                           |
+| `userId`                    | `String` | ID of a user stored on onboarding process.                                |
+| `identityVerificationId`    | `String` | ID of the identity verification subprocess.                               |
+| `provider`                  | `String` | Name of the configured external biometry provider. For example, `iProov`. |
+| `status`                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.      |
+| `score`                     | `Number` | Outcome confidence of the verification check on scale 0-10.               |
+| `presenceCheckResult.frame` | `String` | Photo/image from the biometry session, encoded in base64.                 |
 
 #### Response 200
 
@@ -132,7 +135,7 @@ Service for onboarding process approval.
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new identity verification subprocess). |
 <!-- end -->
 
 <!-- begin api POST /user/lookup -->
