@@ -4,9 +4,9 @@
 Onboarding Server can call services exposed by the entity to extend the KYC process. These services need to be implemented by the client, so the documentation below describes API requirements, not existing services.
 
 <!-- begin remove -->
-- `POST` [/client/approval](#anchor) - Onboarding Approval Service
+- `POST` [/client/approve](#anchor) - Onboarding Approval Service
 - `POST` [/user/lookup](#anchor) - User Lookup Service
-- `POST` [/client/evaluation](#anchor) - Client Evaluation Service
+- `POST` [/client/evaluate](#anchor) - Client Evaluation Service
 - `POST` [/otp/send](#anchor) - OTP Delivery Service
 - `POST` [consent/storage](#anchor) - Consent Storage Service
 - `POST` [/consent/text](#anchor) - Consent Text Service
@@ -36,7 +36,7 @@ $BASE_PATH/$RESOURCE_URI
 Example API URL:
 
 ``` bash
-https://my.great.api/api/v1/client/approval
+https://my.great.api/api/v1/client/approve
 ```
 
 For Onboarding Server configuration `BASE_PATH` value is needed.
@@ -73,7 +73,7 @@ All error responses that are produced by the Onboarding Server have the followin
 
 Optional RESTful API services called by Onboarding Server:
 
-<!-- begin api POST /client/approval -->
+<!-- begin api POST /client/approve -->
 ### Onboarding Approval Service
 
 Service for onboarding process approval.
@@ -86,7 +86,7 @@ Service for onboarding process approval.
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/client/approval</code></td>
+        <td><code>/client/approve</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -190,7 +190,7 @@ Service to identify the prospect and assign user identifier.
 | `consentRequired (deprecated)` | `Boolean` | Tells if the user has to consent the onboarding.                                                                                       |
 <!-- end -->
 
-<!-- begin api POST /client/evaluation -->
+<!-- begin api POST /client/evaluate -->
 ### Client Evaluation Service
 
 Service to evaluate data from the scanned documents. 
@@ -205,7 +205,7 @@ NOTE: Currently triggered only in positive result.
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/client/evaluation</code></td>
+        <td><code>/client/evaluate</code></td>
     </tr>
 </table>
 <!-- end -->
