@@ -83,7 +83,7 @@ public class OnboardingApprovalService {
      * Call the onboarding provider to approve the client.
      *
      * @param identityVerification identity verification to process
-     * @return approval result, may be {@code null} if the approval failed
+     * @return approval result; {@code null} is returned if the approval failed and represents a FAILED evaluation state
      */
     @Transactional(readOnly = true)
     public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification) {
