@@ -131,6 +131,7 @@ public class PresenceCheckService {
         } else {
             logger.debug("Processing a result of an accepted presence check, {}", ownerId);
         }
+        // TODO Lubos store selfie for future use
 
         if (!documentProcessingService.shouldDocumentProviderStoreSelfie()) {
             logger.debug("Selfie will not be submitted to document provider, {}", ownerId);
