@@ -4,9 +4,9 @@
 Onboarding Server can call services exposed by the entity to extend the KYC process. These services need to be implemented by the client, so the documentation below describes API requirements, not existing services.
 
 <!-- begin remove -->
-- `POST` [/client/approval](#anchor) - Onboarding Approval Service
+- `POST` [/client/approve](#anchor) - Onboarding Approval Service
 - `POST` [/user/lookup](#anchor) - User Lookup Service
-- `POST` [/client/evaluation](#anchor) - Client Evaluation Service
+- `POST` [/client/evaluate](#anchor) - Client Evaluation Service
 - `POST` [/otp/send](#anchor) - OTP Delivery Service
 - `POST` [consent/storage](#anchor) - Consent Storage Service
 - `POST` [/consent/text](#anchor) - Consent Text Service
@@ -36,7 +36,7 @@ $BASE_PATH/$RESOURCE_URI
 Example API URL:
 
 ``` bash
-https://my.great.api/api/v1/client/approval
+https://my.great.api/api/v1/client/approve
 ```
 
 For Onboarding Server configuration `BASE_PATH` value is needed.
@@ -73,7 +73,7 @@ All error responses that are produced by the Onboarding Server have the followin
 
 Optional RESTful API services called by Onboarding Server:
 
-<!-- begin api POST /client/approval -->
+<!-- begin api POST /client/approve -->
 ### Onboarding Approval Service
 
 Service for onboarding process approval.
@@ -86,7 +86,7 @@ Service for onboarding process approval.
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/client/approval</code></td>
+        <td><code>/client/approve</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -100,23 +100,26 @@ Service for onboarding process approval.
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
-    "result": Number,
-    "biometryData": "String"
+    "status": "String",
+    "score": Number,
+    "presenceCheckResult": {
+      "frame": "String"
+    }
 }
 ```
 
 ##### Request Params
 
-| Attribute                | Type      | Description                                                                                                                            |
-|:-------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`              | `String`  | ID of an onboarding process.                                                                                                           |
-| `processType`            | `String`  | Type of the onboarding process.                                                                                                        |
-| `userId`                 | `String`  | ID of a user stored on onboarding process.                                                                                             |
-| `identityVerificationId` | `String`  | ID of the document verification subprocess.                                                                                            |
-| `evaluationResult`       | `String`  | The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation. |
-| `provider`               | `String`  | Name of the configured external biometry provider. Currently "iProov".                                                                 |
-| `result`                 | `Number` | Outcome of the verification check on scale 0-10.                                                                                       |
-| `biometryData`           | `String`  | Photo/image identifier from the biometry session, encoded in base64.                                                                   |
+| Attribute                   | Type     | Description                                                               |
+|:----------------------------|:---------|:--------------------------------------------------------------------------|
+| `processId`                 | `String` | ID of an onboarding process.                                              |
+| `processType`               | `String` | Type of the onboarding process.                                           |
+| `userId`                    | `String` | ID of a user stored on onboarding process.                                |
+| `identityVerificationId`    | `String` | ID of the identity verification subprocess.                               |
+| `provider`                  | `String` | Name of the configured external biometry provider. For example, `iProov`. |
+| `status`                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.      |
+| `score`                     | `Number` | Outcome confidence of the verification check on scale 0-10.               |
+| `presenceCheckResult.frame` | `String` | Photo/image from the biometry session, encoded in base64.                 |
 
 #### Response 200
 
@@ -132,7 +135,7 @@ Service for onboarding process approval.
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess).  |
 <!-- end -->
 
 <!-- begin api POST /user/lookup -->
@@ -190,7 +193,7 @@ Service to identify the prospect and assign user identifier.
 | `consentRequired (deprecated)` | `Boolean` | Tells if the user has to consent the onboarding.                                                                                       |
 <!-- end -->
 
-<!-- begin api POST /client/evaluation -->
+<!-- begin api POST /client/evaluate -->
 ### Client Evaluation Service
 
 Service to evaluate data from the scanned documents. 
@@ -205,7 +208,7 @@ NOTE: Currently triggered only in positive result.
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/client/evaluation</code></td>
+        <td><code>/client/evaluate</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -219,24 +222,58 @@ NOTE: Currently triggered only in positive result.
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
-    "investigationId": "String", # verificationId - upstream, investigationId - downstream
-    "verificationResult": Object, # TODO
-    "extractedData": Object # TODO
+    "status": "String",
+    "score": Number,
+    "documentCheckResult": {
+        "documents": [
+            {
+                "type": "String",
+                "status": "String",
+                "data": {
+                    "givenNames": "String",
+                    "surname": "String",
+                    "dateOfBirth": "String",
+                    "placeOfBirth": "String",
+                    "sex": "String",
+                    "nationality": "String",
+                    "personalNumber": "String",
+                    "documentNumber": "String",
+                    "dateOfIssue": "String",
+                    "dateOfExpiry": "String",
+                    "authority": "String"
+                },
+                "images": [
+                    {
+                        "type": "String",
+                        "data": "String"
+                    }
+                ],
+                "rawData": Object
+            }
+        ]
+    }
 }
 ```
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                               |
-|:-------------------------|:---------|:------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                              |
-| `processType`            | `String` | Type of the onboarding process.                                                           |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                |
-| `identityVerificationId` | `String` | ID of the document verification subprocess.                                               |
-| `provider`               | `String` | Name of the configured external document provider: ZenID or Microblink.                   |
-| `investigationId`        | `String` | Optional ID of verification in the external document verifier. It is not used by default. |
-| `verificationResult`     | `Object` | The data set containing the result of overall and partials verification checks.           |
-| `extractedData`          | `Object` | The data set containing all mined data from the document.                                 |
+| Attribute                                   | Type     | Description                                                                                                                                                                                  |
+|:--------------------------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `processId`                                 | `String` | ID of an onboarding process.                                                                                                                                                                 |
+| `processType`                               | `String` | Type of the onboarding process.                                                                                                                                                              |
+| `userId`                                    | `String` | ID of a user stored on onboarding process.                                                                                                                                                   |
+| `identityVerificationId`                    | `String` | ID of the identity verification subprocess.                                                                                                                                                  |
+| `provider`                                  | `String` | Name of the configured external document provider: ZenID or Microblink.                                                                                                                      |
+| `status`                                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
+| `score`                                     | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
+| `documentCheckResult.documents`             | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
+| `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENCE`.                                                                                                                                 |
+| `documentCheckResult.documents.status`      | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
+| `documentCheckResult.documents.data`        | `Object` | Selected normalized data extracted from the document. See `documentCheckResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`). |
+| `documentCheckResult.documents.images`      | `Array`  | Array of images extracted from the document.                                                                                                                                                 |
+| `documentCheckResult.documents.images.type` | `String` | Image type, e.g. `FACE`.                                                                                                                                                                     |
+| `documentCheckResult.documents.images.data` | `String` | JPEG binary data encoded using `base64`.                                                                                                                                                     |
+| `documentCheckResult.documents.rawData`     | `Object` | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                  |
 
 #### Response 200
 
@@ -252,7 +289,7 @@ NOTE: Currently triggered only in positive result.
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess).  |
 <!-- end -->
 
 <!-- begin api POST /otp/send -->
