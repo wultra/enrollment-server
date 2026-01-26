@@ -4,8 +4,8 @@
 Onboarding Server provides a RESTful API that allows to control specific parts of the onboarding process. Usage of the API is optional and depends on the system configuration.
 
 <!-- begin remove -->
-- `POST` [/api/onboarding/client/evaluation](#anchor) - Client Evaluation
-- `POST` [/api/onboarding/client/approval](#anchor) - Onboading Approval
+- `POST` [/api/private/client/evaluate](#anchor) - Client Evaluation
+- `POST` [/api/private/client/approve](#anchor) - Onboarding Approval
 <!-- end -->
 
 ## Error Handling
@@ -31,7 +31,7 @@ All error responses that are produced by the Onboarding Server have the followin
 
 ##  API Endpoints
 
-<!-- begin api POST /api/onboarding/client/evaluation -->
+<!-- begin api POST /api/private/client/evaluate -->
 ###  Client Evaluation
 
 If configured, the system waits for the event from an external system to continue with "client evaluation" phase. Use the endpoint bellow to proceed.
@@ -44,7 +44,7 @@ If configured, the system waits for the event from an external system to continu
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/api/onboarding/client/evaluation</code></td>
+        <td><code>/api/private/client/evaluate</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -66,12 +66,12 @@ If configured, the system waits for the event from an external system to continu
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                                                                            |
-|:-------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                                                                           |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                                                             |
-| `identityVerificationId` | `String` | ID of the document verification subprocess.                                                                                            |
-| `evaluationResult`       | `String` | The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation. |
+| Attribute                | Type     | Description                                                                                 |
+|:-------------------------|:---------|:--------------------------------------------------------------------------------------------|
+| `processId`              | `String` | ID of an onboarding process.                                                                |
+| `userId`                 | `String` | ID of a user stored on onboarding process.                                                  |
+| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                 |
+| `evaluationResult`       | `String` | The evaluation outcome OK or NOK. Process should either continue (OK), or fail/reset (NOK). |
 
 #### Response 200
 
@@ -84,13 +84,13 @@ If configured, the system waits for the event from an external system to continu
 
 ##### Response  Params
 
-| Attribute      | Type     | Description                                                                                                                                      |
-|:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `result`       | `String` | The transition outcome OK, FAIL. Depends on the transition to the next phase was successful.                                                     |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| Attribute      | Type     | Description                                                                                                                                     |
+|:---------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| `result`       | `String` | The transition outcome OK, NOK. Depends on the transition to the next phase was successful.                                                     |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess). |
 <!-- end -->
 
-<!-- begin api POST /api/onboarding/client/approval -->
+<!-- begin api POST /api/private/client/approve -->
 ### Onboarding Approval
 
 If configured, the system waits for the event from an external system to continue with "onboarding approval" phase. Use the endpoint below to proceed.
@@ -103,7 +103,7 @@ If configured, the system waits for the event from an external system to continu
     </tr>
     <tr>
         <td>Resource URI</td>
-        <td><code>/api/onboarding/client/approval</code></td>
+        <td><code>/api/private/client/approve</code></td>
     </tr>
 </table>
 <!-- end -->
@@ -119,18 +119,18 @@ If configured, the system waits for the event from an external system to continu
   "processId": "String",
   "userId": "String",
   "identityVerificationId": "String",
-  "evaluationResult": "String"
+  "approvalResult": "String"
 }
 ```
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                                                                            |
-|:-------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                                                                           |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                                                             |
-| `identityVerificationId` | `String` | ID of the document verification subprocess.                                                                                            |
-| `evaluationResult`       | `String` | The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation. |
+| Attribute                | Type     | Description                                                                               |
+|:-------------------------|:---------|:------------------------------------------------------------------------------------------|
+| `processId`              | `String` | ID of an onboarding process.                                                              |
+| `userId`                 | `String` | ID of a user stored on onboarding process.                                                |
+| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                               |
+| `approvalResult`         | `String` | The approval outcome OK or NOK. Process should either continue (OK), or fail/reset (NOK). |
 
 #### Response 200
 
@@ -145,6 +145,6 @@ If configured, the system waits for the event from an external system to continu
 
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `result`       | `String` | The transition outcome OK, FAIL. Depends on the transition to the next phase was successful.                                                     |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| `result`       | `String` | The transition outcome OK, NOK. Depends on the transition to the next phase was successful.                                                     |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess). |
 <!-- end -->
