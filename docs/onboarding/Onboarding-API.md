@@ -119,7 +119,7 @@ If configured, the system waits for the event from an external system to continu
   "processId": "String",
   "userId": "String",
   "identityVerificationId": "String",
-  "evaluationResult": "String"
+  "approvalResult": "String"
 }
 ```
 
