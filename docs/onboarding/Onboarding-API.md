@@ -5,7 +5,7 @@ Onboarding Server provides a RESTful API that allows to control specific parts o
 
 <!-- begin remove -->
 - `POST` [/api/onboarding/client/evaluate](#anchor) - Client Evaluation
-- `POST` [/api/onboarding/client/approve](#anchor) - Onboading Approval
+- `POST` [/api/onboarding/client/approve](#anchor) - Onboarding Approval
 <!-- end -->
 
 ## Error Handling
