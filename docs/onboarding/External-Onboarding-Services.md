@@ -289,7 +289,7 @@ NOTE: Currently triggered only in positive result.
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new identity verification subprocess). |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess).  |
 <!-- end -->
 
 <!-- begin api POST /otp/send -->
