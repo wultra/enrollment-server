@@ -134,7 +134,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             result.setRejectReason("Rejected documents: " + rejectedDocuments);
         }
 
-        logger.info("action: submitDocuments, state: succeeded, provider: microblink, result: {}", result);
+        logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
         return result;
     }
 
@@ -225,7 +225,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
+    public DocumentsVerificationResult verifyDocuments(OwnerId ownerId, List<String> uploadIds) throws DocumentVerificationException {
         try {
             final var verificationId = UUID.randomUUID().toString();
 
@@ -238,7 +238,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var result = verifyDocuments(uploadIds, verificationId);
 
-            logger.info("action: verifyDocuments, state: succeeded, provider: microblink, result: {}", result);
+            logger.info("action: verifyDocuments, state: succeeded, provider: microblink, result: {}", result.getStatus());
             return result;
         } catch (final DocumentVerificationException e) {
             logger.info("action: verifyDocuments, state: failed, provider: microblink, error: {}", e.getMessage());
