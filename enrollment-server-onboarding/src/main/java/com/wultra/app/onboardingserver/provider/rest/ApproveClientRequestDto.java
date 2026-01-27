@@ -24,7 +24,7 @@ import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * Request object for client evaluation.
+ * Request object for client approval.
  *
  * @param processId Process ID
  * @param processType Process type.

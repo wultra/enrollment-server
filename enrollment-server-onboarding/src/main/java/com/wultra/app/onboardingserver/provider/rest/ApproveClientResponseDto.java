@@ -22,10 +22,10 @@ import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * Response object for client evaluation.
+ * Response object for client approval.
  *
  * @param result The evaluation outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or wait for asynchronous evaluation.
- *  @param resultReason The reason is used when result is FAIL to disclose the reason of failed process.
+ * @param resultReason The reason is used when result is FAIL to disclose the reason of failed process.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder

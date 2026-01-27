@@ -48,7 +48,7 @@ public class SelfieEntity implements Serializable {
     /**
      * Selfie image. Mind that it could be {@code null} if the presence check failed.
      */
-    @Column(name = "image", columnDefinition = "CLOB")
+    @Column(name = "image", columnDefinition = "BLOB")
     private byte[] image;
 
     @ManyToOne(fetch = FetchType.LAZY)

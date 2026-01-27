@@ -150,8 +150,10 @@ public class PresenceCheckService {
     }
 
     private void storeSelfiePhoto(final Image image, final IdentityVerificationEntity idVerification) {
+        final byte[] imageData = image == null ? null : image.getData();
+
         final SelfieEntity selfie = new SelfieEntity();
-        selfie.setImage(image.getData());
+        selfie.setImage(imageData);
         selfie.setIdentityVerification(idVerification);
         selfie.setTimestampCreated(new Date());
 
