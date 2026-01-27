@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.microblink.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
 
 /**
@@ -56,11 +57,14 @@ public class DocumentVerificationResponseParser {
         final var verificationJson = root.path("verification")
                 .toString();
 
+        ((ObjectNode) root).remove("images");
+        final var responseWithoutImagesJson = root.toString();
+
         return response.toBuilder()
                 .extractionFrontJson(extractionFrontJson)
                 .extractionBackJson(extractionBackJson)
                 .verificationJson(verificationJson)
-                .responseJson(responseJson)
+                .responseWithoutImagesJson(responseWithoutImagesJson)
                 .build();
     }
 }
