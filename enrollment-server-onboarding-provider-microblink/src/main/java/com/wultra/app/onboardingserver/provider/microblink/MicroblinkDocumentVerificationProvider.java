@@ -317,11 +317,14 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final DocumentVerificationData frontDocument,
             final DocumentVerificationData backDocument
     ) throws DocumentVerificationException, RemoteCommunicationException {
-        logger.info("Sending request to Microblink REST API for documents: {}, {}", frontDocument, backDocument);
+        logger.info("action: sendMicroblinkRequest, state: initiated, frontDocumentUploadId: {}, backDocumentUploadId: {}",
+                frontDocument != null ? frontDocument.uploadId() : null,
+                backDocument != null ? backDocument.uploadId() : null);
 
         try {
             final var request = buildRequest(frontDocument, backDocument);
-            logger.debug("Request body: {}", (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationRequest(request));
+            logger.debug("action: sendMicroblinkRequest, state: initiated, requestBody: {}",
+                    (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationRequest(request));
 
             final var response = microblinkRestClient.post("/api/v2/docver", request, new ParameterizedTypeReference<String>() {});
             final var body = Optional.ofNullable(response)
@@ -329,11 +332,22 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
 
             final var parsedResponse = parseMicroblinkResponse(body);
-            logger.info("Response traceId: {}, verificationResult: {}", parsedResponse.runtime().traceId(), parsedResponse.verificationJson());
-            logger.debug("Response body: {}", (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationResponseJson(body));
+            logger.info("action: sendMicroblinkRequest, state: succeeded, verificationResult: {}, microblinkTraceId: {}",
+                    Optional.ofNullable(parsedResponse.verification())
+                            .map(DocumentVerificationParsedResponse.Verification::result)
+                            .orElse(null),
+                    Optional.ofNullable(parsedResponse.runtime())
+                            .map(DocumentVerificationParsedResponse.Runtime::traceId)
+                            .orElse(null)
+            );
 
             return parsedResponse;
         } catch (final RestClientException e) {
+            logger.info("action: sendMicroblinkRequest, state: succeeded, exceptionMessage: {}, statusCode: {}, response: {}",
+                    e.getMessage(),
+                    e.getStatusCode(),
+                    e.getResponse());
+
             throw new RemoteCommunicationException(
                     "Failed REST API call to Microblink, statusCode=%s, responseBody='%s'".formatted(
                             e.getStatusCode(),
