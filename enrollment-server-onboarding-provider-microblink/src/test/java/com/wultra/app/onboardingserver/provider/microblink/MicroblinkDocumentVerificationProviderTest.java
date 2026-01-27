@@ -581,7 +581,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_unssuportedDocumentType_exceptionIsThrown() {
+    void testVerifyDocuments_unsupportedDocumentType_exceptionIsThrown() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 

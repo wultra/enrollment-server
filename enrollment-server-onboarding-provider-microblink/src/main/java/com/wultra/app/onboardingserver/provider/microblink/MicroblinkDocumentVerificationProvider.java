@@ -303,11 +303,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var parsedResponse = sendApiRequest(documentDataFront, documentDataBack);
 
-            Optional.ofNullable(documentDataFront)
-                    .ifPresent(d -> results.put(documentType, parsedResponse));
-
-            Optional.ofNullable(documentDataBack)
-                    .ifPresent(d -> results.put(documentType, parsedResponse));
+            results.put(documentType, parsedResponse);
         }
 
         return results;
@@ -343,7 +339,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             return parsedResponse;
         } catch (final RestClientException e) {
-            logger.info("action: sendMicroblinkRequest, state: succeeded, exceptionMessage: {}, statusCode: {}, response: {}",
+            logger.info("action: sendMicroblinkRequest, state: failed, exceptionMessage: {}, statusCode: {}, response: {}",
                     e.getMessage(),
                     e.getStatusCode(),
                     e.getResponse());
