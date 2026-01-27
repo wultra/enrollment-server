@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="es_processed_document_data" />
+            </not>
+        </preConditions>
+        <comment>Create a new table es_processed_document_data</comment>
+        <createTable tableName="es_processed_document_data">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="data" type="${blob_type}">
+                <constraints nullable="false" />
+            </column>
+            <column name="data_type" type="varchar(32)">
+                <constraints nullable="false" />
+            </column>
+            <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="es_document_data" columnName="activation_id" />
+        </preConditions>
+        <comment>Remove column activation_id from es_document_data</comment>
+        <dropColumn tableName="es_document_data" columnName="activation_id" />
+    </changeSet>
+
+    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyTableName="es_document_data" foreignKeyName="es_document_data_identity_verification_id_fk"/>
+        </preConditions>
+        <comment>Remove foreign key es_document_data_identity_verification_id_fk</comment>
+        <dropForeignKeyConstraint baseTableName="es_document_data" constraintName="es_document_data_identity_verification_id_fk" />
+        <rollback>
+            <addForeignKeyConstraint baseTableName="es_document_data" baseColumnNames="identity_verification_id"
+                                     constraintName="es_document_data_identity_verification_id_fk" referencedTableName="es_identity_verification"
+                                     referencedColumnNames="id" />
+        </rollback>
+    </changeSet>
+
+    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="es_document_data" columnName="identity_verification_id" />
+        </preConditions>
+        <comment>Remove column identity_verification_id from es_document_data</comment>
+        <dropColumn tableName="es_document_data" columnName="identity_verification_id" />
+    </changeSet>
+
+    <changeSet id="5" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="es_document_data" columnName="filename" />
+        </preConditions>
+        <comment>Remove column filename from es_document_data</comment>
+        <dropColumn tableName="es_document_data" columnName="filename" />
+    </changeSet>
+
+    <changeSet id="6" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_document_data" indexName="es_document_data_timestamp_created_idx"/>
+            </not>
+        </preConditions>
+        <comment>Add index for table es_document_data column timestamp_created</comment>
+        <createIndex tableName="es_document_data" indexName="es_document_data_timestamp_created_idx">
+            <column name="timestamp_created" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="7" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
+        <preConditions>
+            <not>
+                <indexExists tableName="es_document_verification" indexName="es_document_verification_upload_id_idx"/>
+            </not>
+        </preConditions>
+        <comment>Add index for table es_document_verification column upload_id</comment>
+        <createIndex tableName="es_document_verification" indexName="es_document_verification_upload_id_idx">
+            <column name="upload_id" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -46,6 +46,7 @@ import java.util.stream.IntStream;
 @Service
 @AllArgsConstructor
 @Slf4j
+@AllArgsConstructor
 class CleaningService {
 
     /**
@@ -66,6 +67,8 @@ class CleaningService {
     private final DocumentVerificationRepository documentVerificationRepository;
 
     private final DocumentDataRepository documentDataRepository;
+
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
 
     private final OnboardingOtpRepository onboardingOtpRepository;
 
@@ -146,8 +149,13 @@ class CleaningService {
      * Cleanup of large documents older than retention time.
      */
     @Transactional
-    public void cleanupLargeDocuments() {
-        documentDataRepository.cleanupDocumentData(getDataRetentionTime());
+    public int cleanupDocumentData() {
+        return documentDataRepository.cleanupDocumentData(getDataRetentionTime());
+    }
+
+    @Transactional
+    public int cleanupProcessedDocumentData() {
+        return processedDocumentDataRepository.cleanup(getDataRetentionTime());
     }
 
     /**

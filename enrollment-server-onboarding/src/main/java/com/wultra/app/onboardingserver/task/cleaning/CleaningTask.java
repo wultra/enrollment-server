@@ -101,14 +101,27 @@ public class CleaningTask {
     }
 
     /**
-     * Cleanup of large documents older than retention time.
+     * Cleanup of document data older than retention time.
      */
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")
-    @SchedulerLock(name = SchedulerLockNames.LARGE_DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
-    public void cleanupLargeDocuments() {
+    @SchedulerLock(name = SchedulerLockNames.DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
+    public void cleanupDocumentData() {
         LockAssert.assertLocked();
-        logger.debug("cleanupLargeDocuments");
-        cleaningService.cleanupLargeDocuments();
+        logger.debug("action: cleanupDocumentData, state: initiated");
+        final var count = cleaningService.cleanupDocumentData();
+        logger.debug("action: cleanupDocumentData, state: succeeded, cleanedRecords: {}", count);
+    }
+
+    /**
+     * Cleanup of processed document data older than retention time.
+     */
+    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")
+    @SchedulerLock(name = SchedulerLockNames.PROCESSED_DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
+    public void cleanupProcessedDocumentData() {
+        LockAssert.assertLocked();
+        logger.debug("action: cleanupProcessedDocumentData, state: initiated");
+        final var count = cleaningService.cleanupProcessedDocumentData();
+        logger.debug("action: cleanupProcessedDocumentData, state: succeeded, cleanedRecords: {}", count);
     }
 
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")

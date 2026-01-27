@@ -26,6 +26,13 @@ You have to insert at least one row into the table `es_onboarding_process_config
 Added a new column `target_activation_id` to the table `es_onboarding_process`.
 
 
+### Removing columns from `es_document_data` table
+
+Columns `activation_id`, `identity_verification_id` and `filename` are removed. This should not cause any data loss because 
+the table was never used in production and all these metadata are stored in `es_document_verification` table and 
+linked to `es_document_data` records via `upload_id` column.
+
+
 ### Selfie
 
 A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
@@ -40,6 +47,11 @@ The following changes were made to the onboarding start endpoint:
 
 - Added a new optional request field `processType` to specify which onboarding process type should be used.
 - Added a new optional response field `activationCode` to return activation code and a mandatory field `activationType`.
+
+
+### Removing large file upload endpoint
+
+Endpoint `POST api/identity/document/upload` was removed because it was never used in production.
 
 
 ## External Onboarding Services Changes

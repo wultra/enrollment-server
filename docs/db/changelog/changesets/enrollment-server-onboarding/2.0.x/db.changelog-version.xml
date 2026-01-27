@@ -5,6 +5,7 @@
 
     <include file="20251111-process-configuration.xml" relativeToChangelogFile="true" />
     <include file="20251219-process-target-activation-id.xml" relativeToChangelogFile="true" />
+    <include file="20260116-add-processed-document-data-table.xml" relativeToChangelogFile="true" />
     <include file="20260126-selfie.xml" relativeToChangelogFile="true" />
     <include file="20251215-add-tag-2.0.0.xml" relativeToChangelogFile="true" />
 

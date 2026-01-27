@@ -40,7 +40,9 @@ public final class SchedulerLockNames {
 
     public static final String DOCUMENT_VERIFICATION_LOCK = "documentVerificationsLock";
 
-    public static final String LARGE_DOCUMENT_DATA_LOCK = "largeDocumentDataLock";
+    public static final String DOCUMENT_DATA_LOCK = "documentDataDataLock";
+
+    public static final String PROCESSED_DOCUMENT_DATA_LOCK = "processedDocumentDataLock";
 
     public static final String EXPIRE_DOCUMENT_VERIFICATION_LOCK = "expireDocumentVerificationLock";
 

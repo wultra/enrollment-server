@@ -100,10 +100,10 @@ Service for onboarding process approval.
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
-    "status": "SUCCESS",
-    "score": 5,
+    "status": "String",
+    "score": Number,
     "presenceCheckResult": {
-      "frame": "base64"
+      "frame": "String"
     }
 }
 ```
@@ -132,10 +132,10 @@ Service for onboarding process approval.
 
 ##### Response  Params
 
-| Attribute      | Type     | Description                                                                                                                                        |
-|:---------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------------------|
-| `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.               |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started a new identity verification subprocess). |
+| Attribute      | Type     | Description                                                                                                                                      |
+|:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess).  |
 <!-- end -->
 
 <!-- begin api POST /user/lookup -->
@@ -222,24 +222,58 @@ NOTE: Currently triggered only in positive result.
     "userId": "String",
     "identityVerificationId": "String",
     "provider": "String",
-    "investigationId": "String", # verificationId - upstream, investigationId - downstream
-    "verificationResult": Object, # TODO
-    "extractedData": Object # TODO
+    "status": "String",
+    "score": Number,
+    "documentCheckResult": {
+        "documents": [
+            {
+                "type": "String",
+                "status": "String",
+                "data": {
+                    "givenNames": "String",
+                    "surname": "String",
+                    "dateOfBirth": "String",
+                    "placeOfBirth": "String",
+                    "sex": "String",
+                    "nationality": "String",
+                    "personalNumber": "String",
+                    "documentNumber": "String",
+                    "dateOfIssue": "String",
+                    "dateOfExpiry": "String",
+                    "authority": "String"
+                },
+                "images": [
+                    {
+                        "type": "String",
+                        "data": "String"
+                    }
+                ],
+                "rawData": Object
+            }
+        ]
+    }
 }
 ```
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                               |
-|:-------------------------|:---------|:------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                              |
-| `processType`            | `String` | Type of the onboarding process.                                                           |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                |
-| `identityVerificationId` | `String` | ID of the document verification subprocess.                                               |
-| `provider`               | `String` | Name of the configured external document provider: ZenID or Microblink.                   |
-| `investigationId`        | `String` | Optional ID of verification in the external document verifier. It is not used by default. |
-| `verificationResult`     | `Object` | The data set containing the result of overall and partials verification checks.           |
-| `extractedData`          | `Object` | The data set containing all mined data from the document.                                 |
+| Attribute                                   | Type     | Description                                                                                                                                                                                  |
+|:--------------------------------------------|:---------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `processId`                                 | `String` | ID of an onboarding process.                                                                                                                                                                 |
+| `processType`                               | `String` | Type of the onboarding process.                                                                                                                                                              |
+| `userId`                                    | `String` | ID of a user stored on onboarding process.                                                                                                                                                   |
+| `identityVerificationId`                    | `String` | ID of the identity verification subprocess.                                                                                                                                                  |
+| `provider`                                  | `String` | Name of the configured external document provider: ZenID or Microblink.                                                                                                                      |
+| `status`                                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
+| `score`                                     | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
+| `documentCheckResult.documents`             | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
+| `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENCE`.                                                                                                                                 |
+| `documentCheckResult.documents.status`      | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
+| `documentCheckResult.documents.data`        | `Object` | Selected normalized data extracted from the document. See `documentCheckResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`). |
+| `documentCheckResult.documents.images`      | `Array`  | Array of images extracted from the document.                                                                                                                                                 |
+| `documentCheckResult.documents.images.type` | `String` | Image type, e.g. `FACE`.                                                                                                                                                                     |
+| `documentCheckResult.documents.images.data` | `String` | JPEG binary data encoded using `base64`.                                                                                                                                                     |
+| `documentCheckResult.documents.rawData`     | `Object` | Complete response from verification provider with verification status, performed checks and extracted data.                                                                                  |
 
 #### Response 200
 
@@ -255,7 +289,7 @@ NOTE: Currently triggered only in positive result.
 | Attribute      | Type     | Description                                                                                                                                      |
 |:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The approval outcome OK, NOK and WAIT. Process should either continue (OK), or fail/reset (NOK) or WAIT for asynchronous evaluation.             |
-| `resultReason` | `String` | The reason is used when result is FAIL to disclose the reason of failed process (for example user started new document verification subprocess). |
+| `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess).  |
 <!-- end -->
 
 <!-- begin api POST /otp/send -->

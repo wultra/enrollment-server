@@ -116,4 +116,11 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "    d.timestampLastUpdated = :timestamp " +
             "WHERE d.id IN :ids")
     void terminate(Collection<String> ids, Date timestamp, String errorDetail, ErrorOrigin errorOrigin);
+
+    @Query("""
+            SELECT d
+            FROM DocumentVerificationEntity d
+            WHERE d.uploadId IN :uploadIds
+    """)
+    List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadIds);
 }
