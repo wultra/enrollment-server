@@ -46,4 +46,6 @@ public final class SchedulerLockNames {
 
     public static final String CLEANUP_ACTIVATIONS_LOCK = "cleanupActivationsLock";
 
+    public static final String CLEANUP_SELFIES_LOCK = "onboardingProcessLock";
+
 }

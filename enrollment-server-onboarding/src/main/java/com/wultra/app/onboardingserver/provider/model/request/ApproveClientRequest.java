@@ -46,7 +46,7 @@ public record ApproveClientRequest(
         @NonNull String provider,
         @NonNull Status status,
         @NonNull Integer score,
-        @NonNull String image
+        String image
 ) {
 
     public enum Status {

@@ -26,6 +26,11 @@ You have to insert at least one row into the table `es_onboarding_process_config
 Added a new column `target_activation_id` to the table `es_onboarding_process`.
 
 
+### Selfie
+
+A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
+
+
 ## REST API Changes
 
 

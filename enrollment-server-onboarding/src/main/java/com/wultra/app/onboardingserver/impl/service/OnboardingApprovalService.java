@@ -18,9 +18,11 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
+import com.wultra.app.onboardingserver.common.database.SelfieRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.SelfieEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -35,6 +37,8 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Base64;
 
 /**
  * Onboarding approval service.
@@ -55,6 +59,8 @@ public class OnboardingApprovalService {
     private final OnboardingProvider onboardingProvider;
 
     private final ScaResultRepository scaResultRepository;
+
+    private final SelfieRepository selfieRepository;
 
     private final AuditService auditService;
 
@@ -102,7 +108,7 @@ public class OnboardingApprovalService {
                     .identityVerificationId(identityVerification.getId())
                     .status(convert(presenceCheckResult))
                     .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
-                    .image("TODO") // TODO Lubos fill image
+                    .image(loadImage(identityVerification))
                     .build();
 
             final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
@@ -115,6 +121,13 @@ public class OnboardingApprovalService {
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
+    }
+
+    private String loadImage(final IdentityVerificationEntity identityVerification) {
+        return selfieRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification)
+                .map(SelfieEntity::getImage)
+                .map(Base64.getEncoder()::encodeToString)
+                .orElse(null);
     }
 
     private ApproveClientResponse callApproveClient(final ApproveClientRequest request, final RetryContext context) throws OnboardingProviderException {

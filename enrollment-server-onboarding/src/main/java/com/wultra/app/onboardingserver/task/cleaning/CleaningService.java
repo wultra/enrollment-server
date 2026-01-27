@@ -26,8 +26,8 @@ import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +44,7 @@ import java.util.stream.IntStream;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 class CleaningService {
 
@@ -68,28 +69,9 @@ class CleaningService {
 
     private final OnboardingOtpRepository onboardingOtpRepository;
 
+    private final SelfieRepository selfieRepository;
+
     private final AuditService auditService;
-
-    @Autowired
-    public CleaningService(
-            final OnboardingConfig onboardingConfig,
-            final IdentityVerificationConfig identityVerificationConfig,
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final DocumentDataRepository documentDataRepository,
-            final OnboardingOtpRepository onboardingOtpRepository,
-            final AuditService auditService) {
-
-        this.onboardingConfig = onboardingConfig;
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.onboardingProcessRepository = onboardingProcessRepository;
-        this.identityVerificationRepository = identityVerificationRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.documentDataRepository = documentDataRepository;
-        this.onboardingOtpRepository = onboardingOtpRepository;
-        this.auditService = auditService;
-    }
 
     /**
      * Terminate processes with expired activation.
@@ -144,6 +126,20 @@ class CleaningService {
         for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             terminateAndAuditProcesses(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
+    }
+
+    /**
+     * Clean selfie images.
+     *
+     * @return Number of deleted selfie images.
+     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
+     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
+     */
+    @Transactional
+    public int cleanSelfies() {
+        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
+        final Date dateCleanup = DateUtil.convertExpirationToCreatedDate(processExpiration);
+        return selfieRepository.cleanup(dateCleanup);
     }
 
     /**

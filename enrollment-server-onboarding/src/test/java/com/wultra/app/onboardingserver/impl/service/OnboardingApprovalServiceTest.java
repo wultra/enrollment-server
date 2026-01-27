@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
+import com.wultra.app.onboardingserver.common.database.SelfieRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
@@ -56,6 +57,9 @@ class OnboardingApprovalServiceTest {
     @MockitoBean
     private ScaResultRepository scaResultRepository;
 
+    @MockitoBean
+    private SelfieRepository selfieRepository;
+
     @Autowired
     private OnboardingApprovalService tested;
 
@@ -91,5 +95,6 @@ class OnboardingApprovalServiceTest {
         assertEquals(ApproveClientResponse.EvaluationResult.OK, result);
 
         verify(onboardingProvider, times(2)).approveClient(any());
+        verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);
     }
 }

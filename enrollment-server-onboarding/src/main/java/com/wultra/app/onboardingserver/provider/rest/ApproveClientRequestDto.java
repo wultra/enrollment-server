@@ -55,7 +55,7 @@ record ApproveClientRequestDto(
      * @param frame Photo/image from the biometry session, encoded in base64.
      */
     public record PresenceCheckResult(
-            @NonNull String frame
+            String frame
     ) {}
 
     public enum Status {
