@@ -44,7 +44,6 @@ import java.util.stream.IntStream;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
-@AllArgsConstructor
 @Slf4j
 @AllArgsConstructor
 class CleaningService {
@@ -58,7 +57,7 @@ class CleaningService {
 
     private final OnboardingConfig onboardingConfig;
 
-    final IdentityVerificationConfig identityVerificationConfig;
+    private final IdentityVerificationConfig identityVerificationConfig;
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
