@@ -528,14 +528,19 @@ class MicroblinkDocumentVerificationProviderTest {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 
-        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of());
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildExtractedDataJson("John"), "[]", "[]")
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
         when(documentVerificationRepository.findAllByUploadIds(uploadIds)).thenReturn(documentVerifications);
 
         // when
         final var error = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, uploadIds));
 
         // then
-        assertEquals("No document verification data found for uploadId: 52ca4d10-06ac-442c-934c-9d085ab18934", error.getMessage());
+        assertEquals("No document verification data found for uploadId: bdfb45ce-a808-4b65-86a8-9f5f184c56f6", error.getMessage());
     }
 
     @Test
