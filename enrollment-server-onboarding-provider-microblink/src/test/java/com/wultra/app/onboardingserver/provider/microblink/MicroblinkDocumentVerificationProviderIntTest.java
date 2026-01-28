@@ -27,8 +27,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -53,7 +51,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 /**
  * Integration tests for Microblink document verification provider.
@@ -244,53 +241,27 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testInitVerificationSdk_platformFetchedFromPowerAuthServer_responseWithLicenseKey() throws RemoteCommunicationException, PowerAuthClientException {
+    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey() {
         // given
-        final var response = new GetActivationStatusResponse();
-        response.setPlatform("android");
-        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenReturn(response);
+        final var initParams = Map.of("source", "app1", "platform", "android");
 
         // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of());
+        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, initParams);
 
         // then
-        assertEquals(new VerificationSdkInfo(Map.of("license-key", "dummy-android-license-key")), result);
+        assertEquals(new VerificationSdkInfo(), result);
     }
 
     @Test
-    void testInitVerificationSdk_platformFetchedFromPowerAuthServerFail_exceptionIsThrown() throws PowerAuthClientException {
+    void testInitVerificationSdk_sdkConfigFound_responseWithLicenseKey() {
         // given
-        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenThrow(new PowerAuthClientException("Test exception"));
+        final var initParams = Map.of("source", "app1", "platform", "ios");
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class, () -> microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of()));
+        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, initParams);
 
         // then
-        assertEquals("Error when fetching mobile platform", exception.getMessage());
-    }
-
-    @Test
-    void testInitVerificationSdk_androidMobilePlatform_responseWithLicenseKey() throws RemoteCommunicationException {
-        // given
-        // -
-
-        // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("platform", "android"));
-
-        // then
-        assertEquals(new VerificationSdkInfo(Map.of("license-key", "dummy-android-license-key")), result);
-    }
-
-    @Test
-    void testInitVerificationSdk_iosMobilePlatform_responseWithLicenseKey() throws RemoteCommunicationException {
-        // given
-        // -
-
-        // when
-        final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, Map.of("platform", "ios"));
-
-        // then
-        assertEquals(new VerificationSdkInfo(Map.of("license-key", "dummy-ios-license-key")), result);
+        assertEquals(new VerificationSdkInfo(Map.of("license-key", "abc")), result);
     }
 
     @Test

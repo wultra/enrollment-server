@@ -22,8 +22,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Configuration properties for Microblink document verification provider.
@@ -41,12 +41,25 @@ public class MicroblinkConfigProperties {
     private RestClientConfiguration restClientConfig;
 
     /**
-     * Mobile SDK license keys by platform.
-     */
-    private Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
-
-    /**
      * Check of extracted data from documents.
      */
     private boolean extractedDataCheckEnabled;
+
+    /**
+     * Configurations for mobile SDK.
+     */
+    private List<SdkConfig> mobileSdkConfigs = new ArrayList<>();
+
+    /**
+     * Microblink mobile SDK configuration.
+     *
+     * @param source Bundle ID / App ID
+     * @param platform mobile platform
+     * @param licenseKey license key for mobile SDK
+     */
+    public record SdkConfig(
+            String source,
+            String platform,
+            String licenseKey
+    ) {}
 }
