@@ -87,8 +87,7 @@ public class DocumentResultEntity implements Serializable {
     /**
      * JSON serialized document with the verification result
      */
-    @Lob
-    @Column(name = "verification_result")
+    @Column(name = "verification_result", columnDefinition = "CLOB")
     private String verificationResult;
 
     /**
@@ -104,8 +103,7 @@ public class DocumentResultEntity implements Serializable {
     /**
      * JSON serialized data extracted from the uploaded document
      */
-    @Lob
-    @Column(name = "extracted_data")
+    @Column(name = "extracted_data", columnDefinition = "CLOB")
     private String extractedData;
 
     /**
