@@ -72,11 +72,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final DocumentDataRepository documentDataRepository;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
+    private final MicroblinkConfigProperties properties;
 
     public MicroblinkDocumentVerificationProvider(
             RestClient microblinkRestClient,
             DocumentVerificationResponseParser responseParser,
-            Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys,
+            MicroblinkConfigProperties properties,
             PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
@@ -84,15 +85,15 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
-
-        mobileSdkLicenseKeyByPlatform = mobileSdkLicenseKeys.entrySet()
-                .stream()
-                .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
-
+        this.properties = properties;
         this.powerAuthClient = powerAuthClient;
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
+
+        mobileSdkLicenseKeyByPlatform = properties.getMobileSdkLicenseKeys().entrySet()
+                .stream()
+                .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
     }
 
     @Override
@@ -473,16 +474,16 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult());
 
-            if (!crosscheckDataByDocumentType.containsKey(documentType)) {
+            final var microblinkCheckResult = microblinkResponse.verification().result();
+            microblinkCheckResults.add(microblinkCheckResult);
+
+            if (properties.isExtractedDataCheckEnabled() && !crosscheckDataByDocumentType.containsKey(documentType)) {
                 final var extractedType = microblinkResponse.extraction().classInfo().type();
                 verifyDocumentType(documentType, extractedType);
 
                 final var overallExtraction = microblinkResponse.extraction().overall();
                 final var crosscheckData = buildCrosscheckData(overallExtraction);
                 crosscheckDataByDocumentType.put(documentType, crosscheckData);
-
-                final var microblinkCheckResult = microblinkResponse.verification().result();
-                microblinkCheckResults.add(microblinkCheckResult);
             }
 
             final var documentVerificationResult = new DocumentVerificationResult();
@@ -503,7 +504,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResults.add(documentVerificationResult);
         }
 
-        performDocumentsCrosscheck(crosscheckDataByDocumentType.values().stream().toList());
+        if (properties.isExtractedDataCheckEnabled()) {
+            performDocumentsCrosscheck(crosscheckDataByDocumentType.values().stream().toList());
+        }
 
         final var allChecksPassed = microblinkCheckResults.stream()
                 .allMatch(MICROBLINK_VALIDATION_PASS_RESULT::equalsIgnoreCase);

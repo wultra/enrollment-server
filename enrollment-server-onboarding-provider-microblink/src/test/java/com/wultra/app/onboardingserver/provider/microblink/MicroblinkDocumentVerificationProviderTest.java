@@ -80,6 +80,11 @@ class MicroblinkDocumentVerificationProviderTest {
     private static final String USER_ID = "fc87e60a-85fe-405c-bfa3-9580211e1670";
     private static final String ACTIVATION_ID = "da15f970-d939-46f0-abe7-7858e74ea3b0";
 
+    private static final Map<MicroblinkMobilePlatform, String> MICROBLINK_LICENSE_KEYS = Map.of(
+            MicroblinkMobilePlatform.IOS, "ios-license-key",
+            MicroblinkMobilePlatform.ANDROID, "android-license-key"
+    );
+
     private static final String DOCUMENT_ID_CARD_FRONT_ID = "id-card-front";
     private static final String DOCUMENT_ID_CARD_FRONT_UPLOAD_ID = "52ca4d10-06ac-442c-934c-9d085ab18934";
 
@@ -121,6 +126,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @Mock
     private DocumentVerificationRepository documentVerificationRepository;
+
+    @Mock
+    private MicroblinkConfigProperties microblinkConfigProperties;
 
     private MicroblinkDocumentVerificationProvider provider;
 
@@ -181,15 +189,12 @@ class MicroblinkDocumentVerificationProviderTest {
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        final var licenseKeys = Map.of(
-                MicroblinkMobilePlatform.IOS, "ios-license-key",
-                MicroblinkMobilePlatform.ANDROID, "android-license-key"
-        );
+        when(microblinkConfigProperties.getMobileSdkLicenseKeys()).thenReturn(MICROBLINK_LICENSE_KEYS);
 
         provider = new MicroblinkDocumentVerificationProvider(
                 restClient,
                 new DocumentVerificationResponseParser(objectMapper),
-                licenseKeys,
+                microblinkConfigProperties,
                 powerAuthClient,
                 documentDataRepository,
                 processedDocumentDataRepository,
@@ -228,6 +233,8 @@ class MicroblinkDocumentVerificationProviderTest {
     @Test
     void testInitVerificationSdk_supportedPlatformFetchedFromPowerAuth_resultWithLicenseKey() throws PowerAuthClientException, RemoteCommunicationException {
         // given
+        // -
+
         final var response = new GetActivationStatusResponse();
         response.setPlatform("android");
 
@@ -561,6 +568,8 @@ class MicroblinkDocumentVerificationProviderTest {
     @Test
     void testVerifyDocuments_documentTypeDoesNotMatchClaimedOne_exceptionIsThrown() {
         // given
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
+
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 
         final var documentResult = new DocumentResultEntity();
@@ -583,6 +592,8 @@ class MicroblinkDocumentVerificationProviderTest {
     @Test
     void testVerifyDocuments_unsupportedDocumentType_exceptionIsThrown() {
         // given
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
+
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 
         final var documentResult = new DocumentResultEntity();
@@ -605,6 +616,8 @@ class MicroblinkDocumentVerificationProviderTest {
     @Test
     void testVerifyDocuments_missingExtractedValueForCrosscheck_exceptionIsThrown() {
         // given
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
+
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
         final var documentResult = new DocumentResultEntity();
@@ -623,8 +636,52 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
+    void testVerifyDocuments_extractedDataCheckDisabled_exceptionIsThrown() throws DocumentVerificationException {
+        // given
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(false);
+
+        final var uploadIds = List.of(
+                DOCUMENT_ID_CARD_FRONT_UPLOAD_ID,
+                DOCUMENT_ID_CARD_BACK_UPLOAD_ID,
+                DOCUMENT_DRIVING_LICENSE_FRONT_UPLOAD_ID,
+                DOCUMENT_DRIVING_LICENSE_BACK_UPLOAD_ID
+        );
+
+        final var idCardDocumentResult = new DocumentResultEntity();
+        idCardDocumentResult.setVerificationResult(
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.PASSPORT, buildExtractedDataJson("John"), "[]", "[]")
+        );
+
+        final var idCardVerifications = buildDocumentVerifications(
+                List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack),
+                Set.of(idCardDocumentResult)
+        );
+        final var drivingLicenseDocumentResult = new DocumentResultEntity();
+        drivingLicenseDocumentResult.setVerificationResult(
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, "[]", "[]", "[]")
+        );
+
+        final var drivingLicenseVerifications = buildDocumentVerifications(
+                List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack),
+                Set.of(drivingLicenseDocumentResult)
+        );
+
+        final var verifications = Stream.concat(idCardVerifications.stream(), drivingLicenseVerifications.stream())
+                .toList();
+        when(documentVerificationRepository.findAllByUploadIds(uploadIds)).thenReturn(verifications);
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
+    }
+
+    @Test
     void testVerifyDocuments_crosscheckFails_exceptionIsThrown() {
         // given
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
+
         final var uploadIds = List.of(
                 DOCUMENT_ID_CARD_FRONT_UPLOAD_ID,
                 DOCUMENT_ID_CARD_BACK_UPLOAD_ID,
