@@ -27,7 +27,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +38,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,9 +119,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Autowired
     private DocumentResultRepository documentResultRepository;
-
-    @MockitoBean
-    private PowerAuthClient powerAuthClient;
 
     private OwnerId ownerId;
 

@@ -222,7 +222,7 @@ class MicroblinkDocumentVerificationProviderTest {
             "app1,android,source1-android-1",
             "app2,ios,source2-ios-1"
     })
-    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String origin, final String platform, final String expectedLicenseKey) {
+    void testInitVerificationSdk_sdkConfigFound_responseWithLicenseKey(final String origin, final String platform, final String expectedLicenseKey) {
         // given
         final var initParams = Map.of("origin", origin, "platform", platform);
 

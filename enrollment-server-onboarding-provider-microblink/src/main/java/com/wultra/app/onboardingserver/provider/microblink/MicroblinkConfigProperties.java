@@ -18,9 +18,12 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.wultra.core.rest.client.base.RestClientConfiguration;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,7 @@ import java.util.List;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.microblink")
+@Validated
 @Getter
 @Setter
 public class MicroblinkConfigProperties {
@@ -48,6 +52,7 @@ public class MicroblinkConfigProperties {
     /**
      * Configurations for mobile SDK.
      */
+    @Valid
     private List<SdkConfig> mobileSdkConfigs = new ArrayList<>();
 
     /**
@@ -58,8 +63,8 @@ public class MicroblinkConfigProperties {
      * @param licenseKey license key for mobile SDK
      */
     public record SdkConfig(
-            String origin,
-            String platform,
-            String licenseKey
+            @NotBlank String origin,
+            @NotBlank String platform,
+            @NotBlank String licenseKey
     ) {}
 }
