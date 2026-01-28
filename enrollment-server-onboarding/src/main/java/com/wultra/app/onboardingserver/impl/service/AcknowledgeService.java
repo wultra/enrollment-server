@@ -108,7 +108,7 @@ public class AcknowledgeService {
         return switch (source) {
             case OK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE;
             case NOK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT;
-            default -> throw new IllegalArgumentException("Unsupported result: " + source);
+            case WAIT -> throw new IllegalArgumentException("WAIT result should be handled at the controller level and must not reach AcknowledgeService");
         };
     }
 
