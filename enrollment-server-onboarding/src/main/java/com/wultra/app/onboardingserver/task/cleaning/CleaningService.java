@@ -57,7 +57,7 @@ class CleaningService {
 
     private final OnboardingConfig onboardingConfig;
 
-    final IdentityVerificationConfig identityVerificationConfig;
+    private final IdentityVerificationConfig identityVerificationConfig;
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
@@ -70,6 +70,8 @@ class CleaningService {
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
 
     private final OnboardingOtpRepository onboardingOtpRepository;
+
+    private final SelfieRepository selfieRepository;
 
     private final AuditService auditService;
 
@@ -126,6 +128,20 @@ class CleaningService {
         for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             terminateAndAuditProcesses(idsChunk, now, OnboardingProcessEntity.ERROR_PROCESS_EXPIRED_ONBOARDING, ErrorOrigin.PROCESS_LIMIT_CHECK);
         }
+    }
+
+    /**
+     * Clean selfie images.
+     *
+     * @return Number of deleted selfie images.
+     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
+     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
+     */
+    @Transactional
+    public int cleanSelfies() {
+        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
+        final Date dateCleanup = DateUtil.convertExpirationToCreatedDate(processExpiration);
+        return selfieRepository.cleanup(dateCleanup);
     }
 
     /**

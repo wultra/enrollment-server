@@ -32,6 +32,12 @@ Columns `activation_id`, `identity_verification_id` and `filename` are removed. 
 the table was never used in production and all these metadata are stored in `es_document_verification` table and 
 linked to `es_document_data` records via `upload_id` column.
 
+
+### Selfie
+
+A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
+
+
 ## REST API Changes
 
 

@@ -19,10 +19,7 @@ package com.wultra.app.onboardingserver.provider;
 
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.model.request.*;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
-import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import com.wultra.app.onboardingserver.provider.model.response.*;
 import com.wultra.core.annotations.PublicSpi;
 
 /**
@@ -85,4 +82,13 @@ public interface OnboardingProvider {
      * @throws OnboardingProviderException if there is a problem to call process event
      */
     ProcessEventResponse processEvent(ProcessEventRequest request) throws OnboardingProviderException;
+
+    /**
+     * Approve client.
+     *
+     * @param request client approval request
+     * @return client approval response
+     * @throws OnboardingProviderException if there is a problem to approve the client
+     */
+    ApproveClientResponse approveClient(ApproveClientRequest request) throws OnboardingProviderException;
 }

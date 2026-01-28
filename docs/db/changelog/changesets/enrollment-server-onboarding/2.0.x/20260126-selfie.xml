@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.0.x/20260126-selfie.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="es_selfie_seq" />
+            </not>
+        </preConditions>
+        <comment>Create a new sequence es_selfie_seq</comment>
+        <createSequence sequenceName="es_selfie_seq" startValue="1" incrementBy="50" cacheSize="20" />
+    </changeSet>
+
+    <changeSet id="2" logicalFilePath="enrollment-server-onboarding/2.0.x/20260126-selfie.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="es_selfie" />
+            </not>
+        </preConditions>
+        <comment>Create a new table es_selfie</comment>
+        <createTable tableName="es_selfie">
+            <column name="id" type="bigint" defaultValueSequenceNext="es_selfie_seq">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="image" type="${blob_type}" />
+            <column name="identity_verification_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="es_selfie_identity_verification_id_fk" referencedTableName="es_identity_verification" referencedColumnNames="id"/>
+            </column>
+            <column name="timestamp_created" type="timestamp" defaultValueDate="${now}">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" logicalFilePath="enrollment-server-onboarding/2.0.x/20260126-selfie.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_selfie_identity_verification_id_idx"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index es_selfie_identity_verification_id_idx</comment>
+        <createIndex tableName="es_selfie" indexName="es_selfie_identity_verification_id_idx">
+            <column name="identity_verification_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="4" logicalFilePath="enrollment-server-onboarding/2.0.x/20260126-selfie.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_selfie_timestamp_created_idx"/>
+            </not>
+        </preConditions>
+        <comment>Create a new index es_selfie_timestamp_created_idx</comment>
+        <createIndex tableName="es_selfie" indexName="es_selfie_timestamp_created_idx">
+            <column name="timestamp_created"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

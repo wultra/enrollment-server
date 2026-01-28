@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,15 +14,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
+package com.wultra.app.onboardingserver.statemachine.action;
 
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -33,36 +29,29 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
-
 /**
- * Action to process verification result.
+ * Action persisting the state on entry.
  *
- * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class PresenceCheckVerificationAction implements Action<OnboardingState, OnboardingEvent> {
-
-    private final PresenceCheckService presenceCheckService;
+public class PersistOnEntryStateAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationService identityVerificationService;
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
+        final OnboardingState state = context.getStateMachine().getState().getId();
+
+        if (state.isChoiceState()) {
+            throw new IllegalStateException("Choice states must not be persisted, " + state);
+        }
+
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        try {
-            presenceCheckService.checkPresenceVerification(ownerId, identityVerification);
-        } catch (PresenceCheckException | RemoteCommunicationException e) {
-            logger.error("Checking presence verification failed, {}", ownerId, e);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
-            identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-            identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), FAILED, ownerId);
-        }
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId);
     }
-
 }
