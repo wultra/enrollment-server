@@ -90,14 +90,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private static Map<String, Map<String, String>> buildLicenseKeyByOriginByPlatform(final List<MicroblinkConfigProperties.SdkConfig> sdkConfigs) {
-        final var licenseKeyByOriginByPlatform = new HashMap<String, Map<String, String>>();
-
-        for (final var sdkConfig : sdkConfigs) {
-            licenseKeyByOriginByPlatform.computeIfAbsent(sdkConfig.origin(), k -> new HashMap<>())
-                    .put(sdkConfig.platform(), sdkConfig.licenseKey());
-        }
-
-        return licenseKeyByOriginByPlatform;
+         return sdkConfigs.stream().collect(
+                Collectors.groupingBy(
+                        MicroblinkConfigProperties.SdkConfig::origin,
+                        Collectors.toMap(
+                                MicroblinkConfigProperties.SdkConfig::platform,
+                                MicroblinkConfigProperties.SdkConfig::licenseKey,
+                                (a, b) -> {
+                                    throw new IllegalStateException("Duplicate origin+platform combination");
+                                }
+                        )
+                )
+        );
     }
 
     @Override
