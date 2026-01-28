@@ -34,10 +34,10 @@ import lombok.NonNull;
 @Builder
 @PublicApi
 public record ApproveClientResponse(
-        @NonNull EvaluationResult result,
+        @NonNull ApprovalResult result,
         String resultReason
 ) {
-    public enum EvaluationResult {
+    public enum ApprovalResult {
         OK,
         NOK,
 

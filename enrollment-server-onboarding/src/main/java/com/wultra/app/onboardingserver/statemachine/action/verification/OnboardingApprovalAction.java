@@ -44,7 +44,7 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        final ApproveClientResponse.EvaluationResult result = onboardingApprovalService.approve(identityVerification);
+        final ApproveClientResponse.ApprovalResult result = onboardingApprovalService.approve(identityVerification);
         context.getExtendedState().getVariables().put(RESULT_KEY, result);
     }
 }

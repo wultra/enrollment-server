@@ -88,9 +88,9 @@ public class AcknowledgeService {
 
         try {
             final OwnerId ownerId = convert(identityVerification);
-            final OnboardingEvent event = convert(request.evaluationResult());
+            final OnboardingEvent event = convert(request.approvalResult());
             stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
-            auditService.audit(identityVerification, "Acknowledged onboarding approval result: {}", request.evaluationResult());
+            auditService.audit(identityVerification, "Acknowledged onboarding approval result: {}", request.approvalResult());
         } catch (IdentityVerificationException e) {
             logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
             return AcknowledgeApproveClientResponse.builder()
@@ -104,10 +104,11 @@ public class AcknowledgeService {
                 .build();
     }
 
-    private OnboardingEvent convert(final AcknowledgeApproveClientRequest.EvaluationResult source) {
+    private static OnboardingEvent convert(final AcknowledgeApproveClientRequest.ApprovalResult source) {
         return switch (source) {
             case OK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE;
             case NOK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT;
+            default -> throw new IllegalArgumentException("Unsupported result: " + source);
         };
     }
 

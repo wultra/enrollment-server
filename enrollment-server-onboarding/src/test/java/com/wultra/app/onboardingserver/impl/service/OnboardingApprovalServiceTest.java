@@ -82,7 +82,7 @@ class OnboardingApprovalServiceTest {
         when(onboardingProvider.approveClient(any()))
                 .thenThrow(new OnboardingProviderException("approval failed"))
                 .thenReturn(ApproveClientResponse.builder()
-                        .result(ApproveClientResponse.EvaluationResult.OK)
+                        .result(ApproveClientResponse.ApprovalResult.OK)
                         .build());
 
         final ScaResultEntity scaResult = new ScaResultEntity();
@@ -90,9 +90,9 @@ class OnboardingApprovalServiceTest {
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(any()))
                 .thenReturn(Optional.of(scaResult));
 
-        final ApproveClientResponse.EvaluationResult result = tested.approve(identityVerification);
+        final ApproveClientResponse.ApprovalResult result = tested.approve(identityVerification);
 
-        assertEquals(ApproveClientResponse.EvaluationResult.OK, result);
+        assertEquals(ApproveClientResponse.ApprovalResult.OK, result);
 
         verify(onboardingProvider, times(2)).approveClient(any());
         verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);

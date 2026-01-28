@@ -92,7 +92,7 @@ public class OnboardingApprovalService {
      * @return approval result; {@code null} is returned if the approval failed and represents a FAILED evaluation state
      */
     @Transactional(readOnly = true)
-    public @Nullable ApproveClientResponse.EvaluationResult approve(final IdentityVerificationEntity identityVerification) {
+    public @Nullable ApproveClientResponse.ApprovalResult approve(final IdentityVerificationEntity identityVerification) {
         try {
             final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
 
@@ -113,7 +113,7 @@ public class OnboardingApprovalService {
 
             final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
 
-            final ApproveClientResponse.EvaluationResult approvalResult = response.result();
+            final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
             return approvalResult;
         } catch (OnboardingProviderException | OnboardingProcessException e) {

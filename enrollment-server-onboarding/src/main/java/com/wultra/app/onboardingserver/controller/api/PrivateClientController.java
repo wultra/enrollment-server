@@ -50,6 +50,13 @@ class PrivateClientController {
     public AcknowledgeApproveClientResponse acknowledgeApproveClient(final @Valid @RequestBody AcknowledgeApproveClientRequest request) {
         logger.info("action: acknowledgeApproveClient, state: initiated, processId: {}", request.processId());
 
+        if (request.approvalResult() == AcknowledgeApproveClientRequest.ApprovalResult.WAIT) {
+            logger.info("action: acknowledgeApproveClient, state: skipped, reason: approvalResult is WAIT");
+            return AcknowledgeApproveClientResponse.builder()
+                    .result(AcknowledgeApproveClientResponse.Result.OK)
+                    .build();
+        }
+
         final AcknowledgeApproveClientResponse response = acknowledgeService.acknowledgeApproveClient(request);
 
         if (response.result() == AcknowledgeApproveClientResponse.Result.OK) {

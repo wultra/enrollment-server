@@ -366,9 +366,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
-                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.EvaluationResult.OK), persistTargetStateAction)
-                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.EvaluationResult.WAIT), persistTargetStateAction)
-                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.EvaluationResult.NOK), persistTargetStateAction)
+                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.ApprovalResult.OK), persistTargetStateAction)
+                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.ApprovalResult.WAIT), persistTargetStateAction)
+                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.ApprovalResult.NOK), persistTargetStateAction)
                 .last(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistTargetStateAction)
 
                 .and()
@@ -392,13 +392,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .target(OnboardingState.CHOICE_OTP_ENABLED);
     }
 
-    private static Guard<OnboardingState, OnboardingEvent> isApprovalResult(ApproveClientResponse.EvaluationResult expectedResult) {
+    private static Guard<OnboardingState, OnboardingEvent> isApprovalResult(ApproveClientResponse.ApprovalResult expectedResult) {
         return context -> evaluateApprovalResult(context, expectedResult);
     }
 
-    private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.EvaluationResult expectedResult) {
+    private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
         final Object result = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
-        if (!(result instanceof ApproveClientResponse.EvaluationResult)) {
+        if (!(result instanceof ApproveClientResponse.ApprovalResult)) {
             return false;
         }
         return result == expectedResult;

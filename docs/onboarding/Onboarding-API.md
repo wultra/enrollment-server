@@ -66,12 +66,12 @@ If configured, the system waits for the event from an external system to continu
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                                 |
-|:-------------------------|:---------|:--------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                                |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                  |
-| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                 |
-| `evaluationResult`       | `String` | The evaluation outcome OK or NOK. Process should either continue (OK), or fail/reset (NOK). |
+| Attribute                | Type     | Description                                                                                              |
+|:-------------------------|:---------|:---------------------------------------------------------------------------------------------------------|
+| `processId`              | `String` | ID of an onboarding process.                                                                             |
+| `userId`                 | `String` | ID of a user stored on onboarding process.                                                               |
+| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                              |
+| `evaluationResult`       | `String` | The evaluation outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
 
 #### Response 200
 
@@ -125,12 +125,12 @@ If configured, the system waits for the event from an external system to continu
 
 ##### Request Params
 
-| Attribute                | Type     | Description                                                                               |
-|:-------------------------|:---------|:------------------------------------------------------------------------------------------|
-| `processId`              | `String` | ID of an onboarding process.                                                              |
-| `userId`                 | `String` | ID of a user stored on onboarding process.                                                |
-| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                               |
-| `approvalResult`         | `String` | The approval outcome OK or NOK. Process should either continue (OK), or fail/reset (NOK). |
+| Attribute                | Type     | Description                                                                                            |
+|:-------------------------|:---------|:-------------------------------------------------------------------------------------------------------|
+| `processId`              | `String` | ID of an onboarding process.                                                                           |
+| `userId`                 | `String` | ID of a user stored on onboarding process.                                                             |
+| `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                            |
+| `approvalResult`         | `String` | The approval outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
 
 #### Response 200
 
@@ -143,8 +143,8 @@ If configured, the system waits for the event from an external system to continu
 
 ##### Response  Params
 
-| Attribute      | Type     | Description                                                                                                                                      |
-|:---------------|:---------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
+| Attribute      | Type     | Description                                                                                                                                     |
+|:---------------|:---------|:------------------------------------------------------------------------------------------------------------------------------------------------|
 | `result`       | `String` | The transition outcome OK, NOK. Depends on the transition to the next phase was successful.                                                     |
 | `resultReason` | `String` | The reason is used when result is NOK to disclose the reason of failed process (for example user started new identity verification subprocess). |
 <!-- end -->

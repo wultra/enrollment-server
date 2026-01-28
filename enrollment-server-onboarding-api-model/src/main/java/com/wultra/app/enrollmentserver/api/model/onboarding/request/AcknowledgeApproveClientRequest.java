@@ -27,16 +27,16 @@ import jakarta.validation.constraints.NotNull;
  * @param processId Process ID
  * @param userId User ID.
  * @param identityVerificationId Identity verification ID.
- * @param evaluationResult The evaluation result.
+ * @param approvalResult The approval result.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 public record AcknowledgeApproveClientRequest(
         @NotBlank String processId,
         @NotBlank String userId,
         @NotBlank String identityVerificationId,
-        @NotNull EvaluationResult evaluationResult
+        @NotNull ApprovalResult approvalResult
 ) {
-    public enum EvaluationResult {
-        OK, NOK
+    public enum ApprovalResult {
+        OK, NOK, WAIT
     }
 }

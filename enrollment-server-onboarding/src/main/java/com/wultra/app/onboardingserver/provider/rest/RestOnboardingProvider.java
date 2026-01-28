@@ -193,11 +193,11 @@ public class RestOnboardingProvider implements OnboardingProvider {
                 .build();
     }
 
-    private static ApproveClientResponse.EvaluationResult convert(final ApproveClientResponseDto.EvaluationResult source) {
+    private static ApproveClientResponse.ApprovalResult convert(final ApproveClientResponseDto.EvaluationResult source) {
         return switch (source) {
-            case OK -> ApproveClientResponse.EvaluationResult.OK;
-            case NOK -> ApproveClientResponse.EvaluationResult.NOK;
-            case WAIT -> ApproveClientResponse.EvaluationResult.WAIT;
+            case OK -> ApproveClientResponse.ApprovalResult.OK;
+            case NOK -> ApproveClientResponse.ApprovalResult.NOK;
+            case WAIT -> ApproveClientResponse.ApprovalResult.WAIT;
         };
     }
 
