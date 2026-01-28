@@ -30,29 +30,28 @@ import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
 /**
- * Action persisting the target state.
+ * Action persisting the state on entry.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class PersistTargetStateAction implements Action<OnboardingState, OnboardingEvent> {
+public class PersistOnEntryStateAction implements Action<OnboardingState, OnboardingEvent> {
 
     private final IdentityVerificationService identityVerificationService;
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
-        final OnboardingState targetState = context.getTarget().getId();
+        final OnboardingState state = context.getStateMachine().getState().getId();
 
-        if (targetState.isChoiceState()) {
-            logger.debug("Trying to persist choice state, skipping: {}", targetState);
-            return;
+        if (state.isChoiceState()) {
+            throw new IllegalStateException("Choice states must not be persisted, " + state);
         }
 
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, targetState.getPhase(), targetState.getStatus(), ownerId);
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId);
     }
 }

@@ -17,7 +17,7 @@
 package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
-import com.wultra.app.onboardingserver.statemachine.action.PersistTargetStateAction;
+import com.wultra.app.onboardingserver.statemachine.action.PersistOnEntryStateAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
@@ -104,7 +104,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final OnboardingApprovalAction onboardingApprovalAction;
 
-    private final PersistTargetStateAction persistTargetStateAction;
+    private final PersistOnEntryStateAction persistOnEntryStateAction;
 
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
@@ -163,7 +163,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .end(OnboardingState.COMPLETED_ACCEPTED)
                 .end(OnboardingState.COMPLETED_FAILED)
                 .end(OnboardingState.COMPLETED_REJECTED)
-                .states(EnumSet.allOf(OnboardingState.class));
+                .states(EnumSet.allOf(OnboardingState.class))
+                .stateEntry(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_REJECTED, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction);
     }
 
     @Override
@@ -366,24 +371,22 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
-                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.ApprovalResult.OK), persistTargetStateAction)
-                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.ApprovalResult.WAIT), persistTargetStateAction)
-                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.ApprovalResult.NOK), persistTargetStateAction)
-                .last(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistTargetStateAction)
+                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.ApprovalResult.OK))
+                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.ApprovalResult.WAIT))
+                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.ApprovalResult.NOK))
+                .last(OnboardingState.ONBOARDING_APPROVAL_FAILED)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS)
                 .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE)
                 .target(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
-                .action(persistTargetStateAction)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS)
                 .event(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT)
                 .target(OnboardingState.ONBOARDING_APPROVAL_REJECTED)
-                .action(persistTargetStateAction)
 
                 .and()
                 .withExternal()
@@ -442,7 +445,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withChoice()
                 .source(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED)
-                .first(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard, persistTargetStateAction)
+                .first(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, targetActivationEnabledGuard)
                 .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
 
                 .and()
