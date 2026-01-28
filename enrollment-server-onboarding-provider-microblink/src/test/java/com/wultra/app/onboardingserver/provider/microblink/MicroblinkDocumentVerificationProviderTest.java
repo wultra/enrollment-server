@@ -78,9 +78,9 @@ class MicroblinkDocumentVerificationProviderTest {
     private static final String ACTIVATION_ID = "da15f970-d939-46f0-abe7-7858e74ea3b0";
 
     private static final List<MicroblinkConfigProperties.SdkConfig> MOBILE_SDK_CONFIGS = List.of(
-            new MicroblinkConfigProperties.SdkConfig("source1", "ios", "source1-ios-1"),
-            new MicroblinkConfigProperties.SdkConfig("source1", "android", "source1-android-1"),
-            new MicroblinkConfigProperties.SdkConfig("source2", "ios", "source2-ios-1")
+            new MicroblinkConfigProperties.SdkConfig("app1", "ios", "source1-ios-1"),
+            new MicroblinkConfigProperties.SdkConfig("app1", "android", "source1-android-1"),
+            new MicroblinkConfigProperties.SdkConfig("app2", "ios", "source2-ios-1")
     );
 
     private static final String DOCUMENT_ID_CARD_FRONT_ID = "id-card-front";
@@ -199,14 +199,14 @@ class MicroblinkDocumentVerificationProviderTest {
     @ParameterizedTest
     @CsvSource({
             ",",
-            "source1,",
+            "app1,",
             ",ios",
-            "source2,android"
+            "app2,android"
     })
-    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String source, final String platform) {
+    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String origin, final String platform) {
         // given
         final var initParams = new HashMap<String, String>();
-        initParams.put("source", source);
+        initParams.put("origin", origin);
         initParams.put("platform", platform);
 
         // when
@@ -218,13 +218,13 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @ParameterizedTest
     @CsvSource({
-            "source1,ios,source1-ios-1",
-            "source1,android,source1-android-1",
-            "source2,ios,source2-ios-1"
+            "app1,ios,source1-ios-1",
+            "app1,android,source1-android-1",
+            "app2,ios,source2-ios-1"
     })
-    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String source, final String platform, final String expectedLicenseKey) {
+    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String origin, final String platform, final String expectedLicenseKey) {
         // given
-        final var initParams = Map.of("source", source, "platform", platform);
+        final var initParams = Map.of("origin", origin, "platform", platform);
 
         // when
         final var result = provider.initVerificationSdk(ownerId, initParams);

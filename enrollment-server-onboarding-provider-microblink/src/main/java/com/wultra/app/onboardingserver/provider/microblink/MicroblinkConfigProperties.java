@@ -53,12 +53,12 @@ public class MicroblinkConfigProperties {
     /**
      * Microblink mobile SDK configuration.
      *
-     * @param source Bundle ID / App ID
+     * @param origin Bundle ID / App ID
      * @param platform mobile platform
      * @param licenseKey license key for mobile SDK
      */
     public record SdkConfig(
-            String source,
+            String origin,
             String platform,
             String licenseKey
     ) {}

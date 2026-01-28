@@ -69,7 +69,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final MicroblinkConfigProperties properties;
-    private final Map<String, Map<String, String>> licenseKeyBySourceByPlatform;
+    private final Map<String, Map<String, String>> licenseKeyByOriginByPlatform;
 
     public MicroblinkDocumentVerificationProvider(
             RestClient microblinkRestClient,
@@ -86,18 +86,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
 
-        licenseKeyBySourceByPlatform = buildLicenseKeyBySourceByPlatform(properties.getMobileSdkConfigs());
+        licenseKeyByOriginByPlatform = buildLicenseKeyByOriginByPlatform(properties.getMobileSdkConfigs());
     }
 
-    private static Map<String, Map<String, String>> buildLicenseKeyBySourceByPlatform(final List<MicroblinkConfigProperties.SdkConfig> sdkConfigs) {
-        final var licenseKeyBySourceByPlatform = new HashMap<String, Map<String, String>>();
+    private static Map<String, Map<String, String>> buildLicenseKeyByOriginByPlatform(final List<MicroblinkConfigProperties.SdkConfig> sdkConfigs) {
+        final var licenseKeyByOriginByPlatform = new HashMap<String, Map<String, String>>();
 
         for (final var sdkConfig : sdkConfigs) {
-            licenseKeyBySourceByPlatform.computeIfAbsent(sdkConfig.source(), k -> new HashMap<>())
+            licenseKeyByOriginByPlatform.computeIfAbsent(sdkConfig.origin(), k -> new HashMap<>())
                     .put(sdkConfig.platform(), sdkConfig.licenseKey());
         }
 
-        return licenseKeyBySourceByPlatform;
+        return licenseKeyByOriginByPlatform;
     }
 
     @Override
@@ -203,9 +203,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes) {
         logger.info("action: initVerificationSdk, state: initiated, provider: microblink, ownerId: {}, initAttributes: {}", ownerId, initAttributes);
 
-        final var source = initAttributes.getOrDefault("source", null);
+        final var origin = initAttributes.getOrDefault("origin", null);
         final var platform = initAttributes.getOrDefault("platform", null);
-        final var licenseKey = licenseKeyBySourceByPlatform.getOrDefault(source, new HashMap<>())
+        final var licenseKey = licenseKeyByOriginByPlatform.getOrDefault(origin, new HashMap<>())
                 .getOrDefault(platform, null);
 
         final var sdkInfo = Optional.ofNullable(licenseKey)

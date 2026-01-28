@@ -243,7 +243,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     @Test
     void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey() {
         // given
-        final var initParams = Map.of("source", "app1", "platform", "android");
+        final var initParams = Map.of("origin", "app1", "platform", "android");
 
         // when
         final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, initParams);
@@ -255,7 +255,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     @Test
     void testInitVerificationSdk_sdkConfigFound_responseWithLicenseKey() {
         // given
-        final var initParams = Map.of("source", "app1", "platform", "ios");
+        final var initParams = Map.of("origin", "app1", "platform", "ios");
 
         // when
         final var result = microblinkDocumentVerificationProvider.initVerificationSdk(ownerId, initParams);

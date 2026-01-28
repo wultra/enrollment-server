@@ -160,7 +160,7 @@ for details how the score affects false acceptances (FAR) and false rejections (
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.                           |
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                                     |
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                                     |
-| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].source`           |         | Microblink Bundle ID / App ID.                                          |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].origin`           |         | Microblink Bundle ID / App ID.                                          |
 | `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].platform`         |         | Mobile platform. Supported values `ios` and `android` (case sensitive). |
 | `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].license-key`      |         | Mobile SDK license key.                                                 |
 | `enrollment-server-onboarding.document-verification.microblink.extractedDataCheckEnabled`              | `true`  | Whether check/validation of extracted data is enabled.                  |

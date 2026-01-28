@@ -80,7 +80,8 @@ The mobile SDK uses the Microblink SDK to capture document images. The SDK requi
 The license key is sent in the response body of `POST /api/identity/document/init-sdk` as the `license-key` attribute.
 The request body should contain following attributes:
  - `platform` - mobile platform for which the key should be returned. Supported values are `ios` and `android`(both case-sensitive).
- - `source` - Microblink Bundle ID / Application ID
+ - `origin` - Microblink Bundle ID / Application ID
+
 If any of these attributes are missing or there is no config for given combination then license key is not returned in response body.
 
 ## Presence Check
