@@ -37,6 +37,20 @@ public record AcknowledgeApproveClientRequest(
         @NotNull ApprovalResult approvalResult
 ) {
     public enum ApprovalResult {
-        OK, NOK, WAIT
+
+        /**
+         * Approval was successful.
+         */
+        OK,
+
+        /**
+         * Approval was not successful.
+         */
+        NOK,
+
+        /**
+         * Wait, still not decided.
+         */
+        WAIT
     }
 }

@@ -38,11 +38,18 @@ public record ApproveClientResponse(
         String resultReason
 ) {
     public enum ApprovalResult {
+
+        /**
+         * Approval was successful.
+         */
         OK,
+        /**
+         * Approval was not successful.
+         */
         NOK,
 
         /**
-         * Wait for asynchronous evaluation
+         * Wait for asynchronous evaluation.
          */
         WAIT
     }
