@@ -20,10 +20,7 @@ package com.wultra.app.onboardingserver.provider.rest;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
-import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
-import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import com.wultra.app.onboardingserver.provider.model.response.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -169,6 +166,51 @@ public class RestOnboardingProvider implements OnboardingProvider {
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to process event for " + request, e);
         }
+    }
+
+    @Override
+    public ApproveClientResponse approveClient(final ApproveClientRequest request) throws OnboardingProviderException {
+        logger.debug("Approving client for {}", request);
+        final ApproveClientRequestDto requestDto = convert(request);
+
+        try {
+            final ParameterizedTypeReference<ApproveClientResponseDto> type = ParameterizedTypeReference.forType(ApproveClientResponseDto.class);
+            final ResponseEntity<ApproveClientResponseDto> response = restClient.post("/client/approve", requestDto, null, createHeaders(), type);
+            logger.debug("Got approval client response: {}", response);
+            if (response.getBody() == null) {
+                throw new OnboardingProviderException("Client approval response is null");
+            }
+            return convert(response.getBody());
+        } catch (RestClientException e) {
+            throw new OnboardingProviderException("Unable to approve client for " + request, e);
+        }
+    }
+
+    private static ApproveClientResponse convert(final ApproveClientResponseDto source) {
+        return ApproveClientResponse.builder()
+                .result(convert(source.result()))
+                .resultReason(source.resultReason())
+                .build();
+    }
+
+    private static ApproveClientResponse.ApprovalResult convert(final ApproveClientResponseDto.EvaluationResult source) {
+        return switch (source) {
+            case OK -> ApproveClientResponse.ApprovalResult.OK;
+            case NOK -> ApproveClientResponse.ApprovalResult.NOK;
+            case WAIT -> ApproveClientResponse.ApprovalResult.WAIT;
+        };
+    }
+
+    private static ApproveClientRequestDto convert(final ApproveClientRequest source) {
+        return ApproveClientRequestDto.builder()
+                .processId(source.processId())
+                .processType(source.processType())
+                .userId(source.userId())
+                .identityVerificationId(source.identityVerificationId())
+                .provider(source.provider())
+                .score(source.score())
+                .presenceCheckResult(new ApproveClientRequestDto.PresenceCheckResult(source.image()))
+                .build();
     }
 
     private static ProcessEventRequestDto convert(final ProcessEventRequest source) throws OnboardingProviderException {

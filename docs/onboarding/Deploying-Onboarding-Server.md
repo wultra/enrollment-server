@@ -47,3 +47,29 @@ The following Java runtime versions are supported:
 - Java 17 (LTS release)
 
 The Onboarding Server may run on other Java versions, however we do not perform extensive testing with non-LTS releases.
+
+
+## Setting Up REST Service Authentication
+
+Access to private integration REST services is limited to users with elevated privileges.
+You can choose between Basic HTTP and OpenID Connect authentication, each requiring specific configurations as described below.
+By default, basic HTTP authentication scheme is used.
+To change this preference, set the `enrollment-server-onboarding.security.auth-type` configuration property.
+
+
+### Basic HTTP Authentication
+
+To use Basic HTTP authentication you have to specify the username and password using the following configuration properties:
+
+For details, see the [configuration properties](./Configuration-Properties.md#basic-authentication) section
+
+
+### OpenID Connect
+
+To set up the OpenID Connect (OIDC) authentication, specify which authorization server to use using
+the `spring.security.oauth2.resource-server.jwt.issuer-uri` configuration property.
+
+Each request that requires privileged access must include JWT-encoded bearer token in the authorization header. The
+passed token must include roles claim, containing a list of roles for which is the user authorized.
+
+For additional configuration options, refer to the [configuration properties](./Configuration-Properties.md#openid-connect) section.

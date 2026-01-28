@@ -30,7 +30,6 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
-import com.wultra.app.onboardingserver.statemachine.action.verification.MoveToActivationFinishInAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -74,9 +73,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
-
-    @MockitoBean
-    private MoveToActivationFinishInAction moveToActivationFinishInAction;
 
     @Test
     void testPresenceCheckInit() throws Exception {
@@ -184,8 +180,6 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
-
-        verify(moveToActivationFinishInAction).execute(any());
     }
 
     private static OnboardingProcessEntity createProcessWithConfiguration(
