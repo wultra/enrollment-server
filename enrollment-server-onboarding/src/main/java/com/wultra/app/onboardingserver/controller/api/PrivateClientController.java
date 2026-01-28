@@ -19,7 +19,7 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeApproveClientRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeApproveClientResponse;
-import com.wultra.app.onboardingserver.impl.AcknowledgeService;
+import com.wultra.app.onboardingserver.impl.service.AcknowledgeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
