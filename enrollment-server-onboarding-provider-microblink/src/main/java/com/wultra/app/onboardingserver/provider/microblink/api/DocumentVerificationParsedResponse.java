@@ -35,7 +35,8 @@ public record DocumentVerificationParsedResponse(
     String verificationJson,
     String extractionFrontJson,
     String extractionBackJson,
-    String responseJson
+    String responseWithoutImagesJson,
+    List<Message> messages
 ) {
     public record Verification(
             String result
@@ -65,5 +66,11 @@ public record DocumentVerificationParsedResponse(
     public record Image(
             String name,
             String base64
+    ) {}
+
+    public record Message(
+            String code,
+            String message,
+            String status
     ) {}
 }
