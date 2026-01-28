@@ -135,13 +135,14 @@ public class OnboardingApprovalService {
 
         final Throwable lastThrowable = context.getLastThrowable();
         if (lastThrowable != null) {
-            logger.warn("approveClient attempt {}/{}, processId: {}, previous failure: {}",
-                    attempt, MAX_ATTEMPTS, request.processId(), lastThrowable.getMessage(), lastThrowable);
+            logger.info("action: callApproveClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, MAX_ATTEMPTS, lastThrowable.getMessage());
         } else {
-            logger.info("approveClient attempt {}/{}, processId: {}", attempt, MAX_ATTEMPTS, request.processId());
+            logger.info("action: callApproveClient, state: initiated, attempt {}/{}", attempt, MAX_ATTEMPTS);
         }
 
-        return onboardingProvider.approveClient(request);
+        final ApproveClientResponse response = onboardingProvider.approveClient(request);
+        logger.info("action: callApproveClient, state: succeeded");
+        return response;
     }
 
     private static ApproveClientRequest.Status convert(final ScaResultEntity.Result source) {
