@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 public class MicroblinkDocumentVerificationProvider implements DocumentVerificationProvider {
 
     private static final Pattern MICROBLINK_TRACE_ID_PATTERN = Pattern.compile("\"traceId\"\\s*:\\s*\"([^\"]+)\"");
+    private static final String MICROBLINK_VALIDATION_PASS_RESULT = "Pass";
 
     private final RestClient microblinkRestClient;
     private final DocumentVerificationResponseParser responseParser;
@@ -390,7 +391,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var validation = microblinkResponse.verification();
 
-            if (!"Pass".equalsIgnoreCase(validation.result())) {
+            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(validation.result())) {
                 final var validationErrorMessages = microblinkResponse.messages()
                         .stream()
                         .map(DocumentVerificationParsedResponse.Message::message)
@@ -489,7 +490,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResult.setVerificationResult(documentResult.getVerificationResult());
             documentVerificationResult.setExtractedData(documentResult.getExtractedData());
 
-            if (!"Pass".equalsIgnoreCase(microblinkResponse.verification().result())) {
+            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkResponse.verification().result())) {
                 final var rejectReasons = microblinkResponse.messages()
                         .stream()
                         .map(DocumentVerificationParsedResponse.Message::message)
@@ -505,7 +506,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         performDocumentsCrosscheck(crosscheckDataByDocumentType.values().stream().toList());
 
         final var allChecksPassed = microblinkCheckResults.stream()
-                .allMatch("Pass"::equalsIgnoreCase);
+                .allMatch(MICROBLINK_VALIDATION_PASS_RESULT::equalsIgnoreCase);
 
         final var result = new DocumentsVerificationResult();
         result.setVerificationId(verificationId);

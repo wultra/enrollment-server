@@ -88,20 +88,20 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static MockWebServer mockWebServer;
 
-    private static Image idCardFrontImage;
-    private static Image idCardBackImage;
-    private static String idCardFacePhotoBase64;
-    private static String microblinkIdCardRejectResponseBody;
-    private static String microblinkIdCardPassResponseBody;
-    private static String idCardFrontExtractionJson;
-    private static String idCardBackExtractionJson;
-    private static String idCardPassValidationResult;
-    private static String idCardRejectValidationResult;
+    private static final Image idCardFrontImage;
+    private static final Image idCardBackImage;
+    private static final String idCardFacePhotoBase64;
+    private static final String microblinkIdCardRejectResponseBody;
+    private static final String microblinkIdCardPassResponseBody;
+    private static final String idCardFrontExtractionJson;
+    private static final String idCardBackExtractionJson;
+    private static final String idCardPassValidationResult;
+    private static final String idCardRejectValidationResult;
 
-    private static Image passportImage;
-    private static String microblinkPassportPassResponseBody;
-    private static String passportPassExtractionJson;
-    private static String passportPassValidationResult;
+    private static final Image passportImage;
+    private static final String microblinkPassportPassResponseBody;
+    private static final String passportPassExtractionJson;
+    private static final String passportPassValidationResult;
 
     private MicroblinkDocumentVerificationProvider.DocumentVerificationData idCardFrontDocument;
     private MicroblinkDocumentVerificationProvider.DocumentVerificationData idCardBackDocument;
@@ -136,67 +136,73 @@ class MicroblinkDocumentVerificationProviderIntTest {
         registry.add("enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl", () -> url);
     }
 
+    static {
+        try {
+            final var mapper = new ObjectMapper();
+
+            // ID card
+            idCardFrontImage = Image.builder()
+                    .filename("id_card_front.jpeg")
+                    .data(new ClassPathResource("id_card_front.jpeg").getContentAsByteArray())
+                    .build();
+
+            idCardBackImage = Image.builder()
+                    .filename("id_card_back.jpeg")
+                    .data(new ClassPathResource("id_card_back.jpeg").getContentAsByteArray())
+                    .build();
+
+            microblinkIdCardRejectResponseBody = new ClassPathResource("microblink_id_card_reject_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var rejectResponseTree = mapper.readTree(microblinkIdCardRejectResponseBody);
+
+            idCardRejectValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(rejectResponseTree.toString())
+                    .replaceAll("");
+
+            idCardFrontExtractionJson = rejectResponseTree.path("extraction")
+                    .path("viz")
+                    .path("front")
+                    .toString();
+            idCardBackExtractionJson = rejectResponseTree.path("extraction")
+                    .path("viz")
+                    .path("back")
+                    .toString();
+
+            microblinkIdCardPassResponseBody = new ClassPathResource("microblink_id_card_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var passResponseTree = mapper.readTree(microblinkIdCardPassResponseBody);
+
+            idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
+                    .filter(node -> "FaceImage".equals(node.path("name").asText()))
+                    .findFirst()
+                    .map(node -> node.path("base64").asText())
+                    .orElseThrow();
+
+            idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
+                    .replaceAll("");
+
+            // Passport
+            passportImage = Image.builder()
+                    .filename("passport.jpg")
+                    .data(new ClassPathResource("passport.jpg").getContentAsByteArray())
+                    .build();
+
+            microblinkPassportPassResponseBody = new ClassPathResource("microblink_passport_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var passportResponseTree = mapper.readTree(microblinkPassportPassResponseBody);
+
+            passportPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passportResponseTree.toString())
+                    .replaceAll("");
+
+            passportPassExtractionJson = passportResponseTree.path("extraction")
+                    .path("viz")
+                    .path("front")
+                    .toString();
+        } catch (final IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     @BeforeAll
     static void suiteSetup() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-
-        final var mapper = new ObjectMapper();
-
-        // ID card
-        idCardFrontImage = Image.builder()
-                .filename("id_card_front.jpeg")
-                .data(new ClassPathResource("id_card_front.jpeg").getContentAsByteArray())
-                .build();
-
-        idCardBackImage = Image.builder()
-                .filename("id_card_back.jpeg")
-                .data(new ClassPathResource("id_card_back.jpeg").getContentAsByteArray())
-                .build();
-
-        microblinkIdCardRejectResponseBody = new ClassPathResource("microblink_id_card_reject_response_body.json").getContentAsString(StandardCharsets.UTF_8);
-        final var rejectResponseTree = mapper.readTree(microblinkIdCardRejectResponseBody);
-
-        idCardRejectValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(rejectResponseTree.toString())
-                .replaceAll("");
-
-        idCardFrontExtractionJson = rejectResponseTree.path("extraction")
-                .path("viz")
-                .path("front")
-                .toString();
-        idCardBackExtractionJson = rejectResponseTree.path("extraction")
-                .path("viz")
-                .path("back")
-                .toString();
-
-        microblinkIdCardPassResponseBody = new ClassPathResource("microblink_id_card_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
-        final var passResponseTree = mapper.readTree(microblinkIdCardPassResponseBody);
-
-        idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
-                .filter(node -> "FaceImage".equals(node.path("name").asText()))
-                .findFirst()
-                .map(node -> node.path("base64").asText())
-                .orElseThrow();
-
-        idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
-                .replaceAll("");
-
-        // Passport
-        passportImage = Image.builder()
-                .filename("passport.jpg")
-                .data(new ClassPathResource("passport.jpg").getContentAsByteArray())
-                .build();
-
-        microblinkPassportPassResponseBody = new ClassPathResource("microblink_passport_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
-        final var passportResponseTree = mapper.readTree(microblinkPassportPassResponseBody);
-
-        passportPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passportResponseTree.toString())
-                .replaceAll("");
-
-        passportPassExtractionJson = passportResponseTree.path("extraction")
-                .path("viz")
-                .path("front")
-                .toString();
     }
 
     @BeforeEach
