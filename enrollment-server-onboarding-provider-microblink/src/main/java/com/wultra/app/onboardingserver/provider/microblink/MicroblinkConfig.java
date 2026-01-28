@@ -83,7 +83,7 @@ class MicroblinkConfig {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
-                properties.getMobileSdkLicenseKeys(),
+                properties,
                 powerAuthClient,
                 documentDataRepository,
                 processedDocumentDataRepository,

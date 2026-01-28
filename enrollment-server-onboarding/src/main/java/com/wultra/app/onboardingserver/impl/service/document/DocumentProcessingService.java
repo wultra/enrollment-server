@@ -382,6 +382,7 @@ public class DocumentProcessingService {
         entity.setPhase(DocumentProcessingPhase.UPLOAD);
         entity.setRejectReason(docVerificationEntity.getRejectReason());
         entity.setRejectOrigin(docVerificationEntity.getRejectOrigin());
+        entity.setVerificationResult(docSubmitResult.getValidationResult());
         return entity;
     }
 

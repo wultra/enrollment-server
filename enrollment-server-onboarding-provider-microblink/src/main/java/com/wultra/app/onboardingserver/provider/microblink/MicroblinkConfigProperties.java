@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -36,14 +35,6 @@ import java.util.Map;
 @Setter
 public class MicroblinkConfigProperties {
 
-    public static final String DOCUMENTS_CACHE_NAME = "microblinkDocumentsCache";
-    public static final String PHOTO_CACHE_NAME = "microblinkPhotoCache";
-
-    /**
-     * Record time-to-live in the cache after it is written
-     */
-    private Duration cacheRecordTTL = Duration.ofHours(1);
-
     /**
      * REST client configuration
      */
@@ -53,4 +44,9 @@ public class MicroblinkConfigProperties {
      * Mobile SDK license keys by platform.
      */
     private Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
+
+    /**
+     * Check of extracted data from documents.
+     */
+    private boolean extractedDataCheckEnabled;
 }

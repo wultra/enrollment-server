@@ -21,18 +21,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
 import com.wultra.security.powerauth.client.v3.PowerAuthClient;
-import jakarta.persistence.EntityManager;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -51,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -80,19 +78,34 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static final String ID_CARD_FACE_PHOTO_ID = "2a1c3e4f-5b6d-7e8f-9012-3456789abcde";
 
-    private static MockWebServer mockWebServer;
-    private static Image idCardFrontImage;
-    private static Image idCardBackImage;
-    private static String idCardFacePhotoBase64;
-    private static String microblinkRejectResponseBody;
-    private static String microblinkPassResponseBody;
-    private static String verificationRejectJson;
-    private static String verificationPassJson;
-    private static String idCardFrontExtractionJson;
-    private static String idCardBackExtractionJson;
+    private static final String PASSPORT_DOCUMENT_ID = "d4f5a9c2-8e7b-4a1f-9d34-2b6f3c5e8a91";
+    private static final String PASSPORT_UPLOAD_ID = "71b3e2f0-5c9d-4f4a-8e12-9d7c6a4b3f20";
 
-    private MicroblinkVerificationData.Document idCardFrontDocument;
-    private MicroblinkVerificationData.Document idCardBackDocument;
+    private static final Pattern MICROBLINK_RESPONSE_IMAGE_PATTERN = Pattern.compile(
+            "\"images\"\\s*:\\s*\\[.*?\\]\\s*,?",
+            Pattern.DOTALL
+    );
+
+    private static MockWebServer mockWebServer;
+
+    private static final Image idCardFrontImage;
+    private static final Image idCardBackImage;
+    private static final String idCardFacePhotoBase64;
+    private static final String microblinkIdCardRejectResponseBody;
+    private static final String microblinkIdCardPassResponseBody;
+    private static final String idCardFrontExtractionJson;
+    private static final String idCardBackExtractionJson;
+    private static final String idCardPassValidationResult;
+    private static final String idCardRejectValidationResult;
+
+    private static final Image passportImage;
+    private static final String microblinkPassportPassResponseBody;
+    private static final String passportPassExtractionJson;
+    private static final String passportPassValidationResult;
+
+    private MicroblinkDocumentVerificationProvider.DocumentVerificationData idCardFrontDocument;
+    private MicroblinkDocumentVerificationProvider.DocumentVerificationData idCardBackDocument;
+    private MicroblinkDocumentVerificationProvider.DocumentVerificationData passportDocument;
 
     @Autowired
     private MicroblinkDocumentVerificationProvider microblinkDocumentVerificationProvider;
@@ -110,7 +123,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private ProcessedDocumentDataRepository processedDocumentDataRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private DocumentResultRepository documentResultRepository;
 
     @MockitoBean
     private PowerAuthClient powerAuthClient;
@@ -123,44 +136,73 @@ class MicroblinkDocumentVerificationProviderIntTest {
         registry.add("enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl", () -> url);
     }
 
+    static {
+        try {
+            final var mapper = new ObjectMapper();
+
+            // ID card
+            idCardFrontImage = Image.builder()
+                    .filename("id_card_front.jpeg")
+                    .data(new ClassPathResource("id_card_front.jpeg").getContentAsByteArray())
+                    .build();
+
+            idCardBackImage = Image.builder()
+                    .filename("id_card_back.jpeg")
+                    .data(new ClassPathResource("id_card_back.jpeg").getContentAsByteArray())
+                    .build();
+
+            microblinkIdCardRejectResponseBody = new ClassPathResource("microblink_id_card_reject_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var rejectResponseTree = mapper.readTree(microblinkIdCardRejectResponseBody);
+
+            idCardRejectValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(rejectResponseTree.toString())
+                    .replaceAll("");
+
+            idCardFrontExtractionJson = rejectResponseTree.path("extraction")
+                    .path("viz")
+                    .path("front")
+                    .toString();
+            idCardBackExtractionJson = rejectResponseTree.path("extraction")
+                    .path("viz")
+                    .path("back")
+                    .toString();
+
+            microblinkIdCardPassResponseBody = new ClassPathResource("microblink_id_card_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var passResponseTree = mapper.readTree(microblinkIdCardPassResponseBody);
+
+            idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
+                    .filter(node -> "FaceImage".equals(node.path("name").asText()))
+                    .findFirst()
+                    .map(node -> node.path("base64").asText())
+                    .orElseThrow();
+
+            idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
+                    .replaceAll("");
+
+            // Passport
+            passportImage = Image.builder()
+                    .filename("passport.jpg")
+                    .data(new ClassPathResource("passport.jpg").getContentAsByteArray())
+                    .build();
+
+            microblinkPassportPassResponseBody = new ClassPathResource("microblink_passport_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
+            final var passportResponseTree = mapper.readTree(microblinkPassportPassResponseBody);
+
+            passportPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passportResponseTree.toString())
+                    .replaceAll("");
+
+            passportPassExtractionJson = passportResponseTree.path("extraction")
+                    .path("viz")
+                    .path("front")
+                    .toString();
+        } catch (final IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     @BeforeAll
     static void suiteSetup() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-
-        idCardFrontImage = Image.builder()
-                .filename("id_card_front.jpeg")
-                .data(new ClassPathResource("id_card_front.jpeg").getContentAsByteArray())
-                .build();
-
-        idCardBackImage = Image.builder()
-                .filename("id_card_back.jpeg")
-                .data(new ClassPathResource("id_card_back.jpeg").getContentAsByteArray())
-                .build();
-
-        final var mapper = new ObjectMapper();
-
-        microblinkRejectResponseBody = new ClassPathResource("microblink_reject_response_body.json").getContentAsString(StandardCharsets.UTF_8);
-        final var rejectResponseTree = mapper.readTree(microblinkRejectResponseBody);
-        verificationRejectJson = rejectResponseTree.path("verification").toString();
-        idCardFrontExtractionJson = rejectResponseTree.path("extraction")
-                .path("viz")
-                .path("front")
-                .toString();
-        idCardBackExtractionJson = rejectResponseTree.path("extraction")
-                .path("viz")
-                .path("back")
-                .toString();
-
-        microblinkPassResponseBody = new ClassPathResource("microblink_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
-        final var passResponseTree = mapper.readTree(microblinkPassResponseBody);
-        verificationPassJson = passResponseTree.path("verification").toString();
-
-        idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
-                .filter(node -> "FaceImage".equals(node.path("name").asText()))
-                .findFirst()
-                .map(node -> node.path("base64").asText())
-                .orElseThrow();
     }
 
     @BeforeEach
@@ -169,7 +211,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         ownerId.setActivationId(ACTIVATION_ID);
         ownerId.setUserId("37f9c00e-67ad-47e3-9c02-9a87e61cfa12");
 
-        idCardFrontDocument = MicroblinkVerificationData.Document.builder()
+        idCardFrontDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
                 .documentId(ID_CARD_FRONT_DOCUMENT_ID)
                 .uploadId(ID_CARD_FRONT_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
@@ -177,12 +219,20 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .image(idCardFrontImage)
                 .build();
 
-        idCardBackDocument = MicroblinkVerificationData.Document.builder()
+        idCardBackDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
                 .documentId(ID_CARD_BACK_DOCUMENT_ID)
                 .uploadId(ID_CARD_BACK_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
                 .side(CardSide.BACK)
                 .image(idCardBackImage)
+                .build();
+
+        passportDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
+                .documentId(PASSPORT_DOCUMENT_ID)
+                .uploadId(PASSPORT_UPLOAD_ID)
+                .type(DocumentType.PASSPORT)
+                .side(CardSide.FRONT)
+                .image(passportImage)
                 .build();
     }
 
@@ -190,7 +240,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     void cleanup() {
         documentVerificationRepository.deleteAll();
         documentDataRepository.deleteAll();
-
+        processedDocumentDataRepository.deleteAll();
     }
 
     @Test
@@ -244,47 +294,60 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentsUploaded_correctResponseIsReturned() {
+    void testSubmitDocuments_documentWith2SidesUploaded_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(microblinkIdCardPassResponseBody));
 
         // when
         final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertDocumentsSubmitResult(result, List.of(idCardFrontDocument, idCardBackDocument));
+        assertIdCardPassSubmitResult(result);
     }
 
     @Test
-    void testSubmitDocuments_documentsUploaded_documentsStoredInDatabase() {
+    void testSubmitDocuments_documentWith2SidesUploaded_documentDataAreSaved() throws DocumentVerificationException, RemoteCommunicationException {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(microblinkIdCardPassResponseBody));
 
         // when
         final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertStoredDocuments(result, submittedDocuments);
+        assertIdCardDocumentsData(result);
     }
 
     @Test
-    void testVerifyDocuments_documentDataNotFound_exceptionIsThrown() {
+    void testSubmitDocuments_documentWith2SidesUploaded_facePhotoIsSaved() throws DocumentVerificationException, RemoteCommunicationException {
         // given
-        final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID);
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(microblinkIdCardPassResponseBody));
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class,
-                () -> microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds)
-        );
+        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("No document data found for uploadIds: %s".formatted(uploadIds), exception.getMessage());
+        assertIdCardFaceImage(result);
     }
 
     @Test
-    void testVerifyDocuments_microblinkServiceIsNotAvailable_exceptionIsThrown() {
+    void testSubmitDocuments_microblinkClientException_exceptionIsThrown() {
         // given
-        prepareVerificationDataInDatabase();
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(503)
@@ -292,7 +355,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         // when
         final var exception = assertThrows(RemoteCommunicationException.class,
-                () -> microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID))
+                () -> microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments)
         );
 
         // then
@@ -300,71 +363,37 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_microblinkReturnsRejectResult_correctResponseIsReturned() throws RemoteCommunicationException, DocumentVerificationException {
+    void testSubmitDocuments_documentWith1SidesUploaded_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
         // given
-        prepareVerificationDataInDatabase();
+        final var submittedDocuments = buildSubmittedDocuments(List.of(passportDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
                 .setHeader("Content-Type", "application/json")
-                .setBody(microblinkRejectResponseBody));
+                .setBody(microblinkPassportPassResponseBody));
 
         // when
-        final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
+        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertVerificationResult(result, DocumentVerificationStatus.REJECTED, microblinkRejectResponseBody);
+        assertPassportPassSubmitResult(result);
     }
 
     @Test
-    void testVerifyDocuments_microblinkReturnsRejectResult_facePhotoIsStoredInDatabase() throws RemoteCommunicationException, DocumentVerificationException {
+    void testSubmitDocuments_microblinkRejectResponse_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
         // given
-        prepareVerificationDataInDatabase();
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
                 .setHeader("Content-Type", "application/json")
-                .setBody(microblinkRejectResponseBody));
+                .setBody(microblinkIdCardRejectResponseBody));
 
         // when
-        microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
+        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertStoredFacePhoto();
-    }
-
-    @Test
-    void testVerifyDocuments_microblinkReturnsPassResult_correctResponseIsReturned() throws RemoteCommunicationException, DocumentVerificationException {
-        // given
-        prepareVerificationDataInDatabase();
-
-        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
-                .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
-                .setBody(microblinkPassResponseBody));
-
-        // when
-        final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
-
-        // then
-        assertVerificationResult(result, DocumentVerificationStatus.ACCEPTED, microblinkPassResponseBody);
-    }
-
-    @Test
-    void testVerifyDocuments_microblinkReturnsPassResult_facePhotoIsStoredInDatabase() throws RemoteCommunicationException, DocumentVerificationException {
-        // given
-        prepareVerificationDataInDatabase();
-
-        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
-                .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
-                .setBody(microblinkPassResponseBody));
-
-        // when
-        microblinkDocumentVerificationProvider.verifyDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
-
-        // then
-        assertStoredFacePhoto();
+        assertIdCardRejectSubmitResult(result);
     }
 
     @Test
@@ -410,7 +439,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
     @Test
     void testCleanupDocuments_verificationDataFound_allDocumentDataAreDeleted() {
         // given
-        prepareVerificationDataInDatabase();
+        prepareIdCardFrontVerificationDataInDatabase();
+        prepareIdCardBackVerificationDataInDatabase();
         preparePhotoInDatabase();
 
         // when
@@ -421,7 +451,44 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(0, processedDocumentDataRepository.count());
     }
 
-    private List<SubmittedDocument> buildSubmittedDocuments(final List<MicroblinkVerificationData.Document> documents) {
+    @Test
+    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
+        // given
+        prepareIdCardFrontVerificationDataInDatabase();
+        prepareIdCardBackVerificationDataInDatabase();
+        preparePassportVerificationDataInDatabase(passportPassValidationResult);
+
+        final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
+
+        // when
+        final var response = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertDocumentsVerificationResultSuccess(response);
+    }
+
+    @Test
+    void testVerifyDocuments_failVerification_correctResponseIsReturned() {
+        // given
+        prepareIdCardFrontVerificationDataInDatabase();
+        prepareIdCardBackVerificationDataInDatabase();
+
+        final var passportValidationResult = passportPassValidationResult.replaceAll(
+                "\"value\"\\s*:\\s*\"PRENUMELE\"",
+                "\"value\": \"INCORRECT_FIRSTNAME\""
+        );
+        preparePassportVerificationDataInDatabase(passportValidationResult);
+
+        final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
+
+        // when
+        final var exception = assertThrows(DocumentVerificationException.class, () -> microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds));
+
+        // then
+        assertEquals("Crosscheck failed for field firstName", exception.getMessage());
+    }
+
+    private List<SubmittedDocument> buildSubmittedDocuments(final List<MicroblinkDocumentVerificationProvider.DocumentVerificationData> documents) {
         return documents.stream()
                 .map(d -> {
                     final var doc = new SubmittedDocument();
@@ -434,98 +501,225 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .toList();
     }
 
-    private void assertDocumentsSubmitResult(final DocumentsSubmitResult result, final List<MicroblinkVerificationData.Document> expectedDocuments) {
+    private void assertIdCardPassSubmitResult(final DocumentsSubmitResult result) {
         assertDoesNotThrow(() -> UUID.fromString(result.getExtractedPhotoId()));
         assertNull(result.getErrorDetail());
         assertNull(result.getRejectReason());
 
         final var actualDocuments = result.getResults();
-        final var expectedDocumentIds = expectedDocuments.stream()
-                .map(MicroblinkVerificationData.Document::documentId)
-                .collect(Collectors.toSet());
+        assertEquals(2, actualDocuments.size());
 
-        assertEquals(expectedDocumentIds.size(), actualDocuments.size());
+        final var frontDocument = actualDocuments.stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_FRONT_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow();
 
-        for (final var actualDocument : actualDocuments) {
-            assertTrue(expectedDocumentIds.contains(actualDocument.getDocumentId()));
-            assertDoesNotThrow(() -> UUID.fromString(actualDocument.getUploadId()));
-            assertNull(actualDocument.getRejectReason());
-            assertNull(actualDocument.getValidationResult());
-            assertNull(actualDocument.getErrorDetail());
-            assertEquals("{}", actualDocument.getExtractedData());
-        }
+        assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
+        assertNull(frontDocument.getRejectReason());
+        assertEquals(idCardFrontExtractionJson, frontDocument.getExtractedData());
+        assertEquals(idCardPassValidationResult, frontDocument.getValidationResult());
+
+        final var backDocument = actualDocuments.stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
+        assertNull(backDocument.getRejectReason());
+        assertEquals(idCardBackExtractionJson, backDocument.getExtractedData());
+        assertEquals(idCardPassValidationResult, backDocument.getValidationResult());
     }
 
-    private void assertStoredDocuments(final DocumentsSubmitResult result, final List<SubmittedDocument> submittedDocuments) {
+    private void assertIdCardRejectSubmitResult(final DocumentsSubmitResult result) {
+        assertDoesNotThrow(() -> UUID.fromString(result.getExtractedPhotoId()));
+        assertNull(result.getErrorDetail());
+        assertEquals("Rejected documents: [4e3b6b1a-26df-4d3e-9b97-89cf9b1f4c52, 9fa2b0b7-11d2-4d94-bb9d-8f8c3a5f04e6]", result.getRejectReason());
+
+        final var actualDocuments = result.getResults();
+        assertEquals(2, actualDocuments.size());
+
+        final var frontDocument = actualDocuments.stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_FRONT_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
+        assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
+        assertEquals(idCardFrontExtractionJson, frontDocument.getExtractedData());
+        assertEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
+
+        final var backDocument = actualDocuments.stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
+        assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
+        assertEquals(idCardBackExtractionJson, backDocument.getExtractedData());
+        assertEquals(idCardRejectValidationResult, backDocument.getValidationResult());
+    }
+
+    private void assertPassportPassSubmitResult(final DocumentsSubmitResult result) {
+        assertNull(result.getExtractedPhotoId());
+        assertNull(result.getErrorDetail());
+        assertNull(result.getRejectReason());
+
+        final var actualDocuments = result.getResults();
+        assertEquals(1, actualDocuments.size());
+
+        final var document = actualDocuments.stream()
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(document.getUploadId()));
+        assertNull(document.getRejectReason());
+        assertEquals(passportPassExtractionJson, document.getExtractedData());
+        assertEquals(passportPassValidationResult, document.getValidationResult());
+    }
+
+    private void assertIdCardDocumentsData(final DocumentsSubmitResult result) {
         final var documentDataByUploadId = StreamSupport.stream(documentDataRepository.findAll().spliterator(), false)
                 .collect(Collectors.toMap(DocumentDataEntity::getId, i -> i));
 
-        final var documentResultByDocumentId = result.getResults()
-                .stream()
-                .collect(Collectors.toMap(DocumentSubmitResult::getDocumentId, i -> i));
+        assertEquals(2, documentDataByUploadId.size());
 
-        assertEquals(submittedDocuments.size(), documentDataByUploadId.size());
+        final var frontDocumentUploadId = result.getResults().stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_FRONT_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow()
+                .getUploadId();
 
-        for (final var submittedDocument : submittedDocuments) {
-            final var documentId = submittedDocument.getDocumentId();
-            final var documentResult = documentResultByDocumentId.get(documentId);
-            final var documentData = documentDataByUploadId.get(documentResult.getUploadId());
+        final var frontDocumentData = documentDataByUploadId.get(frontDocumentUploadId);
+        assertArrayEquals(idCardFrontImage.getData(), frontDocumentData.getData());
+        assertEquals(new Date().getTime(), frontDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
 
-            assertEquals(documentResult.getUploadId(), documentData.getId());
-            assertArrayEquals(submittedDocument.getPhoto().getData(), documentData.getData());
-            assertEquals(new Date().getTime(), documentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
-        }
+        final var backDocumentUploadId = result.getResults().stream()
+                .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
+                .findFirst()
+                .orElseThrow()
+                .getUploadId();
+
+        final var backDocumentData = documentDataByUploadId.get(backDocumentUploadId);
+        assertArrayEquals(idCardBackImage.getData(), backDocumentData.getData());
+        assertEquals(new Date().getTime(), backDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
     }
 
-    private void prepareVerificationDataInDatabase() {
-        final var idCardFrontDocumentData = new DocumentDataEntity();
-        idCardFrontDocumentData.setId(ID_CARD_FRONT_UPLOAD_ID);
-        idCardFrontDocumentData.setData(new byte[] { 1, 2 });
-        idCardFrontDocumentData.setTimestampCreated(new Date());
-        documentDataRepository.save(idCardFrontDocumentData);
+    private void assertIdCardFaceImage(final DocumentsSubmitResult result) {
+        final var facePhotoId = result.getExtractedPhotoId();
 
-        final var idCardBackDocumentData = new DocumentDataEntity();
-        idCardBackDocumentData.setId(ID_CARD_BACK_UPLOAD_ID);
-        idCardBackDocumentData.setData(new byte[] { 3, 4 });
-        idCardBackDocumentData.setTimestampCreated(new Date());
-        documentDataRepository.save(idCardBackDocumentData);
+        final var facePhoto = processedDocumentDataRepository.findById(facePhotoId).orElseThrow();
+        assertArrayEquals(Base64.getDecoder().decode(idCardFacePhotoBase64), facePhoto.getData());
+        assertEquals(new Date().getTime(), facePhoto.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertEquals(ProcessedDocumentDataType.FACE_IMAGE, facePhoto.getDataType());
+    }
+
+    private void prepareIdCardFrontVerificationDataInDatabase() {
+        final var documentData = new DocumentDataEntity();
+        documentData.setId(ID_CARD_FRONT_UPLOAD_ID);
+        documentData.setData(new byte[] { 1, 2 });
+        documentData.setTimestampCreated(new Date());
+        documentDataRepository.save(documentData);
 
         final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
 
-        final var idCardFrontVerification = new DocumentVerificationEntity();
-        idCardFrontVerification.setActivationId(ACTIVATION_ID);
-        idCardFrontVerification.setIdentityVerification(identityVerification);
-        idCardFrontVerification.setType(DocumentType.ID_CARD);
-        idCardFrontVerification.setSide(CardSide.FRONT);
-        idCardFrontVerification.setProviderName("microblink");
-        idCardFrontVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        idCardFrontVerification.setFilename("id_card_front.jpeg");
-        idCardFrontVerification.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
-        idCardFrontVerification.setVerificationId(UUID.randomUUID().toString());
-        idCardFrontVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
-        idCardFrontVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
-        idCardFrontVerification.setTimestampCreated(new Date());
+        final var documentVerification = new DocumentVerificationEntity();
+        documentVerification.setActivationId(ACTIVATION_ID);
+        documentVerification.setIdentityVerification(identityVerification);
+        documentVerification.setType(DocumentType.ID_CARD);
+        documentVerification.setSide(CardSide.FRONT);
+        documentVerification.setProviderName("microblink");
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setFilename("id_card_front.jpeg");
+        documentVerification.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
+        documentVerification.setVerificationId(UUID.randomUUID().toString());
+        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
+        documentVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
+        documentVerification.setTimestampCreated(new Date());
 
-        documentVerificationRepository.save(idCardFrontVerification);
+        final var savedDocumentVerification = documentVerificationRepository.save(documentVerification);
 
-        final var idCardBackVerification = new DocumentVerificationEntity();
-        idCardBackVerification.setActivationId(ACTIVATION_ID);
-        idCardBackVerification.setIdentityVerification(identityVerification);
-        idCardBackVerification.setType(DocumentType.ID_CARD);
-        idCardBackVerification.setSide(CardSide.BACK);
-        idCardBackVerification.setProviderName("microblink");
-        idCardBackVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        idCardBackVerification.setFilename("id_card_back.jpeg");
-        idCardBackVerification.setUploadId(ID_CARD_BACK_UPLOAD_ID);
-        idCardBackVerification.setVerificationId(UUID.randomUUID().toString());
-        idCardBackVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
-        idCardBackVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
-        idCardBackVerification.setTimestampCreated(new Date());
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
+        documentResult.setVerificationResult(idCardPassValidationResult);
+        documentResult.setExtractedData(idCardFrontExtractionJson);
+        documentResult.setDocumentVerification(savedDocumentVerification);
+        documentResult.setTimestampCreated(new Date());
 
-        documentVerificationRepository.save(idCardBackVerification);
+        savedDocumentVerification.setResults(Set.of(documentResult));
 
-        entityManager.flush();
-        entityManager.clear();
+        documentResultRepository.save(documentResult);
+    }
+
+    private void prepareIdCardBackVerificationDataInDatabase() {
+        final var documentData = new DocumentDataEntity();
+        documentData.setId(ID_CARD_BACK_UPLOAD_ID);
+        documentData.setData(new byte[] { 3, 4 });
+        documentData.setTimestampCreated(new Date());
+        documentDataRepository.save(documentData);
+
+        final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
+
+        final var documentVerification = new DocumentVerificationEntity();
+        documentVerification.setActivationId(ACTIVATION_ID);
+        documentVerification.setIdentityVerification(identityVerification);
+        documentVerification.setType(DocumentType.ID_CARD);
+        documentVerification.setSide(CardSide.BACK);
+        documentVerification.setProviderName("microblink");
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setFilename("id_card_back.jpeg");
+        documentVerification.setUploadId(ID_CARD_BACK_UPLOAD_ID);
+        documentVerification.setVerificationId(UUID.randomUUID().toString());
+        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
+        documentVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
+        documentVerification.setTimestampCreated(new Date());
+
+        final var savedDocumentVerification = documentVerificationRepository.save(documentVerification);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
+        documentResult.setVerificationResult(idCardPassValidationResult);
+        documentResult.setExtractedData(idCardBackExtractionJson);
+        documentResult.setDocumentVerification(savedDocumentVerification);
+        documentResult.setTimestampCreated(new Date());
+
+        savedDocumentVerification.setResults(Set.of(documentResult));
+
+        documentResultRepository.save(documentResult);
+    }
+
+    private void preparePassportVerificationDataInDatabase(final String validationResultJson) {
+        final var documentData = new DocumentDataEntity();
+        documentData.setId(PASSPORT_UPLOAD_ID);
+        documentData.setData(new byte[] { 5, 6 });
+        documentData.setTimestampCreated(new Date());
+        documentDataRepository.save(documentData);
+
+        final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
+
+        final var documentVerification = new DocumentVerificationEntity();
+        documentVerification.setActivationId(ACTIVATION_ID);
+        documentVerification.setIdentityVerification(identityVerification);
+        documentVerification.setType(DocumentType.PASSPORT);
+        documentVerification.setProviderName("microblink");
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setFilename("passport.jpeg");
+        documentVerification.setUploadId(PASSPORT_UPLOAD_ID);
+        documentVerification.setVerificationId(UUID.randomUUID().toString());
+        documentVerification.setOriginalDocumentId(PASSPORT_DOCUMENT_ID);
+        documentVerification.setTimestampCreated(new Date());
+
+        final var savedDocumentVerification = documentVerificationRepository.save(documentVerification);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
+        documentResult.setVerificationResult(validationResultJson);
+        documentResult.setExtractedData(passportPassExtractionJson);
+        documentResult.setTimestampCreated(new Date());
+        documentResult.setDocumentVerification(savedDocumentVerification);
+
+        savedDocumentVerification.setResults(Set.of(documentResult));
+
+        documentResultRepository.save(documentResult);
     }
 
     private void preparePhotoInDatabase() {
@@ -538,42 +732,34 @@ class MicroblinkDocumentVerificationProviderIntTest {
         processedDocumentDataRepository.save(entity);
     }
 
-    private void assertVerificationResult(DocumentsVerificationResult result, final DocumentVerificationStatus status, final String verificationJson) {
+    private void assertDocumentsVerificationResultSuccess(final DocumentsVerificationResult result) {
         assertDoesNotThrow(() -> UUID.fromString(result.getVerificationId()));
-        assertEquals(status, result.getStatus());
-        assertNull(result.getVerificationScore());
+        assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
         assertNull(result.getRejectReason());
         assertNull(result.getErrorDetail());
 
-        final var documents = result.getResults();
-        assertEquals(2, documents.size());
+        final var documentResults = result.getResults();
+        assertEquals(3, documentResults.size());
 
-        final var documentFront = documents.stream()
-                .filter(d -> d.getUploadId().equals(ID_CARD_FRONT_UPLOAD_ID))
-                .findFirst()
-                .orElseThrow();
-
-        assertNull(documentFront.getRejectReason());
-        assertEquals(verificationJson, documentFront.getVerificationResult());
-        assertNull(documentFront.getErrorDetail());
-        assertEquals(idCardFrontExtractionJson, documentFront.getExtractedData());
-
-        final var documentBack = documents.stream()
-                .filter(d -> d.getUploadId().equals(ID_CARD_BACK_UPLOAD_ID))
-                .findFirst()
-                .orElseThrow();
-
-        assertNull(documentBack.getRejectReason());
-        assertEquals(verificationJson, documentBack.getVerificationResult());
-        assertNull(documentBack.getErrorDetail());
-        assertEquals(idCardBackExtractionJson, documentBack.getExtractedData());
+        assertDocumentVerificationResult(documentResults, ID_CARD_FRONT_UPLOAD_ID, idCardPassValidationResult, idCardFrontExtractionJson);
+        assertDocumentVerificationResult(documentResults, ID_CARD_BACK_UPLOAD_ID, idCardPassValidationResult, idCardBackExtractionJson);
+        assertDocumentVerificationResult(documentResults, PASSPORT_UPLOAD_ID, passportPassValidationResult, passportPassExtractionJson);
     }
 
-    private void assertStoredFacePhoto() {
-        final var storedFacePhoto = processedDocumentDataRepository.findById(ID_CARD_FACE_PHOTO_ID).orElseThrow();
+    private static void assertDocumentVerificationResult(
+            final  List<DocumentVerificationResult> documentResults,
+            final String uploadId,
+            final String expectedValidationResult,
+            final String expectedExtractedData
+    ) {
+        final var documentResult = documentResults.stream()
+                .filter(r -> r.getUploadId().equals(uploadId))
+                .findFirst()
+                .orElseThrow();
 
-        assertArrayEquals(Base64.getDecoder().decode(idCardFacePhotoBase64), storedFacePhoto.getData());
-        assertEquals(ProcessedDocumentDataType.FACE_IMAGE, storedFacePhoto.getDataType());
-        assertEquals(new Date().getTime(), storedFacePhoto.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertNull(documentResult.getRejectReason());
+        assertEquals(expectedValidationResult, documentResult.getVerificationResult());
+        assertNull(documentResult.getErrorDetail());
+        assertEquals(expectedExtractedData, documentResult.getExtractedData());
     }
 }
