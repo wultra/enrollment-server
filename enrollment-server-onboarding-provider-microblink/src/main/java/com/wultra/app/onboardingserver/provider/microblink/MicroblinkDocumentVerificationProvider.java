@@ -18,6 +18,8 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -28,13 +30,11 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
+import com.wultra.app.onboardingserver.provider.microblink.api.ExtractedDataField;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -384,10 +384,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 case BACK -> microblinkResponse.extractionBackJson();
             };
 
+            final var extractedDataValue = buildExtractedDataValue(extractedData);
+
             final var result = new DocumentSubmitResult();
             result.setDocumentId(documentVerificationData.documentId());
             result.setUploadId(documentVerificationData.uploadId());
-            result.setExtractedData(extractedData);
+            result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.responseWithoutImagesJson());
 
             final var validation = microblinkResponse.verification();
@@ -631,7 +633,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     )
             );
         }
-
     }
 
     private String fetchMobilePlatform(final String activationId) throws RemoteCommunicationException {
@@ -654,6 +655,55 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         documentData.setData(document.image().getData());
         documentData.setTimestampCreated(new Date());
         return documentData;
+    }
+
+    private static String buildExtractedDataValue(final String extractedDataJson) {
+        try {
+            final var mapper = new ObjectMapper();
+            final var root = mapper.readTree(extractedDataJson);
+
+            final var extractedValueByField = extractFieldValues(root);
+
+            final var extractedDataValue = DocumentExtractedDataValue.builder()
+                    .givenNames(extractedValueByField.getOrDefault(ExtractedDataField.GIVEN_NAMES, null))
+                    .surname(extractedValueByField.getOrDefault(ExtractedDataField.SURNAME, null))
+                    .dateOfBirth(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_BIRTH, null))
+                    .sex(extractedValueByField.getOrDefault(ExtractedDataField.SEX, null))
+                    .nationality(extractedValueByField.getOrDefault(ExtractedDataField.NATIONALITY, null))
+                    .personalNumber(extractedValueByField.getOrDefault(ExtractedDataField.PERSONAL_NUMBER, null))
+                    .documentNumber(extractedValueByField.getOrDefault(ExtractedDataField.DOCUMENT_NUMBER, null))
+                    .dateOfIssue(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_ISSUE, null))
+                    .dateOfExpiry(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_EXPIRY, null))
+                    .authority(extractedValueByField.getOrDefault(ExtractedDataField.AUTHORITY, null))
+                    .build();
+
+            return mapper.writeValueAsString(extractedDataValue);
+        } catch (final JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    public static Map<ExtractedDataField, String> extractFieldValues(final JsonNode root) {
+        final var result = new EnumMap<ExtractedDataField, String>(ExtractedDataField.class);
+
+        for (final var node : root) {
+            final var microblinkField = node.path("field").asText(null);
+            final var field = ExtractedDataField.fromMicroblinkField(microblinkField);
+
+            if (field == null) {
+                continue;
+            }
+
+            final var value = node.has("value")
+                    ? node.path("value").asText(null)
+                    // fallback for Date values
+                    : node.path("originalResult").path(0).path("value").asText(null);
+
+            if (value != null) {
+                result.put(field, value);
+            }
+        }
+        return result;
     }
 
     @Builder(toBuilder = true)
