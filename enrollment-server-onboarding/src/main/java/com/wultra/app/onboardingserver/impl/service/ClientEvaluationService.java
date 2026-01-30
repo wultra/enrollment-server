@@ -17,13 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
@@ -204,9 +203,26 @@ public class ClientEvaluationService {
     }
 
     private static EvaluateClientRequest.DocumentData buildDocumentData(final  DocumentResultEntity documentResult) {
-        return EvaluateClientRequest.DocumentData.builder()
-                // TODO
-                .build();
+        try {
+            final var mapper = new ObjectMapper();
+            final var extractedData = mapper.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class);
+
+            return EvaluateClientRequest.DocumentData.builder()
+                    .givenNames(extractedData.givenNames())
+                    .surname(extractedData.surname())
+                    .dateOfBirth(extractedData.dateOfBirth())
+                    .placeOfBirth(extractedData.placeOfBirth())
+                    .sex(extractedData.sex())
+                    .nationality(extractedData.nationality())
+                    .personalNumber(extractedData.personalNumber())
+                    .documentNumber(extractedData.documentNumber())
+                    .dateOfIssue(extractedData.dateOfIssue())
+                    .dateOfExpiry(extractedData.dateOfExpiry())
+                    .authority(extractedData.authority())
+                    .build();
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     private static List<EvaluateClientRequest.Image> buildImages(final List<ProcessedDocumentDataEntity> processedDocuments) {
