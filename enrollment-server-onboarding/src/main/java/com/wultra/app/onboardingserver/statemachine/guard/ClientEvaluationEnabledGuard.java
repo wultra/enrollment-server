@@ -19,6 +19,10 @@
 package com.wultra.app.onboardingserver.statemachine.guard;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,11 +31,21 @@ import org.springframework.stereotype.Component;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Component
+@AllArgsConstructor
+@Slf4j
 public class ClientEvaluationEnabledGuard extends GuardAdapter {
 
+    private final ClientEvaluationService clientEvaluationService;
+
     @Override
-    protected boolean evaluate(String processId, OwnerId ownerId) {
-        // TODO: get from process config
-        return true;
+    protected boolean evaluate(final String processId, final OwnerId ownerId) {
+        try {
+            final boolean result = clientEvaluationService.isClientEvaluationEnabled(processId);
+            logger.debug("Client evaluation is enabled: {} for processId: {}, {}", result, processId, ownerId);
+            return result;
+        } catch (OnboardingProcessException e) {
+            logger.error("Error fetching configuration for processId: {}, {}", processId, ownerId, e);
+            return false;
+        }
     }
 }

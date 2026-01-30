@@ -17,6 +17,8 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
@@ -30,6 +32,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -136,18 +139,19 @@ public class RestOnboardingProvider implements OnboardingProvider {
     @Override
     public EvaluateClientResponse evaluateClient(final EvaluateClientRequest request) throws OnboardingProviderException {
         logger.debug("Evaluating client for {}", request);
-        // TODO (racansky, 2022-07-20) suboptimal, not sending extracted data yet; adapter must retrieve data based on investigationId itself
-        final ClientEvaluateRequestDto requestDto = convert(request);
+
+        final var requestDto = convert(request);
 
         try {
             final ParameterizedTypeReference<ClientEvaluateResponseDto> type = ParameterizedTypeReference.forType(ClientEvaluateResponseDto.class);
             ResponseEntity<ClientEvaluateResponseDto> response = restClient.post("/client/evaluate", requestDto, null, createHeaders(), type);
             logger.debug("Got evaluating client response: {}", response);
-            final boolean accepted = response.getBody() != null && response.getBody().getResult() == ClientEvaluateResponseDto.ResultEnum.OK;
-            return EvaluateClientResponse.builder()
-                    .accepted(accepted)
-                    .build();
 
+            final var body = Optional.ofNullable(response)
+                    .map(ResponseEntity::getBody)
+                    .orElseThrow(() -> new OnboardingProviderException("Unable to fetch client evaluation, response was null"));
+
+            return convert(body);
         } catch (RestClientException e) {
             throw new OnboardingProviderException("Unable to evaluate client for " + request, e);
         }
@@ -287,6 +291,12 @@ public class RestOnboardingProvider implements OnboardingProvider {
     }
 
     private static ClientEvaluateRequestDto convert(final EvaluateClientRequest source) {
+        final var documents = source.getDocumentCheckResult()
+                .documents()
+                .stream()
+                .map(RestOnboardingProvider::convert)
+                .toList();
+
         final ClientEvaluateRequestDto target = new ClientEvaluateRequestDto();
         target.setProcessId(source.getProcessId());
         target.setProcessType(source.getProcessType());
@@ -294,7 +304,88 @@ public class RestOnboardingProvider implements OnboardingProvider {
         target.setUserId(source.getUserId());
         target.setVerificationId(source.getVerificationId());
         target.setProvider(source.getProvider());
-        target.setExtractedData(source.getExtractedData());
+        target.setStatus(convert(source.getStatus()));
+        target.setScore(source.getScore());
+        target.setDocumentCheckResult(new ClientEvaluateRequestDto.DocumentCheckResult(documents));
+        //target.setExtractedData(source.getExtractedData()); TODO: doublecheck this is set to any value
         return target;
+    }
+
+    private static EvaluateClientResponse convert(final ClientEvaluateResponseDto source) {
+
+        final var result = switch (source.getResult()) {
+            case OK -> EvaluateClientResponse.EvaluationResult.OK;
+            case NOK ->  EvaluateClientResponse.EvaluationResult.NOK;
+            case WAIT ->  EvaluateClientResponse.EvaluationResult.WAIT;
+        };
+
+        return EvaluateClientResponse.builder()
+                .evaluationResult(result)
+                .resultReason(source.getResultReason())
+                .build();
+    }
+
+    private static ClientEvaluateRequestDto.Status convert(final EvaluateClientRequest.Status source) {
+        return switch (source) {
+            case SUCCESS ->  ClientEvaluateRequestDto.Status.SUCCESS;
+            case FAILURE ->  ClientEvaluateRequestDto.Status.FAILURE;
+        };
+    }
+
+    private static ClientEvaluateRequestDto.Document convert(final EvaluateClientRequest.Document source) {
+        final var images = source.images()
+                .stream()
+                .map(RestOnboardingProvider::convert)
+                .toList();
+
+        return ClientEvaluateRequestDto.Document.builder()
+                .type(convert(source.type()))
+                .status(convert(source.status()))
+                .data(convert(source.data()))
+                .images(images)
+                .rawData(source.rawData())
+                .build();
+    }
+
+    private static ClientEvaluateRequestDto.DocumentType convert(final DocumentType source) {
+        return switch (source) {
+            case ID_CARD -> ClientEvaluateRequestDto.DocumentType.ID_CARD;
+            case DRIVING_LICENSE ->  ClientEvaluateRequestDto.DocumentType.DRIVING_LICENCE;
+            case PASSPORT -> ClientEvaluateRequestDto.DocumentType.PASSPORT;
+            default -> throw new IllegalArgumentException("Unsupported document type: " + source);
+        };
+    }
+
+    private static ClientEvaluateRequestDto.DocumentData convert(final EvaluateClientRequest.DocumentData source) {
+        if (source == null) {
+            return null;
+        }
+
+        return ClientEvaluateRequestDto.DocumentData.builder()
+                .givenNames(source.givenNames())
+                .surname(source.surname())
+                .dateOfBirth(source.dateOfBirth())
+                .placeOfBirth(source.placeOfBirth())
+                .sex(source.sex())
+                .nationality(source.nationality())
+                .personalNumber(source.personalNumber())
+                .documentNumber(source.documentNumber())
+                .dateOfIssue(source.dateOfIssue())
+                .dateOfExpiry(source.dateOfExpiry())
+                .authority(source.authority())
+                .build();
+    }
+
+    private static ClientEvaluateRequestDto.Image convert(final EvaluateClientRequest.Image source) {
+        return ClientEvaluateRequestDto.Image.builder()
+                .type(convert(source.type()))
+                .data(source.data())
+                .build();
+    }
+
+    private static ClientEvaluateRequestDto.ImageType convert(final ProcessedDocumentDataType source) {
+        return switch (source) {
+            case FACE_IMAGE ->  ClientEvaluateRequestDto.ImageType.FACE;
+        };
     }
 }

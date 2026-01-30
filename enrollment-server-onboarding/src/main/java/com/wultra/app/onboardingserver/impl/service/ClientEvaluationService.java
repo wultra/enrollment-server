@@ -18,18 +18,17 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
@@ -37,10 +36,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -65,55 +65,116 @@ public class ClientEvaluationService {
 
     private final CommonOnboardingService onboardingService;
 
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+    public static final String RESULT_KEY = "EVALUATION_RESULT";
+
+    /**
+     * Checks whether the client evaluation phase is enabled in the onboarding process.
+     *
+     * @param processId the onboarding process ID
+     * @return whether the client evaluation phase is enabled
+     * @throws OnboardingProcessException if the onboarding process configuration is not found
+     */
+    public boolean isClientEvaluationEnabled(final String processId) throws OnboardingProcessException {
+        return onboardingService.findProcess(processId)
+                .getProcessConfiguration()
+                .getConfiguration()
+                .clientEvaluationEnabled();
+    }
+
     /**
      * Process client evaluation of the given identity verification.
      *
      * @param identityVerification identity verification to process
      * @param ownerId Owner identification.
      */
-    public void processClientEvaluation(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        logger.debug("Client evaluation started for {}", identityVerification);
-
-        final Set<DocumentVerificationEntity> acceptedDocuments = selectAcceptedDocuments(identityVerification);
-
-        final String verificationId;
-        final String processType;
+    public EvaluateClientResponse.EvaluationResult processClientEvaluation(
+            final IdentityVerificationEntity identityVerification,
+            final OwnerId ownerId
+    ) {
         try {
-            verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
-            final OnboardingProcessEntity process = onboardingService.findProcessWithLock(identityVerification.getProcessId());
-            processType = process.getProcessConfiguration().getProcessType();
-        } catch (Exception e) {
-            processVerificationIdError(identityVerification, ownerId, e);
-            return;
+            final var process = onboardingService.findProcess(identityVerification.getProcessId());
+            final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
+            final var documentCheckResult = config.isSendingExtractedDataEnabled() ?
+                    buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
+                    buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
+            final var verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
+
+            final var request = EvaluateClientRequest.builder()
+                    .processId(process.getId())
+                    .processType(process.getProcessConfiguration().getProcessType())
+                    .userId(identityVerification.getUserId())
+                    .identityVerificationId(identityVerification.getId())
+                    .verificationId(verificationId)
+                    .provider(config.getDocumentVerificationProvider())
+                    .status(EvaluateClientRequest.Status.SUCCESS)
+                    .score(10)
+                    .documentCheckResult(documentCheckResult)
+                    .build();
+
+            // TODO: Implement retry
+            final var response = onboardingProvider.evaluateClient(request);
+            return response.getEvaluationResult();
+        } catch (final OnboardingProviderException | OnboardingProcessException e) {
+            return EvaluateClientResponse.EvaluationResult.NOK;
+        }
+    }
+
+    private EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithExtractedData(
+            final Set<DocumentVerificationEntity> documentsVerification
+    ) {
+        final var photoIds = documentsVerification.stream()
+                .map(DocumentVerificationEntity::getPhotoId)
+                .filter(Objects::nonNull)
+                .collect(toSet());
+
+        final var processedDocumentByPhotoId = fetchProcessedDocuments(photoIds);
+
+        final var documents = new ArrayList<EvaluateClientRequest.Document>(documentsVerification.size());
+
+        for (final DocumentVerificationEntity documentVerification : documentsVerification) {
+            final var documentResult = selectLatestDocumentResult(documentVerification);
+            final var documentData = buildDocumentData(documentResult);
+
+            final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
+            final var images = List.of(
+                    EvaluateClientRequest.Image.builder()
+                            .type(processedDocument.getDataType())
+                            .data(processedDocument.getData())
+                            .build()
+            );
+
+            final var document = EvaluateClientRequest.Document.builder()
+                    .type(documentVerification.getType())
+                    .status( EvaluateClientRequest.Status.SUCCESS)
+                    .data(documentData)
+                    .images(images)
+                    .rawData(documentResult.getVerificationResult())
+                    .build();
+
+            documents.add(document);
         }
 
-        final EvaluateClientRequest.EvaluateClientRequestBuilder requestBuilder = EvaluateClientRequest.builder()
-                .processId(identityVerification.getProcessId())
-                .processType(processType)
-                .userId(identityVerification.getUserId())
-                .identityVerificationId(identityVerification.getId())
-                .verificationId(verificationId)
-                .provider(config.getDocumentVerificationProvider());
+        return new EvaluateClientRequest.DocumentCheckResult(documents);
+    }
 
-        if (config.isSendingExtractedDataEnabled()) {
-            requestBuilder.extractedData(fetchDocumentsExtractedData(acceptedDocuments, identityVerification));
-        }
-        final EvaluateClientRequest request = requestBuilder.build();
+    private static EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithoutExtractedData(
+            final Set<DocumentVerificationEntity> documentsVerification
+    ) {
+        final var documents = new ArrayList<EvaluateClientRequest.Document>(documentsVerification.size());
 
-        final int maxFailedAttempts = config.getClientEvaluationMaxFailedAttempts();
-        for (int i = 0; i < maxFailedAttempts; i++) {
-            final int attempt = i + 1;
-            try {
-                final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
-                processEvaluationSuccess(identityVerification, ownerId, response);
-                logger.debug("Client evaluation finished for {}, attempt: {}", identityVerification, attempt);
-                return;
-            } catch (Exception e) {
-                logger.warn("Client evaluation failed for {}, attempt: {}, {}, {}", identityVerification, attempt, ownerId, e.getMessage());
-                logger.debug("Client evaluation failed for {} - attempt: {}, {}", identityVerification, attempt, ownerId, e);
-            }
+        for (final DocumentVerificationEntity documentVerification : documentsVerification) {
+            final var document = EvaluateClientRequest.Document.builder()
+                    .type(documentVerification.getType())
+                    .status( EvaluateClientRequest.Status.SUCCESS)
+                    .images(new ArrayList<>())
+                    .build();
+
+            documents.add(document);
         }
-        processTooManyEvaluationError(identityVerification, ownerId);
+
+        return new EvaluateClientRequest.DocumentCheckResult(documents);
     }
 
     private static Set<DocumentVerificationEntity> selectAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
@@ -121,20 +182,6 @@ public class ClientEvaluationService {
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .collect(toSet());
-    }
-
-    private static List<String> fetchDocumentsExtractedData(final Set<DocumentVerificationEntity> documents, final IdentityVerificationEntity identityVerification) {
-        return documents.stream()
-                .map(doc -> selectLatestDocumentResult(doc, identityVerification))
-                .map(DocumentResultEntity::getExtractedData)
-                .filter(data -> !DocumentSubmitResult.NO_DATA_EXTRACTED.equals(data))
-                .toList();
-    }
-
-    private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity, final IdentityVerificationEntity identityVerification) {
-        return documentVerificationEntity.getResults().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Missing document result for %s of %s".formatted(documentVerificationEntity, identityVerification)));
     }
 
     private static String fetchVerificationId(final IdentityVerificationEntity identityVerification, final Set<DocumentVerificationEntity> documents) {
@@ -150,48 +197,26 @@ public class ClientEvaluationService {
         }
     }
 
-    private void processEvaluationSuccess(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
-        auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
-        // The timestampFinished parameter is not set yet, there may be other steps ahead
-        if (response.isErrorOccurred()) {
-            logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getErrorDetail());
-            identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.CLIENT_EVALUATION_FAILED);
-            auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getErrorDetail());
-        }
-
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
-        if (response.isAccepted()) {
-            logger.info("Client evaluation accepted for {}", identityVerification);
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, ACCEPTED, ownerId);
-        } else {
-            logger.info("Client evaluation rejected for {}", identityVerification);
-            identityVerification.getDocumentVerifications()
-                    .forEach(document -> {
-                        document.setStatus(DocumentStatus.REJECTED);
-                        auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
-                    });
-            identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId);
-        }
+    private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity) {
+        return documentVerificationEntity.getResults().stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
     }
 
-    private void processTooManyEvaluationError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        logger.warn("Client evaluation too many attempts for {} - {}", identityVerification, ownerId);
-        identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
-        identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
-        identityVerification.setTimestampFailed(ownerId.getTimestamp());
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
+    private static EvaluateClientRequest.DocumentData buildDocumentData(final  DocumentResultEntity documentResult) {
+        return EvaluateClientRequest.DocumentData.builder()
+                // TODO
+                .build();
     }
 
-    private void processVerificationIdError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Exception e) {
-        logger.warn("Client evaluation failed to get verificationId for {}, {} - {}", identityVerification, ownerId, e.getMessage());
-        logger.debug("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
-        identityVerification.setErrorDetail(ERROR_VERIFICATION_ID);
-        identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
-        identityVerification.setTimestampFailed(ownerId.getTimestamp());
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
+    private static List<EvaluateClientRequest.Image> buildImages(final List<ProcessedDocumentDataEntity> processedDocuments) {
+        return processedDocuments.stream()
+                .map(i -> new EvaluateClientRequest.Image(i.getDataType(), i.getData()))
+                .toList();
+    }
+
+    private Map<String, ProcessedDocumentDataEntity> fetchProcessedDocuments(final Set<String> ids) {
+        return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
+                .collect(Collectors.toMap(ProcessedDocumentDataEntity::getId, Function.identity()));
     }
 }

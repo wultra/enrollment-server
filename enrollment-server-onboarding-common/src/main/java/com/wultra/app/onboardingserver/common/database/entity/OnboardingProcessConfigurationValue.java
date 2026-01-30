@@ -45,7 +45,8 @@ public record OnboardingProcessConfigurationValue(
         boolean useTemporaryActivation,
         Documents documents,
         ActivationType activationType,
-        boolean approvalEnabled
+        boolean approvalEnabled,
+        boolean clientEvaluationEnabled
 ) implements Serializable {
 
     @Serial
@@ -60,6 +61,7 @@ public record OnboardingProcessConfigurationValue(
             documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
             approvalEnabled = false;
+            clientEvaluationEnabled = false;
         }
     }
 

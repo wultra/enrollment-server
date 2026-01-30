@@ -34,10 +34,13 @@ class ClientEvaluateResponseDto {
 
     private ClientEvaluateResponseInfoDto info;
 
+    private String resultReason;
+
     enum ResultEnum {
 
         OK("OK"),
-        NOK("NOK");
+        NOK("NOK"),
+        WAIT("WAIT");
 
         private final String value;
 

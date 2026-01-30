@@ -17,8 +17,10 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import lombok.Builder;
 import lombok.Data;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,8 +46,81 @@ class ClientEvaluateRequestDto {
 
     private String provider;
 
+    private Status status;
+
+    private Integer score;
+
+    private DocumentCheckResult documentCheckResult;
+
     /**
      * Data extracted from each document/page. Format is defined by the document verification provider used.
+     *
+     * @deprecated
      */
+    @Deprecated(forRemoval = true, since = "2.1.0")
     private List<String> extractedData;
+
+    public enum Status {
+        SUCCESS,
+        FAILURE
+    }
+
+    public record DocumentCheckResult(
+            List<Document> documents
+    ) {}
+
+    @Builder
+    public record Document(
+            DocumentType type,
+            Status status,
+            DocumentData data,
+            List<Image> images,
+            String rawData
+    ) {}
+
+    @Builder
+    public record DocumentData(
+            String givenNames,
+            String surname,
+            String dateOfBirth,
+            String placeOfBirth,
+            String sex,
+            String nationality,
+            String personalNumber,
+            String documentNumber,
+            String dateOfIssue,
+            String dateOfExpiry,
+            String authority
+    ) {}
+
+    @Builder
+    public record Image(
+            ImageType type,
+            byte[] data
+    ) {
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Image other)) return false;
+            return type == other.type && Arrays.equals(data, other.data);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type != null ? type.hashCode() : 0;
+            result = 31 * result + Arrays.hashCode(data);
+            return result;
+        }
+    }
+
+    public enum ImageType {
+        FACE
+    }
+
+    public enum DocumentType {
+        ID_CARD,
+        DRIVING_LICENCE,
+        PASSPORT
+    }
 }

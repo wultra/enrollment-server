@@ -37,17 +37,31 @@ import lombok.ToString;
 public final class EvaluateClientResponse {
 
     /**
-     * Whether client evaluation was accepted.
+     * Result of request.
      */
-    private boolean accepted;
+    private EvaluationResult evaluationResult;
 
     /**
-     * Whether business logic error occurred during client evaluation.
+     * In case of failure, it's detail.
      */
-    private boolean errorOccurred;
+    private String resultReason;
 
-    /**
-     * Error detail to store within onboarding process.
-     */
-    private String errorDetail;
+
+    public enum EvaluationResult {
+
+        /**
+         * Evaluation was successful.
+         */
+        OK,
+
+        /**
+         * Evaluation was not successful.
+         */
+        NOK,
+
+        /**
+         * Wait for asynchronous evaluation.
+         */
+        WAIT
+    }
 }
