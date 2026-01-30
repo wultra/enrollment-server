@@ -18,7 +18,9 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeApproveClientRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeEvaluationClientRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeApproveClientResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeEvaluationClientResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
@@ -117,5 +119,56 @@ public class AcknowledgeService {
         ownerId.setActivationId(source.getActivationId());
         ownerId.setUserId(source.getUserId());
         return ownerId;
+    }
+
+    public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final AcknowledgeEvaluationClientRequest request) {
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(request.processId())
+                .filter(it -> it.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS)
+                .orElse(null);
+
+        if (process == null) {
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Process not found or in invalid state.")
+                    .build();
+        }
+
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId())
+                .filter(it -> it.getProcessId().equals(request.processId()))
+                .filter(it -> it.getPhase() == IdentityVerificationPhase.CLIENT_EVALUATION)
+                .filter(it -> it.getStatus() == IdentityVerificationStatus.IN_PROGRESS)
+                .orElse(null);
+
+        if (identityVerification == null) {
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .build();
+        }
+
+        try {
+            final OwnerId ownerId = convert(identityVerification);
+            final OnboardingEvent event = convert(request.evaluationResult());
+            stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
+            auditService.audit(identityVerification, "Acknowledged evaluation approval result: {}", request.evaluationResult());
+        } catch (IdentityVerificationException e) {
+            logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .build();
+        }
+
+        return AcknowledgeEvaluationClientResponse.builder()
+                .result(AcknowledgeEvaluationClientResponse.Result.OK)
+                .build();
+    }
+
+    private static OnboardingEvent convert(final AcknowledgeEvaluationClientRequest.EvaluationResult source) {
+        return switch (source) {
+            case OK -> OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_APPROVE;
+            case NOK -> OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_REJECT;
+            case WAIT -> throw new IllegalArgumentException("WAIT result should be handled at the controller level and must not reach AcknowledgeService");
+        };
     }
 }
