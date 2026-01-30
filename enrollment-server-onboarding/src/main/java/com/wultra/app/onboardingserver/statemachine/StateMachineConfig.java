@@ -20,6 +20,7 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResp
 import com.wultra.app.onboardingserver.statemachine.action.PersistOnEntryStateAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
+import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.DummyClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
@@ -44,6 +45,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -130,6 +132,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final OnboardingApprovalEnabledGuard onboardingApprovalEnabledGuard;
 
+    private final ClientEvaluationEnabledGuard clientEvaluationEnabledGuard;
+
+    private final DummyClientEvaluationAction dummyClientEvaluationAction;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -143,9 +149,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         states
                 .withStates()
                 .initial(OnboardingState.INITIAL)
-                .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
+                //.choice(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
-                .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+                //.choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+
+                .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
+                .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
+                //.choice(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_ENABLED)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
@@ -168,7 +179,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, persistOnEntryStateAction)
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, persistOnEntryStateAction)
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_REJECTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction);
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction)
+
+                .stateEntry(OnboardingState.CLIENT_EVALUATION_ACCEPTED, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.CLIENT_EVALUATION_REJECTED, persistOnEntryStateAction)
+                .stateEntry(OnboardingState.CLIENT_EVALUATION_FAILED, persistOnEntryStateAction);
     }
 
     @Override
@@ -272,40 +288,84 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .action(clientEvaluationInitAction)
-                .target(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS);
+                .target(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED);
     }
 
     private void configureClientEvaluationTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
-                .withExternal()
-                .source(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .action(clientEvaluationAction)
-                .guard(processIdentifierGuard)
-                .target(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
+                .withChoice()
+                .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
+                .first(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT, clientEvaluationEnabledGuard, dummyClientEvaluationAction)
+                .then(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
 
                 .and()
                 .withChoice()
-                .source(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
-                .first(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, statusInProgressGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_ACCEPTED, statusAcceptedGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, statusRejectedGuard)
-                .then(OnboardingState.CLIENT_EVALUATION_FAILED, statusFailedGuard)
-                .last(OnboardingState.UNEXPECTED_STATE)
+                .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
+                .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, isClientEvaluationResult("Y"), new DummyAction())
+                .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, isClientEvaluationResult("N"))
+                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, isClientEvaluationResult("P"))
+                .last(OnboardingState.ONBOARDING_APPROVAL_FAILED)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
+                .event(OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_APPROVE)
+                .target(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS)
+                .event(OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_REJECT)
+                .target(OnboardingState.CLIENT_EVALUATION_REJECTED)
+
+//                .and()
+//                .withChoice()
+//                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+//                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+//                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+//                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
-                .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+                .guard(presenceCheckEnabledGuard)
+                .action(presenceCheckNotInitializedAction)
+                .target(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
 
                 .and()
-                .withChoice()
-                .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
-                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
+                .withExternal()
+                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .guard(otpVerificationEnabledGuard)
+                .action(otpVerificationSendAction)
+                .target(OnboardingState.OTP_VERIFICATION_PENDING)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .action(verificationProcessResultAction)
+                .target(OnboardingState.CHOICE_COMPLETED_STATE);
+
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final String state) {
+        // TODO: check response result
+        return context -> {
+            final Object result = context.getExtendedState().getVariables().get(DummyClientEvaluationAction.RESULT_KEY);
+            return state.equals(result);
+        };
+    }
+
+    private static class DummyAction implements Action<OnboardingState, OnboardingEvent> {
+
+        @Override
+        public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
+            final var x = 1;
+        }
     }
 
     private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

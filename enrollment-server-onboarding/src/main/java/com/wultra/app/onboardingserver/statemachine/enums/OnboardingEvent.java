@@ -41,6 +41,9 @@ public enum OnboardingEvent {
     /**
      * Onboarding approval acknowledged event, reject. Used if the approval is in async mode.
      */
-    ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT
+    ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT,
 
+    CLIENT_EVALUATION_ACKNOWLEDGED_APPROVE,
+
+    CLIENT_EVALUATION_ACKNOWLEDGED_REJECT
 }
