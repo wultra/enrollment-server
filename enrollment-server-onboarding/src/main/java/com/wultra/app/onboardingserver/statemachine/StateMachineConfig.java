@@ -17,6 +17,7 @@
 package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
+import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.PersistOnEntryStateAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
@@ -293,9 +294,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
-                .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, isClientEvaluationResult("Y"))
-                .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, isClientEvaluationResult("N"))
-                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, isClientEvaluationResult("P"))
+                .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.OK))
+                .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.WAIT))
+                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.NOK))
                 .last(OnboardingState.ONBOARDING_APPROVAL_FAILED)
 
                 .and()
@@ -336,11 +337,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     }
 
-    private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final String state) {
-        // TODO: check response result
+    private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final EvaluateClientResponse.EvaluationResult expectedResult) {
         return context -> {
-            final Object result = context.getExtendedState().getVariables().get(ClientEvaluationAction.RESULT_KEY);
-            return state.equals(result);
+            final var contextValue = context.getExtendedState().getVariables().get(ClientEvaluationAction.RESULT_KEY);
+
+            if (contextValue instanceof EvaluateClientResponse.EvaluationResult result) {
+                return result == expectedResult;
+            }
+
+            return false;
         };
     }
 
