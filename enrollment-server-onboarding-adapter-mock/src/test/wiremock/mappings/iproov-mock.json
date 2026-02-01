@@ -1,0 +1,72 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/api/v2/claim/enrol/token"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-claim-enrol-token-response.json"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/users/.*"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-users-response.json"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/api/v2/claim/enrol/image"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-claim-enrol-image-response.json"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/api/v2/claim/verify/token"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-claim-verify-token-response.json"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/api/v2/claim/verify/validate"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-claim-verify-validate-response.json"
+      }
+    }
+  ]
+}
+
+
+
