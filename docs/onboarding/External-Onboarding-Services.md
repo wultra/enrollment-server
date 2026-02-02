@@ -223,15 +223,21 @@ NOTE: Currently triggered only in positive result.
     "identityVerificationId": "String",
     "provider": "String",
     "status": "String",
-    "score": Number,
     "documentCheckResult": {
+        "person": {
+            "surname": "String",
+            "givenNames": "String",
+            "dateOfBirth": "String"
+        },
         "documents": [
             {
                 "type": "String",
+                "country": "String",
                 "status": "String",
+                "score": Number,
                 "data": {
-                    "givenNames": "String",
                     "surname": "String",
+                    "givenNames": "String",
                     "dateOfBirth": "String",
                     "placeOfBirth": "String",
                     "sex": "String",
@@ -265,10 +271,12 @@ NOTE: Currently triggered only in positive result.
 | `identityVerificationId`                    | `String` | ID of the identity verification subprocess.                                                                                                                                                  |
 | `provider`                                  | `String` | Name of the configured external document provider: ZenID or Microblink.                                                                                                                      |
 | `status`                                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
-| `score`                                     | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
+| `documentCheckResult.person`                | `Object` | Selected normalized data extracted from the documents. Data are cross-checked between the documents. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                    |
 | `documentCheckResult.documents`             | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
 | `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENCE`.                                                                                                                                 |
+| `documentCheckResult.documents.country`     | `String` | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                           |
 | `documentCheckResult.documents.status`      | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
+| `documentCheckResult.documents.score`       | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |
 | `documentCheckResult.documents.data`        | `Object` | Selected normalized data extracted from the document. See `documentCheckResult.documents.rawData` for complete results. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`). |
 | `documentCheckResult.documents.images`      | `Array`  | Array of images extracted from the document.                                                                                                                                                 |
 | `documentCheckResult.documents.images.type` | `String` | Image type, e.g. `FACE`.                                                                                                                                                                     |
