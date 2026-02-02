@@ -149,6 +149,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
+                .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_ENABLED)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
@@ -297,7 +298,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.OK))
                 .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.WAIT))
                 .then(OnboardingState.CLIENT_EVALUATION_REJECTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.NOK))
-                .last(OnboardingState.ONBOARDING_APPROVAL_FAILED)
+                .last(OnboardingState.CLIENT_EVALUATION_FAILED)
 
                 .and()
                 .withExternal()
@@ -311,30 +312,22 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .event(OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_REJECT)
                 .target(OnboardingState.CLIENT_EVALUATION_REJECTED)
 
-                // next step after successful evaluation
                 .and()
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(presenceCheckEnabledGuard)
-                .action(presenceCheckNotInitializedAction)
-                .target(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
+                .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
 
                 .and()
-                .withExternal()
-                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(otpVerificationEnabledGuard)
-                .action(otpVerificationSendAction)
-                .target(OnboardingState.OTP_VERIFICATION_PENDING)
-
-                .and()
-                .withExternal()
-                .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .action(verificationProcessResultAction)
-                .target(OnboardingState.CHOICE_COMPLETED_STATE);
-
+                .withChoice()
+                .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
+                        presenceCheckEnabledGuard,
+                        presenceCheckNotInitializedAction)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING,
+                        otpVerificationEnabledGuard,
+                        otpVerificationSendAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE,
+                        verificationProcessResultAction);
     }
 
     private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final EvaluateClientResponse.EvaluationResult expectedResult) {
