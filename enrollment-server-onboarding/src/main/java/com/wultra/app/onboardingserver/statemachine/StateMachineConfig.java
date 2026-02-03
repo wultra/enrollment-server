@@ -83,8 +83,6 @@ import java.util.function.Function;
 @EnableStateMachineFactory(name = "enrollmentStateMachine")
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<OnboardingState, OnboardingEvent> {
 
-    private final ClientEvaluationInitAction clientEvaluationInitAction;
-
     private final ClientEvaluationAction clientEvaluationAction;
 
     private final OtpVerificationResendAction otpVerificationResendAction;
@@ -156,7 +154,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final var configurer = states.withStates();
         configurer
                 .initial(OnboardingState.INITIAL)
-                .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
@@ -189,7 +186,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
                 OnboardingState.ACTIVATION_FINISH_IN_PROGRESS,
                 OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS,
-                OnboardingState.ONBOARDING_APPROVAL_ACCEPTED);
+                OnboardingState.ONBOARDING_APPROVAL_ACCEPTED,
+                OnboardingState.CLIENT_EVALUATION_ACCEPTED,
+                OnboardingState.CLIENT_EVALUATION_IN_PROGRESS,
+                OnboardingState.CLIENT_EVALUATION_REJECTED,
+                OnboardingState.CLIENT_EVALUATION_FAILED);
 
         for (final OnboardingState state : states) {
             configurer.stateEntryFunction(state, persistState(state));
@@ -309,7 +310,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
-                //.action(clientEvaluationInitAction)
                 .target(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED);
     }
 
@@ -345,6 +345,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
+                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
 
                 .and()

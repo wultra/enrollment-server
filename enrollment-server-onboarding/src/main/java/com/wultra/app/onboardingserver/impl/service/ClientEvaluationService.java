@@ -21,8 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
@@ -54,7 +52,6 @@ import static java.util.stream.Collectors.toSet;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
-// @AllArgsConstructor
 @Slf4j
 public class ClientEvaluationService {
 
@@ -63,8 +60,6 @@ public class ClientEvaluationService {
     private final OnboardingProvider onboardingProvider;
 
     private final IdentityVerificationConfig config;
-
-    private final IdentityVerificationService identityVerificationService;
 
     private final AuditService auditService;
 
@@ -76,13 +71,11 @@ public class ClientEvaluationService {
 
     public ClientEvaluationService(OnboardingProvider onboardingProvider,
                                    IdentityVerificationConfig config,
-                                   IdentityVerificationService identityVerificationService,
                                    AuditService auditService,
                                    CommonOnboardingService onboardingService,
                                    ProcessedDocumentDataRepository processedDocumentDataRepository) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
-        this.identityVerificationService = identityVerificationService;
         this.auditService = auditService;
         this.onboardingService = onboardingService;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
@@ -292,9 +285,6 @@ public class ClientEvaluationService {
         identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
         identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
-
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
     }
 
     private void processVerificationIdError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Exception e) {
@@ -303,9 +293,6 @@ public class ClientEvaluationService {
         identityVerification.setErrorDetail(ERROR_VERIFICATION_ID);
         identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
-
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
     }
 
     private void processEvaluationResponse(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
@@ -318,10 +305,8 @@ public class ClientEvaluationService {
 //            auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getResultReason());
 //        }
 
-        final IdentityVerificationPhase phase = identityVerification.getPhase();
         if (EvaluateClientResponse.EvaluationResult.OK == response.getEvaluationResult()) {
             logger.info("Client evaluation accepted for {}", identityVerification);
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.ACCEPTED, ownerId);
         } else if (EvaluateClientResponse.EvaluationResult.NOK == response.getEvaluationResult()) {
             logger.info("Client evaluation rejected for {}", identityVerification);
             identityVerification.getDocumentVerifications()
@@ -330,10 +315,8 @@ public class ClientEvaluationService {
                         auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
                     });
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId);
         } else { // WAIT
             logger.info("Client evaluation waiting for {}", identityVerification);
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.IN_PROGRESS, ownerId);
         }
     }
 }
