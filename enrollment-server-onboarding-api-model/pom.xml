@@ -14,11 +14,6 @@
     <description>API model of the enrollment onboarding server.</description>
     <name>Enrollment Server Onboarding API Model</name>
 
-    <properties>
-        <skipPublishing>true</skipPublishing>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.wultra.security</groupId>
