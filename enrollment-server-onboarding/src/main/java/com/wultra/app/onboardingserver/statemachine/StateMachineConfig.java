@@ -16,8 +16,10 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
-import com.wultra.app.onboardingserver.statemachine.action.PersistOnEntryStateAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
@@ -27,6 +29,8 @@ import com.wultra.app.onboardingserver.statemachine.action.presencecheck.Presenc
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.*;
+import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
+import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.*;
@@ -49,13 +53,18 @@ import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.config.configurers.StateConfigurer;
 import org.springframework.statemachine.guard.Guard;
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * State machine configuration
@@ -104,7 +113,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final OnboardingApprovalAction onboardingApprovalAction;
 
-    private final PersistOnEntryStateAction persistOnEntryStateAction;
+    private final IdentityVerificationService identityVerificationService;
 
     private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
@@ -140,8 +149,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     @Override
     public void configure(StateMachineStateConfigurer<OnboardingState, OnboardingEvent> states) throws Exception {
-        states
-                .withStates()
+        final var configurer = states.withStates();
+        configurer
                 .initial(OnboardingState.INITIAL)
                 .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
@@ -163,12 +172,35 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .end(OnboardingState.COMPLETED_ACCEPTED)
                 .end(OnboardingState.COMPLETED_FAILED)
                 .end(OnboardingState.COMPLETED_REJECTED)
-                .states(EnumSet.allOf(OnboardingState.class))
-                .stateEntry(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_REJECTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction);
+                .states(EnumSet.allOf(OnboardingState.class));
+
+        registerPersistFunctions(configurer);
+    }
+
+    private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
+        final var states = List.of(
+                OnboardingState.ONBOARDING_APPROVAL_REJECTED,
+                OnboardingState.ONBOARDING_APPROVAL_FAILED,
+                OnboardingState.ACTIVATION_FINISH_IN_PROGRESS,
+                OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS,
+                OnboardingState.ONBOARDING_APPROVAL_ACCEPTED);
+
+        for (final OnboardingState state : states) {
+            configurer.stateEntryFunction(state, persistState(state));
+        }
+    }
+
+    private Function<StateContext<OnboardingState, OnboardingEvent>, Mono<Void>> persistState(final OnboardingState state) {
+        return context -> persistState(context, state);
+    }
+
+    private Mono<Void> persistState(final StateContext<OnboardingState, OnboardingEvent> context, final OnboardingState state) {
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+
+        return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
     }
 
     @Override
