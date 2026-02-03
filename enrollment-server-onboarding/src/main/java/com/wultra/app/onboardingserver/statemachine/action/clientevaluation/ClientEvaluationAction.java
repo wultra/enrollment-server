@@ -28,6 +28,8 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 /**
  * Action to process client evaluation.
  *
@@ -47,6 +49,6 @@ public class ClientEvaluationAction implements Action<OnboardingState, Onboardin
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         final var result = clientEvaluationService.processClientEvaluation(identityVerification, ownerId);
-        context.getExtendedState().getVariables().put(RESULT_KEY, result);
+        context.getExtendedState().getVariables().put(RESULT_KEY, Optional.ofNullable(result));
     }
 }

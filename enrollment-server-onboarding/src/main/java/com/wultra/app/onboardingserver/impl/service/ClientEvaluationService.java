@@ -20,6 +20,9 @@ package com.wultra.app.onboardingserver.impl.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
@@ -31,8 +34,11 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import lombok.AllArgsConstructor;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryException;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -48,7 +54,7 @@ import static java.util.stream.Collectors.toSet;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
-@AllArgsConstructor
+// @AllArgsConstructor
 @Slf4j
 public class ClientEvaluationService {
 
@@ -66,7 +72,27 @@ public class ClientEvaluationService {
 
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
 
-    public static final String RESULT_KEY = "EVALUATION_RESULT";
+    private final RetryTemplate retryTemplate;
+
+    public ClientEvaluationService(OnboardingProvider onboardingProvider,
+                                   IdentityVerificationConfig config,
+                                   IdentityVerificationService identityVerificationService,
+                                   AuditService auditService,
+                                   CommonOnboardingService onboardingService,
+                                   ProcessedDocumentDataRepository processedDocumentDataRepository) {
+        this.onboardingProvider = onboardingProvider;
+        this.config = config;
+        this.identityVerificationService = identityVerificationService;
+        this.auditService = auditService;
+        this.onboardingService = onboardingService;
+        this.processedDocumentDataRepository = processedDocumentDataRepository;
+
+        this.retryTemplate = RetryTemplate.builder()
+                .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
+                .exponentialBackoff(200, 2.0, 2_000)
+                .build();
+    }
+
 
     /**
      * Checks whether the client evaluation phase is enabled in the onboarding process.
@@ -88,7 +114,7 @@ public class ClientEvaluationService {
      * @param identityVerification identity verification to process
      * @param ownerId Owner identification.
      */
-    public EvaluateClientResponse.EvaluationResult processClientEvaluation(
+    public @Nullable EvaluateClientResponse.EvaluationResult processClientEvaluation(
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId
     ) {
@@ -112,12 +138,43 @@ public class ClientEvaluationService {
                     .documentCheckResult(documentCheckResult)
                     .build();
 
-            // TODO: Implement retry
-            final var response = onboardingProvider.evaluateClient(request);
+            final var response = retryTemplate.execute(context -> callEvaluateClient(request, context));
+            processEvaluationResponse(identityVerification, ownerId, response);
             return response.getEvaluationResult();
         } catch (final OnboardingProviderException | OnboardingProcessException e) {
-            return EvaluateClientResponse.EvaluationResult.NOK;
+            processVerificationIdError(identityVerification, ownerId, e);
+            return null;
+        } catch (final RetryException e) {
+            processTooManyEvaluationError(identityVerification, ownerId);
+            return null;
         }
+    }
+
+    private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final RetryContext context) throws OnboardingProviderException {
+        final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
+        final int attempt = context.getRetryCount() + 1;
+
+        final Throwable lastThrowable = context.getLastThrowable();
+        if (lastThrowable != null) {
+            logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, maxAttempts, lastThrowable.getMessage());
+        } else {
+            logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}", attempt, maxAttempts);
+        }
+
+        try {
+            final var response = onboardingProvider.evaluateClient(request);
+            logger.info("action: callEvaluateClient, state: succeeded");
+            return response;
+        } catch (final Exception e) {
+            if (attempt >= maxAttempts) {
+                logger.info("action: callEvaluateClient, state: failed, exceptionMessage: {}", e.getMessage());
+                throw new RetryException("Evaluate client call reached retry limit", e);
+            }
+
+            throw e;
+        }
+
+
     }
 
     private EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithExtractedData(
@@ -225,14 +282,58 @@ public class ClientEvaluationService {
         }
     }
 
-    private static List<EvaluateClientRequest.Image> buildImages(final List<ProcessedDocumentDataEntity> processedDocuments) {
-        return processedDocuments.stream()
-                .map(i -> new EvaluateClientRequest.Image(i.getDataType(), i.getData()))
-                .toList();
-    }
-
     private Map<String, ProcessedDocumentDataEntity> fetchProcessedDocuments(final Set<String> ids) {
         return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
                 .collect(Collectors.toMap(ProcessedDocumentDataEntity::getId, Function.identity()));
+    }
+
+    private void processTooManyEvaluationError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        logger.warn("Client evaluation too many attempts for {} - {}", identityVerification, ownerId);
+        identityVerification.setErrorDetail(IdentityVerificationEntity.ERROR_MAX_FAILED_ATTEMPTS_CLIENT_EVALUATION);
+        identityVerification.setErrorOrigin(ErrorOrigin.PROCESS_LIMIT_CHECK);
+        identityVerification.setTimestampFailed(ownerId.getTimestamp());
+
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
+    }
+
+    private void processVerificationIdError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Exception e) {
+        logger.warn("Client evaluation failed to get verificationId for {}, {} - {}", identityVerification, ownerId, e.getMessage());
+        logger.debug("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
+        identityVerification.setErrorDetail(ERROR_VERIFICATION_ID);
+        identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
+        identityVerification.setTimestampFailed(ownerId.getTimestamp());
+
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+        identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.FAILED, ownerId);
+    }
+
+    private void processEvaluationResponse(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
+        auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
+        // The timestampFinished parameter is not set yet, there may be other steps ahead
+//        if (EvaluateClientResponse.EvaluationResult.NOK == response.getEvaluationResult()) {
+//            logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getResultReason());
+//            identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
+//            identityVerification.setErrorDetail(IdentityVerificationEntity.CLIENT_EVALUATION_FAILED);
+//            auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getResultReason());
+//        }
+
+        final IdentityVerificationPhase phase = identityVerification.getPhase();
+        if (EvaluateClientResponse.EvaluationResult.OK == response.getEvaluationResult()) {
+            logger.info("Client evaluation accepted for {}", identityVerification);
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.ACCEPTED, ownerId);
+        } else if (EvaluateClientResponse.EvaluationResult.NOK == response.getEvaluationResult()) {
+            logger.info("Client evaluation rejected for {}", identityVerification);
+            identityVerification.getDocumentVerifications()
+                    .forEach(document -> {
+                        document.setStatus(DocumentStatus.REJECTED);
+                        auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
+                    });
+            identityVerification.setTimestampFailed(ownerId.getTimestamp());
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.REJECTED, ownerId);
+        } else { // WAIT
+            logger.info("Client evaluation waiting for {}", identityVerification);
+            identityVerificationService.moveToPhaseAndStatus(identityVerification, phase, IdentityVerificationStatus.IN_PROGRESS, ownerId);
+        }
     }
 }

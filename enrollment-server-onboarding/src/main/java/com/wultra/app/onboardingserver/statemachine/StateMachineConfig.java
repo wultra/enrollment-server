@@ -57,6 +57,7 @@ import org.springframework.statemachine.state.State;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Optional;
 
 /**
  * State machine configuration
@@ -172,11 +173,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, persistOnEntryStateAction)
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, persistOnEntryStateAction)
                 .stateEntry(OnboardingState.ONBOARDING_APPROVAL_REJECTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.CLIENT_EVALUATION_ACCEPTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.CLIENT_EVALUATION_REJECTED, persistOnEntryStateAction)
-                .stateEntry(OnboardingState.CLIENT_EVALUATION_FAILED, persistOnEntryStateAction);
+                .stateEntry(OnboardingState.ONBOARDING_APPROVAL_FAILED, persistOnEntryStateAction);
+//                .stateEntry(OnboardingState.CLIENT_EVALUATION_ACCEPTED, persistOnEntryStateAction)
+//                .stateEntry(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, persistOnEntryStateAction)
+//                .stateEntry(OnboardingState.CLIENT_EVALUATION_REJECTED, persistOnEntryStateAction)
+//                .stateEntry(OnboardingState.CLIENT_EVALUATION_FAILED, persistOnEntryStateAction);
     }
 
     @Override
@@ -279,7 +280,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
-                .action(clientEvaluationInitAction)
+                //.action(clientEvaluationInitAction)
                 .target(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED);
     }
 
@@ -334,8 +335,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         return context -> {
             final var contextValue = context.getExtendedState().getVariables().get(ClientEvaluationAction.RESULT_KEY);
 
-            if (contextValue instanceof EvaluateClientResponse.EvaluationResult result) {
-                return result == expectedResult;
+            if (contextValue instanceof Optional<?> value) {
+                return value.filter(it -> it instanceof EvaluateClientResponse.EvaluationResult)
+                        .map(it -> expectedResult == it)
+                        .orElse(false);
             }
 
             return false;

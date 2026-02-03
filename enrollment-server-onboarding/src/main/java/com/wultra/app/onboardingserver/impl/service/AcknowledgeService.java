@@ -53,6 +53,8 @@ public class AcknowledgeService {
 
     private final IdentityVerificationRepository identityVerificationRepository;
 
+    private final IdentityVerificationService identityVerificationService;
+
     private final StateMachineService stateMachineService;
 
     private final AuditService auditService;
@@ -147,10 +149,13 @@ public class AcknowledgeService {
         }
 
         try {
-            final OwnerId ownerId = convert(identityVerification);
-            final OnboardingEvent event = convert(request.evaluationResult());
+            final var result = request.evaluationResult();
+            auditService.audit(identityVerification, "Acknowledged evaluation approval result: {}", result);
+
+            final var ownerId = convert(identityVerification);
+
+            final OnboardingEvent event = convert(result);
             stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
-            auditService.audit(identityVerification, "Acknowledged evaluation approval result: {}", request.evaluationResult());
         } catch (IdentityVerificationException e) {
             logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
             return AcknowledgeEvaluationClientResponse.builder()
