@@ -154,15 +154,16 @@ for details how the score affects false acceptances (FAR) and false rejections (
 
 ## Microblink Configuration
 
-| Property                                                                                               | Default | Note                                                   |
-|--------------------------------------------------------------------------------------------------------|---------|--------------------------------------------------------|
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl`               |         | Base REST service URL for Microblink.                  |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.          |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                    |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                    |
-| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.IOS`               |         | iOS Mobile SDK license key.                            |
-| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.ANDROID`           |         | Android Mobile SDK license key.                        |
-| `enrollment-server-onboarding.document-verification.microblink.extractedDataCheckEnabled`              | `true`  | Whether check/validation of extracted data is enabled. |
+| Property                                                                                               | Default | Note                                                                    |
+|--------------------------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------------|
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl`               |         | Base REST service URL for Microblink.                                   |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.                           |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                                     |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                                     |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].origin`           |         | Microblink Bundle ID / App ID.                                          |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].platform`         |         | Mobile platform. Supported values `ios` and `android` (case sensitive). |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].license-key`      |         | Mobile SDK license key.                                                 |
+| `enrollment-server-onboarding.document-verification.microblink.extractedDataCheckEnabled`              | `true`  | Whether check/validation of extracted data is enabled.                  |
 
 ## Correlation HTTP Header Configuration
 

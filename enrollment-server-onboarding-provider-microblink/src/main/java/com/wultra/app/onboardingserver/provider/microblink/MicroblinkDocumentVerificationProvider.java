@@ -37,8 +37,6 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -66,19 +64,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private final RestClient microblinkRestClient;
     private final DocumentVerificationResponseParser responseParser;
-    private final Map<String, String> mobileSdkLicenseKeyByPlatform;
-    private final PowerAuthClient powerAuthClient;
     private final DocumentDataRepository documentDataRepository;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final MicroblinkConfigProperties properties;
     private final MicroblinkExtractedDataParser microblinkExtractedDataParser;
+    private final Map<String, Map<String, String>> licenseKeyByOriginByPlatform;
 
     public MicroblinkDocumentVerificationProvider(
             RestClient microblinkRestClient,
             DocumentVerificationResponseParser responseParser,
             MicroblinkConfigProperties properties,
-            PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
@@ -87,15 +83,27 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
         this.properties = properties;
-        this.powerAuthClient = powerAuthClient;
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.microblinkExtractedDataParser = microblinkExtractedDataParser;
 
-        mobileSdkLicenseKeyByPlatform = properties.getMobileSdkLicenseKeys().entrySet()
-                .stream()
-                .collect(Collectors.toMap(k -> k.getKey().toString().toLowerCase(), Map.Entry::getValue));
+        licenseKeyByOriginByPlatform = buildLicenseKeyByOriginByPlatform(properties.getMobileSdkConfigs());
+    }
+
+    private static Map<String, Map<String, String>> buildLicenseKeyByOriginByPlatform(final List<MicroblinkConfigProperties.SdkConfig> sdkConfigs) {
+         return sdkConfigs.stream().collect(
+                Collectors.groupingBy(
+                        MicroblinkConfigProperties.SdkConfig::origin,
+                        Collectors.toMap(
+                                MicroblinkConfigProperties.SdkConfig::platform,
+                                MicroblinkConfigProperties.SdkConfig::licenseKey,
+                                (a, b) -> {
+                                    throw new IllegalStateException("Duplicate origin+platform combination");
+                                }
+                        )
+                )
+        );
     }
 
     @Override
@@ -198,28 +206,20 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     @Override
-    public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes) throws RemoteCommunicationException {
+    public VerificationSdkInfo initVerificationSdk(OwnerId ownerId, Map<String, String> initAttributes) {
         logger.info("action: initVerificationSdk, state: initiated, provider: microblink, ownerId: {}, initAttributes: {}", ownerId, initAttributes);
 
-        try {
-            final var activationId = ownerId.getActivationId();
-            var mobilePlatform = initAttributes.getOrDefault("platform", null);
+        final var origin = initAttributes.getOrDefault("origin", null);
+        final var platform = initAttributes.getOrDefault("platform", null);
+        final var licenseKey = licenseKeyByOriginByPlatform.getOrDefault(origin, new HashMap<>())
+                .getOrDefault(platform, null);
 
-            if (mobilePlatform == null || !mobileSdkLicenseKeyByPlatform.containsKey(mobilePlatform)) {
-                mobilePlatform = fetchMobilePlatform(activationId);
-            }
+        final var sdkInfo = Optional.ofNullable(licenseKey)
+                .map(it -> new VerificationSdkInfo(Map.of("license-key", it)))
+                .orElse(new VerificationSdkInfo());
 
-            final var sdkInfo = Optional.ofNullable(mobilePlatform)
-                    .map(platform -> mobileSdkLicenseKeyByPlatform.getOrDefault(platform, null))
-                    .map(licenseKey -> new VerificationSdkInfo(Map.of("license-key", licenseKey)))
-                    .orElseGet(VerificationSdkInfo::new);
-
-            logger.info("action: initVerificationSdk, state: succeeded, provider: microblink, sdkInfo: {}", MicroblinkLogSanitizationUtils.sanitizeSdkInfo(sdkInfo));
-            return sdkInfo;
-        } catch (final RemoteCommunicationException e) {
-            logger.info("action: initVerificationSdk, state: failed, provider: microblink, error: {}", e.getMessage());
-            throw e;
-        }
+        logger.info("action: initVerificationSdk, state: succeeded, provider: microblink, sdkInfo: {}", MicroblinkLogSanitizationUtils.sanitizeSdkInfo(sdkInfo));
+        return sdkInfo;
     }
 
     @Override
@@ -634,20 +634,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                             claimedDocumentType
                     )
             );
-        }
-    }
-
-    private String fetchMobilePlatform(final String activationId) throws RemoteCommunicationException {
-        try {
-            logger.debug("Fetching mobile platform for activationId: {}", activationId);
-
-            final var response = powerAuthClient.getActivationStatus(activationId);
-            final var platform = response.getPlatform();
-
-            logger.debug("Fetched mobile platform: {}", platform);
-            return platform;
-        } catch (PowerAuthClientException e) {
-            throw new RemoteCommunicationException("Error when fetching mobile platform", e);
         }
     }
 
