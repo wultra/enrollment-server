@@ -35,6 +35,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import java.util.Optional;
 
 /**
  * Service for acknowledging async actions
@@ -73,16 +76,13 @@ public class AcknowledgeService {
                     .build();
         }
 
-        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId())
-                .filter(it -> it.getProcessId().equals(request.processId()))
-                .filter(it -> it.getPhase() == IdentityVerificationPhase.ONBOARDING_APPROVAL)
-                .filter(it -> it.getStatus() == IdentityVerificationStatus.IN_PROGRESS)
-                .orElse(null);
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId()).orElse(null);
+        final Optional<String> validationError = validate(identityVerification, request);
 
-        if (identityVerification == null) {
+        if (validationError.isPresent()) {
             return AcknowledgeApproveClientResponse.builder()
                     .result(AcknowledgeApproveClientResponse.Result.NOK)
-                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .resultReason("Acknowledgement validation failed. %s".formatted(validationError.get()))
                     .build();
         }
 
@@ -104,6 +104,21 @@ public class AcknowledgeService {
                 .build();
     }
 
+    private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeApproveClientRequest request) {
+        if (identityVerification == null) {
+            return Optional.of("Identity verification not found.");
+        } else if (!request.processId().equals(identityVerification.getProcessId())) {
+            return Optional.of("Identity verification does not belong to the process.");
+        } else if (identityVerification.getPhase() != IdentityVerificationPhase.ONBOARDING_APPROVAL) {
+            return Optional.of("Identity verification is not in ONBOARDING_APPROVAL phase.");
+        } else if (identityVerification.getStatus() != IdentityVerificationStatus.IN_PROGRESS) {
+            return Optional.of("Identity verification is not in IN_PROGRESS state.");
+        } else if (!request.userId().equals(identityVerification.getUserId())) {
+            return Optional.of("Identity verification does not belong to the user.");
+        }
+        return Optional.empty();
+    }
+
     private static OnboardingEvent convert(final AcknowledgeApproveClientRequest.ApprovalResult source) {
         return switch (source) {
             case OK -> OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE;
@@ -113,6 +128,8 @@ public class AcknowledgeService {
     }
 
     private static OwnerId convert(final IdentityVerificationEntity source) {
+        Assert.notNull(source, "Identity verification cannot be null.");
+
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId(source.getActivationId());
         ownerId.setUserId(source.getUserId());
