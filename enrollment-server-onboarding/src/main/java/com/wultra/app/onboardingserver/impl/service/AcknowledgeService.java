@@ -107,13 +107,13 @@ public class AcknowledgeService {
     private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeApproveClientRequest request) {
         if (identityVerification == null) {
             return Optional.of("Identity verification not found.");
-        } else if (!identityVerification.getProcessId().equals(request.processId())) {
+        } else if (!request.processId().equals(identityVerification.getProcessId())) {
             return Optional.of("Identity verification does not belong to the process.");
         } else if (identityVerification.getPhase() != IdentityVerificationPhase.ONBOARDING_APPROVAL) {
             return Optional.of("Identity verification is not in ONBOARDING_APPROVAL phase.");
         } else if (identityVerification.getStatus() != IdentityVerificationStatus.IN_PROGRESS) {
             return Optional.of("Identity verification is not in IN_PROGRESS state.");
-        } else if (!identityVerification.getUserId().equals(request.userId())) {
+        } else if (!request.userId().equals(identityVerification.getUserId())) {
             return Optional.of("Identity verification does not belong to the user.");
         }
         return Optional.empty();
