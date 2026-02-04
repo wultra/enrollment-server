@@ -206,7 +206,7 @@ class ClientEvaluationServiceTest {
     }
 
     private static EvaluateClientRequest buildRequestWithoutExtractedData() {
-        final var checkResult = new EvaluateClientRequest.DocumentCheckResult(List.of());
+        final var checkResult = new EvaluateClientRequest.DocumentCheckResult(List.of(), null);
 
         return EvaluateClientRequest.builder()
                 .processId("p1")
@@ -216,7 +216,6 @@ class ClientEvaluationServiceTest {
                 .verificationId("v1")
                 .provider("testProvider")
                 .status(EvaluateClientRequest.Status.SUCCESS)
-                .score(10)
                 .documentCheckResult(checkResult)
                 .build();
     }

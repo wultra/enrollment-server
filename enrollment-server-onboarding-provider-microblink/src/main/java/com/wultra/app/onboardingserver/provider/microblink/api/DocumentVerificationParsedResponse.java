@@ -56,7 +56,8 @@ public record DocumentVerificationParsedResponse(
     ) {}
 
     public record ExtractionClassInfo(
-            String type
+            String type,
+            String isoAlpha3CountryCode
     ) {}
 
     public record Runtime(

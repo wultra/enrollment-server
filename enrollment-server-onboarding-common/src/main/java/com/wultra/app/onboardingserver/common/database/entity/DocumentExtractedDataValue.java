@@ -33,6 +33,7 @@ public record DocumentExtractedDataValue(
     String surname,
     String dateOfBirth,
     String placeOfBirth,
+    String country,
     String sex,
     String nationality,
     String personalNumber,

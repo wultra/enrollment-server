@@ -58,8 +58,6 @@ public final class EvaluateClientRequest {
 
     private Status status;
 
-    private Integer score;
-
     private DocumentCheckResult documentCheckResult;
 
     public enum Status {
@@ -67,14 +65,25 @@ public final class EvaluateClientRequest {
         FAILURE
     }
 
+    @Builder
     public record DocumentCheckResult(
-            List<Document> documents
+            List<Document> documents,
+            Person person
+    ) {}
+
+    @Builder
+    public record Person(
+            String surname,
+            String givenNames,
+            String dateOfBirth
     ) {}
 
     @Builder
     public record Document(
             DocumentType type,
+            String country,
             Status status,
+            Integer score,
             DocumentData data,
             List<Image> images,
             String rawData

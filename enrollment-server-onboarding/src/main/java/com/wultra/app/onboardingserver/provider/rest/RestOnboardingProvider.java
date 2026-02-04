@@ -297,6 +297,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
                 .map(RestOnboardingProvider::convert)
                 .toList();
 
+        final var person = convert(source.getDocumentCheckResult().person());
+
         final ClientEvaluateRequestDto target = new ClientEvaluateRequestDto();
         target.setProcessId(source.getProcessId());
         target.setProcessType(source.getProcessType());
@@ -305,10 +307,16 @@ public class RestOnboardingProvider implements OnboardingProvider {
         target.setVerificationId(source.getVerificationId());
         target.setProvider(source.getProvider());
         target.setStatus(convert(source.getStatus()));
-        target.setScore(source.getScore());
-        target.setDocumentCheckResult(new ClientEvaluateRequestDto.DocumentCheckResult(documents));
-        //target.setExtractedData(source.getExtractedData()); TODO: doublecheck this is set to any value
+        target.setDocumentCheckResult(new ClientEvaluateRequestDto.DocumentCheckResult(documents, person));
         return target;
+    }
+
+    private static ClientEvaluateRequestDto.Person convert(final EvaluateClientRequest.Person source) {
+        return ClientEvaluateRequestDto.Person.builder()
+                .surname(source.surname())
+                .givenNames(source.givenNames())
+                .dateOfBirth(source.dateOfBirth())
+                .build();
     }
 
     private static EvaluateClientResponse convert(final ClientEvaluateResponseDto source) {
@@ -340,7 +348,9 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
         return ClientEvaluateRequestDto.Document.builder()
                 .type(convert(source.type()))
+                .country(source.country())
                 .status(convert(source.status()))
+                .score(source.score())
                 .data(convert(source.data()))
                 .images(images)
                 .rawData(source.rawData())

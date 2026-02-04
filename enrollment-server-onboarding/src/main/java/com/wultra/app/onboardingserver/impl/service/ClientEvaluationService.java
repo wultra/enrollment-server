@@ -69,6 +69,8 @@ public class ClientEvaluationService {
 
     private final RetryTemplate retryTemplate;
 
+    private final ObjectMapper objectMapper;
+
     public ClientEvaluationService(OnboardingProvider onboardingProvider,
                                    IdentityVerificationConfig config,
                                    AuditService auditService,
@@ -84,6 +86,8 @@ public class ClientEvaluationService {
                 .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
                 .exponentialBackoff(200, 2.0, 2_000)
                 .build();
+
+        this.objectMapper = new ObjectMapper();
     }
 
 
@@ -127,7 +131,6 @@ public class ClientEvaluationService {
                     .verificationId(verificationId)
                     .provider(config.getDocumentVerificationProvider())
                     .status(EvaluateClientRequest.Status.SUCCESS)
-                    .score(10)
                     .documentCheckResult(documentCheckResult)
                     .build();
 
@@ -184,14 +187,21 @@ public class ClientEvaluationService {
 
         for (final DocumentVerificationEntity documentVerification : documentsVerification) {
             final var documentResult = selectLatestDocumentResult(documentVerification);
-            final var documentData = buildDocumentData(documentResult);
+            final var extractedData = parseExtractedData(documentResult);
+            final var documentData = buildDocumentData(extractedData);
+
+            final var country = Optional.ofNullable(extractedData)
+                    .map(DocumentExtractedDataValue::country)
+                    .orElse(null);
 
             final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
             final var images = buildImages(processedDocument);
 
             final var document = EvaluateClientRequest.Document.builder()
                     .type(documentVerification.getType())
-                    .status( EvaluateClientRequest.Status.SUCCESS)
+                    .country(country)
+                    .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
+                    .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
                     .data(documentData)
                     .images(images)
                     .rawData(documentResult.getVerificationResult())
@@ -200,7 +210,40 @@ public class ClientEvaluationService {
             documents.add(document);
         }
 
-        return new EvaluateClientRequest.DocumentCheckResult(documents);
+        final var person = buildPerson(documents);
+
+        return new EvaluateClientRequest.DocumentCheckResult(documents, person);
+    }
+
+    private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
+        String surname = null;
+        String givenNames = null;
+        String dateOfBirth = null;
+
+        for (final var document : documents) {
+            final var documentData = document.data();
+            if (documentData == null) {
+                return null;
+            }
+
+            if (surname == null) {
+                surname = documentData.surname();
+            }
+
+            if (givenNames == null) {
+                givenNames = documentData.givenNames();
+            }
+
+            if (dateOfBirth == null) {
+                dateOfBirth = documentData.dateOfBirth();
+            }
+        }
+
+        return EvaluateClientRequest.Person.builder()
+                .surname(surname)
+                .givenNames(givenNames)
+                .dateOfBirth(dateOfBirth)
+                .build();
     }
 
     private static List<EvaluateClientRequest.Image> buildImages(final ProcessedDocumentDataEntity processedDocumentData) {
@@ -231,7 +274,7 @@ public class ClientEvaluationService {
             documents.add(document);
         }
 
-        return new EvaluateClientRequest.DocumentCheckResult(documents);
+        return new EvaluateClientRequest.DocumentCheckResult(documents, null);
     }
 
     private static Set<DocumentVerificationEntity> selectAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
@@ -260,25 +303,31 @@ public class ClientEvaluationService {
                 .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
     }
 
-    private static EvaluateClientRequest.DocumentData buildDocumentData(final  DocumentResultEntity documentResult) {
-        try {
-            final var mapper = new ObjectMapper();
-            final var extractedData = mapper.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class);
+    private static EvaluateClientRequest.DocumentData buildDocumentData(final DocumentExtractedDataValue extractedData) {
+        if (extractedData == null) {
+            return null;
+        }
 
-            return EvaluateClientRequest.DocumentData.builder()
-                    .givenNames(extractedData.givenNames())
-                    .surname(extractedData.surname())
-                    .dateOfBirth(extractedData.dateOfBirth())
-                    .placeOfBirth(extractedData.placeOfBirth())
-                    .sex(extractedData.sex())
-                    .nationality(extractedData.nationality())
-                    .personalNumber(extractedData.personalNumber())
-                    .documentNumber(extractedData.documentNumber())
-                    .dateOfIssue(extractedData.dateOfIssue())
-                    .dateOfExpiry(extractedData.dateOfExpiry())
-                    .authority(extractedData.authority())
-                    .build();
+        return EvaluateClientRequest.DocumentData.builder()
+                .givenNames(extractedData.givenNames())
+                .surname(extractedData.surname())
+                .dateOfBirth(extractedData.dateOfBirth())
+                .placeOfBirth(extractedData.placeOfBirth())
+                .sex(extractedData.sex())
+                .nationality(extractedData.nationality())
+                .personalNumber(extractedData.personalNumber())
+                .documentNumber(extractedData.documentNumber())
+                .dateOfIssue(extractedData.dateOfIssue())
+                .dateOfExpiry(extractedData.dateOfExpiry())
+                .authority(extractedData.authority())
+                .build();
+    }
+
+    private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {
+        try {
+            return objectMapper.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class);
         } catch (JsonProcessingException e) {
+            logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
             return null;
         }
     }

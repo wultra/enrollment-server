@@ -16,23 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * TODO
- *
- * @author Michal Rozehnal, michal.rozehnal@wultra.com
- */
-
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Parser for normalized data (according to {@link DocumentExtractedDataValue}) extracted from the Microblink response.
@@ -55,11 +51,16 @@ public class MicroblinkExtractedDataParser {
      * @param extractedDataJson extracted data in Microblink JSON format
      * @return normalized extracted data as {@link DocumentExtractedDataValue} JSON string
      */
-    public String parseExtractedData(final String extractedDataJson) {
+    public String parseExtractedData(final String extractedDataJson, final DocumentVerificationParsedResponse.Extraction extraction) {
         try {
             final var root = mapper.readTree(extractedDataJson);
 
             final var extractedValueByField = extractFieldValues(root);
+
+            final var country = Optional.ofNullable(extraction)
+                    .map(DocumentVerificationParsedResponse.Extraction::classInfo)
+                    .map(DocumentVerificationParsedResponse.ExtractionClassInfo::isoAlpha3CountryCode)
+                    .orElse(null);
 
             final var extractedDataValue = DocumentExtractedDataValue.builder()
                     .givenNames(extractedValueByField.getOrDefault(ExtractedDataField.GIVEN_NAMES, null))
@@ -72,6 +73,7 @@ public class MicroblinkExtractedDataParser {
                     .dateOfIssue(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_ISSUE, null))
                     .dateOfExpiry(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_EXPIRY, null))
                     .authority(extractedValueByField.getOrDefault(ExtractedDataField.AUTHORITY, null))
+                    .country(country)
                     .build();
 
             return mapper.writeValueAsString(extractedDataValue);

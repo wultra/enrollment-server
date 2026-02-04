@@ -386,7 +386,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 case BACK -> microblinkResponse.extractionBackJson();
             };
 
-            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData);
+            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, microblinkResponse.extraction());
 
             final var result = new DocumentSubmitResult();
             result.setDocumentId(documentVerificationData.documentId());

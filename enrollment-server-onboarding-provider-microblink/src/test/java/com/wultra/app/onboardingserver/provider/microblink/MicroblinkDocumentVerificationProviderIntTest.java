@@ -775,16 +775,16 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static String buildPassportNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
     }
 
     private static String buildIdCardFrontNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
     }
 
     private static String buildIdCardBackNormalizedExtractedDataJson() {
         return """
-                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
+                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 }
