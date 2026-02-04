@@ -38,9 +38,6 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
-import com.wultra.security.powerauth.client.model.response.v3.GetActivationStatusResponse;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,9 +77,10 @@ class MicroblinkDocumentVerificationProviderTest {
     private static final String USER_ID = "fc87e60a-85fe-405c-bfa3-9580211e1670";
     private static final String ACTIVATION_ID = "da15f970-d939-46f0-abe7-7858e74ea3b0";
 
-    private static final Map<MicroblinkMobilePlatform, String> MICROBLINK_LICENSE_KEYS = Map.of(
-            MicroblinkMobilePlatform.IOS, "ios-license-key",
-            MicroblinkMobilePlatform.ANDROID, "android-license-key"
+    private static final List<MicroblinkConfigProperties.SdkConfig> MOBILE_SDK_CONFIGS = List.of(
+            new MicroblinkConfigProperties.SdkConfig("app1", "ios", "source1-ios-1"),
+            new MicroblinkConfigProperties.SdkConfig("app1", "android", "source1-android-1"),
+            new MicroblinkConfigProperties.SdkConfig("app2", "ios", "source2-ios-1")
     );
 
     private static final String DOCUMENT_ID_CARD_FRONT_ID = "id-card-front";
@@ -114,9 +112,6 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @Mock
     private RestClient restClient;
-
-    @Mock
-    private PowerAuthClient powerAuthClient;
 
     @Mock
     private DocumentDataRepository documentDataRepository;
@@ -189,81 +184,53 @@ class MicroblinkDocumentVerificationProviderTest {
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        when(microblinkConfigProperties.getMobileSdkLicenseKeys()).thenReturn(MICROBLINK_LICENSE_KEYS);
+        when(microblinkConfigProperties.getMobileSdkConfigs()).thenReturn(MOBILE_SDK_CONFIGS);
 
         provider = new MicroblinkDocumentVerificationProvider(
                 restClient,
                 new DocumentVerificationResponseParser(objectMapper),
                 microblinkConfigProperties,
-                powerAuthClient,
                 documentDataRepository,
                 processedDocumentDataRepository,
                 documentVerificationRepository
         );
     }
 
-    @Test
-    void testInitVerificationSdk_platformFetchFail_exceptionIsThrown() throws PowerAuthClientException {
+    @ParameterizedTest
+    @CsvSource({
+            ",",
+            "app1,",
+            ",ios",
+            "app2,android"
+    })
+    void testInitVerificationSdk_sdkConfigNotFound_responseWithoutLicenseKey(final String origin, final String platform) {
         // given
-        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenThrow(new PowerAuthClientException("Test exception"));
+        final var initParams = new HashMap<String, String>();
+        initParams.put("origin", origin);
+        initParams.put("platform", platform);
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.initVerificationSdk(ownerId, Map.of()));
-
-        // then
-        assertEquals("Error when fetching mobile platform", exception.getMessage());
-        assertNotNull(exception.getCause());
-    }
-
-    @Test
-    void testInitVerificationSdk_unsupportedPlatformFetchedFromPowerAuth_resultWithoutLicenseKey() throws PowerAuthClientException, RemoteCommunicationException {
-        // given
-        final var response = new GetActivationStatusResponse();
-        response.setPlatform("unsupported");
-
-        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenReturn(response);
-
-        // when
-        final var result = provider.initVerificationSdk(ownerId, Map.of());
+        final var result = provider.initVerificationSdk(ownerId, Collections.unmodifiableMap(initParams));
 
         // then
         assertEquals(new VerificationSdkInfo(), result);
     }
 
-    @Test
-    void testInitVerificationSdk_supportedPlatformFetchedFromPowerAuth_resultWithLicenseKey() throws PowerAuthClientException, RemoteCommunicationException {
-        // given
-        // -
-
-        final var response = new GetActivationStatusResponse();
-        response.setPlatform("android");
-
-        when(powerAuthClient.getActivationStatus(ACTIVATION_ID)).thenReturn(response);
-
-        // when
-        final var result = provider.initVerificationSdk(ownerId, Map.of());
-
-        // then
-        assertEquals(new VerificationSdkInfo(Map.of("license-key", "android-license-key")), result);
-    }
-
     @ParameterizedTest
     @CsvSource({
-            "ios,ios-license-key",
-            "android,android-license-key"
+            "app1,ios,source1-ios-1",
+            "app1,android,source1-android-1",
+            "app2,ios,source2-ios-1"
     })
-    void testInitVerificationSdk_supportedMobilePlatformProvided_resultWithLicenseKey(final String platform, final String expectedLicense) throws RemoteCommunicationException {
+    void testInitVerificationSdk_sdkConfigFound_responseWithLicenseKey(final String origin, final String platform, final String expectedLicenseKey) {
         // given
-        // -
+        final var initParams = Map.of("origin", origin, "platform", platform);
 
         // when
-        final var sdkInfo = provider.initVerificationSdk(ownerId, Map.of("platform", platform));
+        final var result = provider.initVerificationSdk(ownerId, initParams);
 
         // then
-        final var expectedResult = new VerificationSdkInfo();
-        expectedResult.getAttributes().put("license-key", expectedLicense);
-
-        assertEquals(expectedResult, sdkInfo);
+        assertEquals(new VerificationSdkInfo(Map.of("license-key", expectedLicenseKey)), result);
     }
 
     @Test
