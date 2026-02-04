@@ -56,8 +56,6 @@ public class AcknowledgeService {
 
     private final IdentityVerificationRepository identityVerificationRepository;
 
-    private final IdentityVerificationService identityVerificationService;
-
     private final StateMachineService stateMachineService;
 
     private final AuditService auditService;
@@ -152,16 +150,13 @@ public class AcknowledgeService {
                     .build();
         }
 
-        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId())
-                .filter(it -> it.getProcessId().equals(request.processId()))
-                .filter(it -> it.getPhase() == IdentityVerificationPhase.CLIENT_EVALUATION)
-                .filter(it -> it.getStatus() == IdentityVerificationStatus.IN_PROGRESS)
-                .orElse(null);
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId()).orElse(null);
+        final Optional<String> validationError = validate(identityVerification, request);
 
-        if (identityVerification == null) {
+        if (validationError.isPresent()) {
             return AcknowledgeEvaluationClientResponse.builder()
                     .result(AcknowledgeEvaluationClientResponse.Result.NOK)
-                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .resultReason("Acknowledgement validation failed. %s".formatted(validationError.get()))
                     .build();
         }
 
@@ -192,5 +187,20 @@ public class AcknowledgeService {
             case NOK -> OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_REJECT;
             case WAIT -> throw new IllegalArgumentException("WAIT result should be handled at the controller level and must not reach AcknowledgeService");
         };
+    }
+
+    private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeEvaluationClientRequest request) {
+        if (identityVerification == null) {
+            return Optional.of("Identity verification not found.");
+        } else if (!request.processId().equals(identityVerification.getProcessId())) {
+            return Optional.of("Identity verification does not belong to the process.");
+        } else if (identityVerification.getPhase() != IdentityVerificationPhase.CLIENT_EVALUATION) {
+            return Optional.of("Identity verification is not in CLIENT_EVALUATION phase.");
+        } else if (identityVerification.getStatus() != IdentityVerificationStatus.IN_PROGRESS) {
+            return Optional.of("Identity verification is not in IN_PROGRESS state.");
+        } else if (!request.userId().equals(identityVerification.getUserId())) {
+            return Optional.of("Identity verification does not belong to the user.");
+        }
+        return Optional.empty();
     }
 }
