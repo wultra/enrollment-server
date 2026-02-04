@@ -18,12 +18,15 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.wultra.core.rest.client.base.RestClientConfiguration;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Configuration properties for Microblink document verification provider.
@@ -31,6 +34,7 @@ import java.util.Map;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.document-verification.microblink")
+@Validated
 @Getter
 @Setter
 public class MicroblinkConfigProperties {
@@ -41,12 +45,26 @@ public class MicroblinkConfigProperties {
     private RestClientConfiguration restClientConfig;
 
     /**
-     * Mobile SDK license keys by platform.
-     */
-    private Map<MicroblinkMobilePlatform, String> mobileSdkLicenseKeys = new EnumMap<>(MicroblinkMobilePlatform.class);
-
-    /**
      * Check of extracted data from documents.
      */
     private boolean extractedDataCheckEnabled;
+
+    /**
+     * Configurations for mobile SDK.
+     */
+    @Valid
+    private List<SdkConfig> mobileSdkConfigs = new ArrayList<>();
+
+    /**
+     * Microblink mobile SDK configuration.
+     *
+     * @param origin Bundle ID / App ID
+     * @param platform mobile platform
+     * @param licenseKey license key for mobile SDK
+     */
+    public record SdkConfig(
+            @NotBlank String origin,
+            @NotBlank String platform,
+            @NotBlank String licenseKey
+    ) {}
 }
