@@ -34,7 +34,6 @@ import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
-import com.wultra.app.onboardingserver.provider.microblink.api.ExtractedDataField;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -73,6 +72,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final MicroblinkConfigProperties properties;
+    private final MicroblinkExtractedDataParser microblinkExtractedDataParser;
 
     public MicroblinkDocumentVerificationProvider(
             RestClient microblinkRestClient,
@@ -81,7 +81,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository
+            DocumentVerificationRepository documentVerificationRepository,
+            MicroblinkExtractedDataParser microblinkExtractedDataParser
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
@@ -90,6 +91,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
+        this.microblinkExtractedDataParser = microblinkExtractedDataParser;
 
         mobileSdkLicenseKeyByPlatform = properties.getMobileSdkLicenseKeys().entrySet()
                 .stream()
@@ -370,7 +372,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static List<DocumentSubmitResult> processMicroblinkResults(
+    private List<DocumentSubmitResult> processMicroblinkResults(
             final List<DocumentVerificationData> documentsVerificationData,
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType
     ) {
@@ -384,7 +386,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 case BACK -> microblinkResponse.extractionBackJson();
             };
 
-            final var extractedDataValue = buildExtractedDataValue(extractedData);
+            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData);
 
             final var result = new DocumentSubmitResult();
             result.setDocumentId(documentVerificationData.documentId());
@@ -655,55 +657,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         documentData.setData(document.image().getData());
         documentData.setTimestampCreated(new Date());
         return documentData;
-    }
-
-    private static String buildExtractedDataValue(final String extractedDataJson) {
-        try {
-            final var mapper = new ObjectMapper();
-            final var root = mapper.readTree(extractedDataJson);
-
-            final var extractedValueByField = extractFieldValues(root);
-
-            final var extractedDataValue = DocumentExtractedDataValue.builder()
-                    .givenNames(extractedValueByField.getOrDefault(ExtractedDataField.GIVEN_NAMES, null))
-                    .surname(extractedValueByField.getOrDefault(ExtractedDataField.SURNAME, null))
-                    .dateOfBirth(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_BIRTH, null))
-                    .sex(extractedValueByField.getOrDefault(ExtractedDataField.SEX, null))
-                    .nationality(extractedValueByField.getOrDefault(ExtractedDataField.NATIONALITY, null))
-                    .personalNumber(extractedValueByField.getOrDefault(ExtractedDataField.PERSONAL_NUMBER, null))
-                    .documentNumber(extractedValueByField.getOrDefault(ExtractedDataField.DOCUMENT_NUMBER, null))
-                    .dateOfIssue(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_ISSUE, null))
-                    .dateOfExpiry(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_EXPIRY, null))
-                    .authority(extractedValueByField.getOrDefault(ExtractedDataField.AUTHORITY, null))
-                    .build();
-
-            return mapper.writeValueAsString(extractedDataValue);
-        } catch (final JsonProcessingException e) {
-            return null;
-        }
-    }
-
-    public static Map<ExtractedDataField, String> extractFieldValues(final JsonNode root) {
-        final var result = new EnumMap<ExtractedDataField, String>(ExtractedDataField.class);
-
-        for (final var node : root) {
-            final var microblinkField = node.path("field").asText(null);
-            final var field = ExtractedDataField.fromMicroblinkField(microblinkField);
-
-            if (field == null) {
-                continue;
-            }
-
-            final var value = node.has("value")
-                    ? node.path("value").asText(null)
-                    // fallback for Date values
-                    : node.path("originalResult").path(0).path("value").asText(null);
-
-            if (value != null) {
-                result.put(field, value);
-            }
-        }
-        return result;
     }
 
     @Builder(toBuilder = true)

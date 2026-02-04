@@ -130,6 +130,9 @@ class MicroblinkDocumentVerificationProviderTest {
     @Mock
     private MicroblinkConfigProperties microblinkConfigProperties;
 
+    @Mock
+    private MicroblinkExtractedDataParser microblinkExtractedDataParser;
+
     private MicroblinkDocumentVerificationProvider provider;
 
     @Captor
@@ -198,7 +201,8 @@ class MicroblinkDocumentVerificationProviderTest {
                 powerAuthClient,
                 documentDataRepository,
                 processedDocumentDataRepository,
-                documentVerificationRepository
+                documentVerificationRepository,
+                microblinkExtractedDataParser
         );
     }
 
@@ -453,6 +457,9 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]")).thenReturn("[{\"front\":\"dummy\"}]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]")).thenReturn("[]");
+
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -480,6 +487,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]")).thenReturn("[{\"front\":\"dummy\"}]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]")).thenReturn("[]");
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);

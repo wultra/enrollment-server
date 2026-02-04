@@ -78,8 +78,8 @@ class MicroblinkConfig {
             PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository
-    ) {
+            DocumentVerificationRepository documentVerificationRepository,
+            MicroblinkExtractedDataParser microblinkExtractedDataParser) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
@@ -87,7 +87,8 @@ class MicroblinkConfig {
                 powerAuthClient,
                 documentDataRepository,
                 processedDocumentDataRepository,
-                documentVerificationRepository
+                documentVerificationRepository,
+                microblinkExtractedDataParser
         );
     }
 }

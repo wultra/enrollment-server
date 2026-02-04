@@ -514,9 +514,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
+        final var frontNormalizedExtractedData = buildIdCardFrontNormalizedExtractedDataJson();
+
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertNull(frontDocument.getRejectReason());
-        assertEquals(idCardFrontExtractionJson, frontDocument.getExtractedData());
+        assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
         assertEquals(idCardPassValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
@@ -524,9 +526,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
+        final var backNormalizedExtractedData = buildIdCardBackNormalizedExtractedDataJson();
+
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertNull(backDocument.getRejectReason());
-        assertEquals(idCardBackExtractionJson, backDocument.getExtractedData());
+        assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
         assertEquals(idCardPassValidationResult, backDocument.getValidationResult());
     }
 
@@ -543,9 +547,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
+        final var frontNormalizedExtractedData = buildIdCardFrontNormalizedExtractedDataJson();
+
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
-        assertEquals(idCardFrontExtractionJson, frontDocument.getExtractedData());
+        assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
         assertEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
@@ -553,9 +559,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
+        final var backNormalizedExtractedData = buildIdCardBackNormalizedExtractedDataJson();
+
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
-        assertEquals(idCardBackExtractionJson, backDocument.getExtractedData());
+        assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
         assertEquals(idCardRejectValidationResult, backDocument.getValidationResult());
     }
 
@@ -571,9 +579,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
+        final var passportNormalizedExtractedData = buildPassportNormalizedExtractedDataJson();
+
         assertDoesNotThrow(() -> UUID.fromString(document.getUploadId()));
         assertNull(document.getRejectReason());
-        assertEquals(passportPassExtractionJson, document.getExtractedData());
+        assertEquals(passportNormalizedExtractedData, document.getExtractedData());
         assertEquals(passportPassValidationResult, document.getValidationResult());
     }
 
@@ -761,5 +771,20 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(expectedValidationResult, documentResult.getVerificationResult());
         assertNull(documentResult.getErrorDetail());
         assertEquals(expectedExtractedData, documentResult.getExtractedData());
+    }
+
+    private static String buildPassportNormalizedExtractedDataJson() {
+        return """
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
+    }
+
+    private static String buildIdCardFrontNormalizedExtractedDataJson() {
+        return """
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"ZZ LL AAAA","authority":null}""";
+    }
+
+    private static String buildIdCardBackNormalizedExtractedDataJson() {
+        return """
+                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 }

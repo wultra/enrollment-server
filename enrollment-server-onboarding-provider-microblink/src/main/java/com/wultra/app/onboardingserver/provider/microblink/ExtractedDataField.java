@@ -22,7 +22,7 @@
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 
-package com.wultra.app.onboardingserver.provider.microblink.api;
+package com.wultra.app.onboardingserver.provider.microblink;
 
 import lombok.Getter;
 
