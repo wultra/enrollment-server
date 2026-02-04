@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.DocumentsVerificationPendingGuard;
@@ -66,6 +67,9 @@ class DocumentVerificationTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private OnboardingProcessRepository onboardingProcessRepository;
+
+    @MockitoBean
+    private ClientEvaluationService clientEvaluationService;
 
     @Test
     void testDocumentVerificationAccepted() throws Exception {

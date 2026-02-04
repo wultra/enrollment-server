@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,39 +14,24 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
-package com.wultra.app.onboardingserver.provider.model.response;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
-import com.wultra.core.annotations.PublicApi;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+package com.wultra.app.enrollmentserver.api.model.onboarding.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * Response object for {@link OnboardingProvider#evaluateClient(EvaluateClientRequest)}.
+ * Request object for client evaluation acknowledgement.
  *
- * @author Lubos Racansky, lubos.racansky@wultra.com
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@Builder
-@Getter
-@ToString
-@PublicApi
-public final class EvaluateClientResponse {
-
-    /**
-     * Result of request.
-     */
-    private EvaluationResult evaluationResult;
-
-    /**
-     * In case of failure, it's detail.
-     */
-    private String resultReason;
-
-
+public record AcknowledgeEvaluationClientRequest(
+    @NotBlank String processId,
+    @NotBlank String userId,
+    @NotBlank String identityVerificationId,
+    @NotNull EvaluationResult evaluationResult
+) {
     public enum EvaluationResult {
 
         /**
@@ -60,7 +45,7 @@ public final class EvaluateClientResponse {
         NOK,
 
         /**
-         * Wait for asynchronous evaluation.
+         * Wait, still not decided.
          */
         WAIT
     }

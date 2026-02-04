@@ -18,6 +18,8 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -28,10 +30,7 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
@@ -69,6 +68,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
     private final MicroblinkConfigProperties properties;
+    private final MicroblinkExtractedDataParser microblinkExtractedDataParser;
     private final Map<String, Map<String, String>> licenseKeyByOriginByPlatform;
 
     public MicroblinkDocumentVerificationProvider(
@@ -77,7 +77,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             MicroblinkConfigProperties properties,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository
+            DocumentVerificationRepository documentVerificationRepository,
+            MicroblinkExtractedDataParser microblinkExtractedDataParser
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
@@ -85,6 +86,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
+        this.microblinkExtractedDataParser = microblinkExtractedDataParser;
 
         licenseKeyByOriginByPlatform = buildLicenseKeyByOriginByPlatform(properties.getMobileSdkConfigs());
     }
@@ -370,7 +372,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static List<DocumentSubmitResult> processMicroblinkResults(
+    private List<DocumentSubmitResult> processMicroblinkResults(
             final List<DocumentVerificationData> documentsVerificationData,
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType
     ) {
@@ -384,10 +386,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 case BACK -> microblinkResponse.extractionBackJson();
             };
 
+            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, microblinkResponse.extraction());
+
             final var result = new DocumentSubmitResult();
             result.setDocumentId(documentVerificationData.documentId());
             result.setUploadId(documentVerificationData.uploadId());
-            result.setExtractedData(extractedData);
+            result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.responseWithoutImagesJson());
 
             final var validation = microblinkResponse.verification();
@@ -631,7 +635,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     )
             );
         }
-
     }
 
     private static DocumentDataEntity buildDocumentData(final DocumentVerificationData document) {

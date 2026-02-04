@@ -18,7 +18,9 @@
 package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeApproveClientRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeEvaluationClientRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeApproveClientResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeEvaluationClientResponse;
 import com.wultra.app.onboardingserver.impl.service.AcknowledgeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -63,6 +65,28 @@ class PrivateClientController {
             logger.info("action: acknowledgeApproveClient, state: succeeded");
         } else {
             logger.info("action: acknowledgeApproveClient, state: failed, reason: {}", response.resultReason());
+        }
+
+        return response;
+    }
+
+    @PostMapping("evaluate")
+    public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final @Valid @RequestBody AcknowledgeEvaluationClientRequest request) {
+        logger.info("action: acknowledgeEvaluationClient, state: initiated, processId: {}", request.processId());
+
+        if (request.evaluationResult() == AcknowledgeEvaluationClientRequest.EvaluationResult.WAIT) {
+            logger.info("action: acknowledgeEvaluationClient, state: skipped, reason: evaluationResult is WAIT");
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.OK)
+                    .build();
+        }
+
+        final AcknowledgeEvaluationClientResponse response = acknowledgeService.acknowledgeEvaluationClient(request);
+
+        if (response.result() == AcknowledgeEvaluationClientResponse.Result.OK) {
+            logger.info("action: acknowledgeEvaluationClient, state: succeeded");
+        } else {
+            logger.info("action: acknowledgeEvaluationClient, state: failed, reason: {}", response.resultReason());
         }
 
         return response;

@@ -18,10 +18,13 @@
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -53,8 +56,73 @@ public final class EvaluateClientRequest {
 
     private String provider;
 
-    /**
-     * Data extracted from each document/page. Format is defined by the document verification provider used.
-     */
-    private List<String> extractedData;
+    private Status status;
+
+    private DocumentCheckResult documentCheckResult;
+
+    public enum Status {
+        SUCCESS,
+        FAILURE
+    }
+
+    @Builder
+    public record DocumentCheckResult(
+            List<Document> documents,
+            Person person
+    ) {}
+
+    @Builder
+    public record Person(
+            String surname,
+            String givenNames,
+            String dateOfBirth
+    ) {}
+
+    @Builder
+    public record Document(
+            DocumentType type,
+            String country,
+            Status status,
+            Integer score,
+            DocumentData data,
+            List<Image> images,
+            String rawData
+    ) {
+    }
+
+    @Builder
+    public record DocumentData(
+            String givenNames,
+            String surname,
+            String dateOfBirth,
+            String placeOfBirth,
+            String sex,
+            String nationality,
+            String personalNumber,
+            String documentNumber,
+            String dateOfIssue,
+            String dateOfExpiry,
+            String authority
+    ) {}
+
+    @Builder
+    public record Image(
+            ProcessedDocumentDataType type,
+            byte[] data
+    ) {
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Image other)) return false;
+            return type == other.type && Arrays.equals(data, other.data);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type != null ? type.hashCode() : 0;
+            result = 31 * result + Arrays.hashCode(data);
+            return result;
+        }
+    }
 }
