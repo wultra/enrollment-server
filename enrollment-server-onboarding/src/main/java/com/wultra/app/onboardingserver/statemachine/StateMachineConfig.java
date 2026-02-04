@@ -365,10 +365,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         return context -> {
             final var contextValue = context.getExtendedState().getVariables().get(ClientEvaluationAction.RESULT_KEY);
 
-            if (contextValue instanceof Optional<?> value) {
-                return value.filter(it -> it instanceof EvaluateClientResponse.EvaluationResult)
-                        .map(it -> expectedResult == it)
-                        .orElse(false);
+            if (contextValue instanceof EvaluateClientResponse.EvaluationResult result) {
+                return expectedResult == result;
             }
 
             return false;
@@ -469,10 +467,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
         final var contextValue = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
 
-        if (contextValue instanceof Optional<?> value) {
-            return value.filter(it -> it instanceof ApproveClientResponse.ApprovalResult)
-                    .map(it -> expectedResult == it)
-                    .orElse(false);
+        if (contextValue instanceof ApproveClientResponse.ApprovalResult result) {
+            return expectedResult == result;
         }
 
         return false;

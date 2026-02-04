@@ -16,12 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Name of the field whose value is to be extracted from Microblink response.
- *
- * @author Michal Rozehnal, michal.rozehnal@wultra.com
- */
-
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import lombok.Getter;
@@ -32,6 +26,11 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Name of the field whose value is to be extracted from Microblink response.
+ *
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
+ */
 @Getter
 public enum ExtractedDataField {
     GIVEN_NAMES("FirstName"),

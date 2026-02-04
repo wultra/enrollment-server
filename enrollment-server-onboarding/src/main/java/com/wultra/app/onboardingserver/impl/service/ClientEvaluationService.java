@@ -38,6 +38,7 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryException;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
@@ -90,7 +91,6 @@ public class ClientEvaluationService {
         this.objectMapper = new ObjectMapper();
     }
 
-
     /**
      * Checks whether the client evaluation phase is enabled in the onboarding process.
      *
@@ -98,6 +98,7 @@ public class ClientEvaluationService {
      * @return whether the client evaluation phase is enabled
      * @throws OnboardingProcessException if the onboarding process configuration is not found
      */
+    @Transactional(readOnly=true)
     public boolean isClientEvaluationEnabled(final String processId) throws OnboardingProcessException {
         return onboardingService.findProcess(processId)
                 .getProcessConfiguration()
@@ -354,13 +355,6 @@ public class ClientEvaluationService {
 
     private void processEvaluationResponse(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
         auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
-        // The timestampFinished parameter is not set yet, there may be other steps ahead
-//        if (EvaluateClientResponse.EvaluationResult.NOK == response.getEvaluationResult()) {
-//            logger.warn("Business logic error occurred during client evaluation, identity verification ID: {}, error detail: {}", identityVerification.getId(), response.getResultReason());
-//            identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
-//            identityVerification.setErrorDetail(IdentityVerificationEntity.CLIENT_EVALUATION_FAILED);
-//            auditService.auditOnboardingProvider(identityVerification, "Error to evaluate client for user: {}, {}", ownerId.getUserId(), response.getResultReason());
-//        }
 
         if (EvaluateClientResponse.EvaluationResult.OK == response.getEvaluationResult()) {
             logger.info("Client evaluation accepted for {}", identityVerification);

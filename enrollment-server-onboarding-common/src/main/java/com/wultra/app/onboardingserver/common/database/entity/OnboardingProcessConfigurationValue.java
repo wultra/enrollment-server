@@ -61,7 +61,7 @@ public record OnboardingProcessConfigurationValue(
             documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
             approvalEnabled = false;
-            clientEvaluationEnabled = false;
+            clientEvaluationEnabled = true;
         }
     }
 
