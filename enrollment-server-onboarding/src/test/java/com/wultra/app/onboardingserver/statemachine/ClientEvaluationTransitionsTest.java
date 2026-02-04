@@ -104,7 +104,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
     @Test
     void testClientEvaluationAcceptedToPresenceCheckInit() throws Exception {
-        IdentityVerificationEntity idVerification = createIdentityVerification( IdentityVerificationStatus.ACCEPTED);
+        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);

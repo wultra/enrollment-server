@@ -98,7 +98,7 @@ public class ClientEvaluationService {
      * @return whether the client evaluation phase is enabled
      * @throws OnboardingProcessException if the onboarding process configuration is not found
      */
-    @Transactional(readOnly=true)
+    @Transactional(readOnly = true)
     public boolean isClientEvaluationEnabled(final String processId) throws OnboardingProcessException {
         return onboardingService.findProcess(processId)
                 .getProcessConfiguration()
@@ -170,8 +170,6 @@ public class ClientEvaluationService {
 
             throw e;
         }
-
-
     }
 
     private EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithExtractedData(
@@ -268,7 +266,7 @@ public class ClientEvaluationService {
         for (final DocumentVerificationEntity documentVerification : documentsVerification) {
             final var document = EvaluateClientRequest.Document.builder()
                     .type(documentVerification.getType())
-                    .status( EvaluateClientRequest.Status.SUCCESS)
+                    .status(EvaluateClientRequest.Status.SUCCESS)
                     .images(new ArrayList<>())
                     .build();
 

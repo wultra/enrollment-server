@@ -53,7 +53,7 @@ class ClientEvaluateRequestDto {
     /**
      * Data extracted from each document/page. Format is defined by the document verification provider used.
      *
-     * @deprecated
+     * @deprecated use {@link #documentCheckResult} instead.
      */
     @Deprecated(forRemoval = true, since = "2.1.0")
     private List<String> extractedData;

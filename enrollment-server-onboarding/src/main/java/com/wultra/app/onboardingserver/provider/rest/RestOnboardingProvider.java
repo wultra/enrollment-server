@@ -335,8 +335,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
     private static ClientEvaluateRequestDto.Status convert(final EvaluateClientRequest.Status source) {
         return switch (source) {
-            case SUCCESS ->  ClientEvaluateRequestDto.Status.SUCCESS;
-            case FAILURE ->  ClientEvaluateRequestDto.Status.FAILURE;
+            case SUCCESS -> ClientEvaluateRequestDto.Status.SUCCESS;
+            case FAILURE -> ClientEvaluateRequestDto.Status.FAILURE;
         };
     }
 
@@ -360,7 +360,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ClientEvaluateRequestDto.DocumentType convert(final DocumentType source) {
         return switch (source) {
             case ID_CARD -> ClientEvaluateRequestDto.DocumentType.ID_CARD;
-            case DRIVING_LICENSE ->  ClientEvaluateRequestDto.DocumentType.DRIVING_LICENCE;
+            case DRIVING_LICENSE -> ClientEvaluateRequestDto.DocumentType.DRIVING_LICENCE;
             case PASSPORT -> ClientEvaluateRequestDto.DocumentType.PASSPORT;
             default -> throw new IllegalArgumentException("Unsupported document type: " + source);
         };
@@ -395,7 +395,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
     private static ClientEvaluateRequestDto.ImageType convert(final ProcessedDocumentDataType source) {
         return switch (source) {
-            case FACE_IMAGE ->  ClientEvaluateRequestDto.ImageType.FACE;
+            case FACE_IMAGE -> ClientEvaluateRequestDto.ImageType.FACE;
         };
     }
 }

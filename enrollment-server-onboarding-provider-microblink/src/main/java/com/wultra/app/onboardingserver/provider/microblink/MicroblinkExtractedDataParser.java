@@ -78,6 +78,7 @@ public class MicroblinkExtractedDataParser {
 
             return mapper.writeValueAsString(extractedDataValue);
         } catch (final JsonProcessingException e) {
+            logger.warn("Serialization of normalized extracted data failed", e);
             return null;
         }
     }
