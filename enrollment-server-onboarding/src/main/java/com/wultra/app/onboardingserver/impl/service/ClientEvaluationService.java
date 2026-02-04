@@ -353,11 +353,12 @@ public class ClientEvaluationService {
 
     private void processEvaluationResponse(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final EvaluateClientResponse response) {
         auditService.auditOnboardingProvider(identityVerification, "Client evaluated for user: {}", ownerId.getUserId());
+        final var identityVerificationId = identityVerification.getId();
 
         if (EvaluateClientResponse.EvaluationResult.OK == response.getEvaluationResult()) {
-            logger.info("Client evaluation accepted for {}", identityVerification);
+            logger.info("Client evaluation accepted for identity verification id: {}", identityVerificationId);
         } else if (EvaluateClientResponse.EvaluationResult.NOK == response.getEvaluationResult()) {
-            logger.info("Client evaluation rejected for {}", identityVerification);
+            logger.info("Client evaluation rejected for identity verification id: {}", identityVerificationId);
             identityVerification.getDocumentVerifications()
                     .forEach(document -> {
                         document.setStatus(DocumentStatus.REJECTED);
@@ -365,7 +366,7 @@ public class ClientEvaluationService {
                     });
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
         } else { // WAIT
-            logger.info("Client evaluation waiting for {}", identityVerification);
+            logger.info("Client evaluation waiting for identity verification id: {}", identityVerificationId);
         }
     }
 }

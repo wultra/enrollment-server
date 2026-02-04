@@ -349,14 +349,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
-                        presenceCheckEnabledGuard,
-                        presenceCheckNotInitializedAction)
-                .then(OnboardingState.OTP_VERIFICATION_PENDING,
-                        otpVerificationEnabledGuard,
-                        otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE,
-                        verificationProcessResultAction);
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
+                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
     }
 
     private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final EvaluateClientResponse.EvaluationResult expectedResult) {
