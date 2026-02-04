@@ -157,9 +157,6 @@ class AcknowledgeServiceTest {
         when(onboardingProcessRepository.findByIdWithLock(PROCESS_ID)).thenReturn(Optional.of(process));
         when(identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID)).thenReturn(Optional.of(identityVerification));
 
-        when(onboardingProcessRepository.findByIdWithLock(PROCESS_ID)).thenReturn(Optional.of(process));
-        when(identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID)).thenReturn(Optional.of(identityVerification));
-
         final AcknowledgeApproveClientResponse response = tested.acknowledgeApproveClient(request);
 
         assertEquals(AcknowledgeApproveClientResponse.Result.NOK, response.result());
@@ -173,9 +170,6 @@ class AcknowledgeServiceTest {
         final OnboardingProcessEntity process = createOnboardingProcess();
         final IdentityVerificationEntity identityVerification = createIdentityVerification();
         identityVerification.setUserId("wrong-user-id");
-
-        when(onboardingProcessRepository.findByIdWithLock(PROCESS_ID)).thenReturn(Optional.of(process));
-        when(identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID)).thenReturn(Optional.of(identityVerification));
 
         when(onboardingProcessRepository.findByIdWithLock(PROCESS_ID)).thenReturn(Optional.of(process));
         when(identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID)).thenReturn(Optional.of(identityVerification));
