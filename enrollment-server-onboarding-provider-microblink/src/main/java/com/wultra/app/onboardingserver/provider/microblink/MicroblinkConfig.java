@@ -74,15 +74,16 @@ class MicroblinkConfig {
             MicroblinkConfigProperties properties,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository
-    ) {
+            DocumentVerificationRepository documentVerificationRepository,
+            MicroblinkExtractedDataParser microblinkExtractedDataParser) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
                 properties,
                 documentDataRepository,
                 processedDocumentDataRepository,
-                documentVerificationRepository
+                documentVerificationRepository,
+                microblinkExtractedDataParser
         );
     }
 }

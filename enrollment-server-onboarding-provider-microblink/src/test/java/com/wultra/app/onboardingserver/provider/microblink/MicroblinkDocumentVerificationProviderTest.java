@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
@@ -110,6 +111,8 @@ class MicroblinkDocumentVerificationProviderTest {
     private SubmittedDocument submittedDocumentIdCardFront;
     private SubmittedDocument submittedDocumentIdCardBack;
 
+    private DocumentVerificationParsedResponse.Extraction idCardExtraction;
+
     @Mock
     private RestClient restClient;
 
@@ -124,6 +127,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @Mock
     private MicroblinkConfigProperties microblinkConfigProperties;
+
+    @Mock
+    private MicroblinkExtractedDataParser microblinkExtractedDataParser;
 
     private MicroblinkDocumentVerificationProvider provider;
 
@@ -181,6 +187,10 @@ class MicroblinkDocumentVerificationProviderTest {
         submittedDocumentIdCardFront = buildSubmittedDocument(verificationDocumentCardIdFront);
         submittedDocumentIdCardBack = buildSubmittedDocument(verificationDocumentCardIdBack);
 
+        idCardExtraction = new DocumentVerificationParsedResponse.Extraction(
+                List.of(),
+                new DocumentVerificationParsedResponse.ExtractionClassInfo("Id", null));
+
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -192,7 +202,8 @@ class MicroblinkDocumentVerificationProviderTest {
                 microblinkConfigProperties,
                 documentDataRepository,
                 processedDocumentDataRepository,
-                documentVerificationRepository
+                documentVerificationRepository,
+                microblinkExtractedDataParser
         );
     }
 
@@ -420,6 +431,9 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -447,6 +461,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);

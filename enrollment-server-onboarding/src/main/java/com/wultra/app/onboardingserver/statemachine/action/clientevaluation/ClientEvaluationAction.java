@@ -19,11 +19,12 @@ package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import com.wultra.app.onboardingserver.statemachine.NullObject;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
@@ -34,20 +35,19 @@ import org.springframework.stereotype.Component;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
+@AllArgsConstructor
 public class ClientEvaluationAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final ClientEvaluationService clientEvaluationService;
+    public static final String RESULT_KEY = "EVALUATION_RESULT";
 
-    @Autowired
-    public ClientEvaluationAction(ClientEvaluationService clientEvaluationService) {
-        this.clientEvaluationService = clientEvaluationService;
-    }
+    private final ClientEvaluationService clientEvaluationService;
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        clientEvaluationService.processClientEvaluation(identityVerification, ownerId);
+        final var result = clientEvaluationService.processClientEvaluation(identityVerification, ownerId);
+        context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
     }
 }

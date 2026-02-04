@@ -18,7 +18,9 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeApproveClientRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.AcknowledgeEvaluationClientRequest;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeApproveClientResponse;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.AcknowledgeEvaluationClientResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
@@ -134,5 +136,71 @@ public class AcknowledgeService {
         ownerId.setActivationId(source.getActivationId());
         ownerId.setUserId(source.getUserId());
         return ownerId;
+    }
+
+    public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final AcknowledgeEvaluationClientRequest request) {
+        final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(request.processId())
+                .filter(it -> it.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS)
+                .orElse(null);
+
+        if (process == null) {
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Process not found or in invalid state.")
+                    .build();
+        }
+
+        final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById(request.identityVerificationId()).orElse(null);
+        final Optional<String> validationError = validate(identityVerification, request);
+
+        if (validationError.isPresent()) {
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement validation failed. %s".formatted(validationError.get()))
+                    .build();
+        }
+
+        try {
+            final var result = request.evaluationResult();
+            auditService.audit(identityVerification, "Acknowledged evaluation approval result: {}", result);
+
+            final var ownerId = convert(identityVerification);
+
+            final OnboardingEvent event = convert(result);
+            stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
+        } catch (IdentityVerificationException e) {
+            logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
+            return AcknowledgeEvaluationClientResponse.builder()
+                    .result(AcknowledgeEvaluationClientResponse.Result.NOK)
+                    .resultReason("Acknowledgement failed. Verification not found or in invalid state.")
+                    .build();
+        }
+
+        return AcknowledgeEvaluationClientResponse.builder()
+                .result(AcknowledgeEvaluationClientResponse.Result.OK)
+                .build();
+    }
+
+    private static OnboardingEvent convert(final AcknowledgeEvaluationClientRequest.EvaluationResult source) {
+        return switch (source) {
+            case OK -> OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_APPROVE;
+            case NOK -> OnboardingEvent.CLIENT_EVALUATION_ACKNOWLEDGED_REJECT;
+            case WAIT -> throw new IllegalArgumentException("WAIT result should be handled at the controller level and must not reach AcknowledgeService");
+        };
+    }
+
+    private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeEvaluationClientRequest request) {
+        if (identityVerification == null) {
+            return Optional.of("Identity verification not found.");
+        } else if (!request.processId().equals(identityVerification.getProcessId())) {
+            return Optional.of("Identity verification does not belong to the process.");
+        } else if (identityVerification.getPhase() != IdentityVerificationPhase.CLIENT_EVALUATION) {
+            return Optional.of("Identity verification is not in CLIENT_EVALUATION phase.");
+        } else if (identityVerification.getStatus() != IdentityVerificationStatus.IN_PROGRESS) {
+            return Optional.of("Identity verification is not in IN_PROGRESS state.");
+        } else if (!request.userId().equals(identityVerification.getUserId())) {
+            return Optional.of("Identity verification does not belong to the user.");
+        }
+        return Optional.empty();
     }
 }

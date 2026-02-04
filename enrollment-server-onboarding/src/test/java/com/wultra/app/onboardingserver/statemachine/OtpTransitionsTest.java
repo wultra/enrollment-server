@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessC
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
@@ -65,6 +66,9 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private VerificationProcessResultAction verificationProcessResultAction;
+
+    @MockitoBean
+    private ClientEvaluationService clientEvaluationService;
 
     @Test
     void testOtpResend() throws Exception {
