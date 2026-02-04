@@ -210,7 +210,7 @@ class MicroblinkDocumentVerificationProviderTest {
         initParams.put("platform", platform);
 
         // when
-        final var result = provider.initVerificationSdk(ownerId, initParams);
+        final var result = provider.initVerificationSdk(ownerId, Collections.unmodifiableMap(initParams));
 
         // then
         assertEquals(new VerificationSdkInfo(), result);
