@@ -187,12 +187,7 @@ public class ClientEvaluationService {
             final var documentData = buildDocumentData(documentResult);
 
             final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
-            final var images = List.of(
-                    EvaluateClientRequest.Image.builder()
-                            .type(processedDocument.getDataType())
-                            .data(processedDocument.getData())
-                            .build()
-            );
+            final var images = buildImages(processedDocument);
 
             final var document = EvaluateClientRequest.Document.builder()
                     .type(documentVerification.getType())
@@ -206,6 +201,19 @@ public class ClientEvaluationService {
         }
 
         return new EvaluateClientRequest.DocumentCheckResult(documents);
+    }
+
+    private static List<EvaluateClientRequest.Image> buildImages(final ProcessedDocumentDataEntity processedDocumentData) {
+        if (processedDocumentData == null) {
+            return List.of();
+        }
+
+        return List.of(
+                EvaluateClientRequest.Image.builder()
+                        .type(processedDocumentData.getDataType())
+                        .data(processedDocumentData.getData())
+                        .build()
+        );
     }
 
     private static EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithoutExtractedData(

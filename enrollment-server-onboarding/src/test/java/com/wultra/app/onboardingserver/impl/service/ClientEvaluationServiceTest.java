@@ -21,7 +21,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -29,9 +31,9 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,10 +42,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -61,16 +62,28 @@ class ClientEvaluationServiceTest {
     private OnboardingProvider onboardingProvider;
 
     @Mock
-    private IdentityVerificationService identityVerificationService;
-
-    @Mock
     private IdentityVerificationConfig identityVerificationConfig;
 
     @Mock
     private CommonOnboardingService onboardingService;
 
-    @InjectMocks
+    @Mock
+    private ProcessedDocumentDataRepository processedDocumentDataRepository;
+
     private ClientEvaluationService tested;
+
+    @BeforeEach
+    void setUp() {
+        when(identityVerificationConfig.getClientEvaluationMaxFailedAttempts()).thenReturn(1);
+
+        tested = new ClientEvaluationService(
+                onboardingProvider,
+                identityVerificationConfig,
+                auditService,
+                onboardingService,
+                processedDocumentDataRepository
+        );
+    }
 
     @Test
     void testProcessClientEvaluation_successful() throws Exception {
@@ -78,27 +91,23 @@ class ClientEvaluationServiceTest {
                 .thenReturn(1);
         when(identityVerificationConfig.isSendingExtractedDataEnabled())
                 .thenReturn(true);
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("testProvider");
 
         final OnboardingProcessConfigurationEntity processConfiguration = new OnboardingProcessConfigurationEntity();
         processConfiguration.setProcessType("onboarding");
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setId("p1");
         process.setProcessConfiguration(processConfiguration);
-        when(onboardingService.findProcessWithLock("p1"))
-                .thenReturn(process);
 
-        final EvaluateClientRequest evaluateClientRequest = EvaluateClientRequest.builder()
-                .processId("p1")
-                .processType("onboarding")
-                .userId("u1")
-                .identityVerificationId("i1")
-                .verificationId("v1")
-                .extractedData(List.of("d1_data"))
-                .build();
+        when(onboardingService.findProcess("p1")).thenReturn(process);
+
         final EvaluateClientResponse evaluateClientResponse = EvaluateClientResponse.builder()
-                .accepted(true)
+                .evaluationResult(EvaluateClientResponse.EvaluationResult.OK)
                 .build();
-        when(onboardingProvider.evaluateClient(evaluateClientRequest))
+        when(onboardingProvider.evaluateClient(any(EvaluateClientRequest.class)))
                 .thenReturn(evaluateClientResponse);
+
+        when(processedDocumentDataRepository.findAllById(Set.of("photo1"))).thenReturn(List.of());
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setId("i1");
@@ -112,13 +121,13 @@ class ClientEvaluationServiceTest {
 
         final OwnerId ownerId = new OwnerId();
 
-        tested.processClientEvaluation(identityVerification, ownerId);
+        final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
-        verify(identityVerificationService).moveToPhaseAndStatus(identityVerification, CLIENT_EVALUATION, ACCEPTED, ownerId);
+        assertEquals(EvaluateClientResponse.EvaluationResult.OK, result);
     }
 
     @Test
-    void testProcessClientEvaluation_invalidVerificationId() {
+    void testProcessClientEvaluation_invalidVerificationId() throws OnboardingProcessException {
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setId("i1");
         identityVerification.setProcessId("p1");
@@ -130,10 +139,11 @@ class ClientEvaluationServiceTest {
 
         final OwnerId ownerId = new OwnerId();
 
-        tested.processClientEvaluation(identityVerification, ownerId);
+        when(onboardingService.findProcess("p1")).thenThrow(new OnboardingProcessException("Test exception verification not found"));
 
-        verify(identityVerificationService).moveToPhaseAndStatus(identityVerification, CLIENT_EVALUATION, FAILED, ownerId);
+        final var response = tested.processClientEvaluation(identityVerification, ownerId);
 
+        assertNull(response);
         assertEquals("unableToGetDocumentVerificationId", identityVerification.getErrorDetail());
         assertEquals(ErrorOrigin.CLIENT_EVALUATION, identityVerification.getErrorOrigin());
     }
@@ -143,13 +153,9 @@ class ClientEvaluationServiceTest {
         when(identityVerificationConfig.getClientEvaluationMaxFailedAttempts())
                 .thenReturn(1);
 
-        final EvaluateClientRequest evaluateClientRequest = EvaluateClientRequest.builder()
-                .processId("p1")
-                .processType("onboarding")
-                .userId("u1")
-                .identityVerificationId("i1")
-                .verificationId("v1")
-                .build();
+        when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("testProvider");
+
+        final EvaluateClientRequest evaluateClientRequest = buildRequestWithoutExtractedData();
 
         when(onboardingProvider.evaluateClient(evaluateClientRequest))
                 .thenThrow(new OnboardingProviderException());
@@ -157,8 +163,9 @@ class ClientEvaluationServiceTest {
         final OnboardingProcessConfigurationEntity processConfiguration = new OnboardingProcessConfigurationEntity();
         processConfiguration.setProcessType("onboarding");
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setId("p1");
         process.setProcessConfiguration(processConfiguration);
-        when(onboardingService.findProcessWithLock("p1"))
+        when(onboardingService.findProcess("p1"))
                 .thenReturn(process);
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
@@ -171,10 +178,9 @@ class ClientEvaluationServiceTest {
 
         final OwnerId ownerId = new OwnerId();
 
-        tested.processClientEvaluation(identityVerification, ownerId);
+        final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
-        verify(identityVerificationService).moveToPhaseAndStatus(identityVerification, CLIENT_EVALUATION, FAILED, ownerId);
-
+        assertNull(result);
         assertEquals("maxFailedAttemptsClientEvaluation", identityVerification.getErrorDetail());
         assertEquals(ErrorOrigin.PROCESS_LIMIT_CHECK, identityVerification.getErrorOrigin());
     }
@@ -195,6 +201,23 @@ class ClientEvaluationServiceTest {
 
         final DocumentVerificationEntity documentVerification = createDocumentVerification(id, status, verificationId);
         documentVerification.setResults(Set.of(documentResult));
+        documentVerification.setPhotoId("photo1");
         return documentVerification;
+    }
+
+    private static EvaluateClientRequest buildRequestWithoutExtractedData() {
+        final var checkResult = new EvaluateClientRequest.DocumentCheckResult(List.of());
+
+        return EvaluateClientRequest.builder()
+                .processId("p1")
+                .processType("onboarding")
+                .userId("u1")
+                .identityVerificationId("i1")
+                .verificationId("v1")
+                .provider("testProvider")
+                .status(EvaluateClientRequest.Status.SUCCESS)
+                .score(10)
+                .documentCheckResult(checkResult)
+                .build();
     }
 }

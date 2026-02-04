@@ -27,6 +27,8 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 /**
  * Onboarding approval action.
  *
@@ -45,6 +47,6 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         final ApproveClientResponse.ApprovalResult result = onboardingApprovalService.approve(identityVerification);
-        context.getExtendedState().getVariables().put(RESULT_KEY, result);
+        context.getExtendedState().getVariables().put(RESULT_KEY, Optional.ofNullable(result));
     }
 }

@@ -27,6 +27,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessC
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
@@ -73,6 +74,9 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
+
+    @MockitoBean
+    private ClientEvaluationService clientEvaluationService;
 
     @Test
     void testPresenceCheckInit() throws Exception {

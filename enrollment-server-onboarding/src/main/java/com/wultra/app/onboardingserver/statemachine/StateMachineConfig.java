@@ -467,11 +467,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     }
 
     private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
-        final Object result = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
-        if (!(result instanceof ApproveClientResponse.ApprovalResult)) {
-            return false;
+        final var contextValue = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
+
+        if (contextValue instanceof Optional<?> value) {
+            return value.filter(it -> it instanceof ApproveClientResponse.ApprovalResult)
+                    .map(it -> expectedResult == it)
+                    .orElse(false);
         }
-        return result == expectedResult;
+
+        return false;
     }
 
     private void configureOtpTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

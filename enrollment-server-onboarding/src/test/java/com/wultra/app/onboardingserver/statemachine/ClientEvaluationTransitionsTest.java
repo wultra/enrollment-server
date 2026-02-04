@@ -29,10 +29,12 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.ClientEvaluationEnabledGuard;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
@@ -42,10 +44,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.NOT_INITIALIZED;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -75,6 +79,9 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
     @MockitoBean
     private OnboardingProcessRepository onboardingProcessRepository;
 
+    @MockitoBean
+    private ClientEvaluationEnabledGuard clientEvaluationEnabledGuard;
+
     @Test
     void testClientEvaluationAccepted() throws Exception {
         testClientVerificationStatus(IdentityVerificationStatus.ACCEPTED, OnboardingState.CLIENT_EVALUATION_ACCEPTED);
@@ -97,7 +104,7 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
 
     @Test
     void testClientEvaluationAcceptedToPresenceCheckInit() throws Exception {
-        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.ACCEPTED);
+        IdentityVerificationEntity idVerification = createIdentityVerification( IdentityVerificationStatus.ACCEPTED);
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationConfig.isPresenceCheckEnabled()).thenReturn(true);
@@ -185,32 +192,45 @@ class ClientEvaluationTransitionsTest extends AbstractStateMachineTest {
         assertEquals(IdentityVerificationStatus.ACCEPTED, idVerification.getStatus());
     }
 
-    private void testClientVerificationStatus(IdentityVerificationStatus identityStatus, OnboardingState expectedState) throws Exception {
-        IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationStatus.IN_PROGRESS);
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
-
-        doAnswer(args -> {
-            final IdentityVerificationEntity identityVerification = args.getArgument(0, IdentityVerificationEntity.class);
-            identityVerification.setStatus(identityStatus);
-            return null;
-        }).when(clientEvaluationService).processClientEvaluation(idVerification, OWNER_ID);
-
-        Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
-
-        prepareTest(stateMachine)
-                .sendEvent(message)
-                .expectState(expectedState)
-                .and()
-                .build()
-                .test();
-    }
-
     private IdentityVerificationEntity createIdentityVerification(IdentityVerificationStatus status) {
         IdentityVerificationEntity idVerification =
                 createIdentityVerification(IdentityVerificationPhase.CLIENT_EVALUATION, status);
         when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
         return idVerification;
+    }
+
+    private void testClientVerificationStatus(final IdentityVerificationStatus identityStatus, final OnboardingState expectedState) throws Exception {
+        final IdentityVerificationEntity idVerification = createIdentityVerification(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.ACCEPTED);
+
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
+
+        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(idVerification.getActivationId(), OnboardingStatus.VERIFICATION_IN_PROGRESS))
+                .thenReturn(Optional.of(createOnboardingProcessEntity()));
+        when(clientEvaluationEnabledGuard.evaluate(any())).thenReturn(true);
+
+        doAnswer(args -> {
+            final IdentityVerificationEntity identityVerification = args.getArgument(0, IdentityVerificationEntity.class);
+            identityVerification.setPhase(IdentityVerificationPhase.CLIENT_EVALUATION);
+            identityVerification.setStatus(identityStatus);
+            return switch (identityStatus) {
+                case ACCEPTED -> EvaluateClientResponse.EvaluationResult.OK;
+                case REJECTED -> EvaluateClientResponse.EvaluationResult.NOK;
+                case IN_PROGRESS -> EvaluateClientResponse.EvaluationResult.WAIT;
+                default -> null; // FAILED -> null => should lead to CLIENT_EVALUATION_FAILED
+            };
+        }).when(clientEvaluationService).processClientEvaluation(any(IdentityVerificationEntity.class), eq(OWNER_ID));
+
+        final Message<OnboardingEvent> message =
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+
+        stateMachine.sendEvent(reactor.core.publisher.Mono.just(message)).blockLast();
+
+        await()
+                .atMost(Duration.ofSeconds(2))
+                .pollInterval(Duration.ofMillis(10))
+                .until(() -> stateMachine.getState().getId() == expectedState);
+
+        assertEquals(expectedState, stateMachine.getState().getId());
     }
 }
