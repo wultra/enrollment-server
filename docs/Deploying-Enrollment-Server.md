@@ -31,7 +31,7 @@ enrollment-server.activation-spawn.enabled=false
 
 Adding activation flags into a custom object when getting activation status can be enabled or disabled using following configuration property:
 ```bash
-enrollment-server.flag.reporting=true
+enrollment-server.flag.reporting=false
 ```
 
 ## Setting Up REST Service Credentials

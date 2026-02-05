@@ -44,7 +44,7 @@ The Enrollment Server uses the following public configuration properties:
 | `spring.security.user.password`                         |         | Basic HTTP property, user password `{id}encodedPassword`, see [Spring Password Storage Format](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-dpe-format). | 
 | `spring.security.oauth2.resource-server.jwt.issuer-uri` |         | OIDC property, URL of the provider, e.g. `https://sts.windows.net/example/`                                                                                                                                                                |
 | `spring.security.oauth2.resource-server.jwt.audiences`  |         | OIDC property, a comma-separated list of allowed `aud` JWT claim values to be validated.                                                                                                                                                   |
-| `enrollment-server.flag.reporting`                      | `true`  | When set to `true`, it adds activation flags to a custom object when retrieving the activation status.                                                                                                                                     |
+| `enrollment-server.flag.reporting`                      | `false` | When set to `true`, it adds activation flags to a custom object when retrieving the activation status.                                                                                                                                     |
 
 ## UserInfoProvider Configuration
 
