@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "token": "31706131726336496d655177346e55503279616b69547344446e5258684c7542",
+  "type": "verify",
+  "frame_available": false,
+  "frame": "string",
+  "frame_jpeg": "string",
+  "reason": "Please Keep Still",
+  "risk_profile": "string",
+  "assurance_type": "genuine_presence",
+  "signals": {
+    "anti_spoofing": {
+      "passed": true
+    },
+    "matching": {
+      "passed": true
+    },
+    "multiple_faces": {
+      "single_face": {
+        "found": true
+      },
+      "face_consistent": {
+        "passed": true
+      }
+    },
+    "return_frame_quality": {
+      "blur": "not_available",
+      "pose": "not_available",
+      "lighting": "not_available"
+    }
+  },
+  "user_feedback_codes": [
+    "ufc_lighting_issues",
+    "ufc_eyewear",
+    "ufc_obscured_face"
+  ]
+}
