@@ -32,6 +32,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -312,6 +313,10 @@ public class RestOnboardingProvider implements OnboardingProvider {
     }
 
     private static ClientEvaluateRequestDto.Person convert(final EvaluateClientRequest.Person source) {
+        if (source == null) {
+            return null;
+        }
+
         return ClientEvaluateRequestDto.Person.builder()
                 .surname(source.surname())
                 .givenNames(source.givenNames())
@@ -341,7 +346,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
     }
 
     private static ClientEvaluateRequestDto.Document convert(final EvaluateClientRequest.Document source) {
-        final var images = source.images()
+        final var images = Optional.ofNullable(source.images())
+                .orElse(List.of())
                 .stream()
                 .map(RestOnboardingProvider::convert)
                 .toList();
