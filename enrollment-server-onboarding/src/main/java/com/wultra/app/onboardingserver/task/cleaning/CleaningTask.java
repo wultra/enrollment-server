@@ -89,6 +89,18 @@ public class CleaningTask {
     }
 
     /**
+     * Clean selfie images.
+     */
+    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
+    @SchedulerLock(name = SchedulerLockNames.CLEANUP_SELFIES_LOCK, lockAtMostFor = "5m")
+    public void cleanupSelfies() {
+        logger.info("action: cleanupSelfies, state: initiated");
+        LockAssert.assertLocked();
+        final int count = cleaningService.cleanSelfies();
+        logger.info("action: cleanupSelfies, state: succeeded, count: {}", count);
+    }
+
+    /**
      * Cleanup of document data older than retention time.
      */
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")

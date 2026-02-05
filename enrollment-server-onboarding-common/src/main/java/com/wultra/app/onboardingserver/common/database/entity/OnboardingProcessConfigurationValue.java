@@ -31,7 +31,10 @@ import java.util.Set;
  * @param otpForIdentification       Whether the OTP is required for the initial identification of the user.
  * @param otpForIdentityVerification Whether the OTP is required for identity verification - request OTP for the next process step.
  * @param useTemporaryActivation     Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.
+ * @param activationType             Whether the activation is initialized by the onboarding server or by the SDK.
+ * @param approvalEnabled            Whether to call bank systems to approve the client.
  * @param documents                  List of documents.
+ * @param clientEvaluationEnabled    Whether to call bank systems to evaluate the client.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Jacksonized
@@ -42,7 +45,9 @@ public record OnboardingProcessConfigurationValue(
         boolean otpForIdentityVerification,
         boolean useTemporaryActivation,
         Documents documents,
-        ActivationType activationType
+        ActivationType activationType,
+        boolean approvalEnabled,
+        boolean clientEvaluationEnabled
 ) implements Serializable {
 
     @Serial
@@ -56,6 +61,8 @@ public record OnboardingProcessConfigurationValue(
             useTemporaryActivation = false;
             documents = Documents.builder().build();
             activationType = ActivationType.IDENTITY;
+            approvalEnabled = false;
+            clientEvaluationEnabled = true;
         }
     }
 

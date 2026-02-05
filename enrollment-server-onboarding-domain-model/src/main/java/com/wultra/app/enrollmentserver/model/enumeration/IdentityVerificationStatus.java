@@ -45,12 +45,17 @@ public enum IdentityVerificationStatus {
     ACCEPTED,
 
     /**
-     * One or more documents have been rejected.
+     * The step has been evaluated with an expected negative result from business logic.
+     * <p>
+     * Not intended for retrying with the same data.
+     * It differs from the technical error {@link #FAILED}.
      */
     REJECTED,
 
     /**
-     * An unrecoverable error occurred during document analysis.
+     * Unexpected technical error, we may attempt to retry.
+     * <p>
+     * It differs from the business error {@link #REJECTED}.
      */
     FAILED
 

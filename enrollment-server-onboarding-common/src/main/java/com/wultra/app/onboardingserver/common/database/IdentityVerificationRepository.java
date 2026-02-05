@@ -77,6 +77,8 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
                     AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
                    OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK
                     AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING)
+                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.ONBOARDING_APPROVAL
+                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
                    OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.ACTIVATION_FINISH
                     AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS))
                    AND EXISTS (

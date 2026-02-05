@@ -24,9 +24,11 @@ import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
+import com.wultra.app.onboardingserver.common.database.SelfieRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.SelfieEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessLimitException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
@@ -68,6 +70,7 @@ public class PresenceCheckService {
     private final AuditService auditService;
     private final ImageProcessor imageProcessor;
     private final ScaResultRepository scaResultRepository;
+    private final SelfieRepository selfieRepository;
 
     /**
      * Prepares presence check to not initialized state.
@@ -132,6 +135,8 @@ public class PresenceCheckService {
             logger.debug("Processing a result of an accepted presence check, {}", ownerId);
         }
 
+        storeSelfiePhoto(result.getPhoto(), idVerification);
+
         if (!documentProcessingService.shouldDocumentProviderStoreSelfie()) {
             logger.debug("Selfie will not be submitted to document provider, {}", ownerId);
         } else if (result.getPhoto() == null) {
@@ -142,6 +147,17 @@ public class PresenceCheckService {
         }
 
         evaluatePresenceCheckResult(ownerId, idVerification, result);
+    }
+
+    private void storeSelfiePhoto(final Image image, final IdentityVerificationEntity idVerification) {
+        final byte[] imageData = image == null ? null : image.getData();
+
+        final SelfieEntity selfie = new SelfieEntity();
+        selfie.setImage(imageData);
+        selfie.setIdentityVerification(idVerification);
+        selfie.setTimestampCreated(new Date());
+
+        selfieRepository.save(selfie);
     }
 
     private void submitSelfiePhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {

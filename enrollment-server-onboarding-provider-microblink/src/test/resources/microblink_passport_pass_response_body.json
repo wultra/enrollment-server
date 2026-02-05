@@ -1,0 +1,231 @@
+{
+  "processingStatus": "Completed",
+  "verification": {
+    "certaintyLevel": "High",
+    "recommendedOutcome": "Accept",
+    "type": "DetailedCheck",
+    "result": "Pass",
+    "performedChecks": 0
+  },
+  "processIndicators": [
+    {
+      "name": "Clarity",
+      "type": "ImageQuality",
+      "result": "NotPerformed"
+    },
+    {
+      "name": "HandPresence",
+      "type": "ScanProcess",
+      "result": "NotPerformed"
+    },
+    {
+      "name": "Cropped",
+      "type": "ImageQuality",
+      "result": "NotPerformed"
+    }
+  ],
+  "extraction": {
+    "processingStatus": "MandatoryFieldMissing",
+    "recognitionStatus": "Uncertain",
+    "overall": [
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "PRENUMELE",
+        "type": "DetailedStringResult",
+        "field": "FirstName"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "NUMELE",
+        "type": "DetailedStringResult",
+        "field": "LastName"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "EA0000000",
+        "type": "DetailedStringResult",
+        "field": "DocumentNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "X",
+        "type": "DetailedStringResult",
+        "field": "Sex"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "MDA ZZ LL AAAA",
+        "type": "DetailedStringResult",
+        "field": "Nationality"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "000000",
+        "type": "DetailedStringResult",
+        "field": "DocumentAdditionalNumber"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "ZZ LL AAAA",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 1,
+        "month": 1,
+        "year": 1999,
+        "successfullyParsed": false,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfBirth"
+      }
+    ],
+    "viz": {
+      "front": [
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "PRENUMELE",
+          "type": "DetailedStringResult",
+          "field": "FirstName"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "NUMELE",
+          "type": "DetailedStringResult",
+          "field": "LastName"
+        },
+        {
+          "originalResult": [
+            {
+              "side": "Unknown",
+              "script": "Latin",
+              "value": "ZZ LL AAAA",
+              "type": "DetailedStringResult"
+            }
+          ],
+          "day": 0,
+          "month": 0,
+          "year": 0,
+          "successfullyParsed": false,
+          "filledByDomainKnowledge": false,
+          "type": "DetailedDateResult",
+          "field": "DateOfExpiry"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "EA0000000",
+          "type": "DetailedStringResult",
+          "field": "DocumentNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "X",
+          "type": "DetailedStringResult",
+          "field": "Sex"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "MDA ZZ LL AAAA",
+          "type": "DetailedStringResult",
+          "field": "Nationality"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "000000",
+          "type": "DetailedStringResult",
+          "field": "DocumentAdditionalNumber"
+        }
+      ],
+      "back": []
+    },
+    "barcode": [
+      {
+        "value": "",
+        "type": "StringResult",
+        "field": "RawDataBase64"
+      }
+    ],
+    "classInfo": {
+      "country": "Moldova",
+      "type": "Passport",
+      "region": "None",
+      "isoAlpha3CountryCode": "MDA",
+      "isoAlpha2CountryCode": "MD",
+      "isoNumericCountryCode": "498"
+    },
+    "additionalInfo": {
+      "frontProcessingStatus": "MandatoryFieldMissing",
+      "backProcessingStatus": "NotScanned",
+      "recognitionMode": "FullRecognition",
+      "firstSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [
+          "DATE_OF_BIRTH",
+          "DATE_OF_EXPIRY"
+        ],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      },
+      "secondSideAdditionalProcessingInfo": {
+        "missingMandatoryFields": [],
+        "invalidCharacterFields": [],
+        "extraPresentFields": []
+      }
+    }
+  },
+  "messages": [],
+  "runtime": {
+    "startedOn": "2025-11-14T09:52:15.6094455Z",
+    "finishedOn": "2025-11-14T09:52:16.5785809Z",
+    "elapsedMs": 969,
+    "serviceVersion": "3.17.0",
+    "runnerVersion": "unknown",
+    "runnerInstanceKey": "unknown",
+    "runnerInstanceIndex": 0,
+    "wrapperVersion": "3.16.0",
+    "extractionRecognizerVersion": "17.0.4",
+    "verificationRecognizerVersion": "",
+    "clientSdkName": "",
+    "clientSdkVersion": "",
+    "traceId": "00-50f65b0d023e80cb8ef50903b9219d6a-90a5627b896e5d15-01"
+  },
+  "images": [],
+  "optionsUsed": {
+    "screenMatchLevel": "Level5",
+    "photocopyMatchLevel": "Level5",
+    "barcodeAnomalyMatchLevel": "Level7",
+    "photoForgeryMatchLevel": "Level2",
+    "staticSecurityFeaturesMatchLevel": "Level6",
+    "dataMatchMatchLevel": "Level5",
+    "blurMatchLevel": "Level5",
+    "glareMatchLevel": "Level5",
+    "lightingMatchLevel": "Level5",
+    "sharpnessMatchLevel": "Level3",
+    "handOcclusionMatchLevel": "Level5",
+    "dpiMatchLevel": "Level5",
+    "tiltMatchLevel": "Level5",
+    "imageQualityInterpretation": "HighConversion",
+    "sideMode": "MultiSide",
+    "treatExpirationAsFraud": true
+  },
+  "useCaseUsed": {
+    "documentVerificationPolicy": "Standard",
+    "verificationContext": "Remote",
+    "manualReviewStrategy": "RejectedAndAccepted",
+    "manualReviewSensitivity": "Default",
+    "captureConditions": "Basic"
+  }
+}

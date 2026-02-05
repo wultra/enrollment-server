@@ -54,6 +54,11 @@ public enum IdentityVerificationPhase {
     PRESENCE_CHECK,
 
     /**
+     * Optional phase after {@link #PRESENCE_CHECK}, when calling bank systems to approve.
+     */
+    ONBOARDING_APPROVAL,
+
+    /**
      * OTP code verification is in progress.
      */
     OTP_VERIFICATION,

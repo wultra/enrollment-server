@@ -26,7 +26,6 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,8 +45,6 @@ import org.springframework.http.MediaType;
 @Configuration
 @Slf4j
 class MicroblinkConfig {
-
-    private MicroblinkConfigProperties properties;
 
     @Bean("microblinkRestClient")
     RestClient microblinkRestClient(MicroblinkConfigProperties properties) throws RestClientException {
@@ -75,19 +72,18 @@ class MicroblinkConfig {
             @Qualifier("microblinkRestClient") RestClient restClient,
             @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
             MicroblinkConfigProperties properties,
-            PowerAuthClient powerAuthClient,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository
-    ) {
+            DocumentVerificationRepository documentVerificationRepository,
+            MicroblinkExtractedDataParser microblinkExtractedDataParser) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
-                properties.getMobileSdkLicenseKeys(),
-                powerAuthClient,
+                properties,
                 documentDataRepository,
                 processedDocumentDataRepository,
-                documentVerificationRepository
+                documentVerificationRepository,
+                microblinkExtractedDataParser
         );
     }
 }

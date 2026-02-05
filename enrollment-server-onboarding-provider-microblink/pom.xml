@@ -31,11 +31,6 @@
     <artifactId>enrollment-server-onboarding-provider-microblink</artifactId>
     <name>Enrollment Server Onboarding Provider Microblink</name>
 
-    <properties>
-        <skipPublishing>true</skipPublishing>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.wultra.security</groupId>

@@ -29,6 +29,11 @@ The activation spawn functionality can be enabled or disabled using following co
 enrollment-server.activation-spawn.enabled=false
 ```
 
+Adding activation flags into a custom object when getting activation status can be enabled or disabled using following configuration property:
+```bash
+enrollment-server.flag.reporting=false
+```
+
 ## Setting Up REST Service Credentials
 
 _(optional)_ In case PowerAuth Server uses a [restricted access flag in the server configuration](https://github.com/wultra/powerauth-server/blob/develop/docs/Deploying-PowerAuth-Server.md#enabling-powerauth-server-security), you need to configure credentials for the Enrollment Server so that it can connect to the REST service:

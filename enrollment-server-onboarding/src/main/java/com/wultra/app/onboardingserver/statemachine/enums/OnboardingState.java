@@ -51,11 +51,8 @@ public enum OnboardingState {
     DOCUMENT_VERIFICATION_FINAL_REJECTED(IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL, IdentityVerificationStatus.REJECTED),
 
     CLIENT_EVALUATION_ACCEPTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.ACCEPTED),
-
     CLIENT_EVALUATION_IN_PROGRESS(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.IN_PROGRESS),
-
     CLIENT_EVALUATION_FAILED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.FAILED),
-
     CLIENT_EVALUATION_REJECTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.REJECTED),
 
     PRESENCE_CHECK_IN_PROGRESS(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS),
@@ -66,6 +63,11 @@ public enum OnboardingState {
     PRESENCE_CHECK_REJECTED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.REJECTED),
 
     PRESENCE_CHECK_VERIFICATION_PENDING(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.VERIFICATION_PENDING),
+
+    ONBOARDING_APPROVAL_IN_PROGRESS(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.IN_PROGRESS),
+    ONBOARDING_APPROVAL_ACCEPTED(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.ACCEPTED),
+    ONBOARDING_APPROVAL_FAILED(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.FAILED),
+    ONBOARDING_APPROVAL_REJECTED(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.REJECTED),
 
     OTP_VERIFICATION_PENDING(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING),
 
@@ -79,6 +81,8 @@ public enum OnboardingState {
 
     CHOICE_DOCUMENT_UPLOAD,
 
+    CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED,
+    CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT,
     CHOICE_CLIENT_EVALUATION_ACCEPTED,
 
     CHOICE_DOCUMENT_VERIFICATION_PROCESSING,
@@ -86,6 +90,13 @@ public enum OnboardingState {
     CHOICE_OTP_VERIFICATION,
 
     CHOICE_PRESENCE_CHECK_PROCESSING,
+
+    CHOICE_ONBOARDING_APPROVAL_ENABLED,
+    CHOICE_ONBOARDING_APPROVAL_RESULT,
+
+    CHOICE_OTP_ENABLED,
+
+    CHOICE_ACTIVATION_FINISH_ENABLED,
 
     CHOICE_COMPLETED_STATE,
 
@@ -105,9 +116,4 @@ public enum OnboardingState {
         this.phase = phase;
         this.status = status;
     }
-
-    public boolean isChoiceState() {
-        return choiceState;
-    }
-
 }

@@ -154,15 +154,16 @@ for details how the score affects false acceptances (FAR) and false rejections (
 
 ## Microblink Configuration
 
-| Property                                                                                               | Default | Note                                                           |
-|--------------------------------------------------------------------------------------------------------|---------|----------------------------------------------------------------|
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl`               |         | Base REST service URL for Microblink.                          |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.                  |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                            |
-| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                            |
-| `enrollment-server-onboarding.document-verification.microblink.cacheRecordTTL`                         | `1h`    | Time to live for cached Microblink documents for verification. |
-| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.IOS`               |         | iOS Mobile SDK license key.                                    |
-| `enrollment-server-onboarding.document-verification.microblink.mobileSdkLicenseKeys.ANDROID`           |         | Android Mobile SDK license key.                                |
+| Property                                                                                               | Default | Note                                                                    |
+|--------------------------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------------|
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.baseUrl`               |         | Base REST service URL for Microblink.                                   |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.                           |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                                     |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                                     |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].origin`           |         | Microblink Bundle ID / App ID.                                          |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].platform`         |         | Mobile platform. Supported values `ios` and `android` (case sensitive). |
+| `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].license-key`      |         | Mobile SDK license key.                                                 |
+| `enrollment-server-onboarding.document-verification.microblink.extractedDataCheckEnabled`              | `true`  | Whether check/validation of extracted data is enabled.                  |
 
 ## Correlation HTTP Header Configuration
 
@@ -178,6 +179,37 @@ Sample setting of logging pattern:
 ```properties
 logging.pattern.console=%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:%5p}) [%X{X-Correlation-ID}] %clr(%5p) %clr(${PID: }){magenta} %clr(---){faint}%clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}
 ```
+
+
+## REST Service Authentication Configuration
+
+Access to private integration REST services is restricted to users with elevated privileges.
+Please select your preferred authentication type and configure the settings bellow accordingly.
+
+| Property                                          | Default      | Note                                                         |
+|---------------------------------------------------|--------------|--------------------------------------------------------------|
+| `enrollment-server-onboarding.security.auth-type` | `basic_auth` | REST API authentication type. Either `basic_auth` or `oidc`. |
+
+
+### Basic Authentication
+
+If you select basic HTTP authentication, the following configuration properties may need to be adjusted.
+
+| Property                        | Note                                                                                                                                                                                                                  |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spring.security.user.name`     | User name                                                                                                                                                                                                             |
+| `spring.security.user.password` | User password `{id}encodedPassword`, see [Spring Password Storage Format](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-dpe-format). |
+
+
+### OpenID Connect
+
+If you select OpenID Connect for authentication, review the following configuration properties to ensure they meet your requirements.
+
+| Property                                                      | Default | Note                                                                                            |
+|---------------------------------------------------------------|---------|-------------------------------------------------------------------------------------------------|
+| `spring.security.oauth2.resource-server.jwt.issuer-uri`       |         | URL of the authorization server.                                                                |
+| `spring.security.oauth2.resource-server.jwt.audiences`        |         | A comma-separated list of allowed `aud` JWT claim values to be validated.                       |
+
 
 ## Monitoring and Observability
 
