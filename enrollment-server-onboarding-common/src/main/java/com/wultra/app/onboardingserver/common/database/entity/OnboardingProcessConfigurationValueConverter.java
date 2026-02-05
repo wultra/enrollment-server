@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.common.database.entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -30,7 +31,8 @@ import jakarta.persistence.Converter;
 @Converter
 public class OnboardingProcessConfigurationValueConverter implements AttributeConverter<OnboardingProcessConfigurationValue, String> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     @Override
     public String convertToDatabaseColumn(OnboardingProcessConfigurationValue attribute) {
