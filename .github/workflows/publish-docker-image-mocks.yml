@@ -18,10 +18,7 @@ on:
       - 'master'
       - 'releases/*'
     paths:
-      - '**'
-      - '!docs/**'
-      - 'docs/db/**'
-      - '!enrollment-server-onboarding-adapter-mock/**'
+      - 'enrollment-server-onboarding-adapter-mock/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
