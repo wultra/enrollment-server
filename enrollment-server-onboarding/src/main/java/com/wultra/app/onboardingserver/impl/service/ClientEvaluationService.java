@@ -138,11 +138,11 @@ public class ClientEvaluationService {
             final var response = retryTemplate.execute(context -> callEvaluateClient(request, context));
             processEvaluationResponse(identityVerification, ownerId, response);
             return response.getEvaluationResult();
-        } catch (final OnboardingProviderException | OnboardingProcessException e) {
-            processVerificationIdError(identityVerification, ownerId, e);
-            return null;
         } catch (final RetryException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
+            return null;
+        } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
+            processVerificationIdError(identityVerification, ownerId, e);
             return null;
         }
     }
