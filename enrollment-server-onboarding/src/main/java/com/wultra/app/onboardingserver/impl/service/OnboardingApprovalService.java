@@ -116,7 +116,7 @@ public class OnboardingApprovalService {
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
             return approvalResult;
-        } catch (OnboardingProviderException | OnboardingProcessException e) {
+        } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
             logger.warn("Failed to approve client: {}", e.getMessage(), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
