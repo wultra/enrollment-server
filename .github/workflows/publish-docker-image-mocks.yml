@@ -10,7 +10,7 @@ on:
       products_to_build:
         description: Array of product names for which build will be done.
         type: string
-        default: '["enrollment-server-onboarding-adapter-mocks"]'
+        default: '["enrollment-server-onboarding-adapter-mock"]'
         required: true
   pull_request:
     branches:
@@ -60,7 +60,7 @@ jobs:
       INTERNAL_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
     strategy:
       matrix:
-        app: ${{ fromJSON(github.event.inputs.products_to_build || '["enrollment-server-onboarding-adapter-mocks"]') }}
+        app: ${{ fromJSON(github.event.inputs.products_to_build || '["enrollment-server-onboarding-adapter-mock"]') }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5

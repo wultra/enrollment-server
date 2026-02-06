@@ -1,4 +1,4 @@
-name: Build and deploy docker image
+name: Build and publish docker images of Onboarding to Docker registry
 
 on:
   workflow_dispatch:
