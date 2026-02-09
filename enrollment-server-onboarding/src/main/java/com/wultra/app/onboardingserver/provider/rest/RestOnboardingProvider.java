@@ -213,9 +213,17 @@ public class RestOnboardingProvider implements OnboardingProvider {
                 .userId(source.userId())
                 .identityVerificationId(source.identityVerificationId())
                 .provider(source.provider())
+                .status(convert(source.status()))
                 .score(source.score())
                 .presenceCheckResult(new ApproveClientRequestDto.PresenceCheckResult(source.image()))
                 .build();
+    }
+
+    private static ApproveClientRequestDto.Status convert(final ApproveClientRequest.Status source) {
+        return switch (source) {
+            case SUCCESS -> ApproveClientRequestDto.Status.SUCCESS;
+            case FAILURE -> ApproveClientRequestDto.Status.FAILURE;
+        };
     }
 
     private static ProcessEventRequestDto convert(final ProcessEventRequest source) throws OnboardingProviderException {
