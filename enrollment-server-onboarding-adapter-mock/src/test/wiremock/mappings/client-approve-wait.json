@@ -14,6 +14,6 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "body-client-approve-nok.json"
+    "bodyFileName": "body-client-approve-wait.json"
   }
 }
