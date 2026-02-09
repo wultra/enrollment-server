@@ -55,6 +55,15 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @AllArgsConstructor
 class IdentityVerificationPrecompleteCheck {
 
+    public static final String SOME_DOCUMENTS_NOT_ACCEPTED = "Some documents not accepted";
+    public static final String REQUIRED_DOCUMENTS_NOT_PRESENT = "Required documents not present";
+    public static final String NOT_VALID_PHASE_AND_STATE = "Not valid phase and state";
+    public static final String NOT_VALID_USER_VERIFICATION_OTP = "Not valid user verification OTP";
+    public static final String NOT_VALID_ACTIVATION_OTP = "Not valid activation OTP";
+    public static final String NOT_VALID_ACTIVATION = "Activation is not valid";
+    public static final String NOT_VALID_SCA = "Did not pass SCA";
+    public static final String NOT_VALID_TARGET_ACTIVATION = "Target activation is not valid";
+
     private final IdentityVerificationConfig identityVerificationConfig;
 
     private final RequiredDocumentTypesCheck requiredDocumentTypesCheck;
@@ -90,42 +99,42 @@ class IdentityVerificationPrecompleteCheck {
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
             logger.debug("Some documents are not accepted for identity verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Some documents not accepted");
+            return Result.failed(SOME_DOCUMENTS_NOT_ACCEPTED);
         }
 
         if (!requiredDocumentTypesCheck.evaluate(documentVerifications, processId)) {
             logger.debug("Not all required documents are present for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Required documents not present");
+            return Result.failed(REQUIRED_DOCUMENTS_NOT_PRESENT);
         }
 
         if (!isPrecompletePhaseAndStateValid(idVerification)) {
             logger.debug("Not valid phase and state for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Not valid phase and state");
+            return Result.failed(NOT_VALID_PHASE_AND_STATE);
         }
 
         if (!isVerificationOtpValid(idVerification)) {
             logger.debug("Not valid user verification OTP for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Not valid user verification OTP");
+            return Result.failed(NOT_VALID_USER_VERIFICATION_OTP);
         }
 
         if (!isActivationOtpValid(idVerification)) {
             logger.debug("Not valid activation OTP for verification ID: {}, process ID:{}", identityVerificationId, processId);
-            return Result.failed("Not valid activation OTP");
+            return Result.failed(NOT_VALID_ACTIVATION_OTP);
         }
 
         if (!isActivationValid(idVerification)) {
             logger.debug("Activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Activation is not valid");
+            return Result.failed(NOT_VALID_ACTIVATION);
         }
 
         if (!isVerificationPassedSca(idVerification)) {
             logger.debug("Did not pass SCA for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Did not pass SCA");
+            return Result.failed(NOT_VALID_SCA);
         }
 
         if (!isTargetActivationFinished(idVerification)) {
             logger.debug("Target activation is not valid for verification ID: {}, process ID: {}", identityVerificationId, processId);
-            return Result.failed("Target activation is not valid");
+            return Result.failed(NOT_VALID_TARGET_ACTIVATION);
         }
 
         return Result.successful();

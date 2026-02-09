@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
+import static com.wultra.app.onboardingserver.impl.service.IdentityVerificationPrecompleteCheck.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -151,7 +152,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Not valid user verification OTP", result.getErrorDetail());
+        assertEquals(NOT_VALID_USER_VERIFICATION_OTP, result.getErrorDetail());
     }
 
     @Test
@@ -159,7 +160,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentification(true).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
@@ -168,21 +169,21 @@ class IdentityVerificationPrecompleteCheckTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
-        idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(VERIFICATION_PENDING);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
 
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Not valid activation OTP", result.getErrorDetail());
+        assertEquals(NOT_VALID_ACTIVATION_OTP, result.getErrorDetail());
     }
 
     @Test
     void testProcessDocumentVerificationResult_validStateWithoutOtp() throws Exception {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
-        idVerification.setPhase(PRESENCE_CHECK);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
         idVerification.setActivationId("activation-1");
 
         final ScaResultEntity scaResult = new ScaResultEntity();
@@ -195,7 +196,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
@@ -240,8 +241,8 @@ class IdentityVerificationPrecompleteCheckTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
-        idVerification.setPhase(CLIENT_EVALUATION);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
 
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);
@@ -293,7 +294,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Activation is not valid", result.getErrorDetail());
+        assertEquals(NOT_VALID_ACTIVATION, result.getErrorDetail());
     }
 
     @Test
@@ -309,7 +310,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Some documents not accepted", result.getErrorDetail());
+        assertEquals(SOME_DOCUMENTS_NOT_ACCEPTED, result.getErrorDetail());
     }
 
     @Test
@@ -328,7 +329,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Required documents not present", result.getErrorDetail());
+        assertEquals(REQUIRED_DOCUMENTS_NOT_PRESENT, result.getErrorDetail());
     }
 
     @Test
@@ -343,7 +344,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals("Not valid phase and state", result.getErrorDetail());
+        assertEquals(NOT_VALID_PHASE_AND_STATE, result.getErrorDetail());
     }
 
     @Test
