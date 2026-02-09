@@ -160,7 +160,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentification(true).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
@@ -196,7 +196,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
