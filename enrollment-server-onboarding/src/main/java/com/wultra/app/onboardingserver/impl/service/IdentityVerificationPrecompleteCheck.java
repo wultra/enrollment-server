@@ -154,7 +154,7 @@ class IdentityVerificationPrecompleteCheck {
             return false;
         }
 
-        if (isVerificationOtpDisabled(idVerification)) {
+        if (!isVerificationOtpEnabled(idVerification)) {
             logger.debug("OTP is disable, verifying only presence check result");
             return scaResultEntity.getPresenceCheckResult() == ScaResultEntity.Result.SUCCESS;
         }
@@ -185,19 +185,21 @@ class IdentityVerificationPrecompleteCheck {
     }
 
     private boolean isVerificationOtpValid(final IdentityVerificationEntity idVerification) {
-        if (isVerificationOtpDisabled(idVerification)) {
+        if (isVerificationOtpEnabled(idVerification)) {
+            return isOtpValid(idVerification, OtpType.USER_VERIFICATION);
+        } else {
             logger.trace("OTP verification is disabled");
             return true;
         }
-        return isOtpValid(idVerification, OtpType.USER_VERIFICATION);
     }
 
     private boolean isActivationOtpValid(final IdentityVerificationEntity idVerification) {
-        if (isActivationOtpDisabled(idVerification)) {
+        if (isActivationOtpEnabled(idVerification)) {
+            return isOtpValid(idVerification, OtpType.ACTIVATION);
+        } else {
             logger.trace("OTP activation is disabled");
             return true;
         }
-        return isOtpValid(idVerification, OtpType.ACTIVATION);
     }
 
     private boolean isOtpValid(IdentityVerificationEntity idVerification, OtpType otpType) {
@@ -210,11 +212,36 @@ class IdentityVerificationPrecompleteCheck {
     private boolean isPrecompletePhaseAndStateValid(final IdentityVerificationEntity idVerification) {
         final IdentityVerificationPhase phase = idVerification.getPhase();
         final IdentityVerificationStatus status = idVerification.getStatus();
-        final boolean verificationOtpDisabled = isVerificationOtpDisabled(idVerification);
-        return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING) ||
-                (phase == PRESENCE_CHECK && status == ACCEPTED && verificationOtpDisabled) ||
-                (phase == CLIENT_EVALUATION && status == ACCEPTED && verificationOtpDisabled && !identityVerificationConfig.isPresenceCheckEnabled()) ||
-                (phase == ACTIVATION_FINISH && status == IN_PROGRESS);
+        final boolean clientEvaluationEnabled = isVerificationClientEvaluationEnabled(idVerification);
+        final boolean approvalEnabled = isVerificationApprovalEnabled(idVerification);
+        final boolean verificationOtpEnabled = isVerificationOtpEnabled(idVerification);
+        final boolean useTemporaryActivation = useTemporaryActivationEnabled(idVerification);
+
+        // return possible steps based on the chronology of the controls
+
+        if (useTemporaryActivation) {
+
+            return (phase == ACTIVATION_FINISH && status == IN_PROGRESS);
+
+        } else {
+
+            if (verificationOtpEnabled) {
+                return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING);
+            }
+
+            if (approvalEnabled) {
+                return (phase == ONBOARDING_APPROVAL && status == ACCEPTED);
+            }
+
+            if (identityVerificationConfig.isPresenceCheckEnabled()) {
+                return (phase == PRESENCE_CHECK && status == ACCEPTED );
+            }
+
+            if (clientEvaluationEnabled) {
+                return (phase == CLIENT_EVALUATION && status == ACCEPTED );
+            }
+        }
+        return false;
     }
 
     @Getter
@@ -237,15 +264,27 @@ class IdentityVerificationPrecompleteCheck {
         }
     }
 
-    private boolean isVerificationOtpDisabled(final IdentityVerificationEntity idVerification) {
-        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentityVerification);
+    private boolean isVerificationOtpEnabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationEnabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentityVerification);
     }
 
-    private boolean isActivationOtpDisabled(final IdentityVerificationEntity idVerification) {
-        return isConfigurationDisabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentification);
+    private boolean isActivationOtpEnabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationEnabled(idVerification, OnboardingProcessConfigurationValue::otpForIdentification);
     }
 
-    private boolean isConfigurationDisabled(
+    private boolean isVerificationApprovalEnabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationEnabled(idVerification, OnboardingProcessConfigurationValue::approvalEnabled);
+    }
+
+    private boolean isVerificationClientEvaluationEnabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationEnabled(idVerification, OnboardingProcessConfigurationValue::clientEvaluationEnabled);
+    }
+
+    private boolean useTemporaryActivationEnabled(final IdentityVerificationEntity idVerification) {
+        return isConfigurationEnabled(idVerification, OnboardingProcessConfigurationValue::useTemporaryActivation);
+    }
+
+    private boolean isConfigurationEnabled(
             final IdentityVerificationEntity idVerification,
             final Predicate<OnboardingProcessConfigurationValue> predicate) {
 
@@ -253,6 +292,6 @@ class IdentityVerificationPrecompleteCheck {
                 .map(OnboardingProcessEntity::getProcessConfiguration)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
                 .filter(predicate)
-                .isEmpty();
+                .isPresent();
     }
 }
