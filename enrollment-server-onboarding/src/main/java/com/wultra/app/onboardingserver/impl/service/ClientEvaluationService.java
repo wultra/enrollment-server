@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -189,24 +190,27 @@ public class ClientEvaluationService {
             final var extractedData = parseExtractedData(documentResult);
             final var documentData = buildDocumentData(extractedData);
 
-            final var country = Optional.ofNullable(extractedData)
-                    .map(DocumentExtractedDataValue::country)
-                    .orElse(null);
+            if (documentVerification.getSide() == CardSide.FRONT) {
 
-            final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
-            final var images = buildImages(processedDocument);
+                final var country = Optional.ofNullable(extractedData)
+                        .map(DocumentExtractedDataValue::country)
+                        .orElse(null);
 
-            final var document = EvaluateClientRequest.Document.builder()
-                    .type(documentVerification.getType())
-                    .country(country)
-                    .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
-                    .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
-                    .data(documentData)
-                    .images(images)
-                    .rawData(documentResult.getVerificationResult())
-                    .build();
+                final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
+                final var images = buildImages(processedDocument);
 
-            documents.add(document);
+                final var document = EvaluateClientRequest.Document.builder()
+                        .type(documentVerification.getType())
+                        .country(country)
+                        .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
+                        .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                        .data(documentData)
+                        .images(images)
+                        .rawData(documentResult.getVerificationResult())
+                        .build();
+
+                documents.add(document);
+            }
         }
 
         final var person = buildPerson(documents);
