@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -84,21 +85,21 @@ class ClientEvaluateRequestDto {
     public record Person(
             String surname,
             String givenNames,
-            String dateOfBirth
+            Date dateOfBirth
     ) {}
 
     @Builder
     public record DocumentData(
             String givenNames,
             String surname,
-            String dateOfBirth,
+            Date dateOfBirth,
             String placeOfBirth,
             String sex,
             String nationality,
             String personalNumber,
             String documentNumber,
-            String dateOfIssue,
-            String dateOfExpiry,
+            Date dateOfIssue,
+            Date dateOfExpiry,
             String authority
     ) {}
 

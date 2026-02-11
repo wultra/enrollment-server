@@ -41,6 +41,8 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -221,7 +223,7 @@ public class ClientEvaluationService {
     private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
         String surname = null;
         String givenNames = null;
-        String dateOfBirth = null;
+        Date dateOfBirth = null;
 
         for (final var document : documents) {
             final var documentData = document.data();
@@ -306,6 +308,22 @@ public class ClientEvaluationService {
                 .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
     }
 
+    private static Date convertDate(final String date) {
+        if (date == null) {
+            return null;
+        }
+
+        try {
+            return new SimpleDateFormat("DD.MM.YYYY").parse(date);
+        } catch (ParseException e) {
+            try {
+                return new SimpleDateFormat("DD MM YYYY").parse(date);
+            } catch (ParseException ex) {
+                return null;
+            }
+        }
+    }
+
     private static EvaluateClientRequest.DocumentData buildDocumentData(final DocumentExtractedDataValue extractedData) {
         if (extractedData == null) {
             return null;
@@ -314,14 +332,14 @@ public class ClientEvaluationService {
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames(extractedData.givenNames())
                 .surname(extractedData.surname())
-                .dateOfBirth(extractedData.dateOfBirth())
+                .dateOfBirth(convertDate(extractedData.dateOfBirth()))
                 .placeOfBirth(extractedData.placeOfBirth())
                 .sex(extractedData.sex())
                 .nationality(extractedData.nationality())
                 .personalNumber(extractedData.personalNumber())
                 .documentNumber(extractedData.documentNumber())
-                .dateOfIssue(extractedData.dateOfIssue())
-                .dateOfExpiry(extractedData.dateOfExpiry())
+                .dateOfIssue(convertDate(extractedData.dateOfIssue()))
+                .dateOfExpiry(convertDate(extractedData.dateOfExpiry()))
                 .authority(extractedData.authority())
                 .build();
     }
