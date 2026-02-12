@@ -45,12 +45,18 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.SignStyle;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static java.time.temporal.ChronoField.*;
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -319,18 +325,38 @@ public class ClientEvaluationService {
             return null;
         }
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                    .parseLenient()
+                    .appendValue(DAY_OF_MONTH, 2)
+                    .appendLiteral('.')
+                    .appendValue(MONTH_OF_YEAR, 2)
+                    .appendLiteral('.')
+                    .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+                    .toFormatter();
             logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
-
             return LocalDate.parse(date,formatter);
         } catch (DateTimeParseException e) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD.MM.YYYY");
+                DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                        .parseLenient()
+                        .appendValue(DAY_OF_MONTH, 2)
+                        .appendLiteral(' ')
+                        .appendValue(MONTH_OF_YEAR, 2)
+                        .appendLiteral(' ')
+                        .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+                        .toFormatter();
                 logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
                 return LocalDate.parse(date,formatter);
             } catch (DateTimeParseException  ex) {
                 try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD MM YYYY");
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                            .parseLenient()
+                            .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+                            .appendLiteral('-')
+                            .appendValue(MONTH_OF_YEAR, 2)
+                            .appendLiteral('-')
+                            .appendValue(DAY_OF_MONTH, 2)
+                            .toFormatter();
                     logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
                     return LocalDate.parse(date, formatter);
                 } catch (DateTimeParseException  ex2) {
