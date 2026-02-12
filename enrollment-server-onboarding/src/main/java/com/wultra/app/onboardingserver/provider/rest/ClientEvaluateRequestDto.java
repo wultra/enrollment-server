@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
@@ -86,6 +87,7 @@ class ClientEvaluateRequestDto {
     public record Person(
             String surname,
             String givenNames,
+            @JsonFormat(pattern="yyyy-MM-dd")
             LocalDate dateOfBirth
     ) {}
 
@@ -93,13 +95,16 @@ class ClientEvaluateRequestDto {
     public record DocumentData(
             String givenNames,
             String surname,
+            @JsonFormat(pattern="yyyy-MM-dd")
             LocalDate dateOfBirth,
             String placeOfBirth,
             String sex,
             String nationality,
             String personalNumber,
             String documentNumber,
+            @JsonFormat(pattern="yyyy-MM-dd")
             LocalDate dateOfIssue,
+            @JsonFormat(pattern="yyyy-MM-dd")
             LocalDate dateOfExpiry,
             String authority
     ) {}

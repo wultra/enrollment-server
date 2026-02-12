@@ -322,8 +322,10 @@ public class ClientEvaluationService {
         logger.info("action: convertDate, state: initiated,  date: {}", date);
 
         if (date == null) {
+            logger.info("action: convertDate, state: succeed");
             return null;
         }
+        LocalDate localDate;
         try {
             DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                     .parseLenient()
@@ -333,8 +335,7 @@ public class ClientEvaluationService {
                     .appendLiteral('.')
                     .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
                     .toFormatter();
-            logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
-            return LocalDate.parse(date,formatter);
+            localDate= LocalDate.parse(date,formatter);
         } catch (DateTimeParseException e) {
             try {
                 DateTimeFormatter formatter = new DateTimeFormatterBuilder()
@@ -345,8 +346,7 @@ public class ClientEvaluationService {
                         .appendLiteral(' ')
                         .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
                         .toFormatter();
-                logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
-                return LocalDate.parse(date,formatter);
+                localDate=  LocalDate.parse(date,formatter);
             } catch (DateTimeParseException  ex) {
                 try {
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder()
@@ -357,14 +357,15 @@ public class ClientEvaluationService {
                             .appendLiteral('-')
                             .appendValue(DAY_OF_MONTH, 2)
                             .toFormatter();
-                    logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
-                    return LocalDate.parse(date, formatter);
+                    localDate = LocalDate.parse(date, formatter);
                 } catch (DateTimeParseException  ex2) {
                     logger.info("action: convertDate, state: failed");
-                    return null;
+                    localDate =  null;
                 }
             }
         }
+        logger.info("action: convertDate, state: succeed,  date: {}", localDate);
+        return localDate;
     }
 
     private static EvaluateClientRequest.DocumentData buildDocumentData(final DocumentExtractedDataValue extractedData) {
