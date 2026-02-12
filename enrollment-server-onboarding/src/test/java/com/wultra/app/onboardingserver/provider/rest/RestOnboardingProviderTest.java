@@ -35,6 +35,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,6 +53,11 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class RestOnboardingProviderTest {
+
+    private static final LocalDate dateOfBirth = LocalDate.parse("1990-01-01");
+    private static final LocalDate dateOfIssue = LocalDate.parse("2020-01-01");
+    private static final LocalDate dateOfExpiry = LocalDate.parse("2030-01-01");
+
 
     @Mock
     private RestClient restClient;
@@ -125,7 +133,7 @@ class RestOnboardingProviderTest {
                         .person(EvaluateClientRequest.Person.builder()
                                 .givenNames("John")
                                 .surname("Doe")
-                                .dateOfBirth("1990-01-01")
+                                .dateOfBirth(dateOfBirth)
                                 .build())
                         .documents(List.of(
                                 EvaluateClientRequest.Document.builder()
@@ -136,14 +144,14 @@ class RestOnboardingProviderTest {
                                         .data(EvaluateClientRequest.DocumentData.builder()
                                                 .givenNames("John")
                                                 .surname("Doe")
-                                                .dateOfBirth("1990-01-01")
+                                                .dateOfBirth(dateOfBirth)
                                                 .placeOfBirth("Czechia")
                                                 .sex("M")
                                                 .nationality("Czech")
                                                 .personalNumber("123")
                                                 .documentNumber("456")
-                                                .dateOfIssue("2020-01-01")
-                                                .dateOfExpiry("2030-01-01")
+                                                .dateOfIssue(dateOfIssue)
+                                                .dateOfExpiry(dateOfExpiry)
                                                 .authority("ABC")
                                                 .build())
                                         .images(List.of(EvaluateClientRequest.Image.builder()
@@ -184,7 +192,7 @@ class RestOnboardingProviderTest {
                         .person(ClientEvaluateRequestDto.Person.builder()
                                 .givenNames("John")
                                 .surname("Doe")
-                                .dateOfBirth("1990-01-01")
+                                .dateOfBirth(dateOfBirth)
                                 .build())
                         .documents(List.of(
                                 ClientEvaluateRequestDto.Document.builder()
@@ -195,14 +203,14 @@ class RestOnboardingProviderTest {
                                         .data(ClientEvaluateRequestDto.DocumentData.builder()
                                                 .givenNames("John")
                                                 .surname("Doe")
-                                                .dateOfBirth("1990-01-01")
+                                                .dateOfBirth(dateOfBirth)
                                                 .placeOfBirth("Czechia")
                                                 .sex("M")
                                                 .nationality("Czech")
                                                 .personalNumber("123")
                                                 .documentNumber("456")
-                                                .dateOfIssue("2020-01-01")
-                                                .dateOfExpiry("2030-01-01")
+                                                .dateOfIssue(dateOfIssue)
+                                                .dateOfExpiry(dateOfExpiry)
                                                 .authority("ABC")
                                                 .build())
                                         .images(List.of(ClientEvaluateRequestDto.Image.builder()

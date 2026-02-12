@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -76,7 +77,7 @@ public final class EvaluateClientRequest {
     public record Person(
             String surname,
             String givenNames,
-            Date dateOfBirth
+            LocalDate dateOfBirth
     ) {}
 
     @Builder
@@ -95,14 +96,14 @@ public final class EvaluateClientRequest {
     public record DocumentData(
             String givenNames,
             String surname,
-            Date dateOfBirth,
+            LocalDate dateOfBirth,
             String placeOfBirth,
             String sex,
             String nationality,
             String personalNumber,
             String documentNumber,
-            Date dateOfIssue,
-            Date dateOfExpiry,
+            LocalDate dateOfIssue,
+            LocalDate dateOfExpiry,
             String authority
     ) {}
 

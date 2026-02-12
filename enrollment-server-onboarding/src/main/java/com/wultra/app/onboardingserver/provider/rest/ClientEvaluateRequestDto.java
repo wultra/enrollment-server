@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.provider.rest;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -85,21 +86,21 @@ class ClientEvaluateRequestDto {
     public record Person(
             String surname,
             String givenNames,
-            Date dateOfBirth
+            LocalDate dateOfBirth
     ) {}
 
     @Builder
     public record DocumentData(
             String givenNames,
             String surname,
-            Date dateOfBirth,
+            LocalDate dateOfBirth,
             String placeOfBirth,
             String sex,
             String nationality,
             String personalNumber,
             String documentNumber,
-            Date dateOfIssue,
-            Date dateOfExpiry,
+            LocalDate dateOfIssue,
+            LocalDate dateOfExpiry,
             String authority
     ) {}
 

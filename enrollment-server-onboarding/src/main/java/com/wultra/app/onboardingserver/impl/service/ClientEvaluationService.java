@@ -43,6 +43,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -223,7 +226,7 @@ public class ClientEvaluationService {
     private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
         String surname = null;
         String givenNames = null;
-        Date dateOfBirth = null;
+        LocalDate dateOfBirth = null;
 
         for (final var document : documents) {
             final var documentData = document.data();
@@ -308,18 +311,24 @@ public class ClientEvaluationService {
                 .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
     }
 
-    private static Date convertDate(final String date) {
+    private static LocalDate convertDate(final String date) {
         if (date == null) {
             return null;
         }
-
         try {
-            return new SimpleDateFormat("DD.MM.YYYY").parse(date);
-        } catch (ParseException e) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            return LocalDate.parse(date,formatter);
+        } catch (DateTimeParseException e) {
             try {
-                return new SimpleDateFormat("DD MM YYYY").parse(date);
-            } catch (ParseException ex) {
-                return null;
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD.MM.YYYY");
+                return LocalDate.parse(date,formatter);
+            } catch (DateTimeParseException  ex) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD MM YYYY");
+                    return LocalDate.parse(date, formatter);
+                } catch (DateTimeParseException  ex2) {
+                    return null;
+                }
             }
         }
     }
