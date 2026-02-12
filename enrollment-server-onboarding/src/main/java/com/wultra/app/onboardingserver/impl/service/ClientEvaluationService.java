@@ -312,21 +312,29 @@ public class ClientEvaluationService {
     }
 
     private static LocalDate convertDate(final String date) {
+
+        logger.info("action: convertDate, state: initiated,  date: {}", date);
+
         if (date == null) {
             return null;
         }
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
+
             return LocalDate.parse(date,formatter);
         } catch (DateTimeParseException e) {
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD.MM.YYYY");
+                logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
                 return LocalDate.parse(date,formatter);
             } catch (DateTimeParseException  ex) {
                 try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("DD MM YYYY");
+                    logger.info("action: convertDate, state: succeed,  date: {}", LocalDate.parse(date,formatter));
                     return LocalDate.parse(date, formatter);
                 } catch (DateTimeParseException  ex2) {
+                    logger.info("action: convertDate, state: failed");
                     return null;
                 }
             }
