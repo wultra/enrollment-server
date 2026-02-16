@@ -55,14 +55,14 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @AllArgsConstructor
 class IdentityVerificationPrecompleteCheck {
 
-    public static final String SOME_DOCUMENTS_NOT_ACCEPTED = "Some documents not accepted";
-    public static final String REQUIRED_DOCUMENTS_NOT_PRESENT = "Required documents not present";
-    public static final String NOT_VALID_PHASE_AND_STATE = "Not valid phase and state";
-    public static final String NOT_VALID_USER_VERIFICATION_OTP = "Not valid user verification OTP";
-    public static final String NOT_VALID_ACTIVATION_OTP = "Not valid activation OTP";
-    public static final String NOT_VALID_ACTIVATION = "Activation is not valid";
-    public static final String NOT_VALID_SCA = "Did not pass SCA";
-    public static final String NOT_VALID_TARGET_ACTIVATION = "Target activation is not valid";
+    private static final String SOME_DOCUMENTS_NOT_ACCEPTED = "Some documents not accepted";
+    private static final String REQUIRED_DOCUMENTS_NOT_PRESENT = "Required documents not present";
+    private static final String NOT_VALID_PHASE_AND_STATE = "Not valid phase and state";
+    private static final String NOT_VALID_USER_VERIFICATION_OTP = "Not valid user verification OTP";
+    private static final String NOT_VALID_ACTIVATION_OTP = "Not valid activation OTP";
+    private static final String NOT_VALID_ACTIVATION = "Activation is not valid";
+    private static final String NOT_VALID_SCA = "Did not pass SCA";
+    private static final String NOT_VALID_TARGET_ACTIVATION = "Target activation is not valid";
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
