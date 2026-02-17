@@ -40,7 +40,6 @@ import java.util.function.Consumer;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.*;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
-import static com.wultra.app.onboardingserver.impl.service.IdentityVerificationPrecompleteCheck.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -152,7 +151,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(NOT_VALID_USER_VERIFICATION_OTP, result.getErrorDetail());
+        assertEquals("Not valid user verification OTP", result.getErrorDetail());
     }
 
     @Test
@@ -175,7 +174,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(NOT_VALID_ACTIVATION_OTP, result.getErrorDetail());
+        assertEquals("Not valid activation OTP", result.getErrorDetail());
     }
 
     @Test
@@ -294,7 +293,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(NOT_VALID_ACTIVATION, result.getErrorDetail());
+        assertEquals("Activation is not valid", result.getErrorDetail());
     }
 
     @Test
@@ -310,7 +309,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(SOME_DOCUMENTS_NOT_ACCEPTED, result.getErrorDetail());
+        assertEquals("Some documents not accepted", result.getErrorDetail());
     }
 
     @Test
@@ -329,7 +328,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(REQUIRED_DOCUMENTS_NOT_PRESENT, result.getErrorDetail());
+        assertEquals("Required documents not present", result.getErrorDetail());
     }
 
     @Test
@@ -344,7 +343,7 @@ class IdentityVerificationPrecompleteCheckTest {
         final var result = tested.evaluate(idVerification);
 
         assertFalse(result.isSuccessful());
-        assertEquals(NOT_VALID_PHASE_AND_STATE, result.getErrorDetail());
+        assertEquals("Not valid phase and state", result.getErrorDetail());
     }
 
     @Test
