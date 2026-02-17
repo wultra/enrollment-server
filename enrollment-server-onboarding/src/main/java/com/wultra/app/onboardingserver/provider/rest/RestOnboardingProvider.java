@@ -154,7 +154,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
             return convert(body);
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to evaluate client for " + request.getProcessId(), e);
+            throw new OnboardingProviderException("Unable to evaluate client for " + request.getProcessId() + "message:"+ e.getMessage(), e);
         }
     }
 
@@ -187,7 +187,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             }
             return convert(response.getBody());
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve client for " + request.processId(), e);
+            throw new OnboardingProviderException("Unable to approve client for " + request.processId()+ "message:"+ e.getMessage(), e);
         }
     }
 
