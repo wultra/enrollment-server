@@ -35,6 +35,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.time.Duration;
+
 /**
  * Configuration for Microblink specific beans.
  *
@@ -55,7 +57,10 @@ class MicroblinkConfig {
 
         final var restClientConfig = properties.getRestClientConfig();
         restClientConfig.setDefaultHttpHeaders(httpHeaders);
-
+        restClientConfig.setKeepAliveEnabled(true);
+        restClientConfig.setKeepAliveInterval(Duration.ofMinutes(3));
+        restClientConfig.setMaxIdleTime(Duration.ofMinutes(2));
+        restClientConfig.setMaxLifeTime(Duration.ofMinutes(60));
         return new DefaultRestClient(restClientConfig);
     }
 
