@@ -60,7 +60,8 @@ class MicroblinkConfig {
         restClientConfig.setKeepAliveEnabled(true);
         restClientConfig.setKeepAliveInterval(Duration.ofMinutes(3));
         restClientConfig.setKeepAliveCount(1);
-        restClientConfig.setMaxIdleTime(Duration.ofMinutes(2));
+        restClientConfig.setKeepAliveIdle(Duration.ofMinutes(4));
+        restClientConfig.setMaxIdleTime(Duration.ofMinutes(5));
         restClientConfig.setMaxLifeTime(Duration.ofMinutes(60));
         return new DefaultRestClient(restClientConfig);
     }
