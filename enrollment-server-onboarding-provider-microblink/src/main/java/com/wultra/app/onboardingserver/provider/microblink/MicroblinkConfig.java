@@ -59,6 +59,7 @@ class MicroblinkConfig {
         restClientConfig.setDefaultHttpHeaders(httpHeaders);
         restClientConfig.setKeepAliveEnabled(true);
         restClientConfig.setKeepAliveInterval(Duration.ofMinutes(3));
+        restClientConfig.setKeepAliveCount(1);
         restClientConfig.setMaxIdleTime(Duration.ofMinutes(2));
         restClientConfig.setMaxLifeTime(Duration.ofMinutes(60));
         return new DefaultRestClient(restClientConfig);
