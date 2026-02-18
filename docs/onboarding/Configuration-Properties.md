@@ -160,6 +160,10 @@ for details how the score affects false acceptances (FAR) and false rejections (
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthEnabled`  | `true`  | Whether HTTP Basic authentication is enabled.                           |
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthUsername` |         | HTTP Basic authentication username.                                     |
 | `enrollment-server-onboarding.document-verification.microblink.restClientConfig.httpBasicAuthPassword` |         | HTTP Basic authentication password.                                     |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.connectionTimeout`     | 5s      | REST connection timeout.                                                |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.responseTimeout`       | 60s     | REST response timeout.                                                  |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.maxIdleTime`           | 200s    | Max iddle time in connection pool.                                      |
+| `enrollment-server-onboarding.document-verification.microblink.restClientConfig.maxLifeTime`           | 1h      | Max life time in connection pool.                                       |
 | `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].origin`           |         | Microblink Bundle ID / App ID.                                          |
 | `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].platform`         |         | Mobile platform. Supported values `ios` and `android` (case sensitive). |
 | `enrollment-server-onboarding.document-verification.microblink.mobile-sdk-configs[i].license-key`      |         | Mobile SDK license key.                                                 |
