@@ -1,5 +1,11 @@
 # Integration
 
+## State diagram / Flow chart
+
+The diagram illustrates the process flow and its states.
+
+![State diagram / Flow chart](./img/diagram-onboarding-state-flow.png)
+
 ## Identification
 
 ![Identification](./img/Identification.png)
