@@ -84,6 +84,7 @@ Signature attribute is composed from two separate fields:
 - `{SIGNING_KEY_TYPE}` is one character defining which key was used for signature calculation. Available options are:
    - `0` - `KEY_SERVER_MASTER_PRIVATE` was used for ECDSA signature calculation
    - `1` - `KEY_SERVER_PRIVATE` personalized key was used for ECDSA signature calculation
+   - `2` - `KEY_MAC_PERSONALIZED_DATA` personalized key was used for the KMAC-256 signature calculation, derived from the `KDK_UTILITY` key
 - `{ECDSA_QRDATA_SIGNATURE_BASE64}` is ECDSA signature calculated with selected private key.
 
 Then the signed data payload is composed as:
