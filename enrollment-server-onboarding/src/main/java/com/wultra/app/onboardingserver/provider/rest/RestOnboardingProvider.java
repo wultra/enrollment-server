@@ -188,7 +188,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             }
             return convert(response.getBody());
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve client, processId=%s".formatted(request.processId()), e);
+            throw new OnboardingProviderException("Unable to approve client, processId=%s, %s".formatted(request.processId(), e.getMessage()), e);
         }
     }
 

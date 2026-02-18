@@ -33,6 +33,7 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResp
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
@@ -114,10 +115,11 @@ public class OnboardingApprovalService {
             final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
 
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
+            logger.info("action: callApproveClient, state: succeeded, approvalResult: {}", approvalResult);
             auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
             return approvalResult;
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            logger.warn("Failed to approve client: {}", e.getMessage(), e);
+            logger.warn("action: callApproveClient, state: failed, errorMessage: {}", e.getMessage(), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
@@ -135,14 +137,19 @@ public class OnboardingApprovalService {
 
         final Throwable lastThrowable = context.getLastThrowable();
         if (lastThrowable != null) {
-            logger.info("action: callApproveClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, MAX_ATTEMPTS, lastThrowable.getMessage());
+            logger.info("action: callApproveClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, MAX_ATTEMPTS, collectCauseMessages(lastThrowable));
         } else {
             logger.info("action: callApproveClient, state: initiated, attempt {}/{}", attempt, MAX_ATTEMPTS);
         }
 
-        final ApproveClientResponse response = onboardingProvider.approveClient(request);
-        logger.info("action: callApproveClient, state: succeeded");
-        return response;
+        return onboardingProvider.approveClient(request);
+    }
+
+    private static String collectCauseMessages(final Throwable e) {
+        return ExceptionUtils.getThrowableList(e).stream()
+                .map(t -> t.getClass().getSimpleName() + ": " + t.getMessage())
+                .toList()
+                .toString();
     }
 
     private static ApproveClientRequest.Status convert(final ScaResultEntity.Result source) {

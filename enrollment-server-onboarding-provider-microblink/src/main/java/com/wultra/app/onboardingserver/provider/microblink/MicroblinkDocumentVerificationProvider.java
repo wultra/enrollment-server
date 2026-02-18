@@ -18,8 +18,6 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -30,7 +28,10 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
@@ -39,6 +40,7 @@ import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.CollectionUtils;
@@ -344,7 +346,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return parsedResponse;
         } catch (final RestClientException e) {
             logger.info("action: sendMicroblinkRequest, state: failed, exceptionMessage: {}, statusCode: {}, response: {}",
-                    e.getMessage(),
+                    collectCauseMessages(e),
                     e.getStatusCode(),
                     e.getResponse());
 
@@ -356,6 +358,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     e
             );
         }
+    }
+
+    private static String collectCauseMessages(final Throwable e) {
+        return ExceptionUtils.getThrowableList(e).stream()
+                .map(t -> t.getClass().getSimpleName() + ": " + t.getMessage())
+                .toList()
+                .toString();
     }
 
     private DocumentVerificationParsedResponse parseMicroblinkResponse(final String responseBodyJson) throws DocumentVerificationException {
