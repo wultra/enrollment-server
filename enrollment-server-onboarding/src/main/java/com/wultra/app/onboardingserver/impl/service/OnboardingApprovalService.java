@@ -50,7 +50,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class OnboardingApprovalService {
 
-    private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_ATTEMPTS = 1;
 
     private final OnboardingServiceImpl onboardingService;
 
