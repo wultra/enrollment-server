@@ -125,7 +125,7 @@ public class ClientEvaluationService {
                         buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
                         buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
                 verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
-            } catch (Exception e) {
+            } catch (final OnboardingProcessException | RuntimeException e) {
                 processVerificationIdError(identityVerification, ownerId, e);
                 return null;
             }
@@ -145,7 +145,7 @@ public class ClientEvaluationService {
             final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
             processEvaluationResponse(identityVerification, ownerId, response);
             return response.getEvaluationResult();
-        } catch (Exception e) {
+        } catch (final OnboardingProviderException | RuntimeException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
             return null;
         }
