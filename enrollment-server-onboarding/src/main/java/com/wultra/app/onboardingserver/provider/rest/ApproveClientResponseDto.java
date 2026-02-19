@@ -32,7 +32,7 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 record ApproveClientResponseDto(
         @NonNull EvaluationResult result,
-        @NonNull String resultReason
+        String resultReason
 ) {
     enum EvaluationResult {
         OK,
