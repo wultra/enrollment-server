@@ -159,7 +159,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(requiredDocumentTypesCheck.evaluate(any(), eq("process-1")))
                 .thenReturn(true);
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentification(true).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
@@ -168,8 +168,8 @@ class IdentityVerificationPrecompleteCheckTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
-        idVerification.setPhase(OTP_VERIFICATION);
-        idVerification.setStatus(VERIFICATION_PENDING);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
 
         final var result = tested.evaluate(idVerification);
 
@@ -181,8 +181,8 @@ class IdentityVerificationPrecompleteCheckTest {
     void testProcessDocumentVerificationResult_validStateWithoutOtp() throws Exception {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
-        idVerification.setPhase(PRESENCE_CHECK);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
         idVerification.setActivationId("activation-1");
 
         final ScaResultEntity scaResult = new ScaResultEntity();
@@ -195,7 +195,7 @@ class IdentityVerificationPrecompleteCheckTest {
         when(onboardingOtpRepository.findNewestByProcessIdAndType("process-1", OtpType.ACTIVATION))
                 .thenReturn(Optional.of(createOtp()));
 
-        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false));
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder -> builder.otpForIdentityVerification(false).useTemporaryActivation(true));
         when(onboardingProcessRepository.findById("process-1"))
                 .thenReturn(Optional.of(process));
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
@@ -240,8 +240,8 @@ class IdentityVerificationPrecompleteCheckTest {
         final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
         idVerification.setProcessId("process-1");
         idVerification.setActivationId("activation-1");
-        idVerification.setPhase(CLIENT_EVALUATION);
-        idVerification.setStatus(ACCEPTED);
+        idVerification.setPhase(ACTIVATION_FINISH);
+        idVerification.setStatus(IN_PROGRESS);
 
         final ScaResultEntity scaResult = new ScaResultEntity();
         scaResult.setPresenceCheckResult(ScaResultEntity.Result.SUCCESS);

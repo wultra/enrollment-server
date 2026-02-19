@@ -67,11 +67,11 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/user/lookup", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to lookup user for " + request, e);
+            throw new OnboardingProviderException("Unable to lookup user, processId=%s".formatted(request.getProcessId()), e);
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to lookup user for " + request + ", response was null");
+            throw new OnboardingProviderException("Unable to lookup user, processId=%s, response was null".formatted(request.getProcessId()));
         }
         logger.debug("Looked up {} for {}", response, request);
         return LookupUserResponse.builder()
@@ -90,15 +90,15 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/otp/send", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to send otp for " + request, e);
+            throw new OnboardingProviderException("Unable to send otp, processId=%s".formatted(request.getProcessId()), e);
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to send otp for " + request + ", response was null");
+            throw new OnboardingProviderException("Unable to send otp, processId=%s, response was null".formatted(request.getProcessId()));
         }
         logger.debug("Sent otp {} for {}", response, request);
         if (!response.isOtpSent()) {
-            throw new OnboardingProviderException("Otp has not been sent for " + request);
+            throw new OnboardingProviderException("Otp has not been sent, processId=%s".formatted(request.getProcessId()));
         }
     }
 
@@ -113,11 +113,11 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/consent/text", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to fetch consent for " + request, e);
+            throw new OnboardingProviderException("Unable to fetch consent, processId=%s".formatted(request.getProcessId()), e);
         }
 
         if (response == null) {
-            throw new OnboardingProviderException("Unable to fetch consent for " + request + ", response was null");
+            throw new OnboardingProviderException("Unable to fetch consent, processId=%s, response was null".formatted(request.getProcessId()));
         }
         logger.debug("Fetched consent {} for {}", StringUtils.truncate(response.getConsentText(), 100), request);
         return response.getConsentText();
@@ -133,7 +133,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             logger.debug("Approved consent for {}", request);
             return new ApproveConsentResponse();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve consent for " + request, e);
+            throw new OnboardingProviderException("Unable to approve consent, processId=%s".formatted(request.getProcessId()), e);
         }
     }
 
@@ -150,11 +150,12 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
             final var body = Optional.ofNullable(response)
                     .map(ResponseEntity::getBody)
-                    .orElseThrow(() -> new OnboardingProviderException("Unable to fetch client evaluation, response was null"));
+                    .orElseThrow(() ->
+                            new OnboardingProviderException("Unable to fetch client evaluation, processId=%s, response was null".formatted(request.getProcessId())));
 
             return convert(body);
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to evaluate client for " + request, e);
+            throw new OnboardingProviderException("Unable to evaluate client, processId=%s".formatted(request.getProcessId()), e);
         }
     }
 
@@ -169,7 +170,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             logger.debug("Got processing event response: {}", response);
             return ProcessEventResponse.builder().build();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to process event for " + request, e);
+            throw new OnboardingProviderException("Unable to process event, processId=%s".formatted(request.getProcessId()), e);
         }
     }
 
@@ -183,11 +184,11 @@ public class RestOnboardingProvider implements OnboardingProvider {
             final ResponseEntity<ApproveClientResponseDto> response = restClient.post("/client/approve", requestDto, null, createHeaders(), type);
             logger.debug("Got approval client response: {}", response);
             if (response.getBody() == null) {
-                throw new OnboardingProviderException("Client approval response is null");
+                throw new OnboardingProviderException("Client approval response is null, processId=%s".formatted(request.processId()));
             }
             return convert(response.getBody());
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve client for " + request, e);
+            throw new OnboardingProviderException("Unable to approve client, processId=%s".formatted(request.processId()), e);
         }
     }
 

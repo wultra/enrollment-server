@@ -1,0 +1,6 @@
+services:
+  onboarding-adapter-mock:
+    build:
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8081:8080"
