@@ -67,7 +67,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/user/lookup", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to lookup user, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to lookup user, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
 
         if (response == null) {
@@ -90,7 +90,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/otp/send", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to send otp, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to send otp, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
 
         if (response == null) {
@@ -113,7 +113,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
         try {
             response = restClient.post("/consent/text", requestDto, null, createHeaders(), responseType).getBody();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to fetch consent, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to fetch consent, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
 
         if (response == null) {
@@ -133,7 +133,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             logger.debug("Approved consent for {}", request);
             return new ApproveConsentResponse();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve consent, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to approve consent, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
     }
 
@@ -155,7 +155,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
 
             return convert(body);
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to evaluate client, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to evaluate client, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
     }
 
@@ -170,7 +170,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             logger.debug("Got processing event response: {}", response);
             return ProcessEventResponse.builder().build();
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to process event, processId=%s".formatted(request.getProcessId()), e);
+            throw new OnboardingProviderException("Unable to process event, processId=%s, %s".formatted(request.getProcessId(), e.getMessage()), e);
         }
     }
 
@@ -188,7 +188,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
             }
             return convert(response.getBody());
         } catch (RestClientException e) {
-            throw new OnboardingProviderException("Unable to approve client, processId=%s".formatted(request.processId()), e);
+            throw new OnboardingProviderException("Unable to approve client, processId=%s, %s".formatted(request.processId(), e.getMessage()), e);
         }
     }
 
