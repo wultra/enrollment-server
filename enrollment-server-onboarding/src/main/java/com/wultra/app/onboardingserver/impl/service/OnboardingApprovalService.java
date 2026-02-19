@@ -33,8 +33,6 @@ import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResp
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,8 +48,6 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class OnboardingApprovalService {
 
-    private static final int MAX_ATTEMPTS = 3;
-
     private final OnboardingServiceImpl onboardingService;
 
     private final IdentityVerificationConfig config;
@@ -63,11 +59,6 @@ public class OnboardingApprovalService {
     private final SelfieRepository selfieRepository;
 
     private final AuditService auditService;
-
-    private final RetryTemplate retryTemplate = RetryTemplate.builder()
-                .maxAttempts(MAX_ATTEMPTS)
-                .exponentialBackoff(200, 2.0, 2_000)
-                .build();
 
     /**
      * Check if onboarding approval is enabled for the given process ID.
@@ -111,13 +102,16 @@ public class OnboardingApprovalService {
                     .image(loadImage(identityVerification))
                     .build();
 
-            final ApproveClientResponse response = retryTemplate.execute(context -> callApproveClient(request, context));
-
+            logger.info("action: callApproveClient, state: initiated");
+            final ApproveClientResponse response = onboardingProvider.approveClient(request);
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
-            auditService.audit(identityVerification, "Onboarding approval result: {}", approvalResult);
+            final String resultReason = response.resultReason();
+            logger.info("action: callApproveClient, state: succeeded, approvalResult: {}, resultReason: {}", approvalResult, resultReason);
+
+            auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
             return approvalResult;
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            logger.warn("Failed to approve client: {}", e.getMessage(), e);
+            logger.warn("action: callApproveClient, state: failed, exceptionMessage: {}", e.getMessage(), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
@@ -128,21 +122,6 @@ public class OnboardingApprovalService {
                 .map(SelfieEntity::getImage)
                 .map(Base64.getEncoder()::encodeToString)
                 .orElse(null);
-    }
-
-    private ApproveClientResponse callApproveClient(final ApproveClientRequest request, final RetryContext context) throws OnboardingProviderException {
-        final int attempt = context.getRetryCount() + 1;
-
-        final Throwable lastThrowable = context.getLastThrowable();
-        if (lastThrowable != null) {
-            logger.info("action: callApproveClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, MAX_ATTEMPTS, lastThrowable.getMessage());
-        } else {
-            logger.info("action: callApproveClient, state: initiated, attempt {}/{}", attempt, MAX_ATTEMPTS);
-        }
-
-        final ApproveClientResponse response = onboardingProvider.approveClient(request);
-        logger.info("action: callApproveClient, state: succeeded");
-        return response;
     }
 
     private static ApproveClientRequest.Status convert(final ScaResultEntity.Result source) {
