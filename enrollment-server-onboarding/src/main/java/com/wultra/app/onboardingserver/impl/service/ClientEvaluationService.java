@@ -35,7 +35,6 @@ import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientRes
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.RetryException;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,33 +115,38 @@ public class ClientEvaluationService {
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId
     ) {
+        final OnboardingProcessEntity process;
+        final EvaluateClientRequest.DocumentCheckResult documentCheckResult;
+        final String verificationId;
         try {
-            final var process = onboardingService.findProcess(identityVerification.getProcessId());
+            process = onboardingService.findProcess(identityVerification.getProcessId());
             final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
-            final var documentCheckResult = config.isSendingExtractedDataEnabled() ?
+            documentCheckResult = config.isSendingExtractedDataEnabled() ?
                     buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
                     buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
-            final var verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
+            verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
+        } catch (final OnboardingProcessException | RuntimeException e) {
+            processVerificationIdError(identityVerification, ownerId, e);
+            return null;
+        }
 
-            final var request = EvaluateClientRequest.builder()
-                    .processId(process.getId())
-                    .processType(process.getProcessConfiguration().getProcessType())
-                    .userId(identityVerification.getUserId())
-                    .identityVerificationId(identityVerification.getId())
-                    .verificationId(verificationId)
-                    .provider(config.getDocumentVerificationProvider())
-                    .status(EvaluateClientRequest.Status.SUCCESS)
-                    .documentCheckResult(documentCheckResult)
-                    .build();
+        final var request = EvaluateClientRequest.builder()
+                .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
+                .userId(identityVerification.getUserId())
+                .identityVerificationId(identityVerification.getId())
+                .verificationId(verificationId)
+                .provider(config.getDocumentVerificationProvider())
+                .status(EvaluateClientRequest.Status.SUCCESS)
+                .documentCheckResult(documentCheckResult)
+                .build();
 
-            final var response = retryTemplate.execute(context -> callEvaluateClient(request, context));
+        try {
+            final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
             processEvaluationResponse(identityVerification, ownerId, response);
             return response.getEvaluationResult();
-        } catch (final RetryException e) {
+        } catch (final OnboardingProviderException | RuntimeException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
-            return null;
-        } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            processVerificationIdError(identityVerification, ownerId, e);
             return null;
         }
     }
@@ -151,23 +155,14 @@ public class ClientEvaluationService {
         final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
         final int attempt = context.getRetryCount() + 1;
 
-        final Throwable lastThrowable = context.getLastThrowable();
-        if (lastThrowable != null) {
-            logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}, previous failure: {}", attempt, maxAttempts, lastThrowable.getMessage());
-        } else {
-            logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}", attempt, maxAttempts);
-        }
+        logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}", attempt, maxAttempts);
 
         try {
-            final var response = onboardingProvider.evaluateClient(request);
-            logger.info("action: callEvaluateClient, state: succeeded");
+            final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
+            logger.info("action: callEvaluateClient, state: succeeded, evaluationResult: {}, resultReason: {}", response.getEvaluationResult(), response.getResultReason());
             return response;
         } catch (final Exception e) {
-            if (attempt >= maxAttempts) {
-                logger.info("action: callEvaluateClient, state: failed, exceptionMessage: {}", e.getMessage());
-                throw new RetryException("Evaluate client call reached retry limit", e);
-            }
-
+            logger.warn("action: callEvaluateClient, state: failed, attempt {}/{}, exceptionMessage: {}", attempt, maxAttempts, e.getMessage(), e);
             throw e;
         }
     }
