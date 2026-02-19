@@ -18,8 +18,6 @@
 package com.wultra.app.onboardingserver.impl.service.document;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
-import com.wultra.app.enrollmentserver.model.Document;
-import com.wultra.app.enrollmentserver.model.DocumentMetadata;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -27,7 +25,10 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -313,8 +314,7 @@ public class DocumentProcessingService {
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document IDs: {}", ownerId.getUserId(), docVerificationIds);
             return results;
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage());
-            logger.debug("Document verification ID: {}, failed", docVerificationIds, e);
+            logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage(), e);
             final DocumentsSubmitResult results = new DocumentsSubmitResult();
             submittedDocs.forEach(doc -> {
                 final DocumentSubmitResult result = new DocumentSubmitResult();
@@ -336,8 +336,7 @@ public class DocumentProcessingService {
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document ID: {}", ownerId.getUserId(), docVerification.getId());
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
-            logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
+            logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage(), e);
             docsSubmitResults = new DocumentsSubmitResult();
             docSubmitResult = new DocumentSubmitResult();
             docSubmitResult.setErrorDetail(e.getMessage());
