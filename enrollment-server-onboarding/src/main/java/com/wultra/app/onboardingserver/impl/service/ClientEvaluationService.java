@@ -163,8 +163,7 @@ public class ClientEvaluationService {
             logger.info("action: callEvaluateClient, state: succeeded, evaluationResult: {}, resultReason: {}", response.getEvaluationResult(), response.getResultReason());
             return response;
         } catch (final Exception e) {
-            logger.info("action: callEvaluateClient, state: failed, attempt {}/{}, exceptionMessage: {}", attempt, maxAttempts, e.getMessage());
-            logger.debug("action: callEvaluateClient, state: failed, attempt {}/{}", attempt, maxAttempts, e);
+            logger.warn("action: callEvaluateClient, state: failed, attempt {}/{}, exceptionMessage: {}", attempt, maxAttempts, e.getMessage(), e);
             throw e;
         }
     }
