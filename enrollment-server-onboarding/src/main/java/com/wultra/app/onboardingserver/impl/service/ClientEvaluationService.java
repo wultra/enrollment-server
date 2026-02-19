@@ -115,31 +115,31 @@ public class ClientEvaluationService {
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId
     ) {
-            final OnboardingProcessEntity process;
-            final EvaluateClientRequest.DocumentCheckResult documentCheckResult;
-            final String verificationId;
-            try {
-                process = onboardingService.findProcess(identityVerification.getProcessId());
-                final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
-                documentCheckResult = config.isSendingExtractedDataEnabled() ?
-                        buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
-                        buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
-                verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
-            } catch (final OnboardingProcessException | RuntimeException e) {
-                processVerificationIdError(identityVerification, ownerId, e);
-                return null;
-            }
+        final OnboardingProcessEntity process;
+        final EvaluateClientRequest.DocumentCheckResult documentCheckResult;
+        final String verificationId;
+        try {
+            process = onboardingService.findProcess(identityVerification.getProcessId());
+            final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
+            documentCheckResult = config.isSendingExtractedDataEnabled() ?
+                    buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
+                    buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
+            verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
+        } catch (final OnboardingProcessException | RuntimeException e) {
+            processVerificationIdError(identityVerification, ownerId, e);
+            return null;
+        }
 
-            final var request = EvaluateClientRequest.builder()
-                    .processId(process.getId())
-                    .processType(process.getProcessConfiguration().getProcessType())
-                    .userId(identityVerification.getUserId())
-                    .identityVerificationId(identityVerification.getId())
-                    .verificationId(verificationId)
-                    .provider(config.getDocumentVerificationProvider())
-                    .status(EvaluateClientRequest.Status.SUCCESS)
-                    .documentCheckResult(documentCheckResult)
-                    .build();
+        final var request = EvaluateClientRequest.builder()
+                .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
+                .userId(identityVerification.getUserId())
+                .identityVerificationId(identityVerification.getId())
+                .verificationId(verificationId)
+                .provider(config.getDocumentVerificationProvider())
+                .status(EvaluateClientRequest.Status.SUCCESS)
+                .documentCheckResult(documentCheckResult)
+                .build();
 
         try {
             final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
