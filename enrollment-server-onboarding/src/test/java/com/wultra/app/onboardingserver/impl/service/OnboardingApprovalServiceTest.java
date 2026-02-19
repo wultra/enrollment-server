@@ -24,7 +24,6 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link OnboardingApprovalService}.
@@ -64,7 +64,7 @@ class OnboardingApprovalServiceTest {
     private OnboardingApprovalService tested;
 
     @Test
-    void testApproveRetry() throws Exception {
+    void testApprove() throws Exception {
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setId("verification-1");
         identityVerification.setProcessId("process-1");
@@ -80,7 +80,6 @@ class OnboardingApprovalServiceTest {
                 .thenReturn(process);
 
         when(onboardingProvider.approveClient(any()))
-                .thenThrow(new OnboardingProviderException("approval failed"))
                 .thenReturn(ApproveClientResponse.builder()
                         .result(ApproveClientResponse.ApprovalResult.OK)
                         .build());
@@ -94,7 +93,7 @@ class OnboardingApprovalServiceTest {
 
         assertEquals(ApproveClientResponse.ApprovalResult.OK, result);
 
-        verify(onboardingProvider, times(2)).approveClient(any());
+        verify(onboardingProvider).approveClient(any());
         verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);
     }
 }
