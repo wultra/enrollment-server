@@ -143,9 +143,8 @@ public class ClientEvaluationService {
 
         try {
             final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
-            final EvaluateClientResponse.EvaluationResult evaluationResult = response.getEvaluationResult();
             processEvaluationResponse(identityVerification, ownerId, response);
-            return evaluationResult;
+            return response.getEvaluationResult();
         } catch (Exception e) {
             processTooManyEvaluationError(identityVerification, ownerId);
             return null;
