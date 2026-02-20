@@ -64,6 +64,7 @@ public class ClientEvaluationService {
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
                     .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                     .appendOptional(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    // Hungarian identity card format https://en.wikipedia.org/wiki/Hungarian_identity_card#/media/File:The_renewed_hungarian_ID.jpg/2
                     .appendOptional(DateTimeFormatter.ofPattern("dd MM yyyy"))
                     .toFormatter();
 

@@ -119,7 +119,7 @@ class ClientEvaluationServiceTest {
         identityVerification.setPhase(CLIENT_EVALUATION);
         identityVerification.setDocumentVerifications(Set.of(
                 createDocumentVerificationWithResults("d1", """
-                {"dateOfBirth": "24.12.1999", "dateOfIssue":"2023-01-30"}""", DocumentType.ID_CARD), // several different formats should be supported
+                {"dateOfBirth": "24.12.1999", "dateOfIssue":"2023-01-30", "dateOfExpiry":"15 04 2025"}""", DocumentType.ID_CARD), // several different formats should be supported
                 createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
 
@@ -141,6 +141,7 @@ class ClientEvaluationServiceTest {
         assertNotNull(document);
         assertEquals(LocalDate.of(1999, 12, 24), person.dateOfBirth());
         assertEquals(LocalDate.of(2023, 1, 30), document.data().dateOfIssue());
+        assertEquals(LocalDate.of(2025, 4, 15), document.data().dateOfExpiry());
     }
 
     @Test
