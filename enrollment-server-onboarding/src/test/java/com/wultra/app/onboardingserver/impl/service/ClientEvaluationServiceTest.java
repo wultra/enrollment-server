@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -34,17 +35,19 @@ import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientRes
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -115,8 +118,9 @@ class ClientEvaluationServiceTest {
         identityVerification.setUserId("u1");
         identityVerification.setPhase(CLIENT_EVALUATION);
         identityVerification.setDocumentVerifications(Set.of(
-                createDocumentVerificationWithResults("d1", DocumentStatus.ACCEPTED, "v1", "d1_data"),
-                createDocumentVerificationWithResults("d2", DocumentStatus.ACCEPTED, "v1", DocumentSubmitResult.NO_DATA_EXTRACTED),
+                createDocumentVerificationWithResults("d1", """
+                {"dateOfBirth": "24.12.1999", "dateOfIssue":"2023-01-30"}""", DocumentType.ID_CARD), // several different formats should be supported
+                createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
 
         final OwnerId ownerId = new OwnerId();
@@ -124,6 +128,19 @@ class ClientEvaluationServiceTest {
         final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
         assertEquals(EvaluateClientResponse.EvaluationResult.OK, result);
+
+        final var requestCaptor = ArgumentCaptor.forClass(EvaluateClientRequest.class);
+        verify(onboardingProvider).evaluateClient(requestCaptor.capture());
+
+        final var capturedRequest = requestCaptor.getValue();
+        final var person = capturedRequest.getDocumentCheckResult().person();
+        final EvaluateClientRequest.Document document = capturedRequest.getDocumentCheckResult().documents().stream()
+                .filter(it -> it.type() == DocumentType.ID_CARD)
+                .findFirst()
+                .orElse(null);
+        assertNotNull(document);
+        assertEquals(LocalDate.of(1999, 12, 24), person.dateOfBirth());
+        assertEquals(LocalDate.of(2023, 1, 30), document.data().dateOfIssue());
     }
 
     @Test
@@ -195,13 +212,14 @@ class ClientEvaluationServiceTest {
         return documentVerification;
     }
 
-    private static DocumentVerificationEntity createDocumentVerificationWithResults(final String id, final DocumentStatus status, final String verificationId, final String extractedData) {
+    private static DocumentVerificationEntity createDocumentVerificationWithResults(final String id, final String extractedData, final DocumentType documentType) {
         final DocumentResultEntity documentResult = new DocumentResultEntity();
         documentResult.setExtractedData(extractedData);
 
-        final DocumentVerificationEntity documentVerification = createDocumentVerification(id, status, verificationId);
+        final DocumentVerificationEntity documentVerification = createDocumentVerification(id, DocumentStatus.ACCEPTED, "v1");
         documentVerification.setResults(Set.of(documentResult));
         documentVerification.setPhotoId("photo1");
+        documentVerification.setType(documentType);
         return documentVerification;
     }
 

@@ -39,6 +39,10 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,6 +60,12 @@ import static java.util.stream.Collectors.toSet;
 public class ClientEvaluationService {
 
     private static final String ERROR_VERIFICATION_ID = "unableToGetDocumentVerificationId";
+
+    private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
+                    .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    .appendOptional(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    .appendOptional(DateTimeFormatter.ofPattern("dd MM yyyy"))
+                    .toFormatter();
 
     private final OnboardingProvider onboardingProvider;
 
@@ -212,7 +222,7 @@ public class ClientEvaluationService {
     private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
         String surname = null;
         String givenNames = null;
-        String dateOfBirth = null;
+        LocalDate dateOfBirth = null;
 
         for (final var document : documents) {
             final var documentData = document.data();
@@ -305,16 +315,29 @@ public class ClientEvaluationService {
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames(extractedData.givenNames())
                 .surname(extractedData.surname())
-                .dateOfBirth(extractedData.dateOfBirth())
+                .dateOfBirth(convert(extractedData.dateOfBirth()))
                 .placeOfBirth(extractedData.placeOfBirth())
                 .sex(extractedData.sex())
                 .nationality(extractedData.nationality())
                 .personalNumber(extractedData.personalNumber())
                 .documentNumber(extractedData.documentNumber())
-                .dateOfIssue(extractedData.dateOfIssue())
-                .dateOfExpiry(extractedData.dateOfExpiry())
+                .dateOfIssue(convert(extractedData.dateOfIssue()))
+                .dateOfExpiry(convert(extractedData.dateOfExpiry()))
                 .authority(extractedData.authority())
                 .build();
+    }
+
+    private static LocalDate convert(final String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(source.trim(), DATE_FORMATTER);
+        } catch (final DateTimeParseException e) {
+            logger.warn("action: convertDate, state: failed, source: {}, errorMessage: {}", source, e.getMessage());
+            return null;
+        }
     }
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {

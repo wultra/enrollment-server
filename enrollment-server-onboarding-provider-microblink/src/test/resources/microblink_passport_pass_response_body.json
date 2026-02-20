@@ -75,14 +75,14 @@
           {
             "side": "Unknown",
             "script": "Latin",
-            "value": "ZZ LL AAAA",
+            "value": "24.12.1999",
             "type": "DetailedStringResult"
           }
         ],
-        "day": 1,
-        "month": 1,
+        "day": 24,
+        "month": 12,
         "year": 1999,
-        "successfullyParsed": false,
+        "successfullyParsed": true,
         "filledByDomainKnowledge": false,
         "type": "DetailedDateResult",
         "field": "DateOfBirth"
