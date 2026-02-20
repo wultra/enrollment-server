@@ -109,14 +109,14 @@
             {
               "side": "Unknown",
               "script": "Latin",
-              "value": "ZZ LL AAAA",
+              "value": "2025-10-13",
               "type": "DetailedStringResult"
             }
           ],
-          "day": 0,
-          "month": 0,
-          "year": 0,
-          "successfullyParsed": false,
+          "day": 13,
+          "month": 10,
+          "year": 2025,
+          "successfullyParsed": true,
           "filledByDomainKnowledge": false,
           "type": "DetailedDateResult",
           "field": "DateOfExpiry"

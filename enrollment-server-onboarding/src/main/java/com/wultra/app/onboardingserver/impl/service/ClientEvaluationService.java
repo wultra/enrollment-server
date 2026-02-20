@@ -42,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -316,29 +315,16 @@ public class ClientEvaluationService {
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames(extractedData.givenNames())
                 .surname(extractedData.surname())
-                .dateOfBirth(convert(extractedData.dateOfBirth()))
+                .dateOfBirth(extractedData.dateOfBirth())
                 .placeOfBirth(extractedData.placeOfBirth())
                 .sex(extractedData.sex())
                 .nationality(extractedData.nationality())
                 .personalNumber(extractedData.personalNumber())
                 .documentNumber(extractedData.documentNumber())
-                .dateOfIssue(convert(extractedData.dateOfIssue()))
-                .dateOfExpiry(convert(extractedData.dateOfExpiry()))
+                .dateOfIssue(extractedData.dateOfIssue())
+                .dateOfExpiry(extractedData.dateOfExpiry())
                 .authority(extractedData.authority())
                 .build();
-    }
-
-    private static LocalDate convert(final String source) {
-        if (source == null || source.isBlank()) {
-            return null;
-        }
-
-        try {
-            return LocalDate.parse(source.trim(), DATE_FORMATTER);
-        } catch (final DateTimeParseException e) {
-            logger.warn("action: convertDate, state: failed, source: {}, errorMessage: {}", source, e.getMessage());
-            return null;
-        }
     }
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {

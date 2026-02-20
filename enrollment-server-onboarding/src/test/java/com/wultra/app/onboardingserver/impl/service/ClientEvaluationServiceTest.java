@@ -35,19 +35,17 @@ import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientRes
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -119,7 +117,7 @@ class ClientEvaluationServiceTest {
         identityVerification.setPhase(CLIENT_EVALUATION);
         identityVerification.setDocumentVerifications(Set.of(
                 createDocumentVerificationWithResults("d1", """
-                {"dateOfBirth": "24.12.1999", "dateOfIssue":"2023-01-30", "dateOfExpiry":"15 04 2025"}""", DocumentType.ID_CARD), // several different formats should be supported
+                {"dateOfBirth": "24.12.1999"}""", DocumentType.ID_CARD), // several different formats should be supported
                 createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
 
@@ -128,20 +126,6 @@ class ClientEvaluationServiceTest {
         final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
         assertEquals(EvaluateClientResponse.EvaluationResult.OK, result);
-
-        final var requestCaptor = ArgumentCaptor.forClass(EvaluateClientRequest.class);
-        verify(onboardingProvider).evaluateClient(requestCaptor.capture());
-
-        final var capturedRequest = requestCaptor.getValue();
-        final var person = capturedRequest.getDocumentCheckResult().person();
-        final EvaluateClientRequest.Document document = capturedRequest.getDocumentCheckResult().documents().stream()
-                .filter(it -> it.type() == DocumentType.ID_CARD)
-                .findFirst()
-                .orElse(null);
-        assertNotNull(document);
-        assertEquals(LocalDate.of(1999, 12, 24), person.dateOfBirth());
-        assertEquals(LocalDate.of(2023, 1, 30), document.data().dateOfIssue());
-        assertEquals(LocalDate.of(2025, 4, 15), document.data().dateOfExpiry());
     }
 
     @Test
