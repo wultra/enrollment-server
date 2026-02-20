@@ -121,11 +121,11 @@ public class MicroblinkExtractedDataParser {
     }
 
     private static String asText(final ExtractedValue source) {
-        return (source instanceof ExtractedValue.Text text) ? text.value() : null;
+        return (source instanceof ExtractedValue.Text target) ? target.value() : null;
     }
 
     private static LocalDate asDate(final ExtractedValue source) {
-        return (source instanceof ExtractedValue.Date date) ? date.value() : null;
+        return (source instanceof ExtractedValue.Date target) ? target.value() : null;
     }
 
     private sealed interface ExtractedValue permits ExtractedValue.Text, ExtractedValue.Date {
