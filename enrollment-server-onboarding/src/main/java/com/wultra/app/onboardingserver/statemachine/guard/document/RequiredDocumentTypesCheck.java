@@ -137,7 +137,8 @@ public class RequiredDocumentTypesCheck {
             }
 
             final var country = getCountry(documentVerifications);
-            if (!documentRequirements.country().equals(country)) {
+            final var requiredCountry = documentRequirements.country();
+            if (!requiredCountry.isEmpty() && !requiredCountry.equals(country)) {
                 errors.add("group %s, documentType %s: country not matched".formatted(groupIndex, documentType));
             }
         }
@@ -189,7 +190,12 @@ public class RequiredDocumentTypesCheck {
 
     private static String parseExtractedDataCountry(final DocumentResultEntity documentResult) {
         try {
-            return OBJECT_MAPPER.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class)
+            final var extractedData = documentResult.getExtractedData();
+            if (extractedData == null) {
+                return null;
+            }
+
+            return OBJECT_MAPPER.readValue(extractedData, DocumentExtractedDataValue.class)
                     .country();
         } catch (JsonProcessingException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
@@ -197,6 +203,11 @@ public class RequiredDocumentTypesCheck {
         }
     }
 
+    /*
+     * The 'country' is a 'Set'. A document can have more than one side, and each side may have a different
+     * country for various reasons (e.g., incorrect extraction by the provider, or the user uses different documents
+     * for the front and back sides).
+     */
     @Builder
     private record DocumentValidationItem(
         int sideCount,
