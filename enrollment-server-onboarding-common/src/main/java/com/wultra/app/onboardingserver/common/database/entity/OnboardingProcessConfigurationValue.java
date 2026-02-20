@@ -119,12 +119,14 @@ public record OnboardingProcessConfigurationValue(
      *
      * @param type      document type
      * @param sideCount info if the document contains one or two sides
+     * @param country   document country as an ISO 3166-1 alpha-3 code
      */
     @Jacksonized
     @Builder
     public record Document(
             DocumentType type,
-            byte sideCount
+            byte sideCount,
+            String country
     ) implements Serializable {
 
         @Serial

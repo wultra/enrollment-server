@@ -19,6 +19,7 @@ package com.wultra.app.onboardingserver.statemachine.guard.document;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurationService;
@@ -343,6 +344,100 @@ class RequiredDocumentTypesCheckTest {
         assertFalse(result);
     }
 
+    @Test
+    void testEvaluate_countryNotRequiredAndDocumentResultIsMissing_validationPass() {
+        // given
+        final var processConfig = buildProcessConfigurationWithIdAndCountry(null);
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertTrue(result);
+    }
+
+    @Test
+    void testEvaluate_countryRequiredAndDocumentResultIsMissing_validationFails() {
+        // given
+        final var processConfig = buildProcessConfigurationWithIdAndCountry("CZE");
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var documentVerifications = List.of(
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT),
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    void testEvaluate_countryRequiredAndCountryNotInExtractedData_validationFails() {
+        // given
+        final var processConfig = buildProcessConfigurationWithIdAndCountry("CZE");
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var idCardFrontVerification = createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT);
+        idCardFrontVerification.setResults(Set.of(createIdCardFrontDocumentResult(null)));
+
+        final var documentVerifications = List.of(
+                idCardFrontVerification,
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    void testEvaluate_requiredCountryDoesNotMatchExtractedOne_validationFails() {
+        // given
+        final var processConfig = buildProcessConfigurationWithIdAndCountry("CZE");
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var idCardFrontVerification = createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT);
+        idCardFrontVerification.setResults(Set.of(createIdCardFrontDocumentResult("DEU")));
+
+        final var documentVerifications = List.of(
+                idCardFrontVerification,
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    void testEvaluate_requiredCountryMatchesExtractedOne_validationPass() {
+        // given
+        final var processConfig = buildProcessConfigurationWithIdAndCountry("CZE");
+        when(onboardingProcessConfigurationService.findConfigByProcessId("1")).thenReturn(processConfig);
+
+        final var idCardFrontVerification = createDocumentVerification(DocumentType.ID_CARD, CardSide.FRONT);
+        idCardFrontVerification.setResults(Set.of(createIdCardFrontDocumentResult("CZE")));
+
+        final var documentVerifications = List.of(
+                idCardFrontVerification,
+                createDocumentVerification(DocumentType.ID_CARD, CardSide.BACK));
+
+        // when
+        boolean result = tested.evaluate(documentVerifications, "1");
+
+        // then
+        assertTrue(result);
+    }
+
     private DocumentVerificationEntity createDocumentVerification(final DocumentType type) {
         return createDocumentVerification(type, null);
     }
@@ -384,5 +479,36 @@ class RequiredDocumentTypesCheckTest {
                         ))
                         .build())
                 .build();
+    }
+
+    private static OnboardingProcessConfigurationValue buildProcessConfigurationWithIdAndCountry(final String country) {
+        return OnboardingProcessConfigurationValue.builder()
+                .documents(OnboardingProcessConfigurationValue.Documents.builder()
+                        .totalRequiredDocumentsCount((byte) 1)
+                        .groups(Set.of(
+                                OnboardingProcessConfigurationValue.Group.builder()
+                                        .requiredDocumentsCount((byte) 1)
+                                        .items(Set.of(
+                                                OnboardingProcessConfigurationValue.Document.builder()
+                                                        .type(OnboardingProcessConfigurationValue.DocumentType.ID_CARD)
+                                                        .sideCount((byte) 2)
+                                                        .country(country)
+                                                        .build()
+                                        ))
+                                        .build()
+                        ))
+                        .build())
+                .build();
+    }
+
+    private static DocumentResultEntity createIdCardFrontDocumentResult(final String country) {
+        final var extractedData = """
+                {
+                    "country": "%s"
+                }""".formatted(country);
+
+        final var entity = new DocumentResultEntity();
+        entity.setExtractedData(extractedData);
+        return entity;
     }
 }
