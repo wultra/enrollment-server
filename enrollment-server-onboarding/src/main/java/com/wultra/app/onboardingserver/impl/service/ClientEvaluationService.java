@@ -40,8 +40,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -59,13 +57,6 @@ import static java.util.stream.Collectors.toSet;
 public class ClientEvaluationService {
 
     private static final String ERROR_VERIFICATION_ID = "unableToGetDocumentVerificationId";
-
-    private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
-                    .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    .appendOptional(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                    // Hungarian identity card format https://en.wikipedia.org/wiki/Hungarian_identity_card#/media/File:The_renewed_hungarian_ID.jpg/2
-                    .appendOptional(DateTimeFormatter.ofPattern("dd MM yyyy"))
-                    .toFormatter();
 
     private final OnboardingProvider onboardingProvider;
 
