@@ -60,6 +60,7 @@ public class RequiredDocumentTypesCheck {
      * - Minimal total document count is provided
      * - Each document has a required sides count
      * - Minimal document count from each group is provided
+     * - Country extracted from a document matches the required one, if set in the configuration
      *
      * @param documentVerifications document verifications to evaluate
      * @param processId onboarding process identification
