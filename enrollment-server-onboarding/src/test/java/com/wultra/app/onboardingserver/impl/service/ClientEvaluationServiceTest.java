@@ -117,7 +117,7 @@ class ClientEvaluationServiceTest {
         identityVerification.setPhase(CLIENT_EVALUATION);
         identityVerification.setDocumentVerifications(Set.of(
                 createDocumentVerificationWithResults("d1", """
-                {"dateOfBirth": "24.12.1999"}""", DocumentType.ID_CARD), // several different formats should be supported
+                {"dateOfBirth": "24.12.1999"}""", DocumentType.ID_CARD),
                 createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
 
