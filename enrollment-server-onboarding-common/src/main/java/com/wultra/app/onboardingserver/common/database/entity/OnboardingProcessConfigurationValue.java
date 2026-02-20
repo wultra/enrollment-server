@@ -17,6 +17,9 @@
  */
 package com.wultra.app.onboardingserver.common.database.entity;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
@@ -44,7 +47,7 @@ public record OnboardingProcessConfigurationValue(
         boolean otpForIdentification,
         boolean otpForIdentityVerification,
         boolean useTemporaryActivation,
-        Documents documents,
+        @Valid Documents documents,
         ActivationType activationType,
         boolean approvalEnabled,
         boolean clientEvaluationEnabled
@@ -76,7 +79,7 @@ public record OnboardingProcessConfigurationValue(
     @Builder
     public record Documents(
             byte totalRequiredDocumentsCount,
-            Set<Group> groups
+            @Valid Set<Group> groups
     ) implements Serializable {
 
         @Serial
@@ -100,7 +103,7 @@ public record OnboardingProcessConfigurationValue(
     @Builder
     public record Group(
             byte requiredDocumentsCount,
-            Set<Document> items
+            @Valid Set<Document> items
     ) implements Serializable {
 
         @Serial
@@ -125,7 +128,7 @@ public record OnboardingProcessConfigurationValue(
     @Builder
     public record Document(
             DocumentType type,
-            byte sideCount,
+            @Min(1) @Max(2) byte sideCount,
             String country
     ) implements Serializable {
 

@@ -17,6 +17,7 @@
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -49,7 +50,8 @@ import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
