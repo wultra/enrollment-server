@@ -34,7 +34,7 @@ import java.util.List;
 class ClientEvaluateRequestDto {
 
     /**
-     * ISO‑8601
+     * ISO-8601
      */
     private static final String DATE_FORMAT_PATTERN = "yyyy-MM-dd";
 
