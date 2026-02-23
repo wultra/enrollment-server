@@ -16,17 +16,24 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
 import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurationService;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 
@@ -43,15 +50,19 @@ import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
     /**
      * Evaluate whether the provided documents meet all requirements defined in {@link OnboardingProcessConfigurationValue#documents()}.
      *
-     * Following checks are performed:
+     * The following checks are performed:
      * - Minimal total document count is provided
-     * - Each document has required sides count
+     * - Each document has a required sides count
      * - Minimal document count from each group is provided
+     * - Country extracted from a document matches the required one, if set in the configuration
      *
      * @param documentVerifications document verifications to evaluate
      * @param processId onboarding process identification
@@ -71,18 +82,16 @@ public class RequiredDocumentTypesCheck {
             return false;
         }
 
-        final var groupChecksPassed = processConfig.documents().groups().stream()
-                .allMatch(group ->
-                        isMinimalDocumentCountFromGroupProvided(documentVerificationsByType, group)
-                                && areAllDocumentsSidesProvided(documentVerificationsByType, group)
-                );
+        final var groups = List.copyOf(processConfig.documents().groups());
 
-        if (!groupChecksPassed) {
-            return false;
-        }
+        final var validationErrors = IntStream.range(0, groups.size())
+                .mapToObj(groupIndex -> validateGroup(documentVerificationsByType, groups.get(groupIndex), groupIndex))
+                .flatMap(Collection::stream)
+                .toList();
 
-        logger.debug("All required documents accepted for onboarding process: {}", processId);
-        return true;
+        final var result = validationErrors.isEmpty();
+        logger.debug("Required documents validation for processId: {}, result: {}, errors: {}", processId, result, validationErrors);
+        return result;
     }
 
     private static boolean isMinimalDocumentCountProvided(
@@ -100,75 +109,110 @@ public class RequiredDocumentTypesCheck {
         return true;
     }
 
-    private static boolean isMinimalDocumentCountFromGroupProvided(
+    private static List<String> validateGroup(
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
-            final OnboardingProcessConfigurationValue.Group group
+            final OnboardingProcessConfigurationValue.Group group,
+            final int groupIndex
     ) {
-        final var providedDocumentTypes = documentVerificationsByType.keySet();
+        final var documentRequirementByDocumentType = group.items().stream()
+                .collect(Collectors.toMap(i -> convert(i.type()), RequiredDocumentTypesCheck::convert));
 
-        final var groupDocumentTypes = group.items()
-                .stream()
-                .map(OnboardingProcessConfigurationValue.Document::type)
-                .map(RequiredDocumentTypesCheck::convertDocumentType)
-                .collect(Collectors.toSet());
+        final var errors = new ArrayList<String>();
 
-        final var providedCount = providedDocumentTypes.stream()
-                .filter(groupDocumentTypes::contains)
+        for (final var entry : documentVerificationsByType.entrySet()) {
+            final var documentType = entry.getKey();
+
+            if (!documentRequirementByDocumentType.containsKey(documentType)) {
+                continue;
+            }
+
+            final var documentRequirements = documentRequirementByDocumentType.get(documentType);
+
+            final var documentVerifications = entry.getValue();
+
+            final var sidesCount = documentVerifications.stream()
+                    .map(DocumentVerificationEntity::getSide)
+                    .distinct()
+                    .count();
+            if (sidesCount < documentRequirements.sideCount()) {
+                errors.add("group %s, documentType %s: sideCount not matched".formatted(groupIndex, documentType));
+            }
+
+            final var country = getCountry(documentVerifications);
+            final var requiredCountry = documentRequirements.country();
+            if (!requiredCountry.isEmpty() && !requiredCountry.equals(country)) {
+                errors.add("group %s, documentType %s: country not matched".formatted(groupIndex, documentType));
+            }
+        }
+
+        final var documentsCount = documentRequirementByDocumentType.keySet().stream()
+                .filter(documentVerificationsByType::containsKey)
                 .count();
 
-        final var requiredCount = group.requiredDocumentsCount();
-
-        if (providedCount < requiredCount) {
-            logger.debug("Minimal document count from group {} not provided. Required: {}, provided: {}", groupDocumentTypes, requiredCount, providedCount);
-            return false;
+        if (documentsCount < group.requiredDocumentsCount()) {
+            errors.add("group %s: requiredDocumentsCount not matched".formatted(groupIndex));
         }
 
-        return true;
+        return errors;
     }
 
-    private static boolean areAllDocumentsSidesProvided(
-            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
-            final OnboardingProcessConfigurationValue.Group group
-    ) {
-        final var requiredDocumentTypeToSideCount = group.items()
-                .stream()
-                .collect(Collectors.toMap(
-                        item -> convertDocumentType(item.type()),
-                        OnboardingProcessConfigurationValue.Document::sideCount
-                ));
-
-        return requiredDocumentTypeToSideCount.entrySet().stream()
-                .allMatch(i -> areAllDocumentSidesProvided(i.getKey(), i.getValue(), documentVerificationsByType));
-    }
-
-    private static boolean areAllDocumentSidesProvided(
-            final DocumentType documentType,
-            final byte requiredSideCount,
-            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType
-    ) {
-        if (!documentVerificationsByType.containsKey(documentType)) {
-            return true;
-        }
-
-        final var providedSideCount = documentVerificationsByType.get(documentType)
-                .stream()
-                .map(DocumentVerificationEntity::getSide)
-                .distinct()
-                .count();
-
-        if (providedSideCount < requiredSideCount) {
-            logger.debug("Not all sides provided for document type: {}. Required sides: {}, provided sides: {}", documentType, requiredSideCount, providedSideCount);
-            return false;
-        }
-
-        return true;
-    }
-
-    private static DocumentType convertDocumentType(final OnboardingProcessConfigurationValue.DocumentType documentType) {
+    private static DocumentType convert(final OnboardingProcessConfigurationValue.DocumentType documentType) {
         return switch (documentType) {
             case ID_CARD -> ID_CARD;
             case PASSPORT -> PASSPORT;
             case DRIVING_LICENCE -> DRIVING_LICENSE;
         };
     }
+
+    private static DocumentValidationItem convert(final OnboardingProcessConfigurationValue.Document source) {
+        final var country = Optional.ofNullable(source.country())
+                .map(Set::of)
+                .orElse(Set.of());
+
+        return DocumentValidationItem.builder()
+                .sideCount(source.sideCount())
+                .country(country)
+                .build();
+    }
+
+    private static Set<String> getCountry(final List<DocumentVerificationEntity> source) {
+        return source.stream()
+                .map(RequiredDocumentTypesCheck::getCountry)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    private static String getCountry(final DocumentVerificationEntity entity) {
+        return entity.getResults().stream()
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated))
+                .map(RequiredDocumentTypesCheck::parseExtractedDataCountry)
+                .orElse(null);
+    }
+
+    private static String parseExtractedDataCountry(final DocumentResultEntity documentResult) {
+        try {
+            final var extractedData = documentResult.getExtractedData();
+            if (extractedData == null) {
+                return null;
+            }
+
+            return OBJECT_MAPPER.readValue(extractedData, DocumentExtractedDataValue.class)
+                    .country();
+        } catch (JsonProcessingException e) {
+            logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
+            return null;
+        }
+    }
+
+    /*
+     * The 'country' is a 'Set'. A document can have more than one side, and each side may have a different
+     * country for various reasons (e.g., incorrect extraction by the provider, or the user uses different documents
+     * for the front and back sides).
+     */
+    @Builder
+    private record DocumentValidationItem(
+        int sideCount,
+        Set<String> country
+    ) {}
 }

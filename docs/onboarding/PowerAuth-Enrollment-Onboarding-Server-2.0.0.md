@@ -85,7 +85,7 @@ Field `documents.totalRequiredDocumentsCount` - specifies min count of unique do
 
 Field `documents.groups` - group specifies more rules for set of document types:
 - `requiredDocumentsCount` - specifies min count of unique document types required from this group
-- `items` - set of documents. Each item specifies document `type` and `sideCount`
+- `items` - set of documents. Each item specifies document `type`, `sideCount` and optional `country` as ISO 3166-1 alpha-3 code
 
 EXAMPLE:
 
@@ -99,7 +99,8 @@ EXAMPLE:
         "items": [
           {
             "type": "ID_CARD",
-            "sideCount": 2
+            "sideCount": 2,
+            "country": "CZE"
           },
           {
             "type": "PASSPORT",

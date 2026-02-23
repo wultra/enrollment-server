@@ -248,7 +248,8 @@ The configuration is stored as JSON. See the following example:
         "items": [
           {
             "type": "ID_CARD",
-            "sideCount": 2
+            "sideCount": 2,
+            "country": "CZE"
           },
           {
             "type": "PASSPORT",
