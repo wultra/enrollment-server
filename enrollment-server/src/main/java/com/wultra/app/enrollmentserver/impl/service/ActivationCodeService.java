@@ -30,7 +30,7 @@ import com.wultra.security.powerauth.client.model.enumeration.CommitPhase;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.AllArgsConstructor;

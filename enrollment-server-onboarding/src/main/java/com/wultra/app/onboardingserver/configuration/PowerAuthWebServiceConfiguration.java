@@ -62,6 +62,7 @@ public class PowerAuthWebServiceConfiguration {
     @Value("${powerauth.service.security.clientSecret}")
     private String clientSecret;
 
+    // TODO (racansky, 2026-02-23) remove v3 client when fixed the issue https://github.com/wultra/powerauth-restful-integration/issues/678
     @Bean
     public com.wultra.security.powerauth.client.v3.PowerAuthClient powerAuthClientV3() throws PowerAuthClientException {
         return new com.wultra.security.powerauth.rest.client.v3.PowerAuthRestClient(powerAuthServiceUrl, prepareClientConfiguration());

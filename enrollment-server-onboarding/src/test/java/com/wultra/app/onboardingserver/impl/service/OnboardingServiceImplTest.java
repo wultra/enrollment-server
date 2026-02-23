@@ -32,7 +32,7 @@ import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
