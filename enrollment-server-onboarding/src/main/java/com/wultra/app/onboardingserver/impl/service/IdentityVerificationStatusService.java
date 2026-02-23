@@ -79,21 +79,20 @@ public class IdentityVerificationStatusService {
     @Transactional
     @SuppressWarnings("unused") // unused request
     public IdentityVerificationStatusResponse checkIdentityVerificationStatus(IdentityVerificationStatusRequest request, OwnerId ownerId) throws RemoteCommunicationException, OnboardingProcessException {
-        IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
+        final IdentityVerificationStatusResponse response = new IdentityVerificationStatusResponse();
 
-        Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
+        final Optional<IdentityVerificationEntity> idVerificationOptional = identityVerificationService.findByOptional(ownerId);
 
         // Do not lock onboarding process, it is not required for status check
         final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
+        response.setProcessId(onboardingProcess.getId());
+        response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
+
         if (idVerificationOptional.isEmpty()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
             response.setIdentityVerificationPhase(null);
-            response.setProcessId(onboardingProcess.getId());
             return response;
         }
-
-        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
-        response.setProcessId(idVerification.getProcessId());
 
         // Check for expiration of onboarding process
         if (onboardingService.hasProcessExpired(onboardingProcess)) {
@@ -110,6 +109,7 @@ public class IdentityVerificationStatusService {
             return response;
         }
 
+        final IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         return response;
