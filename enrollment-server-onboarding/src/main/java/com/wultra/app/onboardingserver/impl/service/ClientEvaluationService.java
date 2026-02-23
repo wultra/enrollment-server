@@ -39,6 +39,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -212,7 +213,7 @@ public class ClientEvaluationService {
     private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
         String surname = null;
         String givenNames = null;
-        String dateOfBirth = null;
+        LocalDate dateOfBirth = null;
 
         for (final var document : documents) {
             final var documentData = document.data();
