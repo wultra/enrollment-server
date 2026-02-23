@@ -116,6 +116,7 @@ class OnboardingServiceImplTest {
         final InitActivationRequest captorValue = requestCaptor.getValue();
         assertEquals("mock_app_id", captorValue.getApplicationId());
         assertEquals(List.of("VERIFICATION_PENDING"), captorValue.getFlags());
+        assertNotNull(captorValue.getActivationOtp());
 
         final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
         assertTrue(process.isPresent());
