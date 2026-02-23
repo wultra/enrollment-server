@@ -93,6 +93,7 @@ public class ConfigurationController {
                 .enabled(source.enabled())
                 .otpForIdentification(source.otpForIdentification())
                 .otpForIdentityVerification(source.otpForIdentityVerification())
+                .useTemporaryActivation(source.useTemporaryActivation())
                 .documents(convert(source.documents()))
                 .build();
     }
@@ -139,6 +140,7 @@ public class ConfigurationController {
         return ConfigurationResponse.Document.builder()
                 .type(convert(source.type()))
                 .sideCount(source.sideCount())
+                .country(source.country())
                 .build();
     }
 
