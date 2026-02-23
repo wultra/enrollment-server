@@ -21,6 +21,8 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
+import java.time.LocalDate;
+
 /**
  * Normalized data extracted from document.
  *
@@ -31,14 +33,14 @@ import lombok.extern.jackson.Jacksonized;
 public record DocumentExtractedDataValue(
     String givenNames,
     String surname,
-    String dateOfBirth,
+    LocalDate dateOfBirth,
     String placeOfBirth,
     String country,
     String sex,
     String nationality,
     String personalNumber,
     String documentNumber,
-    String dateOfIssue,
-    String dateOfExpiry,
+    LocalDate dateOfIssue,
+    LocalDate dateOfExpiry,
     String authority
 ) {}
