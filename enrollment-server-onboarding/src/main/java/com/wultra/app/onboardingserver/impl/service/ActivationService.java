@@ -75,6 +75,7 @@ public class ActivationService {
             final InitActivationRequest initActivationRequest = new InitActivationRequest();
             initActivationRequest.setApplicationId(lookupResponse.getApplicationId());
             initActivationRequest.setUserId(request.userId());
+            initActivationRequest.setActivationOtp(request.otp());
             initActivationRequest.setCommitPhase(CommitPhase.ON_KEY_EXCHANGE);
             initActivationRequest.setFlags(activationFlagService.fetchInitialActivationFlags());
 
@@ -159,7 +160,7 @@ public class ActivationService {
     }
 
     @Builder
-    public record InitActivationContext(String userId, String applicationKey) {}
+    public record InitActivationContext(String userId, String applicationKey, String otp) {}
 
     @Builder
     public record InitTargetActivationContext(String userId, String applicationId, String parentActivationId) {}
