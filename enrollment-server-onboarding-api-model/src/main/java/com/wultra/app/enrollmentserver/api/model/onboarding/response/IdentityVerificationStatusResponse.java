@@ -34,5 +34,6 @@ public class IdentityVerificationStatusResponse {
     private String processId;
     private IdentityVerificationStatus identityVerificationStatus;
     private IdentityVerificationPhase identityVerificationPhase;
+    private String processType;
 
 }
