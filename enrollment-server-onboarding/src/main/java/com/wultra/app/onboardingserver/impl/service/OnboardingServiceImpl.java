@@ -71,10 +71,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Service implementing specific behavior for the onboarding process. Shared behavior is inherited from {@link CommonOnboardingService}.
@@ -192,11 +189,12 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             throw new TooManyProcessesException("Maximum number of processes per day reached for user: " + userId);
         }
 
-        createAndSendOtp(process, userId);
+        final Optional<String> otp = createAndSendOtp(process, userId);
 
         final ActivationService.InitActivationContext initActivationContext = ActivationService.InitActivationContext.builder()
                 .applicationKey(encryptionContext.getApplicationKey())
                 .userId(userId)
+                .otp(otp.orElse(null))
                 .build();
 
         final var activationType = process.getProcessConfiguration().getConfiguration().activationType();
@@ -213,18 +211,20 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                 .build();
     }
 
-    private void createAndSendOtp(final OnboardingProcessEntity process, final String userId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
+    private Optional<String> createAndSendOtp(final OnboardingProcessEntity process, final String userId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
         if (isActivationOtpDisabled(process)) {
             logger.info("Activation OTP is disabled for process type: {}", process.getProcessConfiguration().getProcessType());
-            return;
+            return Optional.empty();
         }
 
         final String otpCode = otpService.createOtpCode(process, OtpType.ACTIVATION);
         if (userId == null) {
             logger.info("User ID is null, OTP is not sent");
+            return Optional.empty();
         } else {
             logger.debug("Sending OTP for user ID: {}", userId);
             sendOtp(process, otpCode);
+            return Optional.of(otpCode);
         }
     }
 
