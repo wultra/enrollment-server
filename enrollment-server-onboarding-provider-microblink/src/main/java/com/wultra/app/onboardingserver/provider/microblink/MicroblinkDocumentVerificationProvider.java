@@ -495,7 +495,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResult.setUploadId(documentVerification.getUploadId());
             documentVerificationResult.setVerificationResult(documentResult.getVerificationResult());
             documentVerificationResult.setExtractedData(documentResult.getExtractedData());
-            documentVerificationResult.setVerificationScore(null); // TODO Lubos - call extractScore(String)
+            documentVerificationResult.setVerificationScore(convertScore(microblinkResponse.verification().certaintyLevel()));
 
             if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkResponse.verification().result())) {
                 final var rejectReasons = microblinkResponse.messages()
@@ -529,7 +529,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return result;
     }
 
-    private static int extractScore(final String source) {
+    private static int convertScore(final String source) {
+        if (source == null) {
+            return 0;
+        }
+
         return switch (source) {
             case "Low" ->  1;
             case "Medium" ->  5;

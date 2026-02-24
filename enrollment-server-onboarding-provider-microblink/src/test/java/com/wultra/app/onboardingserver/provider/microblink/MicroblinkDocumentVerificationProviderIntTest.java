@@ -738,6 +738,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(expectedValidationResult, documentResult.getVerificationResult());
         assertNull(documentResult.getErrorDetail());
         assertEquals(expectedExtractedData, documentResult.getExtractedData());
+        assertEquals(10, documentResult.getVerificationScore());
     }
 
     private static String buildPassportNormalizedExtractedDataJson() {
