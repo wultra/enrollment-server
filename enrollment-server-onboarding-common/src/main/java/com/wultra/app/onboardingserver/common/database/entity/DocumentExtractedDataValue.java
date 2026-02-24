@@ -42,5 +42,6 @@ public record DocumentExtractedDataValue(
     String documentNumber,
     LocalDate dateOfIssue,
     LocalDate dateOfExpiry,
-    String authority
+    String authority,
+    int score
 ) {}

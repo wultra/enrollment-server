@@ -33,4 +33,9 @@ public class DocumentVerificationResult {
     private String errorDetail;
     private String extractedData;
 
+    /**
+     * Overall score achieved during document verification and fraud detection (0 - 10). Could be {@code null}.
+     */
+    private Integer verificationScore;
+
 }

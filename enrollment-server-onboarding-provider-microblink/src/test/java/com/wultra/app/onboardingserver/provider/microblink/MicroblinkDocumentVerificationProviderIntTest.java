@@ -77,7 +77,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String PASSPORT_UPLOAD_ID = "71b3e2f0-5c9d-4f4a-8e12-9d7c6a4b3f20";
 
     private static final Pattern MICROBLINK_RESPONSE_IMAGE_PATTERN = Pattern.compile(
-            "\"images\"\\s*:\\s*\\[.*?\\]\\s*,?",
+            """
+                    "images"\\s*:\\s*\\[.*?]\\s*,?""",
             Pattern.DOTALL
     );
 
@@ -741,16 +742,16 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static String buildPassportNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-11-14","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-11-14","authority":null,"score":0}""";
     }
 
     private static String buildIdCardFrontNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-10-13","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-10-13","authority":null,"score":0}""";
     }
 
     private static String buildIdCardBackNormalizedExtractedDataJson() {
         return """
-                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
+                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null,"score":0}""";
     }
 }
