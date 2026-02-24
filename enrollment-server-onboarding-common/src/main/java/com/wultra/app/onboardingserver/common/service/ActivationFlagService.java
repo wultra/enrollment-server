@@ -27,7 +27,7 @@ import com.wultra.security.powerauth.client.model.request.ListActivationFlagsReq
 import com.wultra.security.powerauth.client.model.request.RemoveActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.request.UpdateActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.service.HttpCustomizationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
