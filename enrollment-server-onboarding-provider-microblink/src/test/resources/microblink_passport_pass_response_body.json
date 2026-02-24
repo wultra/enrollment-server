@@ -75,14 +75,14 @@
           {
             "side": "Unknown",
             "script": "Latin",
-            "value": "ZZ LL AAAA",
+            "value": "24.12.1999",
             "type": "DetailedStringResult"
           }
         ],
-        "day": 1,
-        "month": 1,
+        "day": 24,
+        "month": 12,
         "year": 1999,
-        "successfullyParsed": false,
+        "successfullyParsed": true,
         "filledByDomainKnowledge": false,
         "type": "DetailedDateResult",
         "field": "DateOfBirth"
@@ -109,14 +109,14 @@
             {
               "side": "Unknown",
               "script": "Latin",
-              "value": "ZZ LL AAAA",
+              "value": "2025-11-14",
               "type": "DetailedStringResult"
             }
           ],
-          "day": 0,
-          "month": 0,
-          "year": 0,
-          "successfullyParsed": false,
+          "day": 14,
+          "month": 11,
+          "year": 2025,
+          "successfullyParsed": true,
           "filledByDomainKnowledge": false,
           "type": "DetailedDateResult",
           "field": "DateOfExpiry"

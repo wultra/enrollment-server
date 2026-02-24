@@ -17,9 +17,11 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,6 +32,11 @@ import java.util.List;
  */
 @Data
 class ClientEvaluateRequestDto {
+
+    /**
+     * ISO-8601
+     */
+    private static final String DATE_FORMAT_PATTERN = "yyyy-MM-dd";
 
     private String processId;
 
@@ -84,21 +91,25 @@ class ClientEvaluateRequestDto {
     public record Person(
             String surname,
             String givenNames,
-            String dateOfBirth
+            @JsonFormat(pattern = DATE_FORMAT_PATTERN)
+            LocalDate dateOfBirth
     ) {}
 
     @Builder
     public record DocumentData(
             String givenNames,
             String surname,
-            String dateOfBirth,
+            @JsonFormat(pattern = DATE_FORMAT_PATTERN)
+            LocalDate dateOfBirth,
             String placeOfBirth,
             String sex,
             String nationality,
             String personalNumber,
             String documentNumber,
-            String dateOfIssue,
-            String dateOfExpiry,
+            @JsonFormat(pattern = DATE_FORMAT_PATTERN)
+            LocalDate dateOfIssue,
+            @JsonFormat(pattern = DATE_FORMAT_PATTERN)
+            LocalDate dateOfExpiry,
             String authority
     ) {}
 

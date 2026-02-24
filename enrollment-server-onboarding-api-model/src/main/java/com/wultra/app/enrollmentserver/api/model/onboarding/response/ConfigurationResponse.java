@@ -39,6 +39,9 @@ public record ConfigurationResponse(
         @Schema(description = "Whether the OTP is required for identity verification - request OTP for the next process step.", requiredMode = Schema.RequiredMode.REQUIRED)
         boolean otpForIdentityVerification,
 
+        @Schema(description = "Whether the onboarding process should use two activations, and exchange the temporary one for the permanent one.", requiredMode = Schema.RequiredMode.REQUIRED)
+        boolean useTemporaryActivation,
+
         @Schema(description = "List of documents.")
         Documents documents
 ) {
@@ -70,7 +73,10 @@ public record ConfigurationResponse(
             DocumentType type,
 
             @Schema(description = "Number of document sides.", requiredMode = Schema.RequiredMode.REQUIRED)
-            byte sideCount
+            byte sideCount,
+
+            @Schema(description = "Country of origin of the document as ISO 3166-1 alpha-3 code", minLength = 3, maxLength = 3, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            String country
     ) {
     }
 
