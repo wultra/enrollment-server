@@ -131,8 +131,8 @@ public class ClientEvaluationDocumentCheckResultBuilder {
             final Map<DocumentType, List<DocumentVerificationEntity>> documentsVerificationByDocumentType,
             final Map<String, ProcessedDocumentDataEntity> processedDocumentByPhotoId
     ) {
-        final var documentVerification = documentsVerificationByDocumentType.get(documentType);
-        final var documentsResult = documentVerification.stream()
+        final var documentVerifications = documentsVerificationByDocumentType.get(documentType);
+        final var documentsResult = documentVerifications.stream()
                 .map(ClientEvaluationDocumentCheckResultBuilder::selectLatestDocumentResult)
                 .toList();
 
@@ -149,9 +149,15 @@ public class ClientEvaluationDocumentCheckResultBuilder {
                 .findFirst()
                 .orElse(null);
 
-        final var processedDocument = documentVerification.stream()
+        final var processedDocument = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getPhotoId)
                 .map(it -> processedDocumentByPhotoId.getOrDefault(it, null))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        final var score = documentVerifications.stream()
+                .map(DocumentVerificationEntity::getVerificationScore)
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
@@ -168,7 +174,7 @@ public class ClientEvaluationDocumentCheckResultBuilder {
                 .type(documentType)
                 .country(country)
                 .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
-                .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                .score(score)
                 .data(documentData)
                 .images(images)
                 .rawData(documentResult)
@@ -242,9 +248,9 @@ public class ClientEvaluationDocumentCheckResultBuilder {
 
     private static EvaluateClientRequest.DocumentCheckResult buildWithoutExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
         final var documents = documentsVerification.stream()
-                .map(it -> it.getType())
+                .map(DocumentVerificationEntity::getType)
                 .distinct()
-                .map(it -> buildDocumentWithoutExtractedData(it))
+                .map(ClientEvaluationDocumentCheckResultBuilder::buildDocumentWithoutExtractedData)
                 .toList();
 
         return new EvaluateClientRequest.DocumentCheckResult(documents, null);

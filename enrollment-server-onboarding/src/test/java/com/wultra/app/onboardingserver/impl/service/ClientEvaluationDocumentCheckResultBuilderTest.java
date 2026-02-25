@@ -91,7 +91,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     @Test
     void testBuild_withoutExtractedData() {
         // given
-        final var documentVerifications = Set.of(buildDocumentVerification(null, null, null));
+        final var documentVerifications = Set.of(buildDocumentVerification(null, null, null, null));
 
         // when
         final var result = tested.build(documentVerifications, false);
@@ -105,8 +105,8 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     void testBuild_withoutExtractedDataMergingDocumentSides() {
         // given
         final var documentVerifications = Set.of(
-                buildDocumentVerification(null, null, CardSide.FRONT),
-                buildDocumentVerification(null, null, CardSide.BACK));
+                buildDocumentVerification(null, null, CardSide.FRONT, null),
+                buildDocumentVerification(null, null, CardSide.BACK, null));
 
         // when
         final var result = tested.build(documentVerifications, false);
@@ -122,7 +122,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(buildDocumentResult(
                 buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -144,7 +144,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     @Test
     void testBuild_documentResultNotFound() {
         // given
-        final var documentVerifications = Set.of(buildDocumentVerification(Set.of(), null, null));
+        final var documentVerifications = Set.of(buildDocumentVerification(Set.of(), null, null, null));
 
         // when
         final var exception = assertThrows(IllegalStateException.class,() -> tested.build(documentVerifications, true));
@@ -159,7 +159,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, null, null));
+                buildDocumentVerification(documentResults, null, null, SCORE));
 
         // when
         final var result = tested.build(documentVerifications, true);
@@ -175,7 +175,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(List.of());
 
@@ -194,7 +194,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT),
                 buildDocumentResult("{}", LocalDateTime.now().minusHours(1), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null));
+                buildDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -219,7 +219,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult("invalid_json", LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -243,8 +243,8 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResultsBackDoc = Set.of(
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, null), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResultsFrontDoc, PHOTO_ID, CardSide.FRONT),
-                buildDocumentVerification(documentResultsBackDoc, PHOTO_ID, CardSide.BACK));
+                buildDocumentVerification(documentResultsFrontDoc, PHOTO_ID, CardSide.FRONT, SCORE),
+                buildDocumentVerification(documentResultsBackDoc, PHOTO_ID, CardSide.BACK, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -269,7 +269,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult("{}", LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, null));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -281,7 +281,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var expectedData = EvaluateClientRequest.DocumentData.builder().build();
         final var expectedPerson = EvaluateClientRequest.Person.builder().build();
 
-        final var expected = buildExpectedResult(expectedData, buildExpectedImages(), expectedPerson, 10, VERIFICATION_RESULT, null);
+        final var expected = buildExpectedResult(expectedData, buildExpectedImages(), expectedPerson, null, VERIFICATION_RESULT, null);
         assertEquals(expected, result);
     }
 
@@ -291,7 +291,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult(null, LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -313,7 +313,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var documentResults = Set.of(
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), null));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null));
+                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(buildProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
@@ -335,7 +335,8 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     private static DocumentVerificationEntity buildDocumentVerification(
             final Set<DocumentResultEntity> documentResults,
             final String photoId,
-            final CardSide side
+            final CardSide side,
+            final Integer score
     ) {
         final var entity = new DocumentVerificationEntity();
         entity.setId(DOCUMENT_VERIFICATION_ID);
@@ -344,6 +345,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         entity.setResults(documentResults);
         entity.setPhotoId(photoId);
         entity.setSide(side);
+        entity.setVerificationScore(score);
 
         Optional.ofNullable(documentResults)
                 .ifPresent(it -> it.forEach(r -> r.setDocumentVerification(entity)));
