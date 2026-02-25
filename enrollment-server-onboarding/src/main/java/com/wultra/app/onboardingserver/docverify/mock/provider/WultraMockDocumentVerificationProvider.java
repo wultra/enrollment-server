@@ -186,6 +186,7 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
         verificationResult.setExtractedData("{\"extracted\": \"data-" + uploadId + "\"}");
         verificationResult.setUploadId(uploadId);
         verificationResult.setVerificationResult("{\"verificationResult\": \"data-" + uploadId + "\"}");
+        verificationResult.setVerificationScore(10);
         return verificationResult;
     }
 

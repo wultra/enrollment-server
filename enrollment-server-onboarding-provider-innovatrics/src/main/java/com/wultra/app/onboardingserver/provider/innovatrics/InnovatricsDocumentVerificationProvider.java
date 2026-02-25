@@ -336,6 +336,8 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
         final DocumentVerificationResult result = new DocumentVerificationResult();
         result.setUploadId(customerId);
         result.setVerificationResult(serializeToString(response));
+        // TODO (racansky, 2026-02-24) so far sending constant 10 as 100 percent confidence, possible future extension point
+        result.setVerificationScore(10);
         if (!rejectionReasons.isEmpty()) {
             result.setRejectReason(serializeToString(rejectionReasons));
         }

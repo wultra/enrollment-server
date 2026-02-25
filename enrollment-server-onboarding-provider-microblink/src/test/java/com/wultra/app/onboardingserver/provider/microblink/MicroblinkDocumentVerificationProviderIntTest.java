@@ -77,7 +77,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String PASSPORT_UPLOAD_ID = "71b3e2f0-5c9d-4f4a-8e12-9d7c6a4b3f20";
 
     private static final Pattern MICROBLINK_RESPONSE_IMAGE_PATTERN = Pattern.compile(
-            "\"images\"\\s*:\\s*\\[.*?\\]\\s*,?",
+            """
+                    "images"\\s*:\\s*\\[.*?]\\s*,?""",
             Pattern.DOTALL
     );
 
@@ -737,6 +738,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(expectedValidationResult, documentResult.getVerificationResult());
         assertNull(documentResult.getErrorDetail());
         assertEquals(expectedExtractedData, documentResult.getExtractedData());
+        assertEquals(10, documentResult.getVerificationScore());
     }
 
     private static String buildPassportNormalizedExtractedDataJson() {
