@@ -126,7 +126,7 @@ public class DocumentVerificationEntity implements Serializable {
     private String photoId;
 
     /**
-     * Overall score achieved during document verification and fraud detection (0 - 100)
+     * Overall score achieved during document verification and fraud detection (0 - 10).
      */
     @Column(name = "verification_score")
     private Integer verificationScore;

@@ -196,7 +196,7 @@ public class ClientEvaluationService {
                     .type(documentVerification.getType())
                     .country(country)
                     .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
-                    .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                    .score(documentVerification.getVerificationScore())
                     .data(documentData)
                     .images(images)
                     .rawData(documentResult.getVerificationResult())

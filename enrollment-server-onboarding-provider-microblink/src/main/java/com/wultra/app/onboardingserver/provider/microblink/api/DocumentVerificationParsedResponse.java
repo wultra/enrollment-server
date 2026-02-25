@@ -39,7 +39,8 @@ public record DocumentVerificationParsedResponse(
     List<Message> messages
 ) {
     public record Verification(
-            String result
+            String result,
+            String certaintyLevel
     ) {}
 
     public record Extraction(
