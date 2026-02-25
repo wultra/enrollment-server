@@ -17,7 +17,9 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.api.model.enrollment.request.*;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.GetInboxDetailRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.GetInboxListRequest;
+import com.wultra.app.enrollmentserver.api.model.enrollment.request.InboxReadRequest;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxCountResponse;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxDetailResponse;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.GetInboxListResponse;
@@ -37,8 +39,8 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,15 +57,11 @@ import java.util.Collections;
 @ConditionalOnExpression("!'${powerauth.push.service.url:}'.empty and ${enrollment-server.inbox.enabled}")
 @RestController
 @RequestMapping(value = "api/inbox")
+@AllArgsConstructor
 @Slf4j
 public class InboxController {
 
     private final PushServerClient pushClient;
-
-    @Autowired
-    public InboxController(PushServerClient pushClient) {
-        this.pushClient = pushClient;
-    }
 
     @PostMapping("count")
     @PowerAuthToken(authenticationCodeType = {
@@ -73,16 +71,18 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+        logger.info("action: countUnreadMessages, state: initiated");
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxCountResponse response = new GetInboxCountResponse();
         try {
             final ObjectResponse<GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, appId);
+            logger.info("action: countUnreadMessages, state: succeeded");
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.debug(ex.getMessage(), ex);
+            logger.warn("action: countUnreadMessages, state: failed, errorMessage: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -95,6 +95,7 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+        logger.info("action: fetchMessageList, state: initiated");
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -105,11 +106,12 @@ public class InboxController {
         try {
             final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
                     userId, Collections.singletonList(appId), onlyUnread, page, size);
+            logger.info("action: fetchMessageList, state: succeeded");
             final GetInboxListResponse response = new GetInboxListResponse();
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
             return new PagedResponse<>(response, page, size);
         } catch (PushServerClientException ex) {
-            logger.debug(ex.getMessage(), ex);
+            logger.warn("action: fetchMessageList, state: failed, errorMessage: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -122,16 +124,18 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+        logger.info("action: fetchMessageDetail, state: initiated");
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxDetailRequest request = objectRequest.getRequestObject();
         try {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
+            logger.info("action: fetchMessageDetail, state: succeeded");
             final GetInboxDetailResponse response = convertMessageDetail(messageDetail);
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.debug(ex.getMessage(), ex);
+            logger.warn("action: fetchMessageDetail, state: failed, errorMessage: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -144,6 +148,7 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+        logger.info("action: readMessage, state: initiated");
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -152,10 +157,14 @@ public class InboxController {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
             if (!messageDetail.isRead()) {
                 pushClient.readMessage(request.getId());
+                logger.info("action: readMessage, state: succeeded");
+            } else {
+                logger.info("action: readMessage, state: skipped, reason: message is already marked as read");
+                return new Response();
             }
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.debug(ex.getMessage(), ex);
+            logger.warn("action: readMessage, state: failed, errorMessage: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -168,14 +177,16 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
     })
     public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+        logger.info("action: readAllMessages, state: initiated");
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         try {
             pushClient.readAllMessages(userId, appId);
+            logger.info("action: readAllMessages, state: succeeded");
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.debug(ex.getMessage(), ex);
+            logger.warn("action: readAllMessages, state: failed, errorMessage: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }

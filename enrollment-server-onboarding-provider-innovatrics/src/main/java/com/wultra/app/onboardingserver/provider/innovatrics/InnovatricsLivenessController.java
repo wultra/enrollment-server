@@ -73,6 +73,7 @@ class InnovatricsLivenessController {
             @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
 
+        logger.info("action: upload, state: initiated");
         if (apiAuthentication == null) {
             throw new PowerAuthTokenInvalidException("Unable to verify device registration when uploading liveness");
         }
@@ -86,6 +87,7 @@ class InnovatricsLivenessController {
         }
 
         innovatricsLivenessService.upload(requestData, encryptionContext);
+        logger.info("action: upload, state: succeeded");
         return new Response();
     }
 }
