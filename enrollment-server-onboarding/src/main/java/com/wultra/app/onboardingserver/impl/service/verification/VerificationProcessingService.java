@@ -94,6 +94,8 @@ public class VerificationProcessingService {
                         .filter(value -> value.getUploadId().equals(docVerification.getUploadId()))
                         .findFirst();
                 if (docVerificationResult.isPresent()) {
+                    docVerification.setVerificationScore(docVerificationResult.get().getVerificationScore());
+
                     DocumentResultEntity docResult = null;
                     try {
                         docResult = getDocumentResultEntity(ownerId, docVerification);
@@ -163,7 +165,6 @@ public class VerificationProcessingService {
     private void updateDocVerification(OwnerId ownerId, DocumentVerificationEntity docVerification, DocumentsVerificationResult docVerificationResult) {
         docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         docVerification.setTimestampVerified(ownerId.getTimestamp());
-        docVerification.setVerificationScore(docVerificationResult.getVerificationScore());
         switch (docVerificationResult.getStatus()) {
             case ACCEPTED ->
                     docVerification.setStatus(DocumentStatus.ACCEPTED);

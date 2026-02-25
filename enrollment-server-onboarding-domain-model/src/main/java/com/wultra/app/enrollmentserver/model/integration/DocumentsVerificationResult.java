@@ -23,7 +23,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * Result of verification of multiple identity-related documents.
+ * Wrapping collection of {@link DocumentVerificationResult}.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
@@ -31,10 +31,13 @@ import java.util.List;
 public class DocumentsVerificationResult {
 
     private String verificationId;
+
     private DocumentVerificationStatus status;
+
     private List<DocumentVerificationResult> results;
-    private Integer verificationScore;
+
     private String rejectReason;
+
     private String errorDetail;
 
     /**
