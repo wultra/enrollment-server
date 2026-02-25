@@ -19,10 +19,7 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
@@ -45,33 +42,30 @@ import java.util.stream.StreamSupport;
 import static java.util.stream.Collectors.toSet;
 
 /**
- * Builder for {@link EvaluateClientRequest.DocumentCheckResult}.
+ * Factory for creating {@link EvaluateClientRequest.DocumentCheckResult}.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class ClientEvaluationDocumentCheckResultBuilder {
+public class ClientEvaluationDocumentCheckResultFactory {
 
-    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
+    private final ObjectMapper mapper;
 
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
 
-    public EvaluateClientRequest.DocumentCheckResult build(final Set<DocumentVerificationEntity> documents, final boolean includeExtractedData) {
+    public EvaluateClientRequest.DocumentCheckResult create(final Set<DocumentVerificationEntity> documents, final boolean includeExtractedData) {
         if (CollectionUtils.isEmpty(documents)) {
             return EvaluateClientRequest.DocumentCheckResult.builder()
                     .documents(List.of())
                     .build();
         }
 
-        return includeExtractedData ? buildWithExtractedData(documents) : buildWithoutExtractedData(documents);
+        return includeExtractedData ? createWithExtractedData(documents) : createWithoutExtractedData(documents);
     }
 
-    private EvaluateClientRequest.DocumentCheckResult buildWithExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
+    private EvaluateClientRequest.DocumentCheckResult createWithExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
         final var photoIds = documentsVerification.stream()
                 .map(DocumentVerificationEntity::getPhotoId)
                 .filter(Objects::nonNull)
@@ -87,7 +81,7 @@ public class ClientEvaluationDocumentCheckResultBuilder {
                 ));
 
         final var documents = documentsVerificationByDocumentType.keySet().stream()
-                .map(it -> buildDocument(it, documentsVerificationByDocumentType, processedDocumentByPhotoId))
+                .map(it -> createDocument(it, documentsVerificationByDocumentType, processedDocumentByPhotoId))
                 .toList();
 
         final var person = buildPerson(documents);
@@ -126,14 +120,14 @@ public class ClientEvaluationDocumentCheckResultBuilder {
                 .build();
     }
 
-    private EvaluateClientRequest.Document buildDocument(
+    private EvaluateClientRequest.Document createDocument(
             final DocumentType documentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentsVerificationByDocumentType,
             final Map<String, ProcessedDocumentDataEntity> processedDocumentByPhotoId
     ) {
         final var documentVerifications = documentsVerificationByDocumentType.get(documentType);
         final var documentsResult = documentVerifications.stream()
-                .map(ClientEvaluationDocumentCheckResultBuilder::selectLatestDocumentResult)
+                .map(ClientEvaluationDocumentCheckResultFactory::selectLatestDocumentResult)
                 .toList();
 
         final var extractedData = documentsResult.stream()
@@ -216,7 +210,7 @@ public class ClientEvaluationDocumentCheckResultBuilder {
             final var extractedData = documentResult.getExtractedData();
 
             return StringUtils.hasLength(extractedData) ?
-                    OBJECT_MAPPER.readValue(extractedData, DocumentExtractedDataValue.class) :
+                    mapper.readValue(extractedData, DocumentExtractedDataValue.class) :
                     null;
         } catch (JsonProcessingException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
@@ -246,11 +240,11 @@ public class ClientEvaluationDocumentCheckResultBuilder {
         );
     }
 
-    private static EvaluateClientRequest.DocumentCheckResult buildWithoutExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
+    private static EvaluateClientRequest.DocumentCheckResult createWithoutExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
         final var documents = documentsVerification.stream()
                 .map(DocumentVerificationEntity::getType)
                 .distinct()
-                .map(ClientEvaluationDocumentCheckResultBuilder::buildDocumentWithoutExtractedData)
+                .map(ClientEvaluationDocumentCheckResultFactory::buildDocumentWithoutExtractedData)
                 .toList();
 
         return new EvaluateClientRequest.DocumentCheckResult(documents, null);

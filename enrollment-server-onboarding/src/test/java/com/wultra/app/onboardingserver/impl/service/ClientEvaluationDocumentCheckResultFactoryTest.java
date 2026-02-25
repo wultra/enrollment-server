@@ -18,6 +18,10 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
@@ -26,9 +30,9 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -41,100 +45,113 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link ClientEvaluationDocumentCheckResultBuilder}.
+ * Unit tests for {@link ClientEvaluationDocumentCheckResultFactory}.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ExtendWith(MockitoExtension.class)
-class ClientEvaluationDocumentCheckResultBuilderTest {
+class ClientEvaluationDocumentCheckResultFactoryTest {
 
-    private static final String NATIONALITY = "\"Czech\"";
-    private static final String DATE_OF_EXPIRY = "\"2022-12-21\"";
+    private static final String NATIONALITY = """
+            "Czech"
+            """;
+    private static final String DATE_OF_EXPIRY = """
+            "2022-12-21"
+            """;
     private static final String VERIFICATION_RESULT = "{}";
     private static final String PHOTO_ID = "3f6a3a6b-6c4b-4c4b-9b1a-3f3f9b9b1f6d";
     private static final int SCORE = 10;
     private static final String COUNTRY = "CZE";
     private static final String DOCUMENT_VERIFICATION_ID = "03e059b0-ff6f-40ab-8ba3-a62e65c0f31d";
 
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
+
     @Mock
     private ProcessedDocumentDataRepository processedDocumentDataRepository;
 
-    @InjectMocks
-    private ClientEvaluationDocumentCheckResultBuilder tested;
+    private ClientEvaluationDocumentCheckResultFactory tested;
+
+    @BeforeEach
+    void setUp() {
+        tested = new ClientEvaluationDocumentCheckResultFactory(OBJECT_MAPPER, processedDocumentDataRepository);
+    }
 
     @Test
-    void testBuild_nullDocumentVerifications() {
+    void testCreate_nullDocumentVerifications() {
         // given
         // -
 
         // when
-        final var result = tested.build(null, false);
+        final var result = tested.create(null, false);
 
         // then
-        final var expected = buildExpectedEmptyResult();
+        final var expected = createExpectedEmptyResult();
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_emptyDocumentVerifications() {
+    void testCreate_emptyDocumentVerifications() {
         // given
         // -
 
         // when
-        final var result = tested.build(Set.of(), false);
+        final var result = tested.create(Set.of(), false);
 
         // then
-        final var expected = buildExpectedEmptyResult();
+        final var expected = createExpectedEmptyResult();
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_withoutExtractedData() {
+    void testCreate_withoutExtractedData() {
         // given
-        final var documentVerifications = Set.of(buildDocumentVerification(null, null, null, null));
+        final var documentVerifications = Set.of(createDocumentVerification(null, null, null, null));
 
         // when
-        final var result = tested.build(documentVerifications, false);
+        final var result = tested.create(documentVerifications, false);
 
         // then
-        final var expected = buildExpectedResult(null, List.of(), null, null, null, null);
+        final var expected = createExpectedResult(null, List.of(), null, null, null, null);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_withoutExtractedDataMergingDocumentSides() {
+    void testCreate_withoutExtractedDataMergingDocumentSides() {
         // given
         final var documentVerifications = Set.of(
-                buildDocumentVerification(null, null, CardSide.FRONT, null),
-                buildDocumentVerification(null, null, CardSide.BACK, null));
+                createDocumentVerification(null, null, CardSide.FRONT, null),
+                createDocumentVerification(null, null, CardSide.BACK, null));
 
         // when
-        final var result = tested.build(documentVerifications, false);
+        final var result = tested.create(documentVerifications, false);
 
         // then
-        final var expected = buildExpectedResult(null, List.of(), null, null, null, null);
+        final var expected = createExpectedResult(null, List.of(), null, null, null, null);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_withExtractedData() {
+    void testCreate_withExtractedData() {
         // given
-        final var documentResults = Set.of(buildDocumentResult(
-                buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
+        final var documentResults = Set.of(createDocumentResult(
+                createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
+                createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(
-                buildExpectedDocumentData(),
-                buildExpectedImages(),
-                buildExpectedPerson(),
+        final var expected = createExpectedResult(
+                createExpectedDocumentData(),
+                createExpectedImages(),
+                createExpectedPerson(),
                 SCORE,
                 VERIFICATION_RESULT,
                 COUNTRY);
@@ -142,71 +159,71 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     }
 
     @Test
-    void testBuild_documentResultNotFound() {
+    void testCreate_documentResultNotFound() {
         // given
-        final var documentVerifications = Set.of(buildDocumentVerification(Set.of(), null, null, null));
+        final var documentVerifications = Set.of(createDocumentVerification(Set.of(), null, null, null));
 
         // when
-        final var exception = assertThrows(IllegalStateException.class,() -> tested.build(documentVerifications, true));
+        final var exception = assertThrows(IllegalStateException.class,() -> tested.create(documentVerifications, true));
 
         // then
         assertEquals("Missing document result for documentVerificationId: 03e059b0-ff6f-40ab-8ba3-a62e65c0f31d", exception.getMessage());
     }
 
     @Test
-    void testBuild_photoIdNotFound() {
+    void testCreate_photoIdNotFound() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult(createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, null, null, SCORE));
+                createDocumentVerification(documentResults, null, null, SCORE));
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(buildExpectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
+        final var expected = createExpectedResult(createExpectedDocumentData(), List.of(), createExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_processedDocumentNotFound() {
+    void testCreate_processedDocumentNotFound() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult(createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
+                createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(List.of());
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(buildExpectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
+        final var expected = createExpectedResult(createExpectedDocumentData(), List.of(), createExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_manyDocumentResults_theLatestOneIsUsed() {
+    void testCreate_manyDocumentResults_theLatestOneIsUsed() {
         // given
         final var documentResults = List.of(
-                buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT),
-                buildDocumentResult("{}", LocalDateTime.now().minusHours(1), VERIFICATION_RESULT));
+                createDocumentResult(createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT),
+                createDocumentResult("{}", LocalDateTime.now().minusHours(1), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null, SCORE));
+                createDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(
-                buildExpectedDocumentData(),
-                buildExpectedImages(),
-                buildExpectedPerson(),
+        final var expected = createExpectedResult(
+                createExpectedDocumentData(),
+                createExpectedImages(),
+                createExpectedPerson(),
                 SCORE,
                 VERIFICATION_RESULT,
                 COUNTRY);
@@ -214,49 +231,49 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     }
 
     @Test
-    void testBuild_extractedDataParsingError() {
+    void testCreate_extractedDataParsingError() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult("invalid_json", LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult("invalid_json", LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
+                createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
         final var exptectedDocumentData = EvaluateClientRequest.DocumentData.builder().build();
         final var expectedPerson = EvaluateClientRequest.Person.builder().build();
-        final var expected = buildExpectedResult(exptectedDocumentData, buildExpectedImages(), expectedPerson, SCORE, VERIFICATION_RESULT, null);
+        final var expected = createExpectedResult(exptectedDocumentData, createExpectedImages(), expectedPerson, SCORE, VERIFICATION_RESULT, null);
 
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_mergingDocumentSides() {
+    void testCreate_mergingDocumentSides() {
         // given
         final var documentResultsFrontDoc = Set.of(
-                buildDocumentResult(buildExtractedDataJson(null, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult(createExtractedDataJson(null, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentResultsBackDoc = Set.of(
-                buildDocumentResult(buildExtractedDataJson(NATIONALITY, null), LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult(createExtractedDataJson(NATIONALITY, null), LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResultsFrontDoc, PHOTO_ID, CardSide.FRONT, SCORE),
-                buildDocumentVerification(documentResultsBackDoc, PHOTO_ID, CardSide.BACK, SCORE));
+                createDocumentVerification(documentResultsFrontDoc, PHOTO_ID, CardSide.FRONT, SCORE),
+                createDocumentVerification(documentResultsBackDoc, PHOTO_ID, CardSide.BACK, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(
-                buildExpectedDocumentData(),
-                buildExpectedImages(),
-                buildExpectedPerson(),
+        final var expected = createExpectedResult(
+                createExpectedDocumentData(),
+                createExpectedImages(),
+                createExpectedPerson(),
                 SCORE,
                 VERIFICATION_RESULT,
                 COUNTRY);
@@ -264,75 +281,75 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     }
 
     @Test
-    void testBuild_emptyExtractedData() {
+    void testCreate_emptyExtractedData() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult("{}", LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult("{}", LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, null));
+                createDocumentVerification(documentResults, PHOTO_ID, null, null));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
         final var expectedData = EvaluateClientRequest.DocumentData.builder().build();
         final var expectedPerson = EvaluateClientRequest.Person.builder().build();
 
-        final var expected = buildExpectedResult(expectedData, buildExpectedImages(), expectedPerson, null, VERIFICATION_RESULT, null);
+        final var expected = createExpectedResult(expectedData, createExpectedImages(), expectedPerson, null, VERIFICATION_RESULT, null);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_nullExtractedData() {
+    void testCreate_nullExtractedData() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult(null, LocalDateTime.now(), VERIFICATION_RESULT));
+                createDocumentResult(null, LocalDateTime.now(), VERIFICATION_RESULT));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
+                createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
         final var expectedData = EvaluateClientRequest.DocumentData.builder().build();
         final var expectedPerson = EvaluateClientRequest.Person.builder().build();
 
-        final var expected = buildExpectedResult(expectedData, buildExpectedImages(), expectedPerson, 10, VERIFICATION_RESULT, null);
+        final var expected = createExpectedResult(expectedData, createExpectedImages(), expectedPerson, 10, VERIFICATION_RESULT, null);
         assertEquals(expected, result);
     }
 
     @Test
-    void testBuild_verificationResultIsNull() {
+    void testCreate_verificationResultIsNull() {
         // given
         final var documentResults = Set.of(
-                buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), null));
+                createDocumentResult(createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), null));
         final var documentVerifications = Set.of(
-                buildDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
+                createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
-        final var processedDocuments = List.of(buildProcessedDocument());
+        final var processedDocuments = List.of(createProcessedDocument());
         when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
 
         // when
-        final var result = tested.build(documentVerifications, true);
+        final var result = tested.create(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(
-                buildExpectedDocumentData(),
-                buildExpectedImages(),
-                buildExpectedPerson(),
+        final var expected = createExpectedResult(
+                createExpectedDocumentData(),
+                createExpectedImages(),
+                createExpectedPerson(),
                 SCORE,
                 null,
                 COUNTRY);
         assertEquals(expected, result);
     }
 
-    private static DocumentVerificationEntity buildDocumentVerification(
+    private static DocumentVerificationEntity createDocumentVerification(
             final Set<DocumentResultEntity> documentResults,
             final String photoId,
             final CardSide side,
@@ -353,7 +370,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         return entity;
     }
 
-    private static DocumentResultEntity buildDocumentResult(
+    private static DocumentResultEntity createDocumentResult(
             final String extractedData,
             final LocalDateTime timestampCreated,
             final String verificationResult
@@ -365,13 +382,13 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         return entity;
     }
 
-    private static EvaluateClientRequest.DocumentCheckResult buildExpectedEmptyResult() {
+    private static EvaluateClientRequest.DocumentCheckResult createExpectedEmptyResult() {
         return EvaluateClientRequest.DocumentCheckResult.builder()
                 .documents(List.of())
                 .build();
     }
 
-    private static EvaluateClientRequest.DocumentCheckResult buildExpectedResult(
+    private static EvaluateClientRequest.DocumentCheckResult createExpectedResult(
             final EvaluateClientRequest.DocumentData data,
             final List<EvaluateClientRequest.Image> images,
             final EvaluateClientRequest.Person person,
@@ -395,7 +412,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 .build();
     }
 
-    private static EvaluateClientRequest.DocumentData buildExpectedDocumentData() {
+    private static EvaluateClientRequest.DocumentData createExpectedDocumentData() {
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames("John")
                 .surname("Doe")
@@ -411,7 +428,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 .build();
     }
 
-    private static EvaluateClientRequest.Person buildExpectedPerson() {
+    private static EvaluateClientRequest.Person createExpectedPerson() {
         return EvaluateClientRequest.Person.builder()
                 .givenNames("John")
                 .surname("Doe")
@@ -419,7 +436,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 .build();
     }
 
-    private static ProcessedDocumentDataEntity buildProcessedDocument() {
+    private static ProcessedDocumentDataEntity createProcessedDocument() {
         final var entity = new ProcessedDocumentDataEntity();
         entity.setId(PHOTO_ID);
         entity.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
@@ -427,7 +444,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         return entity;
     }
 
-    private static String buildExtractedDataJson(final String nationality, final String dateOfExpiry) {
+    private static String createExtractedDataJson(final String nationality, final String dateOfExpiry) {
         return """
                 {
                     "givenNames": "John",
@@ -446,7 +463,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 """.formatted(nationality, dateOfExpiry);
     }
 
-    private static List<EvaluateClientRequest.Image> buildExpectedImages() {
+    private static List<EvaluateClientRequest.Image> createExpectedImages() {
         return List.of(
                 EvaluateClientRequest.Image.builder()
                         .type(ProcessedDocumentDataType.FACE_IMAGE)

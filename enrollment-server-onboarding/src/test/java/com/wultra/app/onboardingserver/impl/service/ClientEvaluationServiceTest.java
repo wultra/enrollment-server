@@ -68,7 +68,7 @@ class ClientEvaluationServiceTest {
     private CommonOnboardingService onboardingService;
 
     @Mock
-    private ClientEvaluationDocumentCheckResultBuilder clientEvaluationDocumentCheckResultBuilder;
+    private ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory;
 
     private ClientEvaluationService tested;
 
@@ -81,7 +81,7 @@ class ClientEvaluationServiceTest {
                 identityVerificationConfig,
                 auditService,
                 onboardingService,
-                clientEvaluationDocumentCheckResultBuilder
+                clientEvaluationDocumentCheckResultFactory
         );
     }
 
@@ -118,7 +118,7 @@ class ClientEvaluationServiceTest {
                 DocumentSubmitResult.NO_DATA_EXTRACTED,
                 DocumentType.DRIVING_LICENSE);
 
-        when(clientEvaluationDocumentCheckResultBuilder.build(Set.of(documentVerificationIdCard, documentVerificationDrivingLicense), true))
+        when(clientEvaluationDocumentCheckResultFactory.create(Set.of(documentVerificationIdCard, documentVerificationDrivingLicense), true))
                 .thenReturn(EvaluateClientRequest.DocumentCheckResult.builder().build());
 
         final var documentVerifications = Set.of(

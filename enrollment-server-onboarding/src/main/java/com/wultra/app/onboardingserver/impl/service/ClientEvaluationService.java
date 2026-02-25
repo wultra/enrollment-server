@@ -17,13 +17,9 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -40,11 +36,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -67,7 +59,7 @@ public class ClientEvaluationService {
 
     private final CommonOnboardingService onboardingService;
 
-    private final ClientEvaluationDocumentCheckResultBuilder clientEvaluationDocumentCheckResultBuilder;
+    private final ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory;
 
     private final RetryTemplate retryTemplate;
 
@@ -75,12 +67,12 @@ public class ClientEvaluationService {
                                    IdentityVerificationConfig config,
                                    AuditService auditService,
                                    CommonOnboardingService onboardingService,
-                                   ClientEvaluationDocumentCheckResultBuilder clientEvaluationDocumentCheckResultBuilder) {
+                                   ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.auditService = auditService;
         this.onboardingService = onboardingService;
-        this.clientEvaluationDocumentCheckResultBuilder = clientEvaluationDocumentCheckResultBuilder;
+        this.clientEvaluationDocumentCheckResultFactory = clientEvaluationDocumentCheckResultFactory;
 
         this.retryTemplate = RetryTemplate.builder()
                 .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
@@ -119,7 +111,7 @@ public class ClientEvaluationService {
         try {
             process = onboardingService.findProcess(identityVerification.getProcessId());
             final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
-            documentCheckResult = clientEvaluationDocumentCheckResultBuilder.build(acceptedDocuments, config.isSendingExtractedDataEnabled());
+            documentCheckResult = clientEvaluationDocumentCheckResultFactory.create(acceptedDocuments, config.isSendingExtractedDataEnabled());
             verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
         } catch (final OnboardingProcessException | RuntimeException e) {
             processVerificationIdError(identityVerification, ownerId, e);
