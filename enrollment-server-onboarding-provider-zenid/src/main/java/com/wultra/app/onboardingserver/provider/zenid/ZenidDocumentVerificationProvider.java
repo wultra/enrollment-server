@@ -526,13 +526,12 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 }
 
                 verificationResult.setVerificationResult(verificationResultData);
+                // TODO (racansky, 2026-02-24) so far sending constant 10 as 100 percent confidence, possible future extension point
+                verificationResult.setVerificationScore(10);
                 verificationResults.add(verificationResult);
             }
             result.setResults(verificationResults);
         }
-
-        // TODO compute verification score
-        // result.setVerificationScore();
 
         DocumentVerificationStatus verificationStatus = toStatus(response.getState());
         if (result.getResults() != null) {

@@ -18,8 +18,6 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -30,7 +28,10 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
@@ -494,6 +495,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResult.setUploadId(documentVerification.getUploadId());
             documentVerificationResult.setVerificationResult(documentResult.getVerificationResult());
             documentVerificationResult.setExtractedData(documentResult.getExtractedData());
+            documentVerificationResult.setVerificationScore(convertScore(microblinkResponse.verification().certaintyLevel()));
 
             if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkResponse.verification().result())) {
                 final var rejectReasons = microblinkResponse.messages()
@@ -525,6 +527,20 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
 
         return result;
+    }
+
+    private static int convertScore(final String source) {
+        if (source == null) {
+            return 0;
+        }
+
+        return switch (source) {
+            case "Low" ->  1;
+            case "Medium" ->  5;
+            case "High" -> 10;
+            // also includes Unknown, and NotPerformed
+            default -> 0;
+        };
     }
 
     private static DocumentVerificationImageSource buildImageSource(final DocumentVerificationData documentData) {

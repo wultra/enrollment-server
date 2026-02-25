@@ -32,7 +32,7 @@ import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.security.powerauth.client.model.request.InitActivationRequest;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.LookupApplicationByAppKeyResponse;
-import com.wultra.security.powerauth.client.v3.PowerAuthClient;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -116,6 +116,7 @@ class OnboardingServiceImplTest {
         final InitActivationRequest captorValue = requestCaptor.getValue();
         assertEquals("mock_app_id", captorValue.getApplicationId());
         assertEquals(List.of("VERIFICATION_PENDING"), captorValue.getFlags());
+        assertNotNull(captorValue.getActivationOtp());
 
         final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
         assertTrue(process.isPresent());
