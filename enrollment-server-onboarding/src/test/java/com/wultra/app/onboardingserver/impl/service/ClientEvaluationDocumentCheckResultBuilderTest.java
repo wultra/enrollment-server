@@ -102,6 +102,21 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     }
 
     @Test
+    void testBuild_withoutExtractedDataMergingDocumentSides() {
+        // given
+        final var documentVerifications = Set.of(
+                buildDocumentVerification(null, null, CardSide.FRONT),
+                buildDocumentVerification(null, null, CardSide.BACK));
+
+        // when
+        final var result = tested.build(documentVerifications, false);
+
+        // then
+        final var expected = buildExpectedResult(null, List.of(), null, null, null, null);
+        assertEquals(expected, result);
+    }
+
+    @Test
     void testBuild_withExtractedData() {
         // given
         final var documentResults = Set.of(buildDocumentResult(
@@ -117,7 +132,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
 
         // then
         final var expected = buildExpectedResult(
-                buildExprectedDocumentData(),
+                buildExpectedDocumentData(),
                 buildExpectedImages(),
                 buildExpectedPerson(),
                 SCORE,
@@ -150,7 +165,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var result = tested.build(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(buildExprectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
+        final var expected = buildExpectedResult(buildExpectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
         assertEquals(expected, result);
     }
 
@@ -168,7 +183,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
         final var result = tested.build(documentVerifications, true);
 
         // then
-        final var expected = buildExpectedResult(buildExprectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
+        final var expected = buildExpectedResult(buildExpectedDocumentData(), List.of(), buildExpectedPerson(), SCORE, VERIFICATION_RESULT, COUNTRY);
         assertEquals(expected, result);
     }
 
@@ -189,7 +204,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
 
         // then
         final var expected = buildExpectedResult(
-                buildExprectedDocumentData(),
+                buildExpectedDocumentData(),
                 buildExpectedImages(),
                 buildExpectedPerson(),
                 SCORE,
@@ -239,7 +254,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
 
         // then
         final var expected = buildExpectedResult(
-                buildExprectedDocumentData(),
+                buildExpectedDocumentData(),
                 buildExpectedImages(),
                 buildExpectedPerson(),
                 SCORE,
@@ -271,7 +286,29 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
     }
 
     @Test
-    void testBuild_verificationResulIsNull() {
+    void testBuild_nullExtractedData() {
+        // given
+        final var documentResults = Set.of(
+                buildDocumentResult(null, LocalDateTime.now(), VERIFICATION_RESULT));
+        final var documentVerifications = Set.of(
+                buildDocumentVerification(documentResults, PHOTO_ID, null));
+
+        final var processedDocuments = List.of(buildProcessedDocument());
+        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+
+        // when
+        final var result = tested.build(documentVerifications, true);
+
+        // then
+        final var expectedData = EvaluateClientRequest.DocumentData.builder().build();
+        final var expectedPerson = EvaluateClientRequest.Person.builder().build();
+
+        final var expected = buildExpectedResult(expectedData, buildExpectedImages(), expectedPerson, 10, VERIFICATION_RESULT, null);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testBuild_verificationResultIsNull() {
         // given
         final var documentResults = Set.of(
                 buildDocumentResult(buildExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), null));
@@ -286,7 +323,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
 
         // then
         final var expected = buildExpectedResult(
-                buildExprectedDocumentData(),
+                buildExpectedDocumentData(),
                 buildExpectedImages(),
                 buildExpectedPerson(),
                 SCORE,
@@ -356,7 +393,7 @@ class ClientEvaluationDocumentCheckResultBuilderTest {
                 .build();
     }
 
-    private static EvaluateClientRequest.DocumentData buildExprectedDocumentData() {
+    private static EvaluateClientRequest.DocumentData buildExpectedDocumentData() {
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames("John")
                 .surname("Doe")

@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -143,21 +144,24 @@ public class ClientEvaluationDocumentCheckResultBuilder {
         final var documentData = buildDocumentData(extractedData);
 
         final var country = extractedData.stream()
-                .findFirst()
                 .map(DocumentExtractedDataValue::country)
+                .filter(Objects::nonNull)
+                .findFirst()
                 .orElse(null);
 
         final var processedDocument = documentVerification.stream()
-                .findFirst()
                 .map(DocumentVerificationEntity::getPhotoId)
                 .map(it -> processedDocumentByPhotoId.getOrDefault(it, null))
+                .filter(Objects::nonNull)
+                .findFirst()
                 .orElse(null);
 
         final var images = buildImages(processedDocument);
 
         final var documentResult = documentsResult.stream()
-                .findFirst()
                 .map(DocumentResultEntity::getVerificationResult)
+                .filter(Objects::nonNull)
+                .findFirst()
                 .orElse(null);
 
         return EvaluateClientRequest.Document.builder()
@@ -203,7 +207,11 @@ public class ClientEvaluationDocumentCheckResultBuilder {
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {
         try {
-            return OBJECT_MAPPER.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class);
+            final var extractedData = documentResult.getExtractedData();
+
+            return StringUtils.hasLength(extractedData) ?
+                    OBJECT_MAPPER.readValue(extractedData, DocumentExtractedDataValue.class) :
+                    null;
         } catch (JsonProcessingException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
             return null;
@@ -233,18 +241,20 @@ public class ClientEvaluationDocumentCheckResultBuilder {
     }
 
     private static EvaluateClientRequest.DocumentCheckResult buildWithoutExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
-        final var documents = new ArrayList<EvaluateClientRequest.Document>(documentsVerification.size());
-
-        for (final DocumentVerificationEntity documentVerification : documentsVerification) {
-            final var document = EvaluateClientRequest.Document.builder()
-                    .type(documentVerification.getType())
-                    .status(EvaluateClientRequest.Status.SUCCESS)
-                    .images(new ArrayList<>())
-                    .build();
-
-            documents.add(document);
-        }
+        final var documents = documentsVerification.stream()
+                .map(it -> it.getType())
+                .distinct()
+                .map(it -> buildDocumentWithoutExtractedData(it))
+                .toList();
 
         return new EvaluateClientRequest.DocumentCheckResult(documents, null);
+    }
+
+    private static EvaluateClientRequest.Document buildDocumentWithoutExtractedData(final DocumentType documentType) {
+        return EvaluateClientRequest.Document.builder()
+                .type(documentType)
+                .status(EvaluateClientRequest.Status.SUCCESS)
+                .images(new ArrayList<>())
+                .build();
     }
 }

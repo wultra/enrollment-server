@@ -107,13 +107,23 @@ class ClientEvaluationServiceTest {
         when(onboardingProvider.evaluateClient(any(EvaluateClientRequest.class)))
                 .thenReturn(evaluateClientResponse);
 
-        when(clientEvaluationDocumentCheckResultBuilder.build(anySet(), eq(true)))
+        final var documentVerificationIdCard = createDocumentVerificationWithResults(
+                "d1",
+                """
+                        {"dateOfBirth": "24.12.1999"}""",
+                DocumentType.ID_CARD);
+
+        final var documentVerificationDrivingLicense = createDocumentVerificationWithResults(
+                "d2",
+                DocumentSubmitResult.NO_DATA_EXTRACTED,
+                DocumentType.DRIVING_LICENSE);
+
+        when(clientEvaluationDocumentCheckResultBuilder.build(Set.of(documentVerificationIdCard, documentVerificationDrivingLicense), true))
                 .thenReturn(EvaluateClientRequest.DocumentCheckResult.builder().build());
 
         final var documentVerifications = Set.of(
-                createDocumentVerificationWithResults("d1", """
-                {"dateOfBirth": "24.12.1999"}""", DocumentType.ID_CARD),
-                createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
+                documentVerificationIdCard,
+                documentVerificationDrivingLicense,
                 createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2"));
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
