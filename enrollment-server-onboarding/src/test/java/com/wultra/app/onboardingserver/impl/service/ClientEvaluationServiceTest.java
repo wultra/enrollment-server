@@ -22,7 +22,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -69,7 +68,7 @@ class ClientEvaluationServiceTest {
     private CommonOnboardingService onboardingService;
 
     @Mock
-    private ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory;
 
     private ClientEvaluationService tested;
 
@@ -82,12 +81,12 @@ class ClientEvaluationServiceTest {
                 identityVerificationConfig,
                 auditService,
                 onboardingService,
-                processedDocumentDataRepository
+                clientEvaluationDocumentCheckResultFactory
         );
     }
 
     @Test
-    void testProcessClientEvaluation_successful() throws Exception {
+    void testProcessClientEvaluation_successfulWithExtractedData() throws Exception {
         when(identityVerificationConfig.getClientEvaluationMaxFailedAttempts())
                 .thenReturn(1);
         when(identityVerificationConfig.isSendingExtractedDataEnabled())
@@ -108,18 +107,31 @@ class ClientEvaluationServiceTest {
         when(onboardingProvider.evaluateClient(any(EvaluateClientRequest.class)))
                 .thenReturn(evaluateClientResponse);
 
-        when(processedDocumentDataRepository.findAllById(Set.of("photo1"))).thenReturn(List.of());
+        final var documentVerificationIdCard = createDocumentVerificationWithResults(
+                "d1",
+                """
+                        {"dateOfBirth": "24.12.1999"}""",
+                DocumentType.ID_CARD);
+
+        final var documentVerificationDrivingLicense = createDocumentVerificationWithResults(
+                "d2",
+                DocumentSubmitResult.NO_DATA_EXTRACTED,
+                DocumentType.DRIVING_LICENSE);
+
+        when(clientEvaluationDocumentCheckResultFactory.create(Set.of(documentVerificationIdCard, documentVerificationDrivingLicense), true))
+                .thenReturn(EvaluateClientRequest.DocumentCheckResult.builder().build());
+
+        final var documentVerifications = Set.of(
+                documentVerificationIdCard,
+                documentVerificationDrivingLicense,
+                createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2"));
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setId("i1");
         identityVerification.setProcessId("p1");
         identityVerification.setUserId("u1");
         identityVerification.setPhase(CLIENT_EVALUATION);
-        identityVerification.setDocumentVerifications(Set.of(
-                createDocumentVerificationWithResults("d1", """
-                {"dateOfBirth": "24.12.1999"}""", DocumentType.ID_CARD),
-                createDocumentVerificationWithResults("d2", DocumentSubmitResult.NO_DATA_EXTRACTED, DocumentType.DRIVING_LICENSE),
-                createDocumentVerification("d3", DocumentStatus.DISPOSED, "v2")));
+        identityVerification.setDocumentVerifications(documentVerifications);
 
         final OwnerId ownerId = new OwnerId();
 
