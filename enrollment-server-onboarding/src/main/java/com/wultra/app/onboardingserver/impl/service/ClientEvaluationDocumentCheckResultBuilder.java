@@ -19,7 +19,10 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
@@ -30,6 +33,7 @@ import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequ
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -49,11 +53,20 @@ import static java.util.stream.Collectors.toSet;
 @Slf4j
 public class ClientEvaluationDocumentCheckResultBuilder {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
 
     public EvaluateClientRequest.DocumentCheckResult build(final Set<DocumentVerificationEntity> documents, final boolean includeExtractedData) {
+        if (CollectionUtils.isEmpty(documents)) {
+            return EvaluateClientRequest.DocumentCheckResult.builder()
+                    .documents(List.of())
+                    .build();
+        }
+
         return includeExtractedData ? buildWithExtractedData(documents) : buildWithoutExtractedData(documents);
     }
 
@@ -159,10 +172,6 @@ public class ClientEvaluationDocumentCheckResultBuilder {
     }
 
     private static EvaluateClientRequest.DocumentData buildDocumentData(final List<DocumentExtractedDataValue> extractedData) {
-        if (extractedData == null) {
-            return null;
-        }
-
         return EvaluateClientRequest.DocumentData.builder()
                 .givenNames(findFirstValue(DocumentExtractedDataValue::givenNames, extractedData))
                 .surname(findFirstValue(DocumentExtractedDataValue::surname, extractedData))
@@ -181,14 +190,15 @@ public class ClientEvaluationDocumentCheckResultBuilder {
     private static <T> T findFirstValue(final Function<DocumentExtractedDataValue, T> getter, final List<DocumentExtractedDataValue> values) {
         return values.stream()
                 .map(getter)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
     }
 
     private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity) {
         return documentVerificationEntity.getResults().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
+                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated))
+                .orElseThrow(() -> new IllegalStateException("Missing document result for documentVerificationId: %s".formatted(documentVerificationEntity.getId())));
     }
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {
@@ -201,6 +211,10 @@ public class ClientEvaluationDocumentCheckResultBuilder {
     }
 
     private Map<String, ProcessedDocumentDataEntity> fetchProcessedDocuments(final Set<String> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyMap();
+        }
+
         return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
                 .collect(Collectors.toMap(ProcessedDocumentDataEntity::getId, Function.identity()));
     }
