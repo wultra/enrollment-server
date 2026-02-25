@@ -17,12 +17,9 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
@@ -39,11 +36,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -66,29 +59,25 @@ public class ClientEvaluationService {
 
     private final CommonOnboardingService onboardingService;
 
-    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory;
 
     private final RetryTemplate retryTemplate;
-
-    private final ObjectMapper objectMapper;
 
     public ClientEvaluationService(OnboardingProvider onboardingProvider,
                                    IdentityVerificationConfig config,
                                    AuditService auditService,
                                    CommonOnboardingService onboardingService,
-                                   ProcessedDocumentDataRepository processedDocumentDataRepository) {
+                                   ClientEvaluationDocumentCheckResultFactory clientEvaluationDocumentCheckResultFactory) {
         this.onboardingProvider = onboardingProvider;
         this.config = config;
         this.auditService = auditService;
         this.onboardingService = onboardingService;
-        this.processedDocumentDataRepository = processedDocumentDataRepository;
+        this.clientEvaluationDocumentCheckResultFactory = clientEvaluationDocumentCheckResultFactory;
 
         this.retryTemplate = RetryTemplate.builder()
                 .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
                 .exponentialBackoff(200, 2.0, 2_000)
                 .build();
-
-        this.objectMapper = new ObjectMapper();
     }
 
     /**
@@ -122,9 +111,7 @@ public class ClientEvaluationService {
         try {
             process = onboardingService.findProcess(identityVerification.getProcessId());
             final var acceptedDocuments = selectAcceptedDocuments(identityVerification);
-            documentCheckResult = config.isSendingExtractedDataEnabled() ?
-                    buildDocumentCheckResultWithExtractedData(acceptedDocuments) :
-                    buildDocumentCheckResultWithoutExtractedData(acceptedDocuments);
+            documentCheckResult = clientEvaluationDocumentCheckResultFactory.create(acceptedDocuments, config.isSendingExtractedDataEnabled());
             verificationId = fetchVerificationId(identityVerification, acceptedDocuments);
         } catch (final OnboardingProcessException | RuntimeException e) {
             processVerificationIdError(identityVerification, ownerId, e);
@@ -168,110 +155,6 @@ public class ClientEvaluationService {
         }
     }
 
-    private EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithExtractedData(
-            final Set<DocumentVerificationEntity> documentsVerification
-    ) {
-        final var photoIds = documentsVerification.stream()
-                .map(DocumentVerificationEntity::getPhotoId)
-                .filter(Objects::nonNull)
-                .collect(toSet());
-
-        final var processedDocumentByPhotoId = fetchProcessedDocuments(photoIds);
-
-        final var documents = new ArrayList<EvaluateClientRequest.Document>(documentsVerification.size());
-
-        for (final DocumentVerificationEntity documentVerification : documentsVerification) {
-            final var documentResult = selectLatestDocumentResult(documentVerification);
-            final var extractedData = parseExtractedData(documentResult);
-            final var documentData = buildDocumentData(extractedData);
-
-            final var country = Optional.ofNullable(extractedData)
-                    .map(DocumentExtractedDataValue::country)
-                    .orElse(null);
-
-            final var processedDocument = processedDocumentByPhotoId.getOrDefault(documentVerification.getPhotoId(), null);
-            final var images = buildImages(processedDocument);
-
-            final var document = EvaluateClientRequest.Document.builder()
-                    .type(documentVerification.getType())
-                    .country(country)
-                    .status(EvaluateClientRequest.Status.SUCCESS) // so far the request is sent only in case of success
-                    .score(documentVerification.getVerificationScore())
-                    .data(documentData)
-                    .images(images)
-                    .rawData(documentResult.getVerificationResult())
-                    .build();
-
-            documents.add(document);
-        }
-
-        final var person = buildPerson(documents);
-
-        return new EvaluateClientRequest.DocumentCheckResult(documents, person);
-    }
-
-    private static EvaluateClientRequest.Person buildPerson(final List<EvaluateClientRequest.Document> documents) {
-        String surname = null;
-        String givenNames = null;
-        LocalDate dateOfBirth = null;
-
-        for (final var document : documents) {
-            final var documentData = document.data();
-            if (documentData == null) {
-                return null;
-            }
-
-            if (surname == null) {
-                surname = documentData.surname();
-            }
-
-            if (givenNames == null) {
-                givenNames = documentData.givenNames();
-            }
-
-            if (dateOfBirth == null) {
-                dateOfBirth = documentData.dateOfBirth();
-            }
-        }
-
-        return EvaluateClientRequest.Person.builder()
-                .surname(surname)
-                .givenNames(givenNames)
-                .dateOfBirth(dateOfBirth)
-                .build();
-    }
-
-    private static List<EvaluateClientRequest.Image> buildImages(final ProcessedDocumentDataEntity processedDocumentData) {
-        if (processedDocumentData == null) {
-            return List.of();
-        }
-
-        return List.of(
-                EvaluateClientRequest.Image.builder()
-                        .type(processedDocumentData.getDataType())
-                        .data(processedDocumentData.getData())
-                        .build()
-        );
-    }
-
-    private static EvaluateClientRequest.DocumentCheckResult buildDocumentCheckResultWithoutExtractedData(
-            final Set<DocumentVerificationEntity> documentsVerification
-    ) {
-        final var documents = new ArrayList<EvaluateClientRequest.Document>(documentsVerification.size());
-
-        for (final DocumentVerificationEntity documentVerification : documentsVerification) {
-            final var document = EvaluateClientRequest.Document.builder()
-                    .type(documentVerification.getType())
-                    .status(EvaluateClientRequest.Status.SUCCESS)
-                    .images(new ArrayList<>())
-                    .build();
-
-            documents.add(document);
-        }
-
-        return new EvaluateClientRequest.DocumentCheckResult(documents, null);
-    }
-
     private static Set<DocumentVerificationEntity> selectAcceptedDocuments(final IdentityVerificationEntity identityVerification) {
         return identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
@@ -290,46 +173,6 @@ public class ClientEvaluationService {
             throw new IllegalStateException(
                     String.format("Expected just one document verificationId for %s but got %s", identityVerification, verificationIds));
         }
-    }
-
-    private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity) {
-        return documentVerificationEntity.getResults().stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Missing document result for %s".formatted(documentVerificationEntity)));
-    }
-
-    private static EvaluateClientRequest.DocumentData buildDocumentData(final DocumentExtractedDataValue extractedData) {
-        if (extractedData == null) {
-            return null;
-        }
-
-        return EvaluateClientRequest.DocumentData.builder()
-                .givenNames(extractedData.givenNames())
-                .surname(extractedData.surname())
-                .dateOfBirth(extractedData.dateOfBirth())
-                .placeOfBirth(extractedData.placeOfBirth())
-                .sex(extractedData.sex())
-                .nationality(extractedData.nationality())
-                .personalNumber(extractedData.personalNumber())
-                .documentNumber(extractedData.documentNumber())
-                .dateOfIssue(extractedData.dateOfIssue())
-                .dateOfExpiry(extractedData.dateOfExpiry())
-                .authority(extractedData.authority())
-                .build();
-    }
-
-    private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {
-        try {
-            return objectMapper.readValue(documentResult.getExtractedData(), DocumentExtractedDataValue.class);
-        } catch (JsonProcessingException e) {
-            logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
-            return null;
-        }
-    }
-
-    private Map<String, ProcessedDocumentDataEntity> fetchProcessedDocuments(final Set<String> ids) {
-        return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
-                .collect(Collectors.toMap(ProcessedDocumentDataEntity::getId, Function.identity()));
     }
 
     private void processTooManyEvaluationError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
