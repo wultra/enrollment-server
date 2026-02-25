@@ -84,6 +84,13 @@ The request body should contain following attributes:
 
 If any of these attributes are missing or there is no config for given combination then license key is not returned in response body.
 
+Score for client evaluation is calculated based on the value of `certaintyLevel` attribute from the response body.
+- `Low` -> 1
+- `Medium` -> 5
+- `High` -> 10
+- `Unknown`, `NotPerformed`, and any other value -> 0
+
+
 ## Presence Check
 
 The document verification process is currently supported for following providers:
