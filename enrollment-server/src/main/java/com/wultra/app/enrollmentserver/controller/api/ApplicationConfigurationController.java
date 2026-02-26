@@ -72,12 +72,12 @@ public class ApplicationConfigurationController {
         logger.info("action: fetchOidcConfiguration, state: initiated, providerId: {}", request != null ? request.getProviderId() : null);
 
         if (encryptionContext == null) {
-            logger.info("action: fetchOidcConfiguration, state: failed, reason: encryptionFailed");
+            logger.error("action: fetchOidcConfiguration, state: failed, reason: encryptionFailed");
             throw new PowerAuthEncryptionException("Encryption failed");
         }
 
         if (request == null) {
-            logger.info("action: fetchOidcConfiguration, state: failed, reason: invalidRequest");
+            logger.error("action: fetchOidcConfiguration, state: failed, reason: invalidRequest");
             throw new PowerAuthEncryptionException("Invalid request");
         }
 
