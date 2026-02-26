@@ -193,7 +193,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @BeforeAll
-    static void suiteSetup() throws IOException {
+    static void suiteSetup() throws Exception {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
     }
@@ -261,7 +261,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
+    void testSubmitDocuments_documentWith2SidesUploaded_correctResponseIsReturned() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -278,7 +278,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_documentDataAreSaved() throws DocumentVerificationException, RemoteCommunicationException {
+    void testSubmitDocuments_documentWith2SidesUploaded_documentDataAreSaved() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -295,7 +295,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_facePhotoIsSaved() throws DocumentVerificationException, RemoteCommunicationException {
+    void testSubmitDocuments_documentWith2SidesUploaded_facePhotoIsSaved() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -330,7 +330,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith1SidesUploaded_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
+    void testSubmitDocuments_documentWith1SidesUploaded_correctResponseIsReturned() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(passportDocument));
 
@@ -347,7 +347,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkRejectResponse_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
+    void testSubmitDocuments_microblinkRejectResponse_correctResponseIsReturned() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -376,7 +376,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testGetPhoto_photoFound_correctImageIsReturned() throws DocumentVerificationException {
+    void testGetPhoto_photoFound_correctImageIsReturned() throws Exception {
         // given
         preparePhotoInDatabase();
 
@@ -419,7 +419,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws DocumentVerificationException {
+    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws Exception {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
