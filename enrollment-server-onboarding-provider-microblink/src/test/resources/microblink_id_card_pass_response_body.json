@@ -43,6 +43,23 @@
         "field": "LastName"
       },
       {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "2025-10-13",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 13,
+        "month": 10,
+        "year": 2025,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfExpiry"
+      },
+      {
         "side": "Unknown",
         "script": "Latin",
         "value": "EA0000000",
@@ -59,9 +76,30 @@
       {
         "side": "Unknown",
         "script": "Latin",
-        "value": "MDA ZZ LL AAAA",
+        "value": "Prague",
+        "type": "DetailedStringResult",
+        "field": "PlaceOfBirth"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "Moldovan",
         "type": "DetailedStringResult",
         "field": "Nationality"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "816008/0610",
+        "type": "DetailedStringResult",
+        "field": "PersonalIdNumber"
+      },
+      {
+        "side": "Unknown",
+        "script": "Latin",
+        "value": "Chisinau A",
+        "type": "DetailedStringResult",
+        "field": "IssuingAuthority"
       },
       {
         "side": "Unknown",
@@ -86,6 +124,23 @@
         "filledByDomainKnowledge": false,
         "type": "DetailedDateResult",
         "field": "DateOfBirth"
+      },
+      {
+        "originalResult": [
+          {
+            "side": "Unknown",
+            "script": "Latin",
+            "value": "10.01.2012",
+            "type": "DetailedStringResult"
+          }
+        ],
+        "day": 10,
+        "month": 1,
+        "year": 2012,
+        "successfullyParsed": true,
+        "filledByDomainKnowledge": false,
+        "type": "DetailedDateResult",
+        "field": "DateOfIssue"
       }
     ],
     "viz": {
@@ -138,9 +193,30 @@
         {
           "side": "Front",
           "script": "Latin",
-          "value": "MDA ZZ LL AAAA",
+          "value": "Prague",
+          "type": "DetailedStringResult",
+          "field": "PlaceOfBirth"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "Moldovan",
           "type": "DetailedStringResult",
           "field": "Nationality"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "816008/0610",
+          "type": "DetailedStringResult",
+          "field": "PersonalIdNumber"
+        },
+        {
+          "side": "Front",
+          "script": "Latin",
+          "value": "Chisinau A",
+          "type": "DetailedStringResult",
+          "field": "IssuingAuthority"
         },
         {
           "side": "Front",

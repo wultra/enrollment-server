@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -51,6 +52,10 @@ public class MicroblinkExtractedDataParser {
      * @return normalized extracted data as {@link DocumentExtractedDataValue} JSON string
      */
     public String parseExtractedData(final String extractedDataJson, final DocumentVerificationParsedResponse.Extraction extraction) {
+        if (!StringUtils.hasLength(extractedDataJson)) {
+            return null;
+        }
+
         try {
             final var root = mapper.readTree(extractedDataJson);
 
@@ -65,6 +70,7 @@ public class MicroblinkExtractedDataParser {
                     .givenNames(asText(extractedValueByField.getOrDefault(ExtractedDataField.GIVEN_NAMES, null)))
                     .surname(asText(extractedValueByField.getOrDefault(ExtractedDataField.SURNAME, null)))
                     .dateOfBirth(asDate(extractedValueByField.getOrDefault(ExtractedDataField.DATE_OF_BIRTH, null)))
+                    .placeOfBirth(asText(extractedValueByField.getOrDefault(ExtractedDataField.PLACE_OF_BIRTH, null)))
                     .sex(asText(extractedValueByField.getOrDefault(ExtractedDataField.SEX, null)))
                     .nationality(asText(extractedValueByField.getOrDefault(ExtractedDataField.NATIONALITY, null)))
                     .personalNumber(asText(extractedValueByField.getOrDefault(ExtractedDataField.PERSONAL_NUMBER, null)))

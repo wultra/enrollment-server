@@ -419,7 +419,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws DocumentVerificationException, RemoteCommunicationException {
+    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws DocumentVerificationException {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
@@ -748,7 +748,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static String buildIdCardFrontNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-10-13","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":"Prague","country":"MDA","sex":"X","nationality":"Moldovan","personalNumber":"816008/0610","documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-10-13","authority":"Chisinau A"}""";
     }
 
     private static String buildIdCardBackNormalizedExtractedDataJson() {
