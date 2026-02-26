@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
+import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller that publishes the default mobile token services.
@@ -160,7 +161,9 @@ public class MobileTokenController {
                                                           @Parameter(hidden = true) PowerAuthApiAuthentication auth,
                                                           @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
 
-        logger.info("action: fetchOperationDetail, state: initiated, activationId: {}, operationId: {}", extractActivationId(auth), request.getRequestObject().getId());
+        logger.info("action: fetchOperationDetail, state: initiated, activationId: {}, operationId: {}",
+                extractActivationId(auth), extractRequest(request).map(OperationDetailRequest::getId).orElse(null));
+
         try {
             if (auth != null) {
                 final String operationId = request.getRequestObject().getId();
@@ -212,7 +215,9 @@ public class MobileTokenController {
                                                     @Parameter(hidden = true) PowerAuthApiAuthentication auth,
                                                     @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
 
-        logger.info("action: claimOperation, state: initiated, activationId: {}, operationId: {}", extractActivationId(auth), request.getRequestObject().getId());
+        logger.info("action: claimOperation, state: initiated, activationId: {}, operationId: {}",
+                extractActivationId(auth), extractRequest(request).map(OperationDetailRequest::getId).orElse(null));
+
         try {
             if (auth != null) {
                 final String operationId = request.getRequestObject().getId();
@@ -311,7 +316,9 @@ public class MobileTokenController {
             @Parameter(hidden = true) PowerAuthApiAuthentication auth,
             HttpServletRequest servletRequest) throws MobileTokenException, RemoteCommunicationException {
 
-        logger.info("action: operationApprove, state: initiated, activationId: {}, operationId: {}", extractActivationId(auth), request.getRequestObject().getId());
+        logger.info("action: operationApprove, state: initiated, activationId: {}, operationId: {}",
+                extractActivationId(auth), extractRequest(request).map(OperationApproveRequest::getId).orElse(null));
+
         try {
 
             final OperationApproveRequest requestObject = request.getRequestObject();
@@ -411,7 +418,9 @@ public class MobileTokenController {
             @Parameter(hidden = true) PowerAuthApiAuthentication auth,
             HttpServletRequest servletRequest) throws MobileTokenException, RemoteCommunicationException {
 
-        logger.info("action: operationReject, state: initiated, activationId: {}, operationId: {}", extractActivationId(auth), request.getRequestObject().getId());
+        logger.info("action: operationReject, state: initiated, activationId: {}, operationId: {}",
+                extractActivationId(auth), extractRequest(request).map(OperationRejectRequest::getId).orElse(null));
+
         try {
             final OperationRejectRequest requestObject = request.getRequestObject();
             if (requestObject == null) {

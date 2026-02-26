@@ -76,7 +76,7 @@ class InnovatricsLivenessController {
             @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
 
-        logger.info("action: upload, state: initiated, activationId: {}", extractActivation(apiAuthentication).orElse(null));
+        logger.info("action: upload, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
         if (apiAuthentication == null) {
             throw new PowerAuthTokenInvalidException("Unable to verify device registration when uploading liveness");
         }
@@ -95,7 +95,7 @@ class InnovatricsLivenessController {
     }
 
     // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
-    private static Optional<PowerAuthActivation> extractActivation(final PowerAuthApiAuthentication apiAuthentication) {
-        return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext);
+    private static String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
+        return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext).map(PowerAuthActivation::getActivationId).orElse(null);
     }
 }

@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 
 import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
+import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller with facade for Inbox services in Push server.
@@ -127,7 +128,7 @@ public class InboxController {
     })
     public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: fetchMessageDetail, state: initiated, activationId: {}, messageId: {}",
-                extractActivationId(apiAuthentication), objectRequest.getRequestObject().getId());
+                extractActivationId(apiAuthentication), extractRequest(objectRequest).map(GetInboxDetailRequest::getId).orElse(null));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -152,7 +153,7 @@ public class InboxController {
     })
     public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: readMessage, state: initiated, activationId: {}, messageId: {}",
-                extractActivationId(apiAuthentication), objectRequest.getRequestObject().getId());
+                extractActivationId(apiAuthentication), extractRequest(objectRequest).map(InboxReadRequest::getId).orElse(null));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -164,7 +165,6 @@ public class InboxController {
                 logger.info("action: readMessage, state: succeeded");
             } else {
                 logger.info("action: readMessage, state: skipped, reason: message is already marked as read");
-                return new Response();
             }
             return new Response();
         } catch (PushServerClientException ex) {
