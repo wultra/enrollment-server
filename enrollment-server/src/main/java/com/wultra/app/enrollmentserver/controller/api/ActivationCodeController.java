@@ -41,6 +41,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 /**
  * Controller publishing REST services for obtaining a new activation code.
  *
@@ -80,7 +82,7 @@ public class ActivationCodeController {
                                                                         @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
 
-        logger.info("action: requestActivationCode, state: initiated");
+        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", extractRequest(request).map(ActivationCodeRequest::getApplicationId));
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
@@ -103,4 +105,8 @@ public class ActivationCodeController {
         return new ObjectResponse<>(response);
     }
 
+    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
+    private static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
+        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
+    }
 }
