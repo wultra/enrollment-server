@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller publishing REST services for obtaining a new activation code.
@@ -103,10 +103,5 @@ public class ActivationCodeController {
         final ActivationCodeResponse response = activationCodeService.requestActivationCode(request.getRequestObject(), apiAuthentication);
         logger.info("action: requestActivationCode, state: succeeded");
         return new ObjectResponse<>(response);
-    }
-
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    private static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
-        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
     }
 }

@@ -53,7 +53,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivation;
+import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -405,15 +406,5 @@ public class IdentityVerificationController {
         logger.info("action: createTargetActivation, state: succeeded");
 
         return new ObjectResponse<>(response);
-    }
-
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    private static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
-        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
-    }
-
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    private static Optional<PowerAuthActivation> extractActivation(final PowerAuthApiAuthentication apiAuthentication) {
-        return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext);
     }
 }

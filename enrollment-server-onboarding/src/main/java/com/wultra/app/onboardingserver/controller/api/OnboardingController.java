@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller publishing REST services for the onboarding process.
@@ -186,10 +186,5 @@ public class OnboardingController {
         final Response response = onboardingService.performCleanup(request.getRequestObject());
         logger.info("action: cleanup, state: succeeded");
         return response;
-    }
-
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    private static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
-        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
     }
 }

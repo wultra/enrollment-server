@@ -94,7 +94,7 @@ class InnovatricsLivenessController {
         return new Response();
     }
 
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
+    // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
     private static Optional<PowerAuthActivation> extractActivation(final PowerAuthApiAuthentication apiAuthentication) {
         return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext);
     }

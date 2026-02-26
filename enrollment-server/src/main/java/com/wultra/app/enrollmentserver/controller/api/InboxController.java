@@ -36,13 +36,11 @@ import com.wultra.push.model.response.GetInboxMessageCountResponse;
 import com.wultra.push.model.response.GetInboxMessageDetailResponse;
 import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
-import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +48,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
-import java.util.Optional;
+
+import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
 
 /**
  * Controller with facade for Inbox services in Push server.
@@ -85,7 +84,7 @@ public class InboxController {
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.warn("action: countUnreadMessages, state: failed, errorMessage: {}", ex.getMessage());
+            logger.warn("action: countUnreadMessages, state: failed, error: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -114,7 +113,7 @@ public class InboxController {
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
             return new PagedResponse<>(response, page, size);
         } catch (PushServerClientException ex) {
-            logger.warn("action: fetchMessageList, state: failed, errorMessage: {}", ex.getMessage());
+            logger.warn("action: fetchMessageList, state: failed, error: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -139,7 +138,7 @@ public class InboxController {
             final GetInboxDetailResponse response = convertMessageDetail(messageDetail);
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.warn("action: fetchMessageDetail, state: failed, errorMessage: {}", ex.getMessage());
+            logger.warn("action: fetchMessageDetail, state: failed, error: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -169,7 +168,7 @@ public class InboxController {
             }
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.warn("action: readMessage, state: failed, errorMessage: {}", ex.getMessage());
+            logger.warn("action: readMessage, state: failed, error: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -191,7 +190,7 @@ public class InboxController {
             logger.info("action: readAllMessages, state: succeeded");
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.warn("action: readAllMessages, state: failed, errorMessage: {}", ex.getMessage());
+            logger.warn("action: readAllMessages, state: failed, error: {}", ex.getMessage());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -235,14 +234,5 @@ public class InboxController {
             throw new InboxException("Unable to access inbox message detail.");
         }
         return messageDetail;
-    }
-
-    private static @Nullable String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
-        return extractActivation(apiAuthentication).map(PowerAuthActivation::getActivationId).orElse(null);
-    }
-
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    private static Optional<PowerAuthActivation> extractActivation(final PowerAuthApiAuthentication apiAuthentication) {
-        return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext);
     }
 }
