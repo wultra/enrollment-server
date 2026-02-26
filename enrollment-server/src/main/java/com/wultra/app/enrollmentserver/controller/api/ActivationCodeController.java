@@ -82,7 +82,7 @@ public class ActivationCodeController {
                                                                         @Parameter(hidden = true) EncryptionContext encryptionContext,
                                                                         @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
 
-        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", extractRequest(request).map(ActivationCodeRequest::getApplicationId));
+        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", extractRequest(request).map(ActivationCodeRequest::getApplicationId).orElse(null));
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
