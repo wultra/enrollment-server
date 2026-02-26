@@ -120,7 +120,8 @@ public class IdentityVerificationController {
 
         logger.info("action: checkIdentityVerificationStatus, state: initiated, activationId: {}", extractActivation(apiAuthentication).map(PowerAuthActivation::getActivationId).orElse(null));
         final var response = identityVerificationRestService.checkIdentityVerificationStatus(request, apiAuthentication);
-        logger.info("action: checkIdentityVerificationStatus, state: succeeded");
+        logger.info("action: checkIdentityVerificationStatus, state: succeeded, phase: {}, status: {}",
+                response.getResponseObject().getIdentityVerificationPhase(), response.getResponseObject().getIdentityVerificationStatus());
         return response;
     }
 
