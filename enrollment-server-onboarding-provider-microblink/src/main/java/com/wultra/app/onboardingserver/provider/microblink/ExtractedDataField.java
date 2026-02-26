@@ -36,6 +36,7 @@ public enum ExtractedDataField {
     GIVEN_NAMES("FirstName"),
     SURNAME("LastName"),
     DATE_OF_BIRTH("DateOfBirth"),
+    PLACE_OF_BIRTH("PlaceOfBirth"),
     SEX("Sex"),
     NATIONALITY("Nationality"),
     PERSONAL_NUMBER("PersonalIdNumber"),
