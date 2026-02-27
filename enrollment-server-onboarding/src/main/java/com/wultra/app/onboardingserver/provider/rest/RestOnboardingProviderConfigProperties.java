@@ -17,10 +17,12 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import java.util.Map;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ConfigurationProperties("enrollment-server-onboarding.onboarding-adapter")
+@Validated
 @Getter
 @Setter
 public class RestOnboardingProviderConfigProperties {
@@ -39,15 +42,20 @@ public class RestOnboardingProviderConfigProperties {
     private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
     private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";
 
-    private Duration connectionTimeout = Duration.ofSeconds(10);
+    @NotNull
+    private Duration connectionTimeout;
 
-    private Duration handshakeTimeout = Duration.ofSeconds(5);
+    @NotNull
+    private Duration handshakeTimeout;
 
-    private Duration responseTimeout = Duration.ofSeconds(60);
+    @NotNull
+    private Duration responseTimeout;
 
-    private Duration maxIdleTime = Duration.ofSeconds(200);
+    @NotNull
+    private Duration maxIdleTime;
 
-    private Duration maxLifeTime = Duration.ofHours(1);
+    @NotNull
+    private Duration maxLifeTime;
 
     private boolean acceptInvalidSslCertificate;
 
