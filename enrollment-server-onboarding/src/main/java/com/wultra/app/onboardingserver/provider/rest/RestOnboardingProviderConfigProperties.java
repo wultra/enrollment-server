@@ -39,7 +39,7 @@ public class RestOnboardingProviderConfigProperties {
     private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
     private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";
 
-    private Duration connectionTimeout = Duration.ofSeconds(2);
+    private Duration connectionTimeout = Duration.ofSeconds(30);
 
     private Duration handshakeTimeout = Duration.ofSeconds(5);
 

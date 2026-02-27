@@ -52,7 +52,7 @@ The Onboarding Server uses the following public configuration properties:
 | Property                                                                         | Default                 | Note                                                         |
 |----------------------------------------------------------------------------------|-------------------------|--------------------------------------------------------------|
 | `enrollment-server-onboarding.onboarding-adapter.url`                            | `http://localhost:8090` | Digital onboarding adapter service base URL.                 |
-| `enrollment-server-onboarding.onboarding-adapter.connection-timeout`             | `2s`                    | TCP connection timeout.                                      |
+| `enrollment-server-onboarding.onboarding-adapter.connection-timeout`             | `30s`                   | TCP connection timeout.                                      |
 | `enrollment-server-onboarding.onboarding-adapter.handshake-timeout`              | `5s`                    | Handshake timeout.                                           |
 | `enrollment-server-onboarding.onboarding-adapter.response-timeout`               | `5s`                    | HTTP response timeout.                                       |
 | `enrollment-server-onboarding.onboarding-adapter.accept-invalid-ssl-certificate` | `false`                 | Whether invalid SSL certificates are accepted by the client. |
