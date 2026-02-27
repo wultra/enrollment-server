@@ -180,20 +180,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
-        logger.info("action: cleanupDocuments, state: initiated, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
-
-        final var documentVerifications = documentVerificationRepository.findAllByUploadIds(uploadIds);
-
-        final var facePhotoIds = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getPhotoId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        processedDocumentDataRepository.deleteAllById(facePhotoIds);
-
-        documentDataRepository.deleteAllById(uploadIds);
-
-        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink");
+        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
     }
 
     @Override

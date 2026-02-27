@@ -248,10 +248,21 @@ class CleaningService {
     }
 
     private void terminateAndAuditDocuments(final List<String> documentIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
-        documentVerificationRepository.terminate(documentIds, now, errorDetail, errorOrigin);
-        documentIds.forEach(documentId ->
-                documentVerificationRepository.findById(documentId).ifPresent(document ->
-                        auditService.audit(document, "Expired Document verification for user: {}, {}", document.getIdentityVerification().getUserId(), errorDetail)));
+        final var documentVerifications = documentVerificationRepository.findAllById(documentIds);
+        for (final var documentVerification : documentVerifications) {
+            documentVerification.setStatus(DocumentStatus.FAILED);
+            documentVerification.setErrorDetail(errorDetail);
+            documentVerification.setErrorOrigin(errorOrigin);
+            documentVerification.setTimestampLastUpdated(now);
+
+            documentVerification.getResults()
+                    .forEach(it -> {
+                        it.setVerificationResult(null);
+                        it.setExtractedData(null);
+                    });
+
+            auditService.audit(documentVerification, "Expired Document verification for user: {}, {}", documentVerification.getIdentityVerification().getUserId(), errorDetail);
+        }
     }
 
     protected static final class ListUtils {

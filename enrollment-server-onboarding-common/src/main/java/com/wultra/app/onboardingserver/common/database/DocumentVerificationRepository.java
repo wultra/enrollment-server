@@ -19,7 +19,6 @@
 package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,15 +37,6 @@ import java.util.List;
  */
 @Repository
 public interface DocumentVerificationRepository extends JpaRepository<DocumentVerificationEntity, String> {
-
-    @Modifying
-    @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
-            "    d.usedForVerification = false, " +
-            "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.activationId = :activationId " +
-            "AND d.status IN :statuses")
-    int failVerifications(String activationId, Date timestamp, List<DocumentStatus> statuses);
 
     @Query("SELECT d.id FROM DocumentVerificationEntity d " +
             "WHERE d.timestampCreated < :cleanupDate " +
@@ -100,27 +90,17 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.status IN :statuses")
     List<String> findDocumentVerifications(Collection<String> identityVerificationIds, Collection<DocumentStatus> statuses);
 
-    /**
-     * Mark the given document verifications as failed.
-     *
-     * @param ids Document verification IDs
-     * @param timestamp last updated and failed timestamp
-     * @param errorDetail error detail
-     * @param errorOrigin error origin
-     */
-    @Modifying
-    @Query("UPDATE DocumentVerificationEntity d " +
-            "SET d.status = com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus.FAILED, " +
-            "    d.errorDetail = :errorDetail, " +
-            "    d.errorOrigin = :errorOrigin, " +
-            "    d.timestampLastUpdated = :timestamp " +
-            "WHERE d.id IN :ids")
-    void terminate(Collection<String> ids, Date timestamp, String errorDetail, ErrorOrigin errorOrigin);
-
     @Query("""
             SELECT d
             FROM DocumentVerificationEntity d
             WHERE d.uploadId IN :uploadIds
     """)
     List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadIds);
+
+    @Query("""
+            SELECT d
+            FROM DocumentVerificationEntity d
+            WHERE d.activationId = :activationId
+    """)
+    List<DocumentVerificationEntity> findAllByActivationId(String activationId);
 }
