@@ -39,11 +39,15 @@ public class RestOnboardingProviderConfigProperties {
     private static final String CORRELATION_HEADER_DEFAULT_NAME = "X-Correlation-Id";
     private static final String REQUEST_ID_HEADER_DEFAULT_NAME = "X-Request-Id";
 
-    private Duration connectionTimeout = Duration.ofSeconds(30);
+    private Duration connectionTimeout = Duration.ofSeconds(10);
 
     private Duration handshakeTimeout = Duration.ofSeconds(5);
 
-    private Duration responseTimeout = Duration.ofSeconds(5);
+    private Duration responseTimeout = Duration.ofSeconds(60);
+
+    private Duration maxIdleTime = Duration.ofSeconds(200);
+
+    private Duration maxLifeTime = Duration.ofHours(1);
 
     private boolean acceptInvalidSslCertificate;
 

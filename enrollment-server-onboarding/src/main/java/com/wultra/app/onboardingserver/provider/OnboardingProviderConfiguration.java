@@ -70,6 +70,8 @@ class OnboardingProviderConfiguration {
         config.setConnectionTimeout(configuration.getConnectionTimeout());
         config.setResponseTimeout(configuration.getResponseTimeout());
         config.setHandshakeTimeout(configuration.getHandshakeTimeout());
+        config.setMaxIdleTime(configuration.getMaxIdleTime());
+        config.setMaxLifeTime(configuration.getMaxLifeTime());
         config.setDefaultHttpHeaders(headers);
         config.setHttpBasicAuthEnabled(configuration.isHttpBasicAuthEnabled());
         config.setHttpBasicAuthUsername(configuration.getHttpBasicAuthUsername());
