@@ -263,6 +263,8 @@ class CleaningService {
 
             auditService.audit(documentVerification, "Expired Document verification for user: {}, {}", documentVerification.getIdentityVerification().getUserId(), errorDetail);
         }
+
+        documentVerificationRepository.saveAll(documentVerifications);
     }
 
     protected static final class ListUtils {
