@@ -28,10 +28,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
@@ -87,6 +84,7 @@ public class IdentityVerificationService {
 
     private final AuditService auditService;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final DocumentResultRepository documentResultRepository;
 
     /**
      * Finds the current verification identity
@@ -455,15 +453,15 @@ public class IdentityVerificationService {
     @Transactional
     public void cleanup(OwnerId ownerId)
             throws DocumentVerificationException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
-        final var documentVerifications = documentVerificationRepository.findAllByActivationId(ownerId.getActivationId());
+        final var idsViews = documentVerificationRepository.findAllUploadIdPhotoIdByActivationId(ownerId.getActivationId());
 
         if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
-            deleteDocumentData(ownerId, documentVerifications);
+            deleteDocumentData(ownerId, idsViews);
         } else {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
 
-        cleanDocumentVerifications(ownerId, documentVerifications);
+        documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
 
         // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification
         identityVerificationLimitService.resetIdentityVerification(ownerId, ErrorOrigin.CLEANUP, "reset due to cleanup");
@@ -542,59 +540,34 @@ public class IdentityVerificationService {
         return docMetadata;
     }
 
-    private void deleteDocumentData(final OwnerId ownerId, final List<DocumentVerificationEntity> documentVerifications) throws RemoteCommunicationException, DocumentVerificationException, IdentityVerificationNotFoundException {
-        final var uploadIds = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getUploadId)
+    private void deleteDocumentData(final OwnerId ownerId, final List<DocumentVerificationIdsView> idsViews) throws RemoteCommunicationException, DocumentVerificationException, IdentityVerificationNotFoundException {
+        final var uploadIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getUploadId)
                 .filter(Objects::nonNull)
-                .toList();
+                .collect(Collectors.toSet());
 
         logger.info("Deleting DocumentData ids: {}", uploadIds);
         documentDataRepository.deleteAllById(uploadIds);
 
-        final var processedDocumentIds = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getPhotoId)
+        final var processedDocumentIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getPhotoId)
                 .filter(Objects::nonNull)
-                .toList();
+                .collect(Collectors.toSet());
 
         logger.info("Deleting ProcessedDocumentData ids: {}", processedDocumentIds);
         processedDocumentDataRepository.deleteAllById(processedDocumentIds);
 
         documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
 
+        final var documentVerificationIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getId)
+                .collect(Collectors.toSet());
+
+        logger.info("Cleaning DocumentResult documentVerificationIds: {}", documentVerificationIds);
+        documentResultRepository.clean(documentVerificationIds);
+
         final IdentityVerificationEntity identityVerification = findBy(ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Cleaned up documents for user: {}", ownerId.getUserId());
         logger.info("All document data successfully deleted");
-    }
-
-    private void cleanDocumentVerifications(final OwnerId ownerId, final List<DocumentVerificationEntity> documentVerifications) {
-        final var documentVerificationIds = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getId)
-                .collect(Collectors.toSet());
-
-        logger.info("Cleaning DocumentVerification ids: {}", documentVerificationIds);
-
-        for (final var documentVerification : documentVerifications) {
-            if (DocumentStatus.ALL_NOT_FINISHED.contains(documentVerification.getStatus())) {
-                documentVerification.setStatus(DocumentStatus.FAILED);
-                documentVerification.setUsedForVerification(false);
-                documentVerification.setTimestampLastUpdated(ownerId.getTimestamp());
-            }
-
-            if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
-                final var documentResults = documentVerification.getResults();
-                final var documentResultIds = documentResults.stream()
-                        .map(DocumentResultEntity::getId)
-                        .collect(Collectors.toSet());
-
-                logger.info("Cleaning DocumentResult ids: {}", documentResultIds);
-
-                documentResults.forEach(it -> {
-                    it.setVerificationResult(null);
-                    it.setExtractedData(null);
-                });
-            }
-        }
-
-        documentVerificationRepository.saveAll(documentVerifications);
     }
 }

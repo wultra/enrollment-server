@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.core.annotations.PublicSpi;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +107,7 @@ public interface DocumentVerificationProvider {
      * @throws RemoteCommunicationException In case of remote communication error
      * @throws DocumentVerificationException In case of business logic error
      */
-    void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
+    void cleanupDocuments(OwnerId id, Collection<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
 
     // TODO reconsider this method, mention it in the tldr doc
     /**
