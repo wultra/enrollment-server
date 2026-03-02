@@ -32,6 +32,11 @@ public class MobileTokenException extends Exception {
 
     private final String code;
 
+    public MobileTokenException(final String code, final String message, final Throwable cause) {
+        super(message, cause);
+        this.code = code;
+    }
+
     public MobileTokenException(String code, String message) {
         super(message);
         this.code = code;

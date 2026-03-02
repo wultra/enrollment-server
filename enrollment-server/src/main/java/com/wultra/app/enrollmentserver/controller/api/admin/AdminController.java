@@ -53,9 +53,10 @@ public class AdminController {
 
     @GetMapping("/template")
     public ObjectResponse<TemplateListResponse> templates() {
-        logger.debug("Returning template list.");
+        logger.info("action: templates, state: initiated");
         final TemplateListResponse response = new TemplateListResponse();
         response.addAll(convert(operationTemplateService.findAll()));
+        logger.info("action: templates, state: succeeded");
         return new ObjectResponse<>(response);
     }
 
