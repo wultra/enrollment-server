@@ -75,6 +75,8 @@ class CleaningService {
 
     private final AuditService auditService;
 
+    private final DocumentResultRepository documentResultRepository;
+
     /**
      * Terminate processes with expired activation.
      */
@@ -162,14 +164,13 @@ class CleaningService {
      */
     @Transactional
     public void terminateExpiredDocumentVerifications() {
-        final List<String> ids = documentVerificationRepository
-                .findExpiredVerifications(getVerificationExpirationTime(), DocumentStatus.ALL_NOT_FINISHED);
+        final var ids = documentVerificationRepository.findExpiredVerifications(getVerificationExpirationTime(), DocumentStatus.ALL_NOT_FINISHED);
         if (ids.isEmpty()) {
             logger.debug("No expired document verification to terminate");
             return;
         }
 
-        final Date now = new Date();
+        final var now = new Date();
         for (List<String> idsChunk : ListUtils.partition(ids, BATCH_SIZE)) {
             logger.info("Terminating {} expired document verifications", idsChunk.size());
             terminateAndAuditDocuments(idsChunk, now, ERROR_MESSAGE_DOCUMENT_VERIFICATION_EXPIRED, ErrorOrigin.PROCESS_LIMIT_CHECK);
@@ -247,24 +248,16 @@ class CleaningService {
                         auditService.audit(otp, "Expired OTP for user: {}", otp.getProcess().getUserId())));
     }
 
-    private void terminateAndAuditDocuments(final List<String> documentIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
-        final var documentVerifications = documentVerificationRepository.findAllById(documentIds);
+    private void terminateAndAuditDocuments(final List<String> documentVerificationIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
+        documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
+        documentResultRepository.clean(documentVerificationIds);
+
+        final var documentVerifications = documentVerificationRepository.findAllById(documentVerificationIds);
         for (final var documentVerification : documentVerifications) {
-            documentVerification.setStatus(DocumentStatus.FAILED);
-            documentVerification.setErrorDetail(errorDetail);
-            documentVerification.setErrorOrigin(errorOrigin);
-            documentVerification.setTimestampLastUpdated(now);
-
-            documentVerification.getResults()
-                    .forEach(it -> {
-                        it.setVerificationResult(null);
-                        it.setExtractedData(null);
-                    });
-
-            auditService.audit(documentVerification, "Expired Document verification for user: {}, {}", documentVerification.getIdentityVerification().getUserId(), errorDetail);
+            if (documentVerification != null) {
+                auditService.audit(documentVerification, "Expired Document verification for user: {}, {}", documentVerification.getIdentityVerification().getUserId(), errorDetail);
+            }
         }
-
-        documentVerificationRepository.saveAll(documentVerifications);
     }
 
     protected static final class ListUtils {
