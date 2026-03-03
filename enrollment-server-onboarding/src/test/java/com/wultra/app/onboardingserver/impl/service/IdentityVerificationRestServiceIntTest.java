@@ -22,19 +22,16 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubm
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationCleanupRequest;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
-import com.wultra.app.onboardingserver.common.errorhandling.*;
-import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
-import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
-import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +48,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Integration tests for {@link IdentityVerificationRestService}.
@@ -79,7 +77,7 @@ class IdentityVerificationRestServiceIntTest {
     private PresenceCheckProvider presenceCheckProvider;
 
     @Test
-    void testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk() throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
+    void testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk() throws Exception {
         // given
         final var request = DocumentSubmitV2Request.builder()
                 .processId("b9d4cf32-3e3c-4bb1-8f66-5a3c91fe2f8b")
@@ -103,6 +101,8 @@ class IdentityVerificationRestServiceIntTest {
         final var encryptionContext = new EncryptionContext(null, "b7717831-4ed3-4597-88c1-b4646b91a76f", null, null, null);
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
 
+        when(documentVerificationProvider.submitDocuments(any(OwnerId.class), anyList())).thenReturn(new DocumentsSubmitResult());
+
         // when
         final var response = tested.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
 
@@ -111,7 +111,7 @@ class IdentityVerificationRestServiceIntTest {
     }
 
     @Test
-    void testSubmitDocumentsV2_documentsAreResubmitted_responseOk() throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
+    void testSubmitDocumentsV2_documentsAreResubmitted_responseOk() throws Exception {
         // given
         final var request = DocumentSubmitV2Request.builder()
                 .processId("c3c2c4c1-2a84-4c6e-a8bd-4e3b824d5c91")
@@ -137,6 +137,8 @@ class IdentityVerificationRestServiceIntTest {
         final var requestObject = new ObjectRequest<>(request);
         final var encryptionContext = new EncryptionContext(null, "8e4a0b0a-84f3-4c71-9cc0-c9ac7b3f6593", null, null, null);
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
+
+        when(documentVerificationProvider.submitDocuments(any(OwnerId.class), anyList())).thenReturn(new DocumentsSubmitResult());
 
         // when
         final var response = tested.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
