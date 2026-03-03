@@ -180,7 +180,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Override
     public void cleanupDocuments(OwnerId ownerId, List<String> uploadIds) {
-        logger.info("action: cleanupDocuments, state: succeeded, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, String.join(",", uploadIds));
+        logger.debug("action: cleanupDocuments, state: skipped, provider: microblink, ownerId: {}, uploadIds: {}", ownerId, uploadIds);
     }
 
     @Override
