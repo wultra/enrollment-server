@@ -198,6 +198,9 @@ public class PresenceCheckService {
         if (identityVerificationConfig.isPresenceCheckCleanupEnabled()) {
             final IdentityVerificationEntity identityVerification = identityVerificationService.findByOptional(ownerId).orElseThrow(() ->
                     new PresenceCheckException("Unable to find identity verification for " + ownerId));
+
+            selfieRepository.deleteAllByIdentityVerificationId(identityVerification.getId());
+
             presenceCheckProvider.cleanupIdentityData(ownerId, deserializeSessionInfo(identityVerification, ownerId));
             auditService.auditPresenceCheckProvider(identityVerification, "Clean up presence check data for user: {}", ownerId.getUserId());
         } else {

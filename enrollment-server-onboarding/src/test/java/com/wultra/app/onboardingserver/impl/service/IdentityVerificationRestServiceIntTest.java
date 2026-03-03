@@ -234,6 +234,9 @@ class IdentityVerificationRestServiceIntTest {
                 Integer.class);
         assertEquals(1, onboardingProcessCount);
 
+        final var selfieCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM es_selfie", Integer.class);
+        assertEquals(0, selfieCount);
+
         verify(documentVerificationProvider).cleanupDocuments(
                 any(OwnerId.class),
                 argThat(it -> it.containsAll(List.of("c8bf612b-6718-4614-b150-ce17bc39221c", "03a2785a-a563-4feb-bde4-3ce0367e4e9d", "62338ec9-ff2f-4751-9762-e09d34c62796"))));
