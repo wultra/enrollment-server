@@ -29,6 +29,9 @@ import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
+import com.wultra.security.powerauth.client.model.request.ListActivationFlagsRequest;
+import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
+import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
@@ -40,6 +43,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.util.MultiValueMap;
 
 import java.util.Base64;
 import java.util.List;
@@ -75,6 +79,9 @@ class IdentityVerificationRestServiceIntTest {
 
     @MockitoBean
     private PresenceCheckProvider presenceCheckProvider;
+
+    @MockitoBean
+    private PowerAuthClient powerAuthClient;
 
     @Test
     void testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk() throws Exception {
@@ -172,6 +179,9 @@ class IdentityVerificationRestServiceIntTest {
 
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
         apiAuthentication.setActivationContext(activationContext);
+
+        when(powerAuthClient.listActivationFlags(any(ListActivationFlagsRequest.class), any(MultiValueMap.class), any(MultiValueMap.class)))
+                .thenReturn(new ListActivationFlagsResponse());
 
         // when
         tested.cleanup(new ObjectRequest<>(request), apiAuthentication);
