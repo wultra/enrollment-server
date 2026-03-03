@@ -24,7 +24,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.core.annotations.PublicSpi;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 

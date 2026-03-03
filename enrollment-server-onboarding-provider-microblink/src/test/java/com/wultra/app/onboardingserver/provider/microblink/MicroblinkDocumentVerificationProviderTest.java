@@ -799,22 +799,6 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testCleanupDocuments_verificationDataExists_requestedDocumentsAreCleared() {
-        // given
-        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
-        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack), null);
-
-        when(documentVerificationRepository.findAllByUploadIds(uploadIds)).thenReturn(documentVerifications);
-
-        // when
-        provider.cleanupDocuments(ownerId, uploadIds);
-
-        // then
-        verify(documentDataRepository).deleteAllById(uploadIds);
-        verify(processedDocumentDataRepository).deleteAllById(Set.of(FACE_PHOTO_ID));
-    }
-
-    @Test
     void testGetPhoto_photoDoesNotExist_exceptionIsThrown() {
         // given
         // -
