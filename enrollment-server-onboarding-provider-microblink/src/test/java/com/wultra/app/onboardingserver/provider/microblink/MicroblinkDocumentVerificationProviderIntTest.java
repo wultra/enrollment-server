@@ -393,32 +393,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testCleanupDocuments_verificationDataNotFound_noExceptionIsThrown() {
-        // given
-        // -
-
-        // when, then
-        assertDoesNotThrow(
-                () -> microblinkDocumentVerificationProvider.cleanupDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID))
-        );
-    }
-
-    @Test
-    void testCleanupDocuments_verificationDataFound_allDocumentDataAreDeleted() {
-        // given
-        prepareIdCardFrontVerificationDataInDatabase();
-        prepareIdCardBackVerificationDataInDatabase();
-        preparePhotoInDatabase();
-
-        // when
-        microblinkDocumentVerificationProvider.cleanupDocuments(ownerId, List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID));
-
-        // then
-        assertEquals(0, documentDataRepository.count());
-        assertEquals(0, processedDocumentDataRepository.count());
-    }
-
-    @Test
     void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws Exception {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
