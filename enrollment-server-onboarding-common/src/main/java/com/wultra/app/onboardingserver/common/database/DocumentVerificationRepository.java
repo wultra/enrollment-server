@@ -126,7 +126,7 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
     List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadIds);
 
     @Query("""
-            SELECT d.uploadId AS uploadId, d.photoId AS photoId
+            SELECT d.id AS id, d.uploadId AS uploadId, d.photoId AS photoId
             FROM DocumentVerificationEntity d
             WHERE d.activationId = :activationId
     """)

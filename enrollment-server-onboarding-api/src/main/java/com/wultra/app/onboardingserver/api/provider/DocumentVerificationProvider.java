@@ -107,7 +107,7 @@ public interface DocumentVerificationProvider {
      * @throws RemoteCommunicationException In case of remote communication error
      * @throws DocumentVerificationException In case of business logic error
      */
-    void cleanupDocuments(OwnerId id, Collection<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
+    void cleanupDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException;
 
     // TODO reconsider this method, mention it in the tldr doc
     /**

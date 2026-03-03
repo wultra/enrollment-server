@@ -81,7 +81,6 @@ public class IdentityVerificationRestService {
 
     private final IdentityVerificationConfig identityVerificationConfig;
 
-    private final DocumentProcessingService documentProcessingService;
     private final IdentityVerificationService identityVerificationService;
     private final IdentityVerificationStatusService identityVerificationStatusService;
     private final IdentityVerificationOtpService identityVerificationOtpService;
@@ -130,7 +129,6 @@ public class IdentityVerificationRestService {
 
         this.identityVerificationConfig = identityVerificationConfig;
 
-        this.documentProcessingService = documentProcessingService;
         this.identityVerificationService = identityVerificationService;
         this.identityVerificationStatusService = identityVerificationStatusService;
         this.identityVerificationOtpService = identityVerificationOtpService;

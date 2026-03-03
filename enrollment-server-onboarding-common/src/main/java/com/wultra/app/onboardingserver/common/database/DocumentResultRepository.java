@@ -71,7 +71,7 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
             UPDATE DocumentResultEntity d
             SET d.verificationResult = null,
                 d.extractedData = null
-            WHERE d.documentVerification.id IN :ids
+            WHERE d.documentVerification.id IN :documentVerificationIds
     """)
     void clean(final Collection<String> documentVerificationIds);
 

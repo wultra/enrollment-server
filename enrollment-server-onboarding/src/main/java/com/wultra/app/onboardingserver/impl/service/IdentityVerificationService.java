@@ -557,7 +557,7 @@ public class IdentityVerificationService {
         logger.info("Deleting ProcessedDocumentData ids: {}", processedDocumentIds);
         processedDocumentDataRepository.deleteAllById(processedDocumentIds);
 
-        documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
+        documentVerificationProvider.cleanupDocuments(ownerId, uploadIds.stream().toList());
 
         final var documentVerificationIds = idsViews.stream()
                 .map(DocumentVerificationIdsView::getId)
