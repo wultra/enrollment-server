@@ -381,7 +381,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         return findProcess(processId)
                 .getProcessConfiguration()
                 .getConfiguration()
-                .approvalEnabled();
+                .pseudoScaEnabled();
     }
 
     /**

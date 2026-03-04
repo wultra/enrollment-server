@@ -99,7 +99,8 @@ public enum OnboardingState {
     CHOICE_ACTIVATION_FINISH_ENABLED,
 
     /**
-     * If {@code true}, hide the result of presence check until valid OTP is entered.
+     * Choice state that branches based on the {@code pseudoScaEnabled} configuration.
+     * When pseudo SCA is enabled, the state machine hides the result of the presence check until a valid OTP is entered.
      */
     CHOICE_PSEUDO_SCA_ENABLED,
 
