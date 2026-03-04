@@ -139,6 +139,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ClientEvaluationEnabledGuard clientEvaluationEnabledGuard;
 
+    private final PseudoScaEnabledGuard pseudoScaEnabledGuard;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -164,6 +166,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
                 .choice(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED)
+                .choice(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
@@ -411,12 +414,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_REJECTED)
-                .target(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
+                .target(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_FAILED)
-                .target(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED);
+                .target(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+
+                .and()
+                .withChoice()
+                .source(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+                .first(OnboardingState.CHOICE_OTP_ENABLED, pseudoScaEnabledGuard)
+                .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
 
     private void configureOnboardingApproval(final StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

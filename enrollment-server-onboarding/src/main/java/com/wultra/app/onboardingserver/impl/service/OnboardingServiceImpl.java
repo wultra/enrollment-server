@@ -369,6 +369,22 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     }
 
     /**
+     * Check if pseudo SCA is enabled for the given process ID.
+     *
+     * @param processId Process ID.
+     * @return {@code true} if pseudo SCA feature is enabled in the process configuration,
+     *         {@code false} otherwise
+     * @throws OnboardingProcessException if the onboarding process cannot be found or its configuration cannot be read.
+     */
+    @Transactional(readOnly = true)
+    public boolean isPseudoScaEnabled(final String processId) throws OnboardingProcessException {
+        return findProcess(processId)
+                .getProcessConfiguration()
+                .getConfiguration()
+                .approvalEnabled();
+    }
+
+    /**
      * Verify process identifier.
      * @param ownerId Owner identification.
      * @param processId Process identifier from request.
