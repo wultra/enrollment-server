@@ -73,17 +73,6 @@ public class PresenceCheckService {
     private final SelfieRepository selfieRepository;
 
     /**
-     * Prepares presence check to not initialized state.
-     *
-     * @param ownerId Owner identification.
-     * @param idVerification Identity verification entity.
-     */
-    @Transactional
-    public void prepareNotInitialized(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        identityVerificationService.moveToPhaseAndStatus(idVerification, PRESENCE_CHECK, NOT_INITIALIZED, ownerId);
-    }
-
-    /**
      * Initializes presence check process.
      *
      * @param ownerId Owner identification.

@@ -26,7 +26,6 @@ import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationRe
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
-import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.*;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -88,8 +87,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private final OtpVerificationSendAction otpVerificationSendAction;
 
     private final PresenceCheckInitAction presenceCheckInitAction;
-
-    private final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction;
 
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
 
@@ -183,6 +180,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
         final var states = List.of(
+                OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
                 OnboardingState.ACTIVATION_FINISH_IN_PROGRESS,
@@ -319,7 +317,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
                 .first(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT, clientEvaluationEnabledGuard, clientEvaluationAction)
-                .then(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .then(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
                 .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
 
@@ -352,7 +350,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard, presenceCheckNotInitializedAction)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
                 .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
                 .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
     }
