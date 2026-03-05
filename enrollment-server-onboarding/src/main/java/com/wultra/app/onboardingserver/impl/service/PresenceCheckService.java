@@ -195,6 +195,22 @@ public class PresenceCheckService {
     }
 
     /**
+     * Check if pseudo SCA is passed for given identity verification.
+     *
+     * @param identityVerification Identity verification.
+     * @return True if pseudo SCA is passed, false otherwise.
+     */
+    @Transactional(readOnly = true)
+    public boolean isPseudoScaPassed(final IdentityVerificationEntity identityVerification) {
+        final ScaResultEntity scaResultEntity = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification).orElse(null);
+        if (scaResultEntity == null) {
+            return false;
+        }
+
+        return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
+    }
+
+    /**
      * Init presence check and upload upscaled image.
      *
      * @param ownerId Owner identification.

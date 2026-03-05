@@ -138,6 +138,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PseudoScaEnabledGuard pseudoScaEnabledGuard;
 
+    private final PseudoScaPassedGuard pseudoScaPassedGuard;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -164,6 +166,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
                 .choice(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED)
                 .choice(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+                .choice(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
@@ -499,8 +502,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_OTP_VERIFICATION)
-                .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED, otpVerifiedGuard)
-                .last(OnboardingState.OTP_VERIFICATION_PENDING);
+                .first(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING, otpVerifiedGuard)
+                .last(OnboardingState.OTP_VERIFICATION_PENDING)
+
+                .and()
+                .withChoice()
+                .source(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING)
+                .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED, pseudoScaPassedGuard)
+                .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
 
     @SafeVarargs

@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
+import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -66,6 +67,9 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private VerificationProcessResultAction verificationProcessResultAction;
+
+    @MockitoBean
+    private PresenceCheckService presenceCheckService;
 
     @MockitoBean
     private ClientEvaluationService clientEvaluationService;
@@ -118,6 +122,9 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                     .setStatus(IdentityVerificationStatus.ACCEPTED);
             return null;
         }).when(verificationProcessResultAction).execute(any());
+
+        when(presenceCheckService.isPseudoScaPassed(idVerification))
+                .thenReturn(true);
 
         Message<OnboardingEvent> message =
                 stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);

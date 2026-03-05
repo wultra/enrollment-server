@@ -104,6 +104,8 @@ public enum OnboardingState {
      */
     CHOICE_PSEUDO_SCA_ENABLED,
 
+    CHOICE_PSEUDO_SCA_PROCESSING,
+
     CHOICE_COMPLETED_STATE,
 
     UNEXPECTED_STATE;
