@@ -71,6 +71,12 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    /**
+     * Associated {@link DocumentVerificationEntity}.
+     */
+    @Column(name = "document_verification_id")
+    private String documentVerificationId;
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -108,6 +114,7 @@ public class ProcessedDocumentDataEntity implements Serializable {
                 "id=" + id +
                 ", data=" + (data != null ? "byte[" + data.length + "]" : null) +
                 ", dataType=" + dataType +
-                ", timestampCreated=" + timestampCreated + ")";
+                ", timestampCreated=" + timestampCreated +
+                ", documentVerificationId=" + documentVerificationId + ")";
     }
 }

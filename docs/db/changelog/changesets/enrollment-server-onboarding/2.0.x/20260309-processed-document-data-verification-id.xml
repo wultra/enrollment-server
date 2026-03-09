@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.0.x/20260309-processed-document-data-verification-id.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_processed_document_data" columnName="document_verification_id" />
+            </not>
+        </preConditions>
+        <comment>Creates a new column document_verification_id in es_processed_document_data</comment>
+        <addColumn tableName="es_processed_document_data">
+            <column name="document_verification_id" type="varchar(36)">
+                <constraints foreignKeyName="es_processed_document_data_document_verification_id_fk"
+                             referencedTableName="es_document_verification"
+                             referencedColumnNames="id" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="2" logicalFilePath="enrollment-server-onboarding/2.0.x/20260309-processed-document-data-verification-id.xml" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="es_processed_document_data_document_verification_id_idx" />
+            </not>
+        </preConditions>
+        <comment>Creates a new index es_processed_document_data_document_verification_id_idx</comment>
+        <createIndex tableName="es_processed_document_data" indexName="es_processed_document_data_document_verification_id_idx">
+            <column name="document_verification_id" />
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -9,5 +9,6 @@
     <include file="20260126-selfie.xml" relativeToChangelogFile="true" />
     <include file="20260205-audit.xml" relativeToChangelogFile="true" />
     <include file="20251215-add-tag-2.0.0.xml" relativeToChangelogFile="true" />
+    <include file="20260309-processed-document-data-verification-id.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
