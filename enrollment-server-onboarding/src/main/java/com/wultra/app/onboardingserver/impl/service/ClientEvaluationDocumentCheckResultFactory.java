@@ -225,7 +225,7 @@ public class ClientEvaluationDocumentCheckResultFactory {
             return Collections.emptyMap();
         }
 
-        return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
+        return processedDocumentDataRepository.findAllByDocumentVerificationIds(ids).stream()
                 .collect(Collectors.groupingBy(
                         ProcessedDocumentDataEntity::getDocumentVerificationId,
                         Collectors.collectingAndThen(
