@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificati
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ class OnboardingApprovalServiceTest {
     private SelfieRepository selfieRepository;
 
     @MockitoBean
-    private IdentityVerificationService identityVerificationService;
+    private AuditService auditService;
 
     @Autowired
     private OnboardingApprovalService tested;
@@ -99,7 +100,6 @@ class OnboardingApprovalServiceTest {
 
         verify(onboardingProvider).approveClient(any());
         verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);
-        verify(identityVerificationService, never()).updateIdentityVerification(identityVerification);
     }
 
     @Test
@@ -137,7 +137,7 @@ class OnboardingApprovalServiceTest {
 
         verify(onboardingProvider).approveClient(any());
         verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);
-        verify(identityVerificationService).updateIdentityVerification(argumentCaptor.capture());
+        verify(auditService).audit(argumentCaptor.capture(), any(), any(Object[].class));
 
         assertEquals("Some reason", argumentCaptor.getValue().getRejectReason());
         assertEquals(RejectOrigin.CLIENT_APPROVAL, argumentCaptor.getValue().getRejectOrigin());

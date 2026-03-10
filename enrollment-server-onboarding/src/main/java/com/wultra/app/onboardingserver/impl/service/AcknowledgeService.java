@@ -119,8 +119,6 @@ public class AcknowledgeService {
         identityVerification.setRejectOrigin(RejectOrigin.CLIENT_APPROVAL);
         identityVerification.setRejectReason(request.resultReason());
         identityVerification.setTimestampLastUpdated(new Date());
-
-        identityVerificationRepository.save(identityVerification);
     }
 
     private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeApproveClientRequest request) {
@@ -215,8 +213,6 @@ public class AcknowledgeService {
         identityVerification.setRejectOrigin(RejectOrigin.CLIENT_EVALUATION);
         identityVerification.setRejectReason(request.resultReason());
         identityVerification.setTimestampLastUpdated(new Date());
-
-        identityVerificationRepository.save(identityVerification);
     }
 
     private static OnboardingEvent convert(final AcknowledgeEvaluationClientRequest.EvaluationResult source) {

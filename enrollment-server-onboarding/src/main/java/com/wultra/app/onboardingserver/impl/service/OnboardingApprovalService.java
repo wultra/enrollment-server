@@ -52,8 +52,6 @@ public class OnboardingApprovalService {
 
     private final OnboardingServiceImpl onboardingService;
 
-    private final IdentityVerificationService identityVerificationService;
-
     private final IdentityVerificationConfig config;
 
     private final OnboardingProvider onboardingProvider;
@@ -132,8 +130,6 @@ public class OnboardingApprovalService {
         identityVerification.setRejectOrigin(RejectOrigin.CLIENT_APPROVAL);
         identityVerification.setRejectReason(response.resultReason());
         identityVerification.setTimestampLastUpdated(new Date());
-
-        identityVerificationService.updateIdentityVerification(identityVerification);
     }
 
     private String loadImage(final IdentityVerificationEntity identityVerification) {
