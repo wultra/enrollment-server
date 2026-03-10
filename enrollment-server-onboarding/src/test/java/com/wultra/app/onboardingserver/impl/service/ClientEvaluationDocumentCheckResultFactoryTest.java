@@ -142,7 +142,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -194,7 +194,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
         final var documentVerifications = Set.of(
                 createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(List.of());
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(List.of());
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -214,7 +214,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -239,7 +239,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -264,7 +264,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResultsBackDoc, PHOTO_ID, CardSide.BACK, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -289,7 +289,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResults, PHOTO_ID, null, null));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -311,7 +311,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -333,7 +333,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
                 createDocumentVerification(documentResults, PHOTO_ID, null, SCORE));
 
         final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllById(Set.of(PHOTO_ID))).thenReturn(processedDocuments);
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
 
         // when
         final var result = tested.create(documentVerifications, true);
@@ -441,6 +441,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
         entity.setId(PHOTO_ID);
         entity.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
         entity.setData(new byte[] { 0, 1, 2 });
+        entity.setDocumentVerificationId(DOCUMENT_VERIFICATION_ID);
         return entity;
     }
 

@@ -137,7 +137,7 @@ class MicroblinkDocumentVerificationProviderTest {
     private ArgumentCaptor<List<DocumentDataEntity>> documentDataEntitiesCaptor;
 
     @Captor
-    private ArgumentCaptor<ProcessedDocumentDataEntity> processedDocumentDataEntityCaptor;
+    private ArgumentCaptor<List<ProcessedDocumentDataEntity>> processedDocumentDataEntityCaptor;
 
     @Captor
     private ArgumentCaptor<List<DocumentVerificationEntity>> documentVerificationsEntityCaptor;
@@ -271,6 +271,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenThrow(new RestClientException("Test exception", HttpStatus.SERVICE_UNAVAILABLE, "Test error body", null));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
 
@@ -292,6 +294,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok().build());
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
 
@@ -311,6 +315,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok("{ invalidJson, \"traceId\": \"123\" }"));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
@@ -336,6 +342,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -357,6 +365,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
@@ -380,6 +390,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -402,12 +414,17 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(processedDocumentDataRepository).save(processedDocumentDataEntityCaptor.capture());
-        assertStoredFaceImage(processedDocumentDataEntityCaptor.getValue());
+        verify(processedDocumentDataRepository).saveAll(processedDocumentDataEntityCaptor.capture());
+
+        final var storedProcessedData = processedDocumentDataEntityCaptor.getValue();
+        assertEquals(1, storedProcessedData.size());
+        assertStoredFaceImage(storedProcessedData.get(0));
     }
 
     @Test
@@ -433,6 +450,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
         when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
@@ -465,6 +484,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
         when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -492,6 +513,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
@@ -882,6 +905,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var options = new DocumentVerificationProcessingOptions();
         options.setReturnImageFormat(ImageFormat.JPG);
         options.setReturnFaceImage(true);
+        options.setReturnFullDocumentImage(true);
 
         final var useCase = new DocumentVerificationUseCaseOptions();
 
@@ -1196,5 +1220,13 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(expectedValidationResult, result.getVerificationResult());
         assertNull(result.getErrorDetail());
         assertEquals(expectedExtractedData, result.getExtractedData());
+    }
+
+    private static DocumentVerificationProcessingOptions buildRequestOptions() {
+        final var options = new DocumentVerificationProcessingOptions();
+        options.setReturnImageFormat(ImageFormat.JPG);
+        options.setReturnFaceImage(true);
+        options.setReturnFullDocumentImage(true);
+        return options;
     }
 }
