@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationProcessingOptions;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -54,6 +55,11 @@ public class MicroblinkConfigProperties {
      */
     @Valid
     private List<SdkConfig> mobileSdkConfigs = new ArrayList<>();
+
+    /**
+     * The {@code options} field used in REST API request body.
+     */
+    private DocumentVerificationProcessingOptions requestOptions;
 
     /**
      * Microblink mobile SDK configuration.

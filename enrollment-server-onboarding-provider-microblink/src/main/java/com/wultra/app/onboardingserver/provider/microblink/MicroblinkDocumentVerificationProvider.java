@@ -132,7 +132,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
-        final var facePhotoId = saveFacePhoto(microblinkResponseByDocumentType);
+        final var documentVerificationIdByDocumentTypeAndSide = getDocumentVerificationIdByDocumentTypeAndSide(ownerId, documentsByTypeAndSide.keySet());
+        final var facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
 
         final var result = new DocumentsSubmitResult();
         result.setResults(documentResults);
@@ -323,7 +324,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 backDocument != null ? backDocument.uploadId() : null);
 
         try {
-            final var request = buildRequest(frontDocument, backDocument);
+            final var request = buildRequest(frontDocument, backDocument, properties.getRequestOptions());
             logger.debug("action: sendMicroblinkRequest, state: initiated, requestBody: {}",
                     (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationRequest(request));
 
@@ -412,14 +413,97 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return results;
     }
 
-    final String saveFacePhoto(final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType) {
+    private Map<DocumentType, Map<CardSide, String>> getDocumentVerificationIdByDocumentTypeAndSide(final OwnerId ownerId, final Set<DocumentType> documentTypes) {
+        final var activationId = ownerId.getActivationId();
+        final var documentVerifications = documentVerificationRepository.findAllByActivationIdByTypes(activationId, documentTypes);
+
+        return documentVerifications.stream()
+                .collect(Collectors.groupingBy(
+                        DocumentVerificationEntity::getType,
+                        HashMap::new,
+                        Collectors.groupingBy(
+                                DocumentVerificationEntity::getSide,
+                                HashMap::new,
+                                Collectors.collectingAndThen(
+                                        Collectors.maxBy(Comparator.comparing(DocumentVerificationEntity::getTimestampCreated)),
+                                        optional -> optional.map(DocumentVerificationEntity::getId).orElse(null)
+                                )
+                        )
+                ));
+    }
+
+    private String saveProcessedImages(
+            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide
+    ) {
+        final var facePhoto = createFacePhotoEntity(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
+        final var documents = createProcessedDocuments(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
+
+        final var processedDocumentData = new ArrayList<ProcessedDocumentDataEntity>();
+        if (facePhoto != null) {
+            processedDocumentData.add(facePhoto);
+        }
+        processedDocumentData.addAll(documents);
+
+        processedDocumentDataRepository.saveAll(processedDocumentData);
+
+        return Optional.ofNullable(facePhoto)
+                .map(ProcessedDocumentDataEntity::getId)
+                .orElse(null);
+    }
+
+    private List<ProcessedDocumentDataEntity> createProcessedDocuments(
+            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide
+    ) {
+        final var processedDocuments = new ArrayList<ProcessedDocumentDataEntity>();
+
+        for (final var entry : microblinkResponseByDocumentType.entrySet()) {
+            final var documentType = entry.getKey();
+
+            final var images = Optional.ofNullable(entry.getValue())
+                    .map(DocumentVerificationParsedResponse::images)
+                    .orElse(List.of());
+
+            for (final var image : images) {
+                final var imageName = image.name();
+
+                final var processedDocumentType = switch (imageName) {
+                    case "FullDocumentFrontImage" -> ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
+                    case "FullDocumentBackImage" -> ProcessedDocumentDataType.DOCUMENT_BACK_SIDE;
+                    default -> null;
+                };
+
+                if (processedDocumentType == null) {
+                    continue;
+                }
+
+                final var documentSide = processedDocumentType == ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE ? CardSide.FRONT : CardSide.BACK;
+                final var documentVerificationId = documentVerificationIdByDocumentTypeAndSide.getOrDefault(documentType, Map.of())
+                        .getOrDefault(documentSide, null);
+
+                if (documentVerificationId == null) {
+                    logger.warn("Document verification id not found document '{}' of side '{}'", documentType, documentSide);
+                }
+
+                final var processedDocumentEntity = buildProcessedDocumentDataEntity(processedDocumentType, documentVerificationId, image.base64());
+                processedDocuments.add(processedDocumentEntity);
+            }
+        }
+
+        return processedDocuments;
+    }
+
+    final ProcessedDocumentDataEntity createFacePhotoEntity(
+            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide) {
         final var facePhotoDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(microblinkResponseByDocumentType::containsKey)
                 .findFirst()
                 .orElse(null);
 
         if (facePhotoDocumentType == null) {
-            logger.debug("Not suitable document type found for face photo extraction");
+            logger.warn("Not suitable document type found for face photo extraction");
             return null;
         }
 
@@ -439,18 +523,45 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return null;
         }
 
-        final var facePhotoDocumentId = UUID.randomUUID().toString();
-        final var facePhotoDocumentData = new ProcessedDocumentDataEntity();
-        facePhotoDocumentData.setId(facePhotoDocumentId);
-        facePhotoDocumentData.setData(Base64.getDecoder().decode(faceImageBase64));
-        facePhotoDocumentData.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
-        facePhotoDocumentData.setTimestampCreated(new Date());
+        final var documentVerificationId = documentVerificationIdByDocumentTypeAndSide.getOrDefault(facePhotoDocumentType, Map.of())
+                .getOrDefault(CardSide.FRONT, null);
 
-        processedDocumentDataRepository.save(facePhotoDocumentData);
+        if (documentVerificationId == null) {
+            logger.warn("Document verification id not found for face photo");
+        }
 
+        final var facePhotoDocumentData = buildProcessedDocumentDataEntity(ProcessedDocumentDataType.FACE_IMAGE, documentVerificationId, faceImageBase64);
+
+        final var facePhotoDocumentId = facePhotoDocumentData.getId();
         logger.info("Face photo extracted from document type {} and stored with id {}", facePhotoDocumentType, facePhotoDocumentId);
 
-        return facePhotoDocumentId;
+        return facePhotoDocumentData;
+    }
+
+    private static ProcessedDocumentDataEntity buildProcessedDocumentDataEntity(
+            final ProcessedDocumentDataType dataType,
+            final String documentVerificationId,
+            final String dataBase64
+    ) {
+        final var dataBytes = convert(dataBase64, dataType);
+
+        final var entity = new ProcessedDocumentDataEntity();
+        entity.setId(UUID.randomUUID().toString());
+        entity.setData(dataBytes);
+        entity.setDataType(dataType);
+        entity.setTimestampCreated(new Date());
+        entity.setDocumentVerificationId(documentVerificationId);
+
+        return entity;
+    }
+
+    private static byte[] convert(final String dataBase64, final ProcessedDocumentDataType dataType) {
+        try {
+            return Base64.getDecoder().decode(dataBase64);
+        } catch (final RuntimeException e) {
+            logger.warn("Exception when decoding base64 data for data type: {}", dataType);
+            return new byte[0];
+        }
     }
 
     private DocumentsVerificationResult verifyDocuments(List<String> uploadIds, String verificationId) throws DocumentVerificationException {
@@ -555,20 +666,19 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return imageSource;
     }
 
-    private static DocumentVerificationRequest buildRequest(final DocumentVerificationData frontDocument, final DocumentVerificationData backDocument) {
+    private static DocumentVerificationRequest buildRequest(
+            final DocumentVerificationData frontDocument,
+            final DocumentVerificationData backDocument,
+            final DocumentVerificationProcessingOptions requestOptions) {
         final var frontImageSource = buildImageSource(frontDocument);
         final var backImageSource = buildImageSource(backDocument);
-
-        final var options = new DocumentVerificationProcessingOptions();
-        options.setReturnImageFormat(ImageFormat.JPG);
-        options.setReturnFaceImage(true);
 
         final var useCase = new DocumentVerificationUseCaseOptions();
 
         final var request = new DocumentVerificationRequest();
         request.setImageFront(frontImageSource);
         request.setImageBack(backImageSource);
-        request.setOptions(options);
+        request.setOptions(requestOptions);
         request.setUseCase(useCase);
         return request;
     }

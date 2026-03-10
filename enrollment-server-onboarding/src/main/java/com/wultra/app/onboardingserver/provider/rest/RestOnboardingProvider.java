@@ -411,6 +411,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ClientEvaluateRequestDto.ImageType convert(final ProcessedDocumentDataType source) {
         return switch (source) {
             case FACE_IMAGE -> ClientEvaluateRequestDto.ImageType.FACE;
+            default -> throw new IllegalArgumentException("Unsupported image type: " + source);
         };
     }
 }

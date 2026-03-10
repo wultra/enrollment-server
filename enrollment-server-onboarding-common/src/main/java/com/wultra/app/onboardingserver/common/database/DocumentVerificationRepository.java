@@ -19,6 +19,7 @@
 package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Repository for document verification records.
@@ -123,4 +125,11 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             WHERE d.uploadId IN :uploadIds
     """)
     List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadIds);
+
+    @Query("""
+            SELECT d
+            FROM DocumentVerificationEntity d
+            WHERE d.activationId = :activationId AND d.type IN :types
+    """)
+    List<DocumentVerificationEntity> findAllByActivationIdByTypes(final String activationId, final Set<DocumentType> types);
 }
