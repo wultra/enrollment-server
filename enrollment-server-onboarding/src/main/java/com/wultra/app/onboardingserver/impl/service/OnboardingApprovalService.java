@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.SelfieRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Base64;
+import java.util.Date;
 
 /**
  * Onboarding approval service.
@@ -49,6 +51,8 @@ import java.util.Base64;
 public class OnboardingApprovalService {
 
     private final OnboardingServiceImpl onboardingService;
+
+    private final IdentityVerificationService identityVerificationService;
 
     private final IdentityVerificationConfig config;
 
@@ -78,11 +82,12 @@ public class OnboardingApprovalService {
 
     /**
      * Call the onboarding provider to approve the client.
+     * Side-effect: May update the {@link IdentityVerificationEntity#setRejectReason(String)} with the approval result reason.
      *
      * @param identityVerification identity verification to process
      * @return approval result; {@code null} is returned if the approval failed and represents a FAILED evaluation state
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public @Nullable ApproveClientResponse.ApprovalResult approve(final IdentityVerificationEntity identityVerification) {
         try {
             final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
@@ -107,6 +112,7 @@ public class OnboardingApprovalService {
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             final String resultReason = response.resultReason();
             logger.info("action: callApproveClient, state: succeeded, approvalResult: {}, resultReason: {}", approvalResult, resultReason);
+            persistRejectReason(response, identityVerification);
 
             auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
             return approvalResult;
@@ -115,6 +121,19 @@ public class OnboardingApprovalService {
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }
+    }
+
+    private void persistRejectReason(final ApproveClientResponse response, final IdentityVerificationEntity identityVerification) {
+        if (response.result() != ApproveClientResponse.ApprovalResult.NOK) {
+            logger.debug("No reject reason to store");
+            return;
+        }
+
+        identityVerification.setRejectOrigin(RejectOrigin.CLIENT_APPROVAL);
+        identityVerification.setRejectReason(response.resultReason());
+        identityVerification.setTimestampLastUpdated(new Date());
+
+        identityVerificationService.updateIdentityVerification(identityVerification);
     }
 
     private String loadImage(final IdentityVerificationEntity identityVerification) {

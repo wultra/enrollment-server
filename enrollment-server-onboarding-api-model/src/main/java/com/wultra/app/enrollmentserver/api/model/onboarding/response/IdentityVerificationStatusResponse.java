@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.Config
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -34,7 +35,7 @@ public class IdentityVerificationStatusResponse {
 
     private ConfigurationDataDto config;
 
-    @NotNull
+    @NotBlank
     private String processId;
 
     @NotNull
@@ -42,10 +43,10 @@ public class IdentityVerificationStatusResponse {
 
     private IdentityVerificationPhase identityVerificationPhase;
 
-    @NotNull
+    @NotBlank
     private String processType;
 
-    @Schema(description = "Reject reason. Apply for phases such as document verification, client evaluation, presence check, or client approval")
+    @Schema(description = "Reject reason. Apply for phases such as client evaluation, presence check, or client approval")
     private String rejectReason;
 
 }
