@@ -30,7 +30,8 @@ public record AcknowledgeEvaluationClientRequest(
     @NotBlank String processId,
     @NotBlank String userId,
     @NotBlank String identityVerificationId,
-    @NotNull EvaluationResult evaluationResult
+    @NotNull EvaluationResult evaluationResult,
+    String resultReason
 ) {
     public enum EvaluationResult {
 
