@@ -216,7 +216,7 @@ class AcknowledgeServiceTest {
 
     private static AcknowledgeApproveClientRequest createAcknowledgeApproveClientRequest() {
         return new AcknowledgeApproveClientRequest(
-                PROCESS_ID, USER_ID, IDENTITY_VERIFICATION_ID, AcknowledgeApproveClientRequest.ApprovalResult.OK
+                PROCESS_ID, USER_ID, IDENTITY_VERIFICATION_ID, AcknowledgeApproveClientRequest.ApprovalResult.OK, null
         );
     }
 }

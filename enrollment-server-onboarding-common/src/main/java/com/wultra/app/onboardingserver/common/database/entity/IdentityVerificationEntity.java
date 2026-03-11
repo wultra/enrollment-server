@@ -57,8 +57,6 @@ public class IdentityVerificationEntity implements Serializable {
     public static final String PRESENCE_CHECK_REJECTED = "presenceCheckRejected";
     public static final String PRESENCE_CHECK_FAILED = "presenceCheckFailed";
 
-    public static final String CLIENT_EVALUATION_FAILED = "clientEvaluationFailed";
-
     @Id
     @GeneratedValue
     @UuidGenerator

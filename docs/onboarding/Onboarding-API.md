@@ -60,7 +60,8 @@ If configured, the system waits for the event from an external system to continu
   "processId": "String",
   "userId": "String",
   "identityVerificationId": "String",
-  "evaluationResult": "String"
+  "evaluationResult": "String",
+  "evaluationResultReason": "String"
 }
 ```
 
@@ -72,6 +73,7 @@ If configured, the system waits for the event from an external system to continu
 | `userId`                 | `String` | ID of a user stored on onboarding process.                                                               |
 | `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                              |
 | `evaluationResult`       | `String` | The evaluation outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
+| `evaluationResultReason` | `String` | The reason is used when result is NOK to disclose the reason of rejection.                               |
 
 #### Response 200
 
@@ -119,7 +121,8 @@ If configured, the system waits for the event from an external system to continu
   "processId": "String",
   "userId": "String",
   "identityVerificationId": "String",
-  "approvalResult": "String"
+  "approvalResult": "String",
+  "approvalResultReason": "String"
 }
 ```
 
@@ -131,6 +134,7 @@ If configured, the system waits for the event from an external system to continu
 | `userId`                 | `String` | ID of a user stored on onboarding process.                                                             |
 | `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                            |
 | `approvalResult`         | `String` | The approval outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
+| `approvalResultReason`   | `String` | The reason is used when result is NOK to disclose the reason of rejection.                             |
 
 #### Response 200
 

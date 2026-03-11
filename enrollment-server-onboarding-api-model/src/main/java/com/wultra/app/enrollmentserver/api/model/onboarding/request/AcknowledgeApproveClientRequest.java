@@ -28,13 +28,15 @@ import jakarta.validation.constraints.NotNull;
  * @param userId User ID.
  * @param identityVerificationId Identity verification ID.
  * @param approvalResult The approval result.
+ * @param approvalResultReason The reason is used when the result is NOK to disclose the reason of rejection.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 public record AcknowledgeApproveClientRequest(
         @NotBlank String processId,
         @NotBlank String userId,
         @NotBlank String identityVerificationId,
-        @NotNull ApprovalResult approvalResult
+        @NotNull ApprovalResult approvalResult,
+        String approvalResultReason
 ) {
     public enum ApprovalResult {
 

@@ -24,8 +24,12 @@ package com.wultra.app.enrollmentserver.model.enumeration;
  */
 public enum RejectOrigin {
 
+    CLIENT_EVALUATION,
+
     DOCUMENT_VERIFICATION,
 
-    PRESENCE_CHECK
+    PRESENCE_CHECK,
+
+    CLIENT_APPROVAL
 
 }

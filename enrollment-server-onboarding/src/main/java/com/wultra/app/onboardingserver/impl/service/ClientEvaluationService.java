@@ -19,8 +19,11 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
@@ -36,7 +39,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -204,6 +207,8 @@ public class ClientEvaluationService {
                         auditService.audit(document, "Document rejected because of client evaluation for user: {}", identityVerification.getUserId());
                     });
             identityVerification.setTimestampFailed(ownerId.getTimestamp());
+            identityVerification.setRejectOrigin(RejectOrigin.CLIENT_EVALUATION);
+            identityVerification.setRejectReason(response.getResultReason());
         } else { // WAIT
             logger.info("Client evaluation waiting for identity verification id: {}", identityVerificationId);
         }

@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.response.Acknowledge
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -62,6 +64,7 @@ public class AcknowledgeService {
 
     /**
      * Acknowledge client approval.
+     * Side-effect: May update the {@link IdentityVerificationEntity#setRejectReason(String)} with the approval result reason.
      *
      * @param request request
      * @return an acknowledgement result
@@ -91,6 +94,7 @@ public class AcknowledgeService {
         try {
             final OwnerId ownerId = convert(identityVerification);
             final OnboardingEvent event = convert(request.approvalResult());
+            persistRejectReason(request, identityVerification);
             stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
             auditService.audit(identityVerification, "Acknowledged onboarding approval result: {}", request.approvalResult());
         } catch (IdentityVerificationException e) {
@@ -104,6 +108,17 @@ public class AcknowledgeService {
         return AcknowledgeApproveClientResponse.builder()
                 .result(AcknowledgeApproveClientResponse.Result.OK)
                 .build();
+    }
+
+    private void persistRejectReason(final AcknowledgeApproveClientRequest request, final IdentityVerificationEntity identityVerification) {
+        if (request.approvalResult() != AcknowledgeApproveClientRequest.ApprovalResult.NOK) {
+            logger.debug("No reject reason to store");
+            return;
+        }
+
+        identityVerification.setRejectOrigin(RejectOrigin.CLIENT_APPROVAL);
+        identityVerification.setRejectReason(request.approvalResultReason());
+        identityVerification.setTimestampLastUpdated(new Date());
     }
 
     private static Optional<String> validate(final IdentityVerificationEntity identityVerification, final AcknowledgeApproveClientRequest request) {
@@ -138,6 +153,13 @@ public class AcknowledgeService {
         return ownerId;
     }
 
+    /**
+     * Acknowledge client evaluation.
+     * Side-effect: May update the {@link IdentityVerificationEntity#setRejectReason(String)} with the evaluation result reason.
+     *
+     * @param request request
+     * @return an evaluation result
+     */
     public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final AcknowledgeEvaluationClientRequest request) {
         final OnboardingProcessEntity process = onboardingProcessRepository.findByIdWithLock(request.processId())
                 .filter(it -> it.getStatus() == OnboardingStatus.VERIFICATION_IN_PROGRESS)
@@ -167,6 +189,7 @@ public class AcknowledgeService {
             final var ownerId = convert(identityVerification);
 
             final OnboardingEvent event = convert(result);
+            persistRejectReason(request, identityVerification);
             stateMachineService.processStateMachineEvent(ownerId, process.getId(), event);
         } catch (IdentityVerificationException e) {
             logger.warn("Acknowledgement failed. Verification not found or in invalid state. {}", e.getMessage(), e);
@@ -179,6 +202,17 @@ public class AcknowledgeService {
         return AcknowledgeEvaluationClientResponse.builder()
                 .result(AcknowledgeEvaluationClientResponse.Result.OK)
                 .build();
+    }
+
+    private void persistRejectReason(final AcknowledgeEvaluationClientRequest request, final IdentityVerificationEntity identityVerification) {
+        if (request.evaluationResult() != AcknowledgeEvaluationClientRequest.EvaluationResult.NOK) {
+            logger.debug("No reject reason to store");
+            return;
+        }
+
+        identityVerification.setRejectOrigin(RejectOrigin.CLIENT_EVALUATION);
+        identityVerification.setRejectReason(request.evaluationResultReason());
+        identityVerification.setTimestampLastUpdated(new Date());
     }
 
     private static OnboardingEvent convert(final AcknowledgeEvaluationClientRequest.EvaluationResult source) {
