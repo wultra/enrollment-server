@@ -559,7 +559,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             return Base64.getDecoder().decode(dataBase64);
         } catch (final RuntimeException e) {
-            logger.warn("Exception when decoding base64 data for data type: {}", dataType);
+            logger.warn("Exception when decoding base64 data for data type: {}", dataType, e);
             return new byte[0];
         }
     }

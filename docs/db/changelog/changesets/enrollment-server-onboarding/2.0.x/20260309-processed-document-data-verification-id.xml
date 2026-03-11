@@ -22,7 +22,7 @@
     <changeSet id="2" logicalFilePath="enrollment-server-onboarding/2.0.x/20260309-processed-document-data-verification-id.xml" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <not>
-                <indexExists tableName="es_processed_document_data_document_verification_id_idx" />
+                <indexExists tableName="es_processed_document_data" indexName="es_processed_document_data_document_verification_id_idx" />
             </not>
         </preConditions>
         <comment>Creates a new index es_processed_document_data_document_verification_id_idx</comment>
