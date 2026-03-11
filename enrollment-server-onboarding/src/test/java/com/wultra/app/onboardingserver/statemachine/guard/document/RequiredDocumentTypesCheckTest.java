@@ -27,7 +27,9 @@ import com.wultra.app.onboardingserver.impl.service.OnboardingProcessConfigurati
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -48,17 +50,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RequiredDocumentTypesCheckTest {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Spy
+    @SuppressWarnings("unused") // Used by Mockito in @InjectMocks
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
     private OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
+    @InjectMocks
     private RequiredDocumentTypesCheck tested;
-
-    @BeforeEach
-    void setUp() {
-        tested = new RequiredDocumentTypesCheck(OBJECT_MAPPER, onboardingProcessConfigurationService);
-    }
 
     @Test
     void testProcessIdNotFound() {

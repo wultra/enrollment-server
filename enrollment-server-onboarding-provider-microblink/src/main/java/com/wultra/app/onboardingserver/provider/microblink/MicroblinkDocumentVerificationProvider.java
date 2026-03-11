@@ -462,40 +462,40 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType
     ) {
-        final var processedDocuments = new ArrayList<ProcessedDocumentDataEntity>();
-
-        for (final var entry : microblinkResponseByDocumentType.entrySet()) {
-            final var documentType = entry.getKey();
-
-            final var images = Optional.ofNullable(entry.getValue())
-                    .map(DocumentVerificationParsedResponse::images)
-                    .orElse(List.of());
-
-            for (final var image : images) {
-                final var imageName = image.name();
-
-                final var processedDocumentType = switch (imageName) {
-                    case "FullDocumentFrontImage" -> ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
-                    case "FullDocumentBackImage" -> ProcessedDocumentDataType.DOCUMENT_BACK_SIDE;
-                    default -> null;
-                };
-
-                if (processedDocumentType == null) {
-                    continue;
-                }
-
-                final var documentSide = processedDocumentType == ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE ? CardSide.FRONT : CardSide.BACK;
-                final var documentVerificationId = findDocumentVerificationId(documentVerificationsByDocumentType, documentType, documentSide);
-
-                final var processedDocumentEntity = buildProcessedDocumentDataEntity(processedDocumentType, documentVerificationId, image.base64());
-                processedDocuments.add(processedDocumentEntity);
-            }
-        }
-
-        return processedDocuments;
+        return microblinkResponseByDocumentType.entrySet().stream()
+                .flatMap(it -> Optional.ofNullable(it.getValue())
+                        .map(DocumentVerificationParsedResponse::images)
+                        .orElse(List.of())
+                        .stream()
+                        .map(image -> createDocumentImage(image, documentVerificationsByDocumentType, it.getKey()))
+                )
+                .filter(Objects::nonNull)
+                .toList();
     }
 
-    final ProcessedDocumentDataEntity createFacePhotoEntity(
+    private static ProcessedDocumentDataEntity createDocumentImage(
+            final DocumentVerificationParsedResponse.Image image,
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType,
+            final DocumentType documentType) {
+        final var imageName = image.name();
+
+        final var processedDocumentType = switch (imageName) {
+            case "FullDocumentFrontImage" -> ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
+            case "FullDocumentBackImage" -> ProcessedDocumentDataType.DOCUMENT_BACK_SIDE;
+            default -> null;
+        };
+
+        if (processedDocumentType == null) {
+            return null;
+        }
+
+        final var documentSide = processedDocumentType == ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE ? CardSide.FRONT : CardSide.BACK;
+        final var documentVerificationId = findDocumentVerificationId(documentVerificationsByDocumentType, documentType, documentSide);
+
+        return buildProcessedDocumentDataEntity(processedDocumentType, documentVerificationId, image.base64());
+    }
+
+    private ProcessedDocumentDataEntity createFacePhotoEntity(
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType) {
         final var facePhotoDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
