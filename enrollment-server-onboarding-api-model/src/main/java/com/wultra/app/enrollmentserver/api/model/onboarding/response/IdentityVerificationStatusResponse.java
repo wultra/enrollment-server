@@ -35,6 +35,7 @@ public class IdentityVerificationStatusResponse {
 
     private ConfigurationDataDto config;
 
+    @Schema(description = "Process ID")
     @NotBlank
     private String processId;
 
@@ -43,6 +44,7 @@ public class IdentityVerificationStatusResponse {
 
     private IdentityVerificationPhase identityVerificationPhase;
 
+    @Schema(description = "Process type identifier.", example = "reactivation")
     @NotBlank
     private String processType;
 
