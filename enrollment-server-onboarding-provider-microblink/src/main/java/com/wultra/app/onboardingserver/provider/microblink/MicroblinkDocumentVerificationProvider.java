@@ -132,8 +132,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
-        final var documentVerificationIdByDocumentTypeAndSide = getDocumentVerificationIdByDocumentTypeAndSide(ownerId, documentsByTypeAndSide.keySet());
-        final var facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
+        final var documentVerificationsByDocumentType = getDocumentVerificationsByDocumentType(ownerId, documentsByTypeAndSide.keySet());
+        final var facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
 
         final var result = new DocumentsSubmitResult();
         result.setResults(documentResults);
@@ -413,31 +413,37 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return results;
     }
 
-    private Map<DocumentType, Map<CardSide, String>> getDocumentVerificationIdByDocumentTypeAndSide(final OwnerId ownerId, final Set<DocumentType> documentTypes) {
+    private Map<DocumentType, List<DocumentVerificationEntity>> getDocumentVerificationsByDocumentType(final OwnerId ownerId, final Set<DocumentType> documentTypes) {
         final var activationId = ownerId.getActivationId();
         final var documentVerifications = documentVerificationRepository.findAllByActivationIdByTypes(activationId, documentTypes);
 
-        return documentVerifications.stream()
+        final var latestDocumentVerificationByTypeAndSide = documentVerifications.stream()
                 .collect(Collectors.groupingBy(
                         DocumentVerificationEntity::getType,
                         HashMap::new,
-                        Collectors.groupingBy(
+                        Collectors.toMap(
                                 DocumentVerificationEntity::getSide,
-                                HashMap::new,
-                                Collectors.collectingAndThen(
-                                        Collectors.maxBy(Comparator.comparing(DocumentVerificationEntity::getTimestampCreated)),
-                                        optional -> optional.map(DocumentVerificationEntity::getId).orElse(null)
-                                )
+                                Function.identity(),
+                                (existing, current) -> current.getTimestampCreated().after(existing.getTimestampCreated()) ? current : existing,
+                                HashMap::new
                         )
+                ));
+
+        return latestDocumentVerificationByTypeAndSide.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> new ArrayList<>(e.getValue().values()),
+                        (a, b) -> b,
+                        HashMap::new
                 ));
     }
 
     private String saveProcessedImages(
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
-            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType
     ) {
-        final var facePhoto = createFacePhotoEntity(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
-        final var documents = createProcessedDocuments(microblinkResponseByDocumentType, documentVerificationIdByDocumentTypeAndSide);
+        final var facePhoto = createFacePhotoEntity(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
+        final var documents = createProcessedDocuments(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
 
         final var processedDocumentData = new ArrayList<ProcessedDocumentDataEntity>();
         if (facePhoto != null) {
@@ -454,7 +460,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private List<ProcessedDocumentDataEntity> createProcessedDocuments(
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
-            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType
     ) {
         final var processedDocuments = new ArrayList<ProcessedDocumentDataEntity>();
 
@@ -479,12 +485,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 }
 
                 final var documentSide = processedDocumentType == ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE ? CardSide.FRONT : CardSide.BACK;
-                final var documentVerificationId = documentVerificationIdByDocumentTypeAndSide.getOrDefault(documentType, Map.of())
-                        .getOrDefault(documentSide, null);
-
-                if (documentVerificationId == null) {
-                    logger.warn("Document verification id not found document '{}' of side '{}'", documentType, documentSide);
-                }
+                final var documentVerificationId = findDocumentVerificationId(documentVerificationsByDocumentType, documentType, documentSide);
 
                 final var processedDocumentEntity = buildProcessedDocumentDataEntity(processedDocumentType, documentVerificationId, image.base64());
                 processedDocuments.add(processedDocumentEntity);
@@ -496,7 +497,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     final ProcessedDocumentDataEntity createFacePhotoEntity(
             final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
-            final Map<DocumentType, Map<CardSide, String>> documentVerificationIdByDocumentTypeAndSide) {
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType) {
         final var facePhotoDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(microblinkResponseByDocumentType::containsKey)
                 .findFirst()
@@ -523,12 +524,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return null;
         }
 
-        final var documentVerificationId = documentVerificationIdByDocumentTypeAndSide.getOrDefault(facePhotoDocumentType, Map.of())
-                .getOrDefault(CardSide.FRONT, null);
-
-        if (documentVerificationId == null) {
-            logger.warn("Document verification id not found for face photo");
-        }
+        final var documentVerificationId = findDocumentVerificationId(documentVerificationsByDocumentType, facePhotoDocumentType, CardSide.FRONT);
 
         final var facePhotoDocumentData = buildProcessedDocumentDataEntity(ProcessedDocumentDataType.FACE_IMAGE, documentVerificationId, faceImageBase64);
 
@@ -536,6 +532,31 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         logger.info("Face photo extracted from document type {} and stored with id {}", facePhotoDocumentType, facePhotoDocumentId);
 
         return facePhotoDocumentData;
+    }
+
+    private static String findDocumentVerificationId(
+            final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType,
+            final DocumentType documentType,
+            final CardSide side
+    ) {
+        final var documentVerifications = documentVerificationsByDocumentType.getOrDefault(documentType, List.of());
+
+        final var documentVerificationId = documentVerifications.stream()
+                .filter(it -> it.getSide() == side)
+                .map(DocumentVerificationEntity::getId)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(documentVerifications.stream()
+                        .findFirst()
+                        .map(DocumentVerificationEntity::getId)
+                        .orElse(null)
+                );
+
+        if (documentVerificationId == null) {
+            logger.warn("Document verification ID not found for document type '{}' and side '{}'", documentType, side);
+        }
+
+        return documentVerificationId;
     }
 
     private static ProcessedDocumentDataEntity buildProcessedDocumentDataEntity(
