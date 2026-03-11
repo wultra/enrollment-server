@@ -29,4 +29,14 @@ public enum ProcessedDocumentDataType {
      * Face image extracted from the document.
      */
     FACE_IMAGE,
+
+    /**
+     * Front side of a provided document.
+     */
+    DOCUMENT_FRONT_SIDE,
+
+    /**
+     * Back side of a provided document.
+     */
+    DOCUMENT_BACK_SIDE
 }

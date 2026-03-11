@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -64,12 +65,15 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final long TIMESTAMP_ASSERT_DELTA_MS = 3_000;
 
     private static final String ACTIVATION_ID = "26c98f91-e373-4bef-8704-7224880a9912";
+    private static final String IDENTITY_VERIFICATION_ID = "e0a627b9-9829-4bec-8c8d-db3be4ff03c1";
 
     private static final String ID_CARD_FRONT_DOCUMENT_ID = "4e3b6b1a-26df-4d3e-9b97-89cf9b1f4c52";
     private static final String ID_CARD_FRONT_UPLOAD_ID = "5b1e3c4d-6f7a-8b90-1234-56789abcdef0";
+    private static final String ID_CARD_FRONT_DOCUMENT_IMAGE_BASE64 = "ZHVtbXlfZnJvbnRfZG9jdW1lbnQ=";
 
     private static final String ID_CARD_BACK_DOCUMENT_ID = "9fa2b0b7-11d2-4d94-bb9d-8f8c3a5f04e6";
     private static final String ID_CARD_BACK_UPLOAD_ID = "0fedcba9-8765-4321-0fed-cba987654321";
+    private static final String ID_CARD_BACK_DOCUMENT_IMAGE_BASE64 = "ZHVtbXlfYmFja19kb2N1bWVudA==";
 
     private static final String ID_CARD_FACE_PHOTO_ID = "2a1c3e4f-5b6d-7e8f-9012-3456789abcde";
 
@@ -295,8 +299,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_facePhotoIsSaved() throws Exception {
+    void testSubmitDocuments_documentWith2SidesUploaded_processedDocumentDataSaved() throws Exception {
         // given
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
+
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
@@ -305,10 +312,10 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
-        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertIdCardFaceImage(result);
+        assertProcessedDocumentData();
     }
 
     @Test
@@ -581,13 +588,29 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(new Date().getTime(), backDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
     }
 
-    private void assertIdCardFaceImage(final DocumentsSubmitResult result) {
-        final var facePhotoId = result.getExtractedPhotoId();
+    private void assertProcessedDocumentData() {
+        final var processedDocumentData = StreamSupport.stream(processedDocumentDataRepository.findAll().spliterator(), false)
+                .collect(Collectors.toMap(ProcessedDocumentDataEntity::getDataType, Function.identity()));
 
-        final var facePhoto = processedDocumentDataRepository.findById(facePhotoId).orElseThrow();
-        assertArrayEquals(Base64.getDecoder().decode(idCardFacePhotoBase64), facePhoto.getData());
+        assertEquals(3, processedDocumentData.size());
+
+        final var facePhoto = processedDocumentData.get(ProcessedDocumentDataType.FACE_IMAGE);
+        assertDoesNotThrow(() -> UUID.fromString(facePhoto.getId()));
+        assertEquals(idCardFacePhotoBase64, Base64.getEncoder().encodeToString(facePhoto.getData()));
         assertEquals(new Date().getTime(), facePhoto.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
-        assertEquals(ProcessedDocumentDataType.FACE_IMAGE, facePhoto.getDataType());
+        assertDoesNotThrow(() -> UUID.fromString(facePhoto.getDocumentVerificationId()));
+
+        final var frontDocument = processedDocumentData.get(ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
+        assertDoesNotThrow(() -> UUID.fromString(frontDocument.getId()));
+        assertEquals(ID_CARD_FRONT_DOCUMENT_IMAGE_BASE64, Base64.getEncoder().encodeToString(frontDocument.getData()));
+        assertEquals(new Date().getTime(), frontDocument.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertDoesNotThrow(() -> UUID.fromString(frontDocument.getDocumentVerificationId()));
+
+        final var backDocument = processedDocumentData.get(ProcessedDocumentDataType.DOCUMENT_BACK_SIDE);
+        assertDoesNotThrow(() -> UUID.fromString(backDocument.getId()));
+        assertEquals(ID_CARD_BACK_DOCUMENT_IMAGE_BASE64, Base64.getEncoder().encodeToString(backDocument.getData()));
+        assertEquals(new Date().getTime(), backDocument.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertDoesNotThrow(() -> UUID.fromString(backDocument.getDocumentVerificationId()));
     }
 
     private void prepareIdCardFrontVerificationDataInDatabase() {
@@ -597,32 +620,16 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setTimestampCreated(new Date());
         documentDataRepository.save(documentData);
 
-        final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
-
-        final var documentVerification = new DocumentVerificationEntity();
-        documentVerification.setActivationId(ACTIVATION_ID);
-        documentVerification.setIdentityVerification(identityVerification);
-        documentVerification.setType(DocumentType.ID_CARD);
-        documentVerification.setSide(CardSide.FRONT);
-        documentVerification.setProviderName("microblink");
-        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        documentVerification.setFilename("id_card_front.jpeg");
-        documentVerification.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
-        documentVerification.setVerificationId(UUID.randomUUID().toString());
-        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
-        documentVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
-        documentVerification.setTimestampCreated(new Date());
-
-        final var savedDocumentVerification = documentVerificationRepository.save(documentVerification);
+        final var documentVerification = prepareIdCardFrontDocumentVerificationInDatabase();
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
         documentResult.setVerificationResult(idCardPassValidationResult);
         documentResult.setExtractedData(idCardFrontExtractionJson);
-        documentResult.setDocumentVerification(savedDocumentVerification);
+        documentResult.setDocumentVerification(documentVerification);
         documentResult.setTimestampCreated(new Date());
 
-        savedDocumentVerification.setResults(Set.of(documentResult));
+        documentVerification.setResults(Set.of(documentResult));
 
         documentResultRepository.save(documentResult);
     }
@@ -634,32 +641,16 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setTimestampCreated(new Date());
         documentDataRepository.save(documentData);
 
-        final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
-
-        final var documentVerification = new DocumentVerificationEntity();
-        documentVerification.setActivationId(ACTIVATION_ID);
-        documentVerification.setIdentityVerification(identityVerification);
-        documentVerification.setType(DocumentType.ID_CARD);
-        documentVerification.setSide(CardSide.BACK);
-        documentVerification.setProviderName("microblink");
-        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        documentVerification.setFilename("id_card_back.jpeg");
-        documentVerification.setUploadId(ID_CARD_BACK_UPLOAD_ID);
-        documentVerification.setVerificationId(UUID.randomUUID().toString());
-        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
-        documentVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
-        documentVerification.setTimestampCreated(new Date());
-
-        final var savedDocumentVerification = documentVerificationRepository.save(documentVerification);
+        final var documentVerification = prepareIdCardBackDocumentVerificationInDatabase();
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
         documentResult.setVerificationResult(idCardPassValidationResult);
         documentResult.setExtractedData(idCardBackExtractionJson);
-        documentResult.setDocumentVerification(savedDocumentVerification);
+        documentResult.setDocumentVerification(documentVerification);
         documentResult.setTimestampCreated(new Date());
 
-        savedDocumentVerification.setResults(Set.of(documentResult));
+        documentVerification.setResults(Set.of(documentResult));
 
         documentResultRepository.save(documentResult);
     }
@@ -697,6 +688,47 @@ class MicroblinkDocumentVerificationProviderIntTest {
         savedDocumentVerification.setResults(Set.of(documentResult));
 
         documentResultRepository.save(documentResult);
+    }
+
+    private DocumentVerificationEntity prepareIdCardFrontDocumentVerificationInDatabase() {
+        final var identityVerification = identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID).orElseThrow();
+
+        final var documentVerification = new DocumentVerificationEntity();
+        //documentVerification.setId(ID_CARD_FRONT_DOCUMENT_VERIFICATION_ID);
+        documentVerification.setActivationId(ACTIVATION_ID);
+        documentVerification.setIdentityVerification(identityVerification);
+        documentVerification.setType(DocumentType.ID_CARD);
+        documentVerification.setSide(CardSide.FRONT);
+        documentVerification.setProviderName("microblink");
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setFilename("id_card_front.jpeg");
+        documentVerification.setUploadId(ID_CARD_FRONT_UPLOAD_ID);
+        documentVerification.setVerificationId(UUID.randomUUID().toString());
+        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
+        documentVerification.setOriginalDocumentId(ID_CARD_FRONT_DOCUMENT_ID);
+        documentVerification.setTimestampCreated(new Date());
+
+        return documentVerificationRepository.save(documentVerification);
+    }
+
+    private DocumentVerificationEntity prepareIdCardBackDocumentVerificationInDatabase() {
+        final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();
+
+        final var documentVerification = new DocumentVerificationEntity();
+        documentVerification.setActivationId(ACTIVATION_ID);
+        documentVerification.setIdentityVerification(identityVerification);
+        documentVerification.setType(DocumentType.ID_CARD);
+        documentVerification.setSide(CardSide.BACK);
+        documentVerification.setProviderName("microblink");
+        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
+        documentVerification.setFilename("id_card_back.jpeg");
+        documentVerification.setUploadId(ID_CARD_BACK_UPLOAD_ID);
+        documentVerification.setVerificationId(UUID.randomUUID().toString());
+        documentVerification.setPhotoId(ID_CARD_FACE_PHOTO_ID);
+        documentVerification.setOriginalDocumentId(ID_CARD_BACK_DOCUMENT_ID);
+        documentVerification.setTimestampCreated(new Date());
+
+        return documentVerificationRepository.save(documentVerification);
     }
 
     private void preparePhotoInDatabase() {

@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.common.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -71,6 +72,15 @@ public class ProcessedDocumentDataEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    /**
+     * Associated {@link DocumentVerificationEntity}.
+     *
+     * @implNote The database column allows NULL values for backward compatibility with existing records, but new records must have a non-null value.
+     */
+    @Column(name = "document_verification_id")
+    @NotNull
+    private String documentVerificationId;
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -108,6 +118,7 @@ public class ProcessedDocumentDataEntity implements Serializable {
                 "id=" + id +
                 ", data=" + (data != null ? "byte[" + data.length + "]" : null) +
                 ", dataType=" + dataType +
-                ", timestampCreated=" + timestampCreated + ")";
+                ", timestampCreated=" + timestampCreated +
+                ", documentVerificationId=" + documentVerificationId + ")";
     }
 }

@@ -25,6 +25,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Repository for processed document data records.
@@ -43,4 +45,7 @@ public interface ProcessedDocumentDataRepository extends CrudRepository<Processe
     @Modifying
     @Query("DELETE FROM ProcessedDocumentDataEntity p WHERE p.timestampCreated < :dateCleanup")
     int cleanup(final Date dateCleanup);
+
+    @Query("SELECT p FROM ProcessedDocumentDataEntity p WHERE p.documentVerificationId IN :documentVerificationIds")
+    List<ProcessedDocumentDataEntity> findAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
 }

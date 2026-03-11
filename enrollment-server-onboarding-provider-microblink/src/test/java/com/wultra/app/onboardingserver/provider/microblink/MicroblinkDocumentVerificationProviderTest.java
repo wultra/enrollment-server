@@ -86,6 +86,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
     private static final String DOCUMENT_ID_CARD_FRONT_ID = "id-card-front";
     private static final String DOCUMENT_ID_CARD_FRONT_UPLOAD_ID = "52ca4d10-06ac-442c-934c-9d085ab18934";
+    private static final byte[] DOCUMENT_ID_CARD_FRONT_IMAGE_DATA = Base64.getDecoder().decode("ZHVtbXlfZnJvbnRfZG9jdW1lbnQ=");
 
     private static final String DOCUMENT_ID_CARD_BACK_ID = "id-card-back";
     private static final String DOCUMENT_ID_CARD_BACK_UPLOAD_ID = "bdfb45ce-a808-4b65-86a8-9f5f184c56f6";
@@ -137,10 +138,7 @@ class MicroblinkDocumentVerificationProviderTest {
     private ArgumentCaptor<List<DocumentDataEntity>> documentDataEntitiesCaptor;
 
     @Captor
-    private ArgumentCaptor<ProcessedDocumentDataEntity> processedDocumentDataEntityCaptor;
-
-    @Captor
-    private ArgumentCaptor<List<DocumentVerificationEntity>> documentVerificationsEntityCaptor;
+    private ArgumentCaptor<List<ProcessedDocumentDataEntity>> processedDocumentDataEntityCaptor;
 
     @BeforeEach
     void setUp() {
@@ -271,6 +269,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenThrow(new RestClientException("Test exception", HttpStatus.SERVICE_UNAVAILABLE, "Test error body", null));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
 
@@ -292,6 +292,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok().build());
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
 
@@ -311,6 +313,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok("{ invalidJson, \"traceId\": \"123\" }"));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
@@ -336,6 +340,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -358,6 +364,8 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
 
@@ -375,10 +383,12 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildImageJson(), "[]");
+        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]");
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var response = provider.submitDocuments(ownerId, submittedDocuments);
@@ -397,17 +407,22 @@ class MicroblinkDocumentVerificationProviderTest {
                 verificationDocumentCardIdBack.image().getData()
         );
 
-        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildImageJson(), "[]");
+        final var responseJson = buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, "[]", buildFaceImageJson(), "[]");
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(processedDocumentDataRepository).save(processedDocumentDataEntityCaptor.capture());
-        assertStoredFaceImage(processedDocumentDataEntityCaptor.getValue());
+        verify(processedDocumentDataRepository).saveAll(processedDocumentDataEntityCaptor.capture());
+
+        final var storedProcessedData = processedDocumentDataEntityCaptor.getValue();
+        assertEquals(1, storedProcessedData.size());
+        assertStoredFaceImage(storedProcessedData.get(0));
     }
 
     @Test
@@ -424,7 +439,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 CheckResult.FAIL,
                 Type.ID,
                 "[]",
-                buildImageJson(),
+                buildFaceImageJson(),
                 buildMessage()
         );
 
@@ -433,6 +448,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
         when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
@@ -455,7 +472,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 CheckResult.PASS,
                 Type.ID,
                 "[]",
-                buildImageJson(),
+                buildFaceImageJson(),
                 "[]"
         );
 
@@ -464,6 +481,8 @@ class MicroblinkDocumentVerificationProviderTest {
 
         when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
         when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
@@ -486,12 +505,14 @@ class MicroblinkDocumentVerificationProviderTest {
                 CheckResult.PASS,
                 Type.ID,
                 "[]",
-                buildImageJson(),
+                buildFaceImageJson(),
                 "[]"
         );
 
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
@@ -499,6 +520,48 @@ class MicroblinkDocumentVerificationProviderTest {
         // then
         verify(documentDataRepository).saveAll(documentDataEntitiesCaptor.capture());
         assertSavedDocumentsData(documentDataEntitiesCaptor.getValue(), result);
+    }
+
+    @Test
+    void testSubmitDocuments_documentVerificationEntityWithoutSide_firstDocumentVerificationIdForDocumentTypeIsSet() throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront);
+
+        final var apiRequest = buildMicroblinkRequest(
+                verificationDocumentCardIdFront.image().getData(),
+                null
+        );
+
+        final var responseJson = buildMicroblinkResponseJson(
+                CheckResult.PASS,
+                Type.ID,
+                "[]",
+                buildImagesJson(),
+                "[]"
+        );
+
+        when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
+                .thenReturn(ResponseEntity.ok(responseJson));
+
+        when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
+
+        final var verificationDocumentCardIdBackWithoutSide = verificationDocumentCardIdBack.toBuilder()
+                .side(null)
+                .build();
+
+        final var documentVerifications = buildDocumentVerifications(
+                List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBackWithoutSide),
+                Set.of());
+
+        when(documentVerificationRepository.findAllByActivationIdByTypes(ACTIVATION_ID, Set.of(DocumentType.ID_CARD)))
+                .thenReturn(documentVerifications);
+
+        // when
+        provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        verify(processedDocumentDataRepository).saveAll(processedDocumentDataEntityCaptor.capture());
+        assertSavedProcessedDocumentData(processedDocumentDataEntityCaptor.getValue());
     }
 
     @Test
@@ -874,14 +937,18 @@ class MicroblinkDocumentVerificationProviderTest {
                 Base64.getEncoder().encodeToString(documentFrontImageData)
         );
 
-        final var backImageSource = new DocumentVerificationImageSource();
-        backImageSource.setBase64(
-                Base64.getEncoder().encodeToString(documentBackImageData)
-        );
+        final var backImageSource = Optional.ofNullable(documentBackImageData)
+                .map(it -> {
+                    final var image = new DocumentVerificationImageSource();
+                    image.setBase64(Base64.getEncoder().encodeToString(it));
+                    return image;
+                })
+                .orElse(null);
 
         final var options = new DocumentVerificationProcessingOptions();
         options.setReturnImageFormat(ImageFormat.JPG);
         options.setReturnFaceImage(true);
+        options.setReturnFullDocumentImage(true);
 
         final var useCase = new DocumentVerificationUseCaseOptions();
 
@@ -959,12 +1026,27 @@ class MicroblinkDocumentVerificationProviderTest {
                 """.formatted(firstName);
     }
 
-    private static String buildImageJson() {
+    private static String buildFaceImageJson() {
         return """
                 [
                     {
                         "name": "FaceImage",
                         "base64": "dGVzdF9mYWNlX2ltYWdlX2RhdGE="
+                    }
+                ]
+                """;
+    }
+
+    private static String buildImagesJson() {
+        return """
+                [
+                    {
+                        "name": "FaceImage",
+                        "base64": "dGVzdF9mYWNlX2ltYWdlX2RhdGE="
+                    },
+                    {
+                        "name": "FullDocumentFrontImage",
+                        "base64": "ZHVtbXlfZnJvbnRfZG9jdW1lbnQ="
                     }
                 ]
                 """;
@@ -1059,11 +1141,13 @@ class MicroblinkDocumentVerificationProviderTest {
 
         for (final var verificationDocument : verificationDocuments) {
             final var entity = new DocumentVerificationEntity();
+            entity.setId(UUID.randomUUID().toString());
             entity.setType(verificationDocument.type());
             entity.setSide(verificationDocument.side());
             entity.setUploadId(verificationDocument.uploadId());
             entity.setPhotoId(FACE_PHOTO_ID);
             entity.setResults(documentResults);
+            entity.setTimestampCreated(new Date());
 
             entities.add(entity);
         }
@@ -1196,5 +1280,37 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(expectedValidationResult, result.getVerificationResult());
         assertNull(result.getErrorDetail());
         assertEquals(expectedExtractedData, result.getExtractedData());
+    }
+
+    private static void assertSavedProcessedDocumentData(final List<ProcessedDocumentDataEntity> entities) {
+        assertEquals(2, entities.size());
+
+        final var faceImage = entities.stream()
+                .filter(it -> it.getDataType() == ProcessedDocumentDataType.FACE_IMAGE)
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(faceImage.getId()));
+        assertArrayEquals(FACE_PHOTO_DATA, faceImage.getData());
+        assertEquals(new Date().getTime(), faceImage.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertDoesNotThrow(() -> UUID.fromString(faceImage.getDocumentVerificationId()));
+
+        final var documentImage = entities.stream()
+                .filter(it -> it.getDataType() == ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE)
+                .findFirst()
+                .orElseThrow();
+
+        assertDoesNotThrow(() -> UUID.fromString(documentImage.getId()));
+        assertArrayEquals(DOCUMENT_ID_CARD_FRONT_IMAGE_DATA, documentImage.getData());
+        assertEquals(new Date().getTime(), documentImage.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertDoesNotThrow(() -> UUID.fromString(documentImage.getDocumentVerificationId()));
+    }
+
+    private static DocumentVerificationProcessingOptions buildRequestOptions() {
+        final var options = new DocumentVerificationProcessingOptions();
+        options.setReturnImageFormat(ImageFormat.JPG);
+        options.setReturnFaceImage(true);
+        options.setReturnFullDocumentImage(true);
+        return options;
     }
 }
