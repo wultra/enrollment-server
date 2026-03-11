@@ -117,7 +117,7 @@ public class AcknowledgeService {
         }
 
         identityVerification.setRejectOrigin(RejectOrigin.CLIENT_APPROVAL);
-        identityVerification.setRejectReason(request.resultReason());
+        identityVerification.setRejectReason(request.approvalResultReason());
         identityVerification.setTimestampLastUpdated(new Date());
     }
 
@@ -211,7 +211,7 @@ public class AcknowledgeService {
         }
 
         identityVerification.setRejectOrigin(RejectOrigin.CLIENT_EVALUATION);
-        identityVerification.setRejectReason(request.resultReason());
+        identityVerification.setRejectReason(request.evaluationResultReason());
         identityVerification.setTimestampLastUpdated(new Date());
     }
 

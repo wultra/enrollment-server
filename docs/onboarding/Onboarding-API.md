@@ -61,7 +61,7 @@ If configured, the system waits for the event from an external system to continu
   "userId": "String",
   "identityVerificationId": "String",
   "evaluationResult": "String",
-  "resultReason": "String"
+  "evaluationResultReason": "String"
 }
 ```
 
@@ -73,7 +73,7 @@ If configured, the system waits for the event from an external system to continu
 | `userId`                 | `String` | ID of a user stored on onboarding process.                                                               |
 | `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                              |
 | `evaluationResult`       | `String` | The evaluation outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
-| `resultReason`           | `String` | The reason is used when result is NOK to disclose the reason of rejection.                               |
+| `evaluationResultReason` | `String` | The reason is used when result is NOK to disclose the reason of rejection.                               |
 
 #### Response 200
 
@@ -122,7 +122,7 @@ If configured, the system waits for the event from an external system to continu
   "userId": "String",
   "identityVerificationId": "String",
   "approvalResult": "String",
-  "resultReason": "String"
+  "approvalResultReason": "String"
 }
 ```
 
@@ -134,7 +134,7 @@ If configured, the system waits for the event from an external system to continu
 | `userId`                 | `String` | ID of a user stored on onboarding process.                                                             |
 | `identityVerificationId` | `String` | ID of the identity verification subprocess.                                                            |
 | `approvalResult`         | `String` | The approval outcome OK, NOK, or WAIT. Process should either continue (OK), fail/reset (NOK), or wait. |
-| `resultReason`           | `String` | The reason is used when result is NOK to disclose the reason of rejection.                             |
+| `approvalResultReason`   | `String` | The reason is used when result is NOK to disclose the reason of rejection.                             |
 
 #### Response 200
 
