@@ -24,7 +24,25 @@ package com.wultra.app.onboardingserver.common.database.entity;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 public interface DocumentVerificationIdsView {
+
+    /**
+     * Gets {@link DocumentVerificationEntity#getUploadId()}
+     *
+     * @return upload ID
+     */
     String getUploadId();
+
+    /**
+     * Gets {@link DocumentVerificationEntity#getPhotoId()}
+     *
+     * @return photo ID
+     */
     String getPhotoId();
+
+    /**
+     * Gets {@link DocumentVerificationEntity#getId()}
+     *
+     * @return ID
+     */
     String getId();
 }
