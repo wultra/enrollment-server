@@ -41,7 +41,7 @@ class ProcessedDocumentDataEntityTest {
         final var toString = entity.toString();
 
         // then
-        assertEquals("ProcessedDocumentDataEntity(id=null, data=null, dataType=null, timestampCreated=null)", toString);
+        assertEquals("ProcessedDocumentDataEntity(id=null, data=null, dataType=null, timestampCreated=null, documentVerificationId=null)", toString);
     }
 
     @Test
@@ -54,11 +54,12 @@ class ProcessedDocumentDataEntityTest {
         entity.setData(new byte[] { 1, 2, 3 } );
         entity.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
         entity.setTimestampCreated(timestampCreated);
+        entity.setDocumentVerificationId("test-verification-id");
 
         // when
         final var toString = entity.toString();
 
         // then
-        assertEquals("ProcessedDocumentDataEntity(id=test-id, data=byte[3], dataType=FACE_IMAGE, timestampCreated="+timestampCreated+")", toString);
+        assertEquals("ProcessedDocumentDataEntity(id=test-id, data=byte[3], dataType=FACE_IMAGE, timestampCreated="+timestampCreated+", documentVerificationId=test-verification-id)", toString);
     }
 }

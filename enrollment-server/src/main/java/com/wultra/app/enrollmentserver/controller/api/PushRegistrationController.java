@@ -17,11 +17,11 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
-import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.app.enrollmentserver.api.model.enrollment.request.PushRegisterRequest;
 import com.wultra.app.enrollmentserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.enrollmentserver.errorhandling.PushRegistrationFailedException;
+import com.wultra.app.enrollmentserver.impl.service.PushRegistrationService;
+import com.wultra.app.enrollmentserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.crypto.lib.enums.PowerAuthCodeType;
@@ -29,10 +29,12 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller with services related to Push Server registration.
@@ -42,21 +44,11 @@ import org.springframework.web.bind.annotation.*;
 @ConditionalOnPropertyNotEmpty("powerauth.push.service.url")
 @RestController
 @RequestMapping(value = "api/push")
+@AllArgsConstructor
+@Slf4j
 public class PushRegistrationController {
 
-    private static final Logger logger = LoggerFactory.getLogger(PushRegistrationController.class);
-
     private final PushRegistrationService pushRegistrationService;
-
-    /**
-     * Constructor with autowired dependencies.
-     *
-     * @param pushRegistrationService Push registration service.
-     */
-    @Autowired
-    public PushRegistrationController(PushRegistrationService pushRegistrationService) {
-        this.pushRegistrationService = pushRegistrationService;
-    }
 
     /**
      * Register device for the push notifications.

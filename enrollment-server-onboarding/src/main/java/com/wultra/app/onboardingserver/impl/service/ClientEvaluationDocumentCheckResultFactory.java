@@ -66,12 +66,11 @@ public class ClientEvaluationDocumentCheckResultFactory {
     }
 
     private EvaluateClientRequest.DocumentCheckResult createWithExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {
-        final var photoIds = documentsVerification.stream()
-                .map(DocumentVerificationEntity::getPhotoId)
-                .filter(Objects::nonNull)
+        final var documentVerificationIds = documentsVerification.stream()
+                .map(DocumentVerificationEntity::getId)
                 .collect(toSet());
 
-        final var processedDocumentByPhotoId = fetchProcessedDocuments(photoIds);
+        final var processedDocumentByDocumentVerificationId = fetchProcessedDocuments(documentVerificationIds);
 
         final var documentsVerificationByDocumentType = documentsVerification.stream()
                 .collect(Collectors.groupingBy(
@@ -81,7 +80,7 @@ public class ClientEvaluationDocumentCheckResultFactory {
                 ));
 
         final var documents = documentsVerificationByDocumentType.keySet().stream()
-                .map(it -> createDocument(it, documentsVerificationByDocumentType, processedDocumentByPhotoId))
+                .map(it -> createDocument(it, documentsVerificationByDocumentType, processedDocumentByDocumentVerificationId))
                 .toList();
 
         final var person = buildPerson(documents);
@@ -123,7 +122,7 @@ public class ClientEvaluationDocumentCheckResultFactory {
     private EvaluateClientRequest.Document createDocument(
             final DocumentType documentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentsVerificationByDocumentType,
-            final Map<String, ProcessedDocumentDataEntity> processedDocumentByPhotoId
+            final Map<String, List<ProcessedDocumentDataEntity>> processedDocumentByDocumentVerificationId
     ) {
         final var documentVerifications = documentsVerificationByDocumentType.get(documentType);
         final var documentsResult = documentVerifications.stream()
@@ -143,20 +142,23 @@ public class ClientEvaluationDocumentCheckResultFactory {
                 .findFirst()
                 .orElse(null);
 
-        final var processedDocument = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getPhotoId)
-                .map(it -> processedDocumentByPhotoId.getOrDefault(it, null))
+        final var documentVerificationIds = documentVerifications.stream()
+                .map(DocumentVerificationEntity::getId)
+                .collect(toSet());
+
+        final var processedDocuments = processedDocumentByDocumentVerificationId.entrySet().stream()
+                .filter(it -> documentVerificationIds.contains(it.getKey()))
+                .flatMap(it -> it.getValue().stream())
                 .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(null);
+                .toList();
+
+        final var images = buildImages(processedDocuments);
 
         final var score = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getVerificationScore)
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
-
-        final var images = buildImages(processedDocument);
 
         final var documentResult = documentsResult.stream()
                 .map(DocumentResultEntity::getVerificationResult)
@@ -218,26 +220,38 @@ public class ClientEvaluationDocumentCheckResultFactory {
         }
     }
 
-    private Map<String, ProcessedDocumentDataEntity> fetchProcessedDocuments(final Set<String> ids) {
+    private Map<String, List<ProcessedDocumentDataEntity>> fetchProcessedDocuments(final Set<String> ids) {
         if (CollectionUtils.isEmpty(ids)) {
             return Collections.emptyMap();
         }
 
-        return StreamSupport.stream(processedDocumentDataRepository.findAllById(ids).spliterator(), false)
-                .collect(Collectors.toMap(ProcessedDocumentDataEntity::getId, Function.identity()));
+        return processedDocumentDataRepository.findAllByDocumentVerificationIds(ids).stream()
+                .collect(Collectors.groupingBy(
+                        ProcessedDocumentDataEntity::getDocumentVerificationId,
+                        Collectors.collectingAndThen(
+                                Collectors.groupingBy(
+                                        ProcessedDocumentDataEntity::getDataType,
+                                        Collectors.maxBy(Comparator.comparing(ProcessedDocumentDataEntity::getTimestampCreated))
+                                ),
+                                typeMap -> typeMap.values().stream()
+                                        .filter(Optional::isPresent)
+                                        .map(Optional::get)
+                                        .toList()
+                        )
+                ));
     }
 
-    private static List<EvaluateClientRequest.Image> buildImages(final ProcessedDocumentDataEntity processedDocumentData) {
-        if (processedDocumentData == null) {
+    private static List<EvaluateClientRequest.Image> buildImages(final List<ProcessedDocumentDataEntity> processedDocuments) {
+        if (processedDocuments == null) {
             return List.of();
         }
 
-        return List.of(
-                EvaluateClientRequest.Image.builder()
-                        .type(processedDocumentData.getDataType())
-                        .data(processedDocumentData.getData())
-                        .build()
-        );
+        return processedDocuments.stream()
+                .map(it -> EvaluateClientRequest.Image.builder()
+                        .type(it.getDataType())
+                        .data(it.getData())
+                        .build())
+                .toList();
     }
 
     private static EvaluateClientRequest.DocumentCheckResult createWithoutExtractedData(final Set<DocumentVerificationEntity> documentsVerification) {

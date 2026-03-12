@@ -135,7 +135,9 @@ class ClientEvaluateRequestDto {
     }
 
     public enum ImageType {
-        FACE
+        FACE,
+        DOCUMENT_FRONT_SIDE,
+        DOCUMENT_BACK_SIDE
     }
 
     public enum DocumentType {

@@ -112,6 +112,7 @@ public class IdentityVerificationStatusService {
         final IdentityVerificationEntity idVerification = idVerificationOptional.get();
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
+        response.setRejectReason(idVerification.getRejectReason());
         return response;
     }
 

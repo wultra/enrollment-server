@@ -17,7 +17,6 @@
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -50,9 +49,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.DocumentType.*;
 @Slf4j
 public class RequiredDocumentTypesCheck {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+    private final ObjectMapper objectMapper;
     private final OnboardingProcessConfigurationService onboardingProcessConfigurationService;
 
     /**
@@ -109,7 +106,7 @@ public class RequiredDocumentTypesCheck {
         return true;
     }
 
-    private static List<String> validateGroup(
+    private List<String> validateGroup(
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByType,
             final OnboardingProcessConfigurationValue.Group group,
             final int groupIndex
@@ -175,29 +172,29 @@ public class RequiredDocumentTypesCheck {
                 .build();
     }
 
-    private static Set<String> getCountry(final List<DocumentVerificationEntity> source) {
+    private Set<String> getCountry(final List<DocumentVerificationEntity> source) {
         return source.stream()
-                .map(RequiredDocumentTypesCheck::getCountry)
+                .map(this::getCountry)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
 
-    private static String getCountry(final DocumentVerificationEntity entity) {
+    private String getCountry(final DocumentVerificationEntity entity) {
         return entity.getResults().stream()
                 .filter(Objects::nonNull)
                 .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated))
-                .map(RequiredDocumentTypesCheck::parseExtractedDataCountry)
+                .map(this::parseExtractedDataCountry)
                 .orElse(null);
     }
 
-    private static String parseExtractedDataCountry(final DocumentResultEntity documentResult) {
+    private String parseExtractedDataCountry(final DocumentResultEntity documentResult) {
         try {
             final var extractedData = documentResult.getExtractedData();
             if (extractedData == null) {
                 return null;
             }
 
-            return OBJECT_MAPPER.readValue(extractedData, DocumentExtractedDataValue.class)
+            return objectMapper.readValue(extractedData, DocumentExtractedDataValue.class)
                     .country();
         } catch (JsonProcessingException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);

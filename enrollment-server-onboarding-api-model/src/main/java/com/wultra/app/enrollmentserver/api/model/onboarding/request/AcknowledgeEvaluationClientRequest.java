@@ -24,13 +24,19 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Request object for client evaluation acknowledgement.
  *
+ * @param processId Process ID
+ * @param userId User ID.
+ * @param identityVerificationId Identity verification ID.
+ * @param evaluationResult The evaluation result.
+ * @param evaluationResultReason The reason is used when the result is NOK to disclose the reason of rejection.
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 public record AcknowledgeEvaluationClientRequest(
     @NotBlank String processId,
     @NotBlank String userId,
     @NotBlank String identityVerificationId,
-    @NotNull EvaluationResult evaluationResult
+    @NotNull EvaluationResult evaluationResult,
+    String evaluationResultReason
 ) {
     public enum EvaluationResult {
 

@@ -69,9 +69,16 @@ public class ApplicationConfigurationController {
             @EncryptedRequestBody OidcApplicationConfigurationRequest request,
             @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, PowerAuthApplicationConfigurationException {
 
+        logger.info("action: fetchOidcConfiguration, state: initiated, providerId: {}", request != null ? request.getProviderId() : null);
+
         if (encryptionContext == null) {
-            logger.error("Encryption failed");
+            logger.error("action: fetchOidcConfiguration, state: failed, reason: encryptionFailed");
             throw new PowerAuthEncryptionException("Encryption failed");
+        }
+
+        if (request == null) {
+            logger.error("action: fetchOidcConfiguration, state: failed, reason: invalidRequest");
+            throw new PowerAuthEncryptionException("Invalid request");
         }
 
         final OidcApplicationConfiguration oidcApplicationConfiguration = oidcApplicationConfigurationService.fetchOidcApplicationConfiguration(OidcConfigurationQuery.builder()
@@ -79,6 +86,7 @@ public class ApplicationConfigurationController {
                 .applicationKey(encryptionContext.getApplicationKey())
                 .build());
         final OidcApplicationConfigurationResponse result = convert(oidcApplicationConfiguration);
+        logger.info("action: fetchOidcConfiguration, state: succeeded");
         return new ObjectResponse<>(result);
     }
 

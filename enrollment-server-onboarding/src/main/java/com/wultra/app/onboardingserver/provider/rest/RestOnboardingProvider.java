@@ -411,6 +411,8 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ClientEvaluateRequestDto.ImageType convert(final ProcessedDocumentDataType source) {
         return switch (source) {
             case FACE_IMAGE -> ClientEvaluateRequestDto.ImageType.FACE;
+            case DOCUMENT_FRONT_SIDE -> ClientEvaluateRequestDto.ImageType.DOCUMENT_FRONT_SIDE;
+            case DOCUMENT_BACK_SIDE -> ClientEvaluateRequestDto.ImageType.DOCUMENT_BACK_SIDE;
         };
     }
 }
