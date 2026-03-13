@@ -38,6 +38,7 @@ import java.util.Set;
  * @param approvalEnabled            Whether to call bank systems to approve the client.
  * @param documents                  List of documents.
  * @param clientEvaluationEnabled    Whether to call bank systems to evaluate the client.
+ * @param consentRequired            Specifies whether user consent must be accepted.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Jacksonized
@@ -50,7 +51,8 @@ public record OnboardingProcessConfigurationValue(
         @Valid Documents documents,
         ActivationType activationType,
         boolean approvalEnabled,
-        boolean clientEvaluationEnabled
+        boolean clientEvaluationEnabled,
+        boolean consentRequired
 ) implements Serializable {
 
     @Serial
