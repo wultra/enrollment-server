@@ -98,6 +98,8 @@
         <springdoc-openapi-starter-webmvc-ui.version>2.8.16</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.5</moneta.version>
         <central.publishing.plugin.version>0.10.0</central.publishing.plugin.version>
+        <maven-dependency-plugin.version>3.10.0</maven-dependency-plugin.version>
+
 
         <wultra-core.version>2.0.0</wultra-core.version>
         <powerauth-crypto.version>2.0.1</powerauth-crypto.version>
