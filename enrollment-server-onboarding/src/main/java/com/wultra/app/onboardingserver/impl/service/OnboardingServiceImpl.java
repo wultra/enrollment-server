@@ -372,8 +372,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      * Check if verify the presence with OTP is enabled for the given process ID.
      *
      * @param processId Process ID.
-     * @return {@code true} if verify the presence with OTP feature is enabled in the process configuration,
-     *         {@code false} otherwise
+     * @return {@code true} if verify the presence with OTP feature is enabled in the process configuration, {@code false} otherwise
      * @throws OnboardingProcessException if the onboarding process cannot be found or its configuration cannot be read.
      */
     @Transactional(readOnly = true)
