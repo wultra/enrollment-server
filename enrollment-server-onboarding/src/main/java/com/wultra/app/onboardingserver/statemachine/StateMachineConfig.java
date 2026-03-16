@@ -139,6 +139,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ClientEvaluationEnabledGuard clientEvaluationEnabledGuard;
 
+    private final ConsentPendingGuard consentPendingGuard;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -246,7 +248,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.INITIAL)
                 .event(OnboardingEvent.IDENTITY_VERIFICATION_INIT)
-                .guard(processIdentifierGuard)
+                .guard(createCompositeGuard(processIdentifierGuard, consentPendingGuard))
                 .action(verificationInitAction)
                 .target(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }

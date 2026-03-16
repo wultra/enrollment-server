@@ -126,6 +126,13 @@ public class OnboardingProcessEntity implements Serializable {
     @Column(name = "timestamp_failed")
     private Date timestampFailed;
 
+    /**
+     * @implNote The database column allows NULL values for backward compatibility with existing records, but new records must have a non-null value.
+     */
+    @Column(name = "consent_accepted")
+    @NotNull
+    private Boolean consentAccepted;
+
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
     @OrderBy("timestampCreated")
     @ToString.Exclude
