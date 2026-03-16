@@ -121,7 +121,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
                 .withHeader("Content-Type", "application/json")
                 .withBody("""
                     {
-                      "result": "OK"
+                      "otpSent": true
                     }
                     """)
                 .build();
@@ -137,7 +137,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
 
         if (otpCode == null) {
             return new ResponseDefinitionBuilder()
-                    .withStatus(404)
+                    .withStatus(400)
                     .withHeader("Content-Type", "application/json")
                     .withBody("""
                         {
