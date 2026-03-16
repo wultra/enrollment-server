@@ -69,7 +69,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                 .otpForIdentityVerification(true)
                 .useTemporaryActivation(true)
                 .approvalEnabled(true)
-                .pseudoScaEnabled(true)
+                .verifyPresenceWithOtp(true)
                 .documents(
                         OnboardingProcessConfigurationValue.Documents.builder()
                                 .totalRequiredDocumentsCount((byte) 2)
@@ -108,7 +108,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                 .activationType(OnboardingProcessConfigurationValue.ActivationType.IDENTITY)
                 .otpForIdentification(false)
                 .otpForIdentityVerification(false)
-                .pseudoScaEnabled(false)
+                .verifyPresenceWithOtp(false)
                 .documents(
                         OnboardingProcessConfigurationValue.Documents.builder()
                                 .totalRequiredDocumentsCount((byte) 0)

@@ -195,13 +195,13 @@ public class PresenceCheckService {
     }
 
     /**
-     * Check if pseudo SCA is passed for given identity verification.
+     * Check if verify the presence with OTP is passed for given identity verification.
      *
      * @param identityVerification Identity verification.
-     * @return True if pseudo SCA is passed, false otherwise.
+     * @return {code true} if verify the presence with OTP is passed, {@code false} otherwise.
      */
     @Transactional(readOnly = true)
-    public boolean isPseudoScaPassed(final IdentityVerificationEntity identityVerification) {
+    public boolean isVerifyPresenceWithOtpPassed(final IdentityVerificationEntity identityVerification) {
         final ScaResultEntity scaResultEntity = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification).orElse(null);
         if (scaResultEntity == null) {
             return false;

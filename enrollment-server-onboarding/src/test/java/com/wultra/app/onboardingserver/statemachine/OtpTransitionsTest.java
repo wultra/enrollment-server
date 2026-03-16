@@ -123,7 +123,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(verificationProcessResultAction).execute(any());
 
-        when(presenceCheckService.isPseudoScaPassed(idVerification))
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(idVerification))
                 .thenReturn(true);
 
         Message<OnboardingEvent> message =

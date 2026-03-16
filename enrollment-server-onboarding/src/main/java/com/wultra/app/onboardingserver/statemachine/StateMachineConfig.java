@@ -136,9 +136,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ClientEvaluationEnabledGuard clientEvaluationEnabledGuard;
 
-    private final PseudoScaEnabledGuard pseudoScaEnabledGuard;
+    private final VerifyPresenceWithOtpEnabledGuard verifyPresenceWithOtpEnabledGuard;
 
-    private final PseudoScaPassedGuard pseudoScaPassedGuard;
+    private final VerifyPresenceWithOtpPassedGuard verifyPresenceWithOtpPassedGuard;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
@@ -425,7 +425,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
-                .first(OnboardingState.CHOICE_OTP_ENABLED, pseudoScaEnabledGuard)
+                .first(OnboardingState.CHOICE_OTP_ENABLED, verifyPresenceWithOtpEnabledGuard)
                 .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
 
@@ -508,7 +508,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING)
-                .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED, pseudoScaPassedGuard)
+                .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED, verifyPresenceWithOtpPassedGuard)
                 .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
 

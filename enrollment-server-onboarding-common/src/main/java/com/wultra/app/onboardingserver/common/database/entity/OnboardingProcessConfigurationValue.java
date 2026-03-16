@@ -38,7 +38,7 @@ import java.util.Set;
  * @param approvalEnabled            Whether to call bank systems to approve the client.
  * @param documents                  List of documents.
  * @param clientEvaluationEnabled    Whether to call bank systems to evaluate the client.
- * @param pseudoScaEnabled           Whether to use pseudo-SCA. If {@code true}, hide the result of presence check until valid OTP is entered.
+ * @param verifyPresenceWithOtp      Whether to verify the presence with OTP. If {@code true}, hide the result of presence check until valid OTP is entered.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Jacksonized
@@ -52,7 +52,7 @@ public record OnboardingProcessConfigurationValue(
         ActivationType activationType,
         boolean approvalEnabled,
         boolean clientEvaluationEnabled,
-        boolean pseudoScaEnabled
+        boolean verifyPresenceWithOtp
 ) implements Serializable {
 
     @Serial
@@ -68,7 +68,7 @@ public record OnboardingProcessConfigurationValue(
             activationType = ActivationType.IDENTITY;
             approvalEnabled = false;
             clientEvaluationEnabled = true;
-            pseudoScaEnabled = true;
+            verifyPresenceWithOtp = true;
         }
     }
 

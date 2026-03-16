@@ -24,21 +24,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * The guard that checks whether pseudo SCA is enabled.
+ * The guard that checks whether verify the presence with OTP is enabled.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class PseudoScaEnabledGuard extends GuardAdapter {
+public class VerifyPresenceWithOtpEnabledGuard extends GuardAdapter {
 
     private final OnboardingServiceImpl onboardingService;
 
     @Override
     protected boolean evaluate(final String processId, final OwnerId ownerId) {
         try {
-            final boolean result = onboardingService.isPseudoScaEnabled(processId);
+            final boolean result = onboardingService.isVerifyPresenceWithOtpEnabled(processId);
             logger.debug("Pseudo SCA is enabled: {} for processId: {}, {}", result, processId, ownerId);
             return result;
         } catch (OnboardingProcessException e) {

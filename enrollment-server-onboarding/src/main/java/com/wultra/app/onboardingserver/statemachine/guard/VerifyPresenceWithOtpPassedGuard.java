@@ -28,21 +28,21 @@ import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
- * The guard that checks whether pseudo SCA passed.
+ * The guard that checks whether verify the presence with OTP passed.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class PseudoScaPassedGuard implements Guard<OnboardingState, OnboardingEvent> {
+public class VerifyPresenceWithOtpPassedGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final PresenceCheckService presenceCheckService;
 
     @Override
     public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        final boolean result = presenceCheckService.isPseudoScaPassed(identityVerification);
+        final boolean result = presenceCheckService.isVerifyPresenceWithOtpPassed(identityVerification);
         logger.debug("Pseudo SCA is passed: {} for processId: {}", result, identityVerification.getProcessId());
         return result;
     }
