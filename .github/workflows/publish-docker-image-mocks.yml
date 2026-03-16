@@ -113,7 +113,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ env.TAGS }}
           file: ${{ matrix.app }}/docker/Dockerfile
-          context: ${{ matrix.app }}
+          context: .
       - name: Resolve image digests
         if: ${{ needs.set-environment.outputs.should_push == 'true' }}
         id: digests
