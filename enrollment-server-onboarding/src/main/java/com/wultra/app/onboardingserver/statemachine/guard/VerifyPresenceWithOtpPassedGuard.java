@@ -43,7 +43,7 @@ public class VerifyPresenceWithOtpPassedGuard implements Guard<OnboardingState, 
     public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
         final boolean result = presenceCheckService.isVerifyPresenceWithOtpPassed(identityVerification);
-        logger.debug("Pseudo SCA is passed: {} for processId: {}", result, identityVerification.getProcessId());
+        logger.debug("Verify the presence with OTP is passed: {} for processId: {}", result, identityVerification.getProcessId());
         return result;
     }
 }

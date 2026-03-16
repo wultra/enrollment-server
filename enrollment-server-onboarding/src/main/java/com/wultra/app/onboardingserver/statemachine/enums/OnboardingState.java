@@ -102,9 +102,9 @@ public enum OnboardingState {
      * Choice state that branches based on the {@code verifyPresenceWithOtpEnabled} configuration.
      * When verify the presence with OTP is enabled, the state machine hides the result of the presence check until a valid OTP is entered.
      */
-    CHOICE_PSEUDO_SCA_ENABLED,
+    CHOICE_VERIFY_PRESENCE_WITH_OTP_ENABLED,
 
-    CHOICE_PSEUDO_SCA_PROCESSING,
+    CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING,
 
     CHOICE_COMPLETED_STATE,
 

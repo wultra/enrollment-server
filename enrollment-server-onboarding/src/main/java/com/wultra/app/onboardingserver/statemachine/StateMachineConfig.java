@@ -165,8 +165,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
                 .choice(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED)
-                .choice(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
-                .choice(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING)
+                .choice(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_ENABLED)
+                .choice(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING)
                 .end(OnboardingState.CLIENT_EVALUATION_FAILED)
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
@@ -415,16 +415,16 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_REJECTED)
-                .target(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+                .target(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_ENABLED)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_FAILED)
-                .target(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+                .target(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_ENABLED)
 
                 .and()
                 .withChoice()
-                .source(OnboardingState.CHOICE_PSEUDO_SCA_ENABLED)
+                .source(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_ENABLED)
                 .first(OnboardingState.CHOICE_OTP_ENABLED, verifyPresenceWithOtpEnabledGuard)
                 .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
@@ -502,12 +502,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_OTP_VERIFICATION)
-                .first(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING, otpVerifiedGuard)
+                .first(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING, otpVerifiedGuard)
                 .last(OnboardingState.OTP_VERIFICATION_PENDING)
 
                 .and()
                 .withChoice()
-                .source(OnboardingState.CHOICE_PSEUDO_SCA_PROCESSING)
+                .source(OnboardingState.CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING)
                 .first(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED, verifyPresenceWithOtpPassedGuard)
                 .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }

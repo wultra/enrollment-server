@@ -39,7 +39,7 @@ public class VerifyPresenceWithOtpEnabledGuard extends GuardAdapter {
     protected boolean evaluate(final String processId, final OwnerId ownerId) {
         try {
             final boolean result = onboardingService.isVerifyPresenceWithOtpEnabled(processId);
-            logger.debug("Pseudo SCA is enabled: {} for processId: {}, {}", result, processId, ownerId);
+            logger.debug("Verify the presence with OTP is enabled: {} for processId: {}, {}", result, processId, ownerId);
             return result;
         } catch (OnboardingProcessException e) {
             logger.error("Error fetching configuration for processId: {}, {}", processId, ownerId, e);
