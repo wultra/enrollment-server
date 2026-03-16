@@ -32,10 +32,24 @@
     <description>Onboarding adapter mock for enrollment server.</description>
 
     <properties>
+        <wiremock.version>3.13.2</wiremock.version>
         <skipPublishing>true</skipPublishing>
         <maven.deploy.skip>true</maven.deploy.skip>
-        <wiremock.version>2.33.2</wiremock.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>${wiremock.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -48,12 +62,22 @@
                             <goal>copy</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>copy-runtime-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                        <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                        <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <artifactItems>
                         <artifactItem>
-                            <groupId>com.github.tomakehurst</groupId>
-                            <artifactId>wiremock-jre8-standalone</artifactId>
+                            <groupId>org.wiremock</groupId>
+                            <artifactId>wiremock-standalone</artifactId>
                             <version>${wiremock.version}</version>
                         </artifactItem>
                     </artifactItems>

@@ -3,8 +3,10 @@
 mydir=`dirname $0`
 cd $mydir/..
 
-java -jar target/dependency/wiremock-jre8-standalone.jar \
+java -cp "target/dependency/*:target/*" \
+     wiremock.Run \
     --port 8090 \
     --root-dir "src/test/wiremock" \
     --verbose \
-    --global-response-templating
+    --global-response-templating \
+    --extensions com.wultra.app.enrollmentserver.mockutils.OtpStoreTransformer
