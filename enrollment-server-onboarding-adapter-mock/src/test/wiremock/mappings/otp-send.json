@@ -8,7 +8,6 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "body-otp-send.json",
     "transformers": ["otp-store-transformer"]
   }
 }
