@@ -30,7 +30,6 @@
     <artifactId>enrollment-server-onboarding-adapter-mock</artifactId>
     <name>enrollment-server-onboarding-adapter-mock</name>
     <description>Onboarding adapter mock for enrollment server.</description>
-    <packaging>jar</packaging>
 
     <properties>
         <wiremock.version>3.13.2</wiremock.version>
