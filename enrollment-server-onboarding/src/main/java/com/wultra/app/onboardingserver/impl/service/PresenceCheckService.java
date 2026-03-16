@@ -73,17 +73,6 @@ public class PresenceCheckService {
     private final SelfieRepository selfieRepository;
 
     /**
-     * Prepares presence check to not initialized state.
-     *
-     * @param ownerId Owner identification.
-     * @param idVerification Identity verification entity.
-     */
-    @Transactional
-    public void prepareNotInitialized(OwnerId ownerId, IdentityVerificationEntity idVerification) {
-        identityVerificationService.moveToPhaseAndStatus(idVerification, PRESENCE_CHECK, NOT_INITIALIZED, ownerId);
-    }
-
-    /**
      * Initializes presence check process.
      *
      * @param ownerId Owner identification.
@@ -203,6 +192,22 @@ public class PresenceCheckService {
         } else {
             logger.debug("Skipped cleanup of presence check data at the provider (not enabled), {}", ownerId);
         }
+    }
+
+    /**
+     * Check if verify the presence with OTP is passed for given identity verification.
+     *
+     * @param identityVerification Identity verification.
+     * @return {code true} if verify the presence with OTP is passed, {@code false} otherwise.
+     */
+    @Transactional(readOnly = true)
+    public boolean isVerifyPresenceWithOtpPassed(final IdentityVerificationEntity identityVerification) {
+        final ScaResultEntity scaResultEntity = scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification).orElse(null);
+        if (scaResultEntity == null) {
+            return false;
+        }
+
+        return scaResultEntity.getScaResult() == ScaResultEntity.Result.SUCCESS;
     }
 
     /**
