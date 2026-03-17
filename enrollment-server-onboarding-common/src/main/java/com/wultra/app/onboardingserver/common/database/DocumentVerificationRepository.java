@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationIdsView;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -125,6 +126,13 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             WHERE d.uploadId IN :uploadIds
     """)
     List<DocumentVerificationEntity> findAllByUploadIds(final List<String> uploadIds);
+
+    @Query("""
+            SELECT d.id AS id, d.uploadId AS uploadId, d.photoId AS photoId
+            FROM DocumentVerificationEntity d
+            WHERE d.activationId = :activationId
+    """)
+    List<DocumentVerificationIdsView> findAllUploadIdPhotoIdByActivationId(final String activationId);
 
     @Query("""
             SELECT d

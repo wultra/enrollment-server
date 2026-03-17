@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2022 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -14,40 +14,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
+package com.wultra.app.onboardingserver.statemachine.guard;
 
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
-import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
- * Action for a not initialized presence check
+ * The guard that checks whether verify the presence with OTP passed.
  *
- * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
+ * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
-public class PresenceCheckNotInitializedAction implements Action<OnboardingState, OnboardingEvent> {
+@AllArgsConstructor
+@Slf4j
+public class VerifyPresenceWithOtpPassedGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private final PresenceCheckService presenceCheckService;
 
-    @Autowired
-    public PresenceCheckNotInitializedAction(final PresenceCheckService presenceCheckService) {
-        this.presenceCheckService = presenceCheckService;
-    }
-
     @Override
-    public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        presenceCheckService.prepareNotInitialized(ownerId, identityVerification);
+    public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final boolean result = presenceCheckService.isVerifyPresenceWithOtpPassed(identityVerification);
+        logger.debug("Verify the presence with OTP is passed: {} for processId: {}", result, identityVerification.getProcessId());
+        return result;
     }
-
 }

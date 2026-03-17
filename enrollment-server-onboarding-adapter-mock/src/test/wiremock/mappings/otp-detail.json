@@ -1,13 +1,10 @@
 {
   "request": {
     "method": "POST",
-    "url": "/otp/send"
+    "url": "/otp/detail"
   },
   "response": {
     "status": 200,
-    "headers": {
-      "Content-Type": "application/json"
-    },
     "transformers": ["otp-store-transformer"]
   }
 }

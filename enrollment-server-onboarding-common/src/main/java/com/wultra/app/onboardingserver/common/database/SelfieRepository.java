@@ -41,4 +41,8 @@ public interface SelfieRepository extends CrudRepository<SelfieEntity, Long> {
     @Modifying
     @Query("DELETE FROM SelfieEntity s WHERE s.timestampCreated < :dateCleanup")
     int cleanup(Date dateCleanup);
+
+    @Modifying
+    @Query("DELETE FROM SelfieEntity s WHERE s.identityVerification.id = :identityVerificationId")
+    void deleteAllByIdentityVerificationId(final String identityVerificationId);
 }
