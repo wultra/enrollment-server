@@ -28,9 +28,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.VerificationSdkInfo;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
@@ -47,13 +45,13 @@ import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocum
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
@@ -85,6 +83,8 @@ public class IdentityVerificationService {
     private final IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
 
     private final AuditService auditService;
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final DocumentResultRepository documentResultRepository;
 
     /**
      * Finds the current verification identity
@@ -453,18 +453,14 @@ public class IdentityVerificationService {
     @Transactional
     public void cleanup(OwnerId ownerId)
             throws DocumentVerificationException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException, OnboardingProcessException {
-
-        List<String> uploadIds = documentVerificationRepository.findAllUploadIds(ownerId.getActivationId());
+        final var idsViews = documentVerificationRepository.findAllUploadIdPhotoIdByActivationId(ownerId.getActivationId());
 
         if (identityVerificationConfig.isDocumentVerificationCleanupEnabled()) {
-            documentVerificationProvider.cleanupDocuments(ownerId, uploadIds);
-            final IdentityVerificationEntity identityVerification = findBy(ownerId);
-            auditService.auditDocumentVerificationProvider(identityVerification, "Cleaned up documents for user: {}", ownerId.getUserId());
+            deleteDocumentData(ownerId, idsViews);
         } else {
             logger.debug("Skipped cleanup of documents at document verification provider (not enabled), {}", ownerId);
         }
 
-        // Set status of all not finished document verifications to failed
         documentVerificationRepository.failVerifications(ownerId.getActivationId(), ownerId.getTimestamp(), DocumentStatus.ALL_NOT_FINISHED);
 
         // Reset identity verification, the client is expected to call /api/identity/init for the next round of verification
@@ -525,35 +521,6 @@ public class IdentityVerificationService {
         moveToPhaseAndStatus(idVerification, DOCUMENT_UPLOAD, status, ownerId);
     }
 
-    private List<String> collectRejectionErrors(DocumentVerificationEntity entity) {
-        List<String> errors = new ArrayList<>();
-
-        // Collect all rejection reasons from the latest document result
-        Optional<DocumentResultEntity> docResultOptional = entity.getResults().stream().findFirst();
-        if (docResultOptional.isPresent()) {
-            DocumentResultEntity docResult = docResultOptional.get();
-            List<String> rejectionReasons;
-            try {
-                rejectionReasons = documentVerificationProvider.parseRejectionReasons(docResult);
-                final IdentityVerificationEntity identityVerification = docResult.getDocumentVerification().getIdentityVerification();
-                auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", identityVerification.getUserId());
-            } catch (DocumentVerificationException e) {
-                logger.debug("Parsing rejection reasons failure", e);
-                logger.warn("Unable to parse rejection reasons from {} of a rejected {}", docResult, entity);
-                return Collections.emptyList();
-            }
-            if (rejectionReasons.isEmpty()) {
-                logger.warn("No rejection reasons found in {} of a rejected {}", docResult, entity);
-            } else {
-                errors.addAll(rejectionReasons);
-            }
-        } else {
-            logger.warn("Missing document result for {}, defaulting errors to reject reason", entity);
-            errors.add(entity.getRejectReason());
-        }
-        return errors;
-    }
-
     /**
      * Create {@link DocumentMetadataResponseDto} from {@link DocumentVerificationEntity}
      * @param entity Document verification entity.
@@ -571,5 +538,36 @@ public class IdentityVerificationService {
         docMetadata.setStatus(entity.getStatus());
         docMetadata.setType(entity.getType());
         return docMetadata;
+    }
+
+    private void deleteDocumentData(final OwnerId ownerId, final List<DocumentVerificationIdsView> idsViews) throws RemoteCommunicationException, DocumentVerificationException, IdentityVerificationNotFoundException {
+        final var uploadIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getUploadId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        logger.info("Deleting DocumentData ids: {}", uploadIds);
+        documentDataRepository.deleteAllById(uploadIds);
+
+        final var processedDocumentIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getPhotoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        logger.info("Deleting ProcessedDocumentData ids: {}", processedDocumentIds);
+        processedDocumentDataRepository.deleteAllById(processedDocumentIds);
+
+        documentVerificationProvider.cleanupDocuments(ownerId, uploadIds.stream().toList());
+
+        final var documentVerificationIds = idsViews.stream()
+                .map(DocumentVerificationIdsView::getId)
+                .collect(Collectors.toSet());
+
+        logger.info("Cleaning DocumentResult documentVerificationIds: {}", documentVerificationIds);
+        documentResultRepository.clean(documentVerificationIds);
+
+        final IdentityVerificationEntity identityVerification = findBy(ownerId);
+        auditService.auditDocumentVerificationProvider(identityVerification, "Cleaned up documents for user: {}", ownerId.getUserId());
+        logger.info("All document data successfully deleted");
     }
 }
