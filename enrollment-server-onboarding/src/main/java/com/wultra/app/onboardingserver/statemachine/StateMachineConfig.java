@@ -26,7 +26,6 @@ import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationRe
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
-import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckNotInitializedAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.*;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -89,8 +88,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckInitAction presenceCheckInitAction;
 
-    private final PresenceCheckNotInitializedAction presenceCheckNotInitializedAction;
-
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
 
     private final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
@@ -143,7 +140,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final VerifyPresenceWithOtpPassedGuard verifyPresenceWithOtpPassedGuard;
 
-    private final ConsentPendingGuard consentPendingGuard;
+    private final ConsentResolvedGuard consentResolvedGuard;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
@@ -255,7 +252,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.INITIAL)
                 .event(OnboardingEvent.IDENTITY_VERIFICATION_INIT)
-                .guard(createCompositeGuard(processIdentifierGuard, consentPendingGuard))
+                .guard(createCompositeGuard(processIdentifierGuard, consentResolvedGuard))
                 .action(verificationInitAction)
                 .target(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }

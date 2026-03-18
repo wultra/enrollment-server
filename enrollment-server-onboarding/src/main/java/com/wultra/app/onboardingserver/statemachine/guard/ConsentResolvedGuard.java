@@ -26,14 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Guard that checks whether the consent is pending.
+ * Guard that checks that there is no consent pending.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Component
 @AllArgsConstructor
 @Slf4j
-public class ConsentPendingGuard extends GuardAdapter {
+public class ConsentResolvedGuard extends GuardAdapter {
 
     private final OnboardingProcessRepository onboardingProcessRepository;
     private final IdentityVerificationStatusService identityVerificationStatusService;
@@ -52,7 +52,7 @@ public class ConsentPendingGuard extends GuardAdapter {
             final var consentPending = identityVerificationStatusService.isConsentPending(process);
             logger.info("Consent pending: {}, processId: {}", consentPending, processId);
             return !consentPending;
-        } catch (final IllegalStateException e) {
+        } catch (final IllegalArgumentException e) {
             logger.warn("Exception when checking consent pending, processId: {}", processId, e);
             return false;
         }

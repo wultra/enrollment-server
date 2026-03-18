@@ -20,8 +20,12 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationCleanupRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.request.IdentityVerificationStatusRequest;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.IdentityVerificationStatusResponse;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsSubmitResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
@@ -32,6 +36,7 @@ import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.client.model.request.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
+import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthActivationImpl;
 import com.wultra.security.powerauth.rest.api.spring.authentication.impl.PowerAuthApiAuthenticationImpl;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
@@ -43,13 +48,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -173,12 +179,7 @@ class IdentityVerificationRestServiceIntTest {
         final var request = new IdentityVerificationCleanupRequest();
         request.setProcessId("0c47c3cf-6f77-4f52-93f2-934efc6322dd");
 
-        final var activationContext = new PowerAuthActivationImpl();
-        activationContext.setUserId("mockuser_264962080414477774");
-        activationContext.setActivationId("5d1fbb02-94b9-4a49-a0fd-7cda061ca655");
-
-        final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
-        apiAuthentication.setActivationContext(activationContext);
+        final var apiAuthentication = buildApiAuthentication("mockuser_264962080414477774", "5d1fbb02-94b9-4a49-a0fd-7cda061ca655");
 
         when(powerAuthClient.listActivationFlags(any(ListActivationFlagsRequest.class), any(MultiValueMap.class), any(MultiValueMap.class)))
                 .thenReturn(new ListActivationFlagsResponse());
@@ -188,6 +189,25 @@ class IdentityVerificationRestServiceIntTest {
 
         // then
         assertDocumentVerificationAndPresenceCheckCleanup();
+    }
+
+    @Test
+    void testCheckIdentityVerificationStatus() throws Exception {
+        // given
+        final var activationId = "a12c9e4f-5b77-4d2b-9f83-6e1a2c0d4b91";
+        final var userId = "mockuser_264962080414477774";
+
+        stubListActivationFlags(activationId);
+
+        final var request = new IdentityVerificationStatusRequest();
+        final var apiAuthentication = buildApiAuthentication(userId, activationId);
+
+        // when
+        final var response = tested.checkIdentityVerificationStatus(new ObjectRequest<>(request), apiAuthentication);
+
+        // then
+        final var responseObject = response.getResponseObject();
+        assertIdentityVerificationStatusResponse(responseObject);
     }
 
     private void assertDocumentVerificationAndPresenceCheckCleanup() throws Exception {
@@ -250,5 +270,39 @@ class IdentityVerificationRestServiceIntTest {
         verify(presenceCheckProvider).cleanupIdentityData(
                 any(OwnerId.class),
                 eq(sessionInfo));
+    }
+
+    private static void assertIdentityVerificationStatusResponse(final IdentityVerificationStatusResponse response) {
+        assertEquals("3f5a8b6e-9c21-4d7f-8b3a-2e4c1d9a7f60", response.getProcessId());
+        assertEquals(IdentityVerificationStatus.FAILED, response.getIdentityVerificationStatus());
+        assertEquals(IdentityVerificationPhase.COMPLETED, response.getIdentityVerificationPhase());
+        assertEquals("onboardingTest", response.getProcessType());
+        assertEquals("test reject reason", response.getRejectReason());
+        assertTrue(response.isConsentRequired());
+
+        final var config = response.getConfig();
+        assertEquals(30, config.getOtpResendPeriodSeconds());
+        assertEquals("PT30S", config.getOtpResendPeriod());
+    }
+
+    private static PowerAuthApiAuthentication buildApiAuthentication(final String userId, final String activationId) {
+        final var activationContext = new PowerAuthActivationImpl();
+        activationContext.setUserId(userId);
+        activationContext.setActivationId(activationId);
+
+        final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
+        apiAuthentication.setActivationContext(activationContext);
+        return apiAuthentication;
+    }
+
+    private void stubListActivationFlags(final String activationId) throws Exception {
+        final var request = new ListActivationFlagsRequest();
+        request.setActivationId(activationId);
+
+        final var response = new ListActivationFlagsResponse();
+        response.setActivationId(activationId);
+
+        when(powerAuthClient.listActivationFlags(request, new LinkedMultiValueMap<>(), new LinkedMultiValueMap<>()))
+                .thenReturn(response);
     }
 }
