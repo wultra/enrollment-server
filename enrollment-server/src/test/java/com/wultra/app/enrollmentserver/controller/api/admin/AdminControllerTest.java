@@ -55,6 +55,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.status", is("OK")))
                 .andExpect(jsonPath("$.responseObject.*", hasSize(1)))
                 .andExpect(jsonPath("$.responseObject[0].title", is("Payment Approval")))
+                .andExpect(jsonPath("$.responseObject[0].ui", containsString("\"flipButtons\": true")))
                 .andExpect(jsonPath("$.responseObject[0].resultTexts.success", is("Payment of ${amount} ${currency} was confirmed")));
     }
 }

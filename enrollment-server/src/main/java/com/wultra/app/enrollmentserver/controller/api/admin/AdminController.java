@@ -71,6 +71,7 @@ public class AdminController {
                 .name(source.getPlaceholder())
                 .title(source.getTitle())
                 .message(source.getMessage())
+                .ui(source.getUi())
                 .language(source.getLanguage())
                 .attributes(convert(source.getAttributes()))
                 .resultTexts(convertResultTexts(source.getResultTexts()))

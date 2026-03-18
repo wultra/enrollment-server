@@ -18,7 +18,10 @@ values
       "value": "iban"
     }
   }
-]', null,
+]',
+'{
+  "flipButtons": true
+}',
  '{
   "success": "Payment of ${amount} ${currency} was confirmed",
   "reject": "Payment was rejected",
