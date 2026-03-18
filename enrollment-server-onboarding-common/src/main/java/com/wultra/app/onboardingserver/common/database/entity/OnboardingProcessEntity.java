@@ -20,12 +20,10 @@ package com.wultra.app.onboardingserver.common.database.entity;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.validation.NotNullOnCreate;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
@@ -128,9 +126,13 @@ public class OnboardingProcessEntity implements Serializable {
 
     /**
      * @implNote The database column allows NULL values for backward compatibility with existing records, but new records must have a non-null value.
+     * For updating an existing entity, the {@link #setConsentAccepted(boolean)} is used.
+     * For creating a new entity, a validation annotation with a group is applied. This is intentional — we enable validation only for {@code pre-persist} (see {@code application.properties}),
+     * not {@code pre-update}. The reason is that {@code pre-update} is triggered by JPA dirty checking during the flush at the end of a transaction,
+     * which would cause validation to run on legacy entities and potentially throw validation errors.
      */
     @Column(name = "consent_accepted")
-    @NotNull
+    @NotNull(groups = NotNullOnCreate.class)
     private Boolean consentAccepted;
 
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL)
@@ -156,6 +158,18 @@ public class OnboardingProcessEntity implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(identificationData, timestampCreated);
+    }
+
+    /**
+     * Setter for {@link #consentAccepted}.
+     *
+     * @param consentAccepted new consent accepted value.
+     * @implNote The field allows a {@link Boolean} because, for legacy records, the value can be {@code null}, and that is considered valid.
+     * However, for any new updates or creations, the value should be a {@code boolean} (either {@code true} or {@code false}, {@code null} is not valid).
+     * That’s why there is an explicit setter with a {@code boolean} parameter.
+     */
+    public void setConsentAccepted(final boolean consentAccepted) {
+        this.consentAccepted = consentAccepted;
     }
 }
 

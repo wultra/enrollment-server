@@ -553,6 +553,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         process.setStatus(OnboardingStatus.ACTIVATION_IN_PROGRESS);
         process.setTimestampCreated(new Date());
         process.setProcessConfiguration(fetchProcessConfiguration(request.processType()));
+        process.setConsentAccepted(false);
         setProcessCustomData(process, request.fdsData(), requestContext);
         return onboardingProcessRepository.save(process);
     }

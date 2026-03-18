@@ -28,6 +28,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -76,7 +78,9 @@ class IdentityVerificationStatusServiceTest {
         final var process = new OnboardingProcessEntity();
         process.setId("0c4d8e71-2f6b-4a99-b3d5-7e1f2c8a6b55");
         process.setProcessConfiguration(processConfig);
-        process.setConsentAccepted(consentAccepted);
+
+        Optional.ofNullable(consentAccepted)
+                .ifPresent(process::setConsentAccepted);
 
         // when
         final var result = tested.isConsentPending(process);
