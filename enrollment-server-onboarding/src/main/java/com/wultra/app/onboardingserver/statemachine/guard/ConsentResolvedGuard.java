@@ -50,7 +50,7 @@ public class ConsentResolvedGuard extends GuardAdapter {
 
         try {
             final var consentPending = identityVerificationStatusService.isConsentPending(process);
-            logger.info("Consent pending: {}, processId: {}", consentPending, processId);
+            logger.debug("Consent pending: {}, processId: {}", consentPending, processId);
             return !consentPending;
         } catch (final IllegalArgumentException e) {
             logger.warn("Exception when checking consent pending, processId: {}", processId, e);

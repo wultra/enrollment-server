@@ -48,14 +48,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -302,7 +302,7 @@ class IdentityVerificationRestServiceIntTest {
         final var response = new ListActivationFlagsResponse();
         response.setActivationId(activationId);
 
-        when(powerAuthClient.listActivationFlags(request, new LinkedMultiValueMap<>(), new LinkedMultiValueMap<>()))
+        when(powerAuthClient.listActivationFlags(eq(request), any(MultiValueMap.class), any(MultiValueMap.class)))
                 .thenReturn(response);
     }
 }
