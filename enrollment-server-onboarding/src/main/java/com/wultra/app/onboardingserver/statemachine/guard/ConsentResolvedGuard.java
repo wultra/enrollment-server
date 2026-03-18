@@ -39,7 +39,7 @@ public class ConsentResolvedGuard extends GuardAdapter {
     private final IdentityVerificationStatusService identityVerificationStatusService;
 
     @Override
-    protected boolean evaluate(final String processId, final OwnerId ownerId) {
+    public boolean evaluate(final String processId, final OwnerId ownerId) {
         final var process = onboardingProcessRepository.findById(processId)
                 .orElse(null);
 
