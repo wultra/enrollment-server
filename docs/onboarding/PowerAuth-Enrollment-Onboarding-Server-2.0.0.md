@@ -130,6 +130,6 @@ For this configuration in total at least 2 unique document types must be submitt
 
 ### Documents data retention
 
-Removed the property `enrollment-server-onboarding.identity-verification.data-retention:1h`. It controlled how long records were kept 
+Removed the property `enrollment-server-onboarding.identity-verification.data-retention` (default 1 hour). It controlled how long records were kept 
 in the `es_document_data` and `es_processed_document_data` tables based on `timestamp_created`. This setting was independent of process expiration.
-The retention time is now controlled by the property `enrollment-server-onboarding.onboarding-process.expiration:3h`.
+The retention time is now controlled by the property `enrollment-server-onboarding.onboarding-process.expiration` (default 3 hours).
