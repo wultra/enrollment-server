@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 
 /**
  * Integration tests for Microblink document verification provider.
@@ -99,6 +101,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String idCardBackExtractionJson;
     private static final String idCardPassValidationResult;
     private static final String idCardRejectValidationResult;
+    private static final String idCardResponseWithoutPersonalDataJson;
 
     private static final Image passportImage;
     private static final String microblinkPassportPassResponseBody;
@@ -179,6 +182,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
             idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
                     .replaceAll("");
+
+            idCardResponseWithoutPersonalDataJson = ((ObjectNode) passResponseTree).remove(List.of("extraction", "images"))
+                    .toString();
 
             // Passport
             passportImage = Image.builder()
@@ -321,6 +327,31 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         // then
         assertProcessedDocumentData();
+    }
+
+    @Test
+    void testSubmitDocuments_documentWith2SidesUploaded_responseLoggedToAudit() throws Exception {
+        // given
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
+
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(microblinkIdCardPassResponseBody));
+
+        // when
+        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        verify(auditService).auditOnboardingProvider(
+                ownerId,
+                idCardResponseWithoutPersonalDataJson,
+                "Document verification response, user: {}, provider: Microblink, documentType: {}",
+                ownerId.getUserId(),
+                DocumentType.ID_CARD);
     }
 
     @Test
