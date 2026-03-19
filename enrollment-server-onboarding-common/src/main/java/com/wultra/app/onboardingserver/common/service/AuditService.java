@@ -226,7 +226,7 @@ public class AuditService {
      * Audit response from the provider for document verification at info level.
      *
      * @param ownerId Owner identification.
-     * @param documentResponseJson Original document verification response JSON.
+     * @param documentResponseJson Sanitized document verification provider response JSON (without personal data)
      * @param message message, arguments may be put to via template {@code {}}
      * @param args message arguments
      */
