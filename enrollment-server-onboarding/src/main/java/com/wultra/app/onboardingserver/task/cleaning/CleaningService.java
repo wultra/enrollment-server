@@ -141,22 +141,23 @@ class CleaningService {
      */
     @Transactional
     public int cleanSelfies() {
-        final Duration processExpiration = onboardingConfig.getProcessExpirationTime();
-        final Date dateCleanup = DateUtil.convertExpirationToCreatedDate(processExpiration);
-        return selfieRepository.cleanup(dateCleanup);
+        return selfieRepository.cleanup(getProcessExpirationTime());
     }
 
     /**
-     * Cleanup of large documents older than retention time.
+     * Clean document data.
      */
     @Transactional
     public int cleanupDocumentData() {
-        return documentDataRepository.cleanupDocumentData(getDataRetentionTime());
+        return documentDataRepository.cleanupDocumentData(getProcessExpirationTime());
     }
 
+    /**
+     * Clean processed document data.
+     */
     @Transactional
     public int cleanupProcessedDocumentData() {
-        return processedDocumentDataRepository.cleanup(getDataRetentionTime());
+        return processedDocumentDataRepository.cleanup(getProcessExpirationTime());
     }
 
     /**
@@ -196,8 +197,8 @@ class CleaningService {
         }
     }
 
-    private Date getDataRetentionTime() {
-        return DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetentionTime());
+    private Date getProcessExpirationTime() {
+        return DateUtil.convertExpirationToCreatedDate(onboardingConfig.getProcessExpirationTime());
     }
 
     private Date getVerificationExpirationTime() {

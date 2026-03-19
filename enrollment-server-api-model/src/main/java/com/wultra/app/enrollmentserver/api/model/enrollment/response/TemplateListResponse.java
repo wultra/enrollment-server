@@ -37,6 +37,6 @@ public class TemplateListResponse extends ArrayList<TemplateListResponse.Templat
     private static final long serialVersionUID = -5446919236567435144L;
 
     @Builder
-    public record TemplateDetail(String name, String title, String message, List<Object> attributes, String language, Map<String, String> resultTexts) {
+    public record TemplateDetail(String name, String title, String message, String ui, List<Object> attributes, String language, Map<String, String> resultTexts) {
     }
 }
