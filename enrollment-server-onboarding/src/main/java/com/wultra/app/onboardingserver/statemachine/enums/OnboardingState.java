@@ -83,12 +83,17 @@ public enum OnboardingState {
 
     CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED,
     CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT,
+
+    /**
+     * @implNote Normally it should not be a choice state, but because of backward compatibility, we must not expose it to the mobile, because the older version does not know it.
+     */
     CHOICE_CLIENT_EVALUATION_ACCEPTED,
 
     CHOICE_DOCUMENT_VERIFICATION_PROCESSING,
 
     CHOICE_OTP_VERIFICATION,
 
+    CHOICE_PRESENCE_CHECK_ENABLED,
     CHOICE_PRESENCE_CHECK_PROCESSING,
 
     CHOICE_ONBOARDING_APPROVAL_ENABLED,
