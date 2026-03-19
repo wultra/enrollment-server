@@ -230,7 +230,7 @@ public class AuditService {
      * @param message message, arguments may be put to via template {@code {}}
      * @param args message arguments
      */
-    public void auditOnboardingProvider(final OwnerId ownerId, final String documentResponseJson, final String message, final Object... args) {
+    public void auditDocumentVerificationProvider(final OwnerId ownerId, final String documentResponseJson, final String message, final Object... args) {
         final AuditDetail auditDetail = AuditDetail.builder()
                 .type(AuditType.ONBOARDING_PROVIDER.code)
                 .param(ACTIVATION_ID, ownerId.getActivationId())

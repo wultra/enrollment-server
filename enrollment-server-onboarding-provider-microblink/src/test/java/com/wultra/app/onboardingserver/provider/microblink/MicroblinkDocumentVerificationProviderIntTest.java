@@ -346,7 +346,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(auditService).auditOnboardingProvider(
+        verify(auditService).auditDocumentVerificationProvider(
                 ownerId,
                 idCardResponseWithoutPersonalDataJson,
                 "Document verification response, user: {}, provider: Microblink, documentType: {}",

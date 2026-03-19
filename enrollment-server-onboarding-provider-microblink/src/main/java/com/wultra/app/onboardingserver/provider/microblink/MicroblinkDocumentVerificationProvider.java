@@ -789,7 +789,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var documentType = entry.getKey();
             final var microblinkResponse = entry.getValue().responseWithoutPersonalDataJson();
 
-            auditService.auditOnboardingProvider(ownerId, microblinkResponse, "Document verification response, user: {}, provider: Microblink, documentType: {}", ownerId.getUserId(), documentType);
+            auditService.auditDocumentVerificationProvider(ownerId, microblinkResponse, "Document verification response, user: {}, provider: Microblink, documentType: {}", ownerId.getUserId(), documentType);
         }
     }
 
