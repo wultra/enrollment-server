@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
@@ -42,6 +43,7 @@ public class AuditService {
     private static final String OTP_ID = "otpId";
     private static final String DOCUMENT_ID = "documentId";
     private static final String DOCUMENT_VERIFICATION_ID = "documentVerificationId";
+    private static final String DOCUMENT_RESPONSE_JSON = "documentResponseJson";
 
     private final Audit audit;
 
@@ -217,6 +219,25 @@ public class AuditService {
      */
     public void auditOnboardingProvider(final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
         final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, identityVerification);
+        audit.info(message, auditDetail, args);
+    }
+
+    /**
+     * Audit response from the provider for document verification at info level.
+     *
+     * @param ownerId Owner identification.
+     * @param documentResponseJson Original document verification response JSON.
+     * @param message message, arguments may be put to via template {@code {}}
+     * @param args message arguments
+     */
+    public void auditOnboardingProvider(final OwnerId ownerId, final String documentResponseJson, final String message, final Object... args) {
+        final AuditDetail auditDetail = AuditDetail.builder()
+                .type(AuditType.ONBOARDING_PROVIDER.code)
+                .param(ACTIVATION_ID, ownerId.getActivationId())
+                .param(USER_ID, ownerId.getUserId())
+                .param(DOCUMENT_RESPONSE_JSON, documentResponseJson)
+                .build();
+
         audit.info(message, auditDetail, args);
     }
 

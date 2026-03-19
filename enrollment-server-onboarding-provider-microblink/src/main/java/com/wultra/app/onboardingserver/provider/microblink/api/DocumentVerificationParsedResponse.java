@@ -36,6 +36,7 @@ public record DocumentVerificationParsedResponse(
     String extractionFrontJson,
     String extractionBackJson,
     String responseWithoutImagesJson,
+    String responseWithoutPersonalDataJson,
     List<Message> messages
 ) {
     public record Verification(

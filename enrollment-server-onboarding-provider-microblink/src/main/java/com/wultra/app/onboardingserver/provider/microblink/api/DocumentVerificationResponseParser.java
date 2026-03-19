@@ -60,11 +60,15 @@ public class DocumentVerificationResponseParser {
         ((ObjectNode) root).remove("images");
         final var responseWithoutImagesJson = root.toString();
 
+        ((ObjectNode) root).remove("extraction");
+        final var responseWithoutPersonalDataJson = root.toString();
+
         return response.toBuilder()
                 .extractionFrontJson(extractionFrontJson)
                 .extractionBackJson(extractionBackJson)
                 .verificationJson(verificationJson)
                 .responseWithoutImagesJson(responseWithoutImagesJson)
+                .responseWithoutPersonalDataJson(responseWithoutPersonalDataJson)
                 .build();
     }
 }
