@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
@@ -75,7 +76,8 @@ class MicroblinkConfig {
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
             DocumentVerificationRepository documentVerificationRepository,
-            MicroblinkExtractedDataParser microblinkExtractedDataParser) {
+            MicroblinkExtractedDataParser microblinkExtractedDataParser,
+            AuditService auditService) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
                 responseParser,
@@ -83,7 +85,8 @@ class MicroblinkConfig {
                 documentDataRepository,
                 processedDocumentDataRepository,
                 documentVerificationRepository,
-                microblinkExtractedDataParser
+                microblinkExtractedDataParser,
+                auditService
         );
     }
 }

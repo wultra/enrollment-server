@@ -34,6 +34,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
@@ -132,6 +133,9 @@ class MicroblinkDocumentVerificationProviderTest {
     @Mock
     private MicroblinkExtractedDataParser microblinkExtractedDataParser;
 
+    @Mock
+    private AuditService auditService;
+
     private MicroblinkDocumentVerificationProvider provider;
 
     @Captor
@@ -201,7 +205,8 @@ class MicroblinkDocumentVerificationProviderTest {
                 documentDataRepository,
                 processedDocumentDataRepository,
                 documentVerificationRepository,
-                microblinkExtractedDataParser
+                microblinkExtractedDataParser,
+                auditService
         );
     }
 

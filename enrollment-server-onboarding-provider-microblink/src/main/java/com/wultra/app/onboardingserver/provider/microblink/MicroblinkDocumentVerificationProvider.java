@@ -33,6 +33,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
+import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
@@ -71,15 +72,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final MicroblinkConfigProperties properties;
     private final MicroblinkExtractedDataParser microblinkExtractedDataParser;
     private final Map<String, Map<String, String>> licenseKeyByOriginByPlatform;
+    private final AuditService auditService;
 
     public MicroblinkDocumentVerificationProvider(
-            RestClient microblinkRestClient,
-            DocumentVerificationResponseParser responseParser,
-            MicroblinkConfigProperties properties,
-            DocumentDataRepository documentDataRepository,
-            ProcessedDocumentDataRepository processedDocumentDataRepository,
-            DocumentVerificationRepository documentVerificationRepository,
-            MicroblinkExtractedDataParser microblinkExtractedDataParser
+            final RestClient microblinkRestClient,
+            final DocumentVerificationResponseParser responseParser,
+            final MicroblinkConfigProperties properties,
+            final DocumentDataRepository documentDataRepository,
+            final ProcessedDocumentDataRepository processedDocumentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final MicroblinkExtractedDataParser microblinkExtractedDataParser,
+            final AuditService auditService
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.responseParser = responseParser;
@@ -88,6 +91,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.microblinkExtractedDataParser = microblinkExtractedDataParser;
+        this.auditService = auditService;
 
         licenseKeyByOriginByPlatform = buildLicenseKeyByOriginByPlatform(properties.getMobileSdkConfigs());
     }
@@ -129,6 +133,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
         final var microblinkResponseByDocumentType = fetchMicroblinkResults(documentsByTypeAndSide);
+        auditMicroblinkResponse(microblinkResponseByDocumentType, ownerId);
 
         final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
@@ -777,6 +782,15 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         documentData.setData(document.image().getData());
         documentData.setTimestampCreated(new Date());
         return documentData;
+    }
+
+    private void auditMicroblinkResponse(final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType, final OwnerId ownerId) {
+        for (final var entry : microblinkResponseByDocumentType.entrySet()) {
+            final var documentType = entry.getKey();
+            final var microblinkResponse = entry.getValue().responseWithoutPersonalDataJson();
+
+            auditService.auditDocumentVerificationProvider(ownerId, microblinkResponse, "Document verification response, user: {}, provider: Microblink, documentType: {}", ownerId.getUserId(), documentType);
+        }
     }
 
     @Builder(toBuilder = true)
