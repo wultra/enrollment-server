@@ -329,6 +329,7 @@ public class IdentityVerificationRestService {
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
         identityVerificationService.submitDocuments(request, ownerId);
+        stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.DOCUMENT_UPLOADED);
 
         return new Response();
     }

@@ -93,7 +93,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
 
         Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.DOCUMENT_UPLOADED);
 
         prepareTest(stateMachine)
                 .sendEvent(message)

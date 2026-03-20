@@ -33,6 +33,8 @@ public enum OnboardingEvent {
 
     EVENT_NEXT_STATE,
 
+    DOCUMENT_UPLOADED,
+
     /**
      * Onboarding approval acknowledged event, success. Used if the approval is in async mode.
      */

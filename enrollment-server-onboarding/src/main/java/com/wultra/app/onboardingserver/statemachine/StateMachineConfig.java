@@ -282,7 +282,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .event(OnboardingEvent.DOCUMENT_UPLOADED)
                 .guard(documentsVerificationPendingGuard)
                 .action(moveToDocumentUploadVerificationPendingAction)
                 .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)

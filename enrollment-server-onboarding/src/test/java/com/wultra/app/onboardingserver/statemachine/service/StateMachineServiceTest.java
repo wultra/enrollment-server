@@ -18,8 +18,10 @@
 package com.wultra.app.onboardingserver.statemachine.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,8 +47,11 @@ class StateMachineServiceTest {
 
     @Test
     @Sql
-    void testChangeMachineStatesInBatch() {
-        tested.changeMachineStatesInBatch();
+    void testProcessStateMachineEvent_documentUploaded() throws Exception {
+        final OwnerId ownerId = new OwnerId();
+        ownerId.setActivationId("a1");
+
+        tested.processStateMachineEvent(ownerId, "p1", OnboardingEvent.DOCUMENT_UPLOADED);
 
         assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, repository.findById("v1").get().getStatus());
     }
