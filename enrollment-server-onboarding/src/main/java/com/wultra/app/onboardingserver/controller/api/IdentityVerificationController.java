@@ -179,7 +179,7 @@ public class IdentityVerificationController {
 
         logger.info("action: checkDocumentStatus, state: initiated, processId: {}", extractRequest(request).map(DocumentStatusRequest::getProcessId).orElse(null));
         final var result = identityVerificationRestService.checkDocumentStatus(request, apiAuthentication);
-        logger.info("action: checkDocumentStatus, state: succeeded");
+        logger.info("action: checkDocumentStatus, state: succeeded, result: {}", result.getResponseObject().getStatus());
         return result;
     }
 
