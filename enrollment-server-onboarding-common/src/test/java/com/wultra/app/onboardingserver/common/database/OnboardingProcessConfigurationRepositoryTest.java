@@ -91,7 +91,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                                                 OnboardingProcessConfigurationValue.Group.builder()
                                                         .items(Set.of(
                                                                 OnboardingProcessConfigurationValue.Document.builder()
-                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENSE)
                                                                         .sideCount((byte) 1)
                                                                         .build()
                                                         ))

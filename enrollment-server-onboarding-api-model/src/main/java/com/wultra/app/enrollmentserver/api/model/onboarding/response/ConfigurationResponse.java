@@ -83,6 +83,6 @@ public record ConfigurationResponse(
     public enum DocumentType {
         ID_CARD,
         PASSPORT,
-        DRIVING_LICENCE
+        DRIVING_LICENSE
     }
 }
