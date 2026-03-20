@@ -34,7 +34,6 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.event.OnboardingCompletedAcceptedEvent;
 import com.wultra.app.onboardingserver.statemachine.guard.*;
-import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
@@ -94,8 +93,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
 
-    private final MoveToDocumentUploadVerificationPendingAction moveToDocumentUploadVerificationPendingAction;
-
     private final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction;
 
     private final DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
@@ -111,8 +108,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private final OnboardingApprovalAction onboardingApprovalAction;
 
     private final IdentityVerificationService identityVerificationService;
-
-    private final DocumentUploadVerificationPendingGuard documentUploadVerificationPendingGuard;
 
     private final OtpVerificationEnabledGuard otpVerificationEnabledGuard;
 
@@ -159,7 +154,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final var configurer = states.withStates();
         configurer
                 .initial(OnboardingState.INITIAL)
-                .choice(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
                 .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
@@ -192,6 +186,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
         final var states = List.of(
+                OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
@@ -217,6 +212,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
+                .doOnError(e -> logger.error("Error during move to phase: {}, state: {}", state.getPhase(), state.getStatus(), e))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
     }
@@ -284,14 +280,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .event(OnboardingEvent.DOCUMENT_UPLOADED)
                 .guard(documentsVerificationPendingGuard)
-                .action(moveToDocumentUploadVerificationPendingAction)
-                .target(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
-
-                .and()
-                .withChoice()
-                .source(OnboardingState.CHOICE_DOCUMENT_UPLOAD)
-                .first(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, documentUploadVerificationPendingGuard)
-                .last(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
+                .target(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING);
     }
 
     private void configureDocumentVerificationTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
