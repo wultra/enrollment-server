@@ -212,7 +212,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
-                .doOnError(e -> logger.error("Error during move to phase: {}, state: {}", state.getPhase(), state.getStatus(), e))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
     }
