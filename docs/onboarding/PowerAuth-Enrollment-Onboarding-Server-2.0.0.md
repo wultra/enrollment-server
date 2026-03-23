@@ -139,7 +139,7 @@ The retention time is now controlled by the property `enrollment-server-onboardi
 
 ### Document Verification
 
-Async processing of documents has not yet been used, so the following configuration properties were removed:
+Async processing of documents has never been used, so the following configuration properties were removed:
 
 ```properties
 enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits.cron=
