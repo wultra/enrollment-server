@@ -55,6 +55,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -190,7 +191,12 @@ public class IdentityVerificationController {
     }
 
     private static Map<String, DocumentStatus> collectDocumentStatuses(final ObjectResponse<DocumentStatusResponse> source) {
-        return source.getResponseObject().getDocuments().stream()
+        final List<DocumentMetadataResponseDto> documents = source.getResponseObject().getDocuments();
+        if (documents == null) {
+            return Map.of();
+        }
+
+        return documents.stream()
                 .collect(Collectors.toMap(DocumentMetadataResponseDto::getId, DocumentMetadataResponseDto::getStatus));
     }
 
