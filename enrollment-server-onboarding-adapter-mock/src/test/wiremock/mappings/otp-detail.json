@@ -1,5 +1,5 @@
 {
-  "priority":10,
+  "priority": 10,
   "request": {
     "method": "POST",
     "url": "/otp/detail"
