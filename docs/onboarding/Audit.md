@@ -45,25 +45,6 @@ The following values are used:
 | `onboardingProvider`           | [Onboarding provider](./External-Onboarding-Services.md) operations |
 
 
-## Audit levels
-
-A value in the `audit_log.audit_level` column is used to categorize the audit log entry according to severity.
-
-Values from the table below are supported. The table is sorted from the lowest logging level to the highest. Selecting a log level 
-includes all levels that precede it. For example, if the level `INFO` is configured, all messages with levels `ERROR`, `WARN` and `INFO` are persisted, 
-while messages with levels `DEBUG` and `TRACE` are ignored and not persisted.
-
-| Value    | Description                                              |
-|----------|----------------------------------------------------------|
-| `NONE`   | No log message is persisted - audit logging is disabled. |
-| `ERROR`  | Error level                                              |
-| `WARN`   | Warning level                                            |
-| `INFO`   | Information level                                        |
-| `DEBUG`  | Debug level                                              |
-| `TRACE`  | Trace level                                              |
-| `ALL`    | All levels - same effect as `TRACE`                      |
-
-
 ## How to search in audit logs
 
 <!-- begin box warning -->
