@@ -72,16 +72,16 @@ The following application properties can be used to configure audit logging:
 A value in the `audit_log.audit_type` column is used to categorize the audit log entry according to the operation scope.
 The following values are used:
 
-| Value                          | Description                                           |
-|--------------------------------|-------------------------------------------------------|
-| `process`                      | General onboarding process operation                  |
-| `otp`                          | OTP operations                                        |
-| `identityVerification`         | Identity verification operations                      |
-| `activation`                   | Activation operations                                 |
-| `documentVerification`         | Document verification operations                      |
-| `presenceCheckProvider`        | Presence check operations                             |
-| `documentVerificationProvider` | Document verification provider operations             |
-| `onboardingProvider`           | [Onboarding provider](./Onboarding-API.md) operations |
+| Value                          | Description                                                         |
+|--------------------------------|---------------------------------------------------------------------|
+| `process`                      | General onboarding process operation                                |
+| `otp`                          | OTP operations                                                      |
+| `identityVerification`         | Identity verification operations                                    |
+| `activation`                   | Activation operations                                               |
+| `documentVerification`         | Document verification operations                                    |
+| `presenceCheckProvider`        | Presence check operations                                           |
+| `documentVerificationProvider` | Document verification provider operations                           |
+| `onboardingProvider`           | [Onboarding provider](./External-Onboarding-Services.md) operations |
 
 
 ## Audit levels
