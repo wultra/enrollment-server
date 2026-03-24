@@ -11,45 +11,6 @@ The auditing library uses the following database structure.
 If a value longer than the character limit is passed to a column, it is truncated to the limit.
 
 
-### Table `audit_log`
-
-Table of audit log entries
-
-| Column              | Description                                                                                 | Characters limit |
-|---------------------|---------------------------------------------------------------------------------------------|------------------|
-| `audit_log_id`      | The unique identifier for the audit log entry in UUID format                                | 36               |
-| `application_name`  | The name of the application                                                                 | 256              |
-| `audit_level`       | The level of the audit log entry. See the [Audit levels](#audit-levels) section             | 32               |
-| `audit_type`        | Area of business logic producing the log entry. See the [Audit types](#audit-types) section | 256              |
-| `timestamp_created` | Time when the audit log entry was created.                                                  | -                |
-| `message`           | The message of the audit log entry                                                          | -                |
-| `exception_message` | Error message if specified for the log entry                                                | -                |
-| `stack_trace`       | Error stack trace if specified for the log entry                                            | -                |
-| `param`             | Extra parameters for the log entry (independent of the `message`)                           | -                |
-| `calling_class`     | The calling Java class of the audit log entry                                               | 256              |
-| `thread_name`       | The thread producing the log entry                                                          | 256              |
-| `version`           | Version of the application                                                                  | 256              |
-| `build_time`        | The build time of the application                                                           | -                |
-
-
-### Table `audit_param`
-
-Table for audit log parameters. It contains the same information as `audit_log.param`, split by parameter name in records into this table.
-Storing data in this table is disabled by default and is controlled by the `audit.db.table.param.enabled` property.
-
-<!-- begin box warning -->
-The column `audit_log.param` does not have a length limit, but the column `audit_param.param_value` is limited to 4,000 characters. 
-If a value exceeding this limit is passed, it is truncated to 4,000 characters. The same applies to the `audit_param.param_key` where the limit is 256 characters.
-<!-- end -->
-
-| Column              | Description                                                         | Characters limit |
-|---------------------|---------------------------------------------------------------------|------------------|
-| `audit_log_id`      | The identifier of the audit log entry from `audit_log.audit_log_id` | 36               |
-| `timestamp_created` | Time when the parameter record was created                          | -                |
-| `param_key`         | The name of the parameter from `audit_log.param`.                   | 256              |
-| `param_value`       | The value of the parameter from `audit_log.param`.                  | 4000             |
-
-
 ## Configuration
 
 The following application properties can be used to configure audit logging:
