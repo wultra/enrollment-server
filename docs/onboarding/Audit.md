@@ -34,7 +34,7 @@ Table of audit log entries
 
 ### Table `audit_param`
 
-Table for audit log parameters. It contains the same information as `audit_log.param`, split by parameter name into records into this table.
+Table for audit log parameters. It contains the same information as `audit_log.param`, split by parameter name in records into this table.
 Storing data in this table is disabled by default and is controlled by the `audit.db.table.param.enabled` property.
 
 <!-- begin box warning -->
@@ -42,12 +42,12 @@ The column `audit_log.param` does not have a length limit, but the column `audit
 If a value exceeding this limit is passed, it is truncated to 4,000 characters. The same applies to the `audit_param.param_key` where the limit is 256 characters.
 <!-- end -->
 
-| Column               | Description                                                         | Characters limit |
-|----------------------|---------------------------------------------------------------------|------------------|
-| `audit_log_id`       | The identifier of the audit log entry from `audit_log.audit_log_id` | 36               |
-| `timestamp_created`  | Time when the parameter record was created                          | -                |
-| `param_name`         | The name of the parameter from `audit_log.param`.                   | 256              |
-| `param_value`        | The value of the parameter from `audit_log.param`.                  | 4000             |
+| Column              | Description                                                         | Characters limit |
+|---------------------|---------------------------------------------------------------------|------------------|
+| `audit_log_id`      | The identifier of the audit log entry from `audit_log.audit_log_id` | 36               |
+| `timestamp_created` | Time when the parameter record was created                          | -                |
+| `param_key`         | The name of the parameter from `audit_log.param`.                   | 256              |
+| `param_value`       | The value of the parameter from `audit_log.param`.                  | 4000             |
 
 
 ## Configuration
@@ -92,15 +92,15 @@ Values from the table below are supported. The table is sorted from the lowest l
 includes all levels that precede it. For example, if the level `INFO` is configured, all messages with levels `ERROR`, `WARN` and `INFO` are persisted, 
 while messages with levels `DEBUG` and `TRACE` are ignored and not persisted.
 
-| Value    | Description                                               |
-|----------|-----------------------------------------------------------|
-| `NONE`   | No log message ire persisted - audit logging is disabled. |
-| `ERROR`  | Error level                                               |
-| `WARN`   | Warning level                                             |
-| `INFO`   | Information level                                         |
-| `DEBUG`  | Debug level                                               |
-| `TRACE`  | Trace level                                               |
-| `ALL`    | All levels - same effect as `TRACE`                       |
+| Value    | Description                                              |
+|----------|----------------------------------------------------------|
+| `NONE`   | No log message is persisted - audit logging is disabled. |
+| `ERROR`  | Error level                                              |
+| `WARN`   | Warning level                                            |
+| `INFO`   | Information level                                        |
+| `DEBUG`  | Debug level                                              |
+| `TRACE`  | Trace level                                              |
+| `ALL`    | All levels - same effect as `TRACE`                      |
 
 
 ## How to search in audit logs
