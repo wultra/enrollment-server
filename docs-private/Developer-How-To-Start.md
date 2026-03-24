@@ -16,10 +16,16 @@ the compatibility.
 
 ### Build
 
-Build with:
+From the repository root, build all modules with:
 
 ```shell
 mvn clean install
+```
+
+To build only the Enrollment Server module and its dependencies from the repository root, use:
+
+```shell
+mvn -pl enrollment-server -am clean install
 ```
 
 
@@ -32,20 +38,24 @@ mvn clean install
 
 Ensure you have a database installed and running, and that you have an admin account.
 
-##### Create a user and a schema
+##### Create a user and a database
 
 Start a `psql` session with your superuser:
 
 ```shell
-psql -U $(whoami) -d postgres
+psql -U postgres -d postgres
 ```
 
 Then run following commands in the `psql` shell:
 
 ```sql
-CREATE USER powerauth WITH PASSWORD 'powerauth';
+CREATE USER powerauth;
 CREATE DATABASE powerauth OWNER powerauth;
 ```
+
+By default, local development in this repository uses the `powerauth` user without a password.
+If your local PostgreSQL setup requires password authentication, set a password for the user
+and update the matching datasource and Liquibase settings in the commands below.
 
 ##### Load the data with Liquibase
 
@@ -103,6 +113,8 @@ The working directory is `enrollment-server`.
 java -jar target/enrollment-server-x.y.z.war --spring.profiles.active=dev
 ```
 
+The exact WAR filename can be found in the `target/` directory.
+
 #### Maven
 
 ```shell
@@ -129,12 +141,16 @@ If you run the server directly from CLI or Maven without extra server parameters
 curl -v http://localhost:8080/actuator/health
 ```
 
+Standalone CLI and Maven runs use port `8080` by default. Because Enrollment Server
+Onboarding also uses `8080` by default, you can run only one of them at a time unless
+you override `server.port` (and optionally `server.servlet.context-path`).
+
 You should get response: `200 {"status":"UP"}`
 
 You can check other APIs on:
 
-* http://localhost:8080/swagger-ui/index.html
 * http://localhost:8081/enrollment-server/swagger-ui/index.html
+* http://localhost:8080/swagger-ui/index.html (when running only Enrollment Server on the default standalone port)
 
 
 ### Schema Diagram
@@ -148,19 +164,19 @@ For database structure overview, see:
 ##### PostgreSQL
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/postgresql/generated-postgresql-script.sql updateSQL --url=offline:postgresql
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/postgresql/generated-postgresql-script.sql updateSQL --url=offline:postgresql
 ```
 
 ##### Oracle
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/oracle/generated-oracle-script.sql updateSQL --url=offline:oracle
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/oracle/generated-oracle-script.sql updateSQL --url=offline:oracle
 ```
 
 ##### MS SQL
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/mssql/generated-mssql-script.sql updateSQL --url=offline:mssql
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server/db.changelog-module.xml --output-file=./docs/sql/mssql/generated-mssql-script.sql updateSQL --url=offline:mssql
 ```
 
 
@@ -189,10 +205,16 @@ docker run -p 80:8080 -e ENROLLMENT_SERVER_DATASOURCE_URL='jdbc:postgresql://hos
 
 ### Build
 
-Build with:
+From the repository root, build all modules with:
 
 ```shell
 mvn clean install
+```
+
+To build only the Enrollment Server Onboarding module and its dependencies from the repository root, use:
+
+```shell
+mvn -pl enrollment-server-onboarding -am clean install
 ```
 
 
@@ -262,6 +284,8 @@ The working directory is `enrollment-server-onboarding`.
 java -jar target/enrollment-server-onboarding-x.y.z.war --spring.profiles.active=dev
 ```
 
+The exact WAR filename can be found in the `target/` directory.
+
 #### Maven
 
 ```shell
@@ -288,12 +312,16 @@ If you run the server directly from CLI or Maven without extra server parameters
 curl -v http://localhost:8080/actuator/health
 ```
 
+Standalone CLI and Maven runs use port `8080` by default. Because Enrollment Server
+also uses `8080` by default, you can run only one of them at a time unless you
+override `server.port` (and optionally `server.servlet.context-path`).
+
 You should get response: `200 {"status":"UP"}`
 
 You can check other APIs on:
 
-* http://localhost:8080/swagger-ui/index.html
 * http://localhost:8083/enrollment-server-onboarding/swagger-ui/index.html
+* http://localhost:8080/swagger-ui/index.html (when running only Enrollment Server Onboarding on the default standalone port)
 
 
 ### Schema Diagram
@@ -307,17 +335,17 @@ For database structure overview, see:
 ##### Oracle
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/oracle/generated-oracle-script.sql updateSQL --url=offline:oracle
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/oracle/generated-oracle-script.sql updateSQL --url=offline:oracle
 ```
 
 ##### MS SQL
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/mssql/generated-mssql-script.sql updateSQL --url=offline:mssql
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/mssql/generated-mssql-script.sql updateSQL --url=offline:mssql
 ```
 
 ##### PostgreSQL
 
 ```shell
-liquibase --changeLogFile=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/postgresql/generated-postgresql-script.sql updateSQL --url=offline:postgresql
+liquibase --changelog-file=./docs/db/changelog/changesets/enrollment-server-onboarding/db.changelog-module.xml --output-file=./docs/sql/postgresql/generated-postgresql-script.sql updateSQL --url=offline:postgresql
 ```
