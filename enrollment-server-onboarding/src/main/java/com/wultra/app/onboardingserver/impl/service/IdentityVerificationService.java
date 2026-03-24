@@ -55,8 +55,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
+import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
  * Service implementing document identity verification.
@@ -518,11 +518,6 @@ public class IdentityVerificationService {
      */
     public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
         return identityVerificationRepository.streamAllIdentityVerificationsToChangeState(identityVerificationConfig.getDocumentVerificationProvider());
-    }
-
-    private void moveToDocumentUpload(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final IdentityVerificationStatus status) {
-        logger.debug("Moving phase to DOCUMENT_UPLOAD, {}", ownerId);
-        moveToPhaseAndStatus(idVerification, DOCUMENT_UPLOAD, status, ownerId);
     }
 
     /**
