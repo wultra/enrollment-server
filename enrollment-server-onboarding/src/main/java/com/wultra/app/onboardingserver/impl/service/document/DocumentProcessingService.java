@@ -22,25 +22,20 @@ import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
-import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.Base64DeserializationException;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.impl.service.DataExtractionService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,57 +50,19 @@ import static java.util.stream.Collectors.groupingBy;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@Slf4j
+@AllArgsConstructor
 public class DocumentProcessingService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
-
     private final IdentityVerificationConfig identityVerificationConfig;
-
-    private final DocumentDataRepository documentDataRepository;
 
     private final DocumentVerificationRepository documentVerificationRepository;
 
     private final DocumentResultRepository documentResultRepository;
 
-    private final DataExtractionService dataExtractionService;
-
     private final DocumentVerificationProvider documentVerificationProvider;
 
     private final AuditService auditService;
-
-    private final CommonOnboardingService commonOnboardingService;
-
-    /**
-     * Service constructor.
-     * @param identityVerificationConfig Identity verification configuration.
-     * @param documentDataRepository Document data repository.
-     * @param documentVerificationRepository Document verification repository.
-     * @param documentResultRepository Document verification result repository.
-     * @param dataExtractionService Data extraction service.
-     * @param documentVerificationProvider Document verification provider.
-     * @param auditService Audit service.
-     * @param commonOnboardingService Onboarding process service (common).
-     */
-    @Autowired
-    public DocumentProcessingService(
-            final IdentityVerificationConfig identityVerificationConfig,
-            final DocumentDataRepository documentDataRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final DocumentResultRepository documentResultRepository,
-            final DataExtractionService dataExtractionService,
-            final DocumentVerificationProvider documentVerificationProvider,
-            final AuditService auditService,
-            final CommonOnboardingService commonOnboardingService) {
-
-        this.identityVerificationConfig = identityVerificationConfig;
-        this.documentDataRepository = documentDataRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.documentResultRepository = documentResultRepository;
-        this.dataExtractionService = dataExtractionService;
-        this.documentVerificationProvider = documentVerificationProvider;
-        this.auditService = auditService;
-        this.commonOnboardingService = commonOnboardingService;
-    }
 
     /**
      * Submit identity-related documents for verification.
@@ -247,50 +204,6 @@ public class DocumentProcessingService {
             logger.info("Replaced previous {} with new {}, {}", originalDoc, docVerification, ownerId);
             auditService.audit(docVerification, "Document replaced with new one for user: {}", ownerId.getUserId());
         }
-    }
-
-    /**
-     * Checks document submit status and data at the provider.
-     * @param ownerId Owner identification.
-     * @param documentResultEntity Document result entity to be checked at the provider.
-     * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void checkDocumentSubmitWithProvider(OwnerId ownerId, DocumentResultEntity documentResultEntity) throws OnboardingProcessException {
-        DocumentVerificationEntity docVerification = documentResultEntity.getDocumentVerification();
-        DocumentsSubmitResult docsSubmitResults;
-        DocumentSubmitResult docSubmitResult;
-        try {
-            docsSubmitResults = documentVerificationProvider.checkDocumentUpload(ownerId, docVerification);
-            final IdentityVerificationEntity identityVerification = documentResultEntity.getDocumentVerification().getIdentityVerification();
-            auditService.auditDocumentVerificationProvider(identityVerification, "Check document upload for user: {}", ownerId.getUserId());
-            docSubmitResult = docsSubmitResults.getResults().get(0);
-        } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
-            logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
-            docsSubmitResults = new DocumentsSubmitResult();
-            docSubmitResult = new DocumentSubmitResult();
-            docSubmitResult.setErrorDetail(e.getMessage());
-        }
-
-        final String processId = documentResultEntity.getDocumentVerification().getIdentityVerification().getProcessId();
-        commonOnboardingService.findProcessWithLock(processId);
-
-        if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
-            logger.debug("Document result ID: {}, error detail: {}, {}",
-                    documentResultEntity.getId(), docSubmitResult.getErrorDetail(), ownerId);
-            documentResultEntity.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
-            documentResultEntity.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-        }
-        if (StringUtils.isNotBlank(docSubmitResult.getRejectReason())) {
-            logger.debug("Document result ID: {}, reject reason: {}, {}",
-                    documentResultEntity.getId(), docSubmitResult.getRejectReason(), ownerId);
-            documentResultEntity.setRejectReason(ErrorDetail.DOCUMENT_VERIFICATION_REJECTED);
-            documentResultEntity.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
-        }
-
-        documentResultEntity.setExtractedData(docSubmitResult.getExtractedData());
-        processDocsSubmitResults(ownerId, docVerification, docsSubmitResults, docSubmitResult);
     }
 
     /**
