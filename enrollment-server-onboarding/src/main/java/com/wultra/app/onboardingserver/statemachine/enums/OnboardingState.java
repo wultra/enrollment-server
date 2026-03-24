@@ -83,12 +83,18 @@ public enum OnboardingState {
 
     CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED,
     CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT,
+
+    /**
+     * For backward compatibility, it must not be exposed to mobile clients that do not support it.
+     * That is why it is a choice state used only internally.
+     */
     CHOICE_CLIENT_EVALUATION_ACCEPTED,
 
     CHOICE_DOCUMENT_VERIFICATION_PROCESSING,
 
     CHOICE_OTP_VERIFICATION,
 
+    CHOICE_PRESENCE_CHECK_ENABLED,
     CHOICE_PRESENCE_CHECK_PROCESSING,
 
     CHOICE_ONBOARDING_APPROVAL_ENABLED,
