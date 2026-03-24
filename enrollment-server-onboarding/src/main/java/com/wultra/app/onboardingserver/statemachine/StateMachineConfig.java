@@ -93,8 +93,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
 
-    private final MoveToDocumentVerificationFinalInProgressAction moveToDocumentVerificationFinalInProgressAction;
-
     private final DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
 
     private final VerificationDocumentStartAction verificationDocumentStartAction;
@@ -187,6 +185,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
         final var states = List.of(
                 OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
+                OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
@@ -286,27 +285,30 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationDocumentStartAction)
-                .guard(createCompositeGuard(processIdentifierGuard, documentsVerificationPendingGuard))
+                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .first(OnboardingState.DOCUMENT_VERIFICATION_IN_PROGRESS, statusInProgressGuard)
-                .then(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, statusAcceptedGuard)
-                .then(OnboardingState.DOCUMENT_VERIFICATION_REJECTED, statusRejectedGuard)
-                .then(OnboardingState.DOCUMENT_VERIFICATION_FAILED, statusFailedGuard)
-                .last(OnboardingState.UNEXPECTED_STATE)
+                .first(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, isDocumentResult(IdentityVerificationService.DocumentEvaluationStatus.OK))
+                .then(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, isDocumentResult(IdentityVerificationService.DocumentEvaluationStatus.NOK))
+                .last(OnboardingState.DOCUMENT_VERIFICATION_FAILED);
+    }
 
-                .and()
-                .withExternal()
-                .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
-                .action(moveToDocumentVerificationFinalInProgressAction)
-                .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS);
+    private static Guard<OnboardingState, OnboardingEvent> isDocumentResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+        return context -> evaluateDocumentResult(context, expectedResult);
+    }
+
+    private static boolean evaluateDocumentResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(VerificationDocumentStartAction.RESULT_KEY);
+
+        if (contextValue instanceof IdentityVerificationService.DocumentEvaluationStatus result) {
+            return expectedResult == result;
+        }
+
+        return false;
     }
 
     private void configureDocumentVerificationFinalTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
