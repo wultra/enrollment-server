@@ -43,7 +43,7 @@ Ensure you have a database installed and running, and that you have an admin acc
 Start a `psql` session with your superuser:
 
 ```shell
-psql -U postgres -d postgres
+psql -U $(whoami) -d postgres
 ```
 
 Then run following commands in the `psql` shell:
