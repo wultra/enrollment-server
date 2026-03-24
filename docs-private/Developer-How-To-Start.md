@@ -92,7 +92,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/powerauth
 spring.datasource.username=powerauth
 spring.datasource.password=
 powerauth.service.url=http://localhost:8080/powerauth-java-server/rest
-powerauth.push.service.url=http://localhost:8080/powerauth-push-server
+powerauth.push.service.url=http://localhost:8081/powerauth-push-server
 enrollment-server.auth-type=BASIC_HTTP
 enrollment-server.admin.enabled=true
 ```
@@ -149,8 +149,7 @@ You should get response: `200 {"status":"UP"}`
 
 You can check other APIs on:
 
-* http://localhost:8081/enrollment-server/swagger-ui/index.html
-* http://localhost:8080/swagger-ui/index.html (when running only Enrollment Server on the default standalone port)
+* http://localhost:8080/swagger-ui/index.html
 
 
 ### Schema Diagram
@@ -227,6 +226,7 @@ mvn -pl enrollment-server-onboarding -am clean install
 #### Set up
 
 If you have not created the database and user yet, use the same PostgreSQL setup as in the Enrollment Server section.
+See [Database](#database) section above for details.
 
 ##### Load the data with Liquibase
 
@@ -320,8 +320,7 @@ You should get response: `200 {"status":"UP"}`
 
 You can check other APIs on:
 
-* http://localhost:8083/enrollment-server-onboarding/swagger-ui/index.html
-* http://localhost:8080/swagger-ui/index.html (when running only Enrollment Server Onboarding on the default standalone port)
+* http://localhost:8080/swagger-ui/index.html
 
 
 ### Schema Diagram
