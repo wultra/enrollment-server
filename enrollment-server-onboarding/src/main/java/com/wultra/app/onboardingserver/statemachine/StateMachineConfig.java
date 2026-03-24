@@ -184,6 +184,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
         final var states = List.of(
+                OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS,
                 OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
