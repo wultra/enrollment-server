@@ -211,6 +211,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
+        logger.debug("action: persistState, state: initiated, onboardingState: {}", state);
         return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
