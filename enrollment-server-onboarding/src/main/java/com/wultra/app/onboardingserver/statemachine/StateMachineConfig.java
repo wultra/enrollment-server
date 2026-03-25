@@ -217,7 +217,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        logger.debug("action: persistState, state: initiated, onboardingState: {}", state);
+        logger.debug("action: persistState, state: initiated, target: {}", state);
         return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId));
     }
 
@@ -255,7 +255,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
             @Override
             public void eventNotAccepted(Message<OnboardingEvent> event) {
-                logger.error("Not accepted event {}", event.getPayload());
+                logger.error("Not accepted event {}, processId: {}", event.getPayload(), event.getHeaders().get(EventHeaderName.PROCESS_ID));
             }
 
             @Override
@@ -364,7 +364,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.CLIENT_EVALUATION_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .target(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
 
                 .and()
