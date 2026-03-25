@@ -84,11 +84,8 @@ class AuditServiceTest {
 
         verify(audit).info(eq(message), auditDetailCaptor.capture(), eq(USER_ID));
 
-        assertAuditDetail(auditDetailCaptor.getValue(), DOCUMENT_VERIFICATION_PROVIDER_CODE, expectedParams);
-    }
-
-    private static void assertAuditDetail(final AuditDetail auditDetail, final String expectedType, final Map<String, Object> expectedParams) {
-        assertEquals(expectedType, auditDetail.getType());
+        final var auditDetail = auditDetailCaptor.getValue();
+        assertEquals(DOCUMENT_VERIFICATION_PROVIDER_CODE, auditDetail.getType());
         assertEquals(expectedParams, auditDetail.getParam());
     }
 }
