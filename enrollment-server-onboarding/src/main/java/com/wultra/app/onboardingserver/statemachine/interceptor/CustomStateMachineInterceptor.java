@@ -18,10 +18,10 @@ package com.wultra.app.onboardingserver.statemachine.interceptor;
 
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.errorhandling.*;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.stereotype.Component;
@@ -97,37 +96,4 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
         return e;
     }
-
-    @Override
-    public StateContext<OnboardingState, OnboardingEvent> postTransition(StateContext<OnboardingState, OnboardingEvent> context) {
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-
-        OnboardingState targetState = context.getTarget().getId();
-        if (targetState.isChoiceState()) {
-            logger.debug("Transition to a choice state {} for {}", targetState, identityVerification);
-            return context;
-        }
-
-        if (OnboardingState.UNEXPECTED_STATE == targetState) {
-            logger.debug("Transition to unexpected state for {}", identityVerification);
-            return context;
-        }
-
-        OnboardingState expectedState;
-        try {
-            expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
-        } catch (IdentityVerificationException e) {
-            logger.error("Failed post transition check: {}", identityVerification, e);
-            return context;
-        }
-
-        if (expectedState != targetState) {
-            logger.error("Unexpected targetState={} when expectedState={}, {}", targetState, expectedState, identityVerification);
-        } else {
-            logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
-        }
-
-        return context;
-    }
-
 }
