@@ -59,7 +59,6 @@ import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -207,14 +206,19 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         return context -> persistState(context, state);
     }
 
+    /*
+     * We avoid .subscribeOn(Schedulers.boundedElastic()) in this method.
+     * So far, the state is also changed out of the StateMachineConfig, for example, in actions.
+     * If we switch to another thread, we might end up with state changes executed in parallel, which can cause race conditions.
+     * By executing the moveToPhaseAndStatus method in the same thread, we ensure that state changes are processed sequentially, maintaining the integrity of the state machine.
+     */
+    @SuppressWarnings("BlockingMethodInNonBlockingContext")
     private Mono<Void> persistState(final StateContext<OnboardingState, OnboardingEvent> context, final OnboardingState state) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         logger.debug("action: persistState, state: initiated, onboardingState: {}", state);
-        return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+        return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId));
     }
 
     private void registerPublishEventFunction(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
