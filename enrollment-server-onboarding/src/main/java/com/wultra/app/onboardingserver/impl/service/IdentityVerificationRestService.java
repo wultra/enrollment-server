@@ -482,7 +482,7 @@ public class IdentityVerificationRestService {
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_VERIFICATION_RESEND);
+        StateMachine<OnboardingState, OnboardingEvent> stateMachine = stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_RESEND);
         return createResponseEntity(stateMachine);
     }
 
@@ -513,7 +513,7 @@ public class IdentityVerificationRestService {
         final OtpVerifyResponse otpVerifyResponse = identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode);
 
         try {
-            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            stateMachineService.processStateMachineEvent(ownerId, processId, OnboardingEvent.OTP_VERIFIED);
         } catch (IdentityVerificationException e) {
             throw new OnboardingProcessException("Unable to move state machine for " + ownerId, e);
         }

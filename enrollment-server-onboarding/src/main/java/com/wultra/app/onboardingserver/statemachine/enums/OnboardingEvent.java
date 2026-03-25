@@ -25,7 +25,9 @@ public enum OnboardingEvent {
 
     IDENTITY_VERIFICATION_INIT,
 
-    OTP_VERIFICATION_RESEND,
+    OTP_RESEND,
+
+    OTP_VERIFIED,
 
     PRESENCE_CHECK_INIT,
 

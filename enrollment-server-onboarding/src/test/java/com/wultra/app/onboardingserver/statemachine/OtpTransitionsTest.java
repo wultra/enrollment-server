@@ -82,7 +82,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                 .thenReturn(createProcessWithConfiguration());
 
         Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.OTP_VERIFICATION_RESEND);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.OTP_RESEND);
 
         StateMachineTestPlan<OnboardingState, OnboardingEvent> expected =
                 StateMachineTestPlanBuilder.<OnboardingState, OnboardingEvent>builder()
@@ -127,7 +127,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                 .thenReturn(true);
 
         Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.OTP_VERIFIED);
 
         prepareTest(stateMachine)
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)

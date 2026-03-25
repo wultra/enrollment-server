@@ -192,6 +192,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.ACTIVATION_FINISH_IN_PROGRESS,
                 OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS,
                 OnboardingState.ONBOARDING_APPROVAL_ACCEPTED,
+                OnboardingState.OTP_VERIFICATION_PENDING,
                 OnboardingState.CLIENT_EVALUATION_ACCEPTED,
                 OnboardingState.CLIENT_EVALUATION_IN_PROGRESS,
                 OnboardingState.CLIENT_EVALUATION_REJECTED,
@@ -500,13 +501,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withChoice()
                 .source(OnboardingState.CHOICE_OTP_ENABLED)
-                .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction) // action persist the state OTP_VERIFICATION_PENDING
+                .first(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
                 .last(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
-                .event(OnboardingEvent.OTP_VERIFICATION_RESEND)
+                .event(OnboardingEvent.OTP_RESEND)
                 .guard(createCompositeGuard(processIdentifierGuard, otpVerificationEnabledGuard))
                 .action(otpVerificationResendAction)
                 .target(OnboardingState.OTP_VERIFICATION_PENDING)
@@ -514,7 +515,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .event(OnboardingEvent.OTP_VERIFIED)
                 .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_OTP_VERIFICATION)
 
