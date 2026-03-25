@@ -92,5 +92,3 @@ class AuditServiceTest {
         assertEquals(expectedParams, auditDetail.getParam());
     }
 }
-
-
