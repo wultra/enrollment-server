@@ -548,7 +548,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
+                .event(OnboardingEvent.EVENT_NEXT_STATE) // polling, because we don't get any event when the mobile app has finished the activation
                 .guard(targetActivationFinishedGuard)
                 .action(verificationProcessResultAction)
                 .target(OnboardingState.CHOICE_COMPLETED_STATE);
