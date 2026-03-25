@@ -22,15 +22,12 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
 import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
-import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.core.rest.model.base.response.ErrorResponse;
 import com.wultra.core.rest.model.base.response.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
@@ -44,16 +41,8 @@ import java.util.Map;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@Slf4j
 public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<OnboardingState, OnboardingEvent> {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
-
-    private final EnrollmentStateProvider enrollmentStateProvider;
-
-    @Autowired
-    public CustomStateMachineInterceptor(EnrollmentStateProvider enrollmentStateProvider) {
-        this.enrollmentStateProvider = enrollmentStateProvider;
-    }
 
     @Override
     public Exception stateMachineError(StateMachine<OnboardingState, OnboardingEvent> stateMachine, Exception e) {
