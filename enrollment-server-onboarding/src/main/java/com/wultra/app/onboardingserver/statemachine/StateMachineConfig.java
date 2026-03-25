@@ -479,7 +479,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withExternal()
                 .source(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .target(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED);
     }
 
