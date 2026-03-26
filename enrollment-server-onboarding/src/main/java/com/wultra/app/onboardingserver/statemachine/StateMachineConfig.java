@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
@@ -341,9 +340,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
-                .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.OK))
-                .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.WAIT))
-                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, isClientEvaluationResult(EvaluateClientResponse.EvaluationResult.NOK))
+                .first(OnboardingState.CLIENT_EVALUATION_ACCEPTED, ClientEvaluationAction.isResultOk())
+                .then(OnboardingState.CLIENT_EVALUATION_IN_PROGRESS, ClientEvaluationAction.isResultInProgress())
+                .then(OnboardingState.CLIENT_EVALUATION_REJECTED, ClientEvaluationAction.isResultRejected())
                 .last(OnboardingState.CLIENT_EVALUATION_FAILED)
 
                 .and()
@@ -367,18 +366,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .last(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED);
-    }
-
-    private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final EvaluateClientResponse.EvaluationResult expectedResult) {
-        return context -> {
-            final var contextValue = context.getExtendedState().getVariables().get(ClientEvaluationAction.RESULT_KEY);
-
-            if (contextValue instanceof EvaluateClientResponse.EvaluationResult result) {
-                return expectedResult == result;
-            }
-
-            return false;
-        };
     }
 
     private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
