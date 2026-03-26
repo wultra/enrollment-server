@@ -110,27 +110,86 @@ timestamp_created,application_name,audit_type,audit_type,message,param
 
 Here is description of the parameters used in the `audit_log.param` and `audit_log.message` columns:
 
-| Parameter                    | Description                                                                                       |
-|------------------------------|---------------------------------------------------------------------------------------------------|
-| `identityVerificationId`     | Internal identity verification ID                                                                 |
-| `processId`                  | ID of the onboarding process                                                                      |
-| `activationId`               | PowerAuth activation ID bind with the onboarding process                                          |
-| `targetActivationId`         | Final PowerAuth activation ID set after successful onboarding process                             |
-| `userId`                     | ID of user passing the onboarding process                                                         |
-| `otpId`                      | ID of the OTP used in the onboarding process step                                                 |
-| `documentId`                 | Internal document ID used in the onboarding process verification                                  |
-| `documentVerificationId`     | ID of document verification operation                                                             |
-| `documentResponseJson`       | JSON response from the document verification provider                                             |
-| `providerName`               | Document verification provider name                                                               |
-| `documentType`               | Type of document                                                                                  |
-| `documentUploadId`           | ID of document upload operation. Each document side has its own ID. TODO: link to possible values |
-| `documentVerificationStatus` | Status of document verification. TODO: link to possible values                                    |
-| `presenceCheckStatus`        | Result of presence check verification. TODO: link to possible values                              |
+| Parameter                    | Description                                                                                                            |
+|------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `identityVerificationId`     | Internal identity verification ID                                                                                      |
+| `processId`                  | ID of the onboarding process                                                                                           |
+| `activationId`               | PowerAuth activation ID bind with the onboarding process                                                               |
+| `targetActivationId`         | Final PowerAuth activation ID set after successful onboarding process                                                  |
+| `userId`                     | ID of user passing the onboarding process                                                                              |
+| `otpId`                      | ID of the OTP used in the onboarding process step                                                                      |
+| `documentId`                 | Internal document ID used in the onboarding process verification                                                       |
+| `documentVerificationId`     | ID of document verification operation                                                                                  |
+| `documentResponseJson`       | JSON response from the document verification provider                                                                  |
+| `providerName`               | Document verification provider name                                                                                    |
+| `documentType`               | Type of document. Possible values: `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`, `SELFIE_PHOTO`, `SELFIE_VIDEO`, `UNKNOWN` |
+| `documentUploadId`           | ID of document upload operation. Each document side has its own ID.                                                    |
+| `documentVerificationStatus` | Status of document verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED`                      |
+| `presenceCheckStatus`        | Result of presence check verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED`                |
+| `errorDetail`                | Detail of an error                                                                                                     |
+| `clientApprovalResult`       | Result of client approval. Possible values: `OK`, `NOK`, `WAIT`                                                        |
+| `clientApprovalReason`       | Detail of the `clientApprovalResult`                                                                                   |
+| `clientEvaluationResult`     | Result of client evaluation. Possible values: `OK`, `NOK`, `WAIT`                                                      |
+| `otpType`                    | Type of OTP. Possible values: `ACTIVATION`, `USER_VERIFICATION`                                                        |
 
 
 ### Events
 
 Description of the events logged in the `audit_log` table.
+
+
+#### Onboarding started
+
+The onboarding process was created and started. The endpoint `POST api/onboarding/start` was called and existing process was not found for the provided user identification data.
+
+MESSAGE: `Process started for user: {userId}`
+
+
+#### Onboarding resumed
+
+The onboarding process already exists and was resumed. The endpoint `POST api/onboarding/resume` was called and existing process was found for the provided user identification data.
+
+
+#### Activation OTP sent
+
+An activation OTP code was delivered by the onboarding provider [otp endpoint](./External-Onboarding-Services.md#otp-delivery-service) during onboarding start.
+
+MESSAGE: `Sent activation OTP for user: {userId}`
+
+
+#### Activation OTP resent
+
+An activation OTP code was resent by the onboarding provider [otp endpoint](./External-Onboarding-Services.md#otp-delivery-service) after a resend request.
+
+MESSAGE: `Resent activation OTP for user: {userId}`
+
+
+#### User looked up by identification
+
+The onboarding provider [lookup endpoint](./External-Onboarding-Services.md#user-lookup-service) found the user and returned the user ID.
+
+MESSAGE: `Looked up user: {userId}`
+
+
+#### User lookup failed
+
+The onboarding provider [lookup endpoint](./External-Onboarding-Services.md#user-lookup-service) responded with an error.
+
+MESSAGE: `Error to look up user: {userId}, {errorDetail}`
+
+
+#### Consent text approved
+
+The onboarding provider [consent approval endpoint](./External-Onboarding-Services.md#consent-storage-service) successfully stored the user decision.
+
+MESSAGE: `Approve consent text for user: {userId}`
+
+
+#### Consent text approval failed
+
+The onboarding provider [consent approval endpoint](./External-Onboarding-Services.md#consent-storage-service) responded with an error.
+
+MESSAGE: `Consent text approval failed for user: {userId}, error: {errorDetail}`
 
 
 #### Documents are uploaded
@@ -140,11 +199,48 @@ The user is expected to submit their identity document for verification. No sens
 MESSAGE: `Switched to DOCUMENT_UPLOAD/IN_PROGRESS; user ID: {userId}`
 
 
-#### Document submitted to the provider
+#### Verification SDK initialized
 
-Document is successfully uploaded and sent to the document verification provider.
+The mobile client document verification SDK is initialized and ready to be used for scanning identity documents.
+The endpoint `POST /api/identity/document/init-sdk` was called.
+
+MESSAGE: `Sdk initialized for user: {userId}`
+
+
+#### Documents submitted to the provider
+
+Documents are successfully uploaded and sent to the document verification provider.
 
 MESSAGE: `Submit documents for user: {userId}, document IDs: [{documentUploadIds}]`
+
+
+#### Documents submit failed
+
+Set of documents was not sent to the document verification provider because of an error (service not available, invalid document, etc.)
+
+MESSAGE: `Document verification failed for user: {userId}`
+
+
+#### Document submit failed
+
+Document was not sent to the document verification provider because of an error (service not available, invalid document, etc.). This is logged for each document type and side.
+This is related to this [event](#documents-submit-failed), which is logged for the entire set of documents.
+
+MESSAGE: `Document verification failed for user: {userId}, detail: {detail}`
+
+
+#### Document resubmitted
+
+A previously uploaded document was replaced by a new submission. The old document is marked as no longer used for verification.
+
+MESSAGE: `Document replaced with new one for user: {userId}`
+
+
+#### Document rejected by the provider
+
+Document was sent to the document verification provider, but the provider rejected it. This is logged for each document type and side.
+
+MESSAGE: `Document verification rejected for user: {userId}, reason: {documentRejectReason}`
 
 
 #### Document evaluation result received from the provider
@@ -161,6 +257,18 @@ Document is pending for the final verification against the evaluation returned b
 MESSAGE: `Document verification pending for user: {userId}`
 
 
+#### Selfie document status changed
+
+The uploaded selfie document changed status immediately after upload processing.
+This event is logged only for documents of type `SELFIE_PHOTO`.
+
+MESSAGE: `Document selfie changed status to {selfieDocumentStatus} for user: {userId}`
+
+Possible values of `selfieDocumentStatus`:
+- `VERIFICATION_PENDING` when it will be verified as other document types
+- `ACCEPTED` when there is no need to verify it
+
+
 #### Onboarding process is pending for the documents final verification
 
 The onboarding process is waiting for the final verification of the uploaded documents.
@@ -172,7 +280,7 @@ MESSAGE: `Switched to DOCUMENT_UPLOAD/VERIFICATION_PENDING; user ID: {userId}`
 
 #### Documents verified with the verification provider
 
-The provider returned evaluation for an entire set of uploaded documents. The set means all documents in the request body of 
+The provider returned evaluation for an entire set of uploaded documents. The set means all documents in the request body of
 the upload endpoint `POST /api/v2/identity/document/submit`. The result for an entire set is stored in `documentVerificationStatus` parameter.
 
 MESSAGE: `Documents verified: {documentVerificationStatus} for user: {userId}`
@@ -180,7 +288,7 @@ MESSAGE: `Documents verified: {documentVerificationStatus} for user: {userId}`
 
 #### Document evaluated with the verification provider
 
-The provider returned evaluation for an individual document. This message is logged for each document type and side. 
+The provider returned evaluation for an individual document. This message is logged for each document type and side.
 See `documentId` parameter to identify the document and `documentVerificationStatus` for the result.
 
 This is related to this [event](#documents-verified-with-the-verification-provider), which is logged for the entire set of documents.
@@ -193,6 +301,20 @@ MESSAGE: `Document verification status changed to {documentVerificationStatus} f
 All uploaded documents satisfy the requirements for the onboarding process and are passed by evaluation with the verification provider.
 
 MESSAGE: `Switched to DOCUMENT_VERIFICATION/ACCEPTED; user ID: {userId}`
+
+
+#### Document verification failed
+
+Document verification failed due to a technical error when calling the document verification provider.
+
+MESSAGE: `Switched to DOCUMENT_VERIFICATION/FAILED; user ID: {userId}`
+
+
+#### Selfie document accepted
+
+The selfie photo document was automatically accepted without verification against the submitted identity document.
+
+MESSAGE: `Selfie document accepted for user: {userId}`
 
 
 #### Document final verification is performed
@@ -211,19 +333,46 @@ Result of the documents final verification.
 MESSAGE: `Cross verified documents: {documentVerificationStatus} for user: {userId}`
 
 
-#### Result of an individual document in the final verification
+#### Document accepted in the final verification
 
-Result of individual document verification. See `documentId` parameter to identify the document. This message is logged for each document type and side.
+The document passed final verification. This message is logged for each document type and side.
 This is related to this [event](#result-of-the-final-documents-verification), which is logged for all documents.
 
 MESSAGE: `Document accepted at final verification for user: {userId}`
 
+
+#### Document rejected in the final verification
+
+The document was rejected in final verification because of business logic. This message is logged for each document type and side.
+
+MESSAGE: `Document rejected at final verification for user: {userId}`
+
+
+#### Document failed in the final verification
+
+The document failed final verification because of a technical issue. This is logged for each document type and side.
+
+MESSAGE: `Document failed at final verification for user: {userId}`
 
 #### Documents final verification passed
 
 Document final verification passed and the onboarding process continues.
 
 MESSAGE: `Switched to DOCUMENT_VERIFICATION_FINAL/ACCEPTED; user ID: {userId}`
+
+
+#### Documents final verification rejected
+
+Business logic rejected the documents final verification.
+
+MESSAGE: `Switched to DOCUMENT_VERIFICATION_FINAL/REJECTED; user ID: {userId}`
+
+
+#### Documents final verification failed
+
+The documents final verification failed because of a technical issue, not business logic.
+
+MESSAGE: `Switched to DOCUMENT_VERIFICATION_FINAL/FAILED; user ID: {userId}`
 
 
 #### Client evaluation processed
@@ -238,6 +387,115 @@ MESSAGE: `Client evaluated for user: {userId}`
 Client evaluation was accepted.
 
 MESSAGE: `Switched to CLIENT_EVALUATION/ACCEPTED; user ID: {userId}`
+
+
+#### Client evaluation in progress
+
+The [client evaluation service](./External-Onboarding-Services.md#client-evaluation-service) returned `WAIT` — the result is not yet available and will be delivered asynchronously.
+
+MESSAGE: `Switched to CLIENT_EVALUATION/IN_PROGRESS; user ID: {userId}`
+
+
+#### Client evaluation rejected
+
+The [client evaluation service](./External-Onboarding-Services.md#client-evaluation-service) returned `NOK` — the client was rejected.
+
+MESSAGE: `Switched to CLIENT_EVALUATION/REJECTED; user ID: {userId}`
+
+
+#### Client evaluation failed
+
+The [client evaluation service](./External-Onboarding-Services.md#client-evaluation-service) failed due to a technical issue.
+
+MESSAGE: `Switched to CLIENT_EVALUATION/FAILED; user ID: {userId}`
+
+
+#### Client evaluation rejected
+
+Client evaluation was rejected by the [Client evaluation service](./External-Onboarding-Services.md#client-evaluation-service).
+
+MESSAGE: `Document rejected because of client evaluation for user: {userId}`
+
+
+#### Client evaluation acknowledged
+
+Client evaluation result was received on the endpoint `POST /api/private/client/evaluate`. The endpoint is called when evaluation is handled asynchronously.
+
+MESSAGE: `Acknowledged evaluation approval result: {clientEvaluationResult}`
+
+
+#### OTP verification pending
+
+The identity verification entered the OTP verification phase. The OTP code is about to be sent to the user.
+
+MESSAGE: `Switched to OTP_VERIFICATION/VERIFICATION_PENDING; user ID: {userId}`
+
+
+#### User verification OTP sent or resent
+
+User verification OTP was delivered by the onboarding provider.
+The same event is used for initial sending and resend.
+
+MESSAGE: `Sent user verification OTP for user: {userId}`
+
+MESSAGE: `Resent user verification OTP for user: {userId}`
+
+
+#### OTP expired
+
+An OTP code was submitted after its expiration time and could no longer be verified.
+
+MESSAGE: `OTP expired for user: {userId}`
+
+
+#### OTP verified passed
+
+The user submitted valid OTP code.
+
+MESSAGE: `OTP {otpType} verified for user: {userId}`
+
+
+#### OTP verification failed
+
+The user submitted invalid OTP code.
+
+MESSAGE: `OTP {otpType} verification failed for user: {userId}`
+
+
+#### OTP max attempts reached
+
+Too many OTP verification attempts were made.
+
+MESSAGE: `OTP max attempts reached for user: {userId}`
+
+
+#### OTP verification failed due to process state
+
+The onboarding process is failed and the OTP verification is not possible.
+
+MESSAGE: `OTP failed because of failed process for user: {userId}`
+
+
+#### OTP failed
+
+Previously verified user verification OTP was invalidated and marked as failed. This happens when the OTP step succeeds, 
+but the combined SCA evaluation fails because the earlier presence check result was not successful.
+
+MESSAGE: `OTP failed for user: {userId}`
+
+
+#### OTP resend
+
+The user requested to resend the OTP code.
+
+MESSAGE: `Resending OTP for user: {userId}`
+
+
+#### OTP cancelled
+
+Invalidate the OTP code. This is done by calling the endpoint `POST /api/onboarding/cleanup`.
+
+MESSAGE: `OTP canceled for process ID: {processId}, user ID: {userId}, otp type: {otpType}`
 
 
 #### Presence check phase reached
@@ -256,10 +514,17 @@ MESSAGE: `Check document upload for user: {userId}`
 
 #### Presence check initialized
 
-The trusted face photo was fetched from the uploaded document, upscaled if needed, and uploaded to the presence check provider. 
+The trusted face photo was fetched from the uploaded document, upscaled if needed, and uploaded to the presence check provider.
 The provider session has been prepared with the reference image.
 
 MESSAGE: `Presence check initialized for user: {userId}`
+
+
+#### Presence check initialization skipped
+
+Presence check initialization was skipped because the reference image was already uploaded in a previous attempt.
+
+MESSAGE: `Presence check initialization skipped for user: {userId}, image already uploaded`
 
 
 #### Presence check started
@@ -267,6 +532,27 @@ MESSAGE: `Presence check initialized for user: {userId}`
 A new presence check session was started with the provider.
 
 MESSAGE: `Presence check started for user: {userId}`
+
+
+#### Presence check data uploaded
+
+Liveness data was uploaded to the presence check provider by calling the `POST /api/identity/presence-check/upload` endpoint.
+
+MESSAGE: `Uploaded presence check data for user: {userId}`
+
+
+#### Presence check data cleaned up
+
+Presence check data was removed from the provider during manual cleanup by calling the `POST /api/identity/cleanup` endpoint.
+
+MESSAGE: `Clean up presence check data for user: {userId}`
+
+
+#### Documents cleaned up from verification provider
+
+Documents were deleted from the document verification provider and server during manual cleanup by calling the `POST /api/identity/cleanup` endpoint.
+
+MESSAGE: `Cleaned up documents for user: {userId}`
 
 
 #### Presence check in progress phase reached
@@ -292,10 +578,87 @@ MESSAGE: `Got presence check result: {presenceCheckStatus} for user: {userId}`
 
 #### Presence check accepted
 
-The provider confirmed that the live biometric captured by the mobile client matches the reference image from the identity document. 
+The provider confirmed that the live biometric captured by the mobile client matches the reference image from the identity document.
 The user has passed both liveness detection and face matching.
 
 MESSAGE: `Switched to PRESENCE_CHECK/ACCEPTED; user ID: {userId}`
+
+
+#### Presence check rejected
+
+The presence check provider rejected the liveness check.
+
+MESSAGE: `Switched to PRESENCE_CHECK/REJECTED; user ID: {userId}`
+
+
+#### Presence check failed
+
+The presence check failed due to a technical error.
+
+MESSAGE: `Switched to PRESENCE_CHECK/FAILED; user ID: {userId}`
+
+
+#### Presence check too many attempts reached
+
+Too many attempts were made to verify the presence check.
+
+MESSAGE: `Presence check max failed attempts reached for user: {userId}`
+
+
+#### Client approval result
+
+Client approval request was sent to the onboarding provider [client approve](./External-Onboarding-Services.md#onboarding-approval-service) and a response was received.
+
+MESSAGE: `Onboarding approval result: {clientApprovalResult}, resultReason: {clientApprovalReason}`
+
+
+#### Client approval failed
+
+Call to the onboarding provider [client approve](./External-Onboarding-Services.md#onboarding-approval-service) failed because of technical issues—the calling service didn't return a result.
+
+MESSAGE: `Onboarding approval result: FAILED`
+
+
+#### Client approval acknowledged
+
+Client approval result was received on the endpoint `POST /api/private/client/approve`. The endpoint is called when approval is handled asynchronously.
+
+MESSAGE: `Acknowledged onboarding approval result: {clientApprovalResult}`
+
+
+#### Onboarding approval in progress
+
+The [onboarding approval service](./External-Onboarding-Services.md#onboarding-approval-service) returned `WAIT` — the approval result is not yet available and will be delivered asynchronously.
+
+MESSAGE: `Switched to ONBOARDING_APPROVAL/IN_PROGRESS; user ID: {userId}`
+
+
+#### Onboarding approval accepted
+
+The [onboarding approval service](./External-Onboarding-Services.md#onboarding-approval-service) returned `OK` — the onboarding was approved and the process continues.
+
+MESSAGE: `Switched to ONBOARDING_APPROVAL/ACCEPTED; user ID: {userId}`
+
+
+#### Onboarding approval rejected
+
+The [onboarding approval service](./External-Onboarding-Services.md#onboarding-approval-service) returned `NOK` — the onboarding was rejected.
+
+MESSAGE: `Switched to ONBOARDING_APPROVAL/REJECTED; user ID: {userId}`
+
+
+#### Onboarding approval failed
+
+The [onboarding approval service](./External-Onboarding-Services.md#onboarding-approval-service) failed due to a technical issue.
+
+MESSAGE: `Switched to ONBOARDING_APPROVAL/FAILED; user ID: {userId}`
+
+
+#### Activation finish in progress
+
+The final PowerAuth activation is being created — the temporary activation used during onboarding is being exchanged for the permanent one.
+
+MESSAGE: `Switched to ACTIVATION_FINISH/IN_PROGRESS; user ID: {userId}`
 
 
 #### Onboarding process passed
@@ -307,6 +670,111 @@ MESSAGE: `Switched to COMPLETED/ACCEPTED; user ID: {userId}`
 
 #### Onboarding process finished
 
-The onboarding process is finished.
+The onboarding process was successfully finished.
 
 MESSAGE: `Process finished for user: {userId}`
+
+
+#### Onboarding process failed
+
+The onboarding process failed.
+
+MESSAGE: `Process failed: {processFailErrorDetail}, for user: {userId}`
+
+
+#### PowerAuth activation removed for a failed process
+
+Activation linked to a failed onboarding process was removed during background cleanup.
+
+MESSAGE: `Remove activation of failed process for user: {userId}`
+
+
+#### Target PowerAuth activation removed
+
+Uncommited target PowerAuth activation was removed.
+
+MESSAGE: `Remove activation for user: {userId}`
+
+
+#### Target PowerAuth activation created
+
+Target PowerAuth activation was created.
+
+MESSAGE: `Create target activation for user: {userId}`
+
+
+#### PowerAuth activation removed
+
+Activation linked to the onboarding process was removed during the manual cleanup—by calling endpoint `POST /api/onboarding/cleanup`.
+
+MESSAGE: `Remove activation for user: {userId}`
+
+
+#### Onboarding process failed
+
+The onboarding process failed.
+
+MESSAGE: `Switched to COMPLETED/FAILED; user ID: {userId}`
+
+
+#### Identity verification expired and cleaned up
+
+Identity verification wasn't completed in a given time, and the process is cleaned up by a scheduled job.
+
+MESSAGE: `Expired identity verification for user: {userId}, {expiredIdentityVerificationErrorDetail}`
+
+Values of `expiredIdentityVerificationErrorDetail`:
+- `expiredProcessOnboarding` - the linked onboarding process expired
+- `expiredProcessActivation` - the linked PowerAuth activation expired
+- `expiredProcessIdentityVerification` - the identity verification itself expired
+
+
+#### Document verification expired and cleaned up
+
+Document verification wasn't completed in a given time, and the process is cleaned up by a scheduled job.
+
+MESSAGE: `Expired Document verification for user: {identityVerificationId}, {expiredDocumentVerificationErrorDetail}`
+
+Values of `expiredDocumentVerificationErrorDetail`:
+- `expired` - the document verification itself expired
+- `expiredProcessActivation` - the linked PowerAuth activation expired
+- `expiredProcessIdentityVerification` - the linked identity verification expired
+
+#### OTP expired and cleaned up
+
+The OTP was not used in a given time, and the process is cleaned up by a scheduled job.
+
+MESSAGE: `Expired OTP for user: {userId}`
+
+
+#### Process expired and cleaned up
+
+The onboarding process was not completed in a given time, and the process is cleaned up by a scheduled job.
+
+MESSAGE: `Expired process for user: {userId}, {expiredProcessErrorDetail}`
+
+Values of `expiredProcessErrorDetail`:
+- `expiredProcessOnboarding` - the onboarding process itself expired
+- `expiredProcessActivation` - the linked PowerAuth activation expired
+- `expiredProcessIdentityVerification` - the linked identity verification expired
+
+
+#### Identity verification limit reached
+
+Too many identity verifications were attempted.
+
+MESSAGE: `Max failed attempts reached for identity verification for user: {userId}`
+
+
+#### Process limit reached
+
+Maximum number of processes per day reached.
+
+MESSAGE: `Maximum number of processes per day reached for user: {userId}`
+
+
+#### Process cleaned up
+
+The onboarding process was cleaned up manually by calling the endpoint `POST /api/onboarding/cleanup`.
+
+MESSAGE: `Process cleaned up for user: {userId}`
