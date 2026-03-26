@@ -7,6 +7,7 @@
 - [Configuration Properties](./Configuration-Properties.md)
 - [Configuration of Verification Providers](./Configuration-Verification-Providers.md)
 - [Database Structure](./Database-Structure.md)
+- [Process Metrics](./Process-Metrics.md)
 
 **Overview**
 
