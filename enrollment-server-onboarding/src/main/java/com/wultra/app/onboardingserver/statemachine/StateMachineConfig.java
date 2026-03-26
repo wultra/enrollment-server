@@ -22,7 +22,6 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationSendAction;
-import com.wultra.app.onboardingserver.statemachine.action.presencecheck.MoveToPresenceCheckVerificationPendingAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckInitAction;
 import com.wultra.app.onboardingserver.statemachine.action.presencecheck.PresenceCheckVerificationAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.*;
@@ -38,6 +37,8 @@ import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedG
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
+import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
+import com.wultra.core.rest.model.base.response.Response;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -87,8 +88,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private final PresenceCheckInitAction presenceCheckInitAction;
 
     private final PresenceCheckVerificationAction presenceCheckVerificationAction;
-
-    private final MoveToPresenceCheckVerificationPendingAction moveToPresenceCheckVerificationPendingAction;
 
     private final DocumentsVerificationPendingGuard documentsVerificationPendingGuard;
 
@@ -191,6 +190,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_REJECTED,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_FAILED,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
+                OnboardingState.PRESENCE_CHECK_IN_PROGRESS,
+                OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
                 OnboardingState.ACTIVATION_FINISH_IN_PROGRESS,
@@ -303,9 +304,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .first(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, VerificationDocumentStartAction.isResultOk())
+                .first(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, VerificationDocumentStartAction.isResultOk())
                 .then(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, VerificationDocumentStartAction.isResultInProgress())
-                .last(OnboardingState.DOCUMENT_VERIFICATION_FAILED);
+                .last(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
+                .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS);
     }
 
     private void configureDocumentVerificationFinalTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
@@ -396,14 +402,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_SUBMITTED)
                 .guard(processIdentifierGuard)
-                .action(moveToPresenceCheckVerificationPendingAction)
+                .action(context -> StateContextUtil.setResponseOk(context, new Response()))
                 .target(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
                 .action(presenceCheckVerificationAction)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
 
@@ -411,10 +416,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .first(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, statusInProgressGuard)
-                .then(OnboardingState.CHOICE_OTP_ENABLED, statusAcceptedGuard)
-                .then(OnboardingState.PRESENCE_CHECK_REJECTED, statusRejectedGuard)
-                .then(OnboardingState.PRESENCE_CHECK_FAILED, statusFailedGuard)
-                .last(OnboardingState.UNEXPECTED_STATE)
+                .then(OnboardingState.CHOICE_OTP_ENABLED, PresenceCheckVerificationAction.isResultOk())
+                .then(OnboardingState.PRESENCE_CHECK_REJECTED, PresenceCheckVerificationAction.isResultRejected())
+                .last(OnboardingState.PRESENCE_CHECK_FAILED)
 
                 .and()
                 .withExternal()
