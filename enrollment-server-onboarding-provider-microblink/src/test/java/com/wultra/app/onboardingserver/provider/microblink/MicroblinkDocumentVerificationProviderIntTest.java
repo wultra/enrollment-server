@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
@@ -101,7 +102,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String idCardBackExtractionJson;
     private static final String idCardPassValidationResult;
     private static final String idCardRejectValidationResult;
-    private static final String idCardResponseWithoutPersonalDataJson;
+    private static final JsonNode idCardResponseWithoutPersonalDataJson;
 
     private static final Image passportImage;
     private static final String microblinkPassportPassResponseBody;
@@ -183,8 +184,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
             idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
                     .replaceAll("");
 
-            idCardResponseWithoutPersonalDataJson = ((ObjectNode) passResponseTree).remove(List.of("extraction", "images"))
-                    .toString();
+            idCardResponseWithoutPersonalDataJson = ((ObjectNode) passResponseTree).remove(List.of("extraction", "images"));
 
             // Passport
             passportImage = Image.builder()

@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public record DocumentVerificationParsedResponse(
     String extractionFrontJson,
     String extractionBackJson,
     String responseWithoutImagesJson,
-    String responseWithoutPersonalDataJson,
+    JsonNode responseWithoutPersonalDataJson,
     List<Message> messages
 ) {
     public record Verification(
