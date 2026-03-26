@@ -28,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class VerificationDocumentStartAction implements Action<OnboardingState, OnboardingEvent> {
 
-    public static final String RESULT_KEY = "DOCUMENT_VERIFICATION_RESULT";
+    private static final String RESULT_KEY = "DOCUMENT_VERIFICATION_RESULT";
 
     private final IdentityVerificationService identityVerificationService;
 
@@ -53,4 +54,35 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
         context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
     }
 
+    /**
+     * Guard that checks if all documents are accepted.
+     *
+     * @return guard returning {@code true} if all documents are accepted
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(IdentityVerificationService.DocumentEvaluationStatus.OK);
+    }
+
+    /**
+     * Guard that checks if the documents are not accepted or not all required documents are accepted yet
+     *
+     * @return guard returning {@code true} if some documents are not accepted or not all required documents are accepted yet
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
+        return isResult(IdentityVerificationService.DocumentEvaluationStatus.NOK);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+        return context -> evaluateDocumentResult(context, expectedResult);
+    }
+
+    private static boolean evaluateDocumentResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof IdentityVerificationService.DocumentEvaluationStatus result) {
+            return expectedResult == result;
+        }
+
+        return false;
+    }
 }

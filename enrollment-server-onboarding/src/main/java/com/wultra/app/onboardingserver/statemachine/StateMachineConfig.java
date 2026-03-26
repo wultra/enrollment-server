@@ -305,24 +305,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
-                .first(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, isDocumentResult(IdentityVerificationService.DocumentEvaluationStatus.OK))
-                .then(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, isDocumentResult(IdentityVerificationService.DocumentEvaluationStatus.NOK))
+                .first(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, VerificationDocumentStartAction.isResultOk())
+                .then(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, VerificationDocumentStartAction.isResultInProgress())
                 .last(OnboardingState.DOCUMENT_VERIFICATION_FAILED);
-    }
-
-    // TODO Lubos move it to action
-    private static Guard<OnboardingState, OnboardingEvent> isDocumentResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
-        return context -> evaluateDocumentResult(context, expectedResult);
-    }
-
-    private static boolean evaluateDocumentResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
-        final var contextValue = context.getExtendedState().getVariables().get(VerificationDocumentStartAction.RESULT_KEY);
-
-        if (contextValue instanceof IdentityVerificationService.DocumentEvaluationStatus result) {
-            return expectedResult == result;
-        }
-
-        return false;
     }
 
     private void configureDocumentVerificationFinalTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
