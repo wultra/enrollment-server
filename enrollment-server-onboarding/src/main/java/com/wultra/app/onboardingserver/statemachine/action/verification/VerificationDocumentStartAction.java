@@ -73,10 +73,10 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
     }
 
     private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
-        return context -> evaluateDocumentResult(context, expectedResult);
+        return context -> evaluateResult(context, expectedResult);
     }
 
-    private static boolean evaluateDocumentResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
         final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
 
         if (contextValue instanceof IdentityVerificationService.DocumentEvaluationStatus result) {

@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.clientevaluation.ClientEvaluationAction;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
@@ -457,9 +456,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_APPROVAL_RESULT)
-                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, isApprovalResult(ApproveClientResponse.ApprovalResult.OK))
-                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, isApprovalResult(ApproveClientResponse.ApprovalResult.WAIT))
-                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, isApprovalResult(ApproveClientResponse.ApprovalResult.NOK))
+                .first(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, OnboardingApprovalAction.isResultOk())
+                .then(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, OnboardingApprovalAction.isResultInProgress())
+                .then(OnboardingState.ONBOARDING_APPROVAL_REJECTED, OnboardingApprovalAction.isResultRejected())
                 .last(OnboardingState.ONBOARDING_APPROVAL_FAILED)
 
                 .and()
@@ -478,20 +477,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED)
                 .target(OnboardingState.CHOICE_ACTIVATION_FINISH_ENABLED);
-    }
-
-    private static Guard<OnboardingState, OnboardingEvent> isApprovalResult(ApproveClientResponse.ApprovalResult expectedResult) {
-        return context -> evaluateApprovalResult(context, expectedResult);
-    }
-
-    private static boolean evaluateApprovalResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
-        final var contextValue = context.getExtendedState().getVariables().get(OnboardingApprovalAction.RESULT_KEY);
-
-        if (contextValue instanceof ApproveClientResponse.ApprovalResult result) {
-            return expectedResult == result;
-        }
-
-        return false;
     }
 
     private void configureOtpTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {

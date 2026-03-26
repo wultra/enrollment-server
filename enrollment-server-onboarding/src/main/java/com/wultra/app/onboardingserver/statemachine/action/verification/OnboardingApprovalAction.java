@@ -26,6 +26,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import lombok.AllArgsConstructor;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,7 +38,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class OnboardingApprovalAction implements Action<OnboardingState, OnboardingEvent> {
 
-    public static final String RESULT_KEY = "APPROVAL_RESULT";
+    private static final String RESULT_KEY = "APPROVAL_RESULT";
 
     private final OnboardingApprovalService onboardingApprovalService;
 
@@ -47,5 +48,46 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
 
         final ApproveClientResponse.ApprovalResult result = onboardingApprovalService.approve(identityVerification);
         context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
+    }
+
+    /**
+     * Guard that checks if the approval result is OK.
+     *
+     * @return guard returning {@code true} if the approval result is OK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(ApproveClientResponse.ApprovalResult.OK);
+    }
+
+    /**
+     * Guard that checks if the approval result is NOK.
+     *
+     * @return guard returning {@code true} if the approval result is NOK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultRejected() {
+        return isResult(ApproveClientResponse.ApprovalResult.NOK);
+    }
+
+    /**
+     * Guard that checks if the approval result is WAIT.
+     *
+     * @return guard returning {@code true} if the approval result is WAIT
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
+        return isResult(ApproveClientResponse.ApprovalResult.WAIT);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(ApproveClientResponse.ApprovalResult expectedResult) {
+        return context -> evaluateResult(context, expectedResult);
+    }
+
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof ApproveClientResponse.ApprovalResult result) {
+            return expectedResult == result;
+        }
+
+        return false;
     }
 }
