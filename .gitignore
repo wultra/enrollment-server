@@ -2,6 +2,7 @@
 **/target/
 **/src/main/java/generated/
 **/.springBeans
+env.list
 
 ### NetBeans template
 **/nbproject/private/
@@ -26,3 +27,7 @@ rebel.xml
 ### Swagger
 .swagger-codegen
 .swagger-codegen-ignore
+
+### Vim
+*.swp
+*.swo

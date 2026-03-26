@@ -77,9 +77,6 @@ The Onboarding Server uses the following public configuration properties:
 |--------------------------------------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------------|
 | `enrollment-server-onboarding.document-verification.provider`                              | `mock`          | Document verification provider (`mock`, `zenid`, `innovatrics`).                      |
 | `enrollment-server-onboarding.document-verification.cleanupEnabled`                        | `false`         | Whether document cleanup is enabled for the provider.                                 |
-| `enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits`        | `0/5 * * * * *` | Cron scheduler for checking status of submitted documents.                            |
-| `enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron`      | `0/5 * * * * *` | Cron scheduler for checking pending document verifications.                           |
-| `enrollment-server-onboarding.document-verification.checkDocumentSubmitVerifications.cron` | `0/5 * * * * *` | Cron scheduler for checking document submit verifications.                            |
 
 ## Presence Check Provider Configuration
 
