@@ -38,6 +38,7 @@ import java.util.Optional;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+// TODO (racansky, 2026-03-26, #1619) validate and/or lock just only at the start of the machine
 public class ProcessIdentifierGuard implements Guard<OnboardingState, OnboardingEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessIdentifierGuard.class);
