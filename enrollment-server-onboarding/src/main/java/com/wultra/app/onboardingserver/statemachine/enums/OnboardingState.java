@@ -55,6 +55,7 @@ public enum OnboardingState {
     CLIENT_EVALUATION_FAILED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.FAILED),
     CLIENT_EVALUATION_REJECTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.REJECTED),
 
+    PRESENCE_CHECK_ACCEPTED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.ACCEPTED),
     PRESENCE_CHECK_IN_PROGRESS(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS),
     PRESENCE_CHECK_FAILED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.FAILED),
 

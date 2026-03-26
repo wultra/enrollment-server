@@ -191,6 +191,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_FAILED,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.PRESENCE_CHECK_IN_PROGRESS,
+                OnboardingState.PRESENCE_CHECK_ACCEPTED,
                 OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
@@ -415,10 +416,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
-                .first(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, statusInProgressGuard)
-                .then(OnboardingState.CHOICE_OTP_ENABLED, PresenceCheckVerificationAction.isResultOk())
+                .first(OnboardingState.PRESENCE_CHECK_ACCEPTED, PresenceCheckVerificationAction.isResultOk())
                 .then(OnboardingState.PRESENCE_CHECK_REJECTED, PresenceCheckVerificationAction.isResultRejected())
                 .last(OnboardingState.PRESENCE_CHECK_FAILED)
+
+                .and()
+                .withExternal()
+                .source(OnboardingState.PRESENCE_CHECK_ACCEPTED)
+                .target(OnboardingState.CHOICE_OTP_ENABLED)
 
                 .and()
                 .withExternal()
