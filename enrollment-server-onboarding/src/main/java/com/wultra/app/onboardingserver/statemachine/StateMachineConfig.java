@@ -155,6 +155,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT)
                 .choice(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
+                .choice(OnboardingState.CHOICE_DOCUMENT_FINAL_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_ENABLED)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED)
@@ -169,6 +170,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .end(OnboardingState.CLIENT_EVALUATION_REJECTED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_FAILED)
                 .end(OnboardingState.DOCUMENT_VERIFICATION_REJECTED)
+                .end(OnboardingState.DOCUMENT_VERIFICATION_FINAL_REJECTED)
+                .end(OnboardingState.DOCUMENT_VERIFICATION_FINAL_FAILED)
                 .end(OnboardingState.ONBOARDING_APPROVAL_FAILED)
                 .end(OnboardingState.ONBOARDING_APPROVAL_REJECTED)
                 .end(OnboardingState.COMPLETED_ACCEPTED)
@@ -186,6 +189,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS,
                 OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS,
+                OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED,
+                OnboardingState.DOCUMENT_VERIFICATION_FINAL_REJECTED,
+                OnboardingState.DOCUMENT_VERIFICATION_FINAL_FAILED,
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
@@ -304,6 +310,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .last(OnboardingState.DOCUMENT_VERIFICATION_FAILED);
     }
 
+    // TODO Lubos move it to action
     private static Guard<OnboardingState, OnboardingEvent> isDocumentResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
         return context -> evaluateDocumentResult(context, expectedResult);
     }
@@ -322,15 +329,20 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .action(documentVerificationFinalAction)
-                .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
+                .target(OnboardingState.CHOICE_DOCUMENT_FINAL_VERIFICATION_PROCESSING)
+
+                .and()
+                .withChoice()
+                .source(OnboardingState.CHOICE_DOCUMENT_FINAL_VERIFICATION_PROCESSING)
+                .first(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED, DocumentVerificationFinalAction.isResultOk())
+                .then(OnboardingState.DOCUMENT_VERIFICATION_FINAL_REJECTED, DocumentVerificationFinalAction.isResultRejected())
+                .last(OnboardingState.DOCUMENT_VERIFICATION_FINAL_FAILED)
 
                 .and()
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
-                .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED);
     }

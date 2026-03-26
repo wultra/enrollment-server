@@ -22,27 +22,23 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
+import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.*;
+import java.util.Optional;
 
 /**
  * Document verification service providing {@link #executeFinalDocumentVerification(IdentityVerificationEntity, OwnerId)}.
@@ -50,48 +46,30 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 public class DocumentVerificationService {
 
     private final DocumentVerificationProvider documentVerificationProvider;
 
-    private final IdentityVerificationService identityVerificationService;
-
-    private final CommonOnboardingService processService;
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     private final OnboardingProcessLimitService processLimitService;
 
     private final AuditService auditService;
 
-    @Autowired
-    public DocumentVerificationService(
-            final DocumentVerificationProvider documentVerificationProvider,
-            final IdentityVerificationService identityVerificationService,
-            final CommonOnboardingService processService,
-            final OnboardingProcessLimitService processLimitService,
-            final AuditService auditService) {
-
-        this.documentVerificationProvider = documentVerificationProvider;
-        this.identityVerificationService = identityVerificationService;
-        this.processService = processService;
-        this.processLimitService = processLimitService;
-        this.auditService = auditService;
-    }
-
     /**
      * Execute final document verification of the given identity verification.
      * <p>
-     * Based on the result of calling document verification provider, change the identity verification status.
+     * Based on the result of calling a document verification provider, change the identity verification status.
      * Also change status of the document verifications accordingly.
      *
      * @param identityVerification Identification verification whose documents should be verified
      * @param ownerId Owner identification
-     * @throws RemoteCommunicationException In case of remote communication error
-     * @throws DocumentVerificationException In case of business logic error
-     * @throws OnboardingProcessException When process not found
+     * @return Result of the final document verification.
      */
-    public void executeFinalDocumentVerification(final IdentityVerificationEntity identityVerification, final OwnerId ownerId)
-            throws RemoteCommunicationException, DocumentVerificationException, OnboardingProcessException {
+    public FinalDocumentVerificationResult executeFinalDocumentVerification(final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        logger.info("action: executeFinalDocumentVerification, state: initiated, identityVerificationId: {}", identityVerification.getId());
 
         final List<DocumentVerificationEntity> documentVerifications = filterDocumentVerifications(identityVerification);
 
@@ -99,40 +77,48 @@ public class DocumentVerificationService {
                 .map(DocumentVerificationEntity::getUploadId)
                 .toList();
 
-        final DocumentsVerificationResult result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
-        final String verificationId = result.getVerificationId();
-        final DocumentVerificationStatus status = result.getStatus();
+        final DocumentsVerificationResult documentsVerificationResult;
+        try {
+            documentsVerificationResult = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
+        } catch (RemoteCommunicationException | DocumentVerificationException e) {
+            logger.error("action: executeFinalDocumentVerification, state: failed, exceptionMessage: {}", e.getMessage(), e);
+            return FinalDocumentVerificationResult.FAILED;
+        }
+
+        final String verificationId = documentsVerificationResult.getVerificationId();
+        final DocumentVerificationStatus status = documentsVerificationResult.getStatus();
         logger.info("Cross verified documents upload ID: {}, verification ID: {}, status: {}, {}", uploadIds, verificationId, status, ownerId);
         auditService.auditDocumentVerificationProvider(identityVerification, "Cross verified documents: {} for user: {}", status, ownerId.getUserId());
 
         documentVerifications.forEach(docVerification -> {
-            docVerification.setVerificationId(result.getVerificationId());
+            docVerification.setVerificationId(documentsVerificationResult.getVerificationId());
             docVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         });
 
-        switch (status) {
-            case ACCEPTED -> accept(identityVerification, documentVerifications, ownerId);
-            case FAILED -> fail(identityVerification, result, documentVerifications, ownerId);
-            case REJECTED -> reject(identityVerification, result, documentVerifications, ownerId);
-            case IN_PROGRESS -> throw new DocumentVerificationException("Only sync mode is supported, " + ownerId);
-            default -> throw new DocumentVerificationException(String.format("Not supported status %s, %s", status, ownerId));
-        }
+        final var result = switch (status) {
+            case ACCEPTED -> accept(identityVerification, documentVerifications);
+            case FAILED -> fail(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
+            case REJECTED -> reject(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
+            // Only sync mode is supported
+            case IN_PROGRESS -> FinalDocumentVerificationResult.FAILED;
+        };
+        logger.info("action: executeFinalDocumentVerification, state: succeeded, identityVerificationId: {}, documentsVerificationResult: {}", identityVerification.getId(), result);
+        return result;
     }
 
-    private void accept(
+    private FinalDocumentVerificationResult accept(
             final IdentityVerificationEntity identityVerification,
-            final List<DocumentVerificationEntity> documentVerifications,
-            final OwnerId ownerId) {
+            final List<DocumentVerificationEntity> documentVerifications) {
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION_FINAL, ACCEPTED, ownerId);
+        return FinalDocumentVerificationResult.OK;
     }
 
-    private void reject(
+    private FinalDocumentVerificationResult reject(
             final IdentityVerificationEntity identityVerification,
             final DocumentsVerificationResult result,
             final List<DocumentVerificationEntity> documentVerifications,
-            final OwnerId ownerId) throws OnboardingProcessException {
+            final OwnerId ownerId) {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.REJECTED);
@@ -147,16 +133,15 @@ public class DocumentVerificationService {
         identityVerification.setRejectOrigin(RejectOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), REJECTED, ownerId);
-
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
+        return FinalDocumentVerificationResult.REJECTED;
     }
 
-    private void fail(
+    private FinalDocumentVerificationResult fail(
             final IdentityVerificationEntity identityVerification,
             final DocumentsVerificationResult result,
             final List<DocumentVerificationEntity> documentVerifications,
-            final OwnerId ownerId) throws OnboardingProcessException {
+            final OwnerId ownerId) {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.FAILED);
@@ -171,19 +156,24 @@ public class DocumentVerificationService {
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
         logger.info("Identity verification ID: {}, failed: {}, {}", identityVerification.getId(), result.getErrorDetail(), ownerId);
 
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), FAILED, ownerId);
-
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
+        return FinalDocumentVerificationResult.FAILED;
     }
 
     private void incrementErrorScore(
             final IdentityVerificationEntity identityVerification,
             final OnboardingProcessError error,
-            final OwnerId ownerId) throws OnboardingProcessException {
+            final OwnerId ownerId) {
 
-        final OnboardingProcessEntity process = processService.findProcess(identityVerification.getProcessId());
-        processLimitService.incrementErrorScore(process, error, ownerId);
-        processLimitService.checkOnboardingProcessErrorLimits(process);
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(identityVerification.getProcessId());
+        if (process.isEmpty()) {
+            // it should never happen in this workflow phase, but make it robust
+            logger.error("action: incrementErrorScore, state: failed, reason: process not found, processId: {}", identityVerification.getProcessId());
+            return;
+        }
+
+        processLimitService.incrementErrorScore(process.get(), error, ownerId);
+        processLimitService.checkOnboardingProcessErrorLimits(process.get());
     }
 
     private static List<DocumentVerificationEntity> filterDocumentVerifications(final IdentityVerificationEntity identityVerification) {
@@ -191,5 +181,11 @@ public class DocumentVerificationService {
                 .filter(DocumentVerificationEntity::isUsedForVerification)
                 .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
                 .toList();
+    }
+
+    public enum FinalDocumentVerificationResult {
+        OK,
+        REJECTED,
+        FAILED
     }
 }
