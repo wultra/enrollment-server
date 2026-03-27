@@ -1,24 +1,7 @@
 # Audit
 
 This feature provides audit logging for the onboarding server in the database.
-For more detailed developer documentation see [auditing library documentation](https://github.com/wultra/java-core?tab=readme-ov-file#wultra-auditing-library).
-
-
-## Configuration
-
-The following application properties can be used to configure audit logging:
-
-| Property Name                                    | Default Value        | Description                                                                                         |
-|--------------------------------------------------|----------------------|-----------------------------------------------------------------------------------------------------|
-| `spring.application.name`                        | `onboarding-server`  | The name of application used to set `application_name` column                                       |
-| `audit.level`                                    | `INFO`               | Threshold of log message levels to be persisted. See the [Audit levels](#audit-levels) section.     |
-| `audit.event.queue.size`                         | `100000`             | Size of the internal queue for log entries to be written.                                           |
-| `audit.db.cleanup.days`                          | `365`                | Data retention period in the database.                                                              |
-| `audit.db.table.log.name`                        | `audit_log`          | Name of the database table for audit log entries.                                                   |
-| `audit.db.table.param.enabled`                   | `false`              | Whether values from the column `audit_log.param` are parsed and persisted into `audit_param` table. |
-| `audit.db.table.param.name`                      | `audit_param`        | Name of the database table for audit log parameters.                                                |
-| `spring.jpa.properties.hibernate.default_schema` | _empty_              | The database schema to use.                                                                         |
-| `audit.db.batch.size`                            | `1000`               | Batch size for database operations.                                                                 |
+For more detailed developer documentation see [auditing library documentation](https://github.com/wultra/java-core?tab=readme-ov-file#wultra-auditing-library). |
 
 
 ## Audit types
@@ -26,16 +9,16 @@ The following application properties can be used to configure audit logging:
 A value in the `audit_log.audit_type` column is used to categorize the audit log entry according to the operation scope.
 The following values are used:
 
-| Value                          | Description                                                         |
-|--------------------------------|---------------------------------------------------------------------|
-| `process`                      | General onboarding process operation                                |
-| `otp`                          | OTP operations                                                      |
-| `identityVerification`         | Identity verification operations                                    |
-| `activation`                   | Activation operations                                               |
-| `documentVerification`         | Document verification operations                                    |
-| `presenceCheckProvider`        | Presence check operations                                           |
-| `documentVerificationProvider` | Document verification provider operations                           |
-| `onboardingProvider`           | [Onboarding provider](./External-Onboarding-Services.md) operations |
+| Value                          | Description                                                           |
+|--------------------------------|-----------------------------------------------------------------------|
+| `process`                      | General onboarding process operation                                  |
+| `otp`                          | OTP operations                                                        |
+| `identityVerification`         | Identity verification operations                                      |
+| `activation`                   | Activation operations                                                 |
+| `documentVerification`         | Document verification operations                                      |
+| `presenceCheckProvider`        | Presence check operations                                             |
+| `documentVerificationProvider` | Document verification provider operations                             |
+| `onboardingProvider`           | [Onboarding provider](./External-Onboarding-Services.md) operations   |
 
 
 ## How to search in audit logs
