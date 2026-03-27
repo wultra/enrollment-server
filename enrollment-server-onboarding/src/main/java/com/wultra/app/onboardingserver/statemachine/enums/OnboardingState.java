@@ -76,7 +76,6 @@ public enum OnboardingState {
 
     COMPLETED_ACCEPTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED),
     COMPLETED_FAILED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED),
-    COMPLETED_REJECTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.REJECTED),
 
     CHOICE_CLIENT_EVALUATION_PROCESSING,
 
@@ -112,9 +111,7 @@ public enum OnboardingState {
 
     CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING,
 
-    CHOICE_COMPLETED_STATE,
-
-    UNEXPECTED_STATE;
+    CHOICE_COMPLETED_STATE;
 
     private boolean choiceState = false;
 

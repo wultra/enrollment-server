@@ -33,10 +33,6 @@ import com.wultra.app.onboardingserver.statemachine.event.OnboardingCompletedAcc
 import com.wultra.app.onboardingserver.statemachine.guard.*;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerifiedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusFailedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusInProgressGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedGuard;
 import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
 import com.wultra.core.rest.model.base.response.Response;
 import lombok.AllArgsConstructor;
@@ -111,14 +107,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ProcessIdentifierGuard processIdentifierGuard;
 
-    private final StatusAcceptedGuard statusAcceptedGuard;
-
-    private final StatusFailedGuard statusFailedGuard;
-
-    private final StatusInProgressGuard statusInProgressGuard;
-
-    private final StatusRejectedGuard statusRejectedGuard;
-
     private final TargetActivationFinishedGuard targetActivationFinishedGuard;
 
     private final TargetActivationEnabledGuard targetActivationEnabledGuard;
@@ -173,7 +161,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .end(OnboardingState.ONBOARDING_APPROVAL_REJECTED)
                 .end(OnboardingState.COMPLETED_ACCEPTED)
                 .end(OnboardingState.COMPLETED_FAILED)
-                .end(OnboardingState.COMPLETED_REJECTED)
                 .states(EnumSet.allOf(OnboardingState.class));
 
         registerPersistFunctions(configurer);
@@ -205,7 +192,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.CLIENT_EVALUATION_ACCEPTED,
                 OnboardingState.CLIENT_EVALUATION_IN_PROGRESS,
                 OnboardingState.CLIENT_EVALUATION_REJECTED,
-                OnboardingState.CLIENT_EVALUATION_FAILED);
+                OnboardingState.CLIENT_EVALUATION_FAILED,
+                OnboardingState.COMPLETED_ACCEPTED,
+                OnboardingState.COMPLETED_FAILED);
 
         for (final OnboardingState state : states) {
             configurer.stateEntryFunction(state, persistState(state));
@@ -538,10 +527,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         transitions
                 .withChoice()
                 .source(OnboardingState.CHOICE_COMPLETED_STATE)
-                .first(OnboardingState.COMPLETED_ACCEPTED, statusAcceptedGuard)
-                .then(OnboardingState.COMPLETED_REJECTED, statusRejectedGuard)
-                .then(OnboardingState.COMPLETED_FAILED, statusFailedGuard)
-                .last(OnboardingState.UNEXPECTED_STATE);
+                .first(OnboardingState.COMPLETED_ACCEPTED, VerificationProcessResultAction.isResultOk())
+                .last(OnboardingState.COMPLETED_FAILED);
     }
 
 }

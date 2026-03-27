@@ -55,7 +55,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
@@ -282,24 +281,25 @@ public class IdentityVerificationService {
      *
      * @param ownerId Owner identification.
      * @param idVerification Identity verification entity.
+     * @return final verification result
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      */
     @Transactional
-    public void processVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
+    public FinalVerificationResult processVerificationResult(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws RemoteCommunicationException {
         final var result = identityVerificationPrecompleteCheck.evaluate(idVerification);
-        if (result.isSuccessful()) {
-            logger.debug("Final validation passed, {}", ownerId);
-            moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
-        } else {
+
+        if (!result.isSuccessful()) {
             logger.warn("Final validation did not pass, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
             idVerification.setErrorDetail(result.getErrorDetail());
             idVerification.setTimestampFailed(ownerId.getTimestamp());
             idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
-            moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);
         }
+
         idVerification.setTimestampFinished(ownerId.getTimestamp());
         idVerification.setTimestampLastUpdated(ownerId.getTimestamp());
         identityVerificationRepository.save(idVerification);
+
+        return result.isSuccessful() ? FinalVerificationResult.OK : FinalVerificationResult.FAILED;
     }
 
     private DocumentEvaluationStatus evaluateDocuments(
@@ -581,5 +581,10 @@ public class IdentityVerificationService {
          * Some documents are not accepted or not all required documents are accepted yet.
          */
         NOK,
+    }
+
+    public enum FinalVerificationResult {
+        OK,
+        FAILED
     }
 }

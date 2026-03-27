@@ -28,15 +28,14 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
-import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlan;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
@@ -66,7 +65,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationOtpService identityVerificationOtpService;
 
     @MockitoBean
-    private VerificationProcessResultAction verificationProcessResultAction;
+    private VerificationResultService verificationResultService;
 
     @MockitoBean
     private PresenceCheckService presenceCheckService;
@@ -115,13 +114,8 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
         StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(idVerification.getProcessId())).thenReturn(true);
-        doAnswer(args -> {
-            args.getArgument(0, StateContext.class)
-                    .getExtendedState()
-                    .get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class)
-                    .setStatus(IdentityVerificationStatus.ACCEPTED);
-            return null;
-        }).when(verificationProcessResultAction).execute(any());
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
 
         when(presenceCheckService.isVerifyPresenceWithOtpPassed(idVerification))
                 .thenReturn(true);
@@ -139,7 +133,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                 .build()
                 .test();
 
-        verify(verificationProcessResultAction).execute(any());
+        verify(verificationResultService).processVerificationResult(any(), any());
     }
 
     @Test
@@ -159,7 +153,7 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                 .build()
                 .test();
 
-        verify(verificationProcessResultAction, never()).execute(any());
+        verify(verificationResultService, never()).processVerificationResult(any(), any());
     }
 
     private IdentityVerificationEntity createIdentityVerification() {
