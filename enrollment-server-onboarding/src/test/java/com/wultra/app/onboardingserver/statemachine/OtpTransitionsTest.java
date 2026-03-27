@@ -147,7 +147,6 @@ class OtpTransitionsTest extends AbstractStateMachineTest {
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
                 .and()
                 .step()
-                .sendEvent(OnboardingEvent.EVENT_NEXT_STATE)
                 .expectState(OnboardingState.OTP_VERIFICATION_PENDING)
                 .and()
                 .build()

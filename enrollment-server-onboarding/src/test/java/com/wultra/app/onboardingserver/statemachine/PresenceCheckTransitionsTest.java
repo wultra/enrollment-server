@@ -105,11 +105,7 @@ class PresenceCheckTransitionsTest extends AbstractStateMachineTest {
             return null;
         }).when(presenceCheckService).checkPresenceVerification(OWNER_ID, idVerification);
 
-        Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
-
         prepareTest(stateMachine)
-            .sendEvent(message)
             .expectState(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
             .and()
             .build()
