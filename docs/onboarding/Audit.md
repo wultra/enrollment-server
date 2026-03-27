@@ -9,16 +9,16 @@ For more detailed developer documentation see [auditing library documentation](h
 A value in the `audit_log.audit_type` column is used to categorize the audit log entry according to the operation scope.
 The following values are used:
 
-| Value                          | Description                                                           |
-|--------------------------------|-----------------------------------------------------------------------|
-| `process`                      | General onboarding process operation                                  |
-| `otp`                          | OTP operations                                                        |
-| `identityVerification`         | Identity verification operations                                      |
-| `activation`                   | Activation operations                                                 |
-| `documentVerification`         | Document verification operations                                      |
-| `presenceCheckProvider`        | Presence check operations                                             |
-| `documentVerificationProvider` | Document verification provider operations                             |
-| `onboardingProvider`           | [Onboarding provider](./External-Onboarding-Services.md) operations   |
+| Value                          | Description                                                                                                                                                                                                                            |
+|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `process`                      | High-level lifecycle events for onboarding processing, including start, resume, completion, cleanup, expiry, and limit handling. Use this type to reconstruct the overall timeline and final outcome of a case.                        |
+| `otp`                          | OTP control events such as send/resend, verification success or failure, expiration, cancellation, and max-attempt handling. This type is used to audit MFA step integrity and detect abuse patterns.                                  |
+| `identityVerification`         | State and status transitions of identity verification phases (for example document upload, presence check, client evaluation, and completion). This is the primary type for tracking decision flow across verification stages.         |
+| `activation`                   | Events related to PowerAuth activation lifecycle during onboarding, including creation, replacement, and cleanup of activation identifiers. Use it to validate activation consistency and rollback behavior.                           |
+| `documentVerification`         | Per-document processing and decision events (pending, accepted, rejected, failed), including final document-level outcomes. This type enables forensic traceability for each submitted document artifact.                              |
+| `presenceCheckProvider`        | Events from the liveness/presence provider, including initialization, execution, result retrieval, and cleanup. Use this type to review biometric verification path and provider-side failures.                                        |
+| `documentVerificationProvider` | Events from the document verification provider, including submissions, evaluation retrieval, cross-verification, SDK initialization, and cleanup. This type is useful for proving provider interaction sequence and response handling. |
+| `onboardingProvider`           | Calls to external [onboarding providers](./External-Onboarding-Services.md) for business services such as lookup, consent, OTP delivery, and client evaluation/approval.                                                               |
 
 
 ## How to search in audit logs
@@ -449,7 +449,7 @@ MESSAGE: `OTP failed because of failed process for user: {userId}`
 
 #### OTP failed
 
-Previously verified user verification OTP was invalidated and marked as failed. This happens when the OTP step succeeds, 
+Previously verified user verification OTP was invalidated and marked as failed. This happens when the OTP step succeeds,
 but the combined SCA evaluation fails because the earlier presence check result was not successful.
 
 MESSAGE: `OTP failed for user: {userId}`
