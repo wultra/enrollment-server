@@ -232,7 +232,7 @@ public class AuditService {
      */
     public void auditDocumentVerificationProvider(final OwnerId ownerId, final String documentResponseJson, final String message, final Object... args) {
         final AuditDetail auditDetail = AuditDetail.builder()
-                .type(AuditType.ONBOARDING_PROVIDER.code)
+                .type(AuditType.DOCUMENT_VERIFICATION_PROVIDER.code)
                 .param(ACTIVATION_ID, ownerId.getActivationId())
                 .param(USER_ID, ownerId.getUserId())
                 .param(DOCUMENT_RESPONSE_JSON, documentResponseJson)
