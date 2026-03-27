@@ -185,6 +185,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         final var states = List.of(
                 OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS,
                 OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING,
+                OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED,
                 OnboardingState.DOCUMENT_VERIFICATION_FINAL_REJECTED,
@@ -192,6 +193,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED,
                 OnboardingState.PRESENCE_CHECK_IN_PROGRESS,
                 OnboardingState.PRESENCE_CHECK_ACCEPTED,
+                OnboardingState.PRESENCE_CHECK_REJECTED,
+                OnboardingState.PRESENCE_CHECK_FAILED,
                 OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING,
                 OnboardingState.ONBOARDING_APPROVAL_REJECTED,
                 OnboardingState.ONBOARDING_APPROVAL_FAILED,
