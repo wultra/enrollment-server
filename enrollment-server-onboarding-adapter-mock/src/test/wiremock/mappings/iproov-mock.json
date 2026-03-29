@@ -68,7 +68,7 @@
     {
       "request": {
         "method": "POST",
-        "url": "/api/v2/.*/access_token"
+        "urlPathPattern": "/api/v2/.*/access_token"
       },
       "response": {
         "status": 200,
