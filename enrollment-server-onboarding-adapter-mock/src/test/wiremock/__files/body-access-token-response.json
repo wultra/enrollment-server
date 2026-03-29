@@ -1,0 +1,10 @@
+{
+  "access_token": "wnsxT6NKwSTfysMgz4dlVSVResPHDnXoCcBuR0sZ2FcCDxZLCn6eIT2zd3f6",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": [
+    "user-write",
+    "user-read",
+    "user-write-status"
+  ]
+}
