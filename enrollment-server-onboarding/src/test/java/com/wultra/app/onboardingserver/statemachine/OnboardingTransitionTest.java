@@ -28,11 +28,14 @@ import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingApprovalService;
 import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
+import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -84,6 +87,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     private VerificationInitAction verificationInitAction;
 
     @MockitoBean
+    private OtpVerificationResendAction otpVerificationResendAction;
+
+    @MockitoBean
     private IdentityVerificationOtpService identityVerificationOtpService;
 
     @MockitoBean
@@ -97,6 +103,12 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private PresenceCheckService presenceCheckService;
+
+    @MockitoBean
+    private OnboardingApprovalService onboardingApprovalService;
+
+    @MockitoBean
+    private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     @Test
     void testInitialToDocumentUploaded() throws Exception {
@@ -267,6 +279,87 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         assertEquals(1, visitedStates.size());
         assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
+    }
+
+    @Test
+    void testOtpVerificationPendingToActivationFinishInProgress() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(true);
+
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(any()))
+                .thenReturn(true);
+
+        when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
+                .thenReturn(false);
+
+        when(identityVerificationTargetActivationService.isTargetActivationEnabled(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_VERIFIED);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, visitedStates.get(0));
+    }
+
+    @Test
+    void testOtpVerificationPending_failed() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(false);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_VERIFIED);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
+    }
+
+    @Test
+    void testOtpVerificationPending_resend() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        when(otpServiceImpl.isOtpVerificationEnabled(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_RESEND);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
     }
 
     private static StateMachineListenerAdapter<OnboardingState, OnboardingEvent> createListener(final List<OnboardingState> visitedStates) {
