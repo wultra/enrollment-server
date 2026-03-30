@@ -22,10 +22,12 @@ import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
+import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
@@ -44,6 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -64,10 +67,16 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     private IdentityVerificationService identityVerificationService;
 
     @MockitoBean
+    private IdentityVerificationCreateService identityVerificationCreateService;
+
+    @MockitoBean
     private IdentityVerificationConfig identityVerificationConfig;
 
     @MockitoBean
     private DocumentVerificationService documentVerificationService;
+
+    @MockitoBean
+    private VerificationInitAction verificationInitAction;
 
     @MockitoBean
     private IdentityVerificationOtpService identityVerificationOtpService;
@@ -77,6 +86,27 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private OtpServiceImpl otpServiceImpl;
+
+    @Test
+    void testInitialToDocumentUploadedChain() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(null, IdentityVerificationStatus.NOT_INITIALIZED);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> initMessage = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
+        stateMachine.sendEvent(Mono.just(initMessage)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertTrue(visitedStates.size() == 1, "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, visitedStates.get(0));
+    }
 
     @Test
     void testDocumentVerificationAcceptedChain() throws Exception {
