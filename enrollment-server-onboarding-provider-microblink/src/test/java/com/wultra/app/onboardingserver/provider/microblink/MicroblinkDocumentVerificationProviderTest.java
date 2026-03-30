@@ -35,8 +35,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -113,7 +112,7 @@ class MicroblinkDocumentVerificationProviderTest {
     private SubmittedDocument submittedDocumentIdCardFront;
     private SubmittedDocument submittedDocumentIdCardBack;
 
-    private DocumentVerificationParsedResponse.Extraction idCardExtraction;
+    private DocumentVerificationResponse.Extraction idCardExtraction;
 
     @Mock
     private RestClient restClient;
@@ -189,9 +188,9 @@ class MicroblinkDocumentVerificationProviderTest {
         submittedDocumentIdCardFront = buildSubmittedDocument(verificationDocumentCardIdFront);
         submittedDocumentIdCardBack = buildSubmittedDocument(verificationDocumentCardIdBack);
 
-        idCardExtraction = new DocumentVerificationParsedResponse.Extraction(
+        idCardExtraction = new DocumentVerificationResponse.Extraction(
                 List.of(),
-                new DocumentVerificationParsedResponse.ExtractionClassInfo("Id", null));
+                new DocumentVerificationResponse.ExtractionClassInfo("Id", null));
 
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -200,7 +199,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         provider = new MicroblinkDocumentVerificationProvider(
                 restClient,
-                new DocumentVerificationResponseParser(objectMapper),
+                objectMapper,
                 microblinkConfigProperties,
                 documentDataRepository,
                 processedDocumentDataRepository,

@@ -18,6 +18,8 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -34,9 +36,12 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseBundle;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationImageSource;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationProcessingOptions;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationRequest;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.Builder;
@@ -65,7 +70,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private static final String MICROBLINK_VALIDATION_PASS_RESULT = "Pass";
 
     private final RestClient microblinkRestClient;
-    private final DocumentVerificationResponseParser responseParser;
+    private final ObjectMapper objectMapper;
     private final DocumentDataRepository documentDataRepository;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final DocumentVerificationRepository documentVerificationRepository;
@@ -76,7 +81,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     public MicroblinkDocumentVerificationProvider(
             final RestClient microblinkRestClient,
-            final DocumentVerificationResponseParser responseParser,
+            final ObjectMapper objectMapper,
             final MicroblinkConfigProperties properties,
             final DocumentDataRepository documentDataRepository,
             final ProcessedDocumentDataRepository processedDocumentDataRepository,
@@ -85,7 +90,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final AuditService auditService
     ) {
         this.microblinkRestClient = microblinkRestClient;
-        this.responseParser = responseParser;
+        this.objectMapper = objectMapper;
         this.properties = properties;
         this.documentDataRepository = documentDataRepository;
         this.processedDocumentDataRepository = processedDocumentDataRepository;
@@ -289,10 +294,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return documentsByTypeAndSide;
     }
 
-    private Map<DocumentType, DocumentVerificationParsedResponse> fetchMicroblinkResults(
+    private Map<DocumentType, DocumentVerificationResponseBundle> fetchMicroblinkResults(
             final Map<DocumentType, Map<CardSide, DocumentVerificationData>> documentsByTypeAndSide
     ) throws DocumentVerificationException, RemoteCommunicationException {
-        final var results = new EnumMap<DocumentType, DocumentVerificationParsedResponse>(DocumentType.class);
+        final var results = new EnumMap<DocumentType, DocumentVerificationResponseBundle>(DocumentType.class);
 
         for (final var documentsOfSameType : documentsByTypeAndSide.entrySet()) {
             final var documentType = documentsOfSameType.getKey();
@@ -307,7 +312,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return results;
     }
 
-    private DocumentVerificationParsedResponse sendApiRequest(
+    private DocumentVerificationResponseBundle sendApiRequest(
             final DocumentVerificationData frontDocument,
             final DocumentVerificationData backDocument
     ) throws DocumentVerificationException, RemoteCommunicationException {
@@ -327,11 +332,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var parsedResponse = parseMicroblinkResponse(body);
             logger.info("action: sendMicroblinkRequest, state: succeeded, verificationResult: {}, microblinkTraceId: {}",
-                    Optional.ofNullable(parsedResponse.verification())
-                            .map(DocumentVerificationParsedResponse.Verification::result)
+                    Optional.ofNullable(parsedResponse.getParsedResponseBody())
+                            .map(DocumentVerificationResponse::verification)
+                            .map(DocumentVerificationResponse.Verification::result)
                             .orElse(null),
-                    Optional.ofNullable(parsedResponse.runtime())
-                            .map(DocumentVerificationParsedResponse.Runtime::traceId)
+                    Optional.ofNullable(parsedResponse.getParsedResponseBody())
+                            .map(DocumentVerificationResponse::runtime)
+                            .map(DocumentVerificationResponse.Runtime::traceId)
                             .orElse(null)
             );
 
@@ -352,9 +359,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private DocumentVerificationParsedResponse parseMicroblinkResponse(final String responseBodyJson) throws DocumentVerificationException {
+    private DocumentVerificationResponseBundle parseMicroblinkResponse(final String responseBodyJson) throws DocumentVerificationException {
         try {
-            return responseParser.parseResponse(responseBodyJson);
+            final var parsedResponseBody = objectMapper.readValue(responseBodyJson, DocumentVerificationResponse.class);
+            final var responseJson = objectMapper.readTree(responseBodyJson);
+
+            return new DocumentVerificationResponseBundle(parsedResponseBody, (ObjectNode) responseJson);
         } catch (final JsonProcessingException e) {
             final var traceId = Optional.ofNullable(responseBodyJson)
                     .map(json -> MICROBLINK_TRACE_ID_PATTERN.matcher(responseBodyJson))
@@ -368,7 +378,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private List<DocumentSubmitResult> processMicroblinkResults(
             final List<DocumentVerificationData> documentsVerificationData,
-            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType
+            final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType
     ) {
         final var results = new ArrayList<DocumentSubmitResult>();
 
@@ -376,24 +386,26 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var microblinkResponse = microblinkResponseByDocumentType.get(documentVerificationData.type());
 
             final var extractedData = switch (documentVerificationData.side()) {
-                case FRONT -> microblinkResponse.extractionFrontJson();
-                case BACK -> microblinkResponse.extractionBackJson();
+                case FRONT -> microblinkResponse.getExtractionFront();
+                case BACK -> microblinkResponse.getExtractionBack();
             };
 
-            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, microblinkResponse.extraction());
+            final var responseBody = microblinkResponse.getParsedResponseBody();
+
+            final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, responseBody.extraction());
 
             final var result = new DocumentSubmitResult();
             result.setDocumentId(documentVerificationData.documentId());
             result.setUploadId(documentVerificationData.uploadId());
             result.setExtractedData(extractedDataValue);
-            result.setValidationResult(microblinkResponse.responseWithoutImagesJson());
+            result.setValidationResult(microblinkResponse.getResponseWithoutImages());
 
-            final var validation = microblinkResponse.verification();
+            final var validation = responseBody.verification();
 
             if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(validation.result())) {
-                final var validationErrorMessages = microblinkResponse.messages()
+                final var validationErrorMessages = responseBody.messages()
                         .stream()
-                        .map(DocumentVerificationParsedResponse.Message::message)
+                        .map(DocumentVerificationResponse.Message::message)
                         .toList();
 
                 result.setRejectReason(validationErrorMessages.toString());
@@ -431,7 +443,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private String saveProcessedImages(
-            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType
     ) {
         final var facePhoto = createFacePhotoEntity(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
@@ -451,12 +463,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private List<ProcessedDocumentDataEntity> createProcessedDocuments(
-            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType
     ) {
         return microblinkResponseByDocumentType.entrySet().stream()
                 .flatMap(it -> Optional.ofNullable(it.getValue())
-                        .map(DocumentVerificationParsedResponse::images)
+                        .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+                        .map(DocumentVerificationResponse::images)
                         .orElse(List.of())
                         .stream()
                         .map(image -> createDocumentImage(image, documentVerificationsByDocumentType, it.getKey()))
@@ -466,7 +479,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private static ProcessedDocumentDataEntity createDocumentImage(
-            final DocumentVerificationParsedResponse.Image image,
+            final DocumentVerificationResponse.Image image,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType,
             final DocumentType documentType) {
         final var imageName = image.name();
@@ -488,7 +501,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private ProcessedDocumentDataEntity createFacePhotoEntity(
-            final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType,
+            final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType,
             final Map<DocumentType, List<DocumentVerificationEntity>> documentVerificationsByDocumentType) {
         final var facePhotoDocumentType = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
                 .filter(microblinkResponseByDocumentType::containsKey)
@@ -503,12 +516,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var microblinkResponse = microblinkResponseByDocumentType.get(facePhotoDocumentType);
 
         final var faceImageBase64 = Optional.ofNullable(microblinkResponse)
-                .map(DocumentVerificationParsedResponse::images)
+                .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+                .map(DocumentVerificationResponse::images)
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(image -> "FaceImage".equals(image.name()))
                 .findFirst()
-                .map(DocumentVerificationParsedResponse.Image::base64)
+                .map(DocumentVerificationResponse.Image::base64)
                 .orElse(null);
 
         if (faceImageBase64 == null) {
@@ -601,7 +615,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .findFirst()
                     .orElseThrow(() -> new DocumentVerificationException("No document result data found for uploadId: " + documentVerification.getUploadId()));
 
-            final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult());
+            final var microblinkResponseBundle = parseMicroblinkResponse(documentResult.getVerificationResult());
+            final var microblinkResponse = microblinkResponseBundle.getParsedResponseBody();
 
             final var microblinkCheckResult = microblinkResponse.verification().result();
             microblinkCheckResults.add(microblinkCheckResult);
@@ -621,10 +636,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             documentVerificationResult.setExtractedData(documentResult.getExtractedData());
             documentVerificationResult.setVerificationScore(convertScore(microblinkResponse.verification().certaintyLevel()));
 
-            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkResponse.verification().result())) {
+            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
                 final var rejectReasons = microblinkResponse.messages()
                         .stream()
-                        .map(DocumentVerificationParsedResponse.Message::message)
+                        .map(DocumentVerificationResponse.Message::message)
                         .toList();
 
                 documentVerificationResult.setRejectReason(rejectReasons.toString());
@@ -696,18 +711,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static DocumentCrosscheckData buildCrosscheckData(final List<DocumentVerificationParsedResponse.Result> documentExtractedData) throws DocumentVerificationException {
+    private static DocumentCrosscheckData buildCrosscheckData(final List<DocumentVerificationResponse.Result> documentExtractedData) throws DocumentVerificationException {
         final var firstName = documentExtractedData.stream()
                 .filter(r -> "FirstName".equals(r.field()))
                 .findFirst()
-                .map(DocumentVerificationParsedResponse.Result::value)
+                .map(DocumentVerificationResponse.Result::value)
                 .map(String::toLowerCase)
                 .orElseThrow(() -> new DocumentVerificationException("Field FirstName not found in extracted data"));
 
         final var lastName = documentExtractedData.stream()
                 .filter(r -> "LastName".equals(r.field()))
                 .findFirst()
-                .map(DocumentVerificationParsedResponse.Result::value)
+                .map(DocumentVerificationResponse.Result::value)
                 .map(String::toLowerCase)
                 .orElseThrow(() -> new DocumentVerificationException("Field LastName not found in extracted data"));
 
@@ -725,7 +740,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .build();
     }
 
-    private static LocalDate parseDate(final DocumentVerificationParsedResponse.Result result) throws DocumentVerificationException {
+    private static LocalDate parseDate(final DocumentVerificationResponse.Result result) throws DocumentVerificationException {
         final var year = Optional.ofNullable(result.year())
                 .orElseThrow(() -> new DocumentVerificationException("Year of field DateOfBirth was not extracted"));
 
@@ -784,10 +799,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return documentData;
     }
 
-    private void auditMicroblinkResponse(final Map<DocumentType, DocumentVerificationParsedResponse> microblinkResponseByDocumentType, final OwnerId ownerId) {
+    private void auditMicroblinkResponse(final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType, final OwnerId ownerId) {
         for (final var entry : microblinkResponseByDocumentType.entrySet()) {
             final var documentType = entry.getKey();
-            final var microblinkResponse = entry.getValue().responseWithoutPersonalDataJson();
+            final var microblinkResponse = entry.getValue().getResponseWithoutPersonalData();
 
             auditService.auditDocumentVerificationProvider(ownerId, microblinkResponse, "Document verification response, user: {}, provider: Microblink, documentType: {}", ownerId.getUserId(), documentType);
         }

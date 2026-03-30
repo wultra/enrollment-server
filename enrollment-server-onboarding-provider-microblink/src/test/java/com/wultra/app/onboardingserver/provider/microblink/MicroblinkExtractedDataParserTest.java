@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -130,10 +130,10 @@ class MicroblinkExtractedDataParserTest {
                 .toString();
     }
 
-    private static DocumentVerificationParsedResponse.Extraction buildExtraction() {
-        return new DocumentVerificationParsedResponse.Extraction(
+    private static DocumentVerificationResponse.Extraction buildExtraction() {
+        return new DocumentVerificationResponse.Extraction(
                 List.of(),
-                new DocumentVerificationParsedResponse.ExtractionClassInfo("Id", "MDA")
+                new DocumentVerificationResponse.ExtractionClassInfo("Id", "MDA")
         );
     }
 }
