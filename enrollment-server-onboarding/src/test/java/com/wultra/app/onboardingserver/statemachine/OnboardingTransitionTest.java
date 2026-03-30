@@ -104,7 +104,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertTrue(visitedStates.size() == 1, "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, visitedStates.get(0));
     }
 
