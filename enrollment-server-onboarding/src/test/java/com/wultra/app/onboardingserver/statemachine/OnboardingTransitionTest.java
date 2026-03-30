@@ -18,6 +18,9 @@ package com.wultra.app.onboardingserver.statemachine;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -25,7 +28,9 @@ import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
+import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
@@ -47,7 +52,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -88,8 +92,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     @MockitoBean
     private OtpServiceImpl otpServiceImpl;
 
+    @MockitoBean
+    private OnboardingServiceImpl onboardingService;
+
+    @MockitoBean
+    private PresenceCheckService presenceCheckService;
+
     @Test
-    void testInitialToDocumentUploadedChain() throws Exception {
+    void testInitialToDocumentUploaded() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
@@ -110,7 +120,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     }
 
     @Test
-    void testDocumentUploadToPresenceCheckNotInitalizedChain() throws Exception {
+    void testDocumentUploadToPresenceCheckNotInitalized() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
@@ -154,7 +164,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     }
 
     @Test
-    void testDocumentVerificationFailedChain() throws Exception {
+    void testDocumentUploadInProgress_documentsPending() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
@@ -179,6 +189,84 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         assertEquals(2, visitedStates.size(), "Should have exactly 2 visited states. Visited: " + visitedStates);
         assertEquals(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, visitedStates.get(0));
         assertEquals(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, visitedStates.get(1));
+    }
+
+    @Test
+    void testPresenceCheckNotInitializedToInProgress() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        when(presenceCheckService.init(any(), any()))
+                .thenReturn(new SessionInfo());
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_INIT);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
+    }
+
+    @Test
+    void testPresenceCheckInProgressToAccepted() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        when(presenceCheckService.checkPresenceVerification(any(), any()))
+                .thenReturn(PresenceCheckStatus.ACCEPTED);
+
+        when(otpServiceImpl.isOtpVerificationEnabled(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(3, visitedStates.size(), "Should have exactly 3 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, visitedStates.get(0));
+        assertEquals(OnboardingState.PRESENCE_CHECK_ACCEPTED, visitedStates.get(1));
+        assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(2));
+    }
+
+    @Test
+    void testPresenceCheckInProgressToNotInitialized() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        when(presenceCheckService.checkPresenceVerification(any(), any()))
+                .thenReturn(PresenceCheckStatus.REJECTED);
+
+        when(onboardingService.isVerifyPresenceWithOtpEnabled(any()))
+                .thenReturn(false);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_INIT);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
     }
 
     private static StateMachineListenerAdapter<OnboardingState, OnboardingEvent> createListener(final List<OnboardingState> visitedStates) {
