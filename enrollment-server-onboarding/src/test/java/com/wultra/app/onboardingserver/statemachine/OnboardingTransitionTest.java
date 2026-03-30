@@ -21,7 +21,10 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationSta
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.impl.service.*;
+import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -37,10 +40,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -100,7 +103,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
 
-        final List<OnboardingState> visitedStates = new ArrayList<>();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
         final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.DOCUMENT_UPLOADED);
@@ -108,9 +111,12 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertTrue(visitedStates.contains(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED), "Should contain DOCUMENT_VERIFICATION_ACCEPTED. Visited: " + visitedStates);
-        assertTrue(visitedStates.contains(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS), "Should contain DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS. Visited: " + visitedStates);
-        assertTrue(visitedStates.contains(OnboardingState.OTP_VERIFICATION_PENDING), "Should contain OTP_VERIFICATION_PENDING. Visited: " + visitedStates);
+        assertEquals(5, visitedStates.size(), "Should have exactly 5 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, visitedStates.get(0));
+        assertEquals(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, visitedStates.get(1));
+        assertEquals(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, visitedStates.get(2));
+        assertEquals(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED, visitedStates.get(3));
+        assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(4));
     }
 
     @Test
@@ -128,7 +134,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(documentVerificationService.hasDocumentsVerificationPending(any()))
                 .thenReturn(true);
 
-        final List<OnboardingState> visitedStates = new ArrayList<>();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
         final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.DOCUMENT_UPLOADED);
@@ -136,7 +142,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertTrue(visitedStates.contains(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS), "Should return to DOCUMENT_UPLOAD_IN_PROGRESS. Visited: " + visitedStates);
+        assertEquals(2, visitedStates.size(), "Should have exactly 2 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, visitedStates.get(0));
+        assertEquals(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS, visitedStates.get(1));
     }
 
     private static StateMachineListenerAdapter<OnboardingState, OnboardingEvent> createListener(final List<OnboardingState> visitedStates) {
