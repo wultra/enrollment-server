@@ -17,13 +17,11 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
@@ -60,18 +58,10 @@ class MicroblinkConfig {
         return new DefaultRestClient(restClientConfig);
     }
 
-    @Bean("microblinkDocumentVerificationResponseParser")
-    DocumentVerificationResponseParser documentVerificationResponseParser() {
-        final var objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        return new DocumentVerificationResponseParser(objectMapper);
-    }
-
     @Bean
     public MicroblinkDocumentVerificationProvider microblinkDocumentVerificationProvider(
             @Qualifier("microblinkRestClient") RestClient restClient,
-            @Qualifier("microblinkDocumentVerificationResponseParser") DocumentVerificationResponseParser responseParser,
+            ObjectMapper objectMapper,
             MicroblinkConfigProperties properties,
             DocumentDataRepository documentDataRepository,
             ProcessedDocumentDataRepository processedDocumentDataRepository,
@@ -80,7 +70,7 @@ class MicroblinkConfig {
             AuditService auditService) {
         return new MicroblinkDocumentVerificationProvider(
                 restClient,
-                responseParser,
+                objectMapper,
                 properties,
                 documentDataRepository,
                 processedDocumentDataRepository,

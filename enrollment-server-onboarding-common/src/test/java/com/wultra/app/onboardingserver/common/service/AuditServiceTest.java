@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.core.audit.base.Audit;
 import com.wultra.core.audit.base.model.AuditDetail;
@@ -67,8 +68,7 @@ class AuditServiceTest {
         ownerId.setActivationId(ACTIVATION_ID);
         ownerId.setUserId(USER_ID);
 
-        final var documentResponseJson = """
-                { "result": "PASSED" }""";
+        final var documentResponseJson = JsonNodeFactory.instance.objectNode();
 
         final var message = "Test message for user: {}";
 

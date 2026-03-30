@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.common.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
@@ -230,7 +231,7 @@ public class AuditService {
      * @param message message, arguments may be put to via template {@code {}}
      * @param args message arguments
      */
-    public void auditDocumentVerificationProvider(final OwnerId ownerId, final String documentResponseJson, final String message, final Object... args) {
+    public void auditDocumentVerificationProvider(final OwnerId ownerId, final JsonNode documentResponseJson, final String message, final Object... args) {
         final AuditDetail auditDetail = AuditDetail.builder()
                 .type(AuditType.DOCUMENT_VERIFICATION_PROVIDER.code)
                 .param(ACTIVATION_ID, ownerId.getActivationId())
