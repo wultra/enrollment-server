@@ -11,16 +11,16 @@ and would negatively impact performance.
 A value in the `audit_log.audit_type` column is used to categorize the audit log entry according to the operation scope.
 The following values are used:
 
-| Value                          | Description                                                                                                                                                                                                                            |
-|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `process`                      | High-level lifecycle events for onboarding processing, including start, resume, completion, cleanup, expiry, and limit handling. Use this type to reconstruct the overall timeline and final outcome of a case.                        |
-| `otp`                          | OTP control events such as send/resend, verification success or failure, expiration, cancellation, and max-attempt handling. This type is used to audit MFA step integrity and detect abuse patterns.                                  |
-| `identityVerification`         | State and status transitions of identity verification phases (for example document upload, presence check, client evaluation, and completion). This is the primary type for tracking decision flow across verification stages.         |
-| `activation`                   | Events related to PowerAuth activation lifecycle during onboarding, including creation, replacement, and cleanup of activation identifiers. Use it to validate activation consistency and rollback behavior.                           |
-| `documentVerification`         | Per-document processing and decision events (pending, accepted, rejected, failed), including final document-level outcomes. This type enables forensic traceability for each submitted document artifact.                              |
-| `presenceCheckProvider`        | Events from the liveness/presence provider, including initialization, execution, result retrieval, and cleanup. Use this type to review biometric verification path and provider-side failures.                                        |
-| `documentVerificationProvider` | Events from the document verification provider, including submissions, evaluation retrieval, cross-verification, SDK initialization, and cleanup. This type is useful for proving provider interaction sequence and response handling. |
-| `onboardingProvider`           | Calls to external [onboarding providers](./External-Onboarding-Services.md) for business services such as lookup, consent, OTP delivery, and client evaluation/approval.                                                               |
+- `process`
+- `otp`
+- `identityVerification`
+- `activation`
+- `documentVerification`
+- `presenceCheckProvider`
+- `documentVerificationProvider`
+- `onboardingProvider`
+
+The details of each type are described in the following sections
 
 
 ## Common parameters
@@ -37,6 +37,8 @@ These parameters are used across event types:
 
 ## Event type `process`
 
+High-level lifecycle events for onboarding processing, including start, resume, completion, cleanup, expiry, and limit handling. Use this type to reconstruct the overall timeline and final outcome of a case.
+
 
 ### Message `Process started for user: {userId}`
 
@@ -50,20 +52,21 @@ The onboarding process was resumed. The endpoint `POST api/onboarding/start` was
 
 ### Message `Process finished for user: {userId}`
 
-The onboarding process was successfully finished.
+The onboarding process reached its terminal successful data state. In the identity verification flow, this corresponds to phase `COMPLETED` with status `ACCEPTED`, and no further onboarding transitions or API calls are expected.
+For one onboarding process (`processId`), this message is expected at most once.
 
 
 ### Message `Process failed: {errorDetail}, for user: {userId}`
 
-The onboarding process failed. See detail in the `errorDetail` parameter.
+The onboarding process reached its terminal unsuccessful data state. In the identity verification flow, this corresponds to phase `COMPLETED` with status `FAILED`, and no further onboarding transitions or API calls are expected.
+For one onboarding process (`processId`), this message is expected at most once. See detail in the `errorDetail` parameter.
 
 
 ### Message `Expired process for user: {userId}, {errorDetail}`
 
-The onboarding process was not completed in a given time, and the process is cleaned up by a scheduled job.
+The onboarding process was not completed within a given time, and the process was cleaned up by a scheduled job.
 
 Event-specific parameters:
-
 
 
 | Parameter     | Description                                                                                                                                                                                                                                                |
@@ -92,6 +95,8 @@ The onboarding process was cleaned up manually by calling the endpoint `POST /ap
 
 
 ## Event type `otp`
+
+OTP controls events such as send/resend, verification success or failure, expiration, cancellation, and max-attempt handling. This type is used to audit MFA step integrity and detect abuse patterns.
 
 
 ### Event type-specific parameters
@@ -145,10 +150,12 @@ The user requested to resend the OTP code.
 
 ### Message `OTP canceled for process ID: {processId}, user ID: {userId}, otp type: {otpType}`
 
-Invalidate the OTP code. This is done by calling the endpoint `POST /api/onboarding/cleanup`.
+The OTP code is invalidated by calling the endpoint `POST /api/onboarding/cleanup`.
 
 
 ## Event type `identityVerification`
+
+State and status transitions of identity verification phases (for example document upload, presence check, client evaluation, and completion). This is the primary type for tracking decision flow across verification stages.
 
 
 ### Event type-specific parameters
@@ -338,6 +345,8 @@ The onboarding process failed.
 
 ## Event type `activation`
 
+Events related to PowerAuth activation lifecycle during onboarding, including creation, replacement, and cleanup of activation identifiers. Use it to validate activation consistency and rollback behavior.
+
 
 ### Event type-specific parameters
 
@@ -367,6 +376,8 @@ Uncommited target PowerAuth activation was removed.
 
 
 ## Event type `documentVerification`
+
+Per-document processing and decision events (pending, accepted, rejected, failed), including final document-level outcomes. This type enables forensic traceability for each submitted document artifact.
 
 
 ### Event type-specific parameters
@@ -470,6 +481,8 @@ The provider returned evaluation for an individual document. This message is log
 
 ## Event type `presenceCheckProvider`
 
+Events from the liveness/presence provider, including initialization, execution, result retrieval, and cleanup. Use this type to review biometric verification path and provider-side failures.
+
 
 ### Event type-specific parameters
 
@@ -510,6 +523,8 @@ A new presence check session was started with the provider.
 
 
 ## Event type `documentVerificationProvider`
+
+Events from the document verification provider, including submissions, evaluation retrieval, cross-verification, SDK initialization, and cleanup. This type is useful for proving provider interaction sequence and response handling.
 
 
 ### Message `Document verification response, user: {userId}, provider: {providerName}, documentType: {documentType}`
@@ -566,20 +581,22 @@ Documents were deleted from the document verification provider and server during
 
 ## Event type `onboardingProvider`
 
+Calls to external [onboarding providers](./External-Onboarding-Services.md) for business services such as lookup, consent, OTP delivery, and client evaluation/approval.
+
 
 ### Message `Client evaluated for user: {userId}`
 
-Client evaluation was successfully sent to the [Client evaluation service](./External-Onboarding-Services.md#client-evaluation-service).
+The client evaluation was successfully sent to the [Client evaluation service](./External-Onboarding-Services.md#client-evaluation-service).
 
 
 ### Message `Sent user verification OTP for user: {userId}`
 
-User verification OTP was sent to the onboarding provider for the first time.
+A new user verification OTP was sent to the onboarding provider.
 
 
 ### Message `Resent user verification OTP for user: {userId}`
 
-User verification OTP was resent to the onboarding provider.
+The user verification OTP was resent to the onboarding provider.
 
 
 ### Message `Looked up user: {userId}`
