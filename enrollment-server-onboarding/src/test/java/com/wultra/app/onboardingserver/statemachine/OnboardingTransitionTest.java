@@ -122,8 +122,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> initMessage = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.IDENTITY_VERIFICATION_INIT);
-        stateMachine.sendEvent(Mono.just(initMessage)).blockLast();
+        sendMessage(OnboardingEvent.IDENTITY_VERIFICATION_INIT, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -161,8 +160,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.DOCUMENT_UPLOADED);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.DOCUMENT_UPLOADED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -193,8 +191,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.DOCUMENT_UPLOADED);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.DOCUMENT_UPLOADED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -218,8 +215,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_INIT);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.PRESENCE_CHECK_INIT, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -245,8 +241,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_SUBMITTED);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.PRESENCE_CHECK_SUBMITTED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -274,8 +269,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.PRESENCE_CHECK_INIT);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.PRESENCE_CHECK_INIT, stateMachine);
 
         assertEquals(1, visitedStates.size());
         assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
@@ -305,8 +299,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_VERIFIED);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -329,8 +322,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_VERIFIED);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
@@ -353,13 +345,17 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
 
-        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, OnboardingEvent.OTP_RESEND);
-        stateMachine.sendEvent(Mono.just(message)).blockLast();
+        sendMessage(OnboardingEvent.OTP_RESEND, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
         assertEquals(1, visitedStates.size());
         assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
+    }
+
+    private void sendMessage(final OnboardingEvent event, final StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
+        final Message<OnboardingEvent> message = stateMachineService.createMessage(OWNER_ID, PROCESS_ID, event);
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
     }
 
     private static StateMachineListenerAdapter<OnboardingState, OnboardingEvent> createListener(final List<OnboardingState> visitedStates) {
