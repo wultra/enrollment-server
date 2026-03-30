@@ -19,11 +19,7 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
@@ -43,7 +39,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,22 +64,16 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     private IdentityVerificationConfig identityVerificationConfig;
 
     @MockitoBean
-    private OnboardingProcessRepository onboardingProcessRepository;
-
-    @MockitoBean
     private DocumentVerificationService documentVerificationService;
 
     @MockitoBean
     private IdentityVerificationOtpService identityVerificationOtpService;
 
     @MockitoBean
-    private PresenceCheckService presenceCheckService;
-
-    @MockitoBean
     private ClientEvaluationService clientEvaluationService;
 
     @MockitoBean
-    private OnboardingProcessConfigurationService onboardingProcessConfigurationService;
+    private OtpServiceImpl otpServiceImpl;
 
     @Test
     void testDocumentVerificationAcceptedChain() throws Exception {
@@ -104,24 +93,12 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(documentVerificationService.executeFinalDocumentVerification(any(), any()))
                 .thenReturn(DocumentVerificationService.FinalDocumentVerificationResult.OK);
 
-        final OnboardingProcessConfigurationValue configurationValue = OnboardingProcessConfigurationValue.builder()
-                .clientEvaluationEnabled(false)
-                .otpForIdentityVerification(true)
-                .build();
-
-        final OnboardingProcessConfigurationEntity configuration = new OnboardingProcessConfigurationEntity();
-        configuration.setConfiguration(configurationValue);
-        final OnboardingProcessEntity process = new OnboardingProcessEntity();
-        process.setId(PROCESS_ID);
-        process.setProcessConfiguration(configuration);
-
-        when(onboardingProcessRepository.findById(PROCESS_ID))
-                .thenReturn(Optional.of(process));
-        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(any(), any()))
-                .thenReturn(Optional.of(process));
-
         when(identityVerificationConfig.isPresenceCheckEnabled())
                 .thenReturn(false);
+        when(clientEvaluationService.isClientEvaluationEnabled(any()))
+                .thenReturn(false);
+        when(otpServiceImpl.isOtpVerificationEnabled(any()))
+                .thenReturn(true);
 
         final List<OnboardingState> visitedStates = new ArrayList<>();
         stateMachine.addStateListener(createListener(visitedStates));
@@ -147,11 +124,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
                 .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.NOK);
-
-        final OnboardingProcessEntity processEntity = new OnboardingProcessEntity();
-        processEntity.setId(PROCESS_ID);
-        when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(any(), any()))
-                .thenReturn(Optional.of(processEntity));
 
         when(documentVerificationService.hasDocumentsVerificationPending(any()))
                 .thenReturn(true);
