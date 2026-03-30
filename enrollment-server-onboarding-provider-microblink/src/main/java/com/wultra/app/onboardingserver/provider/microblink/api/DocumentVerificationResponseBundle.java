@@ -17,10 +17,15 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Bundle of raw and parsed response from Microblink BlinkID REST API.
@@ -41,18 +46,13 @@ public class DocumentVerificationResponseBundle {
 
     @Getter(AccessLevel.NONE)
     private final ObjectNode responseBodyJson;
-    
+
     public ObjectNode getResponseWithoutPersonalData() {
-        final var modifiedObject = responseBodyJson.deepCopy();
-        modifiedObject.remove(IMAGES_FIELD);
-        modifiedObject.remove(EXTRACTION_FIELD);
-        return modifiedObject;
+        return copyWithoutFields(IMAGES_FIELD, EXTRACTION_FIELD);
     }
 
     public String getResponseWithoutImages() {
-        final var modifiedObject = responseBodyJson.deepCopy();
-        modifiedObject.remove(IMAGES_FIELD);
-        return modifiedObject.toString();
+        return copyWithoutFields(IMAGES_FIELD).toString();
     }
 
     public String getExtractionFront() {
@@ -67,5 +67,15 @@ public class DocumentVerificationResponseBundle {
                 .path(VIZ_FIELD)
                 .path(BACK_FIELD)
                 .toString();
+    }
+
+    private ObjectNode copyWithoutFields(final String... excludedFieldNames) {
+        final var excludedFields = Set.of(excludedFieldNames);
+
+        final Map<String, JsonNode> fields = responseBodyJson.properties().stream()
+                .filter(entry -> !excludedFields.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().deepCopy()));
+
+        return responseBodyJson.objectNode().setAll(fields);
     }
 }

@@ -30,11 +30,13 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import lombok.SneakyThrows;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -503,7 +505,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertNull(frontDocument.getRejectReason());
         assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
-        assertEquals(idCardPassValidationResult, frontDocument.getValidationResult());
+        assertJsonEquals(idCardPassValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -515,7 +517,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertNull(backDocument.getRejectReason());
         assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
-        assertEquals(idCardPassValidationResult, backDocument.getValidationResult());
+        assertJsonEquals(idCardPassValidationResult, backDocument.getValidationResult());
     }
 
     private void assertIdCardRejectSubmitResult(final DocumentsSubmitResult result) {
@@ -536,7 +538,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
         assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
-        assertEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
+        assertJsonEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -548,7 +550,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
         assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
-        assertEquals(idCardRejectValidationResult, backDocument.getValidationResult());
+        assertJsonEquals(idCardRejectValidationResult, backDocument.getValidationResult());
     }
 
     private void assertPassportPassSubmitResult(final DocumentsSubmitResult result) {
@@ -568,7 +570,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(document.getUploadId()));
         assertNull(document.getRejectReason());
         assertEquals(passportNormalizedExtractedData, document.getExtractedData());
-        assertEquals(passportPassValidationResult, document.getValidationResult());
+        assertJsonEquals(passportPassValidationResult, document.getValidationResult());
     }
 
     private void assertIdCardDocumentsData(final DocumentsSubmitResult result) {
@@ -781,6 +783,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertNull(documentResult.getErrorDetail());
         assertEquals(expectedExtractedData, documentResult.getExtractedData());
         assertEquals(10, documentResult.getVerificationScore());
+    }
+
+    @SneakyThrows
+    private static void assertJsonEquals(final String expected, final String actual) {
+        JSONAssert.assertEquals(expected, actual, true);
     }
 
     private static String buildPassportNormalizedExtractedDataJson() {

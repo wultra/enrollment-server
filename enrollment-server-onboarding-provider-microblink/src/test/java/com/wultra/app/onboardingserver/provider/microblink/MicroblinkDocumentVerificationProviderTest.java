@@ -39,6 +39,7 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
+import lombok.SneakyThrows;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -1159,7 +1161,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocumentResult.getUploadId()));
         assertEquals("[Test microblink message]", frontDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
         assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
 
@@ -1170,7 +1172,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(backDocumentResult.getUploadId()));
         assertEquals("[Test microblink message]", backDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
@@ -1198,7 +1200,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocumentResult.getUploadId()));
         assertNull(frontDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
         assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
 
@@ -1209,7 +1211,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(backDocumentResult.getUploadId()));
         assertNull(backDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
@@ -1300,5 +1302,10 @@ class MicroblinkDocumentVerificationProviderTest {
         options.setReturnFaceImage(true);
         options.setReturnFullDocumentImage(true);
         return options;
+    }
+
+    @SneakyThrows
+    private static void assertJsonEquals(final String expected, final String actual) {
+        JSONAssert.assertEquals(expected, actual, true);
     }
 }
