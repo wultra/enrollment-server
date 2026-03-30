@@ -39,8 +39,8 @@ import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificat
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
-import lombok.SneakyThrows;
 import org.bouncycastle.util.Arrays;
+import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -1304,8 +1304,11 @@ class MicroblinkDocumentVerificationProviderTest {
         return options;
     }
 
-    @SneakyThrows
     private static void assertJsonEquals(final String expected, final String actual) {
-        JSONAssert.assertEquals(expected, actual, true);
+        try {
+            JSONAssert.assertEquals(expected, actual, true);
+        } catch (JSONException e) {
+            fail("JSON comparison failed", e);
+        }
     }
 }

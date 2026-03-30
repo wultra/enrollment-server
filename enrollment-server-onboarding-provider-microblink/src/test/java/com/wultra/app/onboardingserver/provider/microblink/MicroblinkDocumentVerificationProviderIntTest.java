@@ -30,8 +30,8 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificati
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import lombok.SneakyThrows;
 import okhttp3.mockwebserver.MockWebServer;
+import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -785,9 +785,12 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertEquals(10, documentResult.getVerificationScore());
     }
 
-    @SneakyThrows
     private static void assertJsonEquals(final String expected, final String actual) {
-        JSONAssert.assertEquals(expected, actual, true);
+        try {
+            JSONAssert.assertEquals(expected, actual, true);
+        } catch (JSONException e) {
+            fail("JSON comparison failed", e);
+        }
     }
 
     private static String buildPassportNormalizedExtractedDataJson() {
