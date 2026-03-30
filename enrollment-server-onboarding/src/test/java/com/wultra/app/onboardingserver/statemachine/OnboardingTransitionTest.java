@@ -27,6 +27,7 @@ import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpServi
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
+import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -109,7 +110,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     }
 
     @Test
-    void testDocumentVerificationAcceptedChain() throws Exception {
+    void testDocumentUploadToPresenceCheckNotInitalizedChain() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
@@ -127,11 +128,13 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
                 .thenReturn(DocumentVerificationService.FinalDocumentVerificationResult.OK);
 
         when(identityVerificationConfig.isPresenceCheckEnabled())
-                .thenReturn(false);
+                .thenReturn(true);
         when(clientEvaluationService.isClientEvaluationEnabled(any()))
-                .thenReturn(false);
+                .thenReturn(true);
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
+        when(clientEvaluationService.processClientEvaluation(any(), any()))
+                .thenReturn(EvaluateClientResponse.EvaluationResult.OK);
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
         stateMachine.addStateListener(createListener(visitedStates));
@@ -141,12 +144,13 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(5, visitedStates.size(), "Should have exactly 5 visited states. Visited: " + visitedStates);
+        assertEquals(6, visitedStates.size(), "Should have exactly 5 visited states. Visited: " + visitedStates);
         assertEquals(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, visitedStates.get(0));
         assertEquals(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, visitedStates.get(1));
         assertEquals(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, visitedStates.get(2));
         assertEquals(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED, visitedStates.get(3));
-        assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(4));
+        assertEquals(OnboardingState.CLIENT_EVALUATION_ACCEPTED, visitedStates.get(4));
+        assertEquals(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, visitedStates.get(5));
     }
 
     @Test
