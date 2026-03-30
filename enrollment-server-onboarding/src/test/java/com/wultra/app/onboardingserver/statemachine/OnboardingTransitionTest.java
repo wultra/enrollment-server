@@ -16,18 +16,20 @@
  */
 package com.wultra.app.onboardingserver.statemachine;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.*;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Test transitions with multiple states.
+ * Test transitions defined in {@link StateMachineConfig}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -56,6 +58,9 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Slf4j
 class OnboardingTransitionTest extends AbstractStateMachineTest {
+
+    @MockitoBean
+    private ProcessIdentifierGuard processIdentifierGuard;
 
     @MockitoBean
     private IdentityVerificationService identityVerificationService;
@@ -67,10 +72,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     private OnboardingProcessRepository onboardingProcessRepository;
 
     @MockitoBean
-    private DocumentVerificationRepository documentVerificationRepository;
-
-    @MockitoBean
-    private ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private DocumentVerificationService documentVerificationService;
 
     @MockitoBean
     private IdentityVerificationOtpService identityVerificationOtpService;
@@ -86,6 +88,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testDocumentVerificationAcceptedChain() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
         final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
         stateMachine.startReactively().block();
@@ -93,10 +98,11 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(identityVerificationService.startDocumentVerification(any(), any()))
                 .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.OK);
 
-        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
-        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        when(documentVerificationRepository.findAllUsedForVerification(any()))
-                .thenReturn(List.of(documentVerification));
+        when(documentVerificationService.hasDocumentsVerificationPending(any()))
+                .thenReturn(true);
+
+        when(documentVerificationService.executeFinalDocumentVerification(any(), any()))
+                .thenReturn(DocumentVerificationService.FinalDocumentVerificationResult.OK);
 
         final OnboardingProcessConfigurationValue configurationValue = OnboardingProcessConfigurationValue.builder()
                 .clientEvaluationEnabled(false)
@@ -132,6 +138,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testDocumentVerificationFailedChain() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
         final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
         stateMachine.startReactively().block();
@@ -144,10 +153,8 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(any(), any()))
                 .thenReturn(Optional.of(processEntity));
 
-        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
-        documentVerification.setStatus(DocumentStatus.VERIFICATION_PENDING);
-        when(documentVerificationRepository.findAllUsedForVerification(any()))
-                .thenReturn(List.of(documentVerification));
+        when(documentVerificationService.hasDocumentsVerificationPending(any()))
+                .thenReturn(true);
 
         final List<OnboardingState> visitedStates = new ArrayList<>();
         stateMachine.addStateListener(createListener(visitedStates));

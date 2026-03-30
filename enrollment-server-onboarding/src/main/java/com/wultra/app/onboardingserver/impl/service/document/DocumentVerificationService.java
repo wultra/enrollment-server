@@ -24,6 +24,7 @@ import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationRe
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
@@ -36,6 +37,7 @@ import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitServ
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +53,8 @@ import java.util.Optional;
 public class DocumentVerificationService {
 
     private final DocumentVerificationProvider documentVerificationProvider;
+
+    private final DocumentVerificationRepository documentVerificationRepository;
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
@@ -104,6 +108,19 @@ public class DocumentVerificationService {
         };
         logger.info("action: executeFinalDocumentVerification, state: succeeded, identityVerificationId: {}, documentsVerificationResult: {}", identityVerification.getId(), result);
         return result;
+    }
+
+    /**
+     * Check if there are any document verifications in status {@code VERIFICATION_PENDING}.
+     *
+     * @param identityVerification Identification verification whose documents should be checked
+     * @return {@code true} if there are any document verifications in status {@code VERIFICATION_PENDING}, {@code false} otherwise.
+     */
+    @Transactional(readOnly = true)
+    public boolean hasDocumentsVerificationPending(final IdentityVerificationEntity identityVerification) {
+        final List<DocumentVerificationEntity> documentVerifications = documentVerificationRepository.findAllUsedForVerification(identityVerification);
+        return documentVerifications.stream()
+                .anyMatch(it -> it.getStatus() == DocumentStatus.VERIFICATION_PENDING);
     }
 
     private FinalDocumentVerificationResult accept(
