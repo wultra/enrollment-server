@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
+import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
@@ -373,6 +374,147 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         assertEquals(0, visitedStates.size(), "Should not transition anywhere, listener should not capture any state entry. Visited: " + visitedStates);
         assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, stateMachine.getState().getId());
+    }
+
+    @Test
+    void testOtpVerificationPendingToOnboardingApprovalAccepted() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(true);
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
+                .thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationEnabled(any()))
+                .thenReturn(true);
+
+        when(onboardingApprovalService.approve(any()))
+                .thenReturn(ApproveClientResponse.ApprovalResult.OK);
+
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(2, visitedStates.size(), "Should have exactly 2 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, visitedStates.get(0));
+        assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, visitedStates.get(1));
+    }
+
+    @Test
+    void testOtpVerificationPendingToOnboardingApprovalInProgress() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(true);
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
+                .thenReturn(true);
+
+        when(onboardingApprovalService.approve(any()))
+                .thenReturn(ApproveClientResponse.ApprovalResult.WAIT);
+
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_IN_PROGRESS, visitedStates.get(0));
+    }
+
+    @Test
+    void testOnboardingApprovalInProgressToAccepted() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
+
+        when(identityVerificationTargetActivationService.isTargetActivationEnabled(any()))
+                .thenReturn(true);
+
+        sendMessage(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_APPROVE, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(2, visitedStates.size(), "Should have exactly 2 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_ACCEPTED, visitedStates.get(0));
+        assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, visitedStates.get(1));
+    }
+
+    @Test
+    void testOnboardingApprovalInProgressToRejected() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
+
+        sendMessage(OnboardingEvent.ONBOARDING_APPROVAL_ACKNOWLEDGED_REJECT, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_REJECTED, visitedStates.get(0));
+    }
+
+    @Test
+    void testOtpVerificationPendingToOnboardingApprovalRejected() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(true);
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.approve(any()))
+                .thenReturn(ApproveClientResponse.ApprovalResult.NOK);
+
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_REJECTED, visitedStates.get(0));
+    }
+
+    @Test
+    void testOtpVerificationPendingToOnboardingApprovalFailed() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
+
+        when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
+                .thenReturn(true);
+        when(presenceCheckService.isVerifyPresenceWithOtpPassed(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
+                .thenReturn(true);
+        when(onboardingApprovalService.approve(any()))
+                .thenReturn(null);
+
+        sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates + ". Current state: " + stateMachine.getState().getId());
+        assertEquals(OnboardingState.ONBOARDING_APPROVAL_FAILED, visitedStates.get(0));
     }
 
     private @NonNull StateMachine<OnboardingState, OnboardingEvent> startStateMachine(
