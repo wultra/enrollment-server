@@ -61,6 +61,30 @@ and side = 'FRONT'
 and reject_reason = 'documentVerificationFailed';
 ```
 
+### Multiple Attempts
+
+Documents accepted after multiple attempts (more than one). This means that there is at least one rejected attempt and one accepted attempt (the final one).
+
+```
+SELECT COUNT(*) FROM (
+	SELECT identity_verification_id, type
+	FROM es_document_verification
+	WHERE side = 'FRONT'
+	GROUP BY identity_verification_id, type
+	HAVING
+		COUNT(*) > 1
+    	AND SUM(CASE WHEN status = 'ACCEPTED' AND reject_reason IS NULL THEN 1 ELSE 0 END) > 0
+    	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason='documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
+```
+
+SQL decomposition:
+
+1. We are selecting records from the `es_document_verification` table, limiting them to the `FRONT` side only, because the table contains one or two sides for each document, but the front side is common to all document types.
+2. The results are grouped by `identity_verification_id` and `type` because we want to ensure that attempts within a group originate from the same identity verification ID. There can be multiple documents under each identity verification ID (e.g. ID, passport, driving licence), so grouping by type is also used.
+3. We are checking if there is more than one record in a group. This means there has been more than one attempt.
+4. We check whether the group contains at least one accepted and one rejected attempt.
+5. Finally, we count all returned groups (first row).
+
 ## Liveness Check
 
 You can calculate following metrics based on the data below:
