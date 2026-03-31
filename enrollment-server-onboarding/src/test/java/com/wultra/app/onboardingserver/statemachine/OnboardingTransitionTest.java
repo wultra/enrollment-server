@@ -32,6 +32,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
@@ -109,11 +110,8 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(null, IdentityVerificationStatus.NOT_INITIALIZED);
-        stateMachine.startReactively().block();
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(null, IdentityVerificationStatus.NOT_INITIALIZED, visitedStates);
 
         sendMessage(OnboardingEvent.IDENTITY_VERIFICATION_INIT, stateMachine);
 
@@ -124,12 +122,12 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     }
 
     @Test
-    void testDocumentUploadToPresenceCheckNotInitalized() throws Exception {
+    void testDocumentUploadToPresenceCheckNotInitialized() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
                 .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.OK);
@@ -149,14 +147,11 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(clientEvaluationService.processClientEvaluation(any(), any()))
                 .thenReturn(EvaluateClientResponse.EvaluationResult.OK);
 
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
-
         sendMessage(OnboardingEvent.DOCUMENT_UPLOADED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(6, visitedStates.size(), "Should have exactly 5 visited states. Visited: " + visitedStates);
+        assertEquals(6, visitedStates.size(), "Should have exactly 6 visited states. Visited: " + visitedStates);
         assertEquals(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING, visitedStates.get(0));
         assertEquals(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED, visitedStates.get(1));
         assertEquals(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS, visitedStates.get(2));
@@ -170,17 +165,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
                 .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.NOK);
 
         when(documentVerificationService.hasDocumentsVerificationPending(any()))
                 .thenReturn(true);
-
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
 
         sendMessage(OnboardingEvent.DOCUMENT_UPLOADED, stateMachine);
 
@@ -196,20 +188,17 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED, visitedStates);
 
         when(presenceCheckService.init(any(), any()))
                 .thenReturn(new SessionInfo());
-
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
 
         sendMessage(OnboardingEvent.PRESENCE_CHECK_INIT, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
     }
 
@@ -218,17 +207,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(presenceCheckService.checkPresenceVerification(any(), any()))
                 .thenReturn(PresenceCheckStatus.ACCEPTED);
 
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
-
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
 
         sendMessage(OnboardingEvent.PRESENCE_CHECK_SUBMITTED, stateMachine);
 
@@ -245,8 +231,8 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(presenceCheckService.checkPresenceVerification(any(), any()))
                 .thenReturn(PresenceCheckStatus.REJECTED);
@@ -254,12 +240,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(onboardingService.isVerifyPresenceWithOtpEnabled(any()))
                 .thenReturn(false);
 
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
-
         sendMessage(OnboardingEvent.PRESENCE_CHECK_INIT, stateMachine);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
     }
 
@@ -268,8 +251,8 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
                 .thenReturn(true);
@@ -282,9 +265,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         when(identityVerificationTargetActivationService.isTargetActivationEnabled(any()))
                 .thenReturn(true);
-
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
@@ -299,20 +279,17 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        stateMachine.startReactively().block();
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
                 .thenReturn(false);
-
-        final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
     }
 
@@ -324,17 +301,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        stateMachine.startReactively().block();
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
         sendMessage(OnboardingEvent.OTP_RESEND, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
     }
 
@@ -349,17 +323,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.COMPLETED_ACCEPTED, visitedStates.get(0));
     }
 
@@ -374,17 +345,14 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.FAILED);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        assertEquals(1, visitedStates.size());
+        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
         assertEquals(OnboardingState.COMPLETED_FAILED, visitedStates.get(0));
     }
 
@@ -396,19 +364,26 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
                 .thenReturn(true);
 
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        stateMachine.startReactively().block();
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
-        stateMachine.addStateListener(createListener(visitedStates));
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
 
         logger.info("Visited states: {}", visitedStates);
 
-        // Should not transition anywhere, listener should not capture any state entry
-        assertEquals(0, visitedStates.size());
+        assertEquals(0, visitedStates.size(), "Should not transition anywhere, listener should not capture any state entry. Visited: " + visitedStates);
         assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, stateMachine.getState().getId());
+    }
+
+    private @NonNull StateMachine<OnboardingState, OnboardingEvent> startStateMachine(
+            final IdentityVerificationPhase phase,
+            final IdentityVerificationStatus status,
+            final List<OnboardingState> visitedStates) throws Exception {
+
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(phase, status);
+        stateMachine.startReactively().block();
+        stateMachine.addStateListener(createListener(visitedStates));
+        return stateMachine;
     }
 
     private void sendMessage(final OnboardingEvent event, final StateMachine<OnboardingState, OnboardingEvent> stateMachine) {
