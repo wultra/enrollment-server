@@ -24,7 +24,7 @@ RUN apt-get -y update  \
     && groupadd -r powerauth && useradd -r -g powerauth -s /sbin/nologin powerauth
 
 # Deploy and run applications
-COPY ./enrollment-server-onboarding/docker/images-and-libs/enrollment-server-onboarding.war "${APP_PATH}"
+COPY ./enrollment-server-onboarding/target/enrollment-server-onboarding*.war "${APP_PATH}"
 
 # Docker configuration
 EXPOSE 8080

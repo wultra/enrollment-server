@@ -78,7 +78,7 @@ jobs:
           project_path: ''
           prepare_package: 'false'
           prepare_wars_and_libs: 'false'
-          generate_sbom: 'true'
+          generate_sbom: 'false'
 
       - name: Resolve Docker tags
         uses: wultra/wultra-infrastructure/.github/actions/resolve-docker-tags@develop
