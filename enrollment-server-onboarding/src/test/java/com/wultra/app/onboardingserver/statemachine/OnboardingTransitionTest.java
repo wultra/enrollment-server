@@ -363,7 +363,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
                 .thenReturn(true);
 
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
-                .thenReturn(true);
+                .thenReturn(false);
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
