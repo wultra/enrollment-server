@@ -241,10 +241,12 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(onboardingService.isVerifyPresenceWithOtpEnabled(any()))
                 .thenReturn(false);
 
-        sendMessage(OnboardingEvent.PRESENCE_CHECK_INIT, stateMachine);
+        sendMessage(OnboardingEvent.PRESENCE_CHECK_SUBMITTED, stateMachine);
 
-        assertEquals(1, visitedStates.size(), "Should have exactly 1 visited state. Visited: " + visitedStates);
-        assertEquals(OnboardingState.PRESENCE_CHECK_IN_PROGRESS, visitedStates.get(0));
+        assertEquals(3, visitedStates.size(), "Should have exactly 3 visited states. Visited: " + visitedStates);
+        assertEquals(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING, visitedStates.get(0));
+        assertEquals(OnboardingState.PRESENCE_CHECK_REJECTED, visitedStates.get(1));
+        assertEquals(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, visitedStates.get(2));
     }
 
     @Test
