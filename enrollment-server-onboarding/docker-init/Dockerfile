@@ -2,7 +2,7 @@ FROM liquibase:4.33.0-alpine
 
 LABEL maintainer="Wultra <hello@wultra.com>"
 
-COPY enrollment-server-onboarding/docker-init/liquibase/data /liquibase/changelog
+COPY docs/db/changelog/changesets/enrollment-server-onboarding /liquibase/changelog
 COPY enrollment-server-onboarding/docker-init/docker-entrypoint.sh /docker-entrypoint.sh
 
 RUN rm /liquibase/internal/lib/snowflake-jdbc.jar
