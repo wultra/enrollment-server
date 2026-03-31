@@ -51,6 +51,6 @@ public class IdentityVerificationStatusResponse {
     @Schema(description = "Reject reason. Apply for phases such as client evaluation, presence check, or client approval")
     private String rejectReason;
 
-    @Schema(description = "Specifies whether consent is required and pending.")
+    @Schema(description = "Specifies whether consent is required and is still pending acceptance by the user")
     private boolean consentRequired;
 }
