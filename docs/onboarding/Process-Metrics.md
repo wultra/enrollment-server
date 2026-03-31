@@ -18,6 +18,12 @@ You can calculate following metrics based on the data below:
 (Rejected Documents / (All Documents − Failed Documents)) × 100
 ```
 
+**Multiple Attempts Rate**
+
+```
+(Multiple Attempts / (All attempts − Failed attempts)) × 100
+```
+
 ### All Documents
 
 All document verification attempts.
