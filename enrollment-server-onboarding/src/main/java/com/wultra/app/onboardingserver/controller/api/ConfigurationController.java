@@ -148,7 +148,7 @@ public class ConfigurationController {
         return switch (source) {
             case ID_CARD -> ConfigurationResponse.DocumentType.ID_CARD;
             case PASSPORT -> ConfigurationResponse.DocumentType.PASSPORT;
-            case DRIVING_LICENCE -> ConfigurationResponse.DocumentType.DRIVING_LICENCE;
+            case DRIVING_LICENSE -> ConfigurationResponse.DocumentType.DRIVING_LICENSE;
         };
     }
 }

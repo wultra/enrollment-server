@@ -157,7 +157,7 @@ public class RequiredDocumentTypesCheck {
         return switch (documentType) {
             case ID_CARD -> ID_CARD;
             case PASSPORT -> PASSPORT;
-            case DRIVING_LICENCE -> DRIVING_LICENSE;
+            case DRIVING_LICENSE -> DRIVING_LICENSE;
         };
     }
 

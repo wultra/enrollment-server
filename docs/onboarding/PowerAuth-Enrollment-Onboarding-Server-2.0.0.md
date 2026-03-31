@@ -112,7 +112,7 @@ EXAMPLE:
         "requiredDocumentsCount": 0,
         "items": [
           {
-            "type": "DRIVING_LICENCE",
+            "type": "DRIVING_LICENSE",
             "sideCount": 1
           }
         ]
@@ -124,8 +124,8 @@ EXAMPLE:
 
 For this configuration in total at least 2 unique document types must be submitted for verification. Acceptable combinations:
 - `ID_CARD` (2 sides) + `PASSPORT` (1 side)
-- `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
-- `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)
+- `ID_CARD` (2 sides) + `DRIVING_LICENSE` (1 side)
+- `PASSPORT` (1 side) + `DRIVING_LICENSE` (1 side)
 
 
 ### Documents data retention

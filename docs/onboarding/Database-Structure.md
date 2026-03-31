@@ -261,7 +261,7 @@ The configuration is stored as JSON. See the following example:
         "requiredDocumentsCount": 0,
         "items": [
           {
-            "type": "DRIVING_LICENCE",
+            "type": "DRIVING_LICENSE",
             "sideCount": 1
           }
         ]

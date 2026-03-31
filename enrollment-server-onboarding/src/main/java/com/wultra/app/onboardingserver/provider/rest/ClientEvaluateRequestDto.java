@@ -142,7 +142,7 @@ class ClientEvaluateRequestDto {
 
     public enum DocumentType {
         ID_CARD,
-        DRIVING_LICENCE,
+        DRIVING_LICENSE,
         PASSPORT
     }
 }
