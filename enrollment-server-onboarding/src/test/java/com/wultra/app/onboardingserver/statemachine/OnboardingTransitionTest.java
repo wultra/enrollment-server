@@ -34,12 +34,15 @@ import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
+import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
+import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -109,6 +112,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
+
+    @MockitoBean
+    private VerificationResultService verificationResultService;
 
     @Test
     void testInitialToDocumentUploaded() throws Exception {
@@ -351,6 +357,82 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
         assertEquals(1, visitedStates.size());
         assertEquals(OnboardingState.OTP_VERIFICATION_PENDING, visitedStates.get(0));
+    }
+
+    @Test
+    void testActivationFinishInProgressToCompletedAccepted() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
+                .thenReturn(true);
+
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.COMPLETED_ACCEPTED, visitedStates.get(0));
+    }
+
+    @Test
+    void testActivationFinishInProgressToCompletedFailed() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
+                .thenReturn(true);
+
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.FAILED);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        assertEquals(1, visitedStates.size());
+        assertEquals(OnboardingState.COMPLETED_FAILED, visitedStates.get(0));
+    }
+
+    @Test
+    void testActivationFinishInProgress_notFinishedStayInProgress() throws Exception {
+        when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
+                .thenReturn(true);
+
+        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        stateMachine.startReactively().block();
+
+        final List<OnboardingState> visitedStates = new LinkedList<>();
+        stateMachine.addStateListener(createListener(visitedStates));
+
+        sendMessage(OnboardingEvent.EVENT_NEXT_STATE, stateMachine);
+
+        logger.info("Visited states: {}", visitedStates);
+
+        // Should not transition anywhere, listener should not capture any state entry
+        assertEquals(0, visitedStates.size());
+        assertEquals(OnboardingState.ACTIVATION_FINISH_IN_PROGRESS, stateMachine.getState().getId());
     }
 
     private void sendMessage(final OnboardingEvent event, final StateMachine<OnboardingState, OnboardingEvent> stateMachine) {

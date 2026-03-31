@@ -63,9 +63,8 @@ abstract class AbstractStateMachineTest {
         return stateMachineService.prepareStateMachine(entity.getProcessId(), state, entity);
     }
 
-    protected IdentityVerificationEntity createIdentityVerification(
-            @Nullable IdentityVerificationPhase phase, IdentityVerificationStatus status) {
-        IdentityVerificationEntity entity = new IdentityVerificationEntity();
+    protected IdentityVerificationEntity createIdentityVerification(@Nullable IdentityVerificationPhase phase, IdentityVerificationStatus status) {
+        final IdentityVerificationEntity entity = new IdentityVerificationEntity();
         entity.setActivationId(ACTIVATION_ID);
         entity.setProcessId(PROCESS_ID);
         entity.setPhase(phase);
