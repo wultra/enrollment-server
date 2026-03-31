@@ -23,11 +23,12 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@AllArgsConstructor
 public class IdentityVerificationStatusService {
 
     private final IdentityVerificationService identityVerificationService;
@@ -49,23 +51,6 @@ public class IdentityVerificationStatusService {
     private final OnboardingServiceImpl onboardingService;
 
     private final ActivationFlagService activationFlagService;
-
-    /**
-     * Service constructor.
-     *
-     * @param identityVerificationService       Identity verification service.
-     * @param onboardingService                 Onboarding service.
-     * @param activationFlagService             Activation flags service.
-     */
-    @Autowired
-    public IdentityVerificationStatusService(
-            final IdentityVerificationService identityVerificationService,
-            final OnboardingServiceImpl onboardingService,
-            final ActivationFlagService activationFlagService) {
-        this.identityVerificationService = identityVerificationService;
-        this.onboardingService = onboardingService;
-        this.activationFlagService = activationFlagService;
-    }
 
     /**
      * Check status of identity verification.
@@ -110,13 +95,33 @@ public class IdentityVerificationStatusService {
         }
 
         final IdentityVerificationEntity idVerification = idVerificationOptional.get();
+        final var consentPending = isConsentPending(onboardingProcess);
+
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         response.setRejectReason(idVerification.getRejectReason());
+        response.setConsentRequired(consentPending);
         return response;
     }
 
     private boolean containsActivationFlagVerificationPending(final OwnerId ownerId) throws RemoteCommunicationException {
         return activationFlagService.containsActivationFlagVerificationPending(ownerId.getActivationId());
+    }
+
+    /**
+     * Checks whether consent is pending for the given onboarding process.
+     *
+     * @param onboardingProcess the onboarding process to check
+     * @return {@code true} if consent is required and still pending (not yet accepted);
+     *         {@code false} if consent is not required or has already been accepted
+     * @throws IllegalArgumentException if no configuration is found for the given onboarding process
+     */
+    public boolean isConsentPending(final OnboardingProcessEntity onboardingProcess) {
+        final var processConfig = Optional.of(onboardingProcess)
+                .map(OnboardingProcessEntity::getProcessConfiguration)
+                .map(OnboardingProcessConfigurationEntity::getConfiguration)
+                .orElseThrow(() -> new IllegalArgumentException("Configuration not found for process ID: " + onboardingProcess.getId()));
+
+        return processConfig.consentRequired() && Boolean.FALSE.equals(onboardingProcess.getConsentAccepted());
     }
 }

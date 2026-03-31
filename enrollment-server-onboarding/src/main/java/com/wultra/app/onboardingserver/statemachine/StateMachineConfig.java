@@ -140,6 +140,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final VerifyPresenceWithOtpPassedGuard verifyPresenceWithOtpPassedGuard;
 
+    private final ConsentResolvedGuard consentResolvedGuard;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -251,7 +253,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.INITIAL)
                 .event(OnboardingEvent.IDENTITY_VERIFICATION_INIT)
-                .guard(processIdentifierGuard)
+                .guard(createCompositeGuard(processIdentifierGuard, consentResolvedGuard))
                 .action(verificationInitAction)
                 .target(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }

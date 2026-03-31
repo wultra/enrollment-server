@@ -39,6 +39,7 @@ import java.util.Set;
  * @param documents                  List of documents.
  * @param clientEvaluationEnabled    Whether to call bank systems to evaluate the client.
  * @param verifyPresenceWithOtp      Whether to verify the presence with OTP. If {@code true}, hide the result of presence check until valid OTP is entered.
+ * @param consentRequired            Specifies whether user consent must be accepted.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Jacksonized
@@ -52,7 +53,8 @@ public record OnboardingProcessConfigurationValue(
         ActivationType activationType,
         boolean approvalEnabled,
         boolean clientEvaluationEnabled,
-        boolean verifyPresenceWithOtp
+        boolean verifyPresenceWithOtp,
+        boolean consentRequired
 ) implements Serializable {
 
     @Serial

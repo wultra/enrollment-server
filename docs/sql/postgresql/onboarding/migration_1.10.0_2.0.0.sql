@@ -110,4 +110,8 @@ ALTER TABLE es_processed_document_data ADD CONSTRAINT es_processed_document_data
 -- Creates a new index es_processed_document_data_document_verification_id_idx
 CREATE INDEX es_processed_document_data_document_verification_id_idx ON es_processed_document_data(document_verification_id);
 
+-- Changeset enrollment-server-onboarding/2.0.x/20260313-consent-accepted.xml::1::Michal Rozehnal
+-- Creates a new column consent_accepted in es_onboarding_process
+ALTER TABLE es_onboarding_process ADD consent_accepted BOOLEAN;
+
 -- Changeset enrollment-server-onboarding/2.0.x/20251215-add-tag-2.0.0.xml::1::Lubos Racansky

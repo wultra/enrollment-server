@@ -70,6 +70,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                 .useTemporaryActivation(true)
                 .approvalEnabled(true)
                 .verifyPresenceWithOtp(false)
+                .consentRequired(true)
                 .documents(
                         OnboardingProcessConfigurationValue.Documents.builder()
                                 .totalRequiredDocumentsCount((byte) 2)
