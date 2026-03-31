@@ -64,6 +64,19 @@
         },
         "bodyFileName": "body-claim-verify-validate-response.json"
       }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/api/v2/.*/access_token"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "body-access-token-response.json"
+      }
     }
   ]
 }

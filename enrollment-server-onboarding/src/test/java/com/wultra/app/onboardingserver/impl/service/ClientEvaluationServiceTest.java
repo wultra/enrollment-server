@@ -169,9 +169,7 @@ class ClientEvaluationServiceTest {
 
         when(identityVerificationConfig.getDocumentVerificationProvider()).thenReturn("testProvider");
 
-        final EvaluateClientRequest evaluateClientRequest = buildRequestWithoutExtractedData();
-
-        when(onboardingProvider.evaluateClient(evaluateClientRequest))
+        when(onboardingProvider.evaluateClient(any(EvaluateClientRequest.class)))
                 .thenThrow(new OnboardingProviderException());
 
         final OnboardingProcessConfigurationEntity processConfiguration = new OnboardingProcessConfigurationEntity();

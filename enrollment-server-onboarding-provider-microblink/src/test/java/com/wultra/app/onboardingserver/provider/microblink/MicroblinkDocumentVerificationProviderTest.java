@@ -34,12 +34,13 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseParser;
+import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.*;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import org.bouncycastle.util.Arrays;
+import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -112,7 +114,7 @@ class MicroblinkDocumentVerificationProviderTest {
     private SubmittedDocument submittedDocumentIdCardFront;
     private SubmittedDocument submittedDocumentIdCardBack;
 
-    private DocumentVerificationParsedResponse.Extraction idCardExtraction;
+    private DocumentVerificationResponse.Extraction idCardExtraction;
 
     @Mock
     private RestClient restClient;
@@ -131,6 +133,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
     @Mock
     private MicroblinkExtractedDataParser microblinkExtractedDataParser;
+
+    @Mock
+    private AuditService auditService;
 
     private MicroblinkDocumentVerificationProvider provider;
 
@@ -185,9 +190,9 @@ class MicroblinkDocumentVerificationProviderTest {
         submittedDocumentIdCardFront = buildSubmittedDocument(verificationDocumentCardIdFront);
         submittedDocumentIdCardBack = buildSubmittedDocument(verificationDocumentCardIdBack);
 
-        idCardExtraction = new DocumentVerificationParsedResponse.Extraction(
+        idCardExtraction = new DocumentVerificationResponse.Extraction(
                 List.of(),
-                new DocumentVerificationParsedResponse.ExtractionClassInfo("Id", null));
+                new DocumentVerificationResponse.ExtractionClassInfo("Id", null));
 
         final var objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -196,12 +201,13 @@ class MicroblinkDocumentVerificationProviderTest {
 
         provider = new MicroblinkDocumentVerificationProvider(
                 restClient,
-                new DocumentVerificationResponseParser(objectMapper),
+                objectMapper,
                 microblinkConfigProperties,
                 documentDataRepository,
                 processedDocumentDataRepository,
                 documentVerificationRepository,
-                microblinkExtractedDataParser
+                microblinkExtractedDataParser,
+                auditService
         );
     }
 
@@ -1155,7 +1161,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocumentResult.getUploadId()));
         assertEquals("[Test microblink message]", frontDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
         assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
 
@@ -1166,7 +1172,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(backDocumentResult.getUploadId()));
         assertEquals("[Test microblink message]", backDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
@@ -1194,7 +1200,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocumentResult.getUploadId()));
         assertNull(frontDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
         assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
 
@@ -1205,7 +1211,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertDoesNotThrow(() -> UUID.fromString(backDocumentResult.getUploadId()));
         assertNull(backDocumentResult.getRejectReason());
-        assertEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
+        assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
@@ -1296,5 +1302,13 @@ class MicroblinkDocumentVerificationProviderTest {
         options.setReturnFaceImage(true);
         options.setReturnFullDocumentImage(true);
         return options;
+    }
+
+    private static void assertJsonEquals(final String expected, final String actual) {
+        try {
+            JSONAssert.assertEquals(expected, actual, true);
+        } catch (JSONException e) {
+            fail("JSON comparison failed", e);
+        }
     }
 }

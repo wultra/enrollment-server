@@ -19,6 +19,8 @@ package com.wultra.app.onboardingserver.controller.api;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.*;
+import com.wultra.app.enrollmentserver.api.model.onboarding.response.data.DocumentMetadataResponseDto;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.errorhandling.*;
@@ -52,6 +54,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivation;
 import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
@@ -179,8 +185,19 @@ public class IdentityVerificationController {
 
         logger.info("action: checkDocumentStatus, state: initiated, processId: {}", extractRequest(request).map(DocumentStatusRequest::getProcessId).orElse(null));
         final var result = identityVerificationRestService.checkDocumentStatus(request, apiAuthentication);
-        logger.info("action: checkDocumentStatus, state: succeeded");
+
+        logger.info("action: checkDocumentStatus, state: succeeded, statuses: {}", collectDocumentStatuses(result));
         return result;
+    }
+
+    private static Map<String, DocumentStatus> collectDocumentStatuses(final ObjectResponse<DocumentStatusResponse> source) {
+        final List<DocumentMetadataResponseDto> documents = source.getResponseObject().getDocuments();
+        if (documents == null) {
+            return Map.of();
+        }
+
+        return documents.stream()
+                .collect(Collectors.toMap(DocumentMetadataResponseDto::getId, DocumentMetadataResponseDto::getStatus));
     }
 
     /**

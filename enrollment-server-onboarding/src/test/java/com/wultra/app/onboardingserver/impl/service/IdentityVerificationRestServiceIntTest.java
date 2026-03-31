@@ -69,6 +69,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @TestPropertySource(properties = {
+        "spring.task.scheduling.enabled=false",
         "enrollment-server-onboarding.document-verification.cleanupEnabled=true",
         "enrollment-server-onboarding.presence-check.cleanupEnabled=true"
 })

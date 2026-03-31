@@ -130,7 +130,7 @@ class PresenceCheckServiceTest {
         page3.setId("3");
         page3.setType(DocumentType.DRIVING_LICENSE);
         page3.setSide(CardSide.FRONT);
-        page3.setPhotoId("driving_licence_portrait");
+        page3.setPhotoId("driving_license_portrait");
 
         when(presenceCheckProvider.trustedPhotoSource()).thenReturn(PresenceCheckProvider.TrustedPhotoSource.REFERENCE);
 
@@ -145,7 +145,7 @@ class PresenceCheckServiceTest {
         tested.init(ownerId, "p1");
 
         assertTrue(identityVerification.getSessionInfo().contains("\"primaryDocumentReference\":\"id_card_portrait\""));
-        assertTrue(identityVerification.getSessionInfo().contains("\"otherDocumentsReferences\":[\"driving_licence_portrait\"]"));
+        assertTrue(identityVerification.getSessionInfo().contains("\"otherDocumentsReferences\":[\"driving_license_portrait\"]"));
         verify(presenceCheckProvider).initPresenceCheck(ownerId, null);
     }
 

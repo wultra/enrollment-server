@@ -162,6 +162,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .choice(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
                 .choice(OnboardingState.CHOICE_OTP_ENABLED)
                 .choice(OnboardingState.CHOICE_OTP_VERIFICATION)
+                .choice(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED)
                 .choice(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
                 .choice(OnboardingState.CHOICE_COMPLETED_STATE)
                 .choice(OnboardingState.CHOICE_ONBOARDING_APPROVAL_ENABLED)
@@ -322,9 +323,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withChoice()
                 .source(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED)
                 .first(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT, clientEvaluationEnabledGuard, clientEvaluationAction)
-                .then(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
-                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction)
+                .last(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED)
 
                 .and()
                 .withChoice()
@@ -355,9 +354,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .and()
                 .withChoice()
                 .source(OnboardingState.CHOICE_CLIENT_EVALUATION_ACCEPTED)
-                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
-                .then(OnboardingState.OTP_VERIFICATION_PENDING, otpVerificationEnabledGuard, otpVerificationSendAction)
-                .last(OnboardingState.CHOICE_COMPLETED_STATE, verificationProcessResultAction);
+                .last(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED);
     }
 
     private static Guard<OnboardingState, OnboardingEvent> isClientEvaluationResult(final EvaluateClientResponse.EvaluationResult expectedResult) {
@@ -374,10 +371,16 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private void configurePresenceCheckTransitions(StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions
+                .withChoice()
+                .source(OnboardingState.CHOICE_PRESENCE_CHECK_ENABLED)
+                .first(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED, presenceCheckEnabledGuard)
+                .last(OnboardingState.CHOICE_OTP_ENABLED)
+
+                .and()
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(createCompositeGuard(processIdentifierGuard, presenceCheckEnabledGuard))
+                .guard(processIdentifierGuard)
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
@@ -385,7 +388,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(createCompositeGuard(processIdentifierGuard, presenceCheckEnabledGuard))
+                .guard(processIdentifierGuard)
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 

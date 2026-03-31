@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.11</version>
+        <version>3.5.12</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -89,10 +89,10 @@
     </modules>
 
     <properties>
-        <openapi-generator-maven-plugin.version>7.20.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>7.21.0</openapi-generator-maven-plugin.version>
 
         <okhttp3.version>5.3.2</okhttp3.version>
-        <shedlock.version>7.6.0</shedlock.version>
+        <shedlock.version>7.7.0</shedlock.version>
         <spring-statemachine.version>4.0.1</spring-statemachine.version>
         <swagger-annotations-jakarta.version>2.2.45</swagger-annotations-jakarta.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.8.16</springdoc-openapi-starter-webmvc-ui.version>

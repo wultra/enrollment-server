@@ -112,7 +112,7 @@ EXAMPLE:
         "requiredDocumentsCount": 0,
         "items": [
           {
-            "type": "DRIVING_LICENCE",
+            "type": "DRIVING_LICENSE",
             "sideCount": 1
           }
         ]
@@ -124,5 +124,25 @@ EXAMPLE:
 
 For this configuration in total at least 2 unique document types must be submitted for verification. Acceptable combinations:
 - `ID_CARD` (2 sides) + `PASSPORT` (1 side)
-- `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
-- `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)
+- `ID_CARD` (2 sides) + `DRIVING_LICENSE` (1 side)
+- `PASSPORT` (1 side) + `DRIVING_LICENSE` (1 side)
+
+
+### Documents data retention
+
+Removed the property `enrollment-server-onboarding.identity-verification.data-retention` (default 1 hour). It controlled how long records were kept 
+in the `es_document_data` and `es_processed_document_data` tables based on `timestamp_created`. This setting was independent of process expiration.
+The retention time is now controlled by the property `enrollment-server-onboarding.onboarding-process.expiration` (default 3 hours).
+
+
+## Configuration Changes
+
+### Document Verification
+
+Async processing of documents has never been used, so the following configuration properties were removed:
+
+```properties
+enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmits.cron=
+enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron=
+enrollment-server-onboarding.document-verification.checkDocumentSubmitVerifications.cron=
+```
