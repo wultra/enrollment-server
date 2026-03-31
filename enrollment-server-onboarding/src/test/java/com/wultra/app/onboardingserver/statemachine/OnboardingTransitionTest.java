@@ -19,30 +19,18 @@ package com.wultra.app.onboardingserver.statemachine;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
-import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationOtpService;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
-import com.wultra.app.onboardingserver.impl.service.OnboardingApprovalService;
-import com.wultra.app.onboardingserver.impl.service.OnboardingServiceImpl;
-import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
-import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
+import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -121,8 +109,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(null, IdentityVerificationStatus.NOT_INITIALIZED);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(null, IdentityVerificationStatus.NOT_INITIALIZED);
         stateMachine.startReactively().block();
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
@@ -141,8 +128,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
@@ -184,8 +170,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
@@ -211,8 +196,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED);
         stateMachine.startReactively().block();
 
         when(presenceCheckService.init(any(), any()))
@@ -234,8 +218,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         when(presenceCheckService.checkPresenceVerification(any(), any()))
@@ -262,8 +245,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         when(presenceCheckService.checkPresenceVerification(any(), any()))
@@ -286,8 +268,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         stateMachine.startReactively().block();
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
@@ -318,8 +299,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(processIdentifierGuard.evaluate(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         stateMachine.startReactively().block();
 
         when(identityVerificationOtpService.isUserVerifiedUsingOtp(any()))
@@ -344,8 +324,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING);
         stateMachine.startReactively().block();
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
@@ -370,8 +349,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
@@ -396,8 +374,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.FAILED);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
@@ -419,8 +396,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
                 .thenReturn(true);
 
-        final IdentityVerificationEntity identityVerification = createIdentityVerification(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
-        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(identityVerification);
+        final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(IdentityVerificationPhase.ACTIVATION_FINISH, IdentityVerificationStatus.IN_PROGRESS);
         stateMachine.startReactively().block();
 
         final List<OnboardingState> visitedStates = new LinkedList<>();

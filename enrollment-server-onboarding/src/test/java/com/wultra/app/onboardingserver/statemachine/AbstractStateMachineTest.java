@@ -58,7 +58,14 @@ abstract class AbstractStateMachineTest {
                         .step();
     }
 
-    protected StateMachine<OnboardingState, OnboardingEvent> createStateMachine(IdentityVerificationEntity entity) throws Exception {
+    protected StateMachine<OnboardingState, OnboardingEvent> createStateMachine(
+            final IdentityVerificationPhase phase,
+            final IdentityVerificationStatus status) throws Exception {
+
+        return createStateMachine(createIdentityVerification(phase, status));
+    }
+
+    protected StateMachine<OnboardingState, OnboardingEvent> createStateMachine(final IdentityVerificationEntity entity) throws Exception {
         OnboardingState state = enrollmentStateProvider.findByPhaseAndStatus(entity.getPhase(), entity.getStatus());
         return stateMachineService.prepareStateMachine(entity.getProcessId(), state, entity);
     }
