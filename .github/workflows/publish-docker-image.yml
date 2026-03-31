@@ -79,7 +79,7 @@ jobs:
         uses: wultra/wultra-infrastructure/.github/actions/build-maven@develop
         id: build-maven
         with:
-          module_to_build: 'enrollment-server'
+          module_to_build: ${{ matrix.app }}
           project_path: ''
           generate_sbom: 'true'
 
