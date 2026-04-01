@@ -227,46 +227,8 @@ Stores configuration of onboarding processes.
 
 #### Configuration
 
-The configuration is stored as JSON. See the following example:
-
-```json
-{
-  "enabled": true,
-  "activationType": "CODE",
-  "otpForIdentification": true,
-  "otpForIdentityVerification": true,
-  "useTemporaryActivation": true,
-  "approvalEnabled": true,
-  "documents": {
-    "totalRequiredDocumentsCount": 2,
-    "groups": [
-      {
-        "requiredDocumentsCount": 1,
-        "items": [
-          {
-            "type": "ID_CARD",
-            "sideCount": 2,
-            "country": "CZE"
-          },
-          {
-            "type": "PASSPORT",
-            "sideCount": 1
-          }
-        ]
-      },
-      {
-        "requiredDocumentsCount": 0,
-        "items": [
-          {
-            "type": "DRIVING_LICENSE",
-            "sideCount": 1
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+The configuration is stored as JSON.
+See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md) for the details.
 
 <!-- end -->
 
