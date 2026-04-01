@@ -132,6 +132,7 @@ public class ActivationCodeService {
         final String userId = response.getUserId();
         final AuditDetail auditDetail = AuditDetail.builder()
                 .type("activation")
+                .subjectId(userId)
                 .param("activationId", response.getActivationId())
                 .param("userId", userId)
                 .build();
