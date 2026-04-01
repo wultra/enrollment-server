@@ -25,7 +25,7 @@ The Onboarding Server uses the following public configuration properties:
 
 ## Onboarding Process Configuration
 
-The configuration properties bellow are global to all the onboarding processes.
+The configuration properties below are global to all the onboarding processes.
 Specific process options are defined in the database.
 See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md) for the details of JSON configuration.
 
