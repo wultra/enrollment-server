@@ -96,6 +96,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_PROCESS, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
@@ -115,6 +116,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_PROCESS, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 USER_ID_PARAM, USER_ID
@@ -131,6 +133,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_PROCESS, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
@@ -151,6 +154,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_OTP, auditDetail.getType());
+        assertEquals(OTP_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -170,6 +174,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_OTP, auditDetail.getType());
+        assertEquals(OTP_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -188,6 +193,7 @@ class AuditServiceTest {
         verify(audit).debug(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_OTP, auditDetail.getType());
+        assertEquals(OTP_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -206,6 +212,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_DOCUMENT_VERIFICATION, auditDetail.getType());
+        assertEquals(DOCUMENT_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -226,6 +233,7 @@ class AuditServiceTest {
         verify(audit).debug(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_DOCUMENT_VERIFICATION, auditDetail.getType());
+        assertEquals(DOCUMENT_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -245,6 +253,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_IDENTITY_VERIFICATION, auditDetail.getType());
+        assertEquals(IDENTITY_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -262,6 +271,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_DOCUMENT_VERIFICATION_PROVIDER, auditDetail.getType());
+        assertEquals(IDENTITY_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -279,6 +289,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_PRESENCE_CHECK_PROVIDER, auditDetail.getType());
+        assertEquals(IDENTITY_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -291,11 +302,12 @@ class AuditServiceTest {
     void testAuditActivation() {
         final OnboardingProcessEntity process = createProcess();
 
-        tested.auditActivation(process, MESSAGE);
+        tested.auditActivation(process, "activation-1", MESSAGE);
 
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_ACTIVATION, auditDetail.getType());
+        assertEquals("activation-1", auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
@@ -313,6 +325,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_ONBOARDING_PROVIDER, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
@@ -330,6 +343,7 @@ class AuditServiceTest {
         verify(audit).debug(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_ONBOARDING_PROVIDER, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 PROCESS_ID_PARAM, PROCESS_ID,
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
@@ -347,6 +361,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_ONBOARDING_PROVIDER, auditDetail.getType());
+        assertEquals(PROCESS_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 IDENTITY_VERIFICATION_ID_PARAM, IDENTITY_VERIFICATION_ID,
                 PROCESS_ID_PARAM, PROCESS_ID,
@@ -368,6 +383,7 @@ class AuditServiceTest {
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_DOCUMENT_VERIFICATION_PROVIDER, auditDetail.getType());
+        assertEquals(null, auditDetail.getSubjectId());// TODO Lubos
         assertEquals(Map.of(
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
                 USER_ID_PARAM, USER_ID,

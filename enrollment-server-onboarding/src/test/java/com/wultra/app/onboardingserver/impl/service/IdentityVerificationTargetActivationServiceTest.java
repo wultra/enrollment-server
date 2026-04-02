@@ -90,7 +90,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
-        verify(auditService).auditActivation(process, "Create target activation for user: {}", "user1");
+        verify(auditService).auditActivation(process, "activation-1", "Create target activation for user: {}", "user1");
 
         final var processCaptor = ArgumentCaptor.forClass(OnboardingProcessEntity.class);
         verify(onboardingService, times(2)).updateProcess(processCaptor.capture());
@@ -144,7 +144,7 @@ class IdentityVerificationTargetActivationServiceTest {
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
-        verify(auditService).auditActivation(process, "Create target activation for user: {}", "user1");
+        verify(auditService).auditActivation(process, "activation-1", "Create target activation for user: {}", "user1");
 
         final var processCaptor = ArgumentCaptor.forClass(OnboardingProcessEntity.class);
         verify(onboardingService, times(2)).updateProcess(processCaptor.capture());
@@ -176,8 +176,8 @@ class IdentityVerificationTargetActivationServiceTest {
 
         assertEquals("KA4PD-RTIE2-KOP3U-H53EA", result.activationCode());
 
-        verify(auditService).auditActivation(process, "Remove activation for user: {}", "user1");
-        verify(auditService).auditActivation(process, "Create target activation for user: {}", "user1");
+        verify(auditService).auditActivation(process, "activation-1", "Remove activation for user: {}", "user1");
+        verify(auditService).auditActivation(process, "activation-1", "Create target activation for user: {}", "user1");
 
         final var processCaptor = ArgumentCaptor.forClass(OnboardingProcessEntity.class);
         verify(onboardingService, times(2)).updateProcess(processCaptor.capture());

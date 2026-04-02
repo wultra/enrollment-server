@@ -71,7 +71,7 @@ class ActivationCleaningService {
             removeActivation(activationId);
             process.setActivationRemoved(true);
             onboardingProcessRepository.save(process);
-            auditService.auditActivation(process, "Remove activation of failed process for user: {}", process.getUserId());
+            auditService.auditActivation(process, activationId, "Remove activation of failed process for user: {}", process.getUserId());
         } catch (RemoteCommunicationException e) {
             logger.error("Unable to remove activation ID: {}", activationId, e);
         }
