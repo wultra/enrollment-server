@@ -64,6 +64,9 @@ public class DocumentMetadataResponseDto {
      */
     private List<String> errors;
 
+    /**
+     * Document country as an ISO 3166-1 alpha-3 code.
+     */
     @Schema(description = "Document country as an ISO 3166-1 alpha-3 code", example = "CZE", maxLength = 3, minLength = 3)
     @Size(min = 3, max = 3)
     private String country;
