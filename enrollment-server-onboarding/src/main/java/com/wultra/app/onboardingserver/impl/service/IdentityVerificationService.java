@@ -527,7 +527,7 @@ public class IdentityVerificationService {
      * @return Document metadata for response
      */
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
-        final DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
+        final var docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
         // Hide specific error reason if any.
         if (StringUtils.isNotBlank(entity.getErrorDetail()) || StringUtils.isNotBlank(entity.getRejectReason())) {
