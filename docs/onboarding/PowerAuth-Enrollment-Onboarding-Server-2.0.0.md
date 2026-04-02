@@ -38,6 +38,11 @@ linked to `es_document_data` records via `upload_id` column.
 A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
 
 
+### Document Verification
+
+A new column `country` has been added to the table `es_document_verification`.
+
+
 ## REST API Changes
 
 
@@ -52,6 +57,11 @@ The following changes were made to the onboarding start endpoint:
 ### Removing large file upload endpoint
 
 Endpoint `POST api/identity/document/upload` was removed because it was never used in production.
+
+
+### Document Submit
+
+The endpoint `/api/identity/document/submit` has been deprecated in favor of `/api/v2/identity/document/submit`.
 
 
 ## External Onboarding Services Changes

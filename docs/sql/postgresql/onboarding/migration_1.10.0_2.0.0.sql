@@ -114,4 +114,8 @@ CREATE INDEX es_processed_document_data_document_verification_id_idx ON es_proce
 -- Creates a new column consent_accepted in es_onboarding_process
 ALTER TABLE es_onboarding_process ADD consent_accepted BOOLEAN;
 
+-- Changeset enrollment-server-onboarding/2.0.x/20260402-document-country.xml::1::Lubos Racansky
+-- Creates a new column country in es_document_verification
+ALTER TABLE es_document_verification ADD country VARCHAR(3);
+
 -- Changeset enrollment-server-onboarding/2.0.x/20251215-add-tag-2.0.0.xml::1::Lubos Racansky

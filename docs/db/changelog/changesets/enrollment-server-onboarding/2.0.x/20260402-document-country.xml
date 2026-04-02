@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.0.x/20260402-document-country.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_document_verification" columnName="country" />
+            </not>
+        </preConditions>
+        <comment>Creates a new column country in es_document_verification</comment>
+        <addColumn tableName="es_document_verification">
+            <column name="country" type="varchar(3)" />
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

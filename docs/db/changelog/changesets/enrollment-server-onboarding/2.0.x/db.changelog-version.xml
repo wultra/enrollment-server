@@ -10,6 +10,7 @@
     <include file="20260205-audit.xml" relativeToChangelogFile="true" />
     <include file="20260309-processed-document-data-verification-id.xml" relativeToChangelogFile="true" />
     <include file="20260313-consent-accepted.xml" relativeToChangelogFile="true" />
+    <include file="20260402-document-country.xml" relativeToChangelogFile="true" />
     <include file="20251215-add-tag-2.0.0.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
