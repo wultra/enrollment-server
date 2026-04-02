@@ -89,7 +89,7 @@ public class DocumentVerificationEntity implements Serializable {
     private String otherSideId;
 
     /**
-     * Country stored as an ISO 3166-1 alpha-3 code, e.g. CZE.
+     * Country stored as an ISO 3166-1 alpha-3 code, e.g. {@code CZE}.
      */
     @Column(name = "country", length = 3)
     private String country;
