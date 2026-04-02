@@ -373,3 +373,7 @@ ALTER TABLE audit_log ADD subject_id VARCHAR2(256);
 -- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
 -- Create a new index on audit_log(subject_id)
 CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
+
+-- Changeset enrollment-server-onboarding/2.0.x/20260402-document-country.xml::1::Lubos Racansky
+-- Creates a new column country in es_document_verification
+ALTER TABLE es_document_verification ADD country VARCHAR2(3);

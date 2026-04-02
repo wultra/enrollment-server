@@ -527,7 +527,7 @@ public class IdentityVerificationService {
      * @return Document metadata for response
      */
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
-        DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
+        final DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
         // Hide specific error reason if any.
         if (StringUtils.isNotBlank(entity.getErrorDetail()) || StringUtils.isNotBlank(entity.getRejectReason())) {
@@ -537,6 +537,7 @@ public class IdentityVerificationService {
         docMetadata.setSide(entity.getSide());
         docMetadata.setStatus(entity.getStatus());
         docMetadata.setType(entity.getType());
+        docMetadata.setCountry(entity.getCountry());
         return docMetadata;
     }
 

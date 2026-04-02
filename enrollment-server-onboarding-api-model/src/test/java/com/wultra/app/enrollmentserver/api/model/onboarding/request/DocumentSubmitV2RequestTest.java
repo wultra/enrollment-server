@@ -56,7 +56,7 @@ class DocumentSubmitV2RequestTest {
 
         // then
         assertEquals(
-                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=null]], resubmit=true]",
+                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, country=null, data=null]], resubmit=true]",
                 requestAsString
         );
     }
@@ -72,6 +72,7 @@ class DocumentSubmitV2RequestTest {
                                 DocumentSubmitV2Request.Document.builder()
                                         .originalDocumentId("doc-1")
                                         .filename("file1.jpg")
+                                        .country("CZE")
                                         .type(DocumentType.ID_CARD)
                                         .side(CardSide.FRONT)
                                         .data("base64-data")
@@ -85,7 +86,7 @@ class DocumentSubmitV2RequestTest {
 
         // then
         assertEquals(
-                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, data=length:11]], resubmit=true]",
+                "DocumentSubmitV2Request[processId=process-1, documents=[Document[originalDocumentId=doc-1, filename=file1.jpg, type=ID_CARD, side=FRONT, country=CZE, data=length:11]], resubmit=true]",
                 requestAsString
         );
     }

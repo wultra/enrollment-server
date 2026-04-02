@@ -38,6 +38,11 @@ linked to `es_document_data` records via `upload_id` column.
 A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
 
 
+### Document Verification
+
+A new column `country` has been added to the table `es_document_verification`.
+
+
 ## REST API Changes
 
 

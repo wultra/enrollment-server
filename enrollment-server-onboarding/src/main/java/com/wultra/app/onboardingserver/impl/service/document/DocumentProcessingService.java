@@ -306,6 +306,7 @@ public class DocumentProcessingService {
         entity.setOriginalDocumentId(document.originalDocumentId());
         entity.setSide(document.side());
         entity.setType(document.type());
+        entity.setCountry(document.country());
         entity.setStatus(DocumentStatus.UPLOAD_IN_PROGRESS);
         entity.setTimestampCreated(ownerId.getTimestamp());
         entity.setUsedForVerification(true);

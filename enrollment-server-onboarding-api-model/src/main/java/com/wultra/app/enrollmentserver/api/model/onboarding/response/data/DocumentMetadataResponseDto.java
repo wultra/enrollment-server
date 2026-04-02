@@ -20,6 +20,7 @@ package com.wultra.app.enrollmentserver.api.model.onboarding.response.data;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -61,5 +62,8 @@ public class DocumentMetadataResponseDto {
      * Errors discovered during processing of the document
      */
     private List<String> errors;
+
+    @Schema(description = "Document country as an ISO 3166-1 alpha-3 code", example = "CZE", maxLength = 3, minLength = 3)
+    private String country;
 
 }

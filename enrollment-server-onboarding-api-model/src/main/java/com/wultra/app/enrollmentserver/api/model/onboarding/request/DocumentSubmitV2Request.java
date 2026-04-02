@@ -68,6 +68,9 @@ public record DocumentSubmitV2Request(
             @NotEmpty
             CardSide side,
 
+            @Schema(description = "Document country as an ISO 3166-1 alpha-3 code", example = "CZE", maxLength = 3, minLength = 3)
+            String country,
+
             @Schema(description = "Document image", example = "iVBORw0KGgoAAAANSUhEUgAA...", format = "byte")
             @NotEmpty
             String data
@@ -76,11 +79,12 @@ public record DocumentSubmitV2Request(
         @Override
         @NonNull
         public String toString() {
-            return "Document[originalDocumentId=%s, filename=%s, type=%s, side=%s, data=%s]".formatted(
+            return "Document[originalDocumentId=%s, filename=%s, type=%s, side=%s, country=%s, data=%s]".formatted(
                     originalDocumentId,
                     filename,
                     type,
                     side,
+                    country,
                     data != null ? "length:" + data.length() : "null"
             );
         }
