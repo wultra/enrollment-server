@@ -59,6 +59,11 @@ The following changes were made to the onboarding start endpoint:
 Endpoint `POST api/identity/document/upload` was removed because it was never used in production.
 
 
+## Document Submit
+
+The endpoint `/api/identity/document/submit` has been deprecated in favor of `/api/v2/identity/document/submit`.
+
+
 ## External Onboarding Services Changes
 
 
