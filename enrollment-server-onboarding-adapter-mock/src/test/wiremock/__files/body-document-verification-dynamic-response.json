@@ -1,3 +1,4 @@
+{{parseJson (base64 (jsonPath request.body '$.imageFront.base64') decode=true) 'doc'}}
 {
   "processingStatus": "Completed",
   "verification": {
@@ -625,9 +626,9 @@
     ],
     "classInfo": {
       "country": "Czechia",
-      "type": "Id",
+      "type": "{{val doc.type or='Id'}}",
       "region": "None",
-      "isoAlpha3CountryCode": "CZE",
+      "isoAlpha3CountryCode": "{{val doc.isoAlpha3CountryCode or='CZE'}}",
       "isoAlpha2CountryCode": "CZ",
       "isoNumericCountryCode": "203"
     },
