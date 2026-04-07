@@ -795,15 +795,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return documentData;
     }
 
-    private Map<DocumentType, ObjectNode> collectDataForAudit(final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType) {
+    private static Map<DocumentType, ObjectNode> collectDataForAudit(final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType) {
         return microblinkResponseByDocumentType.entrySet().stream()
-                .collect(Collectors.toMap(
+                .collect(Collectors.toUnmodifiableMap(
                         Map.Entry::getKey,
-                        entry -> entry.getValue().getResponseWithoutPersonalData(),
-                        (left, right) -> {
-                            throw new IllegalStateException("Duplicate document type: " + left);
-                        },
-                        () -> new EnumMap<>(DocumentType.class)
+                        entry -> entry.getValue().getResponseWithoutPersonalData()
                 ));
     }
 
