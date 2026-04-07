@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.nimbusds.oauth2.sdk.util.MapUtils;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -40,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -244,7 +244,7 @@ public class DocumentProcessingService {
 
     private void auditVerificationResponse(final DocumentsSubmitResult results, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
         final String provider = identityVerificationConfig.getDocumentVerificationProvider();
-        if (MapUtils.isNotEmpty(results.getAuditData())) {
+        if (!CollectionUtils.isEmpty(results.getAuditData())) {
             for (var entry : results.getAuditData().entrySet()) {
                 auditService.auditDocumentVerificationProvider(ownerId, identityVerification, entry.getValue(), "Document verification response, user: {}, provider: {}, documentType: {}", ownerId.getUserId(), provider, entry.getKey());
             }
