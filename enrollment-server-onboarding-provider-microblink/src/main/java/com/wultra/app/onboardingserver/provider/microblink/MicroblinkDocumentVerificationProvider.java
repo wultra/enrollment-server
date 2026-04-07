@@ -332,7 +332,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
             final var parsedResponse = Optional.of(body)
                     .map(this::parseMicroblinkResponse)
-                    .orElseThrow(() -> new DocumentVerificationException("Failed to parse response body"));
+                    .orElseThrow(() -> new DocumentVerificationException("Failed to parse Microblink API response"));
 
             logger.info("action: sendMicroblinkRequest, state: succeeded, verificationResult: {}, microblinkTraceId: {}",
                     Optional.ofNullable(parsedResponse.getParsedResponseBody())
@@ -617,7 +617,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(it -> "uploadId=%s, rejectReason=%s".formatted(it.getUploadId(), it.getRejectReason()))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        if (properties.isExtractedDataCheckEnabled()) {
+        if (properties.isExtractedDataCheckEnabled() && rejectReasons.isEmpty()) {
             final var crosscheckDataByDocumentType = documentVerificationResultBundles.stream()
                     .collect(Collectors.toMap(
                             i -> i.result().getUploadId(),
@@ -678,11 +678,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var microblinkVerification = Optional.of(microblinkResponse)
                 .map(DocumentVerificationResponseBundle::getParsedResponseBody)
                 .map(DocumentVerificationResponse::verification);
+
         final var microblinkCheckResult = microblinkVerification.map(DocumentVerificationResponse.Verification::result)
                 .orElse(null);
+
         final var score = microblinkVerification.map(DocumentVerificationResponse.Verification::certaintyLevel)
                 .map(MicroblinkDocumentVerificationProvider::convertScore)
-                .orElse(null);
+                .orElse(0);
 
         if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
             final var rejectReasons = Optional.of(microblinkResponse)
@@ -693,7 +695,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(message -> "%s %s".formatted(message.code(), message.message()))
                     .toList();
 
-            return createDocumentVerificationResultBundle(uploadId, documentResult, rejectReasons.toString(), score, null);
+            return createDocumentVerificationResultBundle(uploadId, documentResult, "Rejected by provider " + rejectReasons, score, null);
         }
 
         DocumentCrosscheckData crosscheckData = null;
@@ -750,10 +752,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     }
 
     private static Integer convertScore(final String source) {
-        if (source == null) {
-            return 0;
-        }
-
         return switch (source) {
             case "Low" ->  1;
             case "Medium" ->  5;
@@ -833,16 +831,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         final var crosscheckData = crosscheckDataByDocumentType.values();
 
-        final var failedFields = new ArrayList<String>();
-        failedFields.add(performFieldCrosscheck("firstName", crosscheckData, DocumentCrosscheckData::firstName));
-        failedFields.add(performFieldCrosscheck("lastName", crosscheckData, DocumentCrosscheckData::lastName));
-        failedFields.add(performFieldCrosscheck("dateOfBirth", crosscheckData, DocumentCrosscheckData::dateOfBirth));
+        final var crosscheckResults = new ArrayList<String>();
+        crosscheckResults.add(performFieldCrosscheck("firstName", crosscheckData, DocumentCrosscheckData::firstName));
+        crosscheckResults.add(performFieldCrosscheck("lastName", crosscheckData, DocumentCrosscheckData::lastName));
+        crosscheckResults.add(performFieldCrosscheck("dateOfBirth", crosscheckData, DocumentCrosscheckData::dateOfBirth));
 
-        final var passed = failedFields.stream()
-                .allMatch(Objects::isNull);
+        final var failedFields = crosscheckResults.stream()
+                .filter(Objects::nonNull)
+                .toList();
 
         return CrosscheckResult.builder()
-                .passed(passed)
+                .passed(failedFields.isEmpty())
                 .failedFields(failedFields)
                 .build();
     }

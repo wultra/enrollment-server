@@ -454,7 +454,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_failVerification_correctResponseIsReturned() {
+    void testVerifyDocuments_failVerification_correctResponseIsReturned() throws Exception {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
@@ -468,10 +468,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds));
+        final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 
         // then
-        assertEquals("Crosscheck failed for field firstName", exception.getMessage());
+        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
+        assertEquals("[Document data crosscheck failed for fields: [firstName]]", result.getRejectReason());
     }
 
     private List<SubmittedDocument> buildSubmittedDocuments(final List<MicroblinkDocumentVerificationProvider.DocumentVerificationData> documents) {
