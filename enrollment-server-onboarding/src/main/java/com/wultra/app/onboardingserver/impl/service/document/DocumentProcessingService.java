@@ -246,7 +246,7 @@ public class DocumentProcessingService {
         final String provider = identityVerificationConfig.getDocumentVerificationProvider();
         if (MapUtils.isNotEmpty(results.getAuditData())) {
             for (var entry : results.getAuditData().entrySet()) {
-                auditService.auditDocumentVerificationProvider(ownerId, identityVerification, entry.getValue(), "Document verification response, user: {}, provider: {}, documentType: {}", ownerId.getUserId(), provider, entry.getValue());
+                auditService.auditDocumentVerificationProvider(ownerId, identityVerification, entry.getValue(), "Document verification response, user: {}, provider: {}, documentType: {}", ownerId.getUserId(), provider, entry.getKey());
             }
         } else {
             logger.debug("No audit data available for document verification response, userId: {}, provider: {}", ownerId.getUserId(), provider);
