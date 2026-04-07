@@ -189,6 +189,7 @@ public class AuditService {
      * Audit the activation specified by the given process at info level.
      *
      * @param process process to audit
+     * @param activationId activation ID used as audit subject ID
      * @param message message, arguments may be put to via template {@code {}}
      * @param args message arguments
      */
