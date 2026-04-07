@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
+import com.nimbusds.oauth2.sdk.util.MapUtils;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.DocumentSubmitV2Request;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
@@ -225,6 +226,7 @@ public class DocumentProcessingService {
             final DocumentsSubmitResult results = documentVerificationProvider.submitDocuments(ownerId, submittedDocs);
             logger.debug("Documents {} submitted to provider, {}", docVerifications, ownerId);
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document IDs: {}", ownerId.getUserId(), docVerificationIds);
+            auditVerificationResponse(results, identityVerification, ownerId);
             return results;
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage(), e);
@@ -240,6 +242,17 @@ public class DocumentProcessingService {
 
     }
 
+    private void auditVerificationResponse(final DocumentsSubmitResult results, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        final String provider = identityVerificationConfig.getDocumentVerificationProvider();
+        if (MapUtils.isNotEmpty(results.getAuditData())) {
+            for (var entry : results.getAuditData().entrySet()) {
+                auditService.auditDocumentVerificationProvider(ownerId, identityVerification, entry.getValue(), "Document verification response, user: {}, provider: {}, documentType: {}", ownerId.getUserId(), provider, entry.getValue());
+            }
+        } else {
+            logger.debug("No audit data available for document verification response, userId: {}, provider: {}", ownerId.getUserId(), provider);
+        }
+    }
+
     public DocumentSubmitResult submitDocumentToProvider(OwnerId ownerId, DocumentVerificationEntity docVerification, SubmittedDocument submittedDoc) {
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
@@ -247,6 +260,7 @@ public class DocumentProcessingService {
             docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
             final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document ID: {}", ownerId.getUserId(), docVerification.getId());
+            auditVerificationResponse(docsSubmitResults, identityVerification, ownerId);
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage(), e);

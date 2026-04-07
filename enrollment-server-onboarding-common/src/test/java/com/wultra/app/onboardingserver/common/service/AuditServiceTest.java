@@ -378,12 +378,12 @@ class AuditServiceTest {
 
         final var documentResponseJson = JsonNodeFactory.instance.objectNode();
 
-        tested.auditDocumentVerificationProvider(ownerId, documentResponseJson, MESSAGE);
+        tested.auditDocumentVerificationProvider(ownerId, createIdentityVerification(), documentResponseJson, MESSAGE);
 
         verify(audit).info(eq(MESSAGE), auditDetailCaptor.capture(), any(Object[].class));
         final AuditDetail auditDetail = auditDetailCaptor.getValue();
         assertEquals(TYPE_DOCUMENT_VERIFICATION_PROVIDER, auditDetail.getType());
-        assertEquals(null, auditDetail.getSubjectId());// TODO Lubos
+        assertEquals(IDENTITY_VERIFICATION_ID, auditDetail.getSubjectId());
         assertEquals(Map.of(
                 ACTIVATION_ID_PARAM, ACTIVATION_ID,
                 USER_ID_PARAM, USER_ID,

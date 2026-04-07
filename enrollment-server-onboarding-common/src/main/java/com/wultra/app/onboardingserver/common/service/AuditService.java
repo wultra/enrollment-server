@@ -235,14 +235,15 @@ public class AuditService {
      * Audit response from the provider for document verification at info level.
      *
      * @param ownerId Owner identification.
+     * @param identityVerification Identity verification.
      * @param documentResponseJson Sanitized document verification provider response JSON (without personal data)
      * @param message message, arguments may be put to via template {@code {}}
      * @param args message arguments
      */
-    public void auditDocumentVerificationProvider(final OwnerId ownerId, final JsonNode documentResponseJson, final String message, final Object... args) {
+    public void auditDocumentVerificationProvider(final OwnerId ownerId, IdentityVerificationEntity identityVerification, final JsonNode documentResponseJson, final String message, final Object... args) {
         final AuditDetail auditDetail = AuditDetail.builder()
                 .type(AuditType.DOCUMENT_VERIFICATION_PROVIDER.code)
-                .subjectId(null) // TODO Lubos - identity verification ID
+                .subjectId(identityVerification.getId())
                 .param(ACTIVATION_ID, ownerId.getActivationId())
                 .param(USER_ID, ownerId.getUserId())
                 .param(DOCUMENT_RESPONSE_JSON, documentResponseJson)
