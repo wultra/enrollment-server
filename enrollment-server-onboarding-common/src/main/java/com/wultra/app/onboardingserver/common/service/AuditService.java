@@ -61,7 +61,9 @@ public class AuditService {
      * @param args message arguments
      */
     public void audit(final OnboardingProcessEntity process, final String message, final Object... args) {
-        final AuditDetail auditDetail = createProcssAuditDetail(process, null);
+        final AuditDetail auditDetail = createAuditDetailBuilder(AuditType.PROCESS, process, null)
+                .subjectId(process.getId())
+                .build();
         audit.info(message, auditDetail, args);
     }
 
@@ -74,7 +76,9 @@ public class AuditService {
      * @param args message arguments
      */
     public void audit(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final String message, final Object... args) {
-        final AuditDetail auditDetail = createProcssAuditDetail(process, identityVerification.getId());
+        final AuditDetail auditDetail = createAuditDetailBuilder(AuditType.PROCESS, process, identityVerification.getId())
+                .subjectId(process.getId())
+                .build();
         audit.info(message, auditDetail, args);
     }
 
@@ -302,12 +306,6 @@ public class AuditService {
                 .param(USER_ID, identityVerification.getUserId())
                 .param(DOCUMENT_ID, document.getId())
                 .param(DOCUMENT_VERIFICATION_ID, document.getVerificationId())
-                .build();
-    }
-
-    private static AuditDetail createProcssAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {
-        return createAuditDetailBuilder(AuditType.PROCESS, process, identityVerificationId)
-                .subjectId(process.getId())
                 .build();
     }
 
