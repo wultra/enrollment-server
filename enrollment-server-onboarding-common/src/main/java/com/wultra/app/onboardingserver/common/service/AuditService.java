@@ -189,7 +189,9 @@ public class AuditService {
      * @param args message arguments
      */
     public void auditActivation(final OnboardingProcessEntity process, final String activationId, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(AuditType.ACTIVATION, process, activationId, null);
+        final AuditDetail auditDetail = createAuditDetailBuilder(AuditType.ACTIVATION, process, null)
+                .subjectId(activationId)
+                .build();
         audit.info(message, auditDetail, args);
     }
 
@@ -201,7 +203,9 @@ public class AuditService {
      * @param args message arguments
      */
     public void auditOnboardingProvider(final OnboardingProcessEntity process, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, process, process.getId(), null);
+        final AuditDetail auditDetail = createAuditDetailBuilder(AuditType.ONBOARDING_PROVIDER, process, null)
+                .subjectId(process.getId())
+                .build();
         audit.info(message, auditDetail, args);
     }
 
@@ -213,7 +217,9 @@ public class AuditService {
      * @param args message arguments
      */
     public void auditOnboardingProviderDebug(final OnboardingProcessEntity process, final String message, final Object... args) {
-        final AuditDetail auditDetail = createAuditDetail(AuditType.ONBOARDING_PROVIDER, process, process.getId(), null);
+        final AuditDetail auditDetail = createAuditDetailBuilder(AuditType.ONBOARDING_PROVIDER, process, null)
+                .subjectId(process.getId())
+                .build();
         audit.debug(message, auditDetail, args);
     }
 
@@ -300,13 +306,14 @@ public class AuditService {
     }
 
     private static AuditDetail createProcssAuditDetail(final OnboardingProcessEntity process, final String identityVerificationId) {
-        return createAuditDetail(AuditType.PROCESS, process, process.getId(), identityVerificationId);
+        return createAuditDetailBuilder(AuditType.PROCESS, process, identityVerificationId)
+                .subjectId(process.getId())
+                .build();
     }
 
-    private static AuditDetail createAuditDetail(final AuditType type, final OnboardingProcessEntity process, final String subjectId, final String identityVerificationId) {
+    private static AuditDetail.Builder createAuditDetailBuilder(final AuditType type, final OnboardingProcessEntity process, final String identityVerificationId) {
         final AuditDetail.Builder builder = AuditDetail.builder()
                 .type(type.code)
-                .subjectId(subjectId)
                 .param(PROCESS_ID, process.getId());
 
         if (identityVerificationId != null) {
@@ -328,7 +335,7 @@ public class AuditService {
             builder.param(USER_ID, userId);
         }
 
-        return builder.build();
+        return builder;
     }
 
     private enum AuditType {
