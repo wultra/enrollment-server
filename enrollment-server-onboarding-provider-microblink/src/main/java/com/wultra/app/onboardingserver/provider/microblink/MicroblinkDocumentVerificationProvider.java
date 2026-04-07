@@ -330,7 +330,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(HttpEntity::getBody)
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
 
-            final var parsedResponse = parseMicroblinkResponse(body);
+            final var parsedResponse = Optional.of(body)
+                    .map(this::parseMicroblinkResponse)
+                    .orElseThrow(() -> new DocumentVerificationException("Failed to parse response body"));
+
             logger.info("action: sendMicroblinkRequest, state: succeeded, verificationResult: {}, microblinkTraceId: {}",
                     Optional.ofNullable(parsedResponse.getParsedResponseBody())
                             .map(DocumentVerificationResponse::verification)
@@ -359,7 +362,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private DocumentVerificationResponseBundle parseMicroblinkResponse(final String responseBodyJson) throws DocumentVerificationException {
+    private DocumentVerificationResponseBundle parseMicroblinkResponse(final String responseBodyJson) {
         try {
             final var parsedResponseBody = objectMapper.readValue(responseBodyJson, DocumentVerificationResponse.class);
             final var responseJson = objectMapper.readTree(responseBodyJson);
@@ -372,7 +375,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(matcher -> matcher.group(1))
                     .orElse(null);
 
-            throw new DocumentVerificationException("Failed to parse Microblink API response. Microblink traceId: %s".formatted(traceId), e);
+            logger.warn("Failed to parse Microblink API response, response body is not valid JSON. Microblink traceId: {}", traceId, e);
+            return null;
         }
     }
 
@@ -600,75 +604,152 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             throw new DocumentVerificationException("No document verification data found for uploadIds: %s".formatted(uploadIds));
         }
 
-        final var crosscheckDataByDocumentType = new EnumMap<DocumentType, DocumentCrosscheckData>(DocumentType.class);
-        final var microblinkCheckResults = new ArrayList<String>();
-        final var documentVerificationResults = new ArrayList<DocumentVerificationResult>();
-        final var rejectedDocumentUploadIds = new ArrayList<String>();
+        final var documentVerificationResultBundles = uploadIds.stream()
+                .map(uploadId -> verifyDocument(documentsVerificationByUploadId, uploadId))
+                .toList();
 
-        for (final var uploadId : uploadIds) {
-            final var documentVerification = Optional.ofNullable(documentsVerificationByUploadId.getOrDefault(uploadId, null))
-                    .orElseThrow(() -> new DocumentVerificationException("No document verification data found for uploadId: " + uploadId));
+        final var documentResults = documentVerificationResultBundles.stream()
+                .map(DocumentVerificationResultBundle::result)
+                .toList();
 
-            final var documentType = documentVerification.getType();
-            final var documentResult = documentVerification.getResults()
-                    .stream()
-                    .findFirst()
-                    .orElseThrow(() -> new DocumentVerificationException("No document result data found for uploadId: " + documentVerification.getUploadId()));
-
-            final var microblinkResponseBundle = parseMicroblinkResponse(documentResult.getVerificationResult());
-            final var microblinkResponse = microblinkResponseBundle.getParsedResponseBody();
-
-            final var microblinkCheckResult = microblinkResponse.verification().result();
-            microblinkCheckResults.add(microblinkCheckResult);
-
-            if (properties.isExtractedDataCheckEnabled() && !crosscheckDataByDocumentType.containsKey(documentType)) {
-                final var extractedType = microblinkResponse.extraction().classInfo().type();
-                verifyDocumentType(documentType, extractedType);
-
-                final var overallExtraction = microblinkResponse.extraction().overall();
-                final var crosscheckData = buildCrosscheckData(overallExtraction);
-                crosscheckDataByDocumentType.put(documentType, crosscheckData);
-            }
-
-            final var documentVerificationResult = new DocumentVerificationResult();
-            documentVerificationResult.setUploadId(documentVerification.getUploadId());
-            documentVerificationResult.setVerificationResult(documentResult.getVerificationResult());
-            documentVerificationResult.setExtractedData(documentResult.getExtractedData());
-            documentVerificationResult.setVerificationScore(convertScore(microblinkResponse.verification().certaintyLevel()));
-
-            if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
-                final var rejectReasons = microblinkResponse.messages()
-                        .stream()
-                        .map(DocumentVerificationResponse.Message::message)
-                        .toList();
-
-                documentVerificationResult.setRejectReason(rejectReasons.toString());
-                rejectedDocumentUploadIds.add(documentVerification.getUploadId());
-            }
-
-            documentVerificationResults.add(documentVerificationResult);
-        }
+        final var rejectReasons = documentResults.stream()
+                .filter(it -> it.getRejectReason() != null)
+                .map(it -> "uploadId=%s, rejectReason=%s".formatted(it.getUploadId(), it.getRejectReason()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
         if (properties.isExtractedDataCheckEnabled()) {
-            performDocumentsCrosscheck(crosscheckDataByDocumentType.values().stream().toList());
-        }
+            final var crosscheckDataByDocumentType = documentVerificationResultBundles.stream()
+                    .collect(Collectors.toMap(
+                            i -> i.result().getUploadId(),
+                            DocumentVerificationResultBundle::crosscheckData,
+                            (existing, replacement) -> existing
+                    ));
 
-        final var allChecksPassed = microblinkCheckResults.stream()
-                .allMatch(MICROBLINK_VALIDATION_PASS_RESULT::equalsIgnoreCase);
+            final var crosscheckResult = performDocumentsCrosscheck(crosscheckDataByDocumentType);
+            final var crosscheckPassed = crosscheckResult.passed();
+            final var crosscheckFailedFields = crosscheckResult.failedFields();
+
+            logger.info("Document data crosscheck passed: {}, failedFields: {}, uploadIds: {}", crosscheckPassed, crosscheckFailedFields, uploadIds);
+
+            if (!crosscheckPassed) {
+                rejectReasons.add("Document data crosscheck failed for fields: %s".formatted(crosscheckFailedFields));
+            }
+        }
 
         final var result = new DocumentsVerificationResult();
         result.setVerificationId(verificationId);
-        result.setStatus(allChecksPassed ? DocumentVerificationStatus.ACCEPTED : DocumentVerificationStatus.REJECTED);
-        result.setResults(documentVerificationResults);
+        result.setResults(documentResults);
 
-        if (!rejectedDocumentUploadIds.isEmpty()) {
-            result.setRejectReason("Rejected document upload ids: " + rejectedDocumentUploadIds);
+        if (rejectReasons.isEmpty()) {
+            result.setStatus(DocumentVerificationStatus.ACCEPTED);
+        } else {
+            result.setStatus(DocumentVerificationStatus.REJECTED);
+            result.setRejectReason(rejectReasons.toString());
         }
 
         return result;
     }
 
-    private static int convertScore(final String source) {
+    private DocumentVerificationResultBundle verifyDocument(
+            final Map<String, DocumentVerificationEntity> documentsVerificationByUploadId,
+            final String uploadId
+    ) {
+        if (!documentsVerificationByUploadId.containsKey(uploadId)) {
+            return createDocumentVerificationResultBundle(uploadId, null, "Document verification data not found", null, null);
+        }
+
+        final var documentVerification = documentsVerificationByUploadId.get(uploadId);
+
+        final var documentType = documentVerification.getType();
+        final var documentResult = documentVerification.getResults()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        if (documentResult == null) {
+            return createDocumentVerificationResultBundle(uploadId, null, "Document result not found", null, null);
+        }
+
+        final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult());
+        if (microblinkResponse == null) {
+            return createDocumentVerificationResultBundle(uploadId, null, "Failed to parse provider response", null, null);
+        }
+
+        final var microblinkVerification = Optional.of(microblinkResponse)
+                .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+                .map(DocumentVerificationResponse::verification);
+        final var microblinkCheckResult = microblinkVerification.map(DocumentVerificationResponse.Verification::result)
+                .orElse(null);
+        final var score = microblinkVerification.map(DocumentVerificationResponse.Verification::certaintyLevel)
+                .map(MicroblinkDocumentVerificationProvider::convertScore)
+                .orElse(null);
+
+        if (!MICROBLINK_VALIDATION_PASS_RESULT.equalsIgnoreCase(microblinkCheckResult)) {
+            final var rejectReasons = Optional.of(microblinkResponse)
+                    .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+                    .map(DocumentVerificationResponse::messages)
+                    .orElse(List.of())
+                    .stream()
+                    .map(message -> "%s %s".formatted(message.code(), message.message()))
+                    .toList();
+
+            return createDocumentVerificationResultBundle(uploadId, documentResult, rejectReasons.toString(), score, null);
+        }
+
+        DocumentCrosscheckData crosscheckData = null;
+        if (properties.isExtractedDataCheckEnabled()) {
+            final var extraction = Optional.of(microblinkResponse)
+                    .map(DocumentVerificationResponseBundle::getParsedResponseBody)
+                    .map(DocumentVerificationResponse::extraction);
+
+            final var extractedType = extraction.map(DocumentVerificationResponse.Extraction::classInfo)
+                    .map(DocumentVerificationResponse.ExtractionClassInfo::type)
+                    .orElse(null);
+
+            final var isDocumentTypeValid = verifyDocumentType(uploadId, documentType, extractedType);
+
+            if (!isDocumentTypeValid) {
+                final var rejectReason = "Extracted document type %s does not match claimed type %s".formatted(extractedType, documentType);
+                return createDocumentVerificationResultBundle(uploadId, documentResult, rejectReason, score, null);
+            }
+
+            final var extractedData = extraction.map(DocumentVerificationResponse.Extraction::overall)
+                    .orElse(List.of());
+
+            crosscheckData = buildCrosscheckData(extractedData);
+        }
+
+        return createDocumentVerificationResultBundle(uploadId, documentResult, null, score, crosscheckData);
+    }
+
+    private static DocumentVerificationResultBundle createDocumentVerificationResultBundle(
+            final String uploadId,
+            final DocumentResultEntity documentResultEntity,
+            final String rejectReason,
+            final Integer score,
+            final DocumentCrosscheckData crosscheckData
+    ) {
+        final var result = new DocumentVerificationResult();
+        result.setUploadId(uploadId);
+
+        if (documentResultEntity != null) {
+            result.setVerificationResult(documentResultEntity.getVerificationResult());
+            result.setExtractedData(documentResultEntity.getExtractedData());
+        }
+
+        result.setRejectReason(rejectReason);
+        result.setVerificationScore(score);
+
+        final var finalCrosscheckData = Optional.ofNullable(crosscheckData)
+                .orElse(DocumentCrosscheckData.builder().build());
+
+        return DocumentVerificationResultBundle.builder()
+                .result(result)
+                .crosscheckData(finalCrosscheckData)
+                .build();
+    }
+
+    private static Integer convertScore(final String source) {
         if (source == null) {
             return 0;
         }
@@ -711,25 +792,25 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static DocumentCrosscheckData buildCrosscheckData(final List<DocumentVerificationResponse.Result> documentExtractedData) throws DocumentVerificationException {
+    private static DocumentCrosscheckData buildCrosscheckData(final List<DocumentVerificationResponse.Result> documentExtractedData) {
         final var firstName = documentExtractedData.stream()
                 .filter(r -> "FirstName".equals(r.field()))
                 .findFirst()
                 .map(DocumentVerificationResponse.Result::value)
                 .map(String::toLowerCase)
-                .orElseThrow(() -> new DocumentVerificationException("Field FirstName not found in extracted data"));
+                .orElse(null);
 
         final var lastName = documentExtractedData.stream()
                 .filter(r -> "LastName".equals(r.field()))
                 .findFirst()
                 .map(DocumentVerificationResponse.Result::value)
                 .map(String::toLowerCase)
-                .orElseThrow(() -> new DocumentVerificationException("Field LastName not found in extracted data"));
+                .orElse(null);
 
         final var dateOfBirthResult = documentExtractedData.stream()
                 .filter(r -> "DateOfBirth".equals(r.field()))
                 .findFirst()
-                .orElseThrow(() -> new DocumentVerificationException("Field DateOfBirth not found in extracted data"));
+                .orElse(null);
 
         final var dateOfBirth = parseDate(dateOfBirthResult);
 
@@ -740,55 +821,66 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .build();
     }
 
-    private static LocalDate parseDate(final DocumentVerificationResponse.Result result) throws DocumentVerificationException {
-        final var year = Optional.ofNullable(result.year())
-                .orElseThrow(() -> new DocumentVerificationException("Year of field DateOfBirth was not extracted"));
-
-        final var month = Optional.ofNullable(result.month())
-                .orElseThrow(() -> new DocumentVerificationException("Month of field DateOfBirth was not extracted"));
-
-        final var day = Optional.ofNullable(result.day())
-                .orElseThrow(() -> new DocumentVerificationException("Day of field DateOfBirth was not extracted"));
-
-        return LocalDate.of(year, month, day);
-    }
-    private static void performDocumentsCrosscheck(final List<DocumentCrosscheckData> documentsCrosscheckData) throws DocumentVerificationException {
-        performDocumentFieldCrosscheck("firstName", documentsCrosscheckData, DocumentCrosscheckData::firstName);
-        performDocumentFieldCrosscheck("lastName", documentsCrosscheckData, DocumentCrosscheckData::lastName);
-        performDocumentFieldCrosscheck("dateOfBirth", documentsCrosscheckData, DocumentCrosscheckData::dateOfBirth);
-    }
-
-    private static void performDocumentFieldCrosscheck(
-            final String fieldName,
-            final List<DocumentCrosscheckData> documentsCrosscheckData,
-            final Function<DocumentCrosscheckData, Object> fieldExtractor
-    ) throws DocumentVerificationException {
-        final var checkPassed = documentsCrosscheckData.stream()
-                .map(fieldExtractor)
-                .distinct()
-                .count() <= 1;
-
-        if (!checkPassed) {
-            throw new DocumentVerificationException("Crosscheck failed for field %s".formatted(fieldName));
+    private static LocalDate parseDate(final DocumentVerificationResponse.Result result) {
+        try {
+            return LocalDate.of(result.year(), result.month(), result.day());
+        } catch (final RuntimeException e) {
+            return null;
         }
     }
 
-    private static void verifyDocumentType(final DocumentType claimedDocumentType, final String extractedType) throws DocumentVerificationException {
+    private static CrosscheckResult performDocumentsCrosscheck(final Map<String, DocumentCrosscheckData> crosscheckDataByDocumentType) {
+
+        final var crosscheckData = crosscheckDataByDocumentType.values();
+
+        final var failedFields = new ArrayList<String>();
+        failedFields.add(performFieldCrosscheck("firstName", crosscheckData, DocumentCrosscheckData::firstName));
+        failedFields.add(performFieldCrosscheck("lastName", crosscheckData, DocumentCrosscheckData::lastName));
+        failedFields.add(performFieldCrosscheck("dateOfBirth", crosscheckData, DocumentCrosscheckData::dateOfBirth));
+
+        final var passed = failedFields.stream()
+                .allMatch(Objects::isNull);
+
+        return CrosscheckResult.builder()
+                .passed(passed)
+                .failedFields(failedFields)
+                .build();
+    }
+
+    private static String performFieldCrosscheck(
+            final String fieldName,
+            final Collection<DocumentCrosscheckData> documentsCrosscheckData,
+            final Function<DocumentCrosscheckData, Object> fieldExtractor
+    ) {
+        final var values = documentsCrosscheckData.stream()
+                .map(fieldExtractor)
+                .distinct()
+                .toList();
+
+        final var checkPassed = values.size() == 1 && !values.contains(null);
+
+        return checkPassed ? null : fieldName;
+    }
+
+    private static boolean verifyDocumentType(final String uploadId, final DocumentType claimedDocumentType, final String extractedType) {
+        if (extractedType == null) {
+            logger.warn("Extracted document type is missing for document uploadId={}", uploadId);
+            return false;
+        }
+
         final var extractedDocumentType = switch (extractedType) {
             case "Id" -> DocumentType.ID_CARD;
             case "Passport" -> DocumentType.PASSPORT;
             case "Dl" -> DocumentType.DRIVING_LICENSE;
-            default -> throw new DocumentVerificationException("Unsupported extracted document type %s".formatted(extractedType));
+            default -> DocumentType.UNKNOWN;
         };
 
-        if (extractedDocumentType != claimedDocumentType) {
-            throw new DocumentVerificationException(
-                    "Extracted document type %s does not match claimed type %s".formatted(
-                            extractedDocumentType,
-                            claimedDocumentType
-                    )
-            );
+        if (extractedDocumentType == DocumentType.UNKNOWN) {
+            logger.warn("Unsupported document type '{}' for document uploadId={}", uploadId, extractedType);
+            return false;
         }
+
+        return extractedDocumentType == claimedDocumentType;
     }
 
     private static DocumentDataEntity buildDocumentData(final DocumentVerificationData document) {
@@ -822,5 +914,17 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             String firstName,
             String lastName,
             LocalDate dateOfBirth
+    ) {}
+
+    @Builder
+    record DocumentVerificationResultBundle(
+            DocumentVerificationResult result,
+            DocumentCrosscheckData crosscheckData
+    ) {}
+
+    @Builder
+    record CrosscheckResult(
+            boolean passed,
+            List<String> failedFields
     ) {}
 }
