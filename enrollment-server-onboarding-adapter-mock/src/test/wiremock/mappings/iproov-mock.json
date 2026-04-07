@@ -16,7 +16,7 @@
     {
       "request": {
         "method": "GET",
-        "urlPathPattern": "/users/.*"
+        "urlPathPattern": "/api/v2/users/.*"
       },
       "response": {
         "status": 400,
