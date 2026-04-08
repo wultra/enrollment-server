@@ -86,6 +86,7 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
                 .userId("mock_user")
+                .consentRequired(false)
                 .build());
 
         final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
@@ -120,6 +121,7 @@ class OnboardingServiceImplTest {
 
         final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
         assertTrue(process.isPresent());
+        assertTrue(process.get().getConsentAccepted());
         assertEquals(initResponse.getActivationId(), process.get().getActivationId());
     }
 
@@ -134,6 +136,7 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
                 .userId("mock_user")
+                .consentRequired(true)
                 .build());
 
         final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
@@ -155,6 +158,10 @@ class OnboardingServiceImplTest {
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNull(result.activationCode());
         assertEquals(ActivationType.IDENTITY, result.activationType());
+
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
+        assertTrue(process.isPresent());
+        assertFalse(process.get().getConsentAccepted());
     }
 
     @Test
