@@ -18,7 +18,7 @@
     </changeSet>
 
     <changeSet id="2" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_onboarding_process_timestamp_identity_data_cleaned_idx"/>
             </not>
@@ -32,7 +32,7 @@
     </changeSet>
 
     <changeSet id="3" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_onboarding_process_timestamp_finished_idx" />
             </not>
@@ -46,7 +46,7 @@
     </changeSet>
 
     <changeSet id="4" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_onboarding_process_timestamp_failed_idx" />
             </not>
@@ -60,7 +60,7 @@
     </changeSet>
 
     <changeSet id="5" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_identity_verification_process_id_idx" />
             </not>

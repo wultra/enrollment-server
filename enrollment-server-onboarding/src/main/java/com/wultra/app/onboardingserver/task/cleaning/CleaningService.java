@@ -191,7 +191,7 @@ class CleaningService {
             processIds.add(dataIdsItem.getProcessId());
             identityVerificationIds.add(dataIdsItem.getIdentityVerificationId());
             documentVerificationIds.add(dataIdsItem.getDocumentVerificationId());
-            Optional.of(dataIdsItem.getUploadId())
+            Optional.ofNullable(dataIdsItem.getUploadId())
                     .ifPresent(uploadIds::add);
 
             counter++;
