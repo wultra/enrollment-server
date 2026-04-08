@@ -90,30 +90,6 @@ class CleaningServiceTest {
 
     @Test
     @Sql
-    void testCleanupDocumentData() {
-        final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
-        final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
-
-        tested.cleanupDocumentData();
-
-        assertNotNull(fetchDocumentData(id1));
-        assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");
-    }
-
-    @Test
-    @Sql
-    void testCleanupProcessedDocumentData() {
-        final var idToBeKept = "e3b0c442-98fc-4c4a-9c1f-0e4e2b7b5b6a";
-        final var idToBeDeleted = "7f6d2c3a-1b4e-4a8e-9d7c-3f2e1a5c9b8d";
-
-        tested.cleanupProcessedDocumentData();
-
-        assertNotNull(fetchProcessedDocumentData(idToBeKept));
-        assertNull(fetchProcessedDocumentData(idToBeDeleted));
-    }
-
-    @Test
-    @Sql
     void testTerminateExpiredProcesses() {
         final String processId1 = "11111111-df91-4053-bb3d-3970979baf5d";
         final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";

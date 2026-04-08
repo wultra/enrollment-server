@@ -27,6 +27,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Repository for {@link SelfieEntity}.
@@ -45,4 +46,13 @@ public interface SelfieRepository extends CrudRepository<SelfieEntity, Long> {
     @Modifying
     @Query("DELETE FROM SelfieEntity s WHERE s.identityVerification.id = :identityVerificationId")
     void deleteAllByIdentityVerificationId(final String identityVerificationId);
+
+    /**
+     * Deletes all records by identity verification IDs.
+     *
+     * @param identityVerificationIds identity verification IDs to be deleted
+     */
+    @Modifying
+    @Query("DELETE FROM SelfieEntity s WHERE s.identityVerification.id IN :identityVerificationIds")
+    void deleteAllByIdentityVerificationIds(final Set<String> identityVerificationIds);
 }

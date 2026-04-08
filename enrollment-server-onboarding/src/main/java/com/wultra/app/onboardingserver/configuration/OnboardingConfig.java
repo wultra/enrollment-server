@@ -59,4 +59,10 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.default-type:}")
     private String defaultProcessType;
 
+    /**
+     * How long are identity data (e.g. selfie, uploaded documents) kept in database after the process is completed.
+     */
+    @Value("${enrollment-server-onboarding.onboarding-process.completedProcessDataRetentionTime:1h}")
+    private Duration completedProcessDataRetentionTime;
+
 }

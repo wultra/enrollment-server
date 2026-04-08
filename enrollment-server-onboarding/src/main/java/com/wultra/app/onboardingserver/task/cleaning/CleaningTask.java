@@ -88,42 +88,6 @@ public class CleaningTask {
         cleaningService.terminateExpiredProcesses();
     }
 
-    /**
-     * Clean selfie images.
-     */
-    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
-    @SchedulerLock(name = SchedulerLockNames.CLEANUP_SELFIES_LOCK, lockAtMostFor = "5m")
-    public void cleanupSelfies() {
-        logger.info("action: cleanupSelfies, state: initiated");
-        LockAssert.assertLocked();
-        final int count = cleaningService.cleanSelfies();
-        logger.info("action: cleanupSelfies, state: succeeded, count: {}", count);
-    }
-
-    /**
-     * Cleanup of document data older than retention time.
-     */
-    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")
-    @SchedulerLock(name = SchedulerLockNames.DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
-    public void cleanupDocumentData() {
-        LockAssert.assertLocked();
-        logger.debug("action: cleanupDocumentData, state: initiated");
-        final var count = cleaningService.cleanupDocumentData();
-        logger.debug("action: cleanupDocumentData, state: succeeded, cleanedRecords: {}", count);
-    }
-
-    /**
-     * Cleanup of processed document data older than retention time.
-     */
-    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")
-    @SchedulerLock(name = SchedulerLockNames.PROCESSED_DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
-    public void cleanupProcessedDocumentData() {
-        LockAssert.assertLocked();
-        logger.debug("action: cleanupProcessedDocumentData, state: initiated");
-        final var count = cleaningService.cleanupProcessedDocumentData();
-        logger.debug("action: cleanupProcessedDocumentData, state: succeeded, cleanedRecords: {}", count);
-    }
-
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
     @SchedulerLock(name = SchedulerLockNames.EXPIRE_DOCUMENT_VERIFICATION_LOCK, lockAtMostFor = "5m")
     public void terminateExpiredDocumentVerifications() {
@@ -149,5 +113,17 @@ public class CleaningTask {
         LockAssert.assertLocked();
         logger.debug("cleanupActivations");
         activationCleaningService.cleanupActivations();
+    }
+
+    /**
+     * Cleanup identity data of completed onboarding processes.
+     */
+    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT10S")
+    @SchedulerLock(name = SchedulerLockNames.CLEANUP_COMPLETED_PROCESS_IDENTITY_DATA_LOCK, lockAtMostFor = "5m")
+    public void cleanupCompletedProcessIdentityData() {
+        logger.info("action: cleanupCompletedProcessIdentityData, state: initiated");
+        LockAssert.assertLocked();
+        cleaningService.cleanupCompletedProcessIdentityData();
+        logger.info("action: cleanupCompletedProcessIdentityData, state: succeeded");
     }
 }

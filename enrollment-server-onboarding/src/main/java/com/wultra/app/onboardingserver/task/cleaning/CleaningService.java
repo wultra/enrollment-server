@@ -32,9 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -133,34 +131,6 @@ class CleaningService {
     }
 
     /**
-     * Clean selfie images.
-     *
-     * @return Number of deleted selfie images.
-     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
-     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
-     */
-    @Transactional
-    public int cleanSelfies() {
-        return selfieRepository.cleanup(getProcessExpirationTime());
-    }
-
-    /**
-     * Clean document data.
-     */
-    @Transactional
-    public int cleanupDocumentData() {
-        return documentDataRepository.cleanupDocumentData(getProcessExpirationTime());
-    }
-
-    /**
-     * Clean processed document data.
-     */
-    @Transactional
-    public int cleanupProcessedDocumentData() {
-        return processedDocumentDataRepository.cleanup(getProcessExpirationTime());
-    }
-
-    /**
      * Terminate expired document verifications.
      */
     @Transactional
@@ -197,8 +167,51 @@ class CleaningService {
         }
     }
 
-    private Date getProcessExpirationTime() {
-        return DateUtil.convertExpirationToCreatedDate(onboardingConfig.getProcessExpirationTime());
+    /**
+     * Cleanup identity data of completed processes after the retention time.
+     */
+    @Transactional
+    public void cleanupCompletedProcessIdentityData() {
+        final var retentionTime = DateUtil.convertExpirationToCreatedDate(onboardingConfig.getCompletedProcessDataRetentionTime());
+
+        final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime);
+        logger.debug("Data records of completed processes to be deleted: count={}, retentionTime={}", dataIds.size(), retentionTime);
+
+        if (dataIds.isEmpty()) {
+            return;
+        }
+
+        final var identityVerificationIds = new HashSet<String>();
+        final var documentVerificationIds = new HashSet<String>();
+        final var uploadIds = new HashSet<String>();
+
+        var counter = 0;
+        for (final var dataIdsItem : dataIds) {
+            identityVerificationIds.add(dataIdsItem.getIdentityVerificationId());
+            documentVerificationIds.add(dataIdsItem.getDocumentVerificationId());
+            uploadIds.add(dataIdsItem.getUploadId());
+            counter++;
+
+            if (counter % BATCH_SIZE == 0) {
+                cleanCompletedProcessIdentityData(identityVerificationIds, documentVerificationIds, uploadIds);
+
+                identityVerificationIds.clear();
+                documentVerificationIds.clear();
+                uploadIds.clear();
+            }
+        }
+
+        if (counter % BATCH_SIZE != 0) {
+            cleanCompletedProcessIdentityData(identityVerificationIds, documentVerificationIds, uploadIds);
+        }
+
+        logger.info("Deleted {} data records of completed processes", counter);
+    }
+
+    private void cleanCompletedProcessIdentityData(final Set<String> identityVerificationIds, final Set<String> documentVerificationIds, final Set<String> uploadIds) {
+        selfieRepository.deleteAllByIdentityVerificationIds(identityVerificationIds);
+        processedDocumentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
+        documentDataRepository.deleteAllById(uploadIds);
     }
 
     private Date getVerificationExpirationTime() {

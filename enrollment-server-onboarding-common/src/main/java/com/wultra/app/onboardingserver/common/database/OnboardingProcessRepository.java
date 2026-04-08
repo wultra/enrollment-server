@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessIdentityDataIdsView;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
@@ -195,5 +196,24 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "p.errorOrigin = :errorOrigin " +
             "WHERE p.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
+
+    /**
+     * Finds all identity data IDs for completed processes to be cleaned up.
+     *
+     * @param statuses statuses of completed processes
+     * @param processCompletedBefore time before which the process must have been completed to be included in the result
+     * @return list of identity data IDs for completed processes to be cleaned up
+     */
+    @Query("""
+        SELECT iv.id AS identityVerificationId,
+               dv.id AS documentVerificationId,
+               dv.uploadId AS uploadId
+        FROM OnboardingProcessEntity p
+        JOIN IdentityVerificationEntity iv ON iv.processId = p.id
+        JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
+        WHERE p.status IN :statuses
+          AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
+        """)
+    List<OnboardingProcessIdentityDataIdsView> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore);
 
 }

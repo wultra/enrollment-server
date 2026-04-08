@@ -48,4 +48,13 @@ public interface ProcessedDocumentDataRepository extends CrudRepository<Processe
 
     @Query("SELECT p FROM ProcessedDocumentDataEntity p WHERE p.documentVerificationId IN :documentVerificationIds")
     List<ProcessedDocumentDataEntity> findAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
+
+    /**
+     * Deletes all records by document verification IDs.
+     *
+     * @param documentVerificationIds document verification IDs to be deleted
+     */
+    @Modifying
+    @Query("DELETE FROM ProcessedDocumentDataEntity p WHERE p.documentVerificationId IN :documentVerificationIds")
+    void deleteAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
 }
