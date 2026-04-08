@@ -55,6 +55,6 @@ public enum OnboardingStatus {
     /**
      * Set of statuses representing completed onboarding process.
      */
-    public static final Set<OnboardingStatus> COMPLETED = Set.of(ACTIVATION_IN_PROGRESS, VERIFICATION_IN_PROGRESS);
+    public static final Set<OnboardingStatus> COMPLETED = Set.of(FINISHED, FAILED);
 
 }
