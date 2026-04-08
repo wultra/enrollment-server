@@ -214,6 +214,7 @@ public class DocumentProcessingService {
      * @param identityVerification Identity verification entity.
      * @param ownerId Owner identification.
      * @return document submit result
+     * @see #submitDocumentToProvider(OwnerId, DocumentVerificationEntity, SubmittedDocument)
      */
     private DocumentsSubmitResult submitDocumentToProvider(final List<SubmittedDocument> submittedDocs,
                                                            final List<DocumentVerificationEntity> docVerifications,
@@ -253,6 +254,15 @@ public class DocumentProcessingService {
         }
     }
 
+    /**
+     * Pass a single page of a document to document verification provider.
+     *
+     * @param submittedDoc Document page to submit.
+     * @param docVerification Entity associated with the document page to submit.
+     * @param ownerId Owner identification.
+     * @return document submit result
+     * @see #submitDocumentToProvider(List, List, IdentityVerificationEntity, OwnerId)
+     */
     public DocumentSubmitResult submitDocumentToProvider(OwnerId ownerId, DocumentVerificationEntity docVerification, SubmittedDocument submittedDoc) {
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
