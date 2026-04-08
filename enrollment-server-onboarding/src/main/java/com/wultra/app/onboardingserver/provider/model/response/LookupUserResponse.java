@@ -40,9 +40,7 @@ public final class LookupUserResponse {
     @NonNull
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    private boolean consentRequired;
 
     /**
      * Whether business logic error occurred during user lookup.

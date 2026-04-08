@@ -55,6 +55,7 @@ import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequ
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
@@ -541,7 +542,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUserService.lookupUser(process, request.identification()).orElse(null);
+        final String userId = lookupUserService.lookupUser(process, request.identification())
+                .map(LookupUserResponse::getUserId)
+                .orElse(null);
         process.setUserId(userId);
         auditService.audit(process, "Process started for user: {}", userId);
         return process;
@@ -596,7 +599,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
         setProcessCustomData(process, fdsData, requestContext);
-        final String userId = lookupUserService.lookupUser(process, identification).orElse(null);
+        final String userId = lookupUserService.lookupUser(process, identification)
+                .map(LookupUserResponse::getUserId)
+                .orElse(null);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
                     String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",

@@ -184,7 +184,7 @@ Service to identify the prospect and assign user identifier.
 }
 ```
 
-##### Response  Params
+##### Response Params
 
 | Attribute                      | Type      | Description                                                                                                                            |
 |:-------------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|

@@ -30,7 +30,7 @@ class UserLookupResponseDto {
     private String userId;
 
     /**
-     * If consent if required or not, for our flow it is always true
+     * If consent is required or not.
      */
     private Boolean consentRequired;
 
