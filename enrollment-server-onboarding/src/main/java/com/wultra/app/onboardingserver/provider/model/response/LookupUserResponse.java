@@ -52,4 +52,13 @@ public final class LookupUserResponse {
      */
     private String errorDetail;
 
+    /**
+     * Whether consent is not required.
+     *
+     * @return {@code true} if consent is not required, {@code false} otherwise.
+     */
+    public boolean isConsentNotRequired() {
+        return !isConsentRequired();
+    }
+
 }

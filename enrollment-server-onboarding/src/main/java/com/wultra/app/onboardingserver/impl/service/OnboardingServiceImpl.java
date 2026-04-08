@@ -542,11 +542,11 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUserService.lookupUser(process, request.identification())
-                .map(LookupUserResponse::getUserId)
-                .orElse(null);
+        final Optional<LookupUserResponse> lookupUserResponse = lookupUserService.lookupUser(process, request.identification());
+        final String userId = lookupUserResponse.map(LookupUserResponse::getUserId).orElse(null);
         process.setUserId(userId);
-        auditService.audit(process, "Process started for user: {}", userId);
+        process.setConsentAccepted(lookupUserResponse.map(LookupUserResponse::isConsentNotRequired).orElse(false));
+        auditService.audit(process, "Process started for user: {}", process.getUserId());
         return process;
     }
 
