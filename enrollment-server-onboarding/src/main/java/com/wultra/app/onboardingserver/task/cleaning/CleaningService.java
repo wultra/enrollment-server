@@ -175,26 +175,29 @@ class CleaningService {
         final var retentionTime = DateUtil.convertExpirationToCreatedDate(onboardingConfig.getCompletedProcessDataRetentionTime());
 
         final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime);
-        logger.debug("Data records of completed processes to be deleted: count={}, retentionTime={}", dataIds.size(), retentionTime);
+        logger.info("Found {} data records of completed processes for cleanup. Retention time: {}", dataIds.size(), retentionTime);
 
         if (dataIds.isEmpty()) {
             return;
         }
 
+        final var processIds = new HashSet<String>();
         final var identityVerificationIds = new HashSet<String>();
         final var documentVerificationIds = new HashSet<String>();
         final var uploadIds = new HashSet<String>();
 
         var counter = 0;
         for (final var dataIdsItem : dataIds) {
+            processIds.add(dataIdsItem.getProcessId());
             identityVerificationIds.add(dataIdsItem.getIdentityVerificationId());
             documentVerificationIds.add(dataIdsItem.getDocumentVerificationId());
             uploadIds.add(dataIdsItem.getUploadId());
             counter++;
 
             if (counter % BATCH_SIZE == 0) {
-                cleanCompletedProcessIdentityData(identityVerificationIds, documentVerificationIds, uploadIds);
+                cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds, uploadIds);
 
+                processIds.clear();
                 identityVerificationIds.clear();
                 documentVerificationIds.clear();
                 uploadIds.clear();
@@ -202,16 +205,22 @@ class CleaningService {
         }
 
         if (counter % BATCH_SIZE != 0) {
-            cleanCompletedProcessIdentityData(identityVerificationIds, documentVerificationIds, uploadIds);
+            cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds, uploadIds);
         }
 
         logger.info("Deleted {} data records of completed processes", counter);
     }
 
-    private void cleanCompletedProcessIdentityData(final Set<String> identityVerificationIds, final Set<String> documentVerificationIds, final Set<String> uploadIds) {
+    private void cleanCompletedProcessIdentityData(
+            final Set<String> processIds,
+            final Set<String> identityVerificationIds,
+            final Set<String> documentVerificationIds,
+            final Set<String> uploadIds
+    ) {
         selfieRepository.deleteAllByIdentityVerificationIds(identityVerificationIds);
         processedDocumentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
         documentDataRepository.deleteAllById(uploadIds);
+        onboardingProcessRepository.updateIdentityDataCleanup(processIds, new Date());
     }
 
     private Date getVerificationExpirationTime() {

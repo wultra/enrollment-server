@@ -205,7 +205,8 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      * @return list of identity data IDs for completed processes to be cleaned up
      */
     @Query("""
-        SELECT iv.id AS identityVerificationId,
+        SELECT p.id AS processId,
+               iv.id AS identityVerificationId,
                dv.id AS documentVerificationId,
                dv.uploadId AS uploadId
         FROM OnboardingProcessEntity p
@@ -213,7 +214,21 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
         JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
         WHERE p.status IN :statuses
           AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
+          AND p.timestampIdentityDataCleaned IS NULL
         """)
     List<OnboardingProcessIdentityDataIdsView> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore);
 
+    /**
+     * Sets identity data cleaned timestamp.
+     *
+     * @param ids process IDs where the timestamp will be set
+     * @param timestamp timestamp to be set
+     */
+    @Modifying
+    @Query("""
+            UPDATE OnboardingProcessEntity p SET
+                    p.timestampIdentityDataCleaned = :timestamp
+            WHERE p.id IN :ids
+        """)
+    void updateIdentityDataCleanup(final Set<String> ids, final Date timestamp);
 }

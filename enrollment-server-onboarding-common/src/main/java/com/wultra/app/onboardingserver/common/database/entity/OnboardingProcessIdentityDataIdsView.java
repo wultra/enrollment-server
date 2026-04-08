@@ -27,6 +27,13 @@ package com.wultra.app.onboardingserver.common.database.entity;
 public interface OnboardingProcessIdentityDataIdsView {
 
     /**
+     * Gets {@link OnboardingProcessEntity#id}.
+     *
+     * @return onboarding process ID
+     */
+    String getProcessId();
+
+    /**
      * Gets linked {@link IdentityVerificationEntity#id}.
      *
      * @return identity verification ID
