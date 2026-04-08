@@ -18,3 +18,13 @@ Added a new indexed column `subject_id` holding an identifier linking the audit 
 <!-- begin box warning -->
 The auditing tables may be already updated in your database schema if the database schema is not separated for different PowerAuth applications. In case the column `audit_log.subject_id` and its index `audit_log_subject_id_idx` are already present, you can safely skip this migration step.
 <!-- end -->
+
+
+### Onboarding process identity data retention
+
+The identity data retention period is configured in the new `property enrollment-server-onboarding.onboarding-process.completedProcessDataRetentionTime`.
+The retention period is measured from the process completion time—either the `timestamp_finished` or `timestamp_failed` column in the `es_onboarding_process` table.
+After this period, records linked to the process are deleted from the following tables:
+- `es_document_data`
+- `es_processed_document_data`
+- `es_selfie`
