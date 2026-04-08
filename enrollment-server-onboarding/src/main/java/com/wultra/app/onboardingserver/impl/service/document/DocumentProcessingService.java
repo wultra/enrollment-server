@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -213,6 +214,7 @@ public class DocumentProcessingService {
      * @param identityVerification Identity verification entity.
      * @param ownerId Owner identification.
      * @return document submit result
+     * @see #submitDocumentToProvider(OwnerId, DocumentVerificationEntity, SubmittedDocument)
      */
     private DocumentsSubmitResult submitDocumentToProvider(final List<SubmittedDocument> submittedDocs,
                                                            final List<DocumentVerificationEntity> docVerifications,
@@ -225,6 +227,7 @@ public class DocumentProcessingService {
             final DocumentsSubmitResult results = documentVerificationProvider.submitDocuments(ownerId, submittedDocs);
             logger.debug("Documents {} submitted to provider, {}", docVerifications, ownerId);
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document IDs: {}", ownerId.getUserId(), docVerificationIds);
+            auditVerificationResponse(results, identityVerification, ownerId);
             return results;
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage(), e);
@@ -240,6 +243,26 @@ public class DocumentProcessingService {
 
     }
 
+    private void auditVerificationResponse(final DocumentsSubmitResult results, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
+        final String provider = identityVerificationConfig.getDocumentVerificationProvider();
+        if (!CollectionUtils.isEmpty(results.getAuditData())) {
+            for (var entry : results.getAuditData().entrySet()) {
+                auditService.auditDocumentVerificationProvider(ownerId, identityVerification, entry.getValue(), "Document verification response, user: {}, provider: {}, documentType: {}", ownerId.getUserId(), provider, entry.getKey());
+            }
+        } else {
+            logger.debug("No audit data available for document verification response, userId: {}, provider: {}", ownerId.getUserId(), provider);
+        }
+    }
+
+    /**
+     * Pass a single page of a document to document verification provider.
+     *
+     * @param submittedDoc Document page to submit.
+     * @param docVerification Entity associated with the document page to submit.
+     * @param ownerId Owner identification.
+     * @return document submit result
+     * @see #submitDocumentToProvider(List, List, IdentityVerificationEntity, OwnerId)
+     */
     public DocumentSubmitResult submitDocumentToProvider(OwnerId ownerId, DocumentVerificationEntity docVerification, SubmittedDocument submittedDoc) {
         DocumentsSubmitResult docsSubmitResults;
         DocumentSubmitResult docSubmitResult;
@@ -247,6 +270,7 @@ public class DocumentProcessingService {
             docsSubmitResults = documentVerificationProvider.submitDocuments(ownerId, List.of(submittedDoc));
             final IdentityVerificationEntity identityVerification = docVerification.getIdentityVerification();
             auditService.auditDocumentVerificationProvider(identityVerification, "Submit documents for user: {}, document ID: {}", ownerId.getUserId(), docVerification.getId());
+            auditVerificationResponse(docsSubmitResults, identityVerification, ownerId);
             docSubmitResult = docsSubmitResults.getResults().get(0);
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
             logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage(), e);

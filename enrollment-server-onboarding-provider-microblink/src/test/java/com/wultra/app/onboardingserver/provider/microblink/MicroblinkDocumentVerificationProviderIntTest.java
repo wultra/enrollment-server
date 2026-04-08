@@ -29,7 +29,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.common.service.AuditService;
 import okhttp3.mockwebserver.MockWebServer;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +42,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +54,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 
 /**
  * Integration tests for Microblink document verification provider.
@@ -132,9 +129,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Autowired
     private DocumentResultRepository documentResultRepository;
-
-    @MockitoBean
-    private AuditService auditService;
 
     private OwnerId ownerId;
 
@@ -332,7 +326,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_responseLoggedToAudit() throws Exception {
+    void testSubmitDocuments_documentWith2SidesUploaded_responseAuditData() throws Exception {
         // given
         prepareIdCardFrontDocumentVerificationInDatabase();
         prepareIdCardBackDocumentVerificationInDatabase();
@@ -345,15 +339,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
-        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+        final DocumentsSubmitResult result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(auditService).auditDocumentVerificationProvider(
-                ownerId,
-                idCardResponseWithoutPersonalDataJson,
-                "Document verification response, user: {}, provider: Microblink, documentType: {}",
-                ownerId.getUserId(),
-                DocumentType.ID_CARD);
+        final Map<DocumentType, ObjectNode> auditData = result.getAuditData();
+        assertNotNull(auditData);
+        assertEquals(1, auditData.size());
+        assertEquals(idCardResponseWithoutPersonalDataJson, auditData.get(DocumentType.ID_CARD));
     }
 
     @Test
