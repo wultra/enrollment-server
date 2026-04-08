@@ -373,6 +373,8 @@ public class DocumentProcessingService {
 
     private void processDocsSubmitResults(OwnerId ownerId, DocumentVerificationEntity docVerification,
                                           DocumentsSubmitResult docsSubmitResults, DocumentSubmitResult docSubmitResult) {
+        docVerification.setUploadId(docSubmitResult.getUploadId());
+
         if (StringUtils.isNotBlank(docSubmitResult.getErrorDetail())) {
             docVerification.setStatus(DocumentStatus.FAILED);
             docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
@@ -393,7 +395,6 @@ public class DocumentProcessingService {
             if (docVerification.getTimestampUploaded() == null) {
                 docVerification.setTimestampUploaded(ownerId.getTimestamp());
             }
-            docVerification.setUploadId(docSubmitResult.getUploadId());
 
             if (docVerification.getType() == DocumentType.SELFIE_PHOTO) {
                 final DocumentStatus status = identityVerificationConfig.isVerifySelfieWithDocumentsEnabled() ? DocumentStatus.VERIFICATION_PENDING : DocumentStatus.ACCEPTED;
