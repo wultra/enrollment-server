@@ -969,7 +969,7 @@ Handle a request for activation code in activation spawn.
 {
   "requestObject": {
     "applicationId": "app1",
-    "otp": "12345678"
+    "otp": "1234567890123456"
   }
 }
 ```
