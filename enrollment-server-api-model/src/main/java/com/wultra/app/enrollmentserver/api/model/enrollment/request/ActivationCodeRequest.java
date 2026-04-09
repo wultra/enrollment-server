@@ -36,6 +36,7 @@ public class ActivationCodeRequest {
     private String applicationId;
 
     @Schema(description = "OTP code to be used for activation.", example = "1234567890123456")
+    @NotBlank
     @Size(min = 16)
     private String otp;
 
