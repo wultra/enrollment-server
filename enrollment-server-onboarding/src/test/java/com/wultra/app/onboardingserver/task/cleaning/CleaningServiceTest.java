@@ -276,16 +276,16 @@ class CleaningServiceTest {
         entityManager.clear();
 
         final var failedProcess = fetchOnboardingProcess(failedProcessId);
-        assertEquals(System.currentTimeMillis(), failedProcess.getTimestampIdentityDataCleaned().getTime(), TIME_ASSERT_DELTA);
+        assertEquals(System.currentTimeMillis(), failedProcess.getTimestampPersonalDataCleaned().getTime(), TIME_ASSERT_DELTA);
 
         final var successfulProcess = fetchOnboardingProcess(successfulProcessId);
-        assertEquals(System.currentTimeMillis(), successfulProcess.getTimestampIdentityDataCleaned().getTime(), TIME_ASSERT_DELTA);
+        assertEquals(System.currentTimeMillis(), successfulProcess.getTimestampPersonalDataCleaned().getTime(), TIME_ASSERT_DELTA);
 
         final var inProgressProcess = fetchOnboardingProcess(inProgressProcessId);
-        assertNull(inProgressProcess.getTimestampIdentityDataCleaned());
+        assertNull(inProgressProcess.getTimestampPersonalDataCleaned());
 
         final var recentFailedProcess = fetchOnboardingProcess(recentFailedProcessId);
-        assertNull(recentFailedProcess.getTimestampIdentityDataCleaned());
+        assertNull(recentFailedProcess.getTimestampPersonalDataCleaned());
 
         assertNull(fetchSelfie(failedSelfieId));
         assertNull(fetchSelfie(successfulSelfieId));

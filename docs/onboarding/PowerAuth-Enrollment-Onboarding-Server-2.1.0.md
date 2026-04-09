@@ -20,6 +20,16 @@ The auditing tables may be already updated in your database schema if the databa
 <!-- end -->
 
 
+### Add column timestamp_personal_data_cleaned to es_onboarding_process table
+
+The `timestamp_personal_data_cleaned` column track when the personal data associated with an onboarding process has been cleaned up.
+
+
+### Add column document_verification_id to es_document_data table
+
+The `document_verification_id` column is used to link record with the `es_document_verification`. There is a one-to-one relationship and there is foreign key constraint.
+
+
 ### Onboarding process identity data retention
 
 The identity data retention period is configured using the new property `enrollment-server-onboarding.onboarding-process.completedProcessDataRetentionTime`.

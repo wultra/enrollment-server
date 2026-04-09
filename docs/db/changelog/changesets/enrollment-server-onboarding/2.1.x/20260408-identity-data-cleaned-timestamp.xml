@@ -6,14 +6,14 @@
     <changeSet id="1" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="es_onboarding_process" columnName="timestamp_identity_data_cleaned"/>
+                <columnExists tableName="es_onboarding_process" columnName="timestamp_personal_data_cleaned"/>
             </not>
         </preConditions>
         <comment>
-            Create a new column timestamp_identity_data_cleaned in es_onboarding_process table to store the timestamp when the identity data was cleaned
+            Create a new column timestamp_personal_data_cleaned in es_onboarding_process table to store the timestamp when the identity data was cleaned
         </comment>
         <addColumn tableName="es_onboarding_process">
-            <column name="timestamp_identity_data_cleaned" type="timestamp" />
+            <column name="timestamp_personal_data_cleaned" type="timestamp" />
         </addColumn>
     </changeSet>
 

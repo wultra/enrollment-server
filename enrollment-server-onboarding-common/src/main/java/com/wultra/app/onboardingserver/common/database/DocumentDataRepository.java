@@ -24,7 +24,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Repository for document data records.
@@ -36,6 +36,6 @@ public interface DocumentDataRepository extends CrudRepository<DocumentDataEntit
 
     @Modifying
     @Query("DELETE FROM DocumentDataEntity d WHERE d.documentVerificationId IN :documentVerificationIds")
-    void deleteAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
+    void deleteAllByDocumentVerificationIds(final List<String> documentVerificationIds);
 
 }

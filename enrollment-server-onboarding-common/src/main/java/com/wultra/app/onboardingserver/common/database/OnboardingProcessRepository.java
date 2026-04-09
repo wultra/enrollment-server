@@ -20,7 +20,7 @@ package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessIdentityDataIdsView;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessPersonalDataIdsProjection;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
@@ -213,9 +213,9 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
         JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
         WHERE p.status IN :statuses
           AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
-          AND p.timestampIdentityDataCleaned IS NULL
+          AND p.timestampPersonalDataCleaned IS NULL
         """)
-    List<OnboardingProcessIdentityDataIdsView> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore);
+    List<OnboardingProcessPersonalDataIdsProjection> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore);
 
     /**
      * Sets identity data cleaned timestamp.
@@ -226,8 +226,8 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Modifying
     @Query("""
             UPDATE OnboardingProcessEntity p SET
-                    p.timestampIdentityDataCleaned = :timestamp
+                    p.timestampPersonalDataCleaned = :timestamp
             WHERE p.id IN :ids
         """)
-    void updateIdentityDataCleanup(final Set<String> ids, final Date timestamp);
+    void updateIdentityDataCleanup(final List<String> ids, final Date timestamp);
 }

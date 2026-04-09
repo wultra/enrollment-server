@@ -151,8 +151,8 @@ public class OnboardingProcessEntity implements Serializable {
     /**
      * Timestamp when the identity data (e.g. selfie, uploaded documents) was cleaned up.
      */
-    @Column(name = "timestamp_identity_data_cleaned")
-    private Date timestampIdentityDataCleaned;
+    @Column(name = "timestamp_personal_data_cleaned")
+    private Date timestampPersonalDataCleaned;
 
     @Override
     public boolean equals(Object o) {

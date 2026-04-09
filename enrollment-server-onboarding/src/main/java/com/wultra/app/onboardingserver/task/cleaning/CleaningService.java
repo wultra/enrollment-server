@@ -22,6 +22,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessPersonalDataIdsProjection;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
@@ -32,7 +33,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -181,43 +184,56 @@ class CleaningService {
             return;
         }
 
-        final var processIds = new HashSet<String>();
-        final var identityVerificationIds = new HashSet<String>();
-        final var documentVerificationIds = new HashSet<String>();
+        setProcessCleanupTime(dataIds);
+        cleanDocumentData(dataIds);
+        cleanSelfieData(dataIds);
 
-        var counter = 0;
-        for (final var dataIdsItem : dataIds) {
-            processIds.add(dataIdsItem.getProcessId());
-            identityVerificationIds.add(dataIdsItem.getIdentityVerificationId());
-            documentVerificationIds.add(dataIdsItem.getDocumentVerificationId());
-
-            counter++;
-
-            if (counter % BATCH_SIZE == 0) {
-                cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds);
-
-                processIds.clear();
-                identityVerificationIds.clear();
-                documentVerificationIds.clear();
-            }
-        }
-
-        if (counter % BATCH_SIZE != 0) {
-            cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds);
-        }
-
-        logger.info("Deleted {} data records of completed processes", counter);
+        logger.info("Personal data records of completed processes deleted");
     }
 
-    private void cleanCompletedProcessIdentityData(
-            final Set<String> processIds,
-            final Set<String> identityVerificationIds,
-            final Set<String> documentVerificationIds
-    ) {
-        selfieRepository.deleteAllByIdentityVerificationIds(identityVerificationIds);
-        processedDocumentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
-        documentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
-        onboardingProcessRepository.updateIdentityDataCleanup(processIds, new Date());
+    private void setProcessCleanupTime(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var cleanupTime = new Date();
+
+        final var processIds = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getProcessId)
+                .toList();
+
+        logger.debug("Setting cleanup time {} for {} processes", cleanupTime, processIds.size());
+
+        for (final var processIdsBatch : ListUtils.partition(processIds, BATCH_SIZE)) {
+            onboardingProcessRepository.updateIdentityDataCleanup(processIdsBatch, cleanupTime);
+        }
+
+        logger.debug("Cleanup time set for processes");
+    }
+
+    private void cleanDocumentData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var ids = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getDocumentVerificationId)
+                .toList();
+
+        logger.debug("Deleting document data for {} document verifications", ids.size());
+
+        for (final var idsBatch : ListUtils.partition(ids, BATCH_SIZE)) {
+            processedDocumentDataRepository.deleteAllByDocumentVerificationIds(idsBatch);
+            documentDataRepository.deleteAllByDocumentVerificationIds(idsBatch);
+        }
+
+        logger.debug("Document data deleted");
+    }
+
+    private void cleanSelfieData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var ids = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getIdentityVerificationId)
+                .toList();
+
+        logger.debug("Deleting selfie data for {} identity verifications", ids.size());
+
+        for (final var idsBatch : ListUtils.partition(ids, BATCH_SIZE)) {
+            selfieRepository.deleteAllByIdentityVerificationIds(idsBatch);
+        }
+
+        logger.debug("Selfie data deleted");
     }
 
     private Date getVerificationExpirationTime() {

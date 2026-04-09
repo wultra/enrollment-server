@@ -56,5 +56,5 @@ public interface ProcessedDocumentDataRepository extends CrudRepository<Processe
      */
     @Modifying
     @Query("DELETE FROM ProcessedDocumentDataEntity p WHERE p.documentVerificationId IN :documentVerificationIds")
-    void deleteAllByDocumentVerificationIds(final Set<String> documentVerificationIds);
+    void deleteAllByDocumentVerificationIds(final List<String> documentVerificationIds);
 }

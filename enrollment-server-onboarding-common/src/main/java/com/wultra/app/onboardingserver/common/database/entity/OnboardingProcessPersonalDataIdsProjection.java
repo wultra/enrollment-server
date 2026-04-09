@@ -20,11 +20,11 @@ package com.wultra.app.onboardingserver.common.database.entity;
 
 
 /**
- * View for {@link OnboardingProcessEntity} identity data IDs.
+ * Projection for {@link OnboardingProcessEntity} personal data IDs.
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-public interface OnboardingProcessIdentityDataIdsView {
+public interface OnboardingProcessPersonalDataIdsProjection {
 
     /**
      * Gets {@link OnboardingProcessEntity#id}.
