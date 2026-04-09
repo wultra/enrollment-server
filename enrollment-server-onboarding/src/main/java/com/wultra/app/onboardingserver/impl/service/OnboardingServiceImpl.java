@@ -542,12 +542,32 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
+
         final Optional<LookupUserResponse> lookupUserResponse = lookupUserService.lookupUser(process, request.identification());
         final String userId = lookupUserResponse.map(LookupUserResponse::getUserId).orElse(null);
         process.setUserId(userId);
-        process.setConsentAccepted(lookupUserResponse.map(LookupUserResponse::isConsentNotRequired).orElse(false));
+        storeConsent(process, lookupUserResponse.map(LookupUserResponse::isConsentNotRequired).orElse(false));
         auditService.audit(process, "Process started for user: {}", process.getUserId());
         return process;
+    }
+
+    /**
+     * Copy consent result from lookup user response to process if configured to use consent.
+     *
+     * @param process process to store consent for
+     * @param consentAccepted value from lookup user response
+     */
+    private static void storeConsent(final OnboardingProcessEntity process, final boolean consentAccepted) {
+        if (isConsentConfigured(process)) {
+            logger.debug("Consent configured for processId: {}, storing user lookup response value: {}", process.getId(), consentAccepted);
+            process.setConsentAccepted(consentAccepted);
+        } else {
+            logger.debug("Consent not configured for processId: {}, ignoring user lookup response", process.getId());
+        }
+    }
+
+    private static boolean isConsentConfigured(final OnboardingProcessEntity process) {
+        return process.getProcessConfiguration().getConfiguration().consentRequired();
     }
 
     private OnboardingProcessEntity createNewProcess(final OnboardingStartRequest request, final String identificationData, final RequestContext requestContext) throws OnboardingProcessException {
