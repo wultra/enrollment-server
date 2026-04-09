@@ -1065,7 +1065,7 @@ class MicroblinkDocumentVerificationProviderTest {
             final MicroblinkDocumentVerificationProvider.DocumentVerificationData documentVerificationData
     ) {
         final var document = new SubmittedDocument();
-        document.setDocumentId(documentVerificationData.documentId());
+        document.setDocumentId(documentVerificationData.documentVerificationId());
         document.setType(documentVerificationData.type());
         document.setSide(documentVerificationData.side());
         document.setPhoto(
@@ -1092,7 +1092,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .build();
 
         return MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(documentId)
+                .documentVerificationId(documentId)
                 .uploadId(uploadId)
                 .type(type)
                 .side(side)

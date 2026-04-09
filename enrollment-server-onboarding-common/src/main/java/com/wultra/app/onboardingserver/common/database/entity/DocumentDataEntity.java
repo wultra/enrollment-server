@@ -22,6 +22,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -65,6 +66,15 @@ public class DocumentDataEntity implements Serializable {
      */
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
+
+    /**
+     * ID of linked {@link DocumentVerificationEntity}.
+     *
+     * @implNote Nullable for backward compatibility. New records should be non-null.
+     */
+    @Column(name = "document_verification_id")
+    @NotNull
+    private String documentVerificationId;
 
     @Override
     public boolean equals(Object o) {

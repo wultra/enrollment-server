@@ -73,4 +73,34 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="6" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_document_data" columnName="document_verification_id"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create a new column document_verification_id in es_document_data table
+        </comment>
+        <addColumn tableName="es_document_data">
+            <column name="document_verification_id" type="varchar(36)">
+                <constraints foreignKeyName="es_document_verification_id_fk" referencedTableName="es_document_verification" referencedColumnNames="id" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7" author="Michal Rozehnal">
+        <preConditions>
+            <not>
+                <indexExists indexName="es_document_data_document_verification_id_idx" />
+            </not>
+        </preConditions>
+        <comment>
+            Create a new index es_document_data_document_verification_id_idx
+        </comment>
+        <createIndex tableName="es_document_data" indexName="es_document_data_document_verification_id_idx">
+            <column name="document_verification_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

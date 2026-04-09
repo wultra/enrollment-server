@@ -118,16 +118,21 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         throw new UnsupportedOperationException("Method checkDocumentUpload is not supported by Microblink provider.");
     }
 
+    /**
+     * @implNote If any DocumentDataEntity is saved, then uploadId must always be returned so it can be bound to the DocumentVerificationEntity.
+     * A foreign key cannot be used for DocumentVerificationEntity.uploadId because, depending on the provider, data may be uploaded to the cloud
+     * and there may be no corresponding DocumentDataEntity record.
+     */
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) throws DocumentVerificationException, RemoteCommunicationException {
-        final var documentIds = submittedDocuments.stream()
+        final var documentVerificationIds = submittedDocuments.stream()
                 .map(SubmittedDocument::getDocumentId)
                 .toList();
 
-        logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentIds: {}", ownerId, documentIds);
+        logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentVerificationIds: {}", ownerId, documentVerificationIds);
 
         final var documentsVerificationData = submittedDocuments.stream()
-                .map(MicroblinkDocumentVerificationProvider::buildDocumentVerificationData)
+                .map(MicroblinkDocumentVerificationProvider::createDocumentVerificationData)
                 .toList();
 
         final var microblinkResponseByDocumentType = new EnumMap<DocumentType, DocumentVerificationResponseBundle>(DocumentType.class);
@@ -152,23 +157,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
             return result;
         } catch (final DocumentVerificationException | RemoteCommunicationException | RuntimeException e) {
-            logger.info("action: submitDocuments, state: failed, provider: microblink, error: {}", e.getMessage(), e);
-
             final var errorMessage = e.getMessage();
             final var documentResults = documentsVerificationData.stream()
                 .map(document -> {
                     final var submitResult = new DocumentSubmitResult();
-                    submitResult.setDocumentId(document.documentId());
-
-                    // If any DocumentDataEntity is saved, then uploadId must always be returned so it can be bound to the DocumentVerificationEntity.
-                    // A foreign key cannot be used for DocumentVerificationEntity.uploadId because, depending on the provider, data may be uploaded to the cloud and there may be no corresponding DocumentDataEntity record.
+                    submitResult.setDocumentId(document.documentVerificationId());
                     submitResult.setUploadId(document.uploadId());
-
                     submitResult.setErrorDetail(errorMessage);
                     return submitResult;
                 })
             .toList();
 
+            logger.info("action: submitDocuments, state: failed, provider: microblink, error: {}", e.getMessage(), e);
             return createSubmitResult(documentResults, facePhotoId, auditData, errorMessage);
         }
     }
@@ -260,9 +260,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static DocumentVerificationData buildDocumentVerificationData(final SubmittedDocument submittedDocument) {
+    private static DocumentVerificationData createDocumentVerificationData(final SubmittedDocument submittedDocument) {
         return DocumentVerificationData.builder()
-                .documentId(submittedDocument.getDocumentId())
+                .documentVerificationId(submittedDocument.getDocumentId())
                 .uploadId(UUID.randomUUID().toString())
                 .type(submittedDocument.getType())
                 .side(submittedDocument.getSide())
@@ -294,7 +294,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                         "Multiple documents of type %s and side %s found. Document ids: %s".formatted(
                                 documentType,
                                 documentSide,
-                                List.of(documentOfSameSide.documentId(), documentVerificationData.documentId())
+                                List.of(documentOfSameSide.documentVerificationId(), documentVerificationData.documentVerificationId())
                         )
                 );
             }
@@ -406,7 +406,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, responseBody.extraction());
 
             final var result = new DocumentSubmitResult();
-            result.setDocumentId(documentVerificationData.documentId());
+            result.setDocumentId(documentVerificationData.documentVerificationId());
             result.setUploadId(documentVerificationData.uploadId());
             result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.getResponseWithoutImages());
@@ -807,6 +807,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         documentData.setId(document.uploadId());
         documentData.setData(document.image().getData());
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(document.documentVerificationId);
         return documentData;
     }
 
@@ -845,7 +846,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     @Builder(toBuilder = true)
     record DocumentVerificationData(
-            String documentId,
+            String documentVerificationId,
             String uploadId,
             DocumentType type,
             CardSide side,

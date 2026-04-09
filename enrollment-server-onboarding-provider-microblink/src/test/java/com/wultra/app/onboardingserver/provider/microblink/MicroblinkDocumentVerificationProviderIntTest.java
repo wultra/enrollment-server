@@ -215,7 +215,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         ownerId.setUserId("37f9c00e-67ad-47e3-9c02-9a87e61cfa12");
 
         idCardFrontDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(ID_CARD_FRONT_DOCUMENT_ID)
+                .documentVerificationId(ID_CARD_FRONT_DOCUMENT_ID)
                 .uploadId(ID_CARD_FRONT_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
                 .side(CardSide.FRONT)
@@ -223,7 +223,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .build();
 
         idCardBackDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(ID_CARD_BACK_DOCUMENT_ID)
+                .documentVerificationId(ID_CARD_BACK_DOCUMENT_ID)
                 .uploadId(ID_CARD_BACK_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
                 .side(CardSide.BACK)
@@ -231,7 +231,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .build();
 
         passportDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(PASSPORT_DOCUMENT_ID)
+                .documentVerificationId(PASSPORT_DOCUMENT_ID)
                 .uploadId(PASSPORT_UPLOAD_ID)
                 .type(DocumentType.PASSPORT)
                 .side(CardSide.FRONT)
@@ -470,7 +470,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         return documents.stream()
                 .map(d -> {
                     final var doc = new SubmittedDocument();
-                    doc.setDocumentId(d.documentId());
+                    doc.setDocumentId(d.documentVerificationId());
                     doc.setType(d.type());
                     doc.setSide(d.side());
                     doc.setPhoto(d.image());
