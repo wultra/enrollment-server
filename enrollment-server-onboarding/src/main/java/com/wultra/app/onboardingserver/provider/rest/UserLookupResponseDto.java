@@ -30,7 +30,7 @@ class UserLookupResponseDto {
     private String userId;
 
     /**
-     * If consent is required or not.
+     * Whether consent is required. If {@code null}, consent is treated as required.
      */
     private Boolean consentRequired;
 
