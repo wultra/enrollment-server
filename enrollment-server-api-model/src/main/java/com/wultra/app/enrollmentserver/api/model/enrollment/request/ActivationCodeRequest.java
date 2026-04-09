@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -25,9 +26,13 @@ import lombok.Data;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
+@Schema(description = "Request with attributes of a new activation code.")
 public class ActivationCodeRequest {
 
+    @Schema(description = "Application ID for which the activation code is requested (target application ID).", example = "app-id-123")
     private String applicationId;
+
+    @Schema(description = "OTP code to be used for activation.", example = "12345678")
     private String otp;
 
 }
