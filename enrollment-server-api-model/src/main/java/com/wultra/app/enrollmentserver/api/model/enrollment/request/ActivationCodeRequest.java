@@ -18,6 +18,8 @@
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -30,9 +32,11 @@ import lombok.Data;
 public class ActivationCodeRequest {
 
     @Schema(description = "Application ID for which the activation code is requested (target application ID).", example = "app-id-123")
+    @NotBlank
     private String applicationId;
 
-    @Schema(description = "OTP code to be used for activation.", example = "12345678")
+    @Schema(description = "OTP code to be used for activation.", example = "1234567890123456")
+    @Size(min = 16)
     private String otp;
 
 }
