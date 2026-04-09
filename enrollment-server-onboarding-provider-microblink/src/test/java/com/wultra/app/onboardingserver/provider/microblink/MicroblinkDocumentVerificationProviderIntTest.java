@@ -28,7 +28,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -349,7 +348,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkClientException_exceptionIsThrown() {
+    void testSubmitDocuments_microblinkClientException_failedResultIsReturned() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -358,12 +357,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .setBody("Service Not Available"));
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class,
-                () -> microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments)
-        );
+        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", exception.getMessage());
+        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", result.getErrorDetail());
+        assertEquals(2, result.getResults().size());
+        result.getResults()
+                .forEach(documentResult -> assertDoesNotThrow(() -> UUID.fromString(documentResult.getUploadId())));
     }
 
     @Test

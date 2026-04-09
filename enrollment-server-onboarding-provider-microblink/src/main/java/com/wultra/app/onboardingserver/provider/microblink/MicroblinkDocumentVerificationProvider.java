@@ -130,32 +130,47 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(MicroblinkDocumentVerificationProvider::buildDocumentVerificationData)
                 .toList();
 
-        saveDocumentsData(documentsVerificationData);
+        final var microblinkResponseByDocumentType = new EnumMap<DocumentType, DocumentVerificationResponseBundle>(DocumentType.class);
+        final var auditData = new EnumMap<DocumentType, ObjectNode>(DocumentType.class);
+        String facePhotoId = null;
 
-        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
-        final var microblinkResponseByDocumentType = fetchMicroblinkResults(documentsByTypeAndSide);
+        try {
+            saveDocumentsData(documentsVerificationData);
 
-        final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
+            final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
 
-        final var documentVerificationsByDocumentType = getDocumentVerificationsByDocumentType(ownerId, documentsByTypeAndSide.keySet());
-        final var facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
+            microblinkResponseByDocumentType.putAll(fetchMicroblinkResults(documentsByTypeAndSide));
+            auditData.putAll(collectDataForAudit(microblinkResponseByDocumentType));
 
-        final var result = new DocumentsSubmitResult();
-        result.setResults(documentResults);
-        result.setExtractedPhotoId(facePhotoId);
-        result.setAuditData(collectDataForAudit(microblinkResponseByDocumentType));
+            final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
-        final var rejectedDocuments = documentResults.stream()
-                .filter(r -> r.getRejectReason() != null)
-                .map(DocumentSubmitResult::getDocumentId)
-                .toList();
+            final var documentVerificationsByDocumentType = getDocumentVerificationsByDocumentType(ownerId, documentsByTypeAndSide.keySet());
+            facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
 
-        if (!rejectedDocuments.isEmpty()) {
-            result.setRejectReason("Rejected documents: " + rejectedDocuments);
+            final var result = createSubmitResult(documentResults, facePhotoId, auditData, null);
+
+            logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
+            return result;
+        } catch (final DocumentVerificationException | RemoteCommunicationException | RuntimeException e) {
+            logger.info("action: submitDocuments, state: failed, provider: microblink, error: {}", e.getMessage(), e);
+
+            final var errorMessage = e.getMessage();
+            final var documentResults = documentsVerificationData.stream()
+                .map(document -> {
+                    final var submitResult = new DocumentSubmitResult();
+                    submitResult.setDocumentId(document.documentId());
+
+                    // If any DocumentDataEntity is saved, then uploadId must always be returned so it can be bound to the DocumentVerificationEntity.
+                    // A foreign key cannot be used for DocumentVerificationEntity.uploadId because, depending on the provider, data may be uploaded to the cloud and there may be no corresponding DocumentDataEntity record.
+                    submitResult.setUploadId(document.uploadId());
+
+                    submitResult.setErrorDetail(errorMessage);
+                    return submitResult;
+                })
+            .toList();
+
+            return createSubmitResult(documentResults, facePhotoId, auditData, errorMessage);
         }
-
-        logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
-        return result;
     }
 
     @Override
@@ -801,6 +816,31 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                         Map.Entry::getKey,
                         entry -> entry.getValue().getResponseWithoutPersonalData()
                 ));
+    }
+
+    private static DocumentsSubmitResult createSubmitResult(
+            final List<DocumentSubmitResult> documentResults,
+            final String facePhotoId,
+            final Map<DocumentType, ObjectNode> auditData,
+            final String errorDetail
+    ) {
+        final var result = new DocumentsSubmitResult();
+        result.setResults(documentResults);
+        result.setExtractedPhotoId(facePhotoId);
+        result.setAuditData(auditData);
+
+        final var rejectedDocuments = documentResults.stream()
+                .filter(r -> r.getRejectReason() != null)
+                .map(DocumentSubmitResult::getDocumentId)
+                .toList();
+
+        if (!rejectedDocuments.isEmpty()) {
+            result.setRejectReason("Rejected documents: " + rejectedDocuments);
+        }
+
+        result.setErrorDetail(errorDetail);
+
+        return result;
     }
 
     @Builder(toBuilder = true)

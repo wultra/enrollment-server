@@ -244,21 +244,21 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_exceptionIsThrown() {
+    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_exceptionIsThrown() throws Exception {
         // given
         submittedDocumentIdCardBack.setSide(CardSide.FRONT);
 
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", exception.getMessage());
+        assertEquals("Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_clientThrowsException_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_clientThrowsException_exceptionIsThrown() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -273,15 +273,14 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", exception.getMessage());
-        assertNotNull(exception.getCause());
+        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_clientResponseWithoutBody_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_clientResponseWithoutBody_exceptionIsThrown() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -296,14 +295,14 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Response body is empty", exception.getMessage());
+        assertEquals("Response body is empty", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_exceptionWhenParsingResponseBody_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_exceptionWhenParsingResponseBody_exceptionIsThrown() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -318,10 +317,10 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed to parse Microblink API response. Microblink traceId: 123", exception.getMessage());
+        assertEquals("Failed to parse Microblink API response. Microblink traceId: 123", result.getErrorDetail());
     }
 
     @Test
