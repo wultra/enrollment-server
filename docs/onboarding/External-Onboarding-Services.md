@@ -185,10 +185,10 @@ Service to identify the prospect and assign user identifier.
 
 ##### Response Params
 
-| Attribute         | Type      | Description                                                                                                                                                                                       |
-|:------------------|:----------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `userId`          | `String`  | The bank assigned ID for the user being onboarded.                                                                                                                                                |
-| `consentRequired` | `Boolean` | Tells if the user has to consent the onboarding, `null` is evaluated as `true`. Taken into account, only if [the procces is configured](Configuration-Onboarding-Process.md) to require consents. |
+| Attribute         | Type      | Description                                                                                                                                                                                      |
+|:------------------|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `userId`          | `String`  | The bank assigned ID for the user being onboarded.                                                                                                                                               |
+| `consentRequired` | `Boolean` | Tells if the user has to consent the onboarding, `null` is evaluated as `true`. Taken into account only if [the process is configured](Configuration-Onboarding-Process.md) to require consent. |
 <!-- end -->
 
 <!-- begin api POST /client/evaluate -->
