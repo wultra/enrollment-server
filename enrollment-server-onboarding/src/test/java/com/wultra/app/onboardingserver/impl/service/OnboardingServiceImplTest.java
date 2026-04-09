@@ -170,7 +170,7 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
                 .userId("mock_user")
-                .consentRequired(true)
+                .consentRequired(null)
                 .build());
 
         final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();

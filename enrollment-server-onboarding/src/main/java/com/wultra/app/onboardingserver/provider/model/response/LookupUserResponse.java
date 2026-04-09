@@ -40,7 +40,10 @@ public final class LookupUserResponse {
     @NonNull
     private String userId;
 
-    private boolean consentRequired;
+    /**
+     * Whether consent is required. If {@code null}, consent is treated as required.
+     */
+    private Boolean consentRequired;
 
     /**
      * Whether business logic error occurred during user lookup.
@@ -61,4 +64,12 @@ public final class LookupUserResponse {
         return !isConsentRequired();
     }
 
+    /**
+     * Whether consent is required.
+     *
+     * @return {@code true} if consent is not required, {@code false} otherwise.
+     */
+    private boolean isConsentRequired() {
+        return consentRequired == null || consentRequired;
+    }
 }

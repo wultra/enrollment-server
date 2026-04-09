@@ -616,9 +616,9 @@ A new user verification OTP was sent to the onboarding provider.
 The user verification OTP was resent to the onboarding provider.
 
 
-### Message `Looked up user: {userId}`
+### Message `Looked up user: {userId}, consentRequired: {consentRequired}`
 
-The onboarding provider [lookup endpoint](./External-Onboarding-Services.md#user-lookup-service) found the user and returned the user ID.
+The onboarding provider [lookup endpoint](./External-Onboarding-Services.md#user-lookup-service) found the user and returned the user ID and consent status.
 
 
 ### Message `Error to look up user: {userId}, {errorDetail}`

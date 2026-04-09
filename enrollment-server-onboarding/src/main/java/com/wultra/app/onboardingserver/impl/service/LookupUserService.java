@@ -67,7 +67,7 @@ public class LookupUserService {
                     .processType(process.getProcessConfiguration().getProcessType())
                     .build();
             final LookupUserResponse response = onboardingProvider.lookupUser(lookupUserRequest);
-            auditService.auditOnboardingProvider(process, "Looked up user: {}", response.getUserId());
+            auditService.auditOnboardingProvider(process, "Looked up user: {}, consentRequired: {}", response.getUserId(), response.getConsentRequired());
             if (response.isErrorOccurred()) {
                 logger.warn("Business logic error occurred during user lookup, process ID: {}, error detail: {}", process.getId(), response.getErrorDetail());
                 process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
