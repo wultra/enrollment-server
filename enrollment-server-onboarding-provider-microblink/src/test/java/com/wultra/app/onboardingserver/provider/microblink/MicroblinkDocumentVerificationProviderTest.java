@@ -244,7 +244,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_exceptionIsThrown() throws Exception {
+    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_resultWithError() throws Exception {
         // given
         submittedDocumentIdCardBack.setSide(CardSide.FRONT);
 
@@ -258,7 +258,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_clientThrowsException_exceptionIsThrown() throws Exception {
+    void testSubmitDocuments_clientThrowsException_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -280,7 +280,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_clientResponseWithoutBody_exceptionIsThrown() throws Exception {
+    void testSubmitDocuments_clientResponseWithoutBody_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -302,7 +302,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_exceptionWhenParsingResponseBody_exceptionIsThrown() throws Exception {
+    void testSubmitDocuments_exceptionWhenParsingResponseBody_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -1041,7 +1041,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertEquals(documentResults.size(), storedEntities.size());
 
-        final var documentIdToDocumentData = documentResults.stream()
+        final var documentUploadIdToDocumentData = documentResults.stream()
                 .collect(Collectors.toMap(
                         DocumentSubmitResult::getDocumentId,
                         i -> storedEntities.stream()
@@ -1050,13 +1050,15 @@ class MicroblinkDocumentVerificationProviderTest {
                                 .orElseThrow()
                 ));
 
-        final var idCardFrontDocumentData = documentIdToDocumentData.get(DOCUMENT_ID_CARD_FRONT_ID);
+        final var idCardFrontDocumentData = documentUploadIdToDocumentData.get(DOCUMENT_ID_CARD_FRONT_ID);
         assertDoesNotThrow(() -> UUID.fromString(idCardFrontDocumentData.getId()));
+        assertEquals(DOCUMENT_ID_CARD_FRONT_ID, idCardFrontDocumentData.getDocumentVerificationId());
         assertArrayEquals(verificationDocumentCardIdFront.image().getData(), idCardFrontDocumentData.getData());
         assertEquals(new Date().getTime(), idCardFrontDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
 
-        final var idCardBackDocumentData = documentIdToDocumentData.get(DOCUMENT_ID_CARD_BACK_ID);
+        final var idCardBackDocumentData = documentUploadIdToDocumentData.get(DOCUMENT_ID_CARD_BACK_ID);
         assertDoesNotThrow(() -> UUID.fromString(idCardBackDocumentData.getId()));
+        assertEquals(DOCUMENT_ID_CARD_BACK_ID, idCardBackDocumentData.getDocumentVerificationId());
         assertArrayEquals(verificationDocumentCardIdBack.image().getData(), idCardBackDocumentData.getData());
         assertEquals(new Date().getTime(), idCardBackDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
     }

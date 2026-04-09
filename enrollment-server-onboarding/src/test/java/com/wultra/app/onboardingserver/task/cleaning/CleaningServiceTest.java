@@ -261,11 +261,13 @@ class CleaningServiceTest {
 
         final var failedDocumentUploadId = "upload-cleanup-failed";
         final var successfulDocumentUploadId = "upload-cleanup-success";
+        final var successfulDisposedDocumentUploadId = "upload-cleanup-success-disposed";
         final var inProgressDocumentUploadId = "upload-cleanup-progress";
         final var recentFailedDocumentUploadId = "upload-cleanup-recent-failed";
 
         final var failedProcessedDocumentId = "processed-cleanup-failed";
         final var successfulProcessedDocumentId = "processed-cleanup-success";
+        final var successfulDisposedProcessedDocumentId = "processed-cleanup-success-disposed";
         final var inProgressProcessedDocumentId = "processed-cleanup-progress";
         final var recentFailedProcessedDocumentId = "processed-cleanup-recent-failed";
 
@@ -292,11 +294,13 @@ class CleaningServiceTest {
 
         assertNull(fetchProcessedDocumentData(failedProcessedDocumentId));
         assertNull(fetchProcessedDocumentData(successfulProcessedDocumentId));
+        assertNull(fetchProcessedDocumentData(successfulDisposedProcessedDocumentId));
         assertNotNull(fetchProcessedDocumentData(inProgressProcessedDocumentId));
         assertNotNull(fetchProcessedDocumentData(recentFailedProcessedDocumentId));
 
         assertNull(fetchDocumentData(failedDocumentUploadId));
         assertNull(fetchDocumentData(successfulDocumentUploadId));
+        assertNull(fetchDocumentData(successfulDisposedDocumentUploadId));
         assertNotNull(fetchDocumentData(inProgressDocumentUploadId));
         assertNotNull(fetchDocumentData(recentFailedDocumentUploadId));
     }

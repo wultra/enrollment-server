@@ -580,6 +580,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var frontDocumentData = documentDataByUploadId.get(frontDocumentUploadId);
         assertArrayEquals(idCardFrontImage.getData(), frontDocumentData.getData());
         assertEquals(new Date().getTime(), frontDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertEquals(ID_CARD_FRONT_DOCUMENT_ID, frontDocumentData.getDocumentVerificationId());
 
         final var backDocumentUploadId = result.getResults().stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -590,6 +591,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var backDocumentData = documentDataByUploadId.get(backDocumentUploadId);
         assertArrayEquals(idCardBackImage.getData(), backDocumentData.getData());
         assertEquals(new Date().getTime(), backDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertEquals(ID_CARD_BACK_DOCUMENT_ID, backDocumentData.getDocumentVerificationId());
     }
 
     private void assertProcessedDocumentData() {

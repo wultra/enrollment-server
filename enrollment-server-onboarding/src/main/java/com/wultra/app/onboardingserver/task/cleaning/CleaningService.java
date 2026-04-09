@@ -184,30 +184,26 @@ class CleaningService {
         final var processIds = new HashSet<String>();
         final var identityVerificationIds = new HashSet<String>();
         final var documentVerificationIds = new HashSet<String>();
-        final var uploadIds = new HashSet<String>();
 
         var counter = 0;
         for (final var dataIdsItem : dataIds) {
             processIds.add(dataIdsItem.getProcessId());
             identityVerificationIds.add(dataIdsItem.getIdentityVerificationId());
             documentVerificationIds.add(dataIdsItem.getDocumentVerificationId());
-            Optional.ofNullable(dataIdsItem.getUploadId())
-                    .ifPresent(uploadIds::add);
 
             counter++;
 
             if (counter % BATCH_SIZE == 0) {
-                cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds, uploadIds);
+                cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds);
 
                 processIds.clear();
                 identityVerificationIds.clear();
                 documentVerificationIds.clear();
-                uploadIds.clear();
             }
         }
 
         if (counter % BATCH_SIZE != 0) {
-            cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds, uploadIds);
+            cleanCompletedProcessIdentityData(processIds, identityVerificationIds, documentVerificationIds);
         }
 
         logger.info("Deleted {} data records of completed processes", counter);
@@ -216,12 +212,11 @@ class CleaningService {
     private void cleanCompletedProcessIdentityData(
             final Set<String> processIds,
             final Set<String> identityVerificationIds,
-            final Set<String> documentVerificationIds,
-            final Set<String> uploadIds
+            final Set<String> documentVerificationIds
     ) {
         selfieRepository.deleteAllByIdentityVerificationIds(identityVerificationIds);
         processedDocumentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
-        documentDataRepository.deleteAllById(uploadIds);
+        documentDataRepository.deleteAllByDocumentVerificationIds(documentVerificationIds);
         onboardingProcessRepository.updateIdentityDataCleanup(processIds, new Date());
     }
 

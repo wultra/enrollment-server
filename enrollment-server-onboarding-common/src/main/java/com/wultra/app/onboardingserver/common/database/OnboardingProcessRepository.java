@@ -207,8 +207,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
     @Query("""
         SELECT p.id AS processId,
                iv.id AS identityVerificationId,
-               dv.id AS documentVerificationId,
-               dv.uploadId AS uploadId
+               dv.id AS documentVerificationId
         FROM OnboardingProcessEntity p
         JOIN IdentityVerificationEntity iv ON iv.processId = p.id
         JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id

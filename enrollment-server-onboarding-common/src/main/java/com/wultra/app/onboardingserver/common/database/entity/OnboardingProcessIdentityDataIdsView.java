@@ -46,11 +46,4 @@ public interface OnboardingProcessIdentityDataIdsView {
      * @return document verification ID
      */
     String getDocumentVerificationId();
-
-    /**
-     * Gets linked {@link DocumentVerificationEntity#uploadId}
-     *
-     * @return document verification upload ID
-     */
-    String getUploadId();
 }
