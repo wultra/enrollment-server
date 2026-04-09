@@ -985,7 +985,12 @@ Both source and target applications must be correctly configured to allow activa
 
 ```json
 {
-  "status": "OK"
+  "status": "OK",
+  "responseObject": {
+    "activationId": "9e0ba60f-bf22-4ff5-b999-2733784e5eaa",
+    "activationCode": "ABCDE-FGHIJ",
+    "activationSignature": "base64-encoded-signature"
+  }
 }
 ```
 
