@@ -116,14 +116,14 @@ public class CleaningTask {
     }
 
     /**
-     * Cleanup identity data of completed onboarding processes.
+     * Cleanup personal data of completed onboarding processes.
      */
-    @Scheduled(fixedDelayString = "PT15S", initialDelayString = "PT10S")
-    @SchedulerLock(name = SchedulerLockNames.CLEANUP_COMPLETED_PROCESS_IDENTITY_DATA_LOCK, lockAtMostFor = "5m")
-    public void cleanupCompletedProcessIdentityData() {
-        logger.info("action: cleanupCompletedProcessIdentityData, state: initiated");
+    @Scheduled(fixedDelayString = "PT60S", initialDelayString = "PT30S")
+    @SchedulerLock(name = SchedulerLockNames.CLEANUP_COMPLETED_PROCESS_PERSONAL_DATA_LOCK, lockAtMostFor = "5m")
+    public void cleanupCompletedProcessPersonalData() {
+        logger.info("action: cleanupCompletedProcessPersonalData, state: initiated");
         LockAssert.assertLocked();
-        cleaningService.cleanupCompletedProcessIdentityData();
-        logger.info("action: cleanupCompletedProcessIdentityData, state: succeeded");
+        cleaningService.cleanupCompletedProcessPersonalData();
+        logger.info("action: cleanupCompletedProcessPersonalData, state: succeeded");
     }
 }

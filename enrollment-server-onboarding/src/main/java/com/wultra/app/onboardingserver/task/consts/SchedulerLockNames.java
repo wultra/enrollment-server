@@ -38,6 +38,6 @@ public final class SchedulerLockNames {
 
     public static final String CLEANUP_ACTIVATIONS_LOCK = "cleanupActivationsLock";
 
-    public static final String CLEANUP_COMPLETED_PROCESS_IDENTITY_DATA_LOCK = "cleanupCompletedProcessIdentityDataLock";
+    public static final String CLEANUP_COMPLETED_PROCESS_PERSONAL_DATA_LOCK = "cleanupCompletedProcessPersonalDataLock";
 
 }

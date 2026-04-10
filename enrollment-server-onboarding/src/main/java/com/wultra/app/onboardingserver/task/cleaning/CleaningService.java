@@ -172,10 +172,10 @@ class CleaningService {
     }
 
     /**
-     * Cleanup identity data of completed processes after the retention time.
+     * Cleanup personal data of completed processes after the retention time.
      */
     @Transactional
-    public void cleanupCompletedProcessIdentityData() {
+    public void cleanupCompletedProcessPersonalData() {
         final var retentionTime = DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetention());
 
         final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime);

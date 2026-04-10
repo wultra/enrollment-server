@@ -273,7 +273,7 @@ class CleaningServiceTest {
         final var inProgressProcessedDocumentId = "processed-cleanup-progress";
         final var recentFailedProcessedDocumentId = "processed-cleanup-recent-failed";
 
-        tested.cleanupCompletedProcessIdentityData();
+        tested.cleanupCompletedProcessPersonalData();
         entityManager.flush();
         entityManager.clear();
 
