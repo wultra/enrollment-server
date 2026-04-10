@@ -360,7 +360,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", result.getErrorDetail());
+        assertEquals("Microblink provider exception: RemoteCommunicationException Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", result.getErrorDetail());
         assertEquals(2, result.getResults().size());
         result.getResults()
                 .forEach(documentResult -> assertDoesNotThrow(() -> UUID.fromString(documentResult.getUploadId())));
@@ -624,6 +624,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(ID_CARD_FRONT_UPLOAD_ID);
         documentData.setData(new byte[] { 1, 2 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(ID_CARD_FRONT_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var documentVerification = prepareIdCardFrontDocumentVerificationInDatabase();
@@ -645,6 +646,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(ID_CARD_BACK_UPLOAD_ID);
         documentData.setData(new byte[] { 3, 4 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(ID_CARD_BACK_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var documentVerification = prepareIdCardBackDocumentVerificationInDatabase();
@@ -666,6 +668,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(PASSPORT_UPLOAD_ID);
         documentData.setData(new byte[] { 5, 6 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(PASSPORT_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();

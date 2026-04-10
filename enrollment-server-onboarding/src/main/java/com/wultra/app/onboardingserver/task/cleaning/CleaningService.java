@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -211,6 +212,7 @@ class CleaningService {
     private void cleanDocumentData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
         final var ids = personalDataIds.stream()
                 .map(OnboardingProcessPersonalDataIdsProjection::getDocumentVerificationId)
+                .filter(Objects::nonNull)
                 .toList();
 
         logger.debug("Deleting document data for {} document verifications", ids.size());

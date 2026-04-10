@@ -157,7 +157,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
             return result;
         } catch (final DocumentVerificationException | RemoteCommunicationException | RuntimeException e) {
-            final var errorMessage = e.getMessage();
+            final var errorMessage = "Microblink provider exception: %s %s".formatted(e.getClass().getSimpleName(), e.getMessage());
             final var documentResults = documentsVerificationData.stream()
                 .map(document -> {
                     final var submitResult = new DocumentSubmitResult();

@@ -210,7 +210,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
                dv.id AS documentVerificationId
         FROM OnboardingProcessEntity p
         JOIN IdentityVerificationEntity iv ON iv.processId = p.id
-        JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
+        LEFT JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
         WHERE p.status IN :statuses
           AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
           AND p.timestampPersonalDataCleaned IS NULL

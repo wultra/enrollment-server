@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -254,7 +255,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", result.getErrorDetail());
+        assertEquals("Microblink provider exception: DocumentVerificationException Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", result.getErrorDetail());
     }
 
     @Test
@@ -276,7 +277,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", result.getErrorDetail());
+        assertEquals("Microblink provider exception: RemoteCommunicationException Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", result.getErrorDetail());
     }
 
     @Test
@@ -298,7 +299,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Response body is empty", result.getErrorDetail());
+        assertEquals("Microblink provider exception: DocumentVerificationException Response body is empty", result.getErrorDetail());
     }
 
     @Test
@@ -320,7 +321,21 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed to parse Microblink API response. Microblink traceId: 123", result.getErrorDetail());
+        assertEquals("Microblink provider exception: DocumentVerificationException Failed to parse Microblink API response. Microblink traceId: 123", result.getErrorDetail());
+    }
+
+    @Test
+    void testSubmitDocuments_exceptionWithoutMessageIsThrown_resultWithError() throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+
+        when(documentDataRepository.saveAll(anyIterable())).thenThrow(new RuntimeException());
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals("Microblink provider exception: RuntimeException null", result.getErrorDetail());
     }
 
     @Test

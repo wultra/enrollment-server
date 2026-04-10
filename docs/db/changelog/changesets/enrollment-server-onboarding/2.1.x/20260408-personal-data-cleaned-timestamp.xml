@@ -62,7 +62,7 @@
     </changeSet>
 
     <changeSet id="5" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_document_data_document_verification_id_idx" />
             </not>
