@@ -32,33 +32,34 @@ The `document_verification_id` column is used to link a record to the `es_docume
 
 ### Onboarding process personal data retention
 
-The personal data retention period is configured using the property `enrollment-server-onboarding.identity-verification.data-retention`, and the retention period
-is measured from the process completion time—either the `timestamp_finished` or `timestamp_failed` column in the `es_onboarding_process` table.
-
-After this period, records linked to the process are deleted from the following tables:
+The cleanup logic was changed and the retention period is configured by `enrollment-server-onboarding.identity-verification.data-retention` and is counted from 
+the process completion time (either `timestamp_finished` or `timestamp_failed` column in `es_onboarding_process` table). After this period, records linked to the process 
+are deleted from the following tables:
 - `es_document_data`
 - `es_processed_document_data`
 - `es_selfie`
 
-This is a change from the previous version, where the retention period for records was calculated from their `timestamp_created`.
-After the upgrade, there may be situations where legacy records in `es_document_data` have a `NULL` value in the `document_verification_id` column—they have not yet been deleted 
-by the old cleaning service. Such records will not be deleted by the automatic cleanup task and must be removed manually. Every new record will have document_verification_id set, 
-and the cleanup will work as described.
-
-For manual cleanup, check whether any such records exist by executing the following SQL query:
+The new cleanup logic uses a new column, `es_onboarding_process.timestamp_personal_data_cleaned`, to track whether personal data has been deleted for a process. 
+Because the default value is `NULL`, all processes would be picked up by the first run of cleanup task. 
+To reduce the load on the task, it is recommended to set this value for processes that have already been cleaned by the old cleanup logic.
+Use the following SQL query to do so:
 
 ```sql
-SELECT count(*)
-FROM es_document_data
-WHERE document_verification_id IS NULL;
+UPDATE es_onboarding_process
+SET timestamp_personal_data_cleaned = now()
+WHERE timestamp_created < now() - interval :cleaned_processes_timestamp;
 ```
 
-If any records exist, they can be deleted using the following SQL query:
+The `:cleaned_processes_timestamp` is calculated as `2 * enrollment-server-onboarding.onboarding-process.expiration + 10 minutes`
 
-```sql
-DELETE FROM es_document_data
-WHERE document_verification_id IS NULL;
-```
+For example, if the configuration property `enrollment-server-onboarding.onboarding-process.expiration` is set to `8 hours`, the value of `:cleaned_processes_timestamp` would be `16 hours 10 minutes`.
+
+EXPLANATION OF THE CALCULATION:
+
+Each process expires after `enrollment-server-onboarding.onboarding-process.expiration` from its creation, and no personal data records can be created after that point. Personal data is then deleted 
+after the same `enrollment-server-onboarding.onboarding-process.expiration`, calculated from the time the data was created—not from the process creation time.
+In the worst case, a personal data record can be created very close to the process expiration time, which is why the configuration property is multiplied by 2. 
+The cleanup task for personal data runs every 10 minutes, which accounts for the additional 10 minutes added to the total time.
 
 
 ## Cleaning task
