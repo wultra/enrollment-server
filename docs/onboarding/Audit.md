@@ -641,7 +641,7 @@ The onboarding provider [consent approval endpoint](./External-Onboarding-Servic
 | `errorDetail` | Error message returned by the provider.  |
 
 
-### Message `Approve consent text for user: {userId}`
+### Message `Approve consent text for user: {userId}, isApproved: {isApproved}`
 
 The onboarding provider [consent approval endpoint](./External-Onboarding-Services.md#consent-storage-service) successfully received the user decision.
 
