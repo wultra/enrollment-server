@@ -32,9 +32,30 @@ The `document_verification_id` column is used to link record with the `es_docume
 
 ### Onboarding process identity data retention
 
-The identity data retention period is configured using the new property `enrollment-server-onboarding.onboarding-process.completedProcessDataRetentionTime`.
-The retention period is measured from the process completion time—either the `timestamp_finished` or `timestamp_failed` column in the `es_onboarding_process` table.
+The identity data retention period is configured using the property `enrollment-server-onboarding.identity-verification.data-retention`, and the retention period 
+is measured from the process completion time—either the `timestamp_finished` or `timestamp_failed column` in the `es_onboarding_process` table.
+
 After this period, records linked to the process are deleted from the following tables:
 - `es_document_data`
 - `es_processed_document_data`
 - `es_selfie`
+
+This is a change from the previous version, where the retention period for records was calculated from their `timestamp_created`.
+After the upgrade, there may be situations where legacy records in `es_document_data` have a `NULL` value in the `document_verification_id` column—they have not yet been deleted 
+by the old cleaning service. Such records will not be deleted by the automatic cleanup task and must be removed manually. Every new record will have document_verification_id set, 
+and the cleanup will work as described.
+
+For manual cleanup, check whether any such records exist by executing the following SQL query:
+
+```sql
+SELECT count(*)
+FROM es_document_data
+WHERE document_verification_id IS NULL;
+```
+
+If any records exist, they can be deleted using the following SQL query:
+
+```sql
+DELETE FROM es_document_data
+WHERE document_verification_id IS NULL;
+```

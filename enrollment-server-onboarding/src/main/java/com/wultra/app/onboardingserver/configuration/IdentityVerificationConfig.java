@@ -59,6 +59,12 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload:5}")
     private int documentUploadMaxFailedAttempts;
 
+    /**
+     * How long are identity data (e.g. selfie, uploaded documents) kept in database after the process is completed.
+     */
+    @Value("${enrollment-server-onboarding.identity-verification.data-retention:1h}")
+    private Duration dataRetention;
+
     @Value("${enrollment-server-onboarding.presence-check.max-failed-attempts:5}")
     private int presenceCheckMaxFailedAttempts;
 

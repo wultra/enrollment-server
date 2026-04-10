@@ -175,7 +175,7 @@ class CleaningService {
      */
     @Transactional
     public void cleanupCompletedProcessIdentityData() {
-        final var retentionTime = DateUtil.convertExpirationToCreatedDate(onboardingConfig.getCompletedProcessDataRetentionTime());
+        final var retentionTime = DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetention());
 
         final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime);
         logger.info("Found {} data records of completed processes for cleanup. Retention time: {}", dataIds.size(), retentionTime);
@@ -196,6 +196,7 @@ class CleaningService {
 
         final var processIds = personalDataIds.stream()
                 .map(OnboardingProcessPersonalDataIdsProjection::getProcessId)
+                .distinct()
                 .toList();
 
         logger.debug("Setting cleanup time {} for {} processes", cleanupTime, processIds.size());
@@ -225,6 +226,7 @@ class CleaningService {
     private void cleanSelfieData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
         final var ids = personalDataIds.stream()
                 .map(OnboardingProcessPersonalDataIdsProjection::getIdentityVerificationId)
+                .distinct()
                 .toList();
 
         logger.debug("Deleting selfie data for {} identity verifications", ids.size());
