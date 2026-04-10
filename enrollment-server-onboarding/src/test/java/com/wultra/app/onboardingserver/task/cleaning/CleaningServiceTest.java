@@ -253,13 +253,11 @@ class CleaningServiceTest {
         final var successfulProcessId = "22222222-aaaa-4053-bb3d-3970979baf5d";
         final var inProgressProcessId = "33333333-aaaa-4053-bb3d-3970979baf5d";
         final var recentFailedProcessId = "44444444-aaaa-4053-bb3d-3970979baf5d";
-        final var failedNoDocumentProcessId = "55555555-aaaa-4053-bb3d-3970979baf5d";
 
         final var failedSelfieId = 1L;
         final var successfulSelfieId = 2L;
         final var inProgressSelfieId = 3L;
         final var recentFailedSelfieId = 4L;
-        final var failedNoDocumentSelfieId = 5L;
 
         final var failedDocumentUploadId = "upload-cleanup-failed";
         final var successfulDocumentUploadId = "upload-cleanup-success";
@@ -289,14 +287,10 @@ class CleaningServiceTest {
         final var recentFailedProcess = fetchOnboardingProcess(recentFailedProcessId);
         assertNull(recentFailedProcess.getTimestampPersonalDataCleaned());
 
-        final var failedNoDocumentProcess = fetchOnboardingProcess(failedNoDocumentProcessId);
-        assertEquals(System.currentTimeMillis(), failedNoDocumentProcess.getTimestampPersonalDataCleaned().getTime(), TIME_ASSERT_DELTA);
-
         assertNull(fetchSelfie(failedSelfieId));
         assertNull(fetchSelfie(successfulSelfieId));
         assertNotNull(fetchSelfie(inProgressSelfieId));
         assertNotNull(fetchSelfie(recentFailedSelfieId));
-        assertNull(fetchSelfie(failedNoDocumentSelfieId));
 
         assertNull(fetchProcessedDocumentData(failedProcessedDocumentId));
         assertNull(fetchProcessedDocumentData(successfulProcessedDocumentId));

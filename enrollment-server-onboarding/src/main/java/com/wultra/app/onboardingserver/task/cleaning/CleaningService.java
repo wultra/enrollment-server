@@ -214,7 +214,6 @@ class CleaningService {
     private void cleanDocumentData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
         final var ids = personalDataIds.stream()
                 .map(OnboardingProcessPersonalDataIdsProjection::getDocumentVerificationId)
-                .filter(Objects::nonNull)
                 .toList();
 
         logger.debug("Deleting document data for {} document verifications", ids.size());

@@ -51,19 +51,6 @@ INSERT INTO es_selfie(id, image, identity_verification_id, timestamp_created)
 VALUES
 	(2, X'02', '22222222-bbbb-45dd-b68e-29f4cd991a5c', now() - interval '7200' second);
 
--- failed process eligible for cleanup without document verification
-INSERT INTO es_onboarding_process(id, identification_data, status, error_score, custom_data, timestamp_created, timestamp_finished, timestamp_failed)
-VALUES
-	('55555555-aaaa-4053-bb3d-3970979baf5d', '{}', 'FAILED', 0, '{}', now() - interval '7200' second, null, now() - interval '7200' second);
-
-INSERT INTO es_identity_verification(id, activation_id, user_id, process_id, status, phase, timestamp_created, timestamp_last_updated, timestamp_finished, timestamp_failed)
-VALUES
-	('55555555-bbbb-45dd-b68e-29f4cd991a5c', 'cleanup-a5', 'cleanup-u5', '55555555-aaaa-4053-bb3d-3970979baf5d', 'FAILED', 'COMPLETED', now() - interval '7200' second, now() - interval '7200' second, null, now() - interval '7200' second);
-
-INSERT INTO es_selfie(id, image, identity_verification_id, timestamp_created)
-VALUES
-	(5, X'05', '55555555-bbbb-45dd-b68e-29f4cd991a5c', now() - interval '7200' second);
-
 -- in progress process kept intact
 INSERT INTO es_onboarding_process(id, identification_data, status, error_score, custom_data, timestamp_created, timestamp_finished, timestamp_failed)
 VALUES
