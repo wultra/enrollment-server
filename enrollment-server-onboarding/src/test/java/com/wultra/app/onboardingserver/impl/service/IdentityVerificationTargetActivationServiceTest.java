@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessE
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.v4.GetActivationStatusResponse;
@@ -74,7 +75,7 @@ class IdentityVerificationTargetActivationServiceTest {
     void testCreateTargetActivation_notExisting() throws Exception {
         mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
-                .thenReturn(Optional.of("user1"));
+                .thenReturn(createLookupUserResponse());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         when(onboardingService.verifyProcessIdAndLock(any(), any(), any()))
@@ -103,7 +104,7 @@ class IdentityVerificationTargetActivationServiceTest {
     void testCreateTargetActivation_created() throws Exception {
         mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
-                .thenReturn(Optional.of("user1"));
+                .thenReturn(createLookupUserResponse());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setTargetActivationId("activation-1");
@@ -125,7 +126,7 @@ class IdentityVerificationTargetActivationServiceTest {
     void testCreateTargetActivation_removed() throws Exception {
         mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
-                .thenReturn(Optional.of("user1"));
+                .thenReturn(createLookupUserResponse());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setTargetActivationId("activation-1");
@@ -157,7 +158,7 @@ class IdentityVerificationTargetActivationServiceTest {
     void testCreateTargetActivation_pendingCommit() throws Exception {
         mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
-                .thenReturn(Optional.of("user1"));
+                .thenReturn(createLookupUserResponse());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setTargetActivationId("activation-1");
@@ -192,7 +193,7 @@ class IdentityVerificationTargetActivationServiceTest {
     void testCreateTargetActivation_blocked() throws Exception {
         mockIdentityVerification();
         when(lookupUserService.lookupUser(any(), any()))
-                .thenReturn(Optional.of("user1"));
+                .thenReturn(createLookupUserResponse());
 
         final OnboardingProcessEntity process = new OnboardingProcessEntity();
         process.setTargetActivationId("activation-1");
@@ -270,5 +271,11 @@ class IdentityVerificationTargetActivationServiceTest {
         final PowerAuthApiAuthentication apiAuthentication = new PowerAuthApiAuthenticationImpl();
         apiAuthentication.setActivationContext(new PowerAuthActivationImpl());
         return apiAuthentication;
+    }
+
+    private static Optional<LookupUserResponse> createLookupUserResponse() {
+        return Optional.of(LookupUserResponse.builder()
+                .userId("user1")
+                .build());
     }
 }

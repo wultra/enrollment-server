@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
 import com.wultra.security.powerauth.client.model.response.v4.GetActivationStatusResponse;
@@ -75,6 +76,7 @@ public class IdentityVerificationTargetActivationService {
         validateIdentityVerificationPhase(ownerId);
 
         final String userId = lookupUserService.lookupUser(process, request.identification())
+                .map(LookupUserResponse::getUserId)
                 .orElseThrow(() -> new OnboardingProcessException("Unable to lookup user for " + ownerId));
 
         logger.info("Updating processId: {}, current userId: {} to a new userId: {}", processId, process.getUserId(), userId);

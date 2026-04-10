@@ -86,6 +86,8 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
                 .userId("mock_user")
+                // according to the response, consent is not required, but we want to test that it is not stored in DB, because the process is not configured to do so
+                .consentRequired(false)
                 .build());
 
         final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
@@ -120,7 +122,41 @@ class OnboardingServiceImplTest {
 
         final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
         assertTrue(process.isPresent());
+        assertFalse(process.get().getConsentAccepted());
         assertEquals(initResponse.getActivationId(), process.get().getActivationId());
+    }
+
+    @Test
+    void testStartProcess_storeConsent() throws Exception {
+        final OnboardingStartRequest request = OnboardingStartRequest.builder()
+                .identification(Map.of("username", "john.doe"))
+                .processType("onboarding")
+                .build();
+        final RequestContext context = RequestContext.builder().build();
+        final EncryptionContext encryptionContext = new EncryptionContext("CIx/arZ6CUphVBv9xnddPA==", null, null, null, null);
+
+        when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
+                .userId("mock_user")
+                .consentRequired(false)
+                .build());
+
+        final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
+        appKeyResponse.setApplicationId("mock_app_id");
+
+        when(powerAuthClient.lookupApplicationByAppKey(any(), any(), any()))
+                .thenReturn(appKeyResponse);
+
+        final OnboardingStartResponse result = tested.startOnboarding(request, context, encryptionContext);
+
+        assertNotNull(result);
+        assertNotNull(result.processId());
+        assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
+        assertNull(result.activationCode());
+        assertEquals(ActivationType.IDENTITY, result.activationType());
+
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
+        assertTrue(process.isPresent());
+        assertTrue(process.get().getConsentAccepted());
     }
 
     @Test
@@ -134,6 +170,7 @@ class OnboardingServiceImplTest {
 
         when(onboardingProvider.lookupUser(any())).thenReturn(LookupUserResponse.builder()
                 .userId("mock_user")
+                .consentRequired(null)
                 .build());
 
         final LookupApplicationByAppKeyResponse appKeyResponse = new LookupApplicationByAppKeyResponse();
@@ -155,6 +192,10 @@ class OnboardingServiceImplTest {
         assertEquals(OnboardingStatus.ACTIVATION_IN_PROGRESS, result.onboardingStatus());
         assertNull(result.activationCode());
         assertEquals(ActivationType.IDENTITY, result.activationType());
+
+        final Optional<OnboardingProcessEntity> process = onboardingProcessRepository.findById(result.processId());
+        assertTrue(process.isPresent());
+        assertFalse(process.get().getConsentAccepted());
     }
 
     @Test

@@ -76,6 +76,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
         logger.debug("Looked up {} for {}", response, request);
         return LookupUserResponse.builder()
                 .userId(response.getUserId())
+                .consentRequired(response.getConsentRequired())
                 .build();
     }
 
