@@ -103,7 +103,7 @@ class IdentityVerificationServiceTest {
 
         assertThat(savedIdentityVerification.getPhase(), equalTo(COMPLETED));
         assertThat(savedIdentityVerification.getStatus(), equalTo(FAILED));
-        assertThat(savedIdentityVerification.getErrorDetail(), equalTo("documentVerificationFailed"));
+        assertThat(savedIdentityVerification.getErrorDetail(), equalTo("Not valid OTP"));
         assertThat(savedIdentityVerification.getErrorOrigin(), equalTo(ErrorOrigin.FINAL_VALIDATION));
     }
 
