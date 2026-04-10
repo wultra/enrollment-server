@@ -104,8 +104,7 @@ public class MobileTokenController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         logger.info("action: operationList, state: initiated, activationId: {}", extractActivationId(auth));
@@ -154,8 +153,7 @@ public class MobileTokenController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<Operation> fetchOperationDetail(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                           @Parameter(hidden = true) PowerAuthApiAuthentication auth,
@@ -208,8 +206,7 @@ public class MobileTokenController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<Operation> claimOperation(@RequestBody ObjectRequest<OperationDetailRequest> request,
                                                     @Parameter(hidden = true) PowerAuthApiAuthentication auth,
