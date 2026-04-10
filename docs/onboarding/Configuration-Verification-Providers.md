@@ -79,8 +79,8 @@ When a document is uploaded, then it is temporarily stored in cache on Onboardin
 The mobile SDK uses the Microblink SDK to capture document images. The SDK requires a license key, which is stored in the Onboarding server configuration for each mobile platform.
 The license key is sent in the response body of `POST /api/identity/document/init-sdk` as the `license-key` attribute.
 The request body should contain following attributes:
- - `platform` - mobile platform for which the key should be returned. Together with `origin` forms a composite key for obtaining `license-key`. Example values: `ios`, `android`, `cordova`.
- - `origin` - Microblink Bundle ID / Application ID. Together with `platform` forms a composite key for obtaining `license-key`.
+ - `platform` - mobile platform identifier for which the key should be returned. Together with `origin` it forms a composite key for obtaining `license-key`. This is a free-form, case-sensitive identifier and it must exactly match the configured `mobile-sdk-configs[*].platform` value (for example, commonly `ios` or `android`).
+ - `origin` - Microblink Bundle ID / Application ID. Together with `platform` it forms a composite key for obtaining `license-key`.
 
 If any of these attributes are missing or there is no config for given combination then license key is not returned in response body.
 
