@@ -30,9 +30,9 @@ The `timestamp_personal_data_cleaned` column track when the personal data associ
 The `document_verification_id` column is used to link a record to the `es_document_verification` table. There is a one-to-one relationship and there is a foreign key constraint.
 
 
-### Onboarding process identity data retention
+### Onboarding process personal data retention
 
-The identity data retention period is configured using the property `enrollment-server-onboarding.identity-verification.data-retention`, and the retention period
+The personal data retention period is configured using the property `enrollment-server-onboarding.identity-verification.data-retention`, and the retention period
 is measured from the process completion time—either the `timestamp_finished` or `timestamp_failed` column in the `es_onboarding_process` table.
 
 After this period, records linked to the process are deleted from the following tables:
@@ -59,3 +59,9 @@ If any records exist, they can be deleted using the following SQL query:
 DELETE FROM es_document_data
 WHERE document_verification_id IS NULL;
 ```
+
+
+## Cleaning task
+
+Added a new configuration property `enrollment-server-onboarding.onboarding-process.cleanup-limit` to limit the number of records 
+processed in a single run of the task cleaning personal data of completed onboarding processed.

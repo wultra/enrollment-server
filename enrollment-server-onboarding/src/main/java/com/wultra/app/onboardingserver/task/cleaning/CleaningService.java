@@ -29,6 +29,7 @@ import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -177,8 +178,9 @@ class CleaningService {
     @Transactional
     public void cleanupCompletedProcessPersonalData() {
         final var retentionTime = DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetention());
+        final var limit = onboardingConfig.getCleanupLimit();
 
-        final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime);
+        final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime, PageRequest.of(0, limit));
         logger.info("Found {} data records of completed processes for cleanup. Retention time: {}", dataIds.size(), retentionTime);
 
         if (dataIds.isEmpty()) {

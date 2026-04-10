@@ -23,6 +23,7 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessPersonalDataIdsProjection;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -202,6 +203,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
      *
      * @param statuses statuses of completed processes
      * @param processCompletedBefore time before which the process must have been completed to be included in the result
+     * @param pageable pagination for limiting size of result
      * @return list of identity data IDs for completed processes to be cleaned up
      */
     @Query("""
@@ -215,7 +217,7 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
           AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
           AND p.timestampPersonalDataCleaned IS NULL
         """)
-    List<OnboardingProcessPersonalDataIdsProjection> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore);
+    List<OnboardingProcessPersonalDataIdsProjection> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore, final Pageable pageable);
 
     /**
      * Sets identity data cleaned timestamp.
