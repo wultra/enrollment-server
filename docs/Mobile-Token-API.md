@@ -974,11 +974,12 @@ Handle a request for activation code in activation spawn.
 }
 ```
 
-- `applicationId` - Application ID for which the activation code is requested (target application ID).
+- `applicationId` - PowerAuth Server application ID for which the activation code is requested (target application ID).
 - `otp` - OTP code to be used for activation.
 
-The `sourceApplicationId` is automatically identified from the `X-PowerAuth-Authorization` header (it is the application ID of the mobile token application that calls this API).
+The `sourceApplicationId` is automatically identified from the `X-PowerAuth-Authorization` header (it is the application ID of the mobile application that calls this API).
 Both source and target applications must be correctly configured to allow activation spawn.
+See the PowerAuth Server documentation for more details about [Activation Transfer Configuration](https://developers.wultra.com/components/powerauth-server/develop/documentation/Activation-Transfer#activation-transfer-configuration).
 
 
 #### Response 200

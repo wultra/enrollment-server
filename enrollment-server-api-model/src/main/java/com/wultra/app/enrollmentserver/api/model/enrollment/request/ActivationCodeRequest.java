@@ -31,7 +31,7 @@ import lombok.Data;
 @Schema(description = "Request with attributes of a new activation code.")
 public class ActivationCodeRequest {
 
-    @Schema(description = "Application ID for which the activation code is requested (target application ID).", example = "app-id-123")
+    @Schema(description = "PowerAuth application ID for which the activation code is requested (target application ID).", example = "app-id-123")
     @NotBlank
     private String applicationId;
 
