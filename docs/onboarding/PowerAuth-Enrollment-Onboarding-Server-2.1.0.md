@@ -47,17 +47,31 @@ Because the default value is `NULL`, all processes would be picked up by the fir
 To reduce the load on the task, it is recommended to set this value for processes that have already been cleaned by the old cleanup logic.
 Use the following SQL query to do so:
 
+PostgreSQL:
+
 ```sql
 ALTER TABLE es_document_data ADD document_verification_id VARCHAR(36);
 
 UPDATE es_onboarding_process
 SET timestamp_personal_data_cleaned = now()
-WHERE timestamp_created < now() - interval :cleaned_processes_timestamp;
+WHERE timestamp_created < now() - :cleaned_processes_timestamp;
+```
+
+Oracle:
+
+```sql
+ALTER TABLE es_document_data ADD document_verification_id VARCHAR2(36);
+
+UPDATE es_onboarding_process
+SET timestamp_personal_data_cleaned = SYSTIMESTAMP
+WHERE timestamp_created < SYSTIMESTAMP - :cleaned_processes_timestamp;
 ```
 
 The `:cleaned_processes_timestamp` is calculated as `2 * enrollment-server-onboarding.onboarding-process.expiration + 10 minutes`
 
-For example, if the configuration property `enrollment-server-onboarding.onboarding-process.expiration` is set to `8 hours`, the value of `:cleaned_processes_timestamp` would be `16 hours 10 minutes`.
+For example, if the configuration property `enrollment-server-onboarding.onboarding-process.expiration` is set to `8 hours`, the value of `:cleaned_processes_timestamp` would be `16 hours 10 minutes`:
+- PostgreSQL: `INTERVAL '16 hours 10 minutes'`
+- Oracle: `TO_DSINTERVAL('0 16:10:00')`
 
 EXPLANATION OF THE CALCULATION:
 
