@@ -46,6 +46,12 @@ The Enrollment Server uses the following public configuration properties:
 | `spring.security.oauth2.resource-server.jwt.audiences`  |         | OIDC property, a comma-separated list of allowed `aud` JWT claim values to be validated.                                                                                                                                                   |
 | `enrollment-server.flag.reporting`                      | `false` | When set to `true`, it adds activation flags to a custom object when retrieving the activation status.                                                                                                                                     |
 
+## Security Configuration
+
+| Property                     | Default | Note                                                                                                 |
+|------------------------------|---------|------------------------------------------------------------------------------------------------------|
+| `activation.remove.allow1fa` | `false` | Whether 1FA authentication using `POSSESSION` factor is enabled for the activation removal endpoint. |
+
 ## UserInfoProvider Configuration
 
 | Property                                                                           | Default              | Note                                                                                                                                                                                           |
