@@ -39,12 +39,17 @@ are deleted from the following tables:
 - `es_processed_document_data`
 - `es_selfie`
 
+
+#### Reduce the load of the first run of the new cleanup logic
+
 The new cleanup logic uses a new column, `es_onboarding_process.timestamp_personal_data_cleaned`, to track whether personal data has been deleted for a process. 
 Because the default value is `NULL`, all processes would be picked up by the first run of cleanup task. 
 To reduce the load on the task, it is recommended to set this value for processes that have already been cleaned by the old cleanup logic.
 Use the following SQL query to do so:
 
 ```sql
+ALTER TABLE es_document_data ADD document_verification_id VARCHAR(36);
+
 UPDATE es_onboarding_process
 SET timestamp_personal_data_cleaned = now()
 WHERE timestamp_created < now() - interval :cleaned_processes_timestamp;
@@ -60,6 +65,28 @@ Each process expires after `enrollment-server-onboarding.onboarding-process.expi
 after the same `enrollment-server-onboarding.onboarding-process.expiration`, calculated from the time the data was created—not from the process creation time.
 In the worst case, a personal data record can be created very close to the process expiration time, which is why the configuration property is multiplied by 2. 
 The cleanup task for personal data runs every 10 minutes, which accounts for the additional 10 minutes added to the total time.
+
+
+#### Cleanup of legacy records without document_verification_id
+
+After the upgrade, there may be situations where legacy records in `es_document_data` have a `NULL` value in the `document_verification_id` column—they have not yet been deleted
+by the old cleaning service. Such records will not be deleted by the automatic cleanup task and must be removed manually. This is because of a change from the previous version, 
+where the retention period for records was calculated from their `timestamp_created`. Every new record will have `document_verification_id` set, and the cleanup will work as described.
+
+For manual cleanup, check whether any such records exist by executing the following SQL query:
+
+```sql
+SELECT count(*)
+FROM es_document_data
+WHERE document_verification_id IS NULL;
+```
+
+If any records exist, they can be deleted using the following SQL query:
+
+```sql
+DELETE FROM es_document_data
+WHERE document_verification_id IS NULL;
+```
 
 
 ## Cleaning task
