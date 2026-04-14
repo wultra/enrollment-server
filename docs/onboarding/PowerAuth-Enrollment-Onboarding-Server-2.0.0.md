@@ -23,7 +23,10 @@ You have to insert at least one row into the table `es_onboarding_process_config
 
 ### Onboarding Process
 
-Added a new column `target_activation_id` to the table `es_onboarding_process`.
+Added new columns to the table `es_onboarding_process`:
+
+- `target_activation_id`
+- `consent_accepted`
 
 
 ### Removing columns from `es_document_data` table
