@@ -17,7 +17,10 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Result of verification of a single identity-related document.
@@ -25,6 +28,9 @@ import lombok.Data;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DocumentVerificationResult {
 
     private String uploadId;

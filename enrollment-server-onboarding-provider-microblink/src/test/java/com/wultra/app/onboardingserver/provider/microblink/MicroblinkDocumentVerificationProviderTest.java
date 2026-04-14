@@ -577,19 +577,20 @@ class MicroblinkDocumentVerificationProviderTest {
 
 
     @Test
-    void testVerifyDocuments_emptyDocumentVerifications_exception() {
+    void testVerifyDocuments_emptyDocumentVerifications_rejectResult() {
         // given
         when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(List.of());
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.verifyDocuments(ownerId, List.of()));
+        final var result = provider.verifyDocuments(ownerId, List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID));
 
         // then
-        assertEquals("No document verification data found for uploadIds: []", exception.getMessage());
+        assertEquals(DocumentVerificationStatus.FAILED, result.getStatus());
+        assertEquals("Microblink provider exception: DocumentVerificationException No document verification data found for uploadIds: [52ca4d10-06ac-442c-934c-9d085ab18934]", result.getErrorDetail());
     }
 
     @Test
-    void testVerifyDocuments_missingDocumentVerification_reject() throws Exception {
+    void testVerifyDocuments_missingDocumentVerification_reject() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 
@@ -605,12 +606,12 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.verifyDocuments(ownerId, uploadIds);
 
         // then
-        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
-        assertEquals("[uploadId=bdfb45ce-a808-4b65-86a8-9f5f184c56f6, rejectReason=Document verification data not found]", result.getRejectReason());
+        assertEquals(DocumentVerificationStatus.FAILED, result.getStatus());
+        assertEquals("Microblink provider exception: DocumentVerificationException Document verification data not found for uploadId=bdfb45ce-a808-4b65-86a8-9f5f184c56f6", result.getErrorDetail());
     }
 
     @Test
-    void testVerifyDocuments_missingDocumentResult_reject() throws Exception {
+    void testVerifyDocuments_missingDocumentResult_reject() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -626,12 +627,12 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.verifyDocuments(ownerId, uploadIds);
 
         // then
-        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
-        assertEquals("[uploadId=52ca4d10-06ac-442c-934c-9d085ab18934, rejectReason=Failed to parse provider response]", result.getRejectReason());
+        assertEquals(DocumentVerificationStatus.FAILED, result.getStatus());
+        assertEquals("Microblink provider exception: DocumentVerificationException Failed to parse provider response for uploadId=52ca4d10-06ac-442c-934c-9d085ab18934", result.getErrorDetail());
     }
 
     @Test
-    void testVerifyDocuments_microblinkResponseParseError_reject() throws Exception {
+    void testVerifyDocuments_microblinkResponseParseError_reject() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -642,12 +643,12 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = provider.verifyDocuments(ownerId, uploadIds);
 
         // then
-        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
-        assertEquals("[uploadId=52ca4d10-06ac-442c-934c-9d085ab18934, rejectReason=Document result not found]", result.getRejectReason());
+        assertEquals(DocumentVerificationStatus.FAILED, result.getStatus());
+        assertEquals("Microblink provider exception: DocumentVerificationException Document result not found for uploadId=52ca4d10-06ac-442c-934c-9d085ab18934", result.getErrorDetail());
     }
 
     @Test
-    void testVerifyDocuments_microblinkReject_reject() throws Exception {
+    void testVerifyDocuments_microblinkReject_reject() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -668,7 +669,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_extractedDocumentTypeIsNull_reject() throws Exception {
+    void testVerifyDocuments_extractedDocumentTypeIsNull_reject() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
