@@ -51,7 +51,7 @@ import com.wultra.security.powerauth.rest.api.spring.exception.authentication.Po
 import com.wultra.security.powerauth.rest.api.spring.provider.CustomActivationProvider;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
         havingValue = "true"
 )
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class IdentityVerificationRestService {
 
