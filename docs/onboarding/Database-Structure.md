@@ -58,7 +58,7 @@ Stores onboarding processes created for tracking status of user onboarding.
 | `timestamp_finished`     | `TIMESTAMP`     |                                      | Timestamp when process was finished.                                                                                                             |
 | `timestamp_failed`       | `TIMESTAMP`     |                                      | Timestamp when process failed.                                                                                                                   |
 | `process_config_id`      | `BIGINT`        |                                      | Foreign key to `es_onboarding_process_configuration`                                                                                             |
-| `consent_accepted`       | `BOOLEAN`       |                                      | Flag whether the consent has been accepted.                                                                                                      |
+| `consent_accepted`       | `BOOLEAN`       | Nullable for backward compatibility. | Consent state: `true` = consent accepted, `false` = pending consent, `null` = legacy row value treated as not pending. New rows should store a non-null value. |
 
 <!-- end -->
 
