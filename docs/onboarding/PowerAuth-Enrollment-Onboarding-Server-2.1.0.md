@@ -18,3 +18,12 @@ Added a new indexed column `subject_id` holding an identifier linking the audit 
 <!-- begin box warning -->
 The auditing tables may be already updated in your database schema if the database schema is not separated for different PowerAuth applications. In case the column `audit_log.subject_id` and its index `audit_log_subject_id_idx` are already present, you can safely skip this migration step.
 <!-- end -->
+
+
+## REST API Changes
+
+
+### Identity Status
+
+The property `config` in `/api/identity/status` response has been deprecated and will be removed in a future release.
+Clients should use the dedicated configuration endpoint `/api/configuration` to retrieve `otpResendPeriodSeconds` and other onboarding configuration.

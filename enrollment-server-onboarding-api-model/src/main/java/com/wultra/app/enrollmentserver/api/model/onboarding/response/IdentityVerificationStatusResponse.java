@@ -33,6 +33,11 @@ import lombok.Data;
 @Data
 public class IdentityVerificationStatusResponse {
 
+    /**
+     * @deprecated use {@link ConfigurationResponse}
+     */
+    @Schema(deprecated = true, description = "Deprecated, use '/api/configuration' instead")
+    @Deprecated(forRemoval = true, since = "2.1.0")
     private ConfigurationDataDto config;
 
     @Schema(description = "Process ID")
