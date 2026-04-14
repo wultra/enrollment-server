@@ -35,6 +35,8 @@ The `consent_accepted` column uses the following semantics:
 - `null` = legacy value for records created before this column was introduced; this value is treated as already resolved / not pending
 
 When interpreting migrated data, do not treat `null` as equivalent to `false`. Existing legacy records may keep `null` for backward compatibility.
+
+
 ### Removing columns from `es_document_data` table
 
 Columns `activation_id`, `identity_verification_id` and `filename` are removed. This should not cause any data loss because 
