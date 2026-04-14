@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.util.List;
@@ -29,7 +30,9 @@ import java.util.List;
 @Data
 public class DocumentStatusRequest {
 
+    @NotBlank
     private String processId;
+
     private List<DocumentFilter> filter;
 
     /**

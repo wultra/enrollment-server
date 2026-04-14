@@ -117,17 +117,15 @@ public class IdentityVerificationRestService {
      *           If the activation is confirmed externally, this method changes the process status to {@code VERIFICATION_IN_PROGRESS} as a side effect.
      */
     @Transactional
-    public ResponseEntity<Response> initializeIdentityVerification(ObjectRequest<IdentityVerificationInitRequest> request,
-                                                                   PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
+    public ResponseEntity<Response> initializeIdentityVerification(
+            final IdentityVerificationInitRequest request,
+            final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, IdentityVerificationException, OnboardingProcessException {
 
         final String operationDescription = "initializing identity verification";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
-        // Initialize identity verification
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         final OnboardingProcessEntity process = onboardingService.findProcessWithLock(processId);
@@ -194,24 +192,22 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document submit response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
-    public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(ObjectRequest<IdentityVerificationStatusRequest> request,
-                                                                                              PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException, OnboardingProcessException {
+    public ObjectResponse<IdentityVerificationStatusResponse> checkIdentityVerificationStatus(
+            final IdentityVerificationStatusRequest request,
+            final PowerAuthApiAuthentication apiAuthentication)
+            throws PowerAuthAuthenticationException, RemoteCommunicationException, OnboardingProcessException {
 
         final String operationDescription = "checking identity verification status";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
 
         logger.debug("Onboarding process will not be locked, {}", ownerId);
         // Check verification status
-        final IdentityVerificationStatusResponse response =
-                identityVerificationStatusService.checkIdentityVerificationStatus(request.getRequestObject(), ownerId);
+        final IdentityVerificationStatusResponse response = identityVerificationStatusService.checkIdentityVerificationStatus(request, ownerId);
         response.setConfig(integrationConfigDto);
 
         return new ObjectResponse<>(response);
@@ -352,21 +348,20 @@ public class IdentityVerificationRestService {
      * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
-    public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(ObjectRequest<DocumentStatusRequest> request,
-                                                                      PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
+    public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(
+            final DocumentStatusRequest request,
+            final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, OnboardingProcessException {
 
         final String operationDescription = "checking document verification status";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        final DocumentStatusResponse response = identityVerificationService.fetchDocumentStatusResponse(request.getRequestObject(), ownerId);
+        final DocumentStatusResponse response = identityVerificationService.fetchDocumentStatusResponse(request, ownerId);
         return new ObjectResponse<>(response);
     }
 
@@ -450,21 +445,20 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Presence check initialization response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws IdentityVerificationException Thrown when identity verification is invalid.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @Transactional
-    public ResponseEntity<Response> submitPresenceCheck(ObjectRequest<PresenceCheckSubmitRequest> request,
-                                                        PowerAuthApiAuthentication apiAuthentication)
-            throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
+    public ResponseEntity<Response> submitPresenceCheck(
+            final PresenceCheckSubmitRequest request,
+            final PowerAuthApiAuthentication apiAuthentication)
+            throws IdentityVerificationException, PowerAuthAuthenticationException, OnboardingProcessException {
 
         final String operationDescription = "submitting presence check";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
@@ -479,19 +473,16 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Send OTP response.
      * @throws IdentityVerificationException Thrown when identity verification is not found.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      */
     @Transactional
     public ResponseEntity<Response> resendOtp(
-            final ObjectRequest<IdentityVerificationOtpSendRequest> request,
-            final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
-
-        checkRequestObject(request, "resending OTP during identity verification");
+            final IdentityVerificationOtpSendRequest request,
+            final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException {
 
         // Extract user ID from onboarding process for current activation, lock onboarding process
         final OwnerId ownerId = extractOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
@@ -549,16 +540,16 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessLimitException Thrown when maximum failed attempts for identity verification have been reached.
      */
     @Transactional
-    public Response cleanup(ObjectRequest<IdentityVerificationCleanupRequest> request,
-                            PowerAuthApiAuthentication apiAuthentication)
+    public Response cleanup(
+            final IdentityVerificationCleanupRequest request,
+            final PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
 
         final String operationDescription = "performing document cleanup";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
@@ -607,12 +598,11 @@ public class IdentityVerificationRestService {
      * @return Response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @Transactional
     public Response approveConsent(
             final OnboardingConsentApprovalRequest request,
-            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException {
 
         final String operationDescription = "approving user consent";
         checkApiAuthentication(apiAuthentication, operationDescription);
@@ -653,7 +643,7 @@ public class IdentityVerificationRestService {
         }
     }
 
-    // TODO Lubos remove completely
+    // TODO (racansky, 2026-04-14, #1589) remove when validation of encryptionContext made implicit
     private void checkRequestObject(@Nullable ObjectRequest<?> request, String description) throws PowerAuthEncryptionException {
         if (request == null || request.getRequestObject() == null) {
             throw new PowerAuthEncryptionException("Invalid request received when " + description);

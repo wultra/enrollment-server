@@ -155,8 +155,6 @@ class IdentityVerificationRestServiceTest {
         final IdentityVerificationInitRequest requestObject = new IdentityVerificationInitRequest();
         requestObject.setProcessId(PROCESS_ID);
 
-        final ObjectRequest<IdentityVerificationInitRequest> request = new ObjectRequest<>(requestObject);
-
         final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
         final PowerAuthActivation activationContext = mock(PowerAuthActivation.class);
         when(apiAuthentication.getActivationContext()).thenReturn(activationContext);
@@ -182,7 +180,7 @@ class IdentityVerificationRestServiceTest {
         when(stateMachineService.processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT)))
                 .thenReturn(stateMachine);
 
-        final ResponseEntity<Response> result = tested.initializeIdentityVerification(request, apiAuthentication);
+        final ResponseEntity<Response> result = tested.initializeIdentityVerification(requestObject, apiAuthentication);
 
         assertNotNull(result);
         assertEquals(HttpStatus.OK, result.getStatusCode());
@@ -196,8 +194,6 @@ class IdentityVerificationRestServiceTest {
     void testInitializeIdentityVerification_synchronizeStateWithPowerAuth() throws Exception {
         final IdentityVerificationInitRequest requestObject = new IdentityVerificationInitRequest();
         requestObject.setProcessId(PROCESS_ID);
-
-        final ObjectRequest<IdentityVerificationInitRequest> request = new ObjectRequest<>(requestObject);
 
         final PowerAuthApiAuthentication apiAuthentication = mock(PowerAuthApiAuthentication.class);
         final PowerAuthActivation activationContext = mock(PowerAuthActivation.class);
@@ -227,7 +223,7 @@ class IdentityVerificationRestServiceTest {
         when(stateMachineService.processStateMachineEvent(any(OwnerId.class), eq(PROCESS_ID), eq(OnboardingEvent.IDENTITY_VERIFICATION_INIT)))
                 .thenReturn(stateMachine);
 
-        final ResponseEntity<Response> result = tested.initializeIdentityVerification(request, apiAuthentication);
+        final ResponseEntity<Response> result = tested.initializeIdentityVerification(requestObject, apiAuthentication);
 
         assertNotNull(result);
         assertEquals(HttpStatus.OK, result.getStatusCode());
