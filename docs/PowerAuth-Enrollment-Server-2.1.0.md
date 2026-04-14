@@ -29,4 +29,4 @@ You can enable 1FA for this endpoint by setting the property:
 activation.remove.allow1fa=true
 ```
 
-The default value is `false` which disables 1FA authentication.
+The default value is `false`, meaning that 1FA is not allowed.
