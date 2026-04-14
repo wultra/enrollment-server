@@ -21,7 +21,7 @@ The auditing tables may be already updated in your database schema if the databa
 
 ### Configuration of Activation Removal with 1FA
 
-The activation removal endpoint `/pa/v4/activation/remove` can be configured for authentication using `POSSESSION` factor (1FA). By default, 2FA authentication is used when removing activations, either `POSSESSION_KNOWLEDGE` or `POSSESSION_BIOMETRY`.
+The activation removal endpoint `/pa/v4/activation/remove` can be configured to allow authentication using `POSSESSION` factor (1FA). By default, two-factor authentication is used when removing activations, either `POSSESSION_KNOWLEDGE` or `POSSESSION_BIOMETRY`.
 
 You can enable 1FA authentication for this endpoint by setting the property:
 
