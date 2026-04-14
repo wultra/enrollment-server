@@ -241,7 +241,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             logger.info("action: verifyDocuments, state: succeeded, provider: microblink, result: {}", result.getStatus());
             return result;
         } catch (final DocumentVerificationException | RuntimeException e) {
-            logger.info("action: verifyDocuments, state: failed, provider: microblink, error: {}", e.getMessage(), e);
+            logger.info("action: verifyDocuments, state: failed, provider: microblink, error: {}", e.getMessage());
+            logger.warn("action: verifyDocuments, state: failed, provider: microblink", e);
 
             final var errorMessage = "Microblink provider exception: %s %s".formatted(e.getClass().getSimpleName(), e.getMessage());
 

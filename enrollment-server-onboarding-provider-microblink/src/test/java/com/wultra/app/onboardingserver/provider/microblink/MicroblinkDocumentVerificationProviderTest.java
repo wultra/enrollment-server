@@ -572,7 +572,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
 
     @Test
-    void testVerifyDocuments_emptyDocumentVerifications_rejectResult() {
+    void testVerifyDocuments_emptyDocumentVerifications_failResult() {
         // given
         when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(List.of());
 
@@ -585,7 +585,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_missingDocumentVerification_reject() {
+    void testVerifyDocuments_missingDocumentVerification_failResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, DOCUMENT_ID_CARD_BACK_UPLOAD_ID);
 
@@ -606,7 +606,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_missingDocumentResult_reject() {
+    void testVerifyDocuments_microblinkResponseParseError_failResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -627,7 +627,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_microblinkResponseParseError_reject() {
+    void testVerifyDocuments_missingDocumentResult_failResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -664,7 +664,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_extractedDocumentTypeIsNull_reject() {
+    void testVerifyDocuments_extractedDocumentTypeIsNull_rejectResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -687,7 +687,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_extractedDocumentTypeIsUnknown_reject() throws Exception {
+    void testVerifyDocuments_extractedDocumentTypeIsUnknown_rejectResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -710,7 +710,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_extractedDataIsNullAndVerificationEnabled_reject() throws Exception {
+    void testVerifyDocuments_extractedDataIsNullAndVerificationEnabled_rejectResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -733,7 +733,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testVerifyDocuments_extractedDataIsNullAndVerificationDisabled_accepted() throws Exception {
+    void testVerifyDocuments_extractedDataIsNullAndVerificationDisabled_acceptResult() {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -760,7 +760,7 @@ class MicroblinkDocumentVerificationProviderTest {
             "\"High\",10",
             "\"Unknown\",0"
     })
-    void testVerifyDocuments_score(final String certaintyLevel, Integer expectedScore) throws Exception {
+    void testVerifyDocuments_score(final String certaintyLevel, Integer expectedScore) {
         // given
         final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
 
@@ -789,7 +789,7 @@ class MicroblinkDocumentVerificationProviderTest {
             "Bob, false, ACCEPTED",
             "John, false, ACCEPTED",
     })
-    void testVerifyDocuments_multipleDocumentsCrosscheck(final String idCardFirstName, final boolean crosscheckEnabled, final DocumentVerificationStatus expectedResult) throws Exception {
+    void testVerifyDocuments_multipleDocumentsCrosscheck(final String idCardFirstName, final boolean crosscheckEnabled, final DocumentVerificationStatus expectedResult) {
         // given
         final var uploadIds = List.of(
                 DOCUMENT_ID_CARD_FRONT_UPLOAD_ID,
