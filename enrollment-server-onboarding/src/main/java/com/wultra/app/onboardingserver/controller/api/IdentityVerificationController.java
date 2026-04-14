@@ -286,14 +286,13 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Send OTP response.
      * @throws IdentityVerificationException Thrown when identity verification is not found.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      */
     @PostMapping("otp/resend")
     @PowerAuth(resourceId = "/api/identity/otp/resend", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ResponseEntity<Response> resendOtp(
             final @Valid @RequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthEncryptionException, OnboardingProcessException {
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException {
 
         final IdentityVerificationOtpSendRequest requestObject = request.getRequestObject();
         logger.info("action: resendOtp, state: initiated, processId: {}", requestObject.getProcessId());
@@ -327,7 +326,6 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when PowerAuth signature verification fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentVerificationException Thrown when document cleanup fails
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
@@ -342,7 +340,7 @@ public class IdentityVerificationController {
     public Response cleanup(
             final @Valid @RequestBody ObjectRequest<IdentityVerificationCleanupRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
 
         final IdentityVerificationCleanupRequest requestObject = request.getRequestObject();
         logger.info("action: cleanup, state: initiated, processId: {}", requestObject.getProcessId());
@@ -357,7 +355,6 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Consent text.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @PostMapping("consent/text")
     @Operation(
@@ -369,7 +366,7 @@ public class IdentityVerificationController {
     })
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final @Valid @RequestBody ObjectRequest<OnboardingConsentTextRequest> request,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthTokenInvalidException {
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthTokenInvalidException {
 
         final OnboardingConsentTextRequest requestObject = request.getRequestObject();
         logger.info("action: fetchConsentText, state: initiated, processId: {}", requestObject.getProcessId());
@@ -385,7 +382,6 @@ public class IdentityVerificationController {
      * @return Response.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @PostMapping("consent/approve")
     @Operation(
@@ -395,7 +391,7 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/consent/approve", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response approveConsent(
             final @Valid @RequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException {
 
         final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
         logger.info("action: approveConsent, state: initiated, processId: {}, approved: {}", requestObject.getProcessId(), requestObject.isApproved());

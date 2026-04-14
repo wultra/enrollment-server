@@ -110,7 +110,6 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when encryption fails.
      * @throws IdentityVerificationException Thrown when identity verification initialization fails.
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      * @implNote This method performs a synchronization with the PowerAuth server.
@@ -345,7 +344,6 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when request authentication fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws OnboardingProcessException Thrown when onboarding process identifier is invalid.
      */
     public ObjectResponse<DocumentStatusResponse> checkDocumentStatus(
@@ -531,7 +529,6 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Document status response.
      * @throws PowerAuthAuthenticationException Thrown when PowerAuth signature verification fails.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      * @throws DocumentVerificationException Thrown when document cleanup fails
      * @throws PresenceCheckException Thrown when presence check cleanup fails.
      * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
@@ -543,7 +540,7 @@ public class IdentityVerificationRestService {
     public Response cleanup(
             final IdentityVerificationCleanupRequest request,
             final PowerAuthApiAuthentication apiAuthentication)
-            throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
+            throws PowerAuthAuthenticationException, DocumentVerificationException, PresenceCheckException, RemoteCommunicationException, OnboardingProcessException, IdentityVerificationException, OnboardingProcessLimitException {
 
         final String operationDescription = "performing document cleanup";
         checkApiAuthentication(apiAuthentication, operationDescription);
@@ -571,12 +568,11 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Consent text.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
-     * @throws PowerAuthEncryptionException Thrown when request decryption fails.
      */
     @Transactional
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
             final OnboardingConsentTextRequest request,
-            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthTokenInvalidException {
+            final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthTokenInvalidException {
 
         checkApiAuthentication(apiAuthentication, "obtaining user consent text");
 
