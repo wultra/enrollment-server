@@ -31,8 +31,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentApprovalRequestValidator;
-import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentTextRequestValidator;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -586,23 +584,20 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
-            final ObjectRequest<OnboardingConsentTextRequest> request,
+            final OnboardingConsentTextRequest request,
             final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthTokenInvalidException {
 
         checkApiAuthentication(apiAuthentication, "obtaining user consent text");
-        checkRequestObject(request, "obtaining user consent text");
 
-        final OnboardingConsentTextRequest requestObject = request.getRequestObject();
-        logger.debug("Returning consent for {}", requestObject);
-        OnboardingConsentTextRequestValidator.validate(requestObject);
+        logger.debug("Returning consent for {}", request);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = requestObject.getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.NOT_YET_COMPLETED);
 
-        return new ObjectResponse<>(onboardingService.fetchConsentText(requestObject));
+        return new ObjectResponse<>(onboardingService.fetchConsentText(request));
     }
 
     /**
@@ -616,24 +611,21 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public Response approveConsent(
-            final ObjectRequest<OnboardingConsentApprovalRequest> request,
+            final OnboardingConsentApprovalRequest request,
             final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
         final String operationDescription = "approving user consent";
         checkApiAuthentication(apiAuthentication, operationDescription);
-        checkRequestObject(request, operationDescription);
 
-        final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
-        logger.debug("Approving consent for {}", requestObject);
-        OnboardingConsentApprovalRequestValidator.validate(requestObject);
+        logger.debug("Approving consent for {}", request);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = requestObject.getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.NOT_YET_COMPLETED);
 
-        onboardingService.approveConsent(requestObject);
+        onboardingService.approveConsent(request);
         return new Response();
     }
 
@@ -661,6 +653,7 @@ public class IdentityVerificationRestService {
         }
     }
 
+    // TODO Lubos remove completely
     private void checkRequestObject(@Nullable ObjectRequest<?> request, String description) throws PowerAuthEncryptionException {
         if (request == null || request.getRequestObject() == null) {
             throw new PowerAuthEncryptionException("Invalid request received when " + description);

@@ -365,11 +365,12 @@ public class IdentityVerificationController {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
-            final @RequestBody ObjectRequest<OnboardingConsentTextRequest> request,
+            final @Valid @RequestBody ObjectRequest<OnboardingConsentTextRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthEncryptionException, PowerAuthTokenInvalidException {
 
-        logger.info("action: fetchConsentText, state: initiated, processId: {}", extractRequest(request).map(OnboardingConsentTextRequest::getProcessId).orElse(null));
-        final var response = identityVerificationRestService.fetchConsentText(request, apiAuthentication);
+        final OnboardingConsentTextRequest requestObject = request.getRequestObject();
+        logger.info("action: fetchConsentText, state: initiated, processId: {}", requestObject.getProcessId());
+        final var response = identityVerificationRestService.fetchConsentText(requestObject, apiAuthentication);
         logger.info("action: fetchConsentText, state: succeeded");
         return response;
     }
@@ -390,13 +391,12 @@ public class IdentityVerificationController {
     )
     @PowerAuth(resourceId = "/api/identity/consent/approve", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response approveConsent(
-            final @RequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
+            final @Valid @RequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        logger.info("action: approveConsent, state: initiated, processId: {}, approved: {}",
-                extractRequest(request).map(OnboardingConsentApprovalRequest::getProcessId).orElse(null),
-                extractRequest(request).map(OnboardingConsentApprovalRequest::isApproved).orElse(null));
-        final Response response = identityVerificationRestService.approveConsent(request, apiAuthentication);
+        final OnboardingConsentApprovalRequest requestObject = request.getRequestObject();
+        logger.info("action: approveConsent, state: initiated, processId: {}, approved: {}", requestObject.getProcessId(), requestObject.isApproved());
+        final Response response = identityVerificationRestService.approveConsent(requestObject, apiAuthentication);
         logger.info("action: approveConsent, state: succeeded");
         return response;
     }
