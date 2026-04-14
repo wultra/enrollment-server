@@ -5,6 +5,7 @@
 - [Database Structure](./Database-Structure.md)
 - [Migration Instructions](./Migration-Instructions.md)
 - [Configuration Properties](./Configuration-Properties.md)
+- [Monitoring](./PowerAuth-Enrollment-Server-Monitoring.md)
 - [Documentation for Onboarding Server](./onboarding/Home.md)
 
 **Mobile Token**

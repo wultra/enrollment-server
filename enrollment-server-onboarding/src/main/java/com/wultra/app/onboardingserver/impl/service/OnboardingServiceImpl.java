@@ -55,6 +55,7 @@ import com.wultra.app.onboardingserver.provider.model.request.ApproveConsentRequ
 import com.wultra.app.onboardingserver.provider.model.request.ConsentTextRequest;
 import com.wultra.app.onboardingserver.provider.model.request.SendOtpCodeRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveConsentResponse;
+import com.wultra.app.onboardingserver.provider.model.response.LookupUserResponse;
 import com.wultra.core.http.common.request.RequestContext;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.response.InitActivationResponse;
@@ -494,9 +495,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
                         .formatted(process.getId(), userId, errorDetail));
             }
 
-            process.setConsentAccepted(true);
+            process.setConsentAccepted(request.isApproved());
 
-            auditService.auditOnboardingProvider(process, "Approve consent text for user: {}", userId);
+            auditService.auditOnboardingProvider(process, "Consent decision stored for user: {}, isApproved: {}", userId, request.isApproved());
         } catch (OnboardingProviderException e) {
             throw new OnboardingProcessException("An error when approving consent.", e);
         }
@@ -541,10 +542,32 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
 
         final OnboardingProcessEntity process = createNewProcess(request, identificationData, requestContext);
         logger.debug("Created process ID: {}", process.getId());
-        final String userId = lookupUserService.lookupUser(process, request.identification()).orElse(null);
+
+        final Optional<LookupUserResponse> lookupUserResponse = lookupUserService.lookupUser(process, request.identification());
+        final String userId = lookupUserResponse.map(LookupUserResponse::getUserId).orElse(null);
         process.setUserId(userId);
-        auditService.audit(process, "Process started for user: {}", userId);
+        storeConsent(process, lookupUserResponse.map(LookupUserResponse::isConsentNotRequired).orElse(false));
+        auditService.audit(process, "Process started for user: {}", process.getUserId());
         return process;
+    }
+
+    /**
+     * Copy consent result from lookup user response to process if configured to use consent.
+     *
+     * @param process process to store consent for
+     * @param consentAccepted value from lookup user response
+     */
+    private static void storeConsent(final OnboardingProcessEntity process, final boolean consentAccepted) {
+        if (isConsentConfigured(process)) {
+            logger.debug("Consent configured for processId: {}, storing user lookup response value: {}", process.getId(), consentAccepted);
+            process.setConsentAccepted(consentAccepted);
+        } else {
+            logger.debug("Consent not configured for processId: {}, ignoring user lookup response", process.getId());
+        }
+    }
+
+    private static boolean isConsentConfigured(final OnboardingProcessEntity process) {
+        return process.getProcessConfiguration().getConfiguration().consentRequired();
     }
 
     private OnboardingProcessEntity createNewProcess(final OnboardingStartRequest request, final String identificationData, final RequestContext requestContext) throws OnboardingProcessException {
@@ -596,7 +619,9 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
         logger.debug("Resuming process ID: {}", process.getId());
         process.setTimestampLastUpdated(new Date());
         setProcessCustomData(process, fdsData, requestContext);
-        final String userId = lookupUserService.lookupUser(process, identification).orElse(null);
+        final String userId = lookupUserService.lookupUser(process, identification)
+                .map(LookupUserResponse::getUserId)
+                .orElse(null);
         if (!process.getUserId().equals(userId)) {
             throw new OnboardingProcessException(
                     String.format("Looked up user ID '%s' does not equal to user ID '%s' of process ID %s",
@@ -612,7 +637,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
             try {
                 logger.info("Removing activation ID: {} of process ID: {}", activationId, process.getId());
                 activationService.removeActivation(activationId);
-                auditService.auditActivation(process, "Remove activation for user: {}", process.getUserId());
+                auditService.auditActivation(process, activationId, "Remove activation for user: {}", process.getUserId());
             } catch (RemoteCommunicationException e) {
                 throw new OnboardingProcessException(
                         String.format("Unable to remove activation ID: %s of process ID: %s", activationId, process.getId()), e);

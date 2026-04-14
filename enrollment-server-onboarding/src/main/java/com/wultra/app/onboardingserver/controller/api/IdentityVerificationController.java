@@ -393,7 +393,9 @@ public class IdentityVerificationController {
             final @RequestBody ObjectRequest<OnboardingConsentApprovalRequest> request,
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, PowerAuthAuthenticationException, PowerAuthEncryptionException {
 
-        logger.info("action: approveConsent, state: initiated, processId: {}", extractRequest(request).map(OnboardingConsentApprovalRequest::getProcessId).orElse(null));
+        logger.info("action: approveConsent, state: initiated, processId: {}, approved: {}",
+                extractRequest(request).map(OnboardingConsentApprovalRequest::getProcessId).orElse(null),
+                extractRequest(request).map(OnboardingConsentApprovalRequest::isApproved).orElse(null));
         final Response response = identityVerificationRestService.approveConsent(request, apiAuthentication);
         logger.info("action: approveConsent, state: succeeded");
         return response;

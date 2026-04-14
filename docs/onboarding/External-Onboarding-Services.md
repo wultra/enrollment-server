@@ -179,18 +179,16 @@ Service to identify the prospect and assign user identifier.
 ```json
 {
   "userId": "String",
-  "consent": "String",
-  "consentRequired": Boolean # Deprecated
+  "consentRequired": true
 }
 ```
 
-##### Response  Params
+##### Response Params
 
-| Attribute                      | Type      | Description                                                                                                                            |
-|:-------------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `userId`                       | `String`  | The bank assigned ID for the user being onboarded.                                                                                     |
-| `consent`                      | `String`  | Tells if the user has to consent the onboarding (REQUIRED/NOT_REQUIRED) or if it's not evaluated by backend (NOT_EVALUATED or `null`). |
-| `consentRequired (deprecated)` | `Boolean` | Tells if the user has to consent the onboarding.                                                                                       |
+| Attribute         | Type      | Description                                                                                                                                                                                      |
+|:------------------|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `userId`          | `String`  | The bank assigned ID for the user being onboarded.                                                                                                                                               |
+| `consentRequired` | `Boolean` | Tells if the user has to consent the onboarding, `null` is evaluated as `true`. Taken into account only if [the process is configured](Configuration-Onboarding-Process.md) to require consent. |
 <!-- end -->
 
 <!-- begin api POST /client/evaluate -->

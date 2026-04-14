@@ -35,7 +35,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseBundle;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationImageSource;
@@ -78,7 +77,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
     private final MicroblinkConfigProperties properties;
     private final MicroblinkExtractedDataParser microblinkExtractedDataParser;
     private final Map<String, Map<String, String>> licenseKeyByOriginByPlatform;
-    private final AuditService auditService;
 
     public MicroblinkDocumentVerificationProvider(
             final RestClient microblinkRestClient,
@@ -87,8 +85,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final DocumentDataRepository documentDataRepository,
             final ProcessedDocumentDataRepository processedDocumentDataRepository,
             final DocumentVerificationRepository documentVerificationRepository,
-            final MicroblinkExtractedDataParser microblinkExtractedDataParser,
-            final AuditService auditService
+            final MicroblinkExtractedDataParser microblinkExtractedDataParser
     ) {
         this.microblinkRestClient = microblinkRestClient;
         this.objectMapper = objectMapper;
@@ -97,7 +94,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.microblinkExtractedDataParser = microblinkExtractedDataParser;
-        this.auditService = auditService;
 
         licenseKeyByOriginByPlatform = buildLicenseKeyByOriginByPlatform(properties.getMobileSdkConfigs());
     }
@@ -139,7 +135,6 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
         final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
         final var microblinkResponseByDocumentType = fetchMicroblinkResults(documentsByTypeAndSide);
-        auditMicroblinkResponse(microblinkResponseByDocumentType, ownerId);
 
         final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
@@ -149,6 +144,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         final var result = new DocumentsSubmitResult();
         result.setResults(documentResults);
         result.setExtractedPhotoId(facePhotoId);
+        result.setAuditData(collectDataForAudit(microblinkResponseByDocumentType));
 
         final var rejectedDocuments = documentResults.stream()
                 .filter(r -> r.getRejectReason() != null)
@@ -886,13 +882,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return documentData;
     }
 
-    private void auditMicroblinkResponse(final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType, final OwnerId ownerId) {
-        for (final var entry : microblinkResponseByDocumentType.entrySet()) {
-            final var documentType = entry.getKey();
-            final var microblinkResponse = entry.getValue().getResponseWithoutPersonalData();
-
-            auditService.auditDocumentVerificationProvider(ownerId, microblinkResponse, "Document verification response, user: {}, provider: Microblink, documentType: {}", ownerId.getUserId(), documentType);
-        }
+    private static Map<DocumentType, ObjectNode> collectDataForAudit(final Map<DocumentType, DocumentVerificationResponseBundle> microblinkResponseByDocumentType) {
+        return microblinkResponseByDocumentType.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().getResponseWithoutPersonalData()
+                ));
     }
 
     @Builder(toBuilder = true)
