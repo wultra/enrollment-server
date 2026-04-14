@@ -50,7 +50,7 @@ The Enrollment Server uses the following public configuration properties:
 
 | Property                     | Default | Note                                                                                                 |
 |------------------------------|---------|------------------------------------------------------------------------------------------------------|
-| `activation.remove.allow1fa` | `false` | Whether 1FA authentication using `POSSESSION` factor is enabled for the activation removal endpoint. |
+| `activation.remove.allow1fa` | `false` | Whether single-factor authentication using `POSSESSION` factor is permitted for the activation removal endpoint. |
 
 ## UserInfoProvider Configuration
 
