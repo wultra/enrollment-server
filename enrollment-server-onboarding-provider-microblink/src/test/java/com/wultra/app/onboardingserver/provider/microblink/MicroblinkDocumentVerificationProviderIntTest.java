@@ -430,7 +430,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws Exception {
+    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
@@ -446,7 +446,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_failVerification_correctResponseIsReturned() throws Exception {
+    void testVerifyDocuments_failVerification_correctResponseIsReturned() {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
@@ -699,7 +699,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var identityVerification = identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID).orElseThrow();
 
         final var documentVerification = new DocumentVerificationEntity();
-        //documentVerification.setId(ID_CARD_FRONT_DOCUMENT_VERIFICATION_ID);
         documentVerification.setActivationId(ACTIVATION_ID);
         documentVerification.setIdentityVerification(identityVerification);
         documentVerification.setType(DocumentType.ID_CARD);

@@ -1190,62 +1190,6 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
 
-    private void assertValidationResultReject(
-            final DocumentsVerificationResult result,
-            final String idCardValidationResult,
-            final String drivingLicenseValidationResult
-    ) {
-        assertDoesNotThrow(() -> UUID.fromString(result.getVerificationId()));
-        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
-        assertEquals("Rejected document upload ids: [c3e1f7b8-9d2e-4f6a-8b7c-5d4e3f2a1b0c, d4f2a1b0-c3e1-f7b8-9d2e-4f6a8b7c5d4e]", result.getRejectReason());
-        assertNull(result.getErrorDetail());
-
-        final var documentsResult = result.getResults();
-        assertEquals(4, documentsResult.size());
-
-        assertDocumentValidationResult(documentsResult, DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, null, "{ \"type\": \"ID\" }", idCardValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_ID_CARD_BACK_UPLOAD_ID, null, "{ \"type\": \"ID\" }", idCardValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_DRIVING_LICENSE_FRONT_UPLOAD_ID, "[Test microblink message]", "{ \"type\": \"DL\" }", drivingLicenseValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_DRIVING_LICENSE_BACK_UPLOAD_ID, "[Test microblink message]", "{ \"type\": \"DL\" }", drivingLicenseValidationResult);
-    }
-
-    private void assertValidationResultPass(
-            final DocumentsVerificationResult result,
-            final String idCardValidationResult,
-            final String drivingLicenseValidationResult
-    ) {
-        assertDoesNotThrow(() -> UUID.fromString(result.getVerificationId()));
-        assertEquals(DocumentVerificationStatus.ACCEPTED, result.getStatus());
-        assertNull(result.getRejectReason());
-        assertNull(result.getErrorDetail());
-
-        final var documentsResult = result.getResults();
-        assertEquals(4, documentsResult.size());
-
-        assertDocumentValidationResult(documentsResult, DOCUMENT_ID_CARD_FRONT_UPLOAD_ID, null, "{ \"type\": \"ID\" }", idCardValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_ID_CARD_BACK_UPLOAD_ID, null, "{ \"type\": \"ID\" }", idCardValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_DRIVING_LICENSE_FRONT_UPLOAD_ID, null, "{ \"type\": \"DL\" }", drivingLicenseValidationResult);
-        assertDocumentValidationResult(documentsResult, DOCUMENT_DRIVING_LICENSE_BACK_UPLOAD_ID, null, "{ \"type\": \"DL\" }", drivingLicenseValidationResult);
-    }
-
-    private static void assertDocumentValidationResult(
-            final List<DocumentVerificationResult> documentsResult,
-            final String uploadId,
-            final String expectedRejectReason,
-            final String expectedExtractedData,
-            final String expectedValidationResult
-    ) {
-        final var result = documentsResult.stream()
-                .filter(r -> r.getUploadId().equals(uploadId))
-                .findFirst()
-                .orElseThrow();
-
-        assertEquals(expectedRejectReason, result.getRejectReason());
-        assertEquals(expectedValidationResult, result.getVerificationResult());
-        assertNull(result.getErrorDetail());
-        assertEquals(expectedExtractedData, result.getExtractedData());
-    }
-
     private static void assertSavedProcessedDocumentData(final List<ProcessedDocumentDataEntity> entities) {
         assertEquals(2, entities.size());
 
