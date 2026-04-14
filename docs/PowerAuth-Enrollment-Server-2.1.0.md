@@ -18,3 +18,15 @@ Added a new indexed column `subject_id` holding an identifier linking the audit 
 <!-- begin box warning -->
 The auditing tables may be already updated in your database schema if the database schema is not separated for different PowerAuth applications. In case the column `audit_log.subject_id` and its index `audit_log_subject_id_idx` are already present, you can safely skip this migration step.
 <!-- end -->
+
+### Configuration of Activation Removal with 1FA
+
+The activation removal endpoint `/pa/v4/activation/remove` can be configured to allow authentication using `POSSESSION` factor (1FA). By default, two-factor authentication is used when removing activations, either `POSSESSION_KNOWLEDGE` or `POSSESSION_BIOMETRY`.
+
+You can enable 1FA for this endpoint by setting the property:
+
+```properties
+activation.remove.allow1fa=true
+```
+
+The default value is `false`, meaning that 1FA is not allowed.
