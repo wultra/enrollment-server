@@ -18,3 +18,15 @@ Added a new indexed column `subject_id` holding an identifier linking the audit 
 <!-- begin box warning -->
 The auditing tables may be already updated in your database schema if the database schema is not separated for different PowerAuth applications. In case the column `audit_log.subject_id` and its index `audit_log_subject_id_idx` are already present, you can safely skip this migration step.
 <!-- end -->
+
+
+## Cleaning task
+
+Added the configuration property `enrollment-server-onboarding.identity-verification.data-retention` with a default value of 1 hour, and modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows:
+
+`database column timestamp_created + enrollment-server-onboarding.onboarding-process.expiration + enrollment-server-onboarding.identity-verification.data-retention`
+
+Records from the following tables are deleted according to this calculation:
+- `es_document_data`
+- `es_processed_document_data`
+- `es_selfie`

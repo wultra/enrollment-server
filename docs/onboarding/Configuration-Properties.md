@@ -44,11 +44,13 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 
 ## Identity Verification Configuration
 
-| Property                                                                                 | Default | Note                                                              |
-|------------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------|
-| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.                         |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.                |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.                      |
+| Property                                                                                 | Default | Note                                                    |
+|------------------------------------------------------------------------------------------|---------|---------------------------------------------------------|
+| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.               |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.      |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.            |
+| `enrollment-server-onboarding.identity-verification.data-retention`                      | `1h`    | Personal data retention time for identity verification. |
+
 
 ## Digital Onboarding Adapter Configuration
 

@@ -141,7 +141,7 @@ class CleaningService {
      */
     @Transactional
     public int cleanSelfies() {
-        return selfieRepository.cleanup(getProcessExpirationTime());
+        return selfieRepository.cleanup(getPersonalDataRetentionTime());
     }
 
     /**
@@ -149,7 +149,7 @@ class CleaningService {
      */
     @Transactional
     public int cleanupDocumentData() {
-        return documentDataRepository.cleanupDocumentData(getProcessExpirationTime());
+        return documentDataRepository.cleanupDocumentData(getPersonalDataRetentionTime());
     }
 
     /**
@@ -157,7 +157,7 @@ class CleaningService {
      */
     @Transactional
     public int cleanupProcessedDocumentData() {
-        return processedDocumentDataRepository.cleanup(getProcessExpirationTime());
+        return processedDocumentDataRepository.cleanup(getPersonalDataRetentionTime());
     }
 
     /**
@@ -197,8 +197,10 @@ class CleaningService {
         }
     }
 
-    private Date getProcessExpirationTime() {
-        return DateUtil.convertExpirationToCreatedDate(onboardingConfig.getProcessExpirationTime());
+    private Date getPersonalDataRetentionTime() {
+        final var processExpirationTime = onboardingConfig.getProcessExpirationTime();
+        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime();
+        return DateUtil.convertExpirationToCreatedDate(processExpirationTime.plus(dataRetentionTime));
     }
 
     private Date getVerificationExpirationTime() {
