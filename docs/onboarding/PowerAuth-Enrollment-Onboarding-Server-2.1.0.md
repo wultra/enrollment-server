@@ -31,9 +31,8 @@ Clients should use the dedicated configuration endpoint `/api/configuration` to 
 
 ## Cleaning task
 
-Added the configuration property `enrollment-server-onboarding.identity-verification.data-retention` with a default value of 1 hour, and modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows:
-
-`database column timestamp_created + enrollment-server-onboarding.onboarding-process.expiration + enrollment-server-onboarding.identity-verification.data-retention`
+Modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows. The data are deleted after the expiration time of the process plus the retention period. 
+Previously, the data was deleted immediately after the retention period, which could lead to the deletion of data for active processes if the process expiration is higher than the data retention.
 
 Records from the following tables are deleted according to this calculation:
 - `es_document_data`

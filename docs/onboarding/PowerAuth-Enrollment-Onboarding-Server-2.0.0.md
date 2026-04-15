@@ -149,13 +149,6 @@ For this configuration in total at least 2 unique document types must be submitt
 - `PASSPORT` (1 side) + `DRIVING_LICENSE` (1 side)
 
 
-### Documents data retention
-
-Removed the property `enrollment-server-onboarding.identity-verification.data-retention` (default 1 hour). It controlled how long records were kept 
-in the `es_document_data` and `es_processed_document_data` tables based on `timestamp_created`. This setting was independent of process expiration.
-The retention time is now controlled by the property `enrollment-server-onboarding.onboarding-process.expiration` (default 3 hours).
-
-
 ## Configuration Changes
 
 ### Document Verification
