@@ -18,7 +18,10 @@
 package com.wultra.app.enrollmentserver.model.integration;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -27,7 +30,11 @@ import java.util.List;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+// TODO (michal-rozehnal-w, 2026-04-15, #1712) Use only builder for creating instances
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DocumentsVerificationResult {
 
     private String verificationId;
