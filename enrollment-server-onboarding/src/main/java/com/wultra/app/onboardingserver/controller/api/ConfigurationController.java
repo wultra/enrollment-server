@@ -21,6 +21,7 @@ import com.wultra.app.enrollmentserver.api.model.onboarding.request.Configuratio
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.ConfigurationResponse;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.InvalidRequestObjectException;
 import com.wultra.app.onboardingserver.impl.service.ConfigurationService;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
@@ -56,6 +57,8 @@ public class ConfigurationController {
 
     private final ConfigurationService configurationService;
 
+    private final OnboardingConfig onboardingConfig;
+
     @PostMapping
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     @Operation(
@@ -80,7 +83,9 @@ public class ConfigurationController {
         final ConfigurationResponse result = configurationService.fetchConfiguration(processType)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
                 .map(ConfigurationController::convert)
-                .orElseThrow(() -> new InvalidRequestObjectException("Configuration not found for processType: " + processType));
+                .orElseThrow(() -> new InvalidRequestObjectException("Configuration not found for processType: " + processType))
+                .otpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().getSeconds())
+                .build();
 
         logger.info("action: fetchConfiguration, state: succeeded");
         logger.debug("action: fetchConfiguration, state: succeeded, result: {}", result);
@@ -88,14 +93,13 @@ public class ConfigurationController {
         return new ObjectResponse<>(result);
     }
 
-    private static ConfigurationResponse convert(final OnboardingProcessConfigurationValue source) {
+    private static ConfigurationResponse.ConfigurationResponseBuilder convert(final OnboardingProcessConfigurationValue source) {
         return ConfigurationResponse.builder()
                 .enabled(source.enabled())
                 .otpForIdentification(source.otpForIdentification())
                 .otpForIdentityVerification(source.otpForIdentityVerification())
                 .useTemporaryActivation(source.useTemporaryActivation())
-                .documents(convert(source.documents()))
-                .build();
+                .documents(convert(source.documents()));
     }
 
     private static ConfigurationResponse.Documents convert(final OnboardingProcessConfigurationValue.Documents source) {

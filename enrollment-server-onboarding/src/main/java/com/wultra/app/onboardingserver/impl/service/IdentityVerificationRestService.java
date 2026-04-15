@@ -31,7 +31,6 @@ import com.wultra.app.onboardingserver.common.errorhandling.*;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.DocumentSubmitException;
-import com.wultra.app.onboardingserver.impl.service.document.DocumentProcessingService;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentApprovalRequestValidator;
 import com.wultra.app.onboardingserver.impl.service.validation.OnboardingConsentTextRequestValidator;
 import com.wultra.app.onboardingserver.impl.util.PowerAuthUtil;
@@ -51,8 +50,9 @@ import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncrypti
 import com.wultra.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import com.wultra.security.powerauth.rest.api.spring.provider.CustomActivationProvider;
 import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,6 +74,7 @@ import java.util.stream.Collectors;
         havingValue = "true"
 )
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class IdentityVerificationRestService {
 
@@ -92,54 +93,17 @@ public class IdentityVerificationRestService {
 
     private final ActivationService activationService;
 
+    private final OnboardingConfig onboardingConfig;
+
     /**
      * Configuration data for client integration
      */
-    private final ConfigurationDataDto integrationConfigDto;
+    private final ConfigurationDataDto integrationConfigDto = new ConfigurationDataDto();
 
-    /**
-     * Controller constructor.
-     *
-     * @param identityVerificationConfig        Configuration of identity verification.
-     * @param onboardingConfig                  Configuration of onboarding.
-     * @param documentProcessingService         Document processing service.
-     * @param identityVerificationService       Identity verification service.
-     * @param identityVerificationStatusService Identity verification status service.
-     * @param identityVerificationOtpService    Identity OTP verification service.
-     * @param onboardingService                 Onboarding service.
-     * @param presenceCheckService              Presence check service.
-     * @param stateMachineService               State machine service.
-     * @param dataExtractionService             Data extraction service for uploaded documents.
-     */
-    @Autowired
-    public IdentityVerificationRestService(
-            IdentityVerificationConfig identityVerificationConfig,
-            OnboardingConfig onboardingConfig,
-            DocumentProcessingService documentProcessingService,
-            IdentityVerificationService identityVerificationService,
-            IdentityVerificationStatusService identityVerificationStatusService,
-            IdentityVerificationOtpService identityVerificationOtpService,
-            OnboardingServiceImpl onboardingService,
-            PresenceCheckService presenceCheckService,
-            StateMachineService stateMachineService,
-            DataExtractionService dataExtractionService,
-            ActivationService activationService) {
-
-        this.identityVerificationConfig = identityVerificationConfig;
-
-        this.identityVerificationService = identityVerificationService;
-        this.identityVerificationStatusService = identityVerificationStatusService;
-        this.identityVerificationOtpService = identityVerificationOtpService;
-        this.onboardingService = onboardingService;
-        this.presenceCheckService = presenceCheckService;
-        this.stateMachineService = stateMachineService;
-        this.activationService = activationService;
-
-        this.integrationConfigDto = new ConfigurationDataDto();
+    @PostConstruct
+    void fillIntegrationConfigDto() {
         integrationConfigDto.setOtpResendPeriod(onboardingConfig.getOtpResendPeriod().toString());
         integrationConfigDto.setOtpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().toSeconds());
-
-        this.dataExtractionService = dataExtractionService;
     }
 
     /**
