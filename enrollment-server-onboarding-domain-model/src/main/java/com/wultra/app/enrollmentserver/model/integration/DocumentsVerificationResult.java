@@ -30,6 +30,7 @@ import java.util.List;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+// TODO (michal-rozehnal-w, 2026-04-15, #1712) Use only builder for creating instances
 @Data
 @Builder
 @NoArgsConstructor

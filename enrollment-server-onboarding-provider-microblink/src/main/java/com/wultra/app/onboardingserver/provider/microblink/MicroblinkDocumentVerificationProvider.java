@@ -336,8 +336,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(HttpEntity::getBody)
                     .orElseThrow(() -> new DocumentVerificationException("Response body is empty"));
 
-            final var parsedResponse = Optional.of(body)
-                    .map(this::parseMicroblinkResponse)
+            final var parsedResponse = parseMicroblinkResponse(body)
                     .orElseThrow(() -> new DocumentVerificationException("Failed to parse Microblink API response"));
 
             logger.info("action: sendMicroblinkRequest, state: succeeded, verificationResult: {}, microblinkTraceId: {}",
@@ -368,12 +367,12 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private DocumentVerificationResponseBundle parseMicroblinkResponse(final String responseBodyJson) {
+    private Optional<DocumentVerificationResponseBundle> parseMicroblinkResponse(final String responseBodyJson) {
         try {
             final var parsedResponseBody = objectMapper.readValue(responseBodyJson, DocumentVerificationResponse.class);
             final var responseJson = objectMapper.readTree(responseBodyJson);
 
-            return new DocumentVerificationResponseBundle(parsedResponseBody, (ObjectNode) responseJson);
+            return Optional.of(new DocumentVerificationResponseBundle(parsedResponseBody, (ObjectNode) responseJson));
         } catch (final JsonProcessingException e) {
             final var traceId = Optional.ofNullable(responseBodyJson)
                     .map(json -> MICROBLINK_TRACE_ID_PATTERN.matcher(responseBodyJson))
@@ -382,7 +381,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .orElse(null);
 
             logger.warn("Failed to parse Microblink API response, response body is not valid JSON. Microblink traceId: {}", traceId, e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -619,7 +618,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .toList();
 
         final var rejectReasons = documentResults.stream()
-                .filter(it -> it.getRejectReason() != null)
+                .filter(DocumentVerificationResult::isRejected)
                 .map(it -> "uploadId=%s, rejectReason=%s".formatted(it.getUploadId(), it.getRejectReason()))
                 .collect(Collectors.toCollection(ArrayList::new));
 
@@ -662,13 +661,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .orElse(null);
 
         if (documentResult == null) {
-            throw new DocumentVerificationException("Document result not found for uploadId=%s".formatted(uploadId));
+            throw new DocumentVerificationException("Document result not found for uploadId=" + uploadId);
         }
 
-        final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult());
-        if (microblinkResponse == null) {
-            throw new DocumentVerificationException("Failed to parse provider response for uploadId=%s".formatted(uploadId));
-        }
+        final var microblinkResponse = parseMicroblinkResponse(documentResult.getVerificationResult())
+                .orElseThrow(() -> new DocumentVerificationException("Failed to parse provider response for uploadId=%s".formatted(uploadId)));
 
         final var microblinkVerification = Optional.of(microblinkResponse)
                 .map(DocumentVerificationResponseBundle::getParsedResponseBody)
@@ -697,7 +694,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             return createDocumentVerificationResultBundle(documentVerificationResultBuilder, null);
         }
 
-        DocumentCrosscheckData crosscheckData = null;
+        documentVerificationResultBuilder.verificationResult(documentResult.getVerificationResult());
+        documentVerificationResultBuilder.extractedData(documentResult.getExtractedData());
+        documentVerificationResultBuilder.verificationScore(score);
+
         if (properties.isExtractedDataCheckEnabled()) {
             final var extraction = Optional.of(microblinkResponse)
                     .map(DocumentVerificationResponseBundle::getParsedResponseBody)
@@ -722,13 +722,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var extractedData = extraction.map(DocumentVerificationResponse.Extraction::overall)
                     .orElse(List.of());
 
-            crosscheckData = buildCrosscheckData(extractedData);
+            final var crosscheckData = buildCrosscheckData(extractedData);
+            return createDocumentVerificationResultBundle(documentVerificationResultBuilder, crosscheckData);
         }
 
-        documentVerificationResultBuilder.verificationResult(documentResult.getVerificationResult());
-        documentVerificationResultBuilder.extractedData(documentResult.getExtractedData());
-        documentVerificationResultBuilder.verificationScore(score);
-        return createDocumentVerificationResultBundle(documentVerificationResultBuilder, crosscheckData);
+        return createDocumentVerificationResultBundle(documentVerificationResultBuilder, null);
     }
 
     private static DocumentVerificationResultBundle createDocumentVerificationResultBundle(
@@ -816,6 +814,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             return LocalDate.of(result.year(), result.month(), result.day());
         } catch (final RuntimeException e) {
+            logger.warn("Exception when parsing date", e);
             return null;
         }
     }
@@ -868,7 +867,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         };
 
         if (extractedDocumentType == DocumentType.UNKNOWN) {
-            logger.warn("Unsupported document type '{}' for document uploadId={}", uploadId, extractedType);
+            logger.warn("Unsupported document type '{}' for document uploadId={}", extractedType, uploadId);
             return false;
         }
 
