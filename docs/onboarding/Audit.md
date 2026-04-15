@@ -503,9 +503,10 @@ Events from the liveness/presence provider, including initialization, execution,
 
 ### Event type-specific parameters
 
-| Parameter              | Description                                                                                             |
-|------------------------|---------------------------------------------------------------------------------------------------------|
-| `presenceCheckStatus`  | Result of presence check verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED` |
+| Parameter             | Description                                                                                                    |
+|-----------------------|----------------------------------------------------------------------------------------------------------------|
+| `presenceCheckStatus` | Result of presence check verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED`        |
+| `rejectReason`        | Reason for the presence check verification failure. This is only set when `presenceCheckStatus` is `REJECTED`. |
 
 
 ### Message `Uploaded presence check data for user: {userId}`
@@ -516,7 +517,6 @@ Liveness data was uploaded to the presence check provider by calling the `POST /
 ### Message `Got presence check result: {presenceCheckStatus}, rejectReason: {rejectReason} for user: {userId}`
 
 The server received the result of the presence check verification.
-`rejectReason` is only set when the provider rejected the liveness check.
 
 
 ### Message `Clean up presence check data for user: {userId}`
