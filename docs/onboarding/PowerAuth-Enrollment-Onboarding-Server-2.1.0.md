@@ -27,3 +27,14 @@ The auditing tables may be already updated in your database schema if the databa
 
 The property `config` in `/api/identity/status` response has been deprecated and will be removed in a future release.
 Clients should use the dedicated configuration endpoint `/api/configuration` to retrieve `otpResendPeriodSeconds` and other onboarding configuration.
+
+
+## Cleaning task
+
+Modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows. The data are deleted after the expiration time of the process plus the retention period. 
+Previously, the data was deleted immediately after the retention period, which could lead to the deletion of data for active processes if the process expiration is higher than the data retention.
+
+Records from the following tables are deleted according to this calculation:
+- `es_document_data`
+- `es_processed_document_data`
+- `es_selfie`

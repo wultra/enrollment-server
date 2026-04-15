@@ -4,5 +4,5 @@ INSERT INTO es_identity_verification(id, activation_id, user_id, process_id, sta
     ('c918e1c4-5ca7-47da-8765-afc92082f717', 'a3', 'u3', 'p3', 'ACCEPTED', 'COMPLETED', now() - 1, now() - 1);
 
 INSERT INTO es_document_data(id, data, timestamp_created) VALUES
-    ('93a41939-a808-4fe4-a673-f527a294f33e', 'data1', DATEADD('MINUTE', -175, NOW())),
-    ('54bcf744-3e78-4a17-b84e-eea065d733a6', 'data2', DATEADD('MINUTE', -185, NOW())); -- to be deleted
+    ('93a41939-a808-4fe4-a673-f527a294f33e', 'data1', DATEADD('HOUR', -3, NOW())),
+    ('54bcf744-3e78-4a17-b84e-eea065d733a6', 'data2', DATEADD('HOUR', -5, NOW())); -- to be deleted

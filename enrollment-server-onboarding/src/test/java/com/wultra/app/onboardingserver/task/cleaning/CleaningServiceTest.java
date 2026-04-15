@@ -90,14 +90,26 @@ class CleaningServiceTest {
 
     @Test
     @Sql
+    void testCleanupSelfie() {
+        final var idToBeKept = 1L;
+        final var idToBeDeleted = 2L;
+
+        tested.cleanSelfies();
+
+        assertNotNull(fetchSelfie(idToBeKept));
+        assertNull(fetchSelfie(idToBeDeleted));
+    }
+
+    @Test
+    @Sql
     void testCleanupDocumentData() {
-        final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
-        final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
+        final String idToBeKept = "93a41939-a808-4fe4-a673-f527a294f33e";
+        final String idToBeDeleted = "54bcf744-3e78-4a17-b84e-eea065d733a6";
 
         tested.cleanupDocumentData();
 
-        assertNotNull(fetchDocumentData(id1));
-        assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");
+        assertNotNull(fetchDocumentData(idToBeKept));
+        assertNull(fetchDocumentData(idToBeDeleted), "document data ID: " + idToBeDeleted + " should be deleted");
     }
 
     @Test
@@ -311,5 +323,9 @@ class CleaningServiceTest {
 
     private ProcessedDocumentDataEntity fetchProcessedDocumentData(final String id) {
         return entityManager.find(ProcessedDocumentDataEntity.class, id);
+    }
+
+    private SelfieEntity fetchSelfie(final Long id) {
+        return entityManager.find(SelfieEntity.class, id);
     }
 }
