@@ -516,6 +516,7 @@ Liveness data was uploaded to the presence check provider by calling the `POST /
 ### Message `Got presence check result: {presenceCheckStatus}, rejectReason: {rejectReason}, user: {userId}`
 
 The server received the result of the presence check verification.
+`rejectReason` is only set when the provider rejected the liveness check.
 
 
 ### Message `Clean up presence check data for user: {userId}`
