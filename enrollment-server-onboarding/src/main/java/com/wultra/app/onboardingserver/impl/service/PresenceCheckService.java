@@ -115,7 +115,7 @@ public class PresenceCheckService {
 
         final SessionInfo sessionInfo = updateSessionInfo(ownerId, idVerification, Map.of(SessionInfo.ATTRIBUTE_TIMESTAMP_LAST_USED, ownerId.getTimestamp()));
         final PresenceCheckResult result = presenceCheckProvider.getResult(ownerId, sessionInfo);
-        auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {}, rejectReason: {}, user: {}", result.getStatus(), result.getRejectReason(), ownerId.getUserId());
+        auditService.auditPresenceCheckProvider(idVerification, "Got presence check result: {}, rejectReason: {} for user: {}", result.getStatus(), result.getRejectReason(), ownerId.getUserId());
 
         // Evaluate the result
         if (result.getStatus() != PresenceCheckStatus.ACCEPTED) {
