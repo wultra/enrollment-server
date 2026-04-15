@@ -23,7 +23,18 @@ You have to insert at least one row into the table `es_onboarding_process_config
 
 ### Onboarding Process
 
-Added a new column `target_activation_id` to the table `es_onboarding_process`.
+Added new columns to the table `es_onboarding_process`:
+
+- `target_activation_id`
+- `consent_accepted`
+
+The `consent_accepted` column uses the following semantics:
+
+- `true` = consent was accepted
+- `false` = consent is pending
+- `null` = legacy value for records created before this column was introduced; this value is treated as already resolved / not pending
+
+When interpreting migrated data, do not treat `null` as equivalent to `false`. Existing legacy records may keep `null` for backward compatibility.
 
 
 ### Removing columns from `es_document_data` table
