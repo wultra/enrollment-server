@@ -136,8 +136,6 @@ class CleaningService {
      * Clean selfie images.
      *
      * @return Number of deleted selfie images.
-     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
-     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
      */
     @Transactional
     public int cleanSelfies() {
@@ -146,6 +144,8 @@ class CleaningService {
 
     /**
      * Clean document data.
+     *
+     * @return Number of deleted document data.
      */
     @Transactional
     public int cleanupDocumentData() {
@@ -154,6 +154,8 @@ class CleaningService {
 
     /**
      * Clean processed document data.
+     *
+     * @return Number of deleted processed document data.
      */
     @Transactional
     public int cleanupProcessedDocumentData() {
