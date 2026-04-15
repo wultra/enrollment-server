@@ -503,9 +503,9 @@ Events from the liveness/presence provider, including initialization, execution,
 
 ### Event type-specific parameters
 
-| Parameter             | Description                                                                                                                                               |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `presenceCheckStatus` | Result of presence check verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED`                                                   |
+| Parameter             | Description                                                                                                                                                                          |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `presenceCheckStatus` | Result of presence check verification. Possible values: `IN_PROGRESS`, `ACCEPTED`, `REJECTED`, `FAILED`                                                                              |
 | `rejectReason`        | Reason for the presence check verification failure. This should be interpreted only when `presenceCheckStatus` is `REJECTED`; for other statuses it may be absent, `null`, or empty. |
 
 
