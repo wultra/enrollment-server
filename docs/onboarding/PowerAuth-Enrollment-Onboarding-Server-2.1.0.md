@@ -20,6 +20,15 @@ The auditing tables may be already updated in your database schema if the databa
 <!-- end -->
 
 
+## REST API Changes
+
+
+### Identity Status
+
+The property `config` in `/api/identity/status` response has been deprecated and will be removed in a future release.
+Clients should use the dedicated configuration endpoint `/api/configuration` to retrieve `otpResendPeriodSeconds` and other onboarding configuration.
+
+
 ## Cleaning task
 
 Added the configuration property `enrollment-server-onboarding.identity-verification.data-retention` with a default value of 1 hour, and modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows:
