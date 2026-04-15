@@ -20,8 +20,10 @@ package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessPersonalDataIdsProjection;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -196,4 +198,38 @@ public interface OnboardingProcessRepository extends CrudRepository<OnboardingPr
             "WHERE p.id IN :ids")
     void terminate(Collection<String> ids, Date timestampExpired, String errorDetail, ErrorOrigin errorOrigin);
 
+    /**
+     * Finds all identity data IDs for completed processes to be cleaned up.
+     *
+     * @param statuses statuses of completed processes
+     * @param processCompletedBefore time before which the process must have been completed to be included in the result
+     * @param pageable pagination for limiting size of result
+     * @return list of identity data IDs for completed processes to be cleaned up
+     */
+    @Query("""
+        SELECT p.id AS processId,
+               iv.id AS identityVerificationId,
+               dv.id AS documentVerificationId
+        FROM OnboardingProcessEntity p
+        JOIN IdentityVerificationEntity iv ON iv.processId = p.id
+        JOIN DocumentVerificationEntity dv ON dv.identityVerification.id = iv.id
+        WHERE p.status IN :statuses
+          AND (p.timestampFinished < :processCompletedBefore OR p.timestampFailed < :processCompletedBefore)
+          AND p.timestampPersonalDataCleaned IS NULL
+        """)
+    List<OnboardingProcessPersonalDataIdsProjection> findIdentityDataForCleanup(final Set<OnboardingStatus> statuses, final Date processCompletedBefore, final Pageable pageable);
+
+    /**
+     * Sets identity data cleaned timestamp.
+     *
+     * @param ids process IDs where the timestamp will be set
+     * @param timestamp timestamp to be set
+     */
+    @Modifying
+    @Query("""
+            UPDATE OnboardingProcessEntity p SET
+                    p.timestampPersonalDataCleaned = :timestamp
+            WHERE p.id IN :ids
+        """)
+    void updateIdentityDataCleanup(final List<String> ids, final Date timestamp);
 }

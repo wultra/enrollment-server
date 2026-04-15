@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -244,21 +245,21 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_exceptionIsThrown() {
+    void testSubmitDocuments_multipleDocumentsOfSameTypeAndSide_resultWithError() throws Exception {
         // given
         submittedDocumentIdCardBack.setSide(CardSide.FRONT);
 
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", exception.getMessage());
+        assertEquals("Microblink provider exception: DocumentVerificationException Multiple documents of type ID_CARD and side FRONT found. Document ids: [id-card-front, id-card-back]", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_clientThrowsException_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_clientThrowsException_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -273,15 +274,14 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", exception.getMessage());
-        assertNotNull(exception.getCause());
+        assertEquals("Microblink provider exception: RemoteCommunicationException Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Test error body'", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_clientResponseWithoutBody_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_clientResponseWithoutBody_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -296,14 +296,14 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Response body is empty", exception.getMessage());
+        assertEquals("Microblink provider exception: DocumentVerificationException Response body is empty", result.getErrorDetail());
     }
 
     @Test
-    void testSubmitDocuments_exceptionWhenParsingResponseBody_exceptionIsThrown() throws RestClientException {
+    void testSubmitDocuments_exceptionWhenParsingResponseBody_resultWithError() throws Exception {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -318,10 +318,24 @@ class MicroblinkDocumentVerificationProviderTest {
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> provider.submitDocuments(ownerId, submittedDocuments));
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed to parse Microblink API response. Microblink traceId: 123", exception.getMessage());
+        assertEquals("Microblink provider exception: DocumentVerificationException Failed to parse Microblink API response. Microblink traceId: 123", result.getErrorDetail());
+    }
+
+    @Test
+    void testSubmitDocuments_exceptionWithoutMessageIsThrown_resultWithError() throws Exception {
+        // given
+        final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
+
+        when(documentDataRepository.saveAll(anyIterable())).thenThrow(new RuntimeException());
+
+        // when
+        final var result = provider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        assertEquals("Microblink provider exception: RuntimeException null", result.getErrorDetail());
     }
 
     @Test
@@ -1042,7 +1056,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         assertEquals(documentResults.size(), storedEntities.size());
 
-        final var documentIdToDocumentData = documentResults.stream()
+        final var documentUploadIdToDocumentData = documentResults.stream()
                 .collect(Collectors.toMap(
                         DocumentSubmitResult::getDocumentId,
                         i -> storedEntities.stream()
@@ -1051,13 +1065,15 @@ class MicroblinkDocumentVerificationProviderTest {
                                 .orElseThrow()
                 ));
 
-        final var idCardFrontDocumentData = documentIdToDocumentData.get(DOCUMENT_ID_CARD_FRONT_ID);
+        final var idCardFrontDocumentData = documentUploadIdToDocumentData.get(DOCUMENT_ID_CARD_FRONT_ID);
         assertDoesNotThrow(() -> UUID.fromString(idCardFrontDocumentData.getId()));
+        assertEquals(DOCUMENT_ID_CARD_FRONT_ID, idCardFrontDocumentData.getDocumentVerificationId());
         assertArrayEquals(verificationDocumentCardIdFront.image().getData(), idCardFrontDocumentData.getData());
         assertEquals(new Date().getTime(), idCardFrontDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
 
-        final var idCardBackDocumentData = documentIdToDocumentData.get(DOCUMENT_ID_CARD_BACK_ID);
+        final var idCardBackDocumentData = documentUploadIdToDocumentData.get(DOCUMENT_ID_CARD_BACK_ID);
         assertDoesNotThrow(() -> UUID.fromString(idCardBackDocumentData.getId()));
+        assertEquals(DOCUMENT_ID_CARD_BACK_ID, idCardBackDocumentData.getDocumentVerificationId());
         assertArrayEquals(verificationDocumentCardIdBack.image().getData(), idCardBackDocumentData.getData());
         assertEquals(new Date().getTime(), idCardBackDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
     }
@@ -1066,7 +1082,7 @@ class MicroblinkDocumentVerificationProviderTest {
             final MicroblinkDocumentVerificationProvider.DocumentVerificationData documentVerificationData
     ) {
         final var document = new SubmittedDocument();
-        document.setDocumentId(documentVerificationData.documentId());
+        document.setDocumentId(documentVerificationData.documentVerificationId());
         document.setType(documentVerificationData.type());
         document.setSide(documentVerificationData.side());
         document.setPhoto(
@@ -1093,7 +1109,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 .build();
 
         return MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(documentId)
+                .documentVerificationId(documentId)
                 .uploadId(uploadId)
                 .type(type)
                 .side(side)

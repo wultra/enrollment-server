@@ -118,44 +118,59 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         throw new UnsupportedOperationException("Method checkDocumentUpload is not supported by Microblink provider.");
     }
 
+    /**
+     * @implNote If any DocumentDataEntity is saved, then uploadId must always be returned so it can be bound to the DocumentVerificationEntity.
+     * A foreign key cannot be used for DocumentVerificationEntity.uploadId because, depending on the provider, data may be uploaded to the cloud
+     * and there may be no corresponding DocumentDataEntity record.
+     */
     @Override
     public DocumentsSubmitResult submitDocuments(OwnerId ownerId, List<SubmittedDocument> submittedDocuments) throws DocumentVerificationException, RemoteCommunicationException {
-        final var documentIds = submittedDocuments.stream()
+        final var documentVerificationIds = submittedDocuments.stream()
                 .map(SubmittedDocument::getDocumentId)
                 .toList();
 
-        logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentIds: {}", ownerId, documentIds);
+        logger.info("action: submitDocuments, state: initiated, provider: microblink, ownerId: {}, documentVerificationIds: {}", ownerId, documentVerificationIds);
 
         final var documentsVerificationData = submittedDocuments.stream()
-                .map(MicroblinkDocumentVerificationProvider::buildDocumentVerificationData)
+                .map(MicroblinkDocumentVerificationProvider::createDocumentVerificationData)
                 .toList();
 
-        saveDocumentsData(documentsVerificationData);
+        final var microblinkResponseByDocumentType = new EnumMap<DocumentType, DocumentVerificationResponseBundle>(DocumentType.class);
+        final var auditData = new EnumMap<DocumentType, ObjectNode>(DocumentType.class);
+        String facePhotoId = null;
 
-        final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
-        final var microblinkResponseByDocumentType = fetchMicroblinkResults(documentsByTypeAndSide);
+        try {
+            saveDocumentsData(documentsVerificationData);
 
-        final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
+            final var documentsByTypeAndSide = groupDocumentsByTypeAndSide(documentsVerificationData);
 
-        final var documentVerificationsByDocumentType = getDocumentVerificationsByDocumentType(ownerId, documentsByTypeAndSide.keySet());
-        final var facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
+            microblinkResponseByDocumentType.putAll(fetchMicroblinkResults(documentsByTypeAndSide));
+            auditData.putAll(collectDataForAudit(microblinkResponseByDocumentType));
 
-        final var result = new DocumentsSubmitResult();
-        result.setResults(documentResults);
-        result.setExtractedPhotoId(facePhotoId);
-        result.setAuditData(collectDataForAudit(microblinkResponseByDocumentType));
+            final var documentResults = processMicroblinkResults(documentsVerificationData, microblinkResponseByDocumentType);
 
-        final var rejectedDocuments = documentResults.stream()
-                .filter(r -> r.getRejectReason() != null)
-                .map(DocumentSubmitResult::getDocumentId)
-                .toList();
+            final var documentVerificationsByDocumentType = getDocumentVerificationsByDocumentType(ownerId, documentsByTypeAndSide.keySet());
+            facePhotoId = saveProcessedImages(microblinkResponseByDocumentType, documentVerificationsByDocumentType);
 
-        if (!rejectedDocuments.isEmpty()) {
-            result.setRejectReason("Rejected documents: " + rejectedDocuments);
+            final var result = createSubmitResult(documentResults, facePhotoId, auditData, null);
+
+            logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
+            return result;
+        } catch (final DocumentVerificationException | RemoteCommunicationException | RuntimeException e) {
+            final var errorMessage = "Microblink provider exception: %s %s".formatted(e.getClass().getSimpleName(), e.getMessage());
+            final var documentResults = documentsVerificationData.stream()
+                .map(document -> {
+                    final var submitResult = new DocumentSubmitResult();
+                    submitResult.setDocumentId(document.documentVerificationId());
+                    submitResult.setUploadId(document.uploadId());
+                    submitResult.setErrorDetail(errorMessage);
+                    return submitResult;
+                })
+            .toList();
+
+            logger.info("action: submitDocuments, state: failed, provider: microblink, error: {}", e.getMessage(), e);
+            return createSubmitResult(documentResults, facePhotoId, auditData, errorMessage);
         }
-
-        logger.info("action: submitDocuments, state: succeeded, provider: microblink, rejectReason: {}", result.getRejectReason());
-        return result;
     }
 
     @Override
@@ -245,9 +260,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         }
     }
 
-    private static DocumentVerificationData buildDocumentVerificationData(final SubmittedDocument submittedDocument) {
+    private static DocumentVerificationData createDocumentVerificationData(final SubmittedDocument submittedDocument) {
         return DocumentVerificationData.builder()
-                .documentId(submittedDocument.getDocumentId())
+                .documentVerificationId(submittedDocument.getDocumentId())
                 .uploadId(UUID.randomUUID().toString())
                 .type(submittedDocument.getType())
                 .side(submittedDocument.getSide())
@@ -279,7 +294,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                         "Multiple documents of type %s and side %s found. Document ids: %s".formatted(
                                 documentType,
                                 documentSide,
-                                List.of(documentOfSameSide.documentId(), documentVerificationData.documentId())
+                                List.of(documentOfSameSide.documentVerificationId(), documentVerificationData.documentVerificationId())
                         )
                 );
             }
@@ -391,7 +406,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, responseBody.extraction());
 
             final var result = new DocumentSubmitResult();
-            result.setDocumentId(documentVerificationData.documentId());
+            result.setDocumentId(documentVerificationData.documentVerificationId());
             result.setUploadId(documentVerificationData.uploadId());
             result.setExtractedData(extractedDataValue);
             result.setValidationResult(microblinkResponse.getResponseWithoutImages());
@@ -792,6 +807,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         documentData.setId(document.uploadId());
         documentData.setData(document.image().getData());
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(document.documentVerificationId);
         return documentData;
     }
 
@@ -803,9 +819,34 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 ));
     }
 
+    private static DocumentsSubmitResult createSubmitResult(
+            final List<DocumentSubmitResult> documentResults,
+            final String facePhotoId,
+            final Map<DocumentType, ObjectNode> auditData,
+            final String errorDetail
+    ) {
+        final var result = new DocumentsSubmitResult();
+        result.setResults(documentResults);
+        result.setExtractedPhotoId(facePhotoId);
+        result.setAuditData(auditData);
+
+        final var rejectedDocuments = documentResults.stream()
+                .filter(r -> r.getRejectReason() != null)
+                .map(DocumentSubmitResult::getDocumentId)
+                .toList();
+
+        if (!rejectedDocuments.isEmpty()) {
+            result.setRejectReason("Rejected documents: " + rejectedDocuments);
+        }
+
+        result.setErrorDetail(errorDetail);
+
+        return result;
+    }
+
     @Builder(toBuilder = true)
     record DocumentVerificationData(
-            String documentId,
+            String documentVerificationId,
             String uploadId,
             DocumentType type,
             CardSide side,

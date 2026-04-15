@@ -24,7 +24,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.util.List;
 
 /**
  * Repository for document data records.
@@ -35,7 +35,7 @@ import java.util.Date;
 public interface DocumentDataRepository extends CrudRepository<DocumentDataEntity, String> {
 
     @Modifying
-    @Query("DELETE FROM DocumentDataEntity d WHERE d.timestampCreated < :dateCleanup")
-    int cleanupDocumentData(Date dateCleanup);
+    @Query("DELETE FROM DocumentDataEntity d WHERE d.documentVerificationId IN :documentVerificationIds")
+    void deleteAllByDocumentVerificationIds(final List<String> documentVerificationIds);
 
 }

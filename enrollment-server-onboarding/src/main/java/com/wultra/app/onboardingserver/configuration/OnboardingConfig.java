@@ -59,4 +59,9 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.default-type:}")
     private String defaultProcessType;
 
+    /**
+     * Maximum number of records processed in a single cleaning task run.
+     */
+    @Value("${enrollment-server-onboarding.onboarding-process.cleanup-limit:10000}")
+    private int cleanupLimit;
 }

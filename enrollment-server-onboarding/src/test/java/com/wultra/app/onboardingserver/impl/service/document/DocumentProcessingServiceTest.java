@@ -175,6 +175,35 @@ class DocumentProcessingServiceTest {
     }
 
     @Test
+    void testSubmitDocuments_rejectedUploadIdIsStored() throws Exception {
+        final var identityVerification = identityVerificationRepository.findById("v1").get();
+        assertNotNull(identityVerification);
+
+        final OwnerId ownerId = createOwnerId();
+
+        final var request = DocumentSubmitV2Request.builder()
+                .processId("p1")
+                .documents(List.of(
+                        DocumentSubmitV2Request.Document.builder()
+                                .filename("unexpected_filename.png")
+                                .data(Base64.getEncoder().encodeToString("img1".getBytes()))
+                                .type(DocumentType.ID_CARD)
+                                .side(CardSide.FRONT)
+                                .build()
+                ))
+                .build();
+
+        tested.submitDocuments(identityVerification, request, ownerId);
+
+        final var documents = documentVerificationRepository.findAll();
+        assertEquals(1, documents.size());
+
+        final var rejectedDocument = documents.get(0);
+        assertEquals(DocumentStatus.REJECTED, rejectedDocument.getStatus());
+        assertNotNull(rejectedDocument.getUploadId());
+    }
+
+    @Test
     void testSubmitDocuments_missingData() throws Exception {
         final IdentityVerificationEntity identityVerification = identityVerificationRepository.findById("v1").get();
         assertNotNull(identityVerification);

@@ -41,14 +41,16 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 | `enrollment-server-onboarding.onboarding-process.max-processes-per-day`   | `5`       | Maximum number of onboarding processes during last 24 hours per user.                         |
 | `enrollment-server-onboarding.onboarding-process.max-error-score`         | `15`      | Maximum error score for an onboarding process.                                                |
 | `enrollment-server-onboarding.onboarding-process.default-type`            | `_empty_` | Default process type used for starting onboarding if not specified by the mobile application. |
+| `enrollment-server-onboarding.onboarding-process.cleanup-limit`           | `10000`   | Maximum number of records processed in a single cleaning task run.                            |
 
 ## Identity Verification Configuration
 
-| Property                                                                                 | Default | Note                                                              |
-|------------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------|
-| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.                         |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.                |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.                      |
+| Property                                                                                 | Default | Note                                                                                                   |
+|------------------------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.                                                              |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.                                                     |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.                                                           |
+| `enrollment-server-onboarding.identity-verification.data-retention`                      | `1h`    | Time period for which the identity data of completed onboarding processes is retained in the database. |
 
 ## Digital Onboarding Adapter Configuration
 

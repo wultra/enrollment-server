@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_onboarding_process" columnName="timestamp_personal_data_cleaned"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create a new column timestamp_personal_data_cleaned in es_onboarding_process table to store the timestamp when the identity data was cleaned
+        </comment>
+        <addColumn tableName="es_onboarding_process">
+            <column name="timestamp_personal_data_cleaned" type="timestamp" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="2" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_onboarding_process_timestamp_personal_data_cleaned_idx"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create a new index es_onboarding_process_timestamp_personal_data_cleaned_idx
+        </comment>
+        <createIndex tableName="es_onboarding_process" indexName="es_onboarding_process_timestamp_personal_data_cleaned_idx">
+            <column name="timestamp_personal_data_cleaned" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="3" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_identity_verification_process_id_idx" />
+            </not>
+        </preConditions>
+        <comment>
+            Create a new index es_identity_verification_process_id_idx
+        </comment>
+        <createIndex tableName="es_identity_verification" indexName="es_identity_verification_process_id_idx">
+            <column name="process_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="4" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_document_data" columnName="document_verification_id"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create a new column document_verification_id in es_document_data table
+        </comment>
+        <addColumn tableName="es_document_data">
+            <column name="document_verification_id" type="varchar(36)">
+                <constraints foreignKeyName="es_document_verification_id_fk" referencedTableName="es_document_verification" referencedColumnNames="id" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="5" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_document_data_document_verification_id_idx" />
+            </not>
+        </preConditions>
+        <comment>
+            Create a new index es_document_data_document_verification_id_idx
+        </comment>
+        <createIndex tableName="es_document_data" indexName="es_document_data_document_verification_id_idx">
+            <column name="document_verification_id" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

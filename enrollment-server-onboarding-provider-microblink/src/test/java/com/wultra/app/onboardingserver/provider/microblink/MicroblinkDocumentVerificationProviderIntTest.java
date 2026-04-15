@@ -28,7 +28,6 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import okhttp3.mockwebserver.MockWebServer;
 import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
@@ -216,7 +215,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         ownerId.setUserId("37f9c00e-67ad-47e3-9c02-9a87e61cfa12");
 
         idCardFrontDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(ID_CARD_FRONT_DOCUMENT_ID)
+                .documentVerificationId(ID_CARD_FRONT_DOCUMENT_ID)
                 .uploadId(ID_CARD_FRONT_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
                 .side(CardSide.FRONT)
@@ -224,7 +223,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .build();
 
         idCardBackDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(ID_CARD_BACK_DOCUMENT_ID)
+                .documentVerificationId(ID_CARD_BACK_DOCUMENT_ID)
                 .uploadId(ID_CARD_BACK_UPLOAD_ID)
                 .type(DocumentType.ID_CARD)
                 .side(CardSide.BACK)
@@ -232,7 +231,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .build();
 
         passportDocument = MicroblinkDocumentVerificationProvider.DocumentVerificationData.builder()
-                .documentId(PASSPORT_DOCUMENT_ID)
+                .documentVerificationId(PASSPORT_DOCUMENT_ID)
                 .uploadId(PASSPORT_UPLOAD_ID)
                 .type(DocumentType.PASSPORT)
                 .side(CardSide.FRONT)
@@ -349,7 +348,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkClientException_exceptionIsThrown() {
+    void testSubmitDocuments_microblinkClientException_failedResultIsReturned() throws Exception {
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -358,12 +357,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .setBody("Service Not Available"));
 
         // when
-        final var exception = assertThrows(RemoteCommunicationException.class,
-                () -> microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments)
-        );
+        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        assertEquals("Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", exception.getMessage());
+        assertEquals("Microblink provider exception: RemoteCommunicationException Failed REST API call to Microblink, statusCode=503 SERVICE_UNAVAILABLE, responseBody='Service Not Available'", result.getErrorDetail());
+        assertEquals(2, result.getResults().size());
+        result.getResults()
+                .forEach(documentResult -> assertDoesNotThrow(() -> UUID.fromString(documentResult.getUploadId())));
     }
 
     @Test
@@ -470,7 +470,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         return documents.stream()
                 .map(d -> {
                     final var doc = new SubmittedDocument();
-                    doc.setDocumentId(d.documentId());
+                    doc.setDocumentId(d.documentVerificationId());
                     doc.setType(d.type());
                     doc.setSide(d.side());
                     doc.setPhoto(d.image());
@@ -580,6 +580,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var frontDocumentData = documentDataByUploadId.get(frontDocumentUploadId);
         assertArrayEquals(idCardFrontImage.getData(), frontDocumentData.getData());
         assertEquals(new Date().getTime(), frontDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertEquals(ID_CARD_FRONT_DOCUMENT_ID, frontDocumentData.getDocumentVerificationId());
 
         final var backDocumentUploadId = result.getResults().stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -590,6 +591,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var backDocumentData = documentDataByUploadId.get(backDocumentUploadId);
         assertArrayEquals(idCardBackImage.getData(), backDocumentData.getData());
         assertEquals(new Date().getTime(), backDocumentData.getTimestampCreated().getTime(), TIMESTAMP_ASSERT_DELTA_MS);
+        assertEquals(ID_CARD_BACK_DOCUMENT_ID, backDocumentData.getDocumentVerificationId());
     }
 
     private void assertProcessedDocumentData() {
@@ -622,6 +624,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(ID_CARD_FRONT_UPLOAD_ID);
         documentData.setData(new byte[] { 1, 2 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(ID_CARD_FRONT_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var documentVerification = prepareIdCardFrontDocumentVerificationInDatabase();
@@ -643,6 +646,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(ID_CARD_BACK_UPLOAD_ID);
         documentData.setData(new byte[] { 3, 4 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(ID_CARD_BACK_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var documentVerification = prepareIdCardBackDocumentVerificationInDatabase();
@@ -664,6 +668,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentData.setId(PASSPORT_UPLOAD_ID);
         documentData.setData(new byte[] { 5, 6 });
         documentData.setTimestampCreated(new Date());
+        documentData.setDocumentVerificationId(PASSPORT_DOCUMENT_ID);
         documentDataRepository.save(documentData);
 
         final var identityVerification = identityVerificationRepository.findById("e0a627b9-9829-4bec-8c8d-db3be4ff03c1").orElseThrow();

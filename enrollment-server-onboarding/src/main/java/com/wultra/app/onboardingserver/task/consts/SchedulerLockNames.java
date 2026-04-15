@@ -34,20 +34,10 @@ public final class SchedulerLockNames {
 
     public static final String ONBOARDING_OTP_LOCK = "onboardingOtpLock";
 
-    public static final String DOCUMENT_SUBMIT_SYNC_LOCK = "documentSubmitCheckLock";
-
-    public static final String DOCUMENT_SUBMIT_VERIFICATION_LOCK = "documentSubmitVerificationsLock";
-
-    public static final String DOCUMENT_VERIFICATION_LOCK = "documentVerificationsLock";
-
-    public static final String DOCUMENT_DATA_LOCK = "documentDataDataLock";
-
-    public static final String PROCESSED_DOCUMENT_DATA_LOCK = "processedDocumentDataLock";
-
     public static final String EXPIRE_DOCUMENT_VERIFICATION_LOCK = "expireDocumentVerificationLock";
 
     public static final String CLEANUP_ACTIVATIONS_LOCK = "cleanupActivationsLock";
 
-    public static final String CLEANUP_SELFIES_LOCK = "cleanupSelfiesLock";
+    public static final String CLEANUP_COMPLETED_PROCESS_PERSONAL_DATA_LOCK = "cleanupCompletedProcessPersonalDataLock";
 
 }

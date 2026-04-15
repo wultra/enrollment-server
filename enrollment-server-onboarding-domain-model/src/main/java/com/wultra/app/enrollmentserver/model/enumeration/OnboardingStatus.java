@@ -52,4 +52,9 @@ public enum OnboardingStatus {
      */
     public static final Set<OnboardingStatus> NOT_YET_COMPLETED = Set.of(ACTIVATION_IN_PROGRESS, VERIFICATION_IN_PROGRESS);
 
+    /**
+     * Set of statuses representing completed onboarding process.
+     */
+    public static final Set<OnboardingStatus> COMPLETED = Set.of(FINISHED, FAILED);
+
 }

@@ -22,12 +22,14 @@ import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.onboardingserver.common.database.*;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessPersonalDataIdsProjection;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.impl.util.DateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -133,34 +136,6 @@ class CleaningService {
     }
 
     /**
-     * Clean selfie images.
-     *
-     * @return Number of deleted selfie images.
-     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
-     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
-     */
-    @Transactional
-    public int cleanSelfies() {
-        return selfieRepository.cleanup(getProcessExpirationTime());
-    }
-
-    /**
-     * Clean document data.
-     */
-    @Transactional
-    public int cleanupDocumentData() {
-        return documentDataRepository.cleanupDocumentData(getProcessExpirationTime());
-    }
-
-    /**
-     * Clean processed document data.
-     */
-    @Transactional
-    public int cleanupProcessedDocumentData() {
-        return processedDocumentDataRepository.cleanup(getProcessExpirationTime());
-    }
-
-    /**
      * Terminate expired document verifications.
      */
     @Transactional
@@ -197,8 +172,73 @@ class CleaningService {
         }
     }
 
-    private Date getProcessExpirationTime() {
-        return DateUtil.convertExpirationToCreatedDate(onboardingConfig.getProcessExpirationTime());
+    /**
+     * Cleanup personal data of completed processes after the retention time.
+     */
+    @Transactional
+    public void cleanupCompletedProcessPersonalData() {
+        final var retentionTime = DateUtil.convertExpirationToCreatedDate(identityVerificationConfig.getDataRetention());
+        final var limit = onboardingConfig.getCleanupLimit();
+
+        final var dataIds = onboardingProcessRepository.findIdentityDataForCleanup(OnboardingStatus.COMPLETED, retentionTime, PageRequest.of(0, limit));
+        logger.info("Found {} data records of completed processes for cleanup. Retention time: {}", dataIds.size(), retentionTime);
+
+        if (dataIds.isEmpty()) {
+            return;
+        }
+
+        setProcessCleanupTime(dataIds);
+        cleanDocumentData(dataIds);
+        cleanSelfieData(dataIds);
+
+        logger.info("Personal data records of completed processes deleted");
+    }
+
+    private void setProcessCleanupTime(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var cleanupTime = new Date();
+
+        final var processIds = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getProcessId)
+                .distinct()
+                .toList();
+
+        logger.debug("Setting cleanup time {} for {} processes", cleanupTime, processIds.size());
+
+        for (final var processIdsBatch : ListUtils.partition(processIds, BATCH_SIZE)) {
+            onboardingProcessRepository.updateIdentityDataCleanup(processIdsBatch, cleanupTime);
+        }
+
+        logger.debug("Cleanup time set for processes");
+    }
+
+    private void cleanDocumentData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var ids = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getDocumentVerificationId)
+                .toList();
+
+        logger.debug("Deleting document data for {} document verifications", ids.size());
+
+        for (final var idsBatch : ListUtils.partition(ids, BATCH_SIZE)) {
+            processedDocumentDataRepository.deleteAllByDocumentVerificationIds(idsBatch);
+            documentDataRepository.deleteAllByDocumentVerificationIds(idsBatch);
+        }
+
+        logger.debug("Document data deleted");
+    }
+
+    private void cleanSelfieData(final List<OnboardingProcessPersonalDataIdsProjection> personalDataIds) {
+        final var ids = personalDataIds.stream()
+                .map(OnboardingProcessPersonalDataIdsProjection::getIdentityVerificationId)
+                .distinct()
+                .toList();
+
+        logger.debug("Deleting selfie data for {} identity verifications", ids.size());
+
+        for (final var idsBatch : ListUtils.partition(ids, BATCH_SIZE)) {
+            selfieRepository.deleteAllByIdentityVerificationIds(idsBatch);
+        }
+
+        logger.debug("Selfie data deleted");
     }
 
     private Date getVerificationExpirationTime() {

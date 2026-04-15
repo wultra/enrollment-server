@@ -45,6 +45,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Transactional
 class CleaningServiceTest {
+    
+    private static final long TIME_ASSERT_DELTA = 3_000;
 
     @Autowired
     private CleaningService tested;
@@ -86,30 +88,6 @@ class CleaningServiceTest {
         final DocumentVerificationEntity documentVerification = fetchDocumentVerification(id2);
         assertEquals("expired", documentVerification.getErrorDetail());
         assertEquals(PROCESS_LIMIT_CHECK, documentVerification.getErrorOrigin());
-    }
-
-    @Test
-    @Sql
-    void testCleanupDocumentData() {
-        final String id1 = "93a41939-a808-4fe4-a673-f527a294f33e";
-        final String id2 = "54bcf744-3e78-4a17-b84e-eea065d733a6";
-
-        tested.cleanupDocumentData();
-
-        assertNotNull(fetchDocumentData(id1));
-        assertNull(fetchDocumentData(id2), "document data ID: " + id2 + " should be deleted");
-    }
-
-    @Test
-    @Sql
-    void testCleanupProcessedDocumentData() {
-        final var idToBeKept = "e3b0c442-98fc-4c4a-9c1f-0e4e2b7b5b6a";
-        final var idToBeDeleted = "7f6d2c3a-1b4e-4a8e-9d7c-3f2e1a5c9b8d";
-
-        tested.cleanupProcessedDocumentData();
-
-        assertNotNull(fetchProcessedDocumentData(idToBeKept));
-        assertNull(fetchProcessedDocumentData(idToBeDeleted));
     }
 
     @Test
@@ -268,6 +246,65 @@ class CleaningServiceTest {
         assertEquals(List.of("a", "b", "c", "d", "e", "f", "g", "h"), result.iterator().next());
     }
 
+    @Test
+    @Sql
+    void testCleanupCompletedProcessIdentityData() {
+        final var failedProcessId = "11111111-aaaa-4053-bb3d-3970979baf5d";
+        final var successfulProcessId = "22222222-aaaa-4053-bb3d-3970979baf5d";
+        final var inProgressProcessId = "33333333-aaaa-4053-bb3d-3970979baf5d";
+        final var recentFailedProcessId = "44444444-aaaa-4053-bb3d-3970979baf5d";
+
+        final var failedSelfieId = 1L;
+        final var successfulSelfieId = 2L;
+        final var inProgressSelfieId = 3L;
+        final var recentFailedSelfieId = 4L;
+
+        final var failedDocumentUploadId = "upload-cleanup-failed";
+        final var successfulDocumentUploadId = "upload-cleanup-success";
+        final var successfulDisposedDocumentUploadId = "upload-cleanup-success-disposed";
+        final var inProgressDocumentUploadId = "upload-cleanup-progress";
+        final var recentFailedDocumentUploadId = "upload-cleanup-recent-failed";
+
+        final var failedProcessedDocumentId = "processed-cleanup-failed";
+        final var successfulProcessedDocumentId = "processed-cleanup-success";
+        final var successfulDisposedProcessedDocumentId = "processed-cleanup-success-disposed";
+        final var inProgressProcessedDocumentId = "processed-cleanup-progress";
+        final var recentFailedProcessedDocumentId = "processed-cleanup-recent-failed";
+
+        tested.cleanupCompletedProcessPersonalData();
+        entityManager.flush();
+        entityManager.clear();
+
+        final var failedProcess = fetchOnboardingProcess(failedProcessId);
+        assertEquals(System.currentTimeMillis(), failedProcess.getTimestampPersonalDataCleaned().getTime(), TIME_ASSERT_DELTA);
+
+        final var successfulProcess = fetchOnboardingProcess(successfulProcessId);
+        assertEquals(System.currentTimeMillis(), successfulProcess.getTimestampPersonalDataCleaned().getTime(), TIME_ASSERT_DELTA);
+
+        final var inProgressProcess = fetchOnboardingProcess(inProgressProcessId);
+        assertNull(inProgressProcess.getTimestampPersonalDataCleaned());
+
+        final var recentFailedProcess = fetchOnboardingProcess(recentFailedProcessId);
+        assertNull(recentFailedProcess.getTimestampPersonalDataCleaned());
+
+        assertNull(fetchSelfie(failedSelfieId));
+        assertNull(fetchSelfie(successfulSelfieId));
+        assertNotNull(fetchSelfie(inProgressSelfieId));
+        assertNotNull(fetchSelfie(recentFailedSelfieId));
+
+        assertNull(fetchProcessedDocumentData(failedProcessedDocumentId));
+        assertNull(fetchProcessedDocumentData(successfulProcessedDocumentId));
+        assertNull(fetchProcessedDocumentData(successfulDisposedProcessedDocumentId));
+        assertNotNull(fetchProcessedDocumentData(inProgressProcessedDocumentId));
+        assertNotNull(fetchProcessedDocumentData(recentFailedProcessedDocumentId));
+
+        assertNull(fetchDocumentData(failedDocumentUploadId));
+        assertNull(fetchDocumentData(successfulDocumentUploadId));
+        assertNull(fetchDocumentData(successfulDisposedDocumentUploadId));
+        assertNotNull(fetchDocumentData(inProgressDocumentUploadId));
+        assertNotNull(fetchDocumentData(recentFailedDocumentUploadId));
+    }
+
     private void assertStatus(final String id, final DocumentStatus status) {
         final DocumentVerificationEntity documentVerification = fetchDocumentVerification(id);
         assertEquals(status, documentVerification.getStatus(), "status of " + id);
@@ -311,5 +348,9 @@ class CleaningServiceTest {
 
     private ProcessedDocumentDataEntity fetchProcessedDocumentData(final String id) {
         return entityManager.find(ProcessedDocumentDataEntity.class, id);
+    }
+
+    private SelfieEntity fetchSelfie(final Long id) {
+        return entityManager.find(SelfieEntity.class, id);
     }
 }
