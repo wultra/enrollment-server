@@ -30,7 +30,7 @@ All document verification attempts.
 
 ```
 select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now() 
+where timestamp_uploaded between now() - INTERVAL '90 day' and now()
 and side = 'FRONT'; -- the document is always evaluated as whole with the same result for FRONT and BACK
 ```
 
@@ -40,7 +40,7 @@ Documents accepted by the provider that have passed the document type check and 
 
 ```
 select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now() 
+where timestamp_uploaded between now() - INTERVAL '90 day' and now()
 and side = 'FRONT' -- the document is always evaluated as whole with the same result for FRONT and BACK
 and reject_reason is null;
 ```
@@ -51,7 +51,7 @@ Documents rejected by the provider due to invalid checks, or by the onboarding s
 
 ```
 select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now() 
+where timestamp_uploaded between now() - INTERVAL '90 day' and now()
 and side = 'FRONT'
 and reject_reason = 'documentVerificationRejected';
 ```
@@ -62,7 +62,7 @@ It failed due to a technical reason, such as a timeout or a network issue.
 
 ```
 select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now() 
+where timestamp_uploaded between now() - INTERVAL '90 day' and now()
 and side = 'FRONT'
 and reject_reason = 'documentVerificationFailed';
 ```
@@ -75,7 +75,8 @@ Documents accepted after multiple attempts (more than one). This means that ther
 SELECT COUNT(*) FROM (
 	SELECT identity_verification_id, type
 	FROM es_document_verification
-	WHERE side = 'FRONT'
+	WHERE timestamp_uploaded between now() - INTERVAL '90 day' and now()
+		AND side = 'FRONT'
 	GROUP BY identity_verification_id, type
 	HAVING
 		COUNT(*) > 1
@@ -83,13 +84,13 @@ SELECT COUNT(*) FROM (
     	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason='documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
 ```
 
-SQL decomposition:
+**SQL decomposition**
 
-1. We are selecting records from the `es_document_verification` table, limiting them to the `FRONT` side only, because the table contains one or two sides for each document, but the front side is common to all document types.
-2. The results are grouped by `identity_verification_id` and `type` because we want to ensure that attempts within a group originate from the same identity verification ID. There can be multiple documents under each identity verification ID (e.g. ID, passport, driving licence), so grouping by type is also used.
-3. We are checking if there is more than one record in a group. This means there has been more than one attempt.
-4. We check whether the group contains at least one accepted and one rejected attempt.
-5. Finally, we count all returned groups (first row).
+1. Count all returned groups by wrapping everything in one select.
+2. Select records from the `es_document_verification` table, limiting them to the `90 day` interval and the `FRONT` side only. Front side only because the table contains one or two sides for each document, but the front side is common to all document types.
+3. The results are grouped by `identity_verification_id` and `type` because we want to ensure that attempts within a group originate from the same identity verification ID. There can be multiple documents under each identity verification ID (e.g. ID, passport, driving licence), so grouping by type is also used.
+4. We are checking if there is more than one record in a group. This means there has been more than one attempt.
+5. We check whether the group contains at least one accepted and one rejected attempt. Rejected attempts always have some value in `reject_reason` but we also use `status` for better code readability.
 
 ## Liveness Check
 
