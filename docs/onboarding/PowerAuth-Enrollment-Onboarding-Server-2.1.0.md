@@ -1,7 +1,7 @@
 # Migration from 1.9.x to 2.1.x
 
-This guide contains instructions for migration from PowerAuth Enrollment Onboarding Server version `1.9.x` to version `2.1.0`.
-Since version `2.0.0` was never released, there is no version between `1.9.x` and `2.1.0`.
+This guide contains instructions for migration from PowerAuth Enrollment Onboarding Server version `1.10.x` to version `2.1.0`.
+Since version `2.0.0` was never released, there is no version between `1.10.x` and `2.1.0`.
 
 
 ## Database Changes
