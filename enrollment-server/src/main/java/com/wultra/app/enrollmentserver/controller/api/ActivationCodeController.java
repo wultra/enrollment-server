@@ -38,14 +38,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller publishing REST services for obtaining a new activation code.
@@ -93,11 +93,13 @@ public class ActivationCodeController {
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
-    public ObjectResponse<ActivationCodeResponse> requestActivationCode(@EncryptedRequestBody ObjectRequest<ActivationCodeRequest> request,
-                                                                        @Parameter(hidden = true) EncryptionContext encryptionContext,
-                                                                        @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
+    public ObjectResponse<ActivationCodeResponse> requestActivationCode(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<ActivationCodeRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
 
-        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", extractRequest(request).map(ActivationCodeRequest::getApplicationId).orElse(null));
+        final ActivationCodeRequest requestObject = request.getRequestObject();
+        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", requestObject.getApplicationId());
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
@@ -110,12 +112,7 @@ public class ActivationCodeController {
             throw new PowerAuthEncryptionException("ECIES decryption failed when fetching activation code");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            logger.error("Invalid request received when fetching activation code");
-            throw new PowerAuthEncryptionException("Invalid request received when fetching activation code");
-        }
-
-        final ActivationCodeResponse response = activationCodeService.requestActivationCode(request.getRequestObject(), apiAuthentication);
+        final ActivationCodeResponse response = activationCodeService.requestActivationCode(requestObject, apiAuthentication);
         logger.info("action: requestActivationCode, state: succeeded");
         return new ObjectResponse<>(response);
     }

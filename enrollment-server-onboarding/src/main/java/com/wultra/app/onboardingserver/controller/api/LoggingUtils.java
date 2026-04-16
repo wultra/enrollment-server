@@ -17,7 +17,6 @@
  */
 package com.wultra.app.onboardingserver.controller.api;
 
-import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.jspecify.annotations.Nullable;
@@ -33,18 +32,6 @@ final class LoggingUtils {
 
     private LoggingUtils() {
         throw new IllegalStateException("Utility class");
-    }
-
-    /**
-     * Extract request object from request.
-     *
-     * @param request request
-     * @return request object as optional
-     * @param <T> request type
-     */
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    public static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
-        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
     }
 
     /**

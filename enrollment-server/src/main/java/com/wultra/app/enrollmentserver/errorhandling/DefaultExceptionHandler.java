@@ -18,16 +18,20 @@
 
 package com.wultra.app.enrollmentserver.errorhandling;
 
-import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.core.rest.model.base.response.ErrorResponse;
+import com.wultra.security.powerauth.lib.mtoken.model.enumeration.ErrorCode;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthApplicationConfigurationException;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -183,5 +187,35 @@ public class DefaultExceptionHandler {
     public @ResponseBody ErrorResponse handleNoResourceFoundException(final NoResourceFoundException e) {
         logger.warn("Error occurred when calling an API: {}", e.getMessage(), e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
+    }
+
+    /**
+     * Exception handler for invalid request exception.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler({ValidationException.class, HttpMessageNotReadableException.class, MethodArgumentNotValidException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleInvalidRequestException(final Exception e) {
+        logger.warn("Error occurred.", e);
+        // TODO (racansky, 2026-04-17) consider returning validation errors in response
+        return new ErrorResponse(ErrorCode.INVALID_REQUEST, "Invalid request sent.");
+    }
+
+    /**
+     * Exception handler for invalid request exception.
+     * <p>
+     * Handles for example {@code @NotNull @EncryptedRequestBody @Valid ObjectRequest<T>}.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleInvalidRequestException(final HandlerMethodValidationException e) {
+        logger.warn("Validation error occurred in method {}: {}", e.getMethod().getName(), e.getParameterValidationResults(), e);
+        // TODO (racansky, 2026-04-17) consider returning validation errors in response
+        return new ErrorResponse(ErrorCode.INVALID_REQUEST, "Invalid request sent.");
     }
 }

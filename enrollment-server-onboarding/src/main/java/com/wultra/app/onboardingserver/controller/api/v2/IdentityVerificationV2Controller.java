@@ -40,14 +40,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 /**
  * Identity Verification V2 REST API Controller.
@@ -97,19 +96,16 @@ class IdentityVerificationV2Controller {
             PowerAuthCodeType.POSSESSION
     })
     public Response submitDocuments(
-            @EncryptedRequestBody @Valid ObjectRequest<DocumentSubmitV2Request> request,
-            @Parameter(hidden = true) EncryptionContext encryptionContext,
-            @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<DocumentSubmitV2Request> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication
     ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
-        final var processId = Optional.ofNullable(request)
-                .map(ObjectRequest::getRequestObject)
-                .map(DocumentSubmitV2Request::processId)
-                .orElse(null);
 
-        logger.info("action: submitDocumentsV2, state: initiated, processId: {}", processId);
+        final DocumentSubmitV2Request requestObject = request.getRequestObject();
+        logger.info("action: submitDocumentsV2, state: initiated, processId: {}", requestObject.processId());
 
         try {
-            final var response = identityVerificationRestService.submitDocumentsV2(request, encryptionContext, apiAuthentication);
+            final var response = identityVerificationRestService.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
 
             logger.info("action: submitDocumentsV2, state: succeeded");
             return response;
