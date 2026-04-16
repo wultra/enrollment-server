@@ -286,13 +286,14 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Send OTP response.
      * @throws IdentityVerificationException Thrown when identity verification is not found.
+     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
      */
     @PostMapping("otp/resend")
     @PowerAuth(resourceId = "/api/identity/otp/resend", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ResponseEntity<Response> resendOtp(
             final @Valid @RequestBody ObjectRequest<IdentityVerificationOtpSendRequest> request,
-            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException {
+            final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException, PowerAuthTokenInvalidException {
 
         final IdentityVerificationOtpSendRequest requestObject = request.getRequestObject();
         logger.info("action: resendOtp, state: initiated, processId: {}", requestObject.getProcessId());

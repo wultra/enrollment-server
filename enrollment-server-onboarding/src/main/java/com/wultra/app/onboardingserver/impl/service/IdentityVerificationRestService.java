@@ -472,13 +472,15 @@ public class IdentityVerificationRestService {
      * @return Send OTP response.
      * @throws IdentityVerificationException Thrown when identity verification is not found.
      * @throws OnboardingProcessException Thrown when OTP code could not be generated.
+     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist.
      */
     @Transactional
     public ResponseEntity<Response> resendOtp(
             final IdentityVerificationOtpSendRequest request,
-            final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException {
+            final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, OnboardingProcessException, PowerAuthTokenInvalidException {
 
         // Extract user ID from onboarding process for current activation, lock onboarding process
+        checkApiAuthentication(apiAuthentication, "resend OTP");
         final OwnerId ownerId = extractOwnerId(apiAuthentication);
         final String processId = request.getProcessId();
 
