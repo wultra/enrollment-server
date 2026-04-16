@@ -624,12 +624,12 @@
       }
     ],
     "classInfo": {
-      "country": "Moldova",
-      "type": "Dl",
+      "country": "Czechia",
+      "type": "Id",
       "region": "None",
-      "isoAlpha3CountryCode": "MDA",
-      "isoAlpha2CountryCode": "MD",
-      "isoNumericCountryCode": "498"
+      "isoAlpha3CountryCode": "CZE",
+      "isoAlpha2CountryCode": "CZ",
+      "isoNumericCountryCode": "203"
     },
     "additionalInfo": {
       "frontProcessingStatus": "Success",

@@ -33,6 +33,11 @@ import lombok.Data;
 @Data
 public class IdentityVerificationStatusResponse {
 
+    /**
+     * @deprecated use {@link ConfigurationResponse}
+     */
+    @Schema(deprecated = true, description = "Deprecated, use '/api/configuration' instead")
+    @Deprecated(forRemoval = true, since = "2.1.0")
     private ConfigurationDataDto config;
 
     @Schema(description = "Process ID")
@@ -51,4 +56,6 @@ public class IdentityVerificationStatusResponse {
     @Schema(description = "Reject reason. Apply for phases such as client evaluation, presence check, or client approval")
     private String rejectReason;
 
+    @Schema(description = "Specifies whether consent is required and is still pending acceptance by the user")
+    private boolean consentRequired;
 }

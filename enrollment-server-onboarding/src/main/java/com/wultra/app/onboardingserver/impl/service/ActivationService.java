@@ -151,7 +151,7 @@ public class ActivationService {
     public GetActivationStatusResponse fetchActivationStatusResponse(final String activationId) throws RemoteCommunicationException {
         final GetActivationStatusRequest request = new GetActivationStatusRequest();
         request.setActivationId(activationId);
-
+        request.setIncludeStatusBlob(false);
         try {
             return powerAuthClient.getActivationStatus(request, httpCustomizationService.getQueryParams(), httpCustomizationService.getHttpHeaders());
         } catch (PowerAuthClientException e) {

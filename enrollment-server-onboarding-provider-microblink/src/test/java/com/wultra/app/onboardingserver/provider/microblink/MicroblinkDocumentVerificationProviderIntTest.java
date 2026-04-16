@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
@@ -28,19 +29,19 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.common.service.AuditService;
 import okhttp3.mockwebserver.MockWebServer;
+import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +54,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 
 /**
  * Integration tests for Microblink document verification provider.
@@ -101,7 +101,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String idCardBackExtractionJson;
     private static final String idCardPassValidationResult;
     private static final String idCardRejectValidationResult;
-    private static final String idCardResponseWithoutPersonalDataJson;
+    private static final JsonNode idCardResponseWithoutPersonalDataJson;
 
     private static final Image passportImage;
     private static final String microblinkPassportPassResponseBody;
@@ -129,9 +129,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Autowired
     private DocumentResultRepository documentResultRepository;
-
-    @MockitoBean
-    private AuditService auditService;
 
     private OwnerId ownerId;
 
@@ -183,8 +180,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
             idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
                     .replaceAll("");
 
-            idCardResponseWithoutPersonalDataJson = ((ObjectNode) passResponseTree).remove(List.of("extraction", "images"))
-                    .toString();
+            idCardResponseWithoutPersonalDataJson = ((ObjectNode) passResponseTree).remove(List.of("extraction", "images"));
 
             // Passport
             passportImage = Image.builder()
@@ -330,7 +326,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testSubmitDocuments_documentWith2SidesUploaded_responseLoggedToAudit() throws Exception {
+    void testSubmitDocuments_documentWith2SidesUploaded_responseAuditData() throws Exception {
         // given
         prepareIdCardFrontDocumentVerificationInDatabase();
         prepareIdCardBackDocumentVerificationInDatabase();
@@ -343,15 +339,13 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
-        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+        final DocumentsSubmitResult result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
 
         // then
-        verify(auditService).auditDocumentVerificationProvider(
-                ownerId,
-                idCardResponseWithoutPersonalDataJson,
-                "Document verification response, user: {}, provider: Microblink, documentType: {}",
-                ownerId.getUserId(),
-                DocumentType.ID_CARD);
+        final Map<DocumentType, ObjectNode> auditData = result.getAuditData();
+        assertNotNull(auditData);
+        assertEquals(1, auditData.size());
+        assertEquals(idCardResponseWithoutPersonalDataJson, auditData.get(DocumentType.ID_CARD));
     }
 
     @Test
@@ -436,7 +430,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     @Test
-    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() throws Exception {
+    void testVerifyDocuments_successfulVerification_correctResponseIsReturned() {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
@@ -466,10 +460,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
 
         // when
-        final var exception = assertThrows(DocumentVerificationException.class, () -> microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds));
+        final var result = microblinkDocumentVerificationProvider.verifyDocuments(ownerId, uploadIds);
 
         // then
-        assertEquals("Crosscheck failed for field firstName", exception.getMessage());
+        assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
+        assertEquals("[Document data crosscheck failed for fields: [firstName]]", result.getRejectReason());
     }
 
     private List<SubmittedDocument> buildSubmittedDocuments(final List<MicroblinkDocumentVerificationProvider.DocumentVerificationData> documents) {
@@ -503,7 +498,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertNull(frontDocument.getRejectReason());
         assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
-        assertEquals(idCardPassValidationResult, frontDocument.getValidationResult());
+        assertJsonEquals(idCardPassValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -515,7 +510,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertNull(backDocument.getRejectReason());
         assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
-        assertEquals(idCardPassValidationResult, backDocument.getValidationResult());
+        assertJsonEquals(idCardPassValidationResult, backDocument.getValidationResult());
     }
 
     private void assertIdCardRejectSubmitResult(final DocumentsSubmitResult result) {
@@ -536,7 +531,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
         assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
-        assertEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
+        assertJsonEquals(idCardRejectValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
                 .filter(d -> d.getDocumentId().equals(ID_CARD_BACK_DOCUMENT_ID))
@@ -548,7 +543,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
         assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
-        assertEquals(idCardRejectValidationResult, backDocument.getValidationResult());
+        assertJsonEquals(idCardRejectValidationResult, backDocument.getValidationResult());
     }
 
     private void assertPassportPassSubmitResult(final DocumentsSubmitResult result) {
@@ -568,7 +563,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertDoesNotThrow(() -> UUID.fromString(document.getUploadId()));
         assertNull(document.getRejectReason());
         assertEquals(passportNormalizedExtractedData, document.getExtractedData());
-        assertEquals(passportPassValidationResult, document.getValidationResult());
+        assertJsonEquals(passportPassValidationResult, document.getValidationResult());
     }
 
     private void assertIdCardDocumentsData(final DocumentsSubmitResult result) {
@@ -704,7 +699,6 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var identityVerification = identityVerificationRepository.findById(IDENTITY_VERIFICATION_ID).orElseThrow();
 
         final var documentVerification = new DocumentVerificationEntity();
-        //documentVerification.setId(ID_CARD_FRONT_DOCUMENT_VERIFICATION_ID);
         documentVerification.setActivationId(ACTIVATION_ID);
         documentVerification.setIdentityVerification(identityVerification);
         documentVerification.setType(DocumentType.ID_CARD);
@@ -781,6 +775,14 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertNull(documentResult.getErrorDetail());
         assertEquals(expectedExtractedData, documentResult.getExtractedData());
         assertEquals(10, documentResult.getVerificationScore());
+    }
+
+    private static void assertJsonEquals(final String expected, final String actual) {
+        try {
+            JSONAssert.assertEquals(expected, actual, true);
+        } catch (JSONException e) {
+            fail("JSON comparison failed", e);
+        }
     }
 
     private static String buildPassportNormalizedExtractedDataJson() {

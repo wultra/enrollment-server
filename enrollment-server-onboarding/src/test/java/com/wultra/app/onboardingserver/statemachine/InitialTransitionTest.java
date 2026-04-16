@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationCreateService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.ConsentResolvedGuard;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,9 @@ class InitialTransitionTest extends AbstractStateMachineTest {
     private OnboardingProcessRepository onboardingProcessRepository;
 
     @MockitoBean
+    private ConsentResolvedGuard consentResolvedGuard;
+
+    @MockitoBean
     private IdentityVerificationCreateService identityVerificationCreateService;
 
     @Test
@@ -61,6 +66,8 @@ class InitialTransitionTest extends AbstractStateMachineTest {
 
         when(onboardingProcessRepository.findByActivationIdAndStatusWithLock(ACTIVATION_ID, OnboardingStatus.VERIFICATION_IN_PROGRESS))
                 .thenReturn(Optional.of(ONBOARDING_PROCESS_ENTITY));
+
+        when(consentResolvedGuard.evaluate(any())).thenReturn(true);
 
         doAnswer(args ->
                 createIdentityVerification(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS)

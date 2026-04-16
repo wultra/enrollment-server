@@ -1,6 +1,7 @@
-# Migration from 1.9.x to 2.0.x
+# Migration from 1.10.x to 2.1.x
 
-This guide contains instructions for migration from PowerAuth Enrollment Onboarding Server version `1.9.x` to version `2.0.0`.
+This guide contains instructions for migration from PowerAuth Enrollment Onboarding Server version `1.10.x` to version `2.1.0`.
+Since version `2.0.0` was never released, there is no version between `1.10.x` and `2.1.0`.
 
 
 ## Database Changes
@@ -9,8 +10,8 @@ For convenience, you can use liquibase for your database migration.
 
 For manual changes use SQL scripts:
 
-- [PostgreSQL script](./../sql/postgresql/onboarding/migration_1.10.0_2.0.0.sql)
-- [Oracle script](./../sql/oracle/onboarding/migration_1.10.0_2.0.0.sql)
+- [PostgreSQL script](./../sql/postgresql/onboarding/migration_1.10.0_2.1.0.sql)
+- [Oracle script](./../sql/oracle/onboarding/migration_1.10.0_2.1.0.sql)
 
 
 ### Onboarding Process Configuration
@@ -23,7 +24,18 @@ You have to insert at least one row into the table `es_onboarding_process_config
 
 ### Onboarding Process
 
-Added a new column `target_activation_id` to the table `es_onboarding_process`.
+Added new columns to the table `es_onboarding_process`:
+
+- `target_activation_id`
+- `consent_accepted`
+
+The `consent_accepted` column uses the following semantics:
+
+- `true` = consent was accepted
+- `false` = consent is pending
+- `null` = legacy value for records created before this column was introduced; this value is treated as already resolved / not pending
+
+When interpreting migrated data, do not treat `null` as equivalent to `false`. Existing legacy records may keep `null` for backward compatibility.
 
 
 ### Removing columns from `es_document_data` table
@@ -36,6 +48,20 @@ linked to `es_document_data` records via `upload_id` column.
 ### Selfie
 
 A new table `es_selfie` has been added to temporarily store selfie images of identity verification.
+
+
+### Document Verification
+
+A new column `country` has been added to the table `es_document_verification`.
+
+
+### Add Column subject_id to audit_log table
+
+Added a new indexed column `subject_id` holding an identifier linking the audit record to an entity it is related to (e.g. user ID for user-related audit records).
+
+<!-- begin box warning -->
+The auditing tables may be already updated in your database schema if the database schema is not separated for different PowerAuth applications. In case the column `audit_log.subject_id` and its index `audit_log_subject_id_idx` are already present, you can safely skip this migration step.
+<!-- end -->
 
 
 ## REST API Changes
@@ -52,6 +78,17 @@ The following changes were made to the onboarding start endpoint:
 ### Removing large file upload endpoint
 
 Endpoint `POST api/identity/document/upload` was removed because it was never used in production.
+
+
+### Document Submit
+
+The endpoint `/api/identity/document/submit` has been deprecated in favor of `/api/v2/identity/document/submit`.
+
+
+### Identity Status
+
+The property `config` in `/api/identity/status` response has been deprecated and will be removed in a future release.
+Clients should use the dedicated configuration endpoint `/api/configuration` to retrieve `otpResendPeriodSeconds` and other onboarding configuration.
 
 
 ## External Onboarding Services Changes
@@ -112,7 +149,7 @@ EXAMPLE:
         "requiredDocumentsCount": 0,
         "items": [
           {
-            "type": "DRIVING_LICENCE",
+            "type": "DRIVING_LICENSE",
             "sideCount": 1
           }
         ]
@@ -124,15 +161,8 @@ EXAMPLE:
 
 For this configuration in total at least 2 unique document types must be submitted for verification. Acceptable combinations:
 - `ID_CARD` (2 sides) + `PASSPORT` (1 side)
-- `ID_CARD` (2 sides) + `DRIVING_LICENCE` (1 side)
-- `PASSPORT` (1 side) + `DRIVING_LICENCE` (1 side)
-
-
-### Documents data retention
-
-Removed the property `enrollment-server-onboarding.identity-verification.data-retention` (default 1 hour). It controlled how long records were kept 
-in the `es_document_data` and `es_processed_document_data` tables based on `timestamp_created`. This setting was independent of process expiration.
-The retention time is now controlled by the property `enrollment-server-onboarding.onboarding-process.expiration` (default 3 hours).
+- `ID_CARD` (2 sides) + `DRIVING_LICENSE` (1 side)
+- `PASSPORT` (1 side) + `DRIVING_LICENSE` (1 side)
 
 
 ## Configuration Changes
@@ -146,3 +176,14 @@ enrollment-server-onboarding.document-verification.checkInProgressDocumentSubmit
 enrollment-server-onboarding.document-verification.checkDocumentsVerifications.cron=
 enrollment-server-onboarding.document-verification.checkDocumentSubmitVerifications.cron=
 ```
+
+
+## Cleaning task
+
+Modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows. The data are deleted after the expiration time of the process plus the retention period.
+Previously, the data was deleted immediately after the retention period, which could lead to the deletion of data for active processes if the process expiration is higher than the data retention.
+
+Records from the following tables are deleted according to this calculation:
+- `es_document_data`
+- `es_processed_document_data`
+- `es_selfie`

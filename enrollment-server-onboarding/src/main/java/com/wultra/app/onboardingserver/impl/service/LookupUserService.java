@@ -56,10 +56,10 @@ public class LookupUserService {
      *
      * @param process Onboarding process. In case of an error, the entity is modified
      * @param identification User identification.
-     * @return user ID or {@code empty}
+     * @return user lookup response or {@code empty}
      */
     @Transactional
-    public Optional<String> lookupUser(final OnboardingProcessEntity process, final Map<String, Object> identification) {
+    public Optional<LookupUserResponse> lookupUser(final OnboardingProcessEntity process, final Map<String, Object> identification) {
         try {
             final LookupUserRequest lookupUserRequest = LookupUserRequest.builder()
                     .identification(identification)
@@ -67,7 +67,7 @@ public class LookupUserService {
                     .processType(process.getProcessConfiguration().getProcessType())
                     .build();
             final LookupUserResponse response = onboardingProvider.lookupUser(lookupUserRequest);
-            auditService.auditOnboardingProvider(process, "Looked up user: {}", response.getUserId());
+            auditService.auditOnboardingProvider(process, "Looked up user: {}, consentRequired: {}", response.getUserId(), response.getConsentRequired());
             if (response.isErrorOccurred()) {
                 logger.warn("Business logic error occurred during user lookup, process ID: {}, error detail: {}", process.getId(), response.getErrorDetail());
                 process.setErrorOrigin(ErrorOrigin.USER_REQUEST);
@@ -76,7 +76,7 @@ public class LookupUserService {
                 onboardingProcessRepository.save(process);
                 auditService.auditOnboardingProvider(process, "Error to look up user: {}, {}", response.getUserId(), response.getErrorDetail());
             }
-            return Optional.of(response.getUserId());
+            return Optional.of(response);
         } catch (final OnboardingProviderException e) {
             logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
             logger.debug("User lookup failed, using null user ID", e);

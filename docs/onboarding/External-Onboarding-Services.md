@@ -179,18 +179,16 @@ Service to identify the prospect and assign user identifier.
 ```json
 {
   "userId": "String",
-  "consent": "String",
-  "consentRequired": Boolean # Deprecated
+  "consentRequired": true
 }
 ```
 
-##### Response  Params
+##### Response Params
 
-| Attribute                      | Type      | Description                                                                                                                            |
-|:-------------------------------|:----------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `userId`                       | `String`  | The bank assigned ID for the user being onboarded.                                                                                     |
-| `consent`                      | `String`  | Tells if the user has to consent the onboarding (REQUIRED/NOT_REQUIRED) or if it's not evaluated by backend (NOT_EVALUATED or `null`). |
-| `consentRequired (deprecated)` | `Boolean` | Tells if the user has to consent the onboarding.                                                                                       |
+| Attribute         | Type      | Description                                                                                                                                                                                      |
+|:------------------|:----------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `userId`          | `String`  | The bank assigned ID for the user being onboarded.                                                                                                                                               |
+| `consentRequired` | `Boolean` | Tells if the user has to consent the onboarding, `null` is evaluated as `true`. Taken into account only if [the process is configured](Configuration-Onboarding-Process.md) to require consent. |
 <!-- end -->
 
 <!-- begin api POST /client/evaluate -->
@@ -273,7 +271,7 @@ NOTE: Currently triggered only in positive result.
 | `status`                                    | `String` | Status of the identity verification process, `SUCCESS` or `FAILURE`.                                                                                                                         |
 | `documentCheckResult.person`                | `Object` | Selected normalized data extracted from the documents. Data are cross-checked between the documents. Date values are in ISO 8601 format `YYYY-MM-DD` (e.g. `2010-01-21`).                    |
 | `documentCheckResult.documents`             | `Array`  | Array of documents containing all mined data.                                                                                                                                                |
-| `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENCE`.                                                                                                                                 |
+| `documentCheckResult.documents.type`        | `String` | Document type, eg. `ID_CARD`, `PASSPORT`, `DRIVING_LICENSE`.                                                                                                                                 |
 | `documentCheckResult.documents.country`     | `String` | Document country in ISO Alpha 3 format, eg. `CZE`.                                                                                                                                           |
 | `documentCheckResult.documents.status`      | `String` | Status of the identity verification process for specific document, `SUCCESS` or `FAILURE`.                                                                                                   |
 | `documentCheckResult.documents.score`       | `Number` | Outcome confidence of the verification check on scale 0-10.                                                                                                                                  |

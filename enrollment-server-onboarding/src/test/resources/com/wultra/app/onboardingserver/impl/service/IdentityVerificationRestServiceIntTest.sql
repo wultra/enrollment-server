@@ -1,3 +1,7 @@
+-- common
+INSERT INTO es_onboarding_process_configuration (id, process_type, config)
+VALUES (101, 'onboardingTest', e'{"consentRequired": true}');
+
 -- testSubmitDocumentsV2_newDocumentsAreSubmitted_responseOk
 insert into es_onboarding_process (id, identification_data, activation_id, status, custom_data, timestamp_created, error_score)
 values ( 'b9d4cf32-3e3c-4bb1-8f66-5a3c91fe2f8b', '{}', 'b7717831-4ed3-4597-88c1-b4646b91a76f', 'VERIFICATION_IN_PROGRESS', '{}', now(), 0);
@@ -17,9 +21,6 @@ values ('bc8b0f4a-8a6f-4dc7-ae2b-05d6ca059e33', '8e4a0b0a-84f3-4c71-9cc0-c9ac7b3
        ('8f3a3887-6f7a-4d84-b907-3bdf257cbb46', '8e4a0b0a-84f3-4c71-9cc0-c9ac7b3f6593', '1f9f3d7c-5c41-4f62-8c18-97af2df6bd62', 'ID_CARD', 'BACK', 'UPLOAD_IN_PROGRESS', 'id_card_back.jpg', '79ae47a3-40c3-42a2-b722-1282ff2d7679', now(), true);
 
 -- testCleanup_fullDocumentVerificationAndPresenceCheckCleanup_allDataAreCleaned
-INSERT INTO es_onboarding_process_configuration (id, process_type, config)
-VALUES (101, 'onboardingTest', '{}');
-
 INSERT INTO es_onboarding_process (id, identification_data, user_id, activation_id, status, activation_removed, error_score, custom_data, timestamp_created, timestamp_last_updated, timestamp_finished, process_config_id)
 VALUES ('0c47c3cf-6f77-4f52-93f2-934efc6322dd', e'{
   "birthDate" : "1970-03-21",
@@ -49,6 +50,12 @@ VALUES (3592, '897f4d47-7962-43af-8c5d-b4b142e02085', 'UPLOAD', '{}', '{}', '202
        (3594, '40e7f9a6-6cbe-478e-b1ee-98b8ad797b9e', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:28.922000');
 
 INSERT INTO es_selfie (id, image, identity_verification_id, timestamp_created)
-VALUES (1, E'\\x'::bytea, '08923a0a-5f4c-41dc-acda-75bb921c75a4', '2026-03-02 12:08:19.545000')
+VALUES (1, E'\\x'::bytea, '08923a0a-5f4c-41dc-acda-75bb921c75a4', '2026-03-02 12:08:19.545000');
 
+-- testCheckIdentityVerificationStatus
+insert into es_onboarding_process (id, identification_data, activation_id, status, custom_data, timestamp_created, error_score, process_config_id, consent_accepted)
+values ( '3f5a8b6e-9c21-4d7f-8b3a-2e4c1d9a7f60', '{}', 'a12c9e4f-5b77-4d2b-9f83-6e1a2c0d4b91', 'VERIFICATION_IN_PROGRESS', '{}', now(), 0, 101, false);
+
+insert into es_identity_verification (id, activation_id, user_id, process_id, status, phase, timestamp_created, reject_reason)
+values ('7d0e5a93-8b6f-4c11-9a72-3f8d2e6b0c44', 'a12c9e4f-5b77-4d2b-9f83-6e1a2c0d4b91', 'test-user', '3f5a8b6e-9c21-4d7f-8b3a-2e4c1d9a7f60', 'FAILED', 'COMPLETED', now(), 'test reject reason');
 

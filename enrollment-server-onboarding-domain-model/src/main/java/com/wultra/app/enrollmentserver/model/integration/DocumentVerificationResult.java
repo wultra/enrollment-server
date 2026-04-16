@@ -17,14 +17,21 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Result of verification of a single identity-related document.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
+// TODO (michal-rozehnal-w, 2026-04-15, #1712) Use only builder for creating instances
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DocumentVerificationResult {
 
     private String uploadId;
@@ -37,5 +44,9 @@ public class DocumentVerificationResult {
      * Overall score achieved during document verification and fraud detection (0 - 10).
      */
     private Integer verificationScore;
+
+    public boolean isRejected() {
+        return rejectReason != null;
+    }
 
 }

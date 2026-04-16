@@ -110,4 +110,19 @@ ALTER TABLE es_processed_document_data ADD CONSTRAINT es_processed_document_data
 -- Creates a new index es_processed_document_data_document_verification_id_idx
 CREATE INDEX es_processed_document_data_document_verification_id_idx ON es_processed_document_data(document_verification_id);
 
+-- Changeset enrollment-server-onboarding/2.0.x/20260313-consent-accepted.xml::1::Michal Rozehnal
+-- Creates a new column consent_accepted in es_onboarding_process
+ALTER TABLE es_onboarding_process ADD consent_accepted BOOLEAN;
+
+-- Changeset enrollment-server-onboarding/2.0.x/20260402-document-country.xml::1::Lubos Racansky
+-- Creates a new column country in es_document_verification
+ALTER TABLE es_document_verification ADD country VARCHAR(3);
+
 -- Changeset enrollment-server-onboarding/2.0.x/20251215-add-tag-2.0.0.xml::1::Lubos Racansky
+-- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::1::Pavel Sindelar
+-- Add subject_id column to audit_log table
+ALTER TABLE audit_log ADD subject_id VARCHAR(256);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
+-- Create a new index on audit_log(subject_id)
+CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);

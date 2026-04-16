@@ -33,7 +33,11 @@ import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContex
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -72,6 +76,17 @@ public class ActivationCodeController {
      * @throws InvalidRequestObjectException In case the object validation fails.
      * @throws ActivationCodeException In case fetching the activation code fails.
      */
+    @Operation(
+            summary = "Request activation code",
+            description = """
+                    Handle a request for activation code in activation spawn.
+                    The target application is specified in the request body (applicationId),
+                    while the source application is identified from the PowerAuth signature.""",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Activation code successfully requested."),
+                    @ApiResponse(responseCode = "401", description = "PowerAuth authentication failed.", content = @Content(schema = @Schema(hidden = true)))
+            }
+    )
     @PostMapping("code")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/activation/code", authenticationCodeType = {

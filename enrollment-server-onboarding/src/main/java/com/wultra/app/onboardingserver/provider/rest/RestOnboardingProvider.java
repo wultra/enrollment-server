@@ -76,6 +76,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
         logger.debug("Looked up {} for {}", response, request);
         return LookupUserResponse.builder()
                 .userId(response.getUserId())
+                .consentRequired(response.getConsentRequired())
                 .build();
     }
 
@@ -375,7 +376,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ClientEvaluateRequestDto.DocumentType convert(final DocumentType source) {
         return switch (source) {
             case ID_CARD -> ClientEvaluateRequestDto.DocumentType.ID_CARD;
-            case DRIVING_LICENSE -> ClientEvaluateRequestDto.DocumentType.DRIVING_LICENCE;
+            case DRIVING_LICENSE -> ClientEvaluateRequestDto.DocumentType.DRIVING_LICENSE;
             case PASSPORT -> ClientEvaluateRequestDto.DocumentType.PASSPORT;
             default -> throw new IllegalArgumentException("Unsupported document type: " + source);
         };

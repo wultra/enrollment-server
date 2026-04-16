@@ -969,16 +969,29 @@ Handle a request for activation code in activation spawn.
 {
   "requestObject": {
     "applicationId": "app1",
-    "otp": "12345678"
+    "otp": "1234567890123456"
   }
 }
 ```
+
+- `applicationId` - PowerAuth Server application ID for which the activation code is requested (target application ID).
+- `otp` - OTP code to be used for activation.
+
+The `sourceApplicationId` is automatically identified from the `X-PowerAuth-Authorization` header (it is the application ID of the mobile application that calls this API).
+Both source and target applications must be correctly configured to allow activation spawn.
+See the PowerAuth Server documentation for more details about [Activation Transfer Configuration](https://developers.wultra.com/components/powerauth-server/develop/documentation/Activation-Transfer#activation-transfer-configuration).
+
 
 #### Response 200
 
 ```json
 {
-  "status": "OK"
+  "status": "OK",
+  "responseObject": {
+    "activationId": "9e0ba60f-bf22-4ff5-b999-2733784e5eaa",
+    "activationCode": "ABCDE-FGHIJ",
+    "activationSignature": "base64-encoded-signature"
+  }
 }
 ```
 

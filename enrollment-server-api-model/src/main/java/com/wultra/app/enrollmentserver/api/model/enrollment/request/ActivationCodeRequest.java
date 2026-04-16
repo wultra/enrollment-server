@@ -17,6 +17,9 @@
  */
 package com.wultra.app.enrollmentserver.api.model.enrollment.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -25,9 +28,16 @@ import lombok.Data;
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
+@Schema(description = "Request with attributes of a new activation code.")
 public class ActivationCodeRequest {
 
+    @Schema(description = "PowerAuth application ID for which the activation code is requested (target application ID).", example = "app-id-123")
+    @NotBlank
     private String applicationId;
+
+    @Schema(description = "OTP code to be used for activation.", example = "1234567890123456")
+    @NotBlank
+    @Size(min = 16)
     private String otp;
 
 }

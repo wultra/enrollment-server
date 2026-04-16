@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.12</version>
+        <version>3.5.13</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -94,15 +94,15 @@
         <okhttp3.version>5.3.2</okhttp3.version>
         <shedlock.version>7.7.0</shedlock.version>
         <spring-statemachine.version>4.0.1</spring-statemachine.version>
-        <swagger-annotations-jakarta.version>2.2.45</swagger-annotations-jakarta.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.8.16</springdoc-openapi-starter-webmvc-ui.version>
+        <swagger-annotations-jakarta.version>2.2.48</swagger-annotations-jakarta.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.8.17</springdoc-openapi-starter-webmvc-ui.version>
         <moneta.version>1.4.5</moneta.version>
         <central.publishing.plugin.version>0.10.0</central.publishing.plugin.version>
 
-        <wultra-core.version>2.0.0</wultra-core.version>
-        <powerauth-crypto.version>2.0.1</powerauth-crypto.version>
-        <powerauth-restful-integration.version>2.0.0</powerauth-restful-integration.version>
-        <powerauth-push.version>2.0.1</powerauth-push.version>
+        <wultra-core.version>2.1.0</wultra-core.version>
+        <powerauth-crypto.version>2.1.0-SNAPSHOT</powerauth-crypto.version>
+        <powerauth-restful-integration.version>2.1.0-SNAPSHOT</powerauth-restful-integration.version>
+        <powerauth-push.version>2.1.0-SNAPSHOT</powerauth-push.version>
 
         <logstash.version>8.1</logstash.version>
         <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>

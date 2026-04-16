@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -27,6 +28,7 @@ import lombok.Data;
 @Data
 public class IdentityVerificationCleanupRequest {
 
+    @NotBlank
     private String processId;
 
 }

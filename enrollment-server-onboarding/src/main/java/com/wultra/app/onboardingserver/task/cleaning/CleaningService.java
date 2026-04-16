@@ -136,28 +136,30 @@ class CleaningService {
      * Clean selfie images.
      *
      * @return Number of deleted selfie images.
-     * @implSpec Right now, the selfie images are deleted based on the process expiration time.
-     * In the future, it could be improved, for example, by cleaning immediately after the process is finished (but the expired ones have to be still handled here).
      */
     @Transactional
     public int cleanSelfies() {
-        return selfieRepository.cleanup(getProcessExpirationTime());
+        return selfieRepository.cleanup(getPersonalDataRetentionTime());
     }
 
     /**
      * Clean document data.
+     *
+     * @return Number of deleted document data.
      */
     @Transactional
     public int cleanupDocumentData() {
-        return documentDataRepository.cleanupDocumentData(getProcessExpirationTime());
+        return documentDataRepository.cleanupDocumentData(getPersonalDataRetentionTime());
     }
 
     /**
      * Clean processed document data.
+     *
+     * @return Number of deleted processed document data.
      */
     @Transactional
     public int cleanupProcessedDocumentData() {
-        return processedDocumentDataRepository.cleanup(getProcessExpirationTime());
+        return processedDocumentDataRepository.cleanup(getPersonalDataRetentionTime());
     }
 
     /**
@@ -197,8 +199,10 @@ class CleaningService {
         }
     }
 
-    private Date getProcessExpirationTime() {
-        return DateUtil.convertExpirationToCreatedDate(onboardingConfig.getProcessExpirationTime());
+    private Date getPersonalDataRetentionTime() {
+        final var processExpirationTime = onboardingConfig.getProcessExpirationTime();
+        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime();
+        return DateUtil.convertExpirationToCreatedDate(processExpirationTime.plus(dataRetentionTime));
     }
 
     private Date getVerificationExpirationTime() {

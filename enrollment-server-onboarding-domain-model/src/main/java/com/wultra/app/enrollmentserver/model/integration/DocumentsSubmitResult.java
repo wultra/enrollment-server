@@ -17,10 +17,13 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Result of submission of multiple identity-related documents.
@@ -50,4 +53,8 @@ public class DocumentsSubmitResult {
      */
     private String extractedPhotoId;
 
+    /**
+     * Response without personal data to audit.
+     */
+    private Map<DocumentType, ObjectNode> auditData;
 }

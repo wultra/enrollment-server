@@ -43,7 +43,10 @@ public record ConfigurationResponse(
         boolean useTemporaryActivation,
 
         @Schema(description = "List of documents.")
-        Documents documents
+        Documents documents,
+
+        @Schema(description = "OTP resend period in seconds.", requiredMode = Schema.RequiredMode.REQUIRED)
+        long otpResendPeriodSeconds
 ) {
 
     @Builder
@@ -83,6 +86,6 @@ public record ConfigurationResponse(
     public enum DocumentType {
         ID_CARD,
         PASSPORT,
-        DRIVING_LICENCE
+        DRIVING_LICENSE
     }
 }

@@ -18,6 +18,7 @@
 package com.wultra.app.enrollmentserver.api.model.onboarding.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -29,8 +30,10 @@ import lombok.Data;
 public class OnboardingConsentTextRequest {
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank
     private String processId;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "GDPR")
+    @NotBlank
     private String consentType;
 }

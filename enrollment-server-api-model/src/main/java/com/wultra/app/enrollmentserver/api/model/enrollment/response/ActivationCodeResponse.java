@@ -16,19 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.wultra.app.enrollmentserver.api.model.enrollment.response;
-
+ 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
+ 
 /**
  * Response with a new activation code.
  *
  * @author Petr Dvorak, petr@wultra.com
  */
 @Data
+@Schema(description = "Response with a new activation code.")
 public class ActivationCodeResponse {
-
+ 
+    @Schema(description = "Activation ID of the new activation.", example = "9e0ba60f-bf22-4ff5-b999-2733784e5eaa")
     private String activationId;
+ 
+    @Schema(description = "New activation code.", example = "ABCDE-FGHIJ")
     private String activationCode;
+ 
+    @Schema(description = "Activation signature used for verification of the activation code.", example = "base64-encoded-signature")
     private String activationSignature;
-
+ 
 }

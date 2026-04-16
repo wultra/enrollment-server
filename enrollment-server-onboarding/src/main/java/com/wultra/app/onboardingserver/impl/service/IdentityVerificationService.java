@@ -281,7 +281,7 @@ public class IdentityVerificationService {
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, ACCEPTED, ownerId);
         } else {
             logger.warn("Final validation did not pass, marking identity verification as failed due to '{}', {}", result.getErrorDetail(), ownerId);
-            idVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
+            idVerification.setErrorDetail(result.getErrorDetail());
             idVerification.setTimestampFailed(ownerId.getTimestamp());
             idVerification.setErrorOrigin(ErrorOrigin.FINAL_VALIDATION);
             moveToPhaseAndStatus(idVerification, IdentityVerificationPhase.COMPLETED, FAILED, ownerId);
@@ -527,7 +527,7 @@ public class IdentityVerificationService {
      * @return Document metadata for response
      */
     private DocumentMetadataResponseDto toDocumentMetadata(DocumentVerificationEntity entity) {
-        DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
+        final DocumentMetadataResponseDto docMetadata = new DocumentMetadataResponseDto();
         docMetadata.setId(entity.getId());
         // Hide specific error reason if any.
         if (StringUtils.isNotBlank(entity.getErrorDetail()) || StringUtils.isNotBlank(entity.getRejectReason())) {
@@ -537,6 +537,7 @@ public class IdentityVerificationService {
         docMetadata.setSide(entity.getSide());
         docMetadata.setStatus(entity.getStatus());
         docMetadata.setType(entity.getType());
+        docMetadata.setCountry(entity.getCountry());
         return docMetadata;
     }
 

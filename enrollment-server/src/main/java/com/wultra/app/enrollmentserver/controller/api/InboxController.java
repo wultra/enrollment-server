@@ -70,8 +70,7 @@ public class InboxController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: countUnreadMessages, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
@@ -94,8 +93,7 @@ public class InboxController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: fetchMessageList, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
@@ -123,8 +121,7 @@ public class InboxController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: fetchMessageDetail, state: initiated, activationId: {}, messageId: {}",
@@ -148,8 +145,7 @@ public class InboxController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: readMessage, state: initiated, activationId: {}, messageId: {}",
@@ -177,8 +173,7 @@ public class InboxController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION,
             PowerAuthCodeType.POSSESSION_BIOMETRY,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE,
-            PowerAuthCodeType.POSSESSION_KNOWLEDGE_BIOMETRY
+            PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
         logger.info("action: readAllMessages, state: initiated, activationId: {}", extractActivationId(apiAuthentication));

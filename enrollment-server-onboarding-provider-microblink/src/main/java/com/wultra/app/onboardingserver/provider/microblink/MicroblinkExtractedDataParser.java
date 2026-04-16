@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
-import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationParsedResponse;
+import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -51,7 +51,7 @@ public class MicroblinkExtractedDataParser {
      * @param extractedDataJson extracted data in Microblink JSON format
      * @return normalized extracted data as {@link DocumentExtractedDataValue} JSON string
      */
-    public String parseExtractedData(final String extractedDataJson, final DocumentVerificationParsedResponse.Extraction extraction) {
+    public String parseExtractedData(final String extractedDataJson, final DocumentVerificationResponse.Extraction extraction) {
         if (!StringUtils.hasLength(extractedDataJson)) {
             return null;
         }
@@ -62,8 +62,8 @@ public class MicroblinkExtractedDataParser {
             final var extractedValueByField = extractFieldValues(root);
 
             final var country = Optional.ofNullable(extraction)
-                    .map(DocumentVerificationParsedResponse.Extraction::classInfo)
-                    .map(DocumentVerificationParsedResponse.ExtractionClassInfo::isoAlpha3CountryCode)
+                    .map(DocumentVerificationResponse.Extraction::classInfo)
+                    .map(DocumentVerificationResponse.ExtractionClassInfo::isoAlpha3CountryCode)
                     .orElse(null);
 
             final var extractedDataValue = DocumentExtractedDataValue.builder()

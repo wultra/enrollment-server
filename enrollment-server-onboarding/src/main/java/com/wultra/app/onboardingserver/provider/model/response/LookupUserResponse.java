@@ -40,9 +40,10 @@ public final class LookupUserResponse {
     @NonNull
     private String userId;
 
-    // not propagated yet; consistent with the client which always considers it as true
-    @Builder.Default
-    private boolean consentRequired = true;
+    /**
+     * Whether consent is required. If {@code null}, consent is treated as required.
+     */
+    private Boolean consentRequired;
 
     /**
      * Whether business logic error occurred during user lookup.
@@ -54,4 +55,21 @@ public final class LookupUserResponse {
      */
     private String errorDetail;
 
+    /**
+     * Whether consent is not required.
+     *
+     * @return {@code true} if consent is not required, {@code false} otherwise.
+     */
+    public boolean isConsentNotRequired() {
+        return !isConsentRequired();
+    }
+
+    /**
+     * Whether consent is required.
+     *
+     * @return {@code true} if consent is not required, {@code false} otherwise.
+     */
+    private boolean isConsentRequired() {
+        return consentRequired == null || consentRequired;
+    }
 }

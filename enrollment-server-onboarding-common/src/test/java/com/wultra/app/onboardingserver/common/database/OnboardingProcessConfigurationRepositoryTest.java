@@ -70,6 +70,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                 .useTemporaryActivation(true)
                 .approvalEnabled(true)
                 .verifyPresenceWithOtp(false)
+                .consentRequired(true)
                 .documents(
                         OnboardingProcessConfigurationValue.Documents.builder()
                                 .totalRequiredDocumentsCount((byte) 2)
@@ -91,7 +92,7 @@ class OnboardingProcessConfigurationRepositoryTest {
                                                 OnboardingProcessConfigurationValue.Group.builder()
                                                         .items(Set.of(
                                                                 OnboardingProcessConfigurationValue.Document.builder()
-                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENCE)
+                                                                        .type(OnboardingProcessConfigurationValue.DocumentType.DRIVING_LICENSE)
                                                                         .sideCount((byte) 1)
                                                                         .build()
                                                         ))
