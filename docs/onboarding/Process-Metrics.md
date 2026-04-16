@@ -4,7 +4,7 @@ The system stores various details about the process and its phases. This data ca
 
 ## Document Verification
 
-You can calculate following metrics based on the data below:
+You can calculate the following metrics based on the data below:
 
 **Accepted Documents Rate**
 
@@ -21,7 +21,7 @@ You can calculate following metrics based on the data below:
 **Multiple Attempts Rate**
 
 ```
-(Multiple Attempts / (All attempts − Failed attempts)) × 100
+(Multiple Attempts / (All Documents − Failed Documents)) × 100
 ```
 
 ### All Documents
@@ -58,7 +58,7 @@ AND reject_reason = 'documentVerificationRejected';
 
 ### Failed Documents
 
-It failed due to a technical reason, such as a timeout or a network issue.
+A document verification attempt failed due to a technical reason, such as a timeout or a network issue.
 
 ```sql
 SELECT COUNT(*) FROM es_document_verification
