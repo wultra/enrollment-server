@@ -640,7 +640,7 @@ public class IdentityVerificationRestService {
         }
     }
 
-    // TODO (racansky, 2026-04-14, #1589) remove when validation of encryptionContext made implicit
+    // TODO (racansky, 2026-04-14, #1589) remove when validation of EncryptedRequestBody made implicit
     private void checkRequestObject(@Nullable ObjectRequest<?> request, String description) throws PowerAuthEncryptionException {
         if (request == null || request.getRequestObject() == null) {
             throw new PowerAuthEncryptionException("Invalid request received when " + description);
