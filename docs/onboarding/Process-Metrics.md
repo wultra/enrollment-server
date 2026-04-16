@@ -81,7 +81,7 @@ SELECT COUNT(*) FROM (
 	HAVING
 		COUNT(*) > 1
     	AND SUM(CASE WHEN status = 'ACCEPTED' AND reject_reason IS NULL THEN 1 ELSE 0 END) > 0
-    	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason='documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
+    	AND SUM(CASE WHEN status IN ('REJECTED','DISPOSED') AND reject_reason = 'documentVerificationRejected' THEN 1 ELSE 0 END) > 0) t;
 ```
 
 **SQL decomposition**
@@ -125,7 +125,7 @@ Successful liveness checks.
 ```sql
 SELECT COUNT(*) FROM es_sca_result
 WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
-AND presence_check_result ='SUCCESS';
+AND presence_check_result = 'SUCCESS';
 ```
 
 ### Failed Liveness Checks
@@ -135,5 +135,5 @@ Failed liveness checks. We do not distinguish between rejected attempts and thos
 ```sql
 SELECT COUNT(*) FROM es_sca_result
 WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
-AND presence_check_result ='FAILED';
+AND presence_check_result = 'FAILED';
 ```
