@@ -186,7 +186,7 @@ class IdentityVerificationRestServiceIntTest {
                 .thenReturn(new ListActivationFlagsResponse());
 
         // when
-        tested.cleanup(new ObjectRequest<>(request), apiAuthentication);
+        tested.cleanup(request, apiAuthentication);
 
         // then
         assertDocumentVerificationAndPresenceCheckCleanup();
@@ -204,7 +204,7 @@ class IdentityVerificationRestServiceIntTest {
         final var apiAuthentication = buildApiAuthentication(userId, activationId);
 
         // when
-        final var response = tested.checkIdentityVerificationStatus(new ObjectRequest<>(request), apiAuthentication);
+        final var response = tested.checkIdentityVerificationStatus(request, apiAuthentication);
 
         // then
         final var responseObject = response.getResponseObject();
