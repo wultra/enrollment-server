@@ -28,7 +28,7 @@ You can calculate following metrics based on the data below:
 
 All document verification attempts.
 
-```
+```sql
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'; -- the document is always evaluated as whole with the same result for FRONT and BACK
@@ -38,7 +38,7 @@ AND side = 'FRONT'; -- the document is always evaluated as whole with the same r
 
 Documents accepted by the provider that have passed the document type check and person cross-check (if the bank is using multiple documents).
 
-```
+```sql
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
@@ -49,7 +49,7 @@ AND reject_reason is null;
 
 Documents rejected by the provider due to invalid checks, or by the onboarding server due to an invalid document type or unsuccessful person cross-check (if the bank is using multiple documents).
 
-```
+```sql
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
@@ -60,7 +60,7 @@ AND reject_reason = 'documentVerificationRejected';
 
 It failed due to a technical reason, such as a timeout or a network issue.
 
-```
+```sql
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
@@ -71,7 +71,7 @@ AND reject_reason = 'documentVerificationFailed';
 
 Documents accepted after multiple attempts (more than one). This means that there is at least one rejected attempt and one accepted attempt (the final one).
 
-```
+```sql
 SELECT COUNT(*) FROM (
 	SELECT identity_verification_id, type
 	FROM es_document_verification
@@ -112,7 +112,7 @@ You can calculate following metrics based on the data below:
 
 All liveness check verification attempts.
 
-```
+```sql
 SELECT COUNT(*) FROM es_sca_result
 WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
 AND presence_check_result IN ('SUCCESS','FAILED');
@@ -122,7 +122,7 @@ AND presence_check_result IN ('SUCCESS','FAILED');
 
 Successful liveness checks.
 
-```
+```sql
 SELECT COUNT(*) FROM es_sca_result
 WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
 AND presence_check_result ='SUCCESS';
@@ -132,7 +132,7 @@ AND presence_check_result ='SUCCESS';
 
 Failed liveness checks. We do not distinguish between rejected attempts and those that have failed due to technical reasons.
 
-```
+```sql
 SELECT COUNT(*) FROM es_sca_result
 WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
 AND presence_check_result ='FAILED';
