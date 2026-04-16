@@ -29,9 +29,9 @@ You can calculate following metrics based on the data below:
 All document verification attempts.
 
 ```
-select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now()
-and side = 'FRONT'; -- the document is always evaluated as whole with the same result for FRONT and BACK
+SELECT COUNT(*) FROM es_document_verification
+WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+AND side = 'FRONT'; -- the document is always evaluated as whole with the same result for FRONT and BACK
 ```
 
 ### Accepted Documents
@@ -39,10 +39,10 @@ and side = 'FRONT'; -- the document is always evaluated as whole with the same r
 Documents accepted by the provider that have passed the document type check and person cross-check (if the bank is using multiple documents).
 
 ```
-select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now()
-and side = 'FRONT' -- the document is always evaluated as whole with the same result for FRONT and BACK
-and reject_reason is null;
+SELECT COUNT(*) FROM es_document_verification
+WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+AND side = 'FRONT'
+AND reject_reason is null;
 ```
 
 ### Rejected Documents
@@ -50,10 +50,10 @@ and reject_reason is null;
 Documents rejected by the provider due to invalid checks, or by the onboarding server due to an invalid document type or unsuccessful person cross-check (if the bank is using multiple documents).
 
 ```
-select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now()
-and side = 'FRONT'
-and reject_reason = 'documentVerificationRejected';
+SELECT COUNT(*) FROM es_document_verification
+WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+AND side = 'FRONT'
+AND reject_reason = 'documentVerificationRejected';
 ```
 
 ### Failed Documents
@@ -61,10 +61,10 @@ and reject_reason = 'documentVerificationRejected';
 It failed due to a technical reason, such as a timeout or a network issue.
 
 ```
-select count(*) from es_document_verification
-where timestamp_uploaded between now() - INTERVAL '90 day' and now()
-and side = 'FRONT'
-and reject_reason = 'documentVerificationFailed';
+SELECT COUNT(*) FROM es_document_verification
+WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
+AND side = 'FRONT'
+AND reject_reason = 'documentVerificationFailed';
 ```
 
 ### Multiple Attempts
@@ -113,9 +113,9 @@ You can calculate following metrics based on the data below:
 All liveness check verification attempts.
 
 ```
-select  count(*) from es_sca_result
-where timestamp_created between now() - INTERVAL '90 day' and now()
-and presence_check_result in ('SUCCESS','FAILED');
+SELECT COUNT(*) FROM es_sca_result
+WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
+AND presence_check_result IN ('SUCCESS','FAILED');
 ```
 
 ### Successful Liveness Checks
@@ -123,9 +123,9 @@ and presence_check_result in ('SUCCESS','FAILED');
 Successful liveness checks.
 
 ```
-select  count(*) from es_sca_result
-where timestamp_created between now() - INTERVAL '90 day' and now()
-and presence_check_result ='SUCCESS';
+SELECT COUNT(*) FROM es_sca_result
+WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
+AND presence_check_result ='SUCCESS';
 ```
 
 ### Failed Liveness Checks
@@ -133,7 +133,7 @@ and presence_check_result ='SUCCESS';
 Failed liveness checks. We do not distinguish between rejected attempts and those that have failed due to technical reasons.
 
 ```
-select  count(*) from es_sca_result
-where timestamp_created between now() - INTERVAL '90 day' and now()
-and presence_check_result ='FAILED';
+SELECT COUNT(*) FROM es_sca_result
+WHERE timestamp_created BETWEEN now() - INTERVAL '90 day' AND now()
+AND presence_check_result ='FAILED';
 ```
