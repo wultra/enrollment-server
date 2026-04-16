@@ -355,6 +355,7 @@ public class IdentityVerificationController {
      * @param apiAuthentication PowerAuth authentication.
      * @return Consent text.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist
      */
     @PostMapping("consent/text")
     @Operation(

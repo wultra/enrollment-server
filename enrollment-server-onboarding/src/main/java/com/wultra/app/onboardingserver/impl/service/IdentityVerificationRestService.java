@@ -568,6 +568,7 @@ public class IdentityVerificationRestService {
      * @param apiAuthentication PowerAuth authentication.
      * @return Consent text.
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
+     * @throws PowerAuthTokenInvalidException When the API authentication object does not exist
      */
     @Transactional
     public ObjectResponse<OnboardingConsentTextResponse> fetchConsentText(
