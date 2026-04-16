@@ -42,7 +42,7 @@ Documents accepted by the provider that have passed the document type check and 
 SELECT COUNT(*) FROM es_document_verification
 WHERE timestamp_uploaded BETWEEN now() - INTERVAL '90 day' AND now()
 AND side = 'FRONT'
-AND reject_reason is null;
+AND reject_reason IS NULL;
 ```
 
 ### Rejected Documents
@@ -90,7 +90,7 @@ SELECT COUNT(*) FROM (
 2. Select records from the `es_document_verification` table, limiting them to the `90 day` interval and the `FRONT` side only. Front side only because the table contains one or two sides for each document, but the front side is common to all document types.
 3. The results are grouped by `identity_verification_id` and `type` because we want to ensure that attempts within a group originate from the same identity verification ID. There can be multiple documents under each identity verification ID (e.g. ID, passport, driving licence), so grouping by type is also used.
 4. We are checking if there is more than one record in a group. This means there has been more than one attempt.
-5. We check whether the group contains at least one accepted and one rejected attempt. Rejected attempts always have some value in `reject_reason` but we also use `status` for better code readability.
+5. We check whether the group contains at least one accepted and one rejected attempt. Rejected attempts always have some value in `reject_reason` but we also use `status` for better code readability. The `DISPOSED` status depends on how the document was sent from the mobile, and it can overwrite the `REJECTED` status. For example, if the first document was rejected and replaced by a second document that was accepted, the first document is set to `DISPOSED`. This is why we need to use both statuses in the filter.
 
 ## Liveness Check
 
