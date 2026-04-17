@@ -74,7 +74,12 @@ The format of the document name is `{country}_{type}_{edition}` according to the
 The BlinkID component from Microblink is used for document verification. For details, see [the official Microblink documentation](https://blinkidverify.docs.microblink.com/docs/docver/overview/intro).
 It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. See [the endpoint specification](https://blinkidverify.docs.microblink.com/docs/docver/api-docs/api-v2).
 
-When a document is uploaded, then it is temporarily stored in cache on Onboarding server. After all documents are uploaded, the endpoint is called for each document.
+When documents are uploaded via the onboarding server `POST /api/v2/identity/document/submit` endpoint, the document images are saved in the `es_document_data` database table.
+Then, the Microblink endpoint is called for each document type to fetch the verification result. The processed images from the response (cropped document photos and the face photo) are saved 
+in the `es_processed_document_data` database table. See the [Request configuration](#request-configuration) section to control Microblink verification and the returned data.
+
+
+#### Mobile SDK license
 
 The mobile SDK uses the Microblink SDK to capture document images. The SDK requires a license key, which is stored in the Onboarding server configuration for each mobile platform.
 The license key is sent in the response body of `POST /api/identity/document/init-sdk` as the `license-key` attribute.
@@ -84,11 +89,31 @@ The request body should contain following attributes:
 
 If any of these attributes are missing or there is no config for given combination then license key is not returned in response body.
 
+
+#### Client evaluation score
+
 Score for client evaluation is calculated based on the value of `certaintyLevel` attribute from the response body.
 - `Low` -> 1
 - `Medium` -> 5
 - `High` -> 10
 - `Unknown`, `NotPerformed`, and any other value -> 0
+
+
+#### Request configuration
+
+The request body contains the following parameters, which control verification and data returned in the response body:
+- `useCase` - simple, user-friendly high-level configuration that defines default verification behavior based on key requirements, while still allowing overrides by `options` if needed. See the [useCase description](https://docs.microblink.com/verify/core-concepts/use-case).
+- `options` - advanced configuration settings that provide fine-grained control over verification behavior and processing details, typically used only when specific requirements go beyond the simple, user-friendly `useCase` defaults. See the [options description](https://docs.microblink.com/verify/core-concepts/options).
+
+Use configuration property `enrollment-server-onboarding.document-verification.microblink.request-options.*` or `enrollment-server-onboarding.document-verification.microblink.request-use-case.*` to configure these parameters.
+
+For example, to set `options.photocopyMatchLevel` to `Level5`, use this configuration:
+
+```properties
+enrollment-server-onboarding.document-verification.microblink.request-options.photocopy-match-level=Level5
+```
+
+See [options model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationProcessingOptions) and [useCase model](https://docs.microblink.com/verify/api/ref/v2#model/DocumentVerificationUseCaseOptions) for the full list of properties and their values.
 
 
 ## Presence Check
