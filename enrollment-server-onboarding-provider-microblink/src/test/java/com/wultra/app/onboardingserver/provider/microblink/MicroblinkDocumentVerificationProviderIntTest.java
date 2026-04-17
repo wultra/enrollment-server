@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -346,6 +347,34 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertNotNull(auditData);
         assertEquals(1, auditData.size());
         assertEquals(idCardResponseWithoutPersonalDataJson, auditData.get(DocumentType.ID_CARD));
+    }
+
+    @Test
+    void testSubmitDocuments_requestContainsConfiguredOptionsAndUseCase() throws Exception {
+        // given
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(microblinkIdCardPassResponseBody));
+
+        // when
+        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        final var actualRequest = mockWebServer.takeRequest(3, TimeUnit.SECONDS);
+        assertNotNull(actualRequest);
+
+        final var requestBodyJson = new ObjectMapper().readTree(actualRequest.getBody().readUtf8());
+
+        final var requestOptions = requestBodyJson.path("options");
+        assertTrue(requestOptions.path("returnFaceImage").asBoolean());
+        assertEquals("Jpg", requestOptions.path("returnImageFormat").asText());
+        assertTrue(requestOptions.path("returnFullDocumentImage").asBoolean());
+
+        final var requestUseCase = requestBodyJson.path("useCase");
+        assertEquals("Strict", requestUseCase.path("documentVerificationPolicy").asText());
     }
 
     @Test

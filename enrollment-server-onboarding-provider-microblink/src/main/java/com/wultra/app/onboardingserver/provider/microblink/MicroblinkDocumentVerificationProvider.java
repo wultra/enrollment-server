@@ -38,9 +38,7 @@ import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationE
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseBundle;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationImageSource;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationProcessingOptions;
 import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationRequest;
-import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.Builder;
@@ -327,7 +325,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 backDocument != null ? backDocument.uploadId() : null);
 
         try {
-            final var request = buildRequest(frontDocument, backDocument, properties.getRequestOptions());
+            final var request = buildRequest(frontDocument, backDocument);
             logger.debug("action: sendMicroblinkRequest, state: initiated, requestBody: {}",
                     (Supplier<String>) () -> MicroblinkLogSanitizationUtils.sanitizeDocumentVerificationRequest(request));
 
@@ -764,20 +762,21 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return imageSource;
     }
 
-    private static DocumentVerificationRequest buildRequest(
+    private DocumentVerificationRequest buildRequest(
             final DocumentVerificationData frontDocument,
-            final DocumentVerificationData backDocument,
-            final DocumentVerificationProcessingOptions requestOptions) {
+            final DocumentVerificationData backDocument
+    ) {
+        final var requestOptions = properties.getRequestOptions();
+        final var requestUseCase = properties.getRequestUseCase();
+
         final var frontImageSource = buildImageSource(frontDocument);
         final var backImageSource = buildImageSource(backDocument);
-
-        final var useCase = new DocumentVerificationUseCaseOptions();
 
         final var request = new DocumentVerificationRequest();
         request.setImageFront(frontImageSource);
         request.setImageBack(backImageSource);
         request.setOptions(requestOptions);
-        request.setUseCase(useCase);
+        request.setUseCase(requestUseCase);
         return request;
     }
 

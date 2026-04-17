@@ -912,13 +912,11 @@ class MicroblinkDocumentVerificationProviderTest {
         options.setReturnFaceImage(true);
         options.setReturnFullDocumentImage(true);
 
-        final var useCase = new DocumentVerificationUseCaseOptions();
-
         final var request = new DocumentVerificationRequest();
         request.setImageFront(frontImageSource);
         request.setImageBack(backImageSource);
         request.setOptions(options);
-        request.setUseCase(useCase);
+        request.setUseCase(null);
         return request;
     }
 
