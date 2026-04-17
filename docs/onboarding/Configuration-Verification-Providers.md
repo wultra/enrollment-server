@@ -75,7 +75,7 @@ The BlinkID component from Microblink is used for document verification. For det
 It is single REST API endpoint `POST /api/v2/docver` protected by Basic Auth. See [the endpoint specification](https://blinkidverify.docs.microblink.com/docs/docver/api-docs/api-v2).
 
 When documents are uploaded via the onboarding server `POST /api/v2/identity/document/submit` endpoint, the document images are saved in the `es_document_data` database table.
-Then, the Microblink endpoint is called for each document type to fetch the verification result. The processed images from the response (cropped document photos and the face photo) are saved 
+Then, the Microblink endpoint is called for each document type to fetch the verification result. The processed images from the response (cropped document photos and the face photo) are saved
 in the `es_processed_document_data` database table. See the [Request configuration](#request-configuration) section to control Microblink verification and the returned data.
 
 
