@@ -103,6 +103,7 @@
         <powerauth-crypto.version>2.2.0-SNAPSHOT</powerauth-crypto.version>
         <powerauth-restful-integration.version>2.2.0-SNAPSHOT</powerauth-restful-integration.version>
         <powerauth-push.version>2.2.0-SNAPSHOT</powerauth-push.version>
+        <user-data-store.version>1.5.1</user-data-store.version>
 
         <logstash.version>8.1</logstash.version>
         <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
@@ -210,6 +211,12 @@
                 <groupId>com.wultra.security</groupId>
                 <artifactId>powerauth-push-client</artifactId>
                 <version>${powerauth-push.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.wultra.security</groupId>
+                <artifactId>user-data-store-rest-client</artifactId>
+                <version>${user-data-store.version}</version>
             </dependency>
 
             <dependency>
