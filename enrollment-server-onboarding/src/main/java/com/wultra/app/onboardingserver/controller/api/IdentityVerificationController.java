@@ -35,7 +35,6 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequest
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
-import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
@@ -59,7 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivation;
+import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivationId;
 import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
 
 /**
@@ -124,7 +123,7 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, RemoteCommunicationException, OnboardingProcessException {
 
-        logger.info("action: checkIdentityVerificationStatus, state: initiated, activationId: {}", extractActivation(apiAuthentication).map(PowerAuthActivation::getActivationId).orElse(null));
+        logger.info("action: checkIdentityVerificationStatus, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
         final var response = identityVerificationRestService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
         logger.info("action: checkIdentityVerificationStatus, state: succeeded, phase: {}, status: {}",
                 response.getResponseObject().getIdentityVerificationPhase(), response.getResponseObject().getIdentityVerificationStatus());

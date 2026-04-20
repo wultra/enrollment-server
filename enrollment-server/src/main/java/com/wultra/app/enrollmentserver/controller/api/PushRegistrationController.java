@@ -67,10 +67,7 @@ public class PushRegistrationController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration");
-        }
+        validateApiAuthentication(apiAuthentication);
 
         logger.info("action: registerDeviceDefault, state: initiated, userId: {}", apiAuthentication.getUserId());
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
@@ -95,15 +92,19 @@ public class PushRegistrationController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
-        if (apiAuthentication == null) {
-            logger.error("Unable to verify device registration");
-            throw new PowerAuthAuthenticationException("Unable to verify device registration");
-        }
+        validateApiAuthentication(apiAuthentication);
 
         logger.info("action: registerDeviceToken, state: initiated, userId: {}", apiAuthentication.getUserId());
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
         logger.info("action: registerDeviceToken, state: succeeded");
         return response;
+    }
+
+    private static void validateApiAuthentication(final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException {
+        if (apiAuthentication == null) {
+            logger.error("Unable to verify device registration");
+            throw new PowerAuthAuthenticationException("Unable to verify device registration");
+        }
     }
 
 }

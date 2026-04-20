@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.controller.api;
 import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -47,13 +48,15 @@ final class LoggingUtils {
     }
 
     /**
-     * Extract activation from authentication.
+     * Extract activation ID from authentication.
      *
      * @param apiAuthentication authentication
-     * @return PowerAuthActivation as optional
+     * @return activation ID or {@code null} if not available
      */
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
-    public static Optional<PowerAuthActivation> extractActivation(final PowerAuthApiAuthentication apiAuthentication) {
-        return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext);
+    public static @Nullable String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
+        return Optional.ofNullable(apiAuthentication)
+                .map(PowerAuthApiAuthentication::getActivationContext)
+                .map(PowerAuthActivation::getActivationId)
+                .orElse(null);
     }
 }

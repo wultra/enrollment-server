@@ -108,19 +108,17 @@ public class MobileTokenController {
     })
     public ObjectResponse<OperationListResponse> operationList(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         logger.info("action: operationList, state: initiated, activationId: {}", extractActivationId(auth));
+        validateApiAuthentication(auth);
+
         try {
-            if (auth != null) {
-                final String userId = auth.getUserId();
-                final String applicationId = auth.getApplicationId();
-                final String activationId = auth.getActivationContext().getActivationId();
-                final String language = locale.getLanguage();
-                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, true);
-                logger.info("action: operationList, state: succeeded");
-                final Date currentTimestamp = new Date();
-                return new MobileTokenResponse<>(listResponse, currentTimestamp);
-            } else {
-                throw new MobileTokenAuthException();
-            }
+            final String userId = auth.getUserId();
+            final String applicationId = auth.getApplicationId();
+            final String activationId = auth.getActivationContext().getActivationId();
+            final String language = locale.getLanguage();
+            final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, true);
+            logger.info("action: operationList, state: succeeded");
+            final Date currentTimestamp = new Date();
+            return new MobileTokenResponse<>(listResponse, currentTimestamp);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
@@ -161,19 +159,16 @@ public class MobileTokenController {
 
         logger.info("action: fetchOperationDetail, state: initiated, activationId: {}, operationId: {}",
                 extractActivationId(auth), extractRequest(request).map(OperationDetailRequest::getId).orElse(null));
+        validateApiAuthentication(auth);
 
         try {
-            if (auth != null) {
-                final String operationId = request.getRequestObject().getId();
-                final String language = locale.getLanguage();
-                final String userId = auth.getUserId();
-                final Operation response = mobileTokenService.fetchOperationDetail(operationId, language, userId);
-                logger.info("action: fetchOperationDetail, state: succeeded");
-                final Date currentTimestamp = new Date();
-                return new MobileTokenResponse<>(response, currentTimestamp);
-            } else {
-                throw new MobileTokenAuthException();
-            }
+            final String operationId = request.getRequestObject().getId();
+            final String language = locale.getLanguage();
+            final String userId = auth.getUserId();
+            final Operation response = mobileTokenService.fetchOperationDetail(operationId, language, userId);
+            logger.info("action: fetchOperationDetail, state: succeeded");
+            final Date currentTimestamp = new Date();
+            return new MobileTokenResponse<>(response, currentTimestamp);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
@@ -214,19 +209,16 @@ public class MobileTokenController {
 
         logger.info("action: claimOperation, state: initiated, activationId: {}, operationId: {}",
                 extractActivationId(auth), extractRequest(request).map(OperationDetailRequest::getId).orElse(null));
+        validateApiAuthentication(auth);
 
         try {
-            if (auth != null) {
-                final String operationId = request.getRequestObject().getId();
-                final String language = locale.getLanguage();
-                final String userId = auth.getUserId();
-                final Operation response = mobileTokenService.claimOperation(operationId, language, userId);
-                logger.info("action: claimOperation, state: succeeded");
-                final Date currentTimestamp = new Date();
-                return new MobileTokenResponse<>(response, currentTimestamp);
-            } else {
-                throw new MobileTokenAuthException();
-            }
+            final String operationId = request.getRequestObject().getId();
+            final String language = locale.getLanguage();
+            final String userId = auth.getUserId();
+            final Operation response = mobileTokenService.claimOperation(operationId, language, userId);
+            logger.info("action: claimOperation, state: succeeded");
+            final Date currentTimestamp = new Date();
+            return new MobileTokenResponse<>(response, currentTimestamp);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
@@ -262,18 +254,16 @@ public class MobileTokenController {
     })
     public ObjectResponse<OperationListResponse> operationListAll(@Parameter(hidden = true) PowerAuthApiAuthentication auth, @Parameter(hidden = true) Locale locale) throws MobileTokenException, MobileTokenConfigurationException, RemoteCommunicationException {
         logger.info("action: operationListAll, state: initiated, activationId: {}", extractActivationId(auth));
+        validateApiAuthentication(auth);
+
         try {
-            if (auth != null) {
-                final String userId = auth.getUserId();
-                final String applicationId = auth.getApplicationId();
-                final String activationId = auth.getActivationContext().getActivationId();
-                final String language = locale.getLanguage();
-                final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, false);
-                logger.info("action: operationListAll, state: succeeded");
-                return new ObjectResponse<>(listResponse);
-            } else {
-                throw new MobileTokenAuthException();
-            }
+            final String userId = auth.getUserId();
+            final String applicationId = auth.getApplicationId();
+            final String activationId = auth.getActivationContext().getActivationId();
+            final String language = locale.getLanguage();
+            final OperationListResponse listResponse = mobileTokenService.operationListForUser(userId, applicationId, language, activationId, false);
+            logger.info("action: operationListAll, state: succeeded");
+            return new ObjectResponse<>(listResponse);
         } catch (PowerAuthClientException e) {
             final String errorCode = e.getPowerAuthError().map(PowerAuthError::getCode).orElse("ERROR_CODE_MISSING");
             switch (errorCode) {
@@ -460,6 +450,13 @@ public class MobileTokenController {
                     throw new RemoteCommunicationException("Unable to call upstream service.", e);
                 }
             }
+        }
+    }
+
+    private static void validateApiAuthentication(final PowerAuthApiAuthentication auth) throws MobileTokenAuthException {
+        if (auth == null) {
+            logger.warn("API authentication is missing");
+            throw new MobileTokenAuthException();
         }
     }
 }

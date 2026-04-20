@@ -53,7 +53,6 @@ final class LoggingUtils {
      * @param apiAuthentication authentication
      * @return activation ID or {@code null} if not available
      */
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
     public static @Nullable String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
         return Optional.ofNullable(apiAuthentication)
                 .map(PowerAuthApiAuthentication::getActivationContext)
