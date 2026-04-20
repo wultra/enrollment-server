@@ -28,8 +28,7 @@ import org.springframework.stereotype.Service;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-// TODO Lubos define correct property
-@ConditionalOnProperty(name = "app.onboarding.user-data-store.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -37,10 +36,13 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
     private final UserDataStoreClient userDataStoreClient;
 
+    private final UserDataStoreConfigurationProperties config;
+
     @Override
     public void storeDocumentData(final String processId) {
         logger.info("action: storeDocumentData, state: initiated, processId: {}", processId);
-        // TODO
+        final var documentType = config.getDocumentType();
+        // TODO Lubos
         logger.info("action: storeDocumentData, state: succeeded");
     }
 

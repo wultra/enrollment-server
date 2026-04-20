@@ -17,22 +17,35 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
- * Test for {@link DefaultUserDataStoreService}
+ * Configuration properties for user data store.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-class DefaultUserDataStoreServiceTest {
+@Component
+@ConfigurationProperties(prefix = "enrollment-server-onboarding.user-data-store")
+@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
+@Getter
+@Setter
+class UserDataStoreConfigurationProperties {
+    // TODO Lubos - document properties in markdown
 
-    @Test
-    void testStoreDocumentData() {
-        final var tested = new DefaultUserDataStoreService(null, new UserDataStoreConfigurationProperties());
+    @NotNull
+    private DocumentType documentType;
 
-        tested.storeDocumentData("testProcessId");
-        // TODO Lubos
+    private boolean storeExtractedData;
+
+    private boolean storeDocumentImageScan;
+
+    enum DocumentType {
+        WITH_TRUSTED_IMAGE,
+        ALL
     }
 }
