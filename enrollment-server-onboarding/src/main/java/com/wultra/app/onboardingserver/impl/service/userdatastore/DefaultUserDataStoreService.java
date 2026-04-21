@@ -109,17 +109,15 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
             final String documentData = fetchDocumentData(verification, latestResult);
 
-            final var request = new DocumentCreateRequest(
-                    process.getUserId(),
-                    mapDocumentType(verification.getType()),
-                    "claims",
-                    verification.getId(),
-                    processId,
-                    documentData,
-                    Map.of("trustedImage", verification.isUsedForVerification()),
-                    photos,
-                    Collections.emptyList()
-            );
+            final var request = DocumentCreateRequest.builder()
+                    .userId(process.getUserId())
+                    .documentType(mapDocumentType(verification.getType()))
+                    .dataType("claims")
+                    .externalId(processId)
+                    .documentData(documentData)
+                    .attributes(Map.of("trustedImage", verification.isUsedForVerification()))
+                    .photos(photos)
+                    .build();
 
             try {
                 userDataStoreClient.createDocument(request);
