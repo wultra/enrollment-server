@@ -222,6 +222,16 @@ If you select OpenID Connect for authentication, review the following configurat
 | `spring.security.oauth2.resource-server.jwt.audiences`        |         | A comma-separated list of allowed `aud` JWT claim values to be validated.                       |
 
 
+## User Data Store Configuration
+
+| Property                                                                 | Default | Note                                                      |
+|--------------------------------------------------------------------------|---------|-----------------------------------------------------------|
+| `enrollment-server-onboarding.user-data-store.enabled`                   | `false` | Whether user data store integration is enabled.           |
+| `enrollment-server-onboarding.user-data-store.document-type`             |         | Type of documents to store (`WITH_TRUSTED_IMAGE`, `ALL`). |
+| `enrollment-server-onboarding.user-data-store.store-extracted-data`      | `false` | Whether to store extracted data from documents.           |
+| `enrollment-server-onboarding.user-data-store.store-document-image-scan` | `false` | Whether to store document image scans.                    |
+
+
 ## Monitoring and Observability
 
 | Property                                  | Default | Note                                                                                                                                                                        |

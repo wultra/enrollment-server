@@ -35,17 +35,36 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 class UserDataStoreConfigurationProperties {
-    // TODO Lubos - document properties in markdown
 
+    /**
+     * Type of documents to store.
+     */
     @NotNull
     private DocumentType documentType;
 
+    /**
+     * Whether to store extracted data from documents.
+     */
     private boolean storeExtractedData;
 
+    /**
+     * Whether to store document image scans.
+     */
     private boolean storeDocumentImageScan;
 
+    /**
+     * Document type filtering.
+     */
     enum DocumentType {
+
+        /**
+         * Store only documents with trusted images.
+         */
         WITH_TRUSTED_IMAGE,
+
+        /**
+         * Store all documents.
+         */
         ALL
     }
 }
