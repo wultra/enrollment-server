@@ -21,14 +21,29 @@ package com.wultra.app.onboardingserver.userdatastore;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
+import okhttp3.Credentials;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.json.JSONException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
-import java.util.Collections;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Integration test for {@link UserDataStoreService}.
@@ -39,12 +54,45 @@ import java.util.Map;
 @ActiveProfiles("test")
 class UserDataStoreServiceIntTest {
 
+    private static MockWebServer mockWebServer;
+
     @Autowired
     private UserDataStoreService tested;
 
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start();
+    }
+
+    @AfterAll
+    static void afterAll() throws Exception {
+        mockWebServer.shutdown();
+    }
+
+    @DynamicPropertySource
+    static void registerProperties(final DynamicPropertyRegistry registry) {
+        registry.add(
+                "enrollment-server-onboarding.user-data-store.rest-client-config.base-url",
+                () -> mockWebServer.url("/user-data-store").toString()
+        );
+    }
     @Test
-    void test() throws Exception {
-        final var request = DocumentCreateRequest.builder()
+    void testCreateDocument() throws Exception {
+        // given
+        final var request = buildRequest();
+        mockWebServer.enqueue(buildResponse());
+
+        // when
+        tested.callCreateDocument(request);
+
+        // then
+        final var recordedRequest = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
+        assertRecordedRequest(recordedRequest);
+    }
+
+    private static DocumentCreateRequest buildRequest() {
+        return DocumentCreateRequest.builder()
                 .userId("admin")
                 .documentType("personal_id")
                 .dataType("claims")
@@ -68,9 +116,66 @@ class UserDataStoreServiceIntTest {
                                 .externalId("3")
                                 .build()
                 ))
-                .attachments(Collections.emptyList())
                 .build();
+    }
 
-        tested.callCreateDocument(request);
+    private static MockResponse buildResponse() {
+        return new MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .setBody("""
+                        {
+                            "status": "OK",
+                            "responseObject": {
+                                "id": "16f63774-2c6d-4827-be4b-7b8cc066d971",
+                                "documentDataId": null,
+                                "photos": [
+                                    {
+                                        "id": "22f2ac50-1caa-433b-8f20-692089dcec42"
+                                    },
+                                    {
+                                        "id": "d065a2f2-fc3d-4476-b960-85e58ab8a3f4"
+                                    },
+                                    {
+                                        "id": "d334f7b1-2a50-4ab3-8558-22fc7f0a6c29"
+                                    }
+                                ],
+                                "attachments": []
+                            }
+                        }""");
+    }
+
+    private static void assertRecordedRequest(final RecordedRequest recordedRequest) throws JSONException {
+        assertNotNull(recordedRequest);
+
+        assertEquals("POST", recordedRequest.getMethod());
+
+        final var expectedAuth = Credentials.basic("user", "password", StandardCharsets.UTF_8);
+        final var actualAuth = recordedRequest.getHeader("Authorization");
+        assertEquals(expectedAuth, actualAuth);
+
+        final var body = recordedRequest.getBody().readUtf8();
+        JSONAssert.assertEquals(buildExpectedRequestBody(), body, false);
+    }
+
+    private static String buildExpectedRequestBody() {
+        return """
+            {
+                "requestObject": {
+                  "userId": "admin",
+                  "documentType": "personal_id",
+                  "dataType": "claims",
+                  "externalId": "test-process-1",
+                  "documentData": "{}",
+                  "attributes": {
+                    "trustedImage": true
+                  },
+                  "photos": [
+                    { "photoType": "person", "externalId": "1" },
+                    { "photoType": "document_front_side", "externalId": "2" },
+                    { "photoType": "document_back_side", "externalId": "3" }
+                  ]
+                }
+            }""";
     }
 }
