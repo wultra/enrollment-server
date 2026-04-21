@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEnti
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
+import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
 import lombok.AllArgsConstructor;
@@ -121,7 +122,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
             try {
                 userDataStoreClient.createDocument(request);
-            } catch (Exception e) {
+            } catch (UserDataStoreClientException e) {
                 logger.error("action: storeDocumentData, state: failed, processId: {}, error: {}", processId, e.getMessage(), e);
             }
         }
@@ -130,8 +131,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
     private @Nullable String fetchDocumentData(final DocumentVerificationEntity verification, final DocumentResultEntity documentResult) {
         if (config.isStoreExtractedData()) {
-            return String.format("""
-                    {"documentData":%s,"country":"%s"}""",
+            return String.format("{\"documentData\":%s,\"country\":\"%s\"}",
                     documentResult.getExtractedData(),
                     verification.getCountry());
         } else {
