@@ -27,6 +27,8 @@ import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
+import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
+import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCreateResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -46,6 +48,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 class DefaultUserDataStoreService implements UserDataStoreService {
+
+    private static final String DATA_TYPE_CLAIMS = "claims";
 
     private final UserDataStoreClient userDataStoreClient;
 
@@ -80,10 +84,10 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             return;
         }
 
-        final var processedDataMap = fetchProcessedDocumentData(documentVerifications);
+        final var processedData = fetchProcessedDocumentData(documentVerifications);
 
         for (final var documentVerification : documentVerifications) {
-            storeDocumentVerification(processId, process.getUserId(), documentVerification, processedDataMap);
+            storeDocumentData(processId, process.getUserId(), documentVerification, processedData);
         }
 
         logger.info("action: storeDocumentData, state: finished");
@@ -97,7 +101,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .collect(Collectors.groupingBy(ProcessedDocumentDataEntity::getDocumentVerificationId));
     }
 
-    private void storeDocumentVerification(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedDataMap) {
+    private void storeDocumentData(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {
         if (config.getDocumentType() == UserDataStoreConfigProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
             return;
         }
@@ -108,27 +112,40 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         }
         final var latestResult = results.iterator().next();
 
-        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedDataMap.getOrDefault(documentVerification.getId(), Collections.emptyList()));
+        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData.getOrDefault(documentVerification.getId(), Collections.emptyList()));
 
         final String documentData = fetchDocumentData(documentVerification, latestResult);
 
         final var request = DocumentCreateRequest.builder()
                 .userId(userId)
                 .documentType(convert(documentVerification.getType()))
-                .dataType("claims")
+                .dataType(DATA_TYPE_CLAIMS)
                 .externalId(processId)
                 .documentData(documentData)
                 .attributes(Map.of("trustedImage", documentVerification.isUsedForVerification()))
                 .photos(photos)
                 .build();
 
+        callCreateDocument(request);
+    }
+
+    void callCreateDocument(final DocumentCreateRequest request) {
+        logger.info("action: callCreateDocument, state: initiated, userId: {}, externalId: {}, documentType: {}, dataType: {}", request.userId(), request.externalId(), request.documentType(), request.dataType());
+
         try {
-            userDataStoreClient.createDocument(request);
-            // TODO Lubos retry pattern
-            logger.error("action: storeDocumentData, state: succeeded, processId: {}, documentVerificationId: {}", processId, documentVerification.getVerificationId());
-        } catch (UserDataStoreClientException e) {
-            logger.error("action: storeDocumentData, state: failed, processId: {}, documentVerificationId: {}, error: {}", processId, documentVerification.getVerificationId(), e.getMessage(), e);
+            final var response = userDataStoreClient.createDocument(request);
+            logger.info("action: callCreateDocument, state: succeeded, documentId: {}, photoIds: {}", response.id(), collectPhotoIds(response));
+        } catch (final UserDataStoreClientException e) {
+            // TODO Lubos retry pattern, could be done in #1725
+            logger.error("action: callCreateDocument, state: failed, errorMessage: {}", e.getMessage(), e);
         }
+    }
+
+    private static List<String> collectPhotoIds(final DocumentCreateResponse response) {
+        return response.photos()
+                .stream()
+                .map(EmbeddedPhotoCreateResponse::id)
+                .toList();
     }
 
     private List<EmbeddedPhotoCreateRequest> fetchPhotos(final List<ProcessedDocumentDataEntity> processedData) {
