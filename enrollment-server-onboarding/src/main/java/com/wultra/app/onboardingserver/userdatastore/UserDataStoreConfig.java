@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(UserDataStoreConfigProperties.class)
 @Slf4j
-public class UserDataStoreConfig {
+class UserDataStoreConfig {
 
     @Bean
     public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigProperties properties) throws UserDataStoreClientException {
