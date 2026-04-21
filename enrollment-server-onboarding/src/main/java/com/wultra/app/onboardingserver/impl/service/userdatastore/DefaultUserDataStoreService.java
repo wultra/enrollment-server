@@ -49,7 +49,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
     private final UserDataStoreClient userDataStoreClient;
 
-    private final UserDataStoreConfigurationProperties config;
+    private final UserDataStoreConfigProperties config;
 
     private final OnboardingProcessRepository onboardingProcessRepository;
 
@@ -98,7 +98,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     private void storeDocumentVerification(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedDataMap) {
-        if (config.getDocumentType() == UserDataStoreConfigurationProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
+        if (config.getDocumentType() == UserDataStoreConfigProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
             return;
         }
 
@@ -124,7 +124,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
         try {
             userDataStoreClient.createDocument(request);
-            // TODO retry pattern
+            // TODO Lubos retry pattern
             logger.error("action: storeDocumentData, state: succeeded, processId: {}, documentVerificationId: {}", processId, documentVerification.getVerificationId());
         } catch (UserDataStoreClientException e) {
             logger.error("action: storeDocumentData, state: failed, processId: {}, documentVerificationId: {}, error: {}", processId, documentVerification.getVerificationId(), e.getMessage(), e);

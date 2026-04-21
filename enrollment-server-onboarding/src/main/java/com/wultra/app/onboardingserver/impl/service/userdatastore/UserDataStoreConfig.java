@@ -37,12 +37,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Configuration
-@EnableConfigurationProperties(UserDataStoreConfigurationProperties.class)
+@EnableConfigurationProperties(UserDataStoreConfigProperties.class)
 @Slf4j
 class UserDataStoreConfig {
 
     @Bean
-    public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigurationProperties config) throws UserDataStoreClientException {
+    public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigProperties config) throws UserDataStoreClientException {
         final var clientConfig = config.getRestClientConfig();
 
         logger.info("Registering UserDataStore client with url: {}", clientConfig.getBaseUrl());
@@ -52,7 +52,7 @@ class UserDataStoreConfig {
     @Bean
     public UserDataStoreService userDataStoreService(
             final UserDataStoreClient client,
-            final UserDataStoreConfigurationProperties config,
+            final UserDataStoreConfigProperties config,
             final OnboardingProcessRepository onboardingProcessRepository,
             final IdentityVerificationRepository identityVerificationRepository,
             final ProcessedDocumentDataRepository processedDocumentDataRepository) {

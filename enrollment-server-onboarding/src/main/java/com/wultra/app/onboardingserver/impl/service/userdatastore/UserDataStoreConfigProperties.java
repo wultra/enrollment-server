@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Getter
 @Setter
-class UserDataStoreConfigurationProperties {
+class UserDataStoreConfigProperties {
 
     /**
      * REST client configuration.

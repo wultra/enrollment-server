@@ -57,7 +57,7 @@ class DefaultUserDataStoreServiceTest {
                     "enrollment-server-onboarding.user-data-store.store-document-image-scan=true"
             }
     )
-    @EnableConfigurationProperties(UserDataStoreConfigurationProperties.class)
+    @EnableConfigurationProperties(UserDataStoreConfigProperties.class)
     @Nested
     class AllDocumentsTest {
 
@@ -137,7 +137,7 @@ class DefaultUserDataStoreServiceTest {
                     "enrollment-server-onboarding.user-data-store.store-extracted-data=true"
             }
     )
-    @EnableConfigurationProperties(UserDataStoreConfigurationProperties.class)
+    @EnableConfigurationProperties(UserDataStoreConfigProperties.class)
     @Nested
     class TrustedTest {
 
