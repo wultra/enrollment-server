@@ -92,12 +92,28 @@ class UserDataStoreServiceIntTest {
     }
 
     private static DocumentCreateRequest buildRequest() {
+        final var documentData = """
+                {
+                    "surname": "Doe",
+                    "givenNames": "John",
+                    "dateOfBirth": "1997-06-14",
+                    "placeOfBirth": "Ostrava",
+                    "sex": "M",
+                    "nationality": "Czech",
+                    "personalNumber": "123456789",
+                    "documentNumber": "AB123456",
+                    "dateOfIssue": "2019-12-27",
+                    "dateOfExpiry": "2029-11-30",
+                    "authority": "City Hall",
+                    "country": "CZE"
+                }""";
+
         return DocumentCreateRequest.builder()
                 .userId("admin")
                 .documentType("personal_id")
                 .dataType("claims")
                 .externalId("test-process-1")
-                .documentData("{}")
+                .documentData(documentData)
                 .attributes(Map.of("trustedImage", true))
                 .photos(List.of(
                         EmbeddedPhotoCreateRequest.builder()
@@ -166,7 +182,7 @@ class UserDataStoreServiceIntTest {
                   "documentType": "personal_id",
                   "dataType": "claims",
                   "externalId": "test-process-1",
-                  "documentData": "{}",
+                  "documentData": "{\\n    \\"surname\\": \\"Doe\\",\\n    \\"givenNames\\": \\"John\\",\\n    \\"dateOfBirth\\": \\"1997-06-14\\",\\n    \\"placeOfBirth\\": \\"Ostrava\\",\\n    \\"sex\\": \\"M\\",\\n    \\"nationality\\": \\"Czech\\",\\n    \\"personalNumber\\": \\"123456789\\",\\n    \\"documentNumber\\": \\"AB123456\\",\\n    \\"dateOfIssue\\": \\"2019-12-27\\",\\n    \\"dateOfExpiry\\": \\"2029-11-30\\",\\n    \\"authority\\": \\"City Hall\\",\\n    \\"country\\": \\"CZE\\"\\n}",
                   "attributes": {
                     "trustedImage": true
                   },
