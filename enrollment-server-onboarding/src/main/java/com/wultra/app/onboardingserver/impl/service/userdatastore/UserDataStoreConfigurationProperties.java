@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.core.rest.client.base.RestClientConfiguration;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +36,11 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 class UserDataStoreConfigurationProperties {
+
+    /**
+     * REST client configuration.
+     */
+    private RestClientConfiguration restClientConfig;
 
     /**
      * Type of documents to store.
