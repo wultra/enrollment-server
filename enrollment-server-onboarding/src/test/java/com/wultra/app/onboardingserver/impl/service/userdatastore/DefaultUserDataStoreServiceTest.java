@@ -78,11 +78,13 @@ class DefaultUserDataStoreServiceTest {
         process.setId(processId);
         process.setActivationId(activationId);
         process.setUserId(userId);
-        when(onboardingProcessRepository.findById(processId)).thenReturn(Optional.of(process));
+        when(onboardingProcessRepository.findById(processId))
+                .thenReturn(Optional.of(process));
 
         final var identity = new IdentityVerificationEntity();
         identity.setActivationId(activationId);
-        when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId)).thenReturn(Optional.of(identity));
+        when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                .thenReturn(Optional.of(identity));
 
         final var verification = new DocumentVerificationEntity();
         verification.setId("v1");
@@ -101,7 +103,8 @@ class DefaultUserDataStoreServiceTest {
         processedData.setDocumentVerificationId("v1");
         processedData.setDataType(com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
         processedData.setData(new byte[]{1, 2, 3});
-        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any())).thenReturn(List.of(processedData));
+        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
+                .thenReturn(List.of(processedData));
 
         config.setDocumentType(UserDataStoreConfigurationProperties.DocumentType.ALL);
         config.setStoreExtractedData(true);
@@ -131,11 +134,13 @@ class DefaultUserDataStoreServiceTest {
         process.setId(processId);
         process.setActivationId(activationId);
         process.setUserId(userId);
-        when(onboardingProcessRepository.findById(processId)).thenReturn(Optional.of(process));
+        when(onboardingProcessRepository.findById(processId))
+                .thenReturn(Optional.of(process));
 
         final var identity = new IdentityVerificationEntity();
         identity.setActivationId(activationId);
-        when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId)).thenReturn(Optional.of(identity));
+        when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                .thenReturn(Optional.of(identity));
 
         final var verification1 = new DocumentVerificationEntity();
         verification1.setId("v1");
