@@ -18,10 +18,11 @@
 
 package com.wultra.app.onboardingserver.userdatastore;
 
-import com.wultra.app.onboardingserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.security.userdatastore.UserDataStoreRestClient;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,14 +32,18 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@ConditionalOnPropertyNotEmpty("enrollment-server-onboarding.user-data-store.rest-client-config.base-url")
+@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Configuration
 @EnableConfigurationProperties(UserDataStoreConfigProperties.class)
+@Slf4j
 public class UserDataStoreConfig {
 
     @Bean
     public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigProperties properties) throws UserDataStoreClientException {
-        return new UserDataStoreRestClient(properties.getRestClientConfig());
+        final var clientConfig = properties.getRestClientConfig();
+
+        logger.info("Registering UserDataStore client with url: {}", clientConfig.getBaseUrl());
+        return new UserDataStoreRestClient(clientConfig);
     }
 
     @Bean
