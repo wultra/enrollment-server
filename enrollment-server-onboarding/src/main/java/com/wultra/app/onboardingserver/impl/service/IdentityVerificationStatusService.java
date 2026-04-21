@@ -72,6 +72,7 @@ public class IdentityVerificationStatusService {
         final OnboardingProcessEntity onboardingProcess = onboardingService.findProcessByActivationId(ownerId.getActivationId());
         response.setProcessId(onboardingProcess.getId());
         response.setProcessType(onboardingProcess.getProcessConfiguration().getProcessType());
+        response.setConsentRequired(isConsentPending(onboardingProcess));
 
         if (idVerificationOptional.isEmpty()) {
             response.setIdentityVerificationStatus(IdentityVerificationStatus.NOT_INITIALIZED);
@@ -95,12 +96,10 @@ public class IdentityVerificationStatusService {
         }
 
         final IdentityVerificationEntity idVerification = idVerificationOptional.get();
-        final var consentPending = isConsentPending(onboardingProcess);
 
         response.setIdentityVerificationStatus(idVerification.getStatus());
         response.setIdentityVerificationPhase(idVerification.getPhase());
         response.setRejectReason(idVerification.getRejectReason());
-        response.setConsentRequired(consentPending);
         return response;
     }
 
