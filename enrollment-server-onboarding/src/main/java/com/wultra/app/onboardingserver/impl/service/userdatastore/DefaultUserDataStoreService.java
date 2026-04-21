@@ -64,82 +64,96 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     public void storeDocumentData(final String processId) {
         logger.info("action: storeDocumentData, state: initiated, processId: {}", processId);
 
-        final var processOptional = onboardingProcessRepository.findById(processId);
-        if (processOptional.isEmpty()) {
+        final var process = onboardingProcessRepository.findById(processId).orElse(null);
+        if (process == null) {
             logger.warn("action: storeDocumentData, state: failed, reason: process_not_found, processId: {}", processId);
             return;
         }
 
-        final var process = processOptional.get();
-        final var identityOptional = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId());
-        if (identityOptional.isEmpty()) {
+        final var identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId()).orElse(null);
+        if (identityVerification == null) {
             logger.warn("action: storeDocumentData, state: failed, reason: identity_not_found, processId: {}", processId);
             return;
         }
-        final var identity = identityOptional.get();
 
-        final var documentVerifications = identity.getDocumentVerifications();
+        final var documentVerifications = identityVerification.getDocumentVerifications();
         if (CollectionUtils.isEmpty(documentVerifications)) {
             logger.info("action: storeDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
             return;
         }
 
-        final var documentVerificationIds = documentVerifications.stream().map(DocumentVerificationEntity::getId).collect(Collectors.toSet());
-        final var processedDataList = processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
-        final var processedDataMap = processedDataList.stream()
-                .collect(Collectors.groupingBy(ProcessedDocumentDataEntity::getDocumentVerificationId));
+        final var processedDataMap = fetchProcessedDocumentData(documentVerifications);
 
-        for (final var verification : documentVerifications) {
-            if (config.getDocumentType() == UserDataStoreConfigurationProperties.DocumentType.WITH_TRUSTED_IMAGE && !verification.isUsedForVerification()) {
-                continue;
-            }
-
-            final var results = verification.getResults();
-            if (results == null || results.isEmpty()) {
-                continue;
-            }
-            final var latestResult = results.iterator().next();
-
-            final List<EmbeddedPhotoCreateRequest> photos = new ArrayList<>();
-            if (config.isStoreDocumentImageScan()) {
-                final var currentProcessedData = processedDataMap.getOrDefault(verification.getId(), Collections.emptyList());
-                for (final var pd : currentProcessedData) {
-                    photos.add(mapToPhotoRequest(pd));
-                }
-            }
-
-            final String documentData = fetchDocumentData(verification, latestResult);
-
-            final var request = DocumentCreateRequest.builder()
-                    .userId(process.getUserId())
-                    .documentType(mapDocumentType(verification.getType()))
-                    .dataType("claims")
-                    .externalId(processId)
-                    .documentData(documentData)
-                    .attributes(Map.of("trustedImage", verification.isUsedForVerification()))
-                    .photos(photos)
-                    .build();
-
-            try {
-                userDataStoreClient.createDocument(request);
-            } catch (UserDataStoreClientException e) {
-                logger.error("action: storeDocumentData, state: failed, processId: {}, error: {}", processId, e.getMessage(), e);
-            }
+        for (final var documentVerification : documentVerifications) {
+            storeDocumentVerification(processId, process.getUserId(), documentVerification, processedDataMap);
         }
-        logger.info("action: storeDocumentData, state: succeeded");
+
+        logger.info("action: storeDocumentData, state: finished");
+    }
+
+    private Map<String, List<ProcessedDocumentDataEntity>> fetchProcessedDocumentData(final Collection<DocumentVerificationEntity> documentVerifications) {
+        final var documentVerificationIds = documentVerifications.stream()
+                .map(DocumentVerificationEntity::getId)
+                .collect(Collectors.toSet());
+        return processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds).stream()
+                .collect(Collectors.groupingBy(ProcessedDocumentDataEntity::getDocumentVerificationId));
+    }
+
+    private void storeDocumentVerification(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedDataMap) {
+        if (config.getDocumentType() == UserDataStoreConfigurationProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
+            return;
+        }
+
+        final var results = documentVerification.getResults();
+        if (CollectionUtils.isEmpty(results)) {
+            return;
+        }
+        final var latestResult = results.iterator().next();
+
+        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedDataMap.getOrDefault(documentVerification.getId(), Collections.emptyList()));
+
+        final String documentData = fetchDocumentData(documentVerification, latestResult);
+
+        final var request = DocumentCreateRequest.builder()
+                .userId(userId)
+                .documentType(convert(documentVerification.getType()))
+                .dataType("claims")
+                .externalId(processId)
+                .documentData(documentData)
+                .attributes(Map.of("trustedImage", documentVerification.isUsedForVerification()))
+                .photos(photos)
+                .build();
+
+        try {
+            userDataStoreClient.createDocument(request);
+            // TODO retry pattern
+            logger.error("action: storeDocumentData, state: succeeded, processId: {}, documentVerificationId: {}", processId, documentVerification.getVerificationId());
+        } catch (UserDataStoreClientException e) {
+            logger.error("action: storeDocumentData, state: failed, processId: {}, documentVerificationId: {}, error: {}", processId, documentVerification.getVerificationId(), e.getMessage(), e);
+        }
+    }
+
+    private List<EmbeddedPhotoCreateRequest> fetchPhotos(final List<ProcessedDocumentDataEntity> processedData) {
+        if (!config.isStoreDocumentImageScan()) {
+            return List.of();
+        }
+
+        return processedData.stream()
+                .map(DefaultUserDataStoreService::convert)
+                .toList();
     }
 
     private @Nullable String fetchDocumentData(final DocumentVerificationEntity verification, final DocumentResultEntity documentResult) {
-        if (config.isStoreExtractedData()) {
-            return String.format("{\"documentData\":%s,\"country\":\"%s\"}",
-                    documentResult.getExtractedData(),
-                    verification.getCountry());
-        } else {
+        if (!config.isStoreExtractedData()) {
             return null;
         }
+
+        return String.format("{\"documentData\":%s,\"country\":\"%s\"}",
+                documentResult.getExtractedData(),
+                verification.getCountry());
     }
 
-    private static String mapDocumentType(final com.wultra.app.enrollmentserver.model.enumeration.DocumentType source) {
+    private static String convert(final com.wultra.app.enrollmentserver.model.enumeration.DocumentType source) {
         return switch (source) {
             case ID_CARD -> "personal_id";
             case PASSPORT -> "passport";
@@ -149,7 +163,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         };
     }
 
-    private static EmbeddedPhotoCreateRequest mapToPhotoRequest(final ProcessedDocumentDataEntity source) {
+    private static EmbeddedPhotoCreateRequest convert(final ProcessedDocumentDataEntity source) {
         final var photoType = switch (source.getDataType()) {
             case FACE_IMAGE -> "person";
             case DOCUMENT_FRONT_SIDE -> "document_front_side";
