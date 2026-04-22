@@ -227,9 +227,9 @@ If you select OpenID Connect for authentication, review the following configurat
 | Property                                                                 | Default | Note                                                      |
 |--------------------------------------------------------------------------|---------|-----------------------------------------------------------|
 | `enrollment-server-onboarding.user-data-store.enabled`                   | `false` | Whether user data store integration is enabled.           |
-| `enrollment-server-onboarding.user-data-store.document-type`             |         | Type of documents to store (`WITH_TRUSTED_IMAGE`, `ALL`). |
-| `enrollment-server-onboarding.user-data-store.store-extracted-data`      | `false` | Whether to store extracted data from documents.           |
-| `enrollment-server-onboarding.user-data-store.store-document-image-scan` | `false` | Whether to store document image scans.                    |
+| `enrollment-server-onboarding.user-data-store.document-type`             | `ALL`   | Type of documents to store (`WITH_TRUSTED_IMAGE`, `ALL`). |
+| `enrollment-server-onboarding.user-data-store.store-extracted-data`      | `true`  | Whether to store extracted data from documents.           |
+| `enrollment-server-onboarding.user-data-store.store-document-image-scan` | `true`  | Whether to store document image scans.                    |
 
 
 ## Monitoring and Observability
