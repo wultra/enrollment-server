@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 
 import java.util.List;
@@ -44,6 +45,7 @@ public interface UserDataStoreService {
      *
      * @param documentRequests List of document creation requests.
      * @see #collectDocumentData(String)
+     * @throws UserDataStoreClientException Implementation should retry when communication fails, but if all attempts exhausted, throws an exception.
      */
-    void storeDocumentData(List<DocumentCreateRequest> documentRequests);
+    void storeDocumentData(List<DocumentCreateRequest> documentRequests) throws UserDataStoreClientException;
 }

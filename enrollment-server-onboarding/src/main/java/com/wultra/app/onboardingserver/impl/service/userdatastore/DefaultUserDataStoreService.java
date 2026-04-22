@@ -29,9 +29,11 @@ import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequ
 import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
 import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
 import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCreateResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -43,9 +45,11 @@ import java.util.stream.Collectors;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 class DefaultUserDataStoreService implements UserDataStoreService {
+
+    private static final int MAX_ATTEMPTS = 3;
 
     private static final String DATA_TYPE_CLAIMS = "claims";
 
@@ -58,6 +62,11 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     private final IdentityVerificationRepository identityVerificationRepository;
 
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+    private final RetryTemplate retryTemplate = RetryTemplate.builder()
+            .maxAttempts(MAX_ATTEMPTS)
+            .exponentialBackoff(200, 2.0, 2_000)
+            .build();
 
     @Transactional(readOnly = true)
     @Override
@@ -94,10 +103,11 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     @Override
-    public void storeDocumentData(final List<DocumentCreateRequest> requests) {
+    public void storeDocumentData(final List<DocumentCreateRequest> requests) throws UserDataStoreClientException {
         logger.info("action: storeDocumentData, state: initiated, count: {}", requests.size());
+
         for (final var request : requests) {
-            callCreateDocument(request);
+            retryTemplate.execute(context -> callCreateDocument(request, context));
         }
         logger.info("action: storeDocumentData, state: finished");
     }
@@ -134,15 +144,18 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .build();
     }
 
-    void callCreateDocument(final DocumentCreateRequest request) {
-        logger.info("action: callCreateDocument, state: initiated, userId: {}, externalId: {}, documentType: {}, dataType: {}", request.userId(), request.externalId(), request.documentType(), request.dataType());
+    Void callCreateDocument(final DocumentCreateRequest request, final RetryContext context) throws UserDataStoreClientException {
+        final int attempt = context.getRetryCount() + 1;
+        logger.info("action: callCreateDocument, state: initiated, userId: {}, externalId: {}, documentType: {}, dataType: {}, attempt {}/{}",
+                request.userId(), request.externalId(), request.documentType(), request.dataType(), attempt, MAX_ATTEMPTS);
 
         try {
             final var response = userDataStoreClient.createDocument(request);
             logger.info("action: callCreateDocument, state: succeeded, documentId: {}, photoIds: {}", response.id(), collectPhotoIds(response));
+            return null;
         } catch (final UserDataStoreClientException e) {
-            // TODO Lubos retry pattern, could be done in #1725
-            logger.error("action: callCreateDocument, state: failed, errorMessage: {}", e.getMessage(), e);
+            logger.warn("action: callCreateDocument, state: failed, attempt {}/{}, errorMessage: {}", attempt, MAX_ATTEMPTS, e.getMessage(), e);
+            throw e;
         }
     }
 

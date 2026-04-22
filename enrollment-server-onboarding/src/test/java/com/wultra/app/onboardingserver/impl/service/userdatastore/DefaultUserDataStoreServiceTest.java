@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.common.database.OnboardingProcessReposito
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
+import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
 import org.junit.jupiter.api.Nested;
@@ -37,8 +38,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Test for {@link DefaultUserDataStoreService}.
@@ -75,6 +77,35 @@ class DefaultUserDataStoreServiceTest {
 
         @MockitoBean
         private ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+        @Test
+        void testStoreData() throws Exception {
+            final DocumentCreateRequest request = DocumentCreateRequest.builder().build();
+
+            when(userDataStoreClient.createDocument(any()))
+                    .thenThrow(new UserDataStoreClientException("error 1"))
+                    .thenThrow(new UserDataStoreClientException("error 2"))
+                    .thenReturn(DocumentCreateResponse.builder().id("doc-id").build());
+
+            tested.storeDocumentData(List.of(request));
+
+            verify(userDataStoreClient, times(3)).createDocument(any());
+        }
+
+        @Test
+        void testStoreData_failed() throws Exception {
+            final DocumentCreateRequest request = DocumentCreateRequest.builder().build();
+
+            when(userDataStoreClient.createDocument(any()))
+                    .thenThrow(new UserDataStoreClientException("error 1"))
+                    .thenThrow(new UserDataStoreClientException("error 2"))
+                    .thenThrow(new UserDataStoreClientException("error 3"));
+
+            final var result = assertThrows(UserDataStoreClientException.class, () -> tested.storeDocumentData(List.of(request)));
+
+            assertEquals("error 3", result.getMessage());
+            verify(userDataStoreClient, times(3)).createDocument(any());
+        }
 
         @Test
         void testCollectDocumentData() throws Exception {
