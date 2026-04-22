@@ -47,6 +47,7 @@ public class UserDataStoreService {
             logger.info("action: callCreateDocument, state: succeeded, documentId: {}, photoIds: {}", response.id(), getPhotoIds(response));
         } catch (final UserDataStoreClientException e) {
             logger.info("action: callCreateDocument, state: failed, errorMessage: {}", e.getMessage());
+            logger.warn("action: callCreateDocument, state: failed", e);
             throw e;
         }
     }

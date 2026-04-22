@@ -19,9 +19,11 @@
 package com.wultra.app.onboardingserver.userdatastore;
 
 import com.wultra.core.rest.client.base.RestClientConfiguration;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for User Data Store integration.
@@ -29,6 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.user-data-store")
+@Validated
 @Setter
 @Getter
 public class UserDataStoreConfigProperties {
@@ -36,6 +39,7 @@ public class UserDataStoreConfigProperties {
     /**
      * REST client configuration.
      */
+    @NotNull
     private RestClientConfiguration restClientConfig;
 
 }
