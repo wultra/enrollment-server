@@ -142,6 +142,10 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     private static List<String> collectPhotoIds(final DocumentCreateResponse response) {
+        if (response.photos() == null) {
+            return List.of();
+        }
+
         return response.photos()
                 .stream()
                 .map(EmbeddedPhotoCreateResponse::id)

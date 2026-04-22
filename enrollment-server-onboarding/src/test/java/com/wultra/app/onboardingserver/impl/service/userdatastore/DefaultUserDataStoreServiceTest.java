@@ -24,6 +24,7 @@ import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepo
 import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
+import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -114,6 +115,9 @@ class DefaultUserDataStoreServiceTest {
             when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
                     .thenReturn(List.of(processedData));
 
+            when(userDataStoreClient.createDocument(any()))
+                    .thenReturn(DocumentCreateResponse.builder().build());
+
             tested.storeDocumentData(processId);
 
             final var captor = ArgumentCaptor.forClass(DocumentCreateRequest.class);
@@ -189,6 +193,9 @@ class DefaultUserDataStoreServiceTest {
             verification2.setResults(Set.of(result2));
 
             identity.setDocumentVerifications(Set.of(verification1, verification2));
+
+            when(userDataStoreClient.createDocument(any()))
+                    .thenReturn(DocumentCreateResponse.builder().build());
 
             tested.storeDocumentData(processId);
 
