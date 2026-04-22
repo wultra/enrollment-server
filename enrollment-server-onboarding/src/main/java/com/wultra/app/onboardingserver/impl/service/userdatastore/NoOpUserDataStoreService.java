@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 @ConditionalOnMissingBean(UserDataStoreService.class)
 @Service
 @Slf4j
-class NoOptUserDataStoreService implements UserDataStoreService {
+class NoOpUserDataStoreService implements UserDataStoreService {
 
     @Override
     public void storeDocumentData(final String processId) {
