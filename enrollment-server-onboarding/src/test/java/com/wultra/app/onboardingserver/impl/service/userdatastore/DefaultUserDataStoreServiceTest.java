@@ -27,7 +27,6 @@ import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequ
 import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,7 +38,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link DefaultUserDataStoreService}.
@@ -78,7 +77,7 @@ class DefaultUserDataStoreServiceTest {
         private ProcessedDocumentDataRepository processedDocumentDataRepository;
 
         @Test
-        void testStoreDocumentData() throws Exception {
+        void testCollectDocumentData() throws Exception {
             final var processId = "testProcessId";
             final var activationId = "testActivationId";
             final var userId = "testUserId";
@@ -101,9 +100,9 @@ class DefaultUserDataStoreServiceTest {
             verification.setCountry("CZE");
             verification.setUsedForVerification(true);
 
-            final var result = new DocumentResultEntity();
-            result.setExtractedData("{\"foo\":\"bar\"}");
-            verification.setResults(Set.of(result));
+            final var documentResult = new DocumentResultEntity();
+            documentResult.setExtractedData("{\"foo\":\"bar\"}");
+            verification.setResults(Set.of(documentResult));
 
             identity.setDocumentVerifications(Set.of(verification));
 
@@ -118,18 +117,16 @@ class DefaultUserDataStoreServiceTest {
             when(userDataStoreClient.createDocument(any()))
                     .thenReturn(DocumentCreateResponse.builder().build());
 
-            final var data = tested.collectDocumentData(processId);
-            tested.storeDocumentData(data);
+            final var results = tested.collectDocumentData(processId);
 
-            final var captor = ArgumentCaptor.forClass(DocumentCreateRequest.class);
-            verify(userDataStoreClient, times(1)).createDocument(captor.capture());
-            final var request = captor.getValue();
-            assertEquals(userId, request.userId());
-            assertEquals("personal_id", request.documentType());
-            assertEquals(processId, request.externalId());
-            assertEquals("{\"foo\":\"bar\"}", request.documentData());
-            assertEquals(1, request.photos().size());
-            assertEquals("AQID", request.photos().get(0).photoData());
+            assertEquals(1, results.size());
+            final DocumentCreateRequest result = results.get(0);
+            assertEquals(userId, result.userId());
+            assertEquals("personal_id", result.documentType());
+            assertEquals(processId, result.externalId());
+            assertEquals("{\"foo\":\"bar\"}", result.documentData());
+            assertEquals(1, result.photos().size());
+            assertEquals("AQID", result.photos().get(0).photoData());
         }
     }
 
@@ -162,7 +159,7 @@ class DefaultUserDataStoreServiceTest {
         private ProcessedDocumentDataRepository processedDocumentDataRepository;
 
         @Test
-        void testStoreDocumentData_withTrustedImageOnly() throws Exception {
+        void testCollectDocumentData_withTrustedImageOnly() throws Exception {
             final var processId = "testProcessId";
             final var activationId = "testActivationId";
             final var userId = "testUserId";
@@ -198,12 +195,10 @@ class DefaultUserDataStoreServiceTest {
             when(userDataStoreClient.createDocument(any()))
                     .thenReturn(DocumentCreateResponse.builder().build());
 
-            final var data = tested.collectDocumentData(processId);
-            tested.storeDocumentData(data);
+            final var result = tested.collectDocumentData(processId);
 
-            final var captor = ArgumentCaptor.forClass(DocumentCreateRequest.class);
-            verify(userDataStoreClient, times(1)).createDocument(captor.capture());
-            assertEquals("passport", captor.getValue().documentType());
+            assertEquals(1, result.size());
+            assertEquals("passport", result.get(0).documentType());
         }
     }
 }
