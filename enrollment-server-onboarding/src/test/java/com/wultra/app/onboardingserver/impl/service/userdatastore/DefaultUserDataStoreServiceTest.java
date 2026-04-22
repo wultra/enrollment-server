@@ -53,6 +53,7 @@ class DefaultUserDataStoreServiceTest {
             classes = {DefaultUserDataStoreService.class},
             properties = {
                     "enrollment-server-onboarding.user-data-store.enabled=true",
+                    "enrollment-server-onboarding.user-data-store.restClientConfig.baseUrl=http://example.com/uds",
                     "enrollment-server-onboarding.user-data-store.document-type=ALL",
                     "enrollment-server-onboarding.user-data-store.store-extracted-data=true",
                     "enrollment-server-onboarding.user-data-store.store-document-image-scan=true"
@@ -137,6 +138,7 @@ class DefaultUserDataStoreServiceTest {
             classes = {DefaultUserDataStoreService.class},
             properties = {
                     "enrollment-server-onboarding.user-data-store.enabled=true",
+                    "enrollment-server-onboarding.user-data-store.restClientConfig.baseUrl=http://example.com/uds",
                     "enrollment-server-onboarding.user-data-store.document-type=WITH_TRUSTED_IMAGE",
                     "enrollment-server-onboarding.user-data-store.store-extracted-data=true"
             }

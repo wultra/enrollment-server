@@ -22,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for user data store.
@@ -31,11 +32,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.user-data-store")
 @Getter
 @Setter
+@Validated
 class UserDataStoreConfigProperties {
 
     /**
      * REST client configuration.
      */
+    @NotNull
     private RestClientConfiguration restClientConfig;
 
     /**

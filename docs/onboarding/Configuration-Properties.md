@@ -230,6 +230,7 @@ If you select OpenID Connect for authentication, review the following configurat
 | `enrollment-server-onboarding.user-data-store.document-type`             | `ALL`   | Type of documents to store (`WITH_TRUSTED_IMAGE`, `ALL`). |
 | `enrollment-server-onboarding.user-data-store.store-extracted-data`      | `true`  | Whether to store extracted data from documents.           |
 | `enrollment-server-onboarding.user-data-store.store-document-image-scan` | `true`  | Whether to store document image scans.                    |
+| `enrollment-server-onboarding.user-data-store.restClientConfig.baseUrl`  |         | URL of user data store.                                   |
 
 
 ## Monitoring and Observability
