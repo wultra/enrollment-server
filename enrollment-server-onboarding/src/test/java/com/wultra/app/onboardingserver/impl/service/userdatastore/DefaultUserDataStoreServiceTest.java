@@ -38,7 +38,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -127,8 +126,7 @@ class DefaultUserDataStoreServiceTest {
             assertEquals(userId, request.userId());
             assertEquals("personal_id", request.documentType());
             assertEquals(processId, request.externalId());
-            assertTrue(request.documentData().contains("\"documentData\":{\"foo\":\"bar\"}"));
-            assertTrue(request.documentData().contains("\"country\":\"CZE\""));
+            assertEquals("{\"foo\":\"bar\"}", request.documentData());
             assertEquals(1, request.photos().size());
             assertEquals("AQID", request.photos().get(0).photoData());
         }

@@ -112,14 +112,12 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
         final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData.getOrDefault(documentVerification.getId(), Collections.emptyList()));
 
-        final String documentData = fetchDocumentData(documentVerification, latestResult);
-
         final var request = DocumentCreateRequest.builder()
                 .userId(userId)
                 .documentType(convert(documentVerification.getType()))
                 .dataType(DATA_TYPE_CLAIMS)
                 .externalId(processId)
-                .documentData(documentData)
+                .documentData(fetchExtractedData(latestResult))
                 .attributes(Map.of("trustedImage", documentVerification.isUsedForVerification()))
                 .photos(photos)
                 .build();
@@ -160,14 +158,12 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .toList();
     }
 
-    private @Nullable String fetchDocumentData(final DocumentVerificationEntity verification, final DocumentResultEntity documentResult) {
+    private @Nullable String fetchExtractedData(final DocumentResultEntity documentResult) {
         if (!config.isStoreExtractedData()) {
             return null;
         }
 
-        return String.format("{\"documentData\":%s,\"country\":\"%s\"}",
-                documentResult.getExtractedData(),
-                verification.getCountry());
+        return documentResult.getExtractedData();
     }
 
     private static String convert(final com.wultra.app.enrollmentserver.model.enumeration.DocumentType source) {
