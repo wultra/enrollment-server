@@ -118,7 +118,8 @@ class DefaultUserDataStoreServiceTest {
             when(userDataStoreClient.createDocument(any()))
                     .thenReturn(DocumentCreateResponse.builder().build());
 
-            tested.storeDocumentData(processId);
+            final var data = tested.collectDocumentData(processId);
+            tested.storeDocumentData(data);
 
             final var captor = ArgumentCaptor.forClass(DocumentCreateRequest.class);
             verify(userDataStoreClient, times(1)).createDocument(captor.capture());
@@ -197,7 +198,8 @@ class DefaultUserDataStoreServiceTest {
             when(userDataStoreClient.createDocument(any()))
                     .thenReturn(DocumentCreateResponse.builder().build());
 
-            tested.storeDocumentData(processId);
+            final var data = tested.collectDocumentData(processId);
+            tested.storeDocumentData(data);
 
             final var captor = ArgumentCaptor.forClass(DocumentCreateRequest.class);
             verify(userDataStoreClient, times(1)).createDocument(captor.capture());

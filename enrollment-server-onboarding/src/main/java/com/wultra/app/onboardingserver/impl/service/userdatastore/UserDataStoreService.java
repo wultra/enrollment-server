@@ -17,6 +17,10 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
+
+import java.util.List;
+
 /**
  * Service for storing user data after the onboarding process is finished.
  *
@@ -25,9 +29,21 @@ package com.wultra.app.onboardingserver.impl.service.userdatastore;
 public interface UserDataStoreService {
 
     /**
-     * Store document data for the given process if the storage is configured; otherwise, do nothing.
+     * Collect document data for the given process if the storage is configured; otherwise, return an empty list.
      *
      * @param processId Process ID.
+     * @return Collected document data or empty if not configured or no data found.
+     * @see #storeDocumentData(List)
      */
-    void storeDocumentData(String processId);
+    default List<DocumentCreateRequest> collectDocumentData(String processId) {
+        return List.of();
+    }
+
+    /**
+     * Store document data in User Data Store if the storage is configured.
+     *
+     * @param documentRequests List of document creation requests.
+     * @see #collectDocumentData(String)
+     */
+    void storeDocumentData(List<DocumentCreateRequest> documentRequests);
 }

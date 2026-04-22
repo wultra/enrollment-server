@@ -61,33 +61,44 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
     @Transactional(readOnly = true)
     @Override
-    public void storeDocumentData(final String processId) {
-        logger.info("action: storeDocumentData, state: initiated, processId: {}", processId);
+    public List<DocumentCreateRequest> collectDocumentData(final String processId) {
+        logger.info("action: collectDocumentData, state: initiated, processId: {}", processId);
 
         final var process = onboardingProcessRepository.findById(processId).orElse(null);
         if (process == null) {
-            logger.warn("action: storeDocumentData, state: failed, reason: process_not_found, processId: {}", processId);
-            return;
+            logger.warn("action: collectDocumentData, state: failed, reason: process_not_found, processId: {}", processId);
+            return List.of();
         }
 
         final var identityVerification = identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(process.getActivationId()).orElse(null);
         if (identityVerification == null) {
-            logger.warn("action: storeDocumentData, state: failed, reason: identity_not_found, processId: {}", processId);
-            return;
+            logger.warn("action: collectDocumentData, state: failed, reason: identity_not_found, processId: {}", processId);
+            return List.of();
         }
 
         final var documentVerifications = identityVerification.getDocumentVerifications();
         if (CollectionUtils.isEmpty(documentVerifications)) {
-            logger.info("action: storeDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
-            return;
+            logger.info("action: collectDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
+            return List.of();
         }
 
         final var processedData = fetchProcessedDocumentData(documentVerifications);
 
-        for (final var documentVerification : documentVerifications) {
-            storeDocumentData(processId, process.getUserId(), documentVerification, processedData);
-        }
+        final List<DocumentCreateRequest> documentRequests = documentVerifications.stream()
+                .map(documentVerification -> createDocumentRequest(processId, process.getUserId(), documentVerification, processedData))
+                .filter(Objects::nonNull)
+                .toList();
 
+        logger.info("action: collectDocumentData, state: finished, processId: {}, count: {}", processId, documentRequests.size());
+        return documentRequests;
+    }
+
+    @Override
+    public void storeDocumentData(final List<DocumentCreateRequest> requests) {
+        logger.info("action: storeDocumentData, state: initiated, count: {}", requests.size());
+        for (final var request : requests) {
+            callCreateDocument(request);
+        }
         logger.info("action: storeDocumentData, state: finished");
     }
 
@@ -99,20 +110,20 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .collect(Collectors.groupingBy(ProcessedDocumentDataEntity::getDocumentVerificationId));
     }
 
-    private void storeDocumentData(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {
+    private @Nullable DocumentCreateRequest createDocumentRequest(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {
         if (config.getDocumentType() == UserDataStoreConfigProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
-            return;
+            return null;
         }
 
         final var results = documentVerification.getResults();
         if (CollectionUtils.isEmpty(results)) {
-            return;
+            return null;
         }
         final var latestResult = results.iterator().next();
 
-        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData.getOrDefault(documentVerification.getId(), Collections.emptyList()));
+        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData.getOrDefault(documentVerification.getId(), List.of()));
 
-        final var request = DocumentCreateRequest.builder()
+        return DocumentCreateRequest.builder()
                 .userId(userId)
                 .documentType(convert(documentVerification.getType()))
                 .dataType(DATA_TYPE_CLAIMS)
@@ -121,8 +132,6 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .attributes(Map.of("trustedImage", documentVerification.isUsedForVerification()))
                 .photos(photos)
                 .build();
-
-        callCreateDocument(request);
     }
 
     void callCreateDocument(final DocumentCreateRequest request) {

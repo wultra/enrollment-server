@@ -17,9 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Empty implementation {@link UserDataStoreService}.
@@ -32,7 +35,7 @@ import org.springframework.stereotype.Service;
 class NoOpUserDataStoreService implements UserDataStoreService {
 
     @Override
-    public void storeDocumentData(final String processId) {
-        logger.info("action: storeDocumentData, state: skipped, processId: {}", processId);
+    public void storeDocumentData(final List<DocumentCreateRequest> documentRequests) {
+        logger.info("action: storeDocumentData, state: skipped");
     }
 }
