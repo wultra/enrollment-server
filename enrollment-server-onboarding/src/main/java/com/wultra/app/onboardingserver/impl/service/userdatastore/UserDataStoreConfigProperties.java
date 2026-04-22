@@ -21,7 +21,6 @@ import com.wultra.core.rest.client.base.RestClientConfiguration;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -30,7 +29,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @ConfigurationProperties(prefix = "enrollment-server-onboarding.user-data-store")
-@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Getter
 @Setter
 class UserDataStoreConfigProperties {

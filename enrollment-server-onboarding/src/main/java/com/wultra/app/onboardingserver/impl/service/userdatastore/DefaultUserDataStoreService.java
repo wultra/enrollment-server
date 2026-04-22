@@ -32,7 +32,6 @@ import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCrea
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -44,7 +43,6 @@ import java.util.stream.Collectors;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @AllArgsConstructor
 @Slf4j
 class DefaultUserDataStoreService implements UserDataStoreService {
