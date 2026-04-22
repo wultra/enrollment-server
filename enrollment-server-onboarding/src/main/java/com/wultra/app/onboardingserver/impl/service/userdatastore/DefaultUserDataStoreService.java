@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -199,12 +200,19 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     private static EmbeddedPhotoCreateRequest convert(final ProcessedDocumentDataEntity source) {
-        final var photoType = switch (source.getDataType()) {
+        final var photoData = Base64.getEncoder().encodeToString(source.getData());
+        return EmbeddedPhotoCreateRequest.builder()
+                .photoType(convert(source.getDataType()))
+                .photoData(photoData)
+                .externalId(source.getId())
+                .build();
+    }
+
+    private static String convert(final ProcessedDocumentDataType source) {
+        return switch (source) {
             case FACE_IMAGE -> "person";
             case DOCUMENT_FRONT_SIDE -> "document_front_side";
             case DOCUMENT_BACK_SIDE -> "document_back_side";
         };
-        final var photoData = Base64.getEncoder().encodeToString(source.getData());
-        return new EmbeddedPhotoCreateRequest(photoType, photoData, source.getId());
     }
 }
