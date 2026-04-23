@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_document_result_timestamp_created_idx" tableName="es_document_result" />
+            </not>
+        </preConditions>
+        <comment>Add index on timestamp_created column in es_document_result table</comment>
+        <createIndex tableName="es_document_result" indexName="es_document_result_timestamp_created_idx">
+            <column name="timestamp_created" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

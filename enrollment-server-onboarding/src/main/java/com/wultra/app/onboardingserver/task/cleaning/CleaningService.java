@@ -165,7 +165,7 @@ class CleaningService {
     /**
      * Clean personal data from document results.
      *
-     * @return Number of deleted personal data.
+     * @return Number of document result records with cleaned personal data.
      */
     @Transactional
     public int cleanupDocumentResultPersonalData() {

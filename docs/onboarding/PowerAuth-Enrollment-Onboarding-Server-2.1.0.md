@@ -188,4 +188,4 @@ Records from the following tables are deleted according to this calculation:
 - `es_processed_document_data`
 - `es_selfie`
 
-For records in table `es_document_result` values in columns `verification_result` and `extracted_data` are set to `null`after the retention period.
+For records in table `es_document_result` values in columns `verification_result` and `extracted_data` are set to `null` after the retention period.
