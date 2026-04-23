@@ -140,9 +140,14 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .dataType(DATA_TYPE_CLAIMS)
                 .externalId(processId)
                 .documentData(fetchExtractedData(latestResult))
-                .attributes(Map.of("trustedImage", documentVerification.isUsedForVerification()))
+                .attributes(createAttributes())
                 .photos(photos)
                 .build();
+    }
+
+    private static Map<String, Object> createAttributes() {
+        // TODO Lubos trusted image
+        return Map.of("trustedImage", true); // or null
     }
 
     Void callCreateDocument(final DocumentCreateRequest request, final RetryContext context) throws UserDataStoreClientException {
