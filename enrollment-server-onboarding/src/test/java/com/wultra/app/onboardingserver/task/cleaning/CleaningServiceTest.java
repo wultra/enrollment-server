@@ -136,8 +136,8 @@ class CleaningServiceTest {
 
         tested.cleanupDocumentResultPersonalData();
 
-        assertDocumentResult(idBeforeCleanupThreshold, "{}", "{}");
-        assertDocumentResult(idAfterCleanupThreshold, null, null);
+        assertDocumentResult(idBeforeCleanupThreshold, "{}", "{}", false);
+        assertDocumentResult(idAfterCleanupThreshold, null, null, true);
     }
 
     @Test
@@ -346,11 +346,12 @@ class CleaningServiceTest {
     }
 
 
-    private void assertDocumentResult(final long id, final String expectedVerificationResult, final String expectedExtractedData) {
+    private void assertDocumentResult(final long id, final String expectedVerificationResult, final String expectedExtractedData, final boolean expectedAnonymized) {
         final var entity = entityManager.find(DocumentResultEntity.class, id);
 
         assertNotNull(entity);
         assertEquals(expectedVerificationResult, entity.getVerificationResult());
         assertEquals(expectedExtractedData, entity.getExtractedData());
+        assertEquals(expectedAnonymized, entity.isAnonymized());
     }
 }

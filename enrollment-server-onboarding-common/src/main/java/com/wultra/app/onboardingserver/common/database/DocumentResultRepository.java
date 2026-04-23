@@ -55,7 +55,8 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
     @Query("""
             UPDATE DocumentResultEntity d
             SET d.verificationResult = null,
-                d.extractedData = null
+                d.extractedData = null,
+                d.anonymized = true
             WHERE d.documentVerification.id IN :documentVerificationIds
     """)
     void clean(final Collection<String> documentVerificationIds);
@@ -70,7 +71,8 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
     @Query("""
             UPDATE DocumentResultEntity d
             SET d.verificationResult = null,
-                d.extractedData = null
+                d.extractedData = null,
+                d.anonymized = true
             WHERE d.anonymized = false
             AND d.timestampCreated < :dateCleanup
     """)
