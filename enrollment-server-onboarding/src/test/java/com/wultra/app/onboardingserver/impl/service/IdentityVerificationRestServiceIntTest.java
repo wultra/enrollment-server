@@ -221,7 +221,7 @@ class IdentityVerificationRestServiceIntTest {
         final var documentResultCount = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) 
                 FROM es_document_result 
-                WHERE extracted_data IS null AND verification_result IS null""",
+                WHERE extracted_data IS null AND verification_result IS null AND anonymized = true""",
                 Integer.class);
         assertEquals(3, documentResultCount);
 
