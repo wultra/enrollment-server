@@ -127,15 +127,13 @@ class CleaningServiceTest {
     @Test
     @Sql
     void testCleanupDocumentResultPersonalData() {
-        final var idToBeCleaned = 1001L;
-        final var idBeforeExpirationWithoutExtractedData = 1002L;
-        final var idBeforeExpirationWithData = 1003L;
+        final var idBeforeCleanupThreshold = 1001L;
+        final var idAfterCleanupThreshold = 1002L;
 
         tested.cleanupDocumentResultPersonalData();
 
-        assertDocumentResult(idToBeCleaned, null, null);
-        assertDocumentResult(idBeforeExpirationWithoutExtractedData, "{}", null);
-        assertDocumentResult(idBeforeExpirationWithData, "verification-result", "extracted-data");
+        assertDocumentResult(idBeforeCleanupThreshold, "{}", "{}");
+        assertDocumentResult(idAfterCleanupThreshold, null, null);
     }
 
     @Test
