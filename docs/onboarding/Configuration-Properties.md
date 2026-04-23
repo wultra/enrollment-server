@@ -74,7 +74,7 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 
 | Property                                                                | Default | Note                                                                                                                                     |
 |-------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `enrollment-server-onboarding.client-evaluation.max-failed-attempts`    | 5       | Number of maximum failed attempts for client evaluation.                                                                                 |
+| `enrollment-server-onboarding.client-evaluation.max-failed-attempts`    | 1       | Number of maximum failed attempts for client evaluation.                                                                                 |
 | `enrollment-server-onboarding.client-evaluation.include-extracted-data` | `false` | Include extracted data to the evaluate client request. The format of extracted data is defined by the provider of document verification. |
 
 ## Document Verification Provider Configuration

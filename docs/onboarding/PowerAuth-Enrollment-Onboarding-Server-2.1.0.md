@@ -165,7 +165,10 @@ For this configuration in total at least 2 unique document types must be submitt
 - `PASSPORT` (1 side) + `DRIVING_LICENSE` (1 side)
 
 
-## Configuration Changes
+### Client Evaluation
+
+The default value of `enrollment-server-onboarding.client-evaluation.max-failed-attempts` was changed from `5` to `1`.
+
 
 ### Document Verification
 
