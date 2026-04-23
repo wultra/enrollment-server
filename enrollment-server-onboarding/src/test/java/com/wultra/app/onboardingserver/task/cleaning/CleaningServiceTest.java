@@ -126,6 +126,20 @@ class CleaningServiceTest {
 
     @Test
     @Sql
+    void testCleanupDocumentResultPersonalData() {
+        final var idToBeCleaned = 1001L;
+        final var idBeforeExpirationWithoutExtractedData = 1002L;
+        final var idBeforeExpirationWithData = 1003L;
+
+        tested.cleanupDocumentResultPersonalData();
+
+        assertDocumentResult(idToBeCleaned, null, null);
+        assertDocumentResult(idBeforeExpirationWithoutExtractedData, "{}", null);
+        assertDocumentResult(idBeforeExpirationWithData, "verification-result", "extracted-data");
+    }
+
+    @Test
+    @Sql
     void testTerminateExpiredProcesses() {
         final String processId1 = "11111111-df91-4053-bb3d-3970979baf5d";
         final String processId2 = "22222222-df91-4053-bb3d-3970979baf5d";
@@ -327,5 +341,14 @@ class CleaningServiceTest {
 
     private SelfieEntity fetchSelfie(final Long id) {
         return entityManager.find(SelfieEntity.class, id);
+    }
+
+
+    private void assertDocumentResult(final long id, final String expectedVerificationResult, final String expectedExtractedData) {
+        final var entity = entityManager.find(DocumentResultEntity.class, id);
+
+        assertNotNull(entity);
+        assertEquals(expectedVerificationResult, entity.getVerificationResult());
+        assertEquals(expectedExtractedData, entity.getExtractedData());
     }
 }
