@@ -26,6 +26,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,6 +46,11 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
             " ORDER BY doc.timestampCreated DESC")
     List<DocumentResultEntity> findLatestResults(String docVerificationId, DocumentProcessingPhase phase);
 
+    /**
+     * Clean personal data for records with given document verification IDs.
+     *
+     * @param documentVerificationIds Document verification IDs
+     */
     @Modifying
     @Query("""
             UPDATE DocumentResultEntity d
@@ -54,4 +60,19 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
     """)
     void clean(final Collection<String> documentVerificationIds);
 
+    /**
+     * Clean personal data for records older than the specified date.
+     *
+     * @param dateCleanup Date older than which the records should be cleaned.
+     * @return Number of records cleaned.
+     */
+    @Modifying
+    @Query("""
+            UPDATE DocumentResultEntity d
+            SET d.verificationResult = null,
+                d.extractedData = null
+            WHERE (d.verificationResult IS NOT NULL OR d.extractedData IS NOT NULL)
+            AND d.timestampCreated < :dateCleanup
+    """)
+    int cleanPersonalData(final Date dateCleanup);
 }

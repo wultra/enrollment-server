@@ -113,6 +113,18 @@ public class CleaningTask {
     }
 
     /**
+     * Clean personal data from document results older than retention time.
+     */
+    @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")
+    @SchedulerLock(name = SchedulerLockNames.DOCUMENT_RESULT_PERSONAL_DATA_LOCK, lockAtMostFor = "5m")
+    public void cleanupDocumentResultPersonalData() {
+        LockAssert.assertLocked();
+        logger.debug("action: cleanupDocumentResultPersonalData, state: initiated");
+        final var count = cleaningService.cleanupDocumentResultPersonalData();
+        logger.debug("action: cleanupDocumentResultPersonalData, state: succeeded, cleanedRecords: {}", count);
+    }
+
+    /**
      * Cleanup of processed document data older than retention time.
      */
     @Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT15S")

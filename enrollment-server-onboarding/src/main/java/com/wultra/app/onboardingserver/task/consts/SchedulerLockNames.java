@@ -44,6 +44,8 @@ public final class SchedulerLockNames {
 
     public static final String PROCESSED_DOCUMENT_DATA_LOCK = "processedDocumentDataLock";
 
+    public static final String DOCUMENT_RESULT_PERSONAL_DATA_LOCK = "documentResultPersonalDataLock";
+
     public static final String EXPIRE_DOCUMENT_VERIFICATION_LOCK = "expireDocumentVerificationLock";
 
     public static final String CLEANUP_ACTIVATIONS_LOCK = "cleanupActivationsLock";

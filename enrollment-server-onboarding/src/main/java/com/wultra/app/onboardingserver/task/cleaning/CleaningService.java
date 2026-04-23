@@ -163,6 +163,16 @@ class CleaningService {
     }
 
     /**
+     * Clean personal data from document results.
+     *
+     * @return Number of deleted personal data.
+     */
+    @Transactional
+    public int cleanupDocumentResultPersonalData() {
+        return documentResultRepository.cleanPersonalData(getPersonalDataRetentionTime());
+    }
+
+    /**
      * Terminate expired document verifications.
      */
     @Transactional
@@ -255,7 +265,6 @@ class CleaningService {
 
     private void terminateAndAuditDocuments(final List<String> documentVerificationIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
         documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
-        documentResultRepository.clean(documentVerificationIds);
 
         final var documentVerifications = documentVerificationRepository.findAllById(documentVerificationIds);
         for (final var documentVerification : documentVerifications) {
