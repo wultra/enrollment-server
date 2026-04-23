@@ -118,7 +118,17 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .map(DocumentVerificationEntity::getId)
                 .collect(Collectors.toSet());
         return processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds).stream()
-                .collect(Collectors.groupingBy(ProcessedDocumentDataEntity::getDocumentVerificationId));
+                .collect(Collectors.groupingBy(
+                        ProcessedDocumentDataEntity::getDocumentVerificationId,
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(
+                                        ProcessedDocumentDataEntity::getDataType,
+                                        processedDocumentData -> processedDocumentData,
+                                        (left, right) -> left.getTimestampCreated().after(right.getTimestampCreated()) ? left : right
+                                ),
+                                groupedByDataType -> new ArrayList<>(groupedByDataType.values())
+                        )
+                ));
     }
 
     private @Nullable DocumentCreateRequest createDocumentRequest(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {

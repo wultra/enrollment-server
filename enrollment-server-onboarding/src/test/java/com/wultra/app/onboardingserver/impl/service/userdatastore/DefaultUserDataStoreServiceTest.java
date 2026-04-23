@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
+import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -33,6 +34,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -142,6 +144,7 @@ class DefaultUserDataStoreServiceTest {
             processedData.setDocumentVerificationId("v1");
             processedData.setDataType(com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
             processedData.setData(new byte[]{1, 2, 3});
+            processedData.setTimestampCreated(new Date());
             when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
                     .thenReturn(List.of(processedData));
 
@@ -158,6 +161,57 @@ class DefaultUserDataStoreServiceTest {
             assertEquals("{\"foo\":\"bar\"}", result.documentData());
             assertEquals(1, result.photos().size());
             assertEquals("AQID", result.photos().get(0).photoData());
+        }
+
+        @Test
+        void testCollectDocumentData_deduplicatePhotos() {
+            final var processId = "testProcessId";
+            final var activationId = "testActivationId";
+            final var userId = "testUserId";
+
+            final var process = new OnboardingProcessEntity();
+            process.setId(processId);
+            process.setActivationId(activationId);
+            process.setUserId(userId);
+            when(onboardingProcessRepository.findById(processId))
+                    .thenReturn(Optional.of(process));
+
+            final var identity = new IdentityVerificationEntity();
+            identity.setActivationId(activationId);
+            when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                    .thenReturn(Optional.of(identity));
+
+            final var verification = new DocumentVerificationEntity();
+            verification.setId("v1");
+            verification.setType(DocumentType.ID_CARD);
+            verification.setResults(Set.of(new DocumentResultEntity()));
+            identity.setDocumentVerifications(Set.of(verification));
+
+            final var photoType = ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
+
+            final var photoOld = new ProcessedDocumentDataEntity();
+            photoOld.setId("old");
+            photoOld.setDocumentVerificationId("v1");
+            photoOld.setDataType(photoType);
+            photoOld.setData(new byte[]{0});
+            photoOld.setTimestampCreated(new Date(1000));
+
+            final var photoNew = new ProcessedDocumentDataEntity();
+            photoNew.setId("new");
+            photoNew.setDocumentVerificationId("v1");
+            photoNew.setDataType(photoType);
+            photoNew.setData(new byte[]{1});
+            photoNew.setTimestampCreated(new Date(2000));
+
+            when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
+                    .thenReturn(List.of(photoOld, photoNew));
+
+            final var results = tested.collectDocumentData(processId);
+
+            assertEquals(1, results.size());
+            assertEquals(1, results.get(0).photos().size());
+            assertEquals("AQ==", results.get(0).photos().get(0).photoData()); // Base64 for byte[]{1}
+            assertEquals("new", results.get(0).photos().get(0).externalId());
         }
     }
 
