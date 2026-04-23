@@ -16,22 +16,22 @@ This is the generic part of the event, which is common to all event types.
 }
 ```
 
-| Attribute                | Type   | Description                                                                                                            |
-|:-------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------|
-| `id`                     | String | Event ID                                                                                                               |
-| `timestamp`              | String | Timestamp, when the action happened                                                                                    |
-| `type`                   | String | Event type. Currently supported types are `documentVerification` `documentVerificationFinal` and `presenceCheck`       |
-| `userId`                 | String | UUID of the user                                                                                                       |
-| `processId`              | String | UUID of the process                                                                                                    |
-| `processType`            | String | Name of the process, e.g. `onboarding`                                                                                 |
-| `identityVerificationId` | String | UUID of the identity verification stage. Can be `null` if the event is not related to the identity verification stage. |
-| `eventData`              | Object | Object with structure different for each `type`                                                                        |
+| Attribute                | Type   | Description                                                                                                                              |
+|:-------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| `id`                     | String | Event ID                                                                                                                                 |
+| `timestamp`              | String | Timestamp, when the action happened                                                                                                      |
+| `type`                   | String | Event type. Currently supported types are `documentVerificationFinished` `finalDocumentVerificationFinished` and `presenceCheckFinished` |
+| `userId`                 | String | UUID of the user                                                                                                                         |
+| `processId`              | String | UUID of the process                                                                                                                      |
+| `processType`            | String | Name of the process, e.g. `onboarding`                                                                                                   |
+| `identityVerificationId` | String | UUID of the identity verification stage. Can be `null` if the event is not related to the identity verification stage.                   |
+| `eventData`              | Object | Object with structure different for each `type`                                                                                          |
 
 ## Event data for different event types
  
 Different event `type` has different structure in `eventData`.
 
-### Event data for documentVerification
+### Event data for documentVerificationFinished
 
 This contains the results from the verification provider. Each document is sent separately.
 
@@ -84,7 +84,7 @@ This contains the results from the verification provider. Each document is sent 
 | `score`                  | String | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                        |
 | `documentCheckResult`    | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationData.document.rawData`. |
 
-### Event data for documentVerificationFinal
+### Event data for finalDocumentVerificationFinished
 
 This contains the overall document check result for all documents combined.
 
@@ -97,7 +97,7 @@ Additional checks:
 
 ```json
 {
-	"documentVerificationFinal": {
+	"finalDocumentVerification": {
 		"documentVerificationId": "String",
 	    "status": "String",
 	    "rejectReason": null,
@@ -108,7 +108,7 @@ Additional checks:
 }
 ```
 
-### Event data for presenceCheck
+### Event data for presenceCheckFinished
 
 This contains the results of the verification provider.
 
