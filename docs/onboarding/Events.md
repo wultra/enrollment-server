@@ -1,7 +1,7 @@
 # Events
 
 # Structure
-Generic part of the event.
+This is the generic part of the event, which is common to all event types.
 
 ```json
 {
@@ -28,16 +28,19 @@ Generic part of the event.
 | `eventData`              | Object | Object with structure different for each `type`                                                                        |
 
 ## Event data for different event types
+ 
+Different event `type` has different structure in `eventData`.
 
 ### Event data for documentVerification
-Contains result from verification provider. Each document is sent separately.
+
+This contains the results from the verification provider. Each document is sent separately.
 
 ```json
 {
 	"documentVerification": {
 		"documentVerificationId": "String",
 		"documentId": "String",
-	    "status": "ACCEPTED",
+	    "status": "String",
 	    "rejectReason": null,
 	    "errorDetail": null,
     	"provider": "String",
@@ -70,17 +73,24 @@ Contains result from verification provider. Each document is sent separately.
 }
 ```
 
-| Attribute                  | Type   | Description                                                                                                                                                                                                                                                        |
-|:---------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `status`                   | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                              |
-| `rejectReason`             | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                                                                                                                                                                                              |
-| `errorDetail`              | String | Reject reason in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                                |
-| `documentVerificationData` | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationData.document.rawData`. |
+| Attribute                | Type   | Description                                                                                                                                                                                                                                                        |
+|:-------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `documentVerificationId` | String | UUID of the document verification                                                                                                                                                                                                                                  |
+| `documentId`             | String | UUID of the document                                                                                                                                                                                                                                               |
+| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                              |
+| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                                                                                                                                                                                              |
+| `errorDetail`            | String | Reject reason in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                                |
+| `provider`               | String | Name of the configured external biometry provider. For example, `iProov` or `Microblink`.                                                                                                                                                                          |
+| `score`                  | String | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                        |
+| `documentCheckResult`    | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationData.document.rawData`. |
 
 ### Event data for documentVerificationFinal
-Contains overall document check result from all documents combined.
 
-Keep in mind that even if the separate documents were verified by the verification provider, overall document check result can be negative because we are performing additional checks.
+This contains the overall document check result for all documents combined.
+
+Bear in mind that even if the individual documents were verified by the verification provider, the overall document check result could still be negative due to the additional checks performed.
+
+Additional checks:
 - document crosscheck
 - document type
 - document country
@@ -89,18 +99,18 @@ Keep in mind that even if the separate documents were verified by the verificati
 {
 	"documentVerificationFinal": {
 		"documentVerificationId": "String",
-		"documentIds": ["String","String"],
-	    "status": "ACCEPTED",
+	    "status": "String",
 	    "rejectReason": null,
 	    "errorDetail": null,
-    	"provider": "String"
+    	"provider": "String",
+		"documentIds": ["String","String"],
 	}
 }
 ```
 
 ### Event data for presenceCheck
 
-Contains result from verification provider.
+This contains the results of the verification provider.
 
 ```json
 {
