@@ -71,7 +71,7 @@ public class IdentityVerificationConfig {
     @Value("${enrollment-server-onboarding.presence-check.selfie.minimal-width:400}")
     private int minimalSelfieWidth;
 
-    @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:5}")
+    @Value("${enrollment-server-onboarding.client-evaluation.max-failed-attempts:1}")
     private int clientEvaluationMaxFailedAttempts;
 
     @Value("${enrollment-server-onboarding.client-evaluation.include-extracted-data:false}")
