@@ -15,4 +15,38 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="2" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_document_result" columnName="anonymized" />
+            </not>
+        </preConditions>
+        <comment>Add column anonymized into table es_document_result</comment>
+        <addColumn tableName="es_document_result">
+            <column name="anonymized" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="3" author="Michal Rozehanal">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="es_document_result" columnName="anonymized" />
+        </preConditions>
+        <comment>Change default value of es_document_result.anonymized to false</comment>
+        <addDefaultValue tableName="es_document_result" columnName="anonymized" defaultValueBoolean="false" />
+    </changeSet>
+
+    <changeSet id="4" author="Michal Rozehnal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="es_document_result_anonymized_idx" tableName="es_document_result" />
+            </not>
+        </preConditions>
+        <comment>Add index on anonymized column in es_document_result table</comment>
+        <createIndex tableName="es_document_result" indexName="es_document_result_anonymized_idx">
+            <column name="anonymized" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

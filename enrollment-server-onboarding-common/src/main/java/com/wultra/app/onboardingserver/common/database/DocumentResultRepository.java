@@ -71,7 +71,7 @@ public interface DocumentResultRepository extends CrudRepository<DocumentResultE
             UPDATE DocumentResultEntity d
             SET d.verificationResult = null,
                 d.extractedData = null
-            WHERE (d.verificationResult IS NOT NULL OR d.extractedData IS NOT NULL)
+            WHERE d.anonymized = false
             AND d.timestampCreated < :dateCleanup
     """)
     int cleanPersonalData(final Date dateCleanup);
