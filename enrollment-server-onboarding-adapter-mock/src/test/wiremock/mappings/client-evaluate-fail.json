@@ -1,0 +1,19 @@
+{
+  "priority": 3,
+  "request": {
+    "method": "POST",
+    "url": "/client/evaluate",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.userId =~ /mockuser_fail.*/)]"
+      }
+    ]
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-client-evaluate-fail.json"
+  }
+}
