@@ -1,0 +1,19 @@
+{
+  "priority": 2,
+  "request": {
+    "method": "POST",
+    "url": "/client/evaluate",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.userId =~ /mockuser_8888.*/)]"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "body-client-evaluate-wait.json"
+  }
+}
