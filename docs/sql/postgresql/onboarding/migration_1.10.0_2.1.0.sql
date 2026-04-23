@@ -126,3 +126,7 @@ ALTER TABLE audit_log ADD subject_id VARCHAR(256);
 -- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
 -- Create a new index on audit_log(subject_id)
 CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-timestamp-created-index.xml::1::Michal Rozehnal
+-- Add index on timestamp_created column in es_document_result table
+CREATE INDEX es_document_result_timestamp_created_idx ON es_document_result(timestamp_created);

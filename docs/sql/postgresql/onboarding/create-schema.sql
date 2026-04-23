@@ -355,3 +355,7 @@ CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
 -- Changeset enrollment-server-onboarding/2.0.x/20260402-document-country.xml::1::Lubos Racansky
 -- Creates a new column country in es_document_verification
 ALTER TABLE es_document_verification ADD country VARCHAR(3);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-timestamp-created-index.xml::1::Michal Rozehnal
+-- Add index on timestamp_created column in es_document_result table
+CREATE INDEX es_document_result_timestamp_created_idx ON es_document_result(timestamp_created);
