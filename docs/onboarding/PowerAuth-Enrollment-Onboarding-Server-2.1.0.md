@@ -180,8 +180,8 @@ enrollment-server-onboarding.document-verification.checkDocumentSubmitVerificati
 
 ## Cleaning task
 
-Automatic cleaning of personal data (e.g., uploaded documents and selfie photos) can be enabled by setting the property `enrollment-server-onboarding.identity-verification.data-retention`.
-
+The retention period for personal data (e.g., uploaded documents and selfie photos) is controlled by the property `enrollment-server-onboarding.identity-verification.data-retention`.
+The default value is 1 hour, and the cleaning task can be disabled by setting an empty value.
 The cleaning task deletes records from the following tables:
 - `es_document_data`
 - `es_processed_document_data`

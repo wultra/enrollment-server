@@ -211,7 +211,8 @@ class CleaningService {
 
     private Date getPersonalDataRetentionTime() {
         final var processExpirationTime = onboardingConfig.getProcessExpirationTime();
-        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime();
+        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime()
+                .orElseThrow(() -> new IllegalStateException("Property 'dataRetentionTime' is not set"));
         return DateUtil.convertExpirationToCreatedDate(processExpirationTime.plus(dataRetentionTime));
     }
 

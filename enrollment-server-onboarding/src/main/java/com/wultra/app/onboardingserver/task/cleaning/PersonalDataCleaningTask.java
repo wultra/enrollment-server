@@ -17,12 +17,12 @@
  */
 package com.wultra.app.onboardingserver.task.cleaning;
 
+import com.wultra.app.onboardingserver.impl.util.ConditionalOnPropertyNotEmpty;
 import com.wultra.app.onboardingserver.task.consts.SchedulerLockNames;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnProperty("enrollment-server-onboarding.identity-verification.data-retention")
+@ConditionalOnPropertyNotEmpty("enrollment-server-onboarding.identity-verification.data-retention")
 public class PersonalDataCleaningTask {
 
 	private final CleaningService cleaningService;

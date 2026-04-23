@@ -41,11 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@SpringBootTest(
-        classes = EnrollmentServerTestApplication.class,
-        properties = {
-                "enrollment-server-onboarding.identity-verification.data-retention=1h"
-        })
+@SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test")
 @Transactional
 class CleaningServiceTest {
