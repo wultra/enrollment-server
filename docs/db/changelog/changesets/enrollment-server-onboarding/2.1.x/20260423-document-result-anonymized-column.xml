@@ -6,18 +6,6 @@
     <changeSet id="1" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <not>
-                <indexExists indexName="es_document_result_timestamp_created_idx" tableName="es_document_result" />
-            </not>
-        </preConditions>
-        <comment>Add index on timestamp_created column in es_document_result table</comment>
-        <createIndex tableName="es_document_result" indexName="es_document_result_timestamp_created_idx">
-            <column name="timestamp_created" />
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="2" author="Michal Rozehnal">
-        <preConditions onFail="MARK_RAN">
-            <not>
                 <columnExists tableName="es_document_result" columnName="anonymized" />
             </not>
         </preConditions>
@@ -29,7 +17,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="3" author="Michal Rozehanal">
+    <changeSet id="2" author="Michal Rozehanal">
         <preConditions onFail="MARK_RAN">
             <columnExists tableName="es_document_result" columnName="anonymized" />
         </preConditions>
@@ -37,7 +25,7 @@
         <addDefaultValue tableName="es_document_result" columnName="anonymized" defaultValueBoolean="false" />
     </changeSet>
 
-    <changeSet id="4" author="Michal Rozehnal">
+    <changeSet id="3" author="Michal Rozehnal">
         <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists indexName="es_document_result_anonymized_idx" tableName="es_document_result" />
