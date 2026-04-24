@@ -32,6 +32,7 @@ import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.event.OnboardingCompletedAcceptedEvent;
 import com.wultra.app.onboardingserver.statemachine.guard.*;
 import com.wultra.app.onboardingserver.statemachine.guard.document.DocumentUploadVerificationPendingGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.otp.OtpVerificationEnabledGuard;
@@ -43,6 +44,7 @@ import com.wultra.app.onboardingserver.statemachine.guard.status.StatusRejectedG
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -63,6 +65,7 @@ import reactor.core.scheduler.Schedulers;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -142,6 +145,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final ConsentResolvedGuard consentResolvedGuard;
 
+    private final ApplicationEventPublisher applicationEventPublisher;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<OnboardingState, OnboardingEvent> config) throws Exception {
         config
@@ -182,6 +187,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .states(EnumSet.allOf(OnboardingState.class));
 
         registerPersistFunctions(configurer);
+
+        registerPublishEventFunction(configurer);
     }
 
     private void registerPersistFunctions(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
@@ -213,6 +220,25 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
         return Mono.fromRunnable(() -> identityVerificationService.moveToPhaseAndStatus(identityVerification, state.getPhase(), state.getStatus(), ownerId))
                 .subscribeOn(Schedulers.boundedElastic())
                 .then();
+    }
+
+    private void registerPublishEventFunction(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
+        configurer.stateEntryFunction(OnboardingState.COMPLETED_ACCEPTED, publishCompletedAcceptedEvent());
+    }
+
+    private Function<StateContext<OnboardingState, OnboardingEvent>, Mono<Void>> publishCompletedAcceptedEvent() {
+        return context -> Mono.fromRunnable(() -> {
+            final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
+
+            final String processId = Optional.of(context)
+                    .map(StateContext::getExtendedState)
+                    .map(extendedState -> extendedState.get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class))
+                    .map(IdentityVerificationEntity::getProcessId)
+                    .orElseThrow(() -> new IllegalStateException("Process ID not found in extended state for userId: %s, activationId: %s".formatted(ownerId.getUserId(), ownerId.getActivationId())));
+
+            logger.debug("Publishing OnboardingCompletedAcceptedEvent for processId={}, {}", processId, ownerId);
+            applicationEventPublisher.publishEvent(new OnboardingCompletedAcceptedEvent(StateMachineConfig.this, ownerId, processId));
+        }).then();
     }
 
     @Override
