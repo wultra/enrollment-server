@@ -183,10 +183,13 @@ enrollment-server-onboarding.document-verification.checkDocumentSubmitVerificati
 
 ## Cleaning task
 
-Modified the calculation of the retention period for processing personal data (e.g., uploaded documents and selfie photos) as follows. The data are deleted after the expiration time of the process plus the retention period.
-Previously, the data was deleted immediately after the retention period, which could lead to the deletion of data for active processes if the process expiration is higher than the data retention.
-
-Records from the following tables are deleted according to this calculation:
+The retention period for personal data (e.g., uploaded documents and selfie photos) is controlled by the property `enrollment-server-onboarding.identity-verification.data-retention`.
+The default value is 1 hour, and the cleaning task can be disabled by setting an empty value.
+The cleaning task deletes records from the following tables:
 - `es_document_data`
 - `es_processed_document_data`
 - `es_selfie`
+
+It also sets the `verification_result` and `extracted_data` columns to `null` in the `es_document_result` table.
+
+The data are deleted or modified after the process expiration time plus the retention period specified by the property.

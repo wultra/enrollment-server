@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.Optional;
 
 /**
  * Identity verification configuration.
@@ -76,4 +77,13 @@ public class IdentityVerificationConfig {
 
     @Value("${enrollment-server-onboarding.client-evaluation.include-extracted-data:false}")
     private boolean sendingExtractedDataEnabled;
+
+    /**
+     * Gets the personal data retention time.
+     *
+     * @return Personal data retention time
+     */
+    public Optional<Duration> getDataRetentionTime() {
+        return Optional.ofNullable(dataRetentionTime);
+    }
 }
