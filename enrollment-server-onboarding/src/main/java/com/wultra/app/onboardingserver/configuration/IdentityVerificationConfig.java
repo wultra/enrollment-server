@@ -52,7 +52,7 @@ public class IdentityVerificationConfig {
     private boolean presenceCheckCleanupEnabled;
 
     @Value("${enrollment-server-onboarding.identity-verification.data-retention:1h}")
-    private Optional<Duration> dataRetentionTime;
+    private Duration dataRetentionTime;
 
     @Value("${enrollment-server-onboarding.onboarding-process.verification.expiration:1h}")
     private Duration verificationExpirationTime;
@@ -77,4 +77,13 @@ public class IdentityVerificationConfig {
 
     @Value("${enrollment-server-onboarding.client-evaluation.include-extracted-data:false}")
     private boolean sendingExtractedDataEnabled;
+
+    /**
+     * Gets the personal data retention time.
+     *
+     * @return Personal data retention time
+     */
+    public Optional<Duration> getDataRetentionTime() {
+        return Optional.ofNullable(dataRetentionTime);
+    }
 }
