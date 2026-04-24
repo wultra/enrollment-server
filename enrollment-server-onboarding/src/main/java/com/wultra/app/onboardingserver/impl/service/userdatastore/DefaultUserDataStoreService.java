@@ -17,12 +17,14 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
@@ -86,7 +88,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             return List.of();
         }
 
-        final var documentVerifications = identityVerification.getDocumentVerifications();
+        final var documentVerifications = fetchDocumentVerifications(identityVerification, config.getDocumentType());
         if (CollectionUtils.isEmpty(documentVerifications)) {
             logger.info("action: collectDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
             return List.of();
@@ -101,6 +103,23 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
         logger.info("action: collectDocumentData, state: finished, processId: {}, count: {}", processId, documentRequests.size());
         return documentRequests;
+    }
+
+    private static List<DocumentVerificationEntity> fetchDocumentVerifications(
+            final IdentityVerificationEntity identityVerification,
+            final UserDataStoreConfigProperties.DocumentType documentType) {
+
+        final List<DocumentVerificationEntity> documentVerifications = identityVerification.getDocumentVerifications().stream()
+                .filter(DocumentVerificationEntity::isUsedForVerification)
+                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
+                .toList();
+
+        return switch (documentType) {
+            case ALL -> documentVerifications;
+            case WITH_TRUSTED_IMAGE -> DocumentVerificationEntity.filterPreferredDocumentWithPhoto(documentVerifications)
+                    .map(List::of)
+                    .orElseGet(List::of);
+        };
     }
 
     @Override
@@ -132,10 +151,6 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     private @Nullable DocumentCreateRequest createDocumentRequest(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {
-        if (config.getDocumentType() == UserDataStoreConfigProperties.DocumentType.WITH_TRUSTED_IMAGE && !documentVerification.isUsedForVerification()) {
-            return null;
-        }
-
         final var results = documentVerification.getResults();
         if (CollectionUtils.isEmpty(results)) {
             return null;

@@ -17,6 +17,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
@@ -127,17 +128,18 @@ class DefaultUserDataStoreServiceTest {
             when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
                     .thenReturn(Optional.of(identity));
 
-            final var verification = new DocumentVerificationEntity();
-            verification.setId("v1");
-            verification.setType(DocumentType.ID_CARD);
-            verification.setCountry("CZE");
-            verification.setUsedForVerification(true);
-
             final var documentResult = new DocumentResultEntity();
             documentResult.setExtractedData("{\"foo\":\"bar\"}");
-            verification.setResults(Set.of(documentResult));
 
-            identity.setDocumentVerifications(Set.of(verification));
+            final var documentVerification = new DocumentVerificationEntity();
+            documentVerification.setId("v1");
+            documentVerification.setType(DocumentType.ID_CARD);
+            documentVerification.setStatus(DocumentStatus.ACCEPTED);
+            documentVerification.setCountry("CZE");
+            documentVerification.setUsedForVerification(true);
+            documentVerification.setResults(Set.of(documentResult));
+
+            identity.setDocumentVerifications(Set.of(documentVerification));
 
             final var processedData = new ProcessedDocumentDataEntity();
             processedData.setId("pd1");
@@ -181,11 +183,13 @@ class DefaultUserDataStoreServiceTest {
             when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
                     .thenReturn(Optional.of(identity));
 
-            final var verification = new DocumentVerificationEntity();
-            verification.setId("v1");
-            verification.setType(DocumentType.ID_CARD);
-            verification.setResults(Set.of(new DocumentResultEntity()));
-            identity.setDocumentVerifications(Set.of(verification));
+            final var documentVerification = new DocumentVerificationEntity();
+            documentVerification.setId("v1");
+            documentVerification.setStatus(DocumentStatus.ACCEPTED);
+            documentVerification.setType(DocumentType.ID_CARD);
+            documentVerification.setUsedForVerification(true);
+            documentVerification.setResults(Set.of(new DocumentResultEntity()));
+            identity.setDocumentVerifications(Set.of(documentVerification));
 
             final var photoType = ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
 
@@ -261,21 +265,24 @@ class DefaultUserDataStoreServiceTest {
             when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
                     .thenReturn(Optional.of(identity));
 
-            final var verification1 = new DocumentVerificationEntity();
-            verification1.setId("v1");
-            verification1.setType(DocumentType.ID_CARD);
-            verification1.setUsedForVerification(false);
+            final var documentVerification1 = new DocumentVerificationEntity();
+            documentVerification1.setId("v1");
+            documentVerification1.setStatus(DocumentStatus.ACCEPTED);
+            documentVerification1.setType(DocumentType.ID_CARD);
+            documentVerification1.setUsedForVerification(false);
 
-            final var verification2 = new DocumentVerificationEntity();
-            verification2.setId("v2");
-            verification2.setType(DocumentType.PASSPORT);
-            verification2.setUsedForVerification(true);
-            verification2.setCountry("CZE");
             final var result2 = new DocumentResultEntity();
             result2.setExtractedData("{}");
-            verification2.setResults(Set.of(result2));
 
-            identity.setDocumentVerifications(Set.of(verification1, verification2));
+            final var documentVerification2 = new DocumentVerificationEntity();
+            documentVerification2.setId("v2");
+            documentVerification2.setStatus(DocumentStatus.ACCEPTED);
+            documentVerification2.setType(DocumentType.PASSPORT);
+            documentVerification2.setUsedForVerification(true);
+            documentVerification2.setCountry("CZE");
+            documentVerification2.setResults(Set.of(result2));
+
+            identity.setDocumentVerifications(Set.of(documentVerification1, documentVerification2));
 
             when(userDataStoreClient.createDocument(any()))
                     .thenReturn(DocumentCreateResponse.builder().build());
