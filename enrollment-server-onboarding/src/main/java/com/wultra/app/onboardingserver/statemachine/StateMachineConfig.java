@@ -229,12 +229,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     private Function<StateContext<OnboardingState, OnboardingEvent>, Mono<Void>> publishCompletedAcceptedEvent() {
         return context -> Mono.fromRunnable(() -> {
             final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-
-            final String processId = Optional.of(context)
-                    .map(StateContext::getExtendedState)
-                    .map(extendedState -> extendedState.get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class))
-                    .map(IdentityVerificationEntity::getProcessId)
-                    .orElseThrow(() -> new IllegalStateException("Process ID not found in extended state for userId: %s, activationId: %s".formatted(ownerId.getUserId(), ownerId.getActivationId())));
+            final String processId = (String) context.getMessageHeader(EventHeaderName.PROCESS_ID);
 
             logger.debug("Publishing OnboardingCompletedAcceptedEvent for processId={}, {}", processId, ownerId);
             applicationEventPublisher.publishEvent(new OnboardingCompletedAcceptedEvent(StateMachineConfig.this, ownerId, processId));
