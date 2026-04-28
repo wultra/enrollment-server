@@ -36,6 +36,7 @@ import com.wultra.security.userdatastore.client.model.response.DocumentCreateRes
 import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCreateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
@@ -238,6 +239,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .map(it -> it.stream().findFirst().orElse(null))
                 .filter(Objects::nonNull)
                 .map(DocumentResultEntity::getExtractedData)
+                .filter(StringUtils::isNotBlank)
                 .map(this::convert)
                 .filter(Objects::nonNull)
                 .toList();
