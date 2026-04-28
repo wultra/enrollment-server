@@ -32,6 +32,7 @@ import com.wultra.security.userdatastore.client.model.response.DocumentCreateRes
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -43,6 +44,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -54,7 +56,7 @@ import static org.mockito.Mockito.*;
 class DefaultUserDataStoreServiceTest {
 
     @SpringBootTest(
-            classes = {DefaultUserDataStoreService.class},
+            classes = {DefaultUserDataStoreService.class, JacksonAutoConfiguration.class},
             properties = {
                     "enrollment-server-onboarding.user-data-store.enabled=true",
                     "enrollment-server-onboarding.user-data-store.restClientConfig.baseUrl=http://example.com/uds",
@@ -115,7 +117,7 @@ class DefaultUserDataStoreServiceTest {
         }
 
         @Test
-        void testCollectDocumentData() throws Exception {
+        void testCollectDocumentData() {
             final var processId = "testProcessId";
             final var activationId = "testActivationId";
             final var userId = "testUserId";
@@ -133,7 +135,7 @@ class DefaultUserDataStoreServiceTest {
                     .thenReturn(Optional.of(identity));
 
             final var documentResult = new DocumentResultEntity();
-            documentResult.setExtractedData("{\"foo\":\"bar\"}");
+            documentResult.setExtractedData("{\"givenNames\":\"John\",\"surname\":\"Doe\"}");
 
             final var documentVerification = new DocumentVerificationEntity();
             documentVerification.setId("v1");
@@ -143,19 +145,17 @@ class DefaultUserDataStoreServiceTest {
             documentVerification.setUsedForVerification(true);
             documentVerification.setResults(Set.of(documentResult));
 
-            identity.setDocumentVerifications(Set.of(documentVerification));
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of(documentVerification));
 
             final var processedData = new ProcessedDocumentDataEntity();
             processedData.setId("pd1");
             processedData.setDocumentVerificationId("v1");
-            processedData.setDataType(com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
+            processedData.setDataType(ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE);
             processedData.setData(new byte[]{1, 2, 3});
             processedData.setTimestampCreated(new Date());
             when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
                     .thenReturn(List.of(processedData));
-
-            when(userDataStoreClient.createDocument(any()))
-                    .thenReturn(DocumentCreateResponse.builder().build());
 
             final var results = tested.collectDocumentData(processId);
 
@@ -164,13 +164,16 @@ class DefaultUserDataStoreServiceTest {
             assertEquals(userId, result.userId());
             assertEquals("personal_id", result.documentType());
             assertEquals(processId, result.externalId());
-            assertEquals("{\"foo\":\"bar\"}", result.documentData());
+            assertTrue(result.documentData().contains("\"givenNames\":\"John\""), "documentData: " + result.documentData());
+            assertTrue(result.documentData().contains("\"surname\":\"Doe\""), "documentData: " + result.documentData());
+            assertEquals(Boolean.TRUE, result.attributes().get("trustedImage"));
             assertEquals(1, result.photos().size());
             assertEquals("AQID", result.photos().get(0).photoData());
+            assertEquals("pd1", result.photos().get(0).externalId());
         }
 
         @Test
-        void testCollectDocumentData_deduplicatePhotos() {
+        void testCollectDocumentData_returnsAllPhotos() {
             final var processId = "testProcessId";
             final var activationId = "testActivationId";
             final var userId = "testUserId";
@@ -193,7 +196,9 @@ class DefaultUserDataStoreServiceTest {
             documentVerification.setType(DocumentType.ID_CARD);
             documentVerification.setUsedForVerification(true);
             documentVerification.setResults(Set.of(new DocumentResultEntity()));
-            identity.setDocumentVerifications(Set.of(documentVerification));
+
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of(documentVerification));
 
             final var photoType = ProcessedDocumentDataType.DOCUMENT_FRONT_SIDE;
 
@@ -217,14 +222,49 @@ class DefaultUserDataStoreServiceTest {
             final var results = tested.collectDocumentData(processId);
 
             assertEquals(1, results.size());
-            assertEquals(1, results.get(0).photos().size());
-            assertEquals("AQ==", results.get(0).photos().get(0).photoData()); // Base64 for byte[]{1}
-            assertEquals("new", results.get(0).photos().get(0).externalId());
+            assertEquals(2, results.get(0).photos().size());
+        }
+
+        @Test
+        void testCollectDocumentData_processNotFound() {
+            when(onboardingProcessRepository.findById("missing"))
+                    .thenReturn(Optional.empty());
+
+            final var results = tested.collectDocumentData("missing");
+
+            assertEquals(0, results.size());
+            verifyNoInteractions(documentVerificationRepository);
+        }
+
+        @Test
+        void testCollectDocumentData_noDocumentVerification() {
+            final var processId = "testProcessId";
+            final var activationId = "testActivationId";
+
+            final var process = new OnboardingProcessEntity();
+            process.setId(processId);
+            process.setActivationId(activationId);
+            process.setUserId("testUserId");
+            when(onboardingProcessRepository.findById(processId))
+                    .thenReturn(Optional.of(process));
+
+            final var identity = new IdentityVerificationEntity();
+            identity.setActivationId(activationId);
+            when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                    .thenReturn(Optional.of(identity));
+
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of());
+
+            final var results = tested.collectDocumentData(processId);
+
+            assertEquals(0, results.size());
+            verifyNoInteractions(processedDocumentDataRepository);
         }
     }
 
     @SpringBootTest(
-            classes = {DefaultUserDataStoreService.class},
+            classes = {DefaultUserDataStoreService.class, JacksonAutoConfiguration.class},
             properties = {
                     "enrollment-server-onboarding.user-data-store.enabled=true",
                     "enrollment-server-onboarding.user-data-store.restClientConfig.baseUrl=http://example.com/uds",
@@ -255,7 +295,7 @@ class DefaultUserDataStoreServiceTest {
         private DocumentVerificationRepository documentVerificationRepository;
 
         @Test
-        void testCollectDocumentData_withTrustedImageOnly() throws Exception {
+        void testCollectDocumentData_withTrustedImageOnly() {
             final var processId = "testProcessId";
             final var activationId = "testActivationId";
             final var userId = "testUserId";
@@ -272,32 +312,27 @@ class DefaultUserDataStoreServiceTest {
             when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
                     .thenReturn(Optional.of(identity));
 
-            final var documentVerification1 = new DocumentVerificationEntity();
-            documentVerification1.setId("v1");
-            documentVerification1.setStatus(DocumentStatus.ACCEPTED);
-            documentVerification1.setType(DocumentType.ID_CARD);
-            documentVerification1.setUsedForVerification(false);
+            // The repository query already filters by usedForVerification = true,
+            // so only the trusted document is returned.
+            final var documentResult = new DocumentResultEntity();
+            documentResult.setExtractedData("{}");
 
-            final var result2 = new DocumentResultEntity();
-            result2.setExtractedData("{}");
+            final var documentVerification = new DocumentVerificationEntity();
+            documentVerification.setId("v2");
+            documentVerification.setStatus(DocumentStatus.ACCEPTED);
+            documentVerification.setType(DocumentType.PASSPORT);
+            documentVerification.setUsedForVerification(true);
+            documentVerification.setCountry("CZE");
+            documentVerification.setResults(Set.of(documentResult));
 
-            final var documentVerification2 = new DocumentVerificationEntity();
-            documentVerification2.setId("v2");
-            documentVerification2.setStatus(DocumentStatus.ACCEPTED);
-            documentVerification2.setType(DocumentType.PASSPORT);
-            documentVerification2.setUsedForVerification(true);
-            documentVerification2.setCountry("CZE");
-            documentVerification2.setResults(Set.of(result2));
-
-            identity.setDocumentVerifications(Set.of(documentVerification1, documentVerification2));
-
-            when(userDataStoreClient.createDocument(any()))
-                    .thenReturn(DocumentCreateResponse.builder().build());
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of(documentVerification));
 
             final var result = tested.collectDocumentData(processId);
 
             assertEquals(1, result.size());
             assertEquals("passport", result.get(0).documentType());
+            assertEquals(Boolean.TRUE, result.get(0).attributes().get("trustedImage"));
         }
     }
 }
