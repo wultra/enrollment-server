@@ -18,6 +18,8 @@
 
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -55,9 +57,11 @@ class UserDataStoreConfig {
             final UserDataStoreConfigProperties config,
             final OnboardingProcessRepository onboardingProcessRepository,
             final IdentityVerificationRepository identityVerificationRepository,
-            final ProcessedDocumentDataRepository processedDocumentDataRepository) {
+            final ProcessedDocumentDataRepository processedDocumentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final ObjectMapper objectMapper) {
 
         logger.info("Initializing DefaultUserDataStoreService.");
-        return new DefaultUserDataStoreService(client, config, onboardingProcessRepository, identityVerificationRepository, processedDocumentDataRepository);
+        return new DefaultUserDataStoreService(client, config, onboardingProcessRepository, identityVerificationRepository, processedDocumentDataRepository, documentVerificationRepository, objectMapper);
     }
 }

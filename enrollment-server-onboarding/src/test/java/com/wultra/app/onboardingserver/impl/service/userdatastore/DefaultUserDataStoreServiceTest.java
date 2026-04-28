@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.impl.service.userdatastore;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
@@ -80,6 +81,9 @@ class DefaultUserDataStoreServiceTest {
 
         @MockitoBean
         private ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+        @MockitoBean
+        private DocumentVerificationRepository documentVerificationRepository;
 
         @Test
         void testStoreData() throws Exception {
@@ -246,6 +250,9 @@ class DefaultUserDataStoreServiceTest {
 
         @MockitoBean
         private ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+        @MockitoBean
+        private DocumentVerificationRepository documentVerificationRepository;
 
         @Test
         void testCollectDocumentData_withTrustedImageOnly() throws Exception {

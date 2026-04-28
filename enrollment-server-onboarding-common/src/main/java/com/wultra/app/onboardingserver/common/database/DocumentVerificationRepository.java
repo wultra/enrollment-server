@@ -91,6 +91,16 @@ public interface DocumentVerificationRepository extends JpaRepository<DocumentVe
             "AND d.usedForVerification = true")
     List<DocumentVerificationEntity> findAllWithPhoto(IdentityVerificationEntity identityVerification);
 
+    @Query("""
+            SELECT d
+            FROM DocumentVerificationEntity d
+            WHERE d.identityVerification = :identityVerification
+            AND d.status = DocumentStatus.ACCEPTED
+            AND d.photoId IS NOT NULL
+            AND d.usedForVerification = true""")
+    List<DocumentVerificationEntity> findAcceptedWithPhoto(IdentityVerificationEntity identityVerification);
+
+
     /**
      * Return document verification IDs by the given identity verification ID and document statuses.
      *

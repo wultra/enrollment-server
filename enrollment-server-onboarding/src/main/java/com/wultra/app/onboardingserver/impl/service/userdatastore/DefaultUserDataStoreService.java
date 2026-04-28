@@ -17,15 +17,17 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.provider.microblink.MicroblinkDocumentVerificationProvider;
+import com.wultra.app.onboardingserver.provider.zenid.ZenidDocumentVerificationProvider;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
@@ -38,14 +40,15 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link UserDataStoreService}.
  *
+ * @implSpec Processing {@link ProcessedDocumentDataEntity} which is used by {@link MicroblinkDocumentVerificationProvider} but not by {@link ZenidDocumentVerificationProvider}.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @RequiredArgsConstructor
@@ -65,6 +68,10 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     private final IdentityVerificationRepository identityVerificationRepository;
 
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+
+    private final DocumentVerificationRepository documentVerificationRepository;
+
+    private final ObjectMapper objectMapper;
 
     private final RetryTemplate retryTemplate = RetryTemplate.builder()
             .maxAttempts(MAX_ATTEMPTS)
@@ -89,37 +96,20 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         }
 
         final var documentVerifications = fetchDocumentVerifications(identityVerification, config.getDocumentType());
-        if (CollectionUtils.isEmpty(documentVerifications)) {
+        if (documentVerifications.primaryDocuments().getValue().isEmpty()) {
             logger.info("action: collectDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
             return List.of();
         }
 
-        final var processedData = fetchProcessedDocumentData(documentVerifications);
+        final List<DocumentCreateRequest> documentRequests = new ArrayList<>();
+        documentRequests.add(createTrustedDocumentRequest(process, documentVerifications.primaryDocuments()));
 
-        final List<DocumentCreateRequest> documentRequests = documentVerifications.stream()
-                .map(documentVerification -> createDocumentRequest(processId, process.getUserId(), documentVerification, processedData))
-                .filter(Objects::nonNull)
-                .toList();
+        for (final var entry : documentVerifications.otherDocuments().entrySet()) {
+            documentRequests.add(createDocumentRequest(process, entry));
+        }
 
         logger.info("action: collectDocumentData, state: finished, processId: {}, count: {}", processId, documentRequests.size());
         return documentRequests;
-    }
-
-    private static List<DocumentVerificationEntity> fetchDocumentVerifications(
-            final IdentityVerificationEntity identityVerification,
-            final UserDataStoreConfigProperties.DocumentType documentType) {
-
-        final List<DocumentVerificationEntity> documentVerifications = identityVerification.getDocumentVerifications().stream()
-                .filter(DocumentVerificationEntity::isUsedForVerification)
-                .filter(it -> it.getStatus() == DocumentStatus.ACCEPTED)
-                .toList();
-
-        return switch (documentType) {
-            case ALL -> documentVerifications;
-            case WITH_TRUSTED_IMAGE -> DocumentVerificationEntity.filterPreferredDocumentWithPhoto(documentVerifications)
-                    .map(List::of)
-                    .orElseGet(List::of);
-        };
     }
 
     @Override
@@ -132,47 +122,69 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         logger.info("action: storeDocumentData, state: finished");
     }
 
-    private Map<String, List<ProcessedDocumentDataEntity>> fetchProcessedDocumentData(final Collection<DocumentVerificationEntity> documentVerifications) {
+    private List<ProcessedDocumentDataEntity> fetchProcessedDocumentData(final Collection<DocumentVerificationEntity> documentVerifications) {
         final var documentVerificationIds = documentVerifications.stream()
                 .map(DocumentVerificationEntity::getId)
                 .collect(Collectors.toSet());
-        return processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds).stream()
-                .collect(Collectors.groupingBy(
-                        ProcessedDocumentDataEntity::getDocumentVerificationId,
-                        Collectors.collectingAndThen(
-                                Collectors.toMap(
-                                        ProcessedDocumentDataEntity::getDataType,
-                                        processedDocumentData -> processedDocumentData,
-                                        (left, right) -> left.getTimestampCreated().after(right.getTimestampCreated()) ? left : right
-                                ),
-                                groupedByDataType -> new ArrayList<>(groupedByDataType.values())
-                        )
-                ));
+        return processedDocumentDataRepository.findAllByDocumentVerificationIds(documentVerificationIds);
     }
 
-    private @Nullable DocumentCreateRequest createDocumentRequest(final String processId, final String userId, final DocumentVerificationEntity documentVerification, final Map<String, List<ProcessedDocumentDataEntity>> processedData) {
-        final var results = documentVerification.getResults();
-        if (CollectionUtils.isEmpty(results)) {
-            return null;
-        }
-        final var latestResult = results.iterator().next();
+    private @Nullable DocumentCreateRequest createTrustedDocumentRequest(
+            final OnboardingProcessEntity process,
+            final Map.Entry<DocumentType,List<DocumentVerificationEntity>> source) {
 
-        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData.getOrDefault(documentVerification.getId(), List.of()));
+        return createDocumentRequest(process, source, Map.of("trustedImage", true));
+    }
+
+    private @Nullable DocumentCreateRequest createDocumentRequest(
+            final OnboardingProcessEntity process,
+            final Map.Entry<DocumentType,List<DocumentVerificationEntity>> source) {
+
+        return createDocumentRequest(process, source, null);
+    }
+
+    private @Nullable DocumentCreateRequest createDocumentRequest(
+            final OnboardingProcessEntity process,
+            final Map.Entry<DocumentType,List<DocumentVerificationEntity>> source,
+            final Map<String, Object> attributes) {
+
+        final List<ProcessedDocumentDataEntity> processedData = fetchProcessedDocumentData(source.getValue());
+        final List<EmbeddedPhotoCreateRequest> photos = fetchPhotos(processedData);
 
         return DocumentCreateRequest.builder()
-                .userId(userId)
-                .documentType(convert(documentVerification.getType()))
+                .userId(process.getUserId())
+                .documentType(convert(source.getKey()))
                 .dataType(DATA_TYPE_CLAIMS)
-                .externalId(processId)
-                .documentData(fetchExtractedData(latestResult))
-                .attributes(createAttributes())
+                .externalId(process.getId())
+                .documentData(fetchExtractedData(source.getValue()))
+                .attributes(attributes)
                 .photos(photos)
                 .build();
     }
 
-    private static Map<String, Object> createAttributes() {
-        // TODO Lubos trusted image
-        return Map.of("trustedImage", true); // or null
+    private DocumentsWrapper fetchDocumentVerifications(final IdentityVerificationEntity idVerification, UserDataStoreConfigProperties.DocumentType documentType) {
+        final Map<DocumentType, List<DocumentVerificationEntity>> documentVerifications = documentVerificationRepository.findAcceptedWithPhoto(idVerification).stream()
+                .collect(Collectors.groupingBy(
+                        DocumentVerificationEntity::getType,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        final Map.Entry<DocumentType, List<DocumentVerificationEntity>> primaryDocuments = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
+                .map(type -> Map.entry(type, documentVerifications.get(type)))
+                .filter(entry -> entry.getValue() != null)
+                .findFirst()
+                .orElseGet(() -> {
+                    logger.warn("Unable to select a preferred source of person photo, selecting the first one, identityVerificationId: {}", idVerification);
+                    return documentVerifications.entrySet().iterator().next();
+                });
+
+        documentVerifications.remove(primaryDocuments.getKey());
+
+        return switch (documentType) {
+            case ALL -> new DocumentsWrapper(primaryDocuments, documentVerifications);
+            case WITH_TRUSTED_IMAGE -> new DocumentsWrapper(primaryDocuments, Map.of());
+        };
     }
 
     Void callCreateDocument(final DocumentCreateRequest request, final RetryContext context) throws UserDataStoreClientException {
@@ -211,12 +223,63 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .toList();
     }
 
-    private @Nullable String fetchExtractedData(final DocumentResultEntity documentResult) {
+    private @Nullable String fetchExtractedData(final List<DocumentVerificationEntity> documentVerifications) {
         if (!config.isStoreExtractedData()) {
             return null;
         }
 
-        return documentResult.getExtractedData();
+        List<DocumentExtractedDataValue> extractedData =
+                documentVerifications.stream()
+                .map(DocumentVerificationEntity::getResults)
+                .map(it -> it.stream().findFirst().orElse(null))
+                .filter(Objects::nonNull)
+                .map(DocumentResultEntity::getExtractedData)
+                .map(this::convert)
+                .filter(Objects::nonNull)
+                .toList();
+
+        final DocumentExtractedDataValue mergedData = merge(extractedData);
+
+        try {
+            return objectMapper.writeValueAsString(mergedData);
+        } catch (JsonProcessingException e) {
+            logger.warn("Failed to write extracted data, source: {}", mergedData, e);
+            return null;
+        }
+    }
+
+    private static DocumentExtractedDataValue merge(final List<DocumentExtractedDataValue> extractedData) {
+        return DocumentExtractedDataValue.builder()
+                .givenNames(findFirstValue(DocumentExtractedDataValue::givenNames, extractedData))
+                .surname(findFirstValue(DocumentExtractedDataValue::surname, extractedData))
+                .dateOfBirth(findFirstValue(DocumentExtractedDataValue::dateOfBirth, extractedData))
+                .placeOfBirth(findFirstValue(DocumentExtractedDataValue::placeOfBirth, extractedData))
+                .sex(findFirstValue(DocumentExtractedDataValue::sex, extractedData))
+                .nationality(findFirstValue(DocumentExtractedDataValue::nationality, extractedData))
+                .personalNumber(findFirstValue(DocumentExtractedDataValue::personalNumber, extractedData))
+                .documentNumber(findFirstValue(DocumentExtractedDataValue::documentNumber, extractedData))
+                .dateOfIssue(findFirstValue(DocumentExtractedDataValue::dateOfIssue, extractedData))
+                .dateOfExpiry(findFirstValue(DocumentExtractedDataValue::dateOfExpiry, extractedData))
+                .authority(findFirstValue(DocumentExtractedDataValue::authority, extractedData))
+                .country(findFirstValue(DocumentExtractedDataValue::country, extractedData))
+                .build();
+    }
+
+    private static <T> T findFirstValue(final Function<DocumentExtractedDataValue, T> getter, final List<DocumentExtractedDataValue> values) {
+        return values.stream()
+                .map(getter)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private DocumentExtractedDataValue convert(final String source) {
+        try {
+            return objectMapper.readValue(source, DocumentExtractedDataValue.class);
+        } catch (final Exception e) {
+            logger.warn("Failed to parse extracted data, source: {}", source, e);
+            return null;
+        }
     }
 
     private static String convert(final com.wultra.app.enrollmentserver.model.enumeration.DocumentType source) {
@@ -244,5 +307,10 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             case DOCUMENT_FRONT_SIDE -> "document_front_side";
             case DOCUMENT_BACK_SIDE -> "document_back_side";
         };
+    }
+
+    private record DocumentsWrapper(
+            Map.Entry<DocumentType, List<DocumentVerificationEntity>> primaryDocuments,
+            Map<DocumentType, List<DocumentVerificationEntity>> otherDocuments) {
     }
 }
