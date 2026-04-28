@@ -179,7 +179,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                 .map(type -> Map.entry(type, documentVerifications.get(type)))
                 .findFirst()
                 .orElseGet(() -> {
-                    logger.warn("Unable to select a preferred source of person photo, selecting the first one, identityVerificationId: {}", idVerification);
+                    logger.warn("Unable to select a preferred source of person photo, selecting the first one, identityVerificationId: {}", idVerification.getId());
                     return documentVerifications.entrySet().iterator().next();
                 });
 
