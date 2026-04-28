@@ -232,7 +232,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             return null;
         }
 
-        List<DocumentExtractedDataValue> extractedData =
+        final List<DocumentExtractedDataValue> extractedData =
                 documentVerifications.stream()
                 .map(DocumentVerificationEntity::getResults)
                 .map(it -> it.stream().findFirst().orElse(null))

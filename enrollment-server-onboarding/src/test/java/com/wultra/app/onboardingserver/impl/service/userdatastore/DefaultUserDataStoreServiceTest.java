@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -223,6 +224,121 @@ class DefaultUserDataStoreServiceTest {
 
             assertEquals(1, results.size());
             assertEquals(2, results.get(0).photos().size());
+        }
+
+        @Test
+        void testCollectDocumentData_multipleDocumentTypes() {
+            final var processId = "testProcessId";
+            final var activationId = "testActivationId";
+            final var userId = "testUserId";
+
+            final var process = new OnboardingProcessEntity();
+            process.setId(processId);
+            process.setActivationId(activationId);
+            process.setUserId(userId);
+            when(onboardingProcessRepository.findById(processId))
+                    .thenReturn(Optional.of(process));
+
+            final var identity = new IdentityVerificationEntity();
+            identity.setActivationId(activationId);
+            when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                    .thenReturn(Optional.of(identity));
+
+            final var idCardResult = new DocumentResultEntity();
+            idCardResult.setExtractedData("{\"givenNames\":\"John\"}");
+            final var idCard = new DocumentVerificationEntity();
+            idCard.setId("v1");
+            idCard.setType(DocumentType.ID_CARD);
+            idCard.setStatus(DocumentStatus.ACCEPTED);
+            idCard.setUsedForVerification(true);
+            idCard.setResults(Set.of(idCardResult));
+
+            final var drivingLicenseResult = new DocumentResultEntity();
+            drivingLicenseResult.setExtractedData("{\"documentNumber\":\"DL-42\"}");
+            final var drivingLicense = new DocumentVerificationEntity();
+            drivingLicense.setId("v2");
+            drivingLicense.setType(DocumentType.DRIVING_LICENSE);
+            drivingLicense.setStatus(DocumentStatus.ACCEPTED);
+            drivingLicense.setUsedForVerification(true);
+            drivingLicense.setResults(Set.of(drivingLicenseResult));
+
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of(idCard, drivingLicense));
+
+            when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
+                    .thenReturn(List.of());
+
+            final var results = tested.collectDocumentData(processId);
+
+            assertEquals(2, results.size());
+
+            final var primary = results.stream()
+                    .filter(it -> "personal_id".equals(it.documentType()))
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals(Boolean.TRUE, primary.attributes().get("trustedImage"));
+            assertTrue(primary.documentData().contains("\"givenNames\":\"John\""), "primary documentData: " + primary.documentData());
+
+            final var other = results.stream()
+                    .filter(it -> "drivers_license".equals(it.documentType()))
+                    .findFirst()
+                    .orElseThrow();
+            assertNull(other.attributes(), "other.attributes: " + other.attributes());
+            assertTrue(other.documentData().contains("\"documentNumber\":\"DL-42\""), "other documentData: " + other.documentData());
+        }
+
+        @Test
+        void testCollectDocumentData_mergesExtractedDataFromFrontAndBackSides() {
+            final var processId = "testProcessId";
+            final var activationId = "testActivationId";
+            final var userId = "testUserId";
+
+            final var process = new OnboardingProcessEntity();
+            process.setId(processId);
+            process.setActivationId(activationId);
+            process.setUserId(userId);
+            when(onboardingProcessRepository.findById(processId))
+                    .thenReturn(Optional.of(process));
+
+            final var identity = new IdentityVerificationEntity();
+            identity.setActivationId(activationId);
+            when(identityVerificationRepository.findFirstByActivationIdOrderByTimestampCreatedDesc(activationId))
+                    .thenReturn(Optional.of(identity));
+
+            // ID card with front side data: given names + surname
+            final var frontResult = new DocumentResultEntity();
+            frontResult.setExtractedData("{\"givenNames\":\"John\",\"surname\":\"Doe\"}");
+            final var frontSide = new DocumentVerificationEntity();
+            frontSide.setId("v-front");
+            frontSide.setType(DocumentType.ID_CARD);
+            frontSide.setStatus(DocumentStatus.ACCEPTED);
+            frontSide.setUsedForVerification(true);
+            frontSide.setResults(Set.of(frontResult));
+
+            // ID card with back side data: personal number + authority
+            final var backResult = new DocumentResultEntity();
+            backResult.setExtractedData("{\"personalNumber\":\"900101/1234\",\"authority\":\"MV CR\"}");
+            final var backSide = new DocumentVerificationEntity();
+            backSide.setId("v-back");
+            backSide.setType(DocumentType.ID_CARD);
+            backSide.setStatus(DocumentStatus.ACCEPTED);
+            backSide.setUsedForVerification(true);
+            backSide.setResults(Set.of(backResult));
+
+            when(documentVerificationRepository.findAcceptedWithPhoto(identity))
+                    .thenReturn(List.of(frontSide, backSide));
+
+            when(processedDocumentDataRepository.findAllByDocumentVerificationIds(any()))
+                    .thenReturn(List.of());
+
+            final var results = tested.collectDocumentData(processId);
+
+            assertEquals(1, results.size());
+            final var documentData = results.get(0).documentData();
+            assertTrue(documentData.contains("\"givenNames\":\"John\""), "documentData: " + documentData);
+            assertTrue(documentData.contains("\"surname\":\"Doe\""), "documentData: " + documentData);
+            assertTrue(documentData.contains("\"personalNumber\":\"900101/1234\""), "documentData: " + documentData);
+            assertTrue(documentData.contains("\"authority\":\"MV CR\""), "documentData: " + documentData);
         }
 
         @Test
