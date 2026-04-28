@@ -96,7 +96,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         }
 
         final var documentVerifications = fetchDocumentVerifications(identityVerification, config.getDocumentType());
-        if (documentVerifications.primaryDocuments().getValue().isEmpty()) {
+        if (documentVerifications.primaryDocuments() == null) {
             logger.info("action: collectDocumentData, state: skipped, reason: no_document_verification, processId: {}", processId);
             return List.of();
         }
@@ -170,9 +170,13 @@ class DefaultUserDataStoreService implements UserDataStoreService {
                         Collectors.toList()
                 ));
 
+        if (documentVerifications.isEmpty()) {
+            return new DocumentsWrapper(null, Map.of());
+        }
+
         final Map.Entry<DocumentType, List<DocumentVerificationEntity>> primaryDocuments = DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
+                .filter(documentVerifications::containsKey)
                 .map(type -> Map.entry(type, documentVerifications.get(type)))
-                .filter(entry -> entry.getValue() != null)
                 .findFirst()
                 .orElseGet(() -> {
                     logger.warn("Unable to select a preferred source of person photo, selecting the first one, identityVerificationId: {}", idVerification);
