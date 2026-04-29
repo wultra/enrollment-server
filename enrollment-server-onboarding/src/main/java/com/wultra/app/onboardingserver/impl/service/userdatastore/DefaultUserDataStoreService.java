@@ -284,7 +284,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         try {
             return objectMapper.readValue(source, DocumentExtractedDataValue.class);
         } catch (final Exception e) {
-            logger.warn("Failed to parse extracted data, source: {}", source, e);
+            logger.warn("Failed to parse extracted data", e);
             return null;
         }
     }
