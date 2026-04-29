@@ -60,7 +60,6 @@ import org.springframework.statemachine.state.State;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Function;
@@ -118,7 +117,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckEnabledGuard presenceCheckEnabledGuard;
 
-    private final ProcessIdentifierGuard processIdentifierGuard;
 
     private final StatusAcceptedGuard statusAcceptedGuard;
 
@@ -253,7 +251,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.INITIAL)
                 .event(OnboardingEvent.IDENTITY_VERIFICATION_INIT)
-                .guard(createCompositeGuard(processIdentifierGuard, consentResolvedGuard))
+                .guard(consentResolvedGuard)
                 .action(verificationInitAction)
                 .target(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS);
     }
@@ -280,7 +278,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.DOCUMENT_UPLOAD_VERIFICATION_PENDING)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
                 .action(verificationDocumentStartAction)
-                .guard(createCompositeGuard(processIdentifierGuard, documentsVerificationPendingGuard))
+                .guard(documentsVerificationPendingGuard)
                 .target(OnboardingState.CHOICE_DOCUMENT_VERIFICATION_PROCESSING)
 
                 .and()
@@ -296,7 +294,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
                 .action(moveToDocumentVerificationFinalInProgressAction)
                 .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS);
     }
@@ -306,7 +303,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_IN_PROGRESS)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
                 .action(documentVerificationFinalAction)
                 .target(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
 
@@ -314,7 +310,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.DOCUMENT_VERIFICATION_FINAL_ACCEPTED)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED);
     }
 
@@ -380,7 +375,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(processIdentifierGuard)
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
@@ -388,7 +382,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_INIT)
-                .guard(processIdentifierGuard)
                 .action(presenceCheckInitAction)
                 .target(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
 
@@ -396,7 +389,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.PRESENCE_CHECK_IN_PROGRESS)
                 .event(OnboardingEvent.PRESENCE_CHECK_SUBMITTED)
-                .guard(processIdentifierGuard)
                 .action(moveToPresenceCheckVerificationPendingAction)
                 .target(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
 
@@ -405,7 +397,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .source(OnboardingState.PRESENCE_CHECK_VERIFICATION_PENDING)
                 .action(presenceCheckVerificationAction)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_PRESENCE_CHECK_PROCESSING)
 
                 .and()
@@ -493,7 +484,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
                 .event(OnboardingEvent.OTP_VERIFICATION_RESEND)
-                .guard(createCompositeGuard(processIdentifierGuard, otpVerificationEnabledGuard))
+                .guard(otpVerificationEnabledGuard)
                 .action(otpVerificationResendAction)
                 .target(OnboardingState.OTP_VERIFICATION_PENDING)
 
@@ -501,7 +492,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .withExternal()
                 .source(OnboardingState.OTP_VERIFICATION_PENDING)
                 .event(OnboardingEvent.EVENT_NEXT_STATE)
-                .guard(processIdentifierGuard)
                 .target(OnboardingState.CHOICE_OTP_VERIFICATION)
 
                 .and()
@@ -517,10 +507,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 .last(OnboardingState.PRESENCE_CHECK_NOT_INITIALIZED);
     }
 
-    @SafeVarargs
-    private static Guard<OnboardingState, OnboardingEvent> createCompositeGuard(final Guard<OnboardingState, OnboardingEvent>... guards) {
-        return context -> Arrays.stream(guards).allMatch(it -> it.evaluate(context));
-    }
 
     private void configureActivationFinishTransitions(final StateMachineTransitionConfigurer<OnboardingState, OnboardingEvent> transitions) throws Exception {
         transitions

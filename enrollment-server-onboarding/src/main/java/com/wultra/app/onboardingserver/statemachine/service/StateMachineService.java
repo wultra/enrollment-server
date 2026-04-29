@@ -16,9 +16,12 @@
  */
 package com.wultra.app.onboardingserver.statemachine.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -34,7 +37,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachineEventResult;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
@@ -67,6 +69,8 @@ public class StateMachineService {
     private final IdentityVerificationService identityVerificationService;
 
     private final TransactionTemplate transactionTemplate;
+
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
@@ -134,10 +138,13 @@ public class StateMachineService {
                 transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
                 transactionTemplate.executeWithoutResult(status -> {
                     try {
+                        lockAndVerifyProcess(processId);
                         processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
                         countFinished.incrementAndGet();
                     } catch (IdentityVerificationException e) {
                         logger.warn("Unable to change state for process ID: {}", processId, e);
+                    } catch (final OnboardingProcessException e) {
+                        logger.warn("Process with ID {} not found", processId, e);
                     }
                 });
             });
@@ -147,10 +154,10 @@ public class StateMachineService {
         }
     }
 
-    private StateMachineEventResult<OnboardingState, OnboardingEvent> sendEventMessage(
+    private void sendEventMessage(
             StateMachine<OnboardingState, OnboardingEvent> stateMachine,
             Message<OnboardingEvent> message) {
-        return stateMachine.sendEvent(Mono.just(message)).blockLast();
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
     }
 
     private StateMachine<OnboardingState, OnboardingEvent> fetchStateMachine(
@@ -161,6 +168,12 @@ public class StateMachineService {
         OnboardingState onboardingState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
 
         return prepareStateMachine(processId, onboardingState, identityVerification);
+    }
+
+    private void lockAndVerifyProcess(final String processId) throws OnboardingProcessException {
+        onboardingProcessRepository.findByIdWithLock(processId)
+                .filter(p -> OnboardingStatus.NOT_YET_COMPLETED.contains(p.getStatus()))
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found for process ID: " + processId));
     }
 
 }
