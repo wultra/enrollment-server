@@ -37,12 +37,6 @@ public class ErrorCode {
     public static final String INVALID_REQUEST              = "INVALID_REQUEST";
 
     /**
-     * Error code for situation when an invalid activation / device is
-     * attempted for operation manipulation.
-     */
-    public static final String INVALID_ACTIVATION           = "INVALID_ACTIVATION";
-
-    /**
      * Error code for situation when an invalid application identifier is
      * attempted for operation manipulation.
      */
@@ -88,4 +82,7 @@ public class ErrorCode {
      */
     public static final String OPERATION_EXPIRED            = "OPERATION_EXPIRED";
 
+    private ErrorCode() {
+        throw new IllegalStateException("Should not be instantiated.");
+    }
 }
