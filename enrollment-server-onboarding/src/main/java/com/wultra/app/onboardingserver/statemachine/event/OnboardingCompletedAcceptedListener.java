@@ -16,13 +16,14 @@
  */
 package com.wultra.app.onboardingserver.statemachine.event;
 
+import com.wultra.app.onboardingserver.impl.service.userdatastore.UserDataStoreService;
+import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-
-import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * Listener for {@link OnboardingCompletedAcceptedEvent}.
@@ -30,8 +31,11 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
 @Component
+@AllArgsConstructor
 @Slf4j
 public class OnboardingCompletedAcceptedListener {
+
+    private final UserDataStoreService userDataStoreService;
 
     /**
      * Handles the {@link OnboardingCompletedAcceptedEvent} after transaction commit.
@@ -41,18 +45,22 @@ public class OnboardingCompletedAcceptedListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async
     public void onOnboardingCompletedAccepted(final OnboardingCompletedAcceptedEvent event) {
-        logger.info("",
-                kv("action", "onOnboardingCompletedAccepted"),
-                kv("state", "initiated"),
-                kv("processId", event.getProcessId()),
-                kv("userId", event.getOwnerId().getUserId()),
-                kv("activationId", event.getOwnerId().getActivationId()));
+        final var processId = event.getProcessId();
 
-        // TODO (michal-rozehnal-w, 2026-04-24, #1723) Sending is implemented in separate issue
+        logger.info("action: onOnboardingCompletedAccepted, state: initiated, processId: {}, userId: {}, activationId: {}",
+                processId,
+                event.getOwnerId().getUserId(),
+                event.getOwnerId().getActivationId());
 
-        logger.info("",
-                kv("action", "onOnboardingCompletedAccepted"),
-                kv("state", "succeeded"));
+        try {
+            final var documentData = userDataStoreService.collectDocumentData(processId);
+            userDataStoreService.storeDocumentData(documentData);
+
+            logger.info("action: onOnboardingCompletedAccepted, state: succeeded, storedDocumentCount: {}", documentData.size());
+        } catch (final UserDataStoreClientException | RuntimeException e) {
+            logger.warn("action: onOnboardingCompletedAccepted, state: failed", e);
+            logger.info("action: onOnboardingCompletedAccepted, state: failed, errorMessage: {}", e.getMessage());
+        }
     }
 }
 

@@ -23,11 +23,13 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.userdatastore.UserDataStoreService;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
+import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -39,6 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -81,6 +84,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
     @MockitoBean
     private StatusAcceptedGuard statusAcceptedGuard;
 
+    @MockitoBean
+    private UserDataStoreService userDataStoreService;
+
     @Captor
     private ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor;
 
@@ -94,6 +100,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
         when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
+        when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
 
         // when
         stateMachineService.processStateMachineEvent(ownerId, PROCESS_ID, OnboardingEvent.EVENT_NEXT_STATE);
@@ -131,6 +138,26 @@ class OnboardingCompletedAcceptedListenerIntTest {
         verify(onboardingCompletedAcceptedListener, after(VERIFY_TIMEOUT).never()).onOnboardingCompletedAccepted(any());
     }
 
+    @Test
+    void testOnOnboardingCompletedAccepted_userDataIsStored() throws Exception {
+        // given
+        final var ownerId = createOwnerId();
+        final var identityVerification = createIdentityVerification();
+        final var documentCreateRequests = createDocumentCreateRequests();
+
+        when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
+        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
+        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
+        when(userDataStoreService.collectDocumentData(any())).thenReturn(documentCreateRequests);
+
+        // when
+        stateMachineService.processStateMachineEvent(ownerId, PROCESS_ID, OnboardingEvent.EVENT_NEXT_STATE);
+
+        // then
+        verify(userDataStoreService, timeout(VERIFY_TIMEOUT)).storeDocumentData(documentCreateRequests);
+    }
+
     private void processStateMachineEvent(final OwnerId ownerId) {
         try {
             stateMachineService.processStateMachineEvent(ownerId, PROCESS_ID, OnboardingEvent.EVENT_NEXT_STATE);
@@ -154,5 +181,12 @@ class OnboardingCompletedAcceptedListenerIntTest {
         identityVerification.setPhase(IdentityVerificationPhase.ACTIVATION_FINISH);
         identityVerification.setStatus(IdentityVerificationStatus.IN_PROGRESS);
         return identityVerification;
+    }
+
+    private static List<DocumentCreateRequest> createDocumentCreateRequests() {
+        return List.of(
+                DocumentCreateRequest.builder().build(),
+                DocumentCreateRequest.builder().build()
+        );
     }
 }
