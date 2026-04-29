@@ -44,12 +44,12 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 
 ## Identity Verification Configuration
 
-| Property                                                                                 | Default | Note                                                                                                                                                                                                      |
-|------------------------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.                                                                                                                                                                 |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.                                                                                                                                                        |
-| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.                                                                                                                                                              |
-| `enrollment-server-onboarding.identity-verification.data-retention`                      | `1h`    | Retention duration for identity verification personal data. The effective retention window is computed as: `timestamp_created` + `enrollment-server-onboarding.onboarding-process.expiration` + this value. |
+| Property                                                                                 | Default | Note                                                                                                                                                                                                                                                            |
+|------------------------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enrollment-server-onboarding.identity-verification.enabled`                             | `false` | Whether identity verification is enabled.                                                                                                                                                                                                                       |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts`                 | `5`     | Maximum failed attempts for identity verification.                                                                                                                                                                                                              |
+| `enrollment-server-onboarding.identity-verification.max-failed-attempts-document-upload` | `5`     | Maximum failed attempts for document upload.                                                                                                                                                                                                                    |
+| `enrollment-server-onboarding.identity-verification.data-retention`                      | `1h`    | Retention duration for identity verification personal data. The effective retention window is computed as: `timestamp_created` + `enrollment-server-onboarding.onboarding-process.expiration` + this value. An empty value means automatic cleanup is disabled. |
 
 
 ## Digital Onboarding Adapter Configuration
@@ -74,7 +74,7 @@ See [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 
 | Property                                                                | Default | Note                                                                                                                                     |
 |-------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `enrollment-server-onboarding.client-evaluation.max-failed-attempts`    | 5       | Number of maximum failed attempts for client evaluation.                                                                                 |
+| `enrollment-server-onboarding.client-evaluation.max-failed-attempts`    | 1       | Number of maximum failed attempts for client evaluation.                                                                                 |
 | `enrollment-server-onboarding.client-evaluation.include-extracted-data` | `false` | Include extracted data to the evaluate client request. The format of extracted data is defined by the provider of document verification. |
 
 ## Document Verification Provider Configuration
