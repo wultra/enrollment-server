@@ -126,3 +126,15 @@ ALTER TABLE audit_log ADD subject_id VARCHAR2(256);
 -- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
 -- Create a new index on audit_log(subject_id)
 CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::1::Michal Rozehnal
+-- Add column anonymized into table es_document_result
+ALTER TABLE es_document_result ADD anonymized BOOLEAN DEFAULT 1 NOT NULL;
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::2::Michal Rozehanal
+-- Change default value of es_document_result.anonymized to false
+ALTER TABLE es_document_result MODIFY anonymized DEFAULT 0;
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::3::Michal Rozehnal
+-- Add index on anonymized column in es_document_result table
+CREATE INDEX es_document_result_anonymized_idx ON es_document_result(anonymized);

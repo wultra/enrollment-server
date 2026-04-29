@@ -34,6 +34,7 @@ import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncrypti
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,20 +67,16 @@ public class ConfigurationController {
             description = "Fetch onboarding process configuration for the given type."
     )
     public ObjectResponse<ConfigurationResponse> fetchConfiguration(
-            @EncryptedRequestBody @Valid final ObjectRequest<ConfigurationRequest> request,
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<ConfigurationRequest> request,
             @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, InvalidRequestObjectException {
 
-        logger.info("action: fetchConfiguration, state: initiated");
+        final String processType = request.getRequestObject().processType();
+        logger.info("action: fetchConfiguration, state: initiated, processType: {}", processType);
 
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received");
-        }
-
-        final String processType = request.getRequestObject().processType();
         final ConfigurationResponse result = configurationService.fetchConfiguration(processType)
                 .map(OnboardingProcessConfigurationEntity::getConfiguration)
                 .map(ConfigurationController::convert)

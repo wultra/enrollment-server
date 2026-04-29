@@ -36,7 +36,6 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
-import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.ObjectResponse;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
@@ -228,7 +227,7 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public Response submitDocumentsV2(
-            final ObjectRequest<DocumentSubmitV2Request> request,
+            final DocumentSubmitV2Request request,
             final EncryptionContext encryptionContext,
             final PowerAuthApiAuthentication apiAuthentication
     ) throws PowerAuthTokenInvalidException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
@@ -236,9 +235,8 @@ public class IdentityVerificationRestService {
 
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkEncryptionContext(encryptionContext, operationDescription);
-        checkRequestObject(request, operationDescription);
 
-        return submitDocuments(request.getRequestObject(), encryptionContext);
+        return submitDocuments(request, encryptionContext);
     }
 
     /**
@@ -257,7 +255,7 @@ public class IdentityVerificationRestService {
      */
     @Transactional
     public Response submitDocuments(
-            final ObjectRequest<DocumentSubmitRequest> request,
+            final DocumentSubmitRequest request,
             final EncryptionContext encryptionContext,
             final PowerAuthApiAuthentication apiAuthentication
     ) throws PowerAuthEncryptionException, PowerAuthAuthenticationException, OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, IdentityVerificationException, OnboardingProcessLimitException {
@@ -265,17 +263,15 @@ public class IdentityVerificationRestService {
 
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkEncryptionContext(encryptionContext, operationDescription);
-        checkRequestObject(request, operationDescription);
 
-        final var requestObject = request.getRequestObject();
-        final var documentsByFilename = getDocumentsByFilename(encryptionContext.getActivationId(), requestObject);
+        final var documentsByFilename = getDocumentsByFilename(encryptionContext.getActivationId(), request);
 
-        final var documentsV2 = buildDocumentsV2(requestObject, documentsByFilename);
+        final var documentsV2 = buildDocumentsV2(request, documentsByFilename);
 
         final var requestV2 = DocumentSubmitV2Request.builder()
-                .processId(requestObject.getProcessId())
+                .processId(request.getProcessId())
                 .documents(documentsV2)
-                .resubmit(requestObject.isResubmit())
+                .resubmit(request.isResubmit())
                 .build();
 
         return submitDocuments(requestV2, encryptionContext);
@@ -376,23 +372,22 @@ public class IdentityVerificationRestService {
      * @throws RemoteCommunicationException In case of remote communication error.
      */
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
-            ObjectRequest<DocumentVerificationSdkInitRequest> request,
-            EncryptionContext encryptionContext,
-            PowerAuthApiAuthentication apiAuthentication)
+            final DocumentVerificationSdkInitRequest request,
+            final EncryptionContext encryptionContext,
+            final PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
         final String operationDescription = "initializing document verification SDK";
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkEncryptionContext(encryptionContext, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will not be locked, {}", processId);
         onboardingService.verifyProcessId(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        final Map<String, String> attributes = request.getRequestObject().getAttributes();
+        final Map<String, String> attributes = request.getAttributes();
         final VerificationSdkInfo sdkVerificationInfo = identityVerificationService.initVerificationSdk(ownerId, attributes);
 
         final DocumentVerificationSdkInitResponse response = new DocumentVerificationSdkInitResponse();
@@ -413,18 +408,18 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessException Thrown when onboarding process is invalid.
      */
     @Transactional
-    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(ObjectRequest<PresenceCheckInitRequest> request,
-                                                      EncryptionContext encryptionContext,
-                                                      PowerAuthApiAuthentication apiAuthentication)
+    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(
+            final PresenceCheckInitRequest request,
+            final EncryptionContext encryptionContext,
+            final PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
         final String operationDescription = "initializing presence check";
         checkApiAuthentication(apiAuthentication, operationDescription);
         checkEncryptionContext(encryptionContext, operationDescription);
-        checkRequestObject(request, operationDescription);
 
         final OwnerId ownerId = PowerAuthUtil.getOwnerId(apiAuthentication);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
@@ -500,21 +495,21 @@ public class IdentityVerificationRestService {
      * @throws OnboardingProcessException Thrown when onboarding process is not found.
      */
     @Transactional
-    public ObjectResponse<OtpVerifyResponse> verifyOtp(ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
-                                                       EncryptionContext encryptionContext)
+    public ObjectResponse<OtpVerifyResponse> verifyOtp(
+            final IdentityVerificationOtpVerifyRequest request,
+            final EncryptionContext encryptionContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
         checkEncryptionContext(encryptionContext, "verifying OTP during identity verification");
-        checkRequestObject(request, "verifying OTP during identity verification");
 
         // Extract user ID from onboarding process for current activation
         final OwnerId ownerId = extractOwnerId(encryptionContext);
-        final String processId = request.getRequestObject().getProcessId();
+        final String processId = request.getProcessId();
 
         logger.debug("Onboarding process will be locked using PESSIMISTIC_WRITE lock, {}", processId);
         onboardingService.verifyProcessIdAndLock(ownerId, processId, OnboardingStatus.VERIFICATION_IN_PROGRESS);
 
-        final String otpCode = request.getRequestObject().getOtpCode();
+        final String otpCode = request.getOtpCode();
         final OtpVerifyResponse otpVerifyResponse = identityVerificationOtpService.verifyOtpCode(processId, ownerId, otpCode);
 
         try {
@@ -639,13 +634,6 @@ public class IdentityVerificationRestService {
     private void checkEncryptionContext(@Nullable EncryptionContext encryptionContext, String description) throws PowerAuthEncryptionException {
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES encryption failed when " + description);
-        }
-    }
-
-    // TODO (racansky, 2026-04-14, #1589) remove when validation of EncryptedRequestBody made implicit
-    private void checkRequestObject(@Nullable ObjectRequest<?> request, String description) throws PowerAuthEncryptionException {
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received when " + description);
         }
     }
 

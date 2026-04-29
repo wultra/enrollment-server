@@ -18,6 +18,7 @@
 package com.wultra.app.onboardingserver.provider.microblink;
 
 import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationProcessingOptions;
+import com.wultra.app.onboardingserver.provider.microblink.model.api.DocumentVerificationUseCaseOptions;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -60,6 +61,11 @@ public class MicroblinkConfigProperties {
      * The {@code options} field used in REST API request body.
      */
     private DocumentVerificationProcessingOptions requestOptions;
+
+    /**
+     * The {@code useCase} field used in REST API request body.
+     */
+    private DocumentVerificationUseCaseOptions requestUseCase;
 
     /**
      * Microblink mobile SDK configuration.
