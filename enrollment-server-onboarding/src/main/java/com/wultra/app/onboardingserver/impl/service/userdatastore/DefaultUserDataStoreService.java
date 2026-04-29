@@ -59,6 +59,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     private static final int MAX_ATTEMPTS = 3;
 
     private static final String DATA_TYPE_CLAIMS = "claims";
+    private static final String ATTRIBUTE_TRUSTED_IMAGE = "trustedImage";
 
     private final UserDataStoreClient userDataStoreClient;
 
@@ -134,7 +135,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             final OnboardingProcessEntity process,
             final Map.Entry<DocumentType,List<DocumentVerificationEntity>> source) {
 
-        return createDocumentRequest(process, source, Map.of("trustedImage", true));
+        return createDocumentRequest(process, source, Map.of(ATTRIBUTE_TRUSTED_IMAGE, true));
     }
 
     private @Nullable DocumentCreateRequest createDocumentRequest(
