@@ -34,7 +34,6 @@ import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequ
 import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
 import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
 import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCreateResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
@@ -52,11 +51,8 @@ import java.util.stream.Collectors;
  * @implSpec Processing {@link ProcessedDocumentDataEntity} which is used by {@link MicroblinkDocumentVerificationProvider} but not by {@link ZenidDocumentVerificationProvider}.
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@RequiredArgsConstructor
 @Slf4j
 class DefaultUserDataStoreService implements UserDataStoreService {
-
-    private static final int MAX_ATTEMPTS = 3;
 
     private static final String DATA_TYPE_CLAIMS = "claims";
     private static final String ATTRIBUTE_TRUSTED_IMAGE = "trustedImage";
@@ -75,10 +71,29 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
     private final ObjectMapper objectMapper;
 
-    private final RetryTemplate retryTemplate = RetryTemplate.builder()
-            .maxAttempts(MAX_ATTEMPTS)
-            .exponentialBackoff(200, 2.0, 2_000)
-            .build();
+    private final RetryTemplate retryTemplate;
+
+    DefaultUserDataStoreService(
+            final UserDataStoreClient userDataStoreClient,
+            final UserDataStoreConfigProperties config,
+            final OnboardingProcessRepository onboardingProcessRepository,
+            final IdentityVerificationRepository identityVerificationRepository,
+            final ProcessedDocumentDataRepository processedDocumentDataRepository,
+            final DocumentVerificationRepository documentVerificationRepository,
+            final ObjectMapper objectMapper) {
+
+        this.userDataStoreClient = userDataStoreClient;
+        this.config = config;
+        this.onboardingProcessRepository = onboardingProcessRepository;
+        this.identityVerificationRepository = identityVerificationRepository;
+        this.processedDocumentDataRepository = processedDocumentDataRepository;
+        this.documentVerificationRepository = documentVerificationRepository;
+        this.objectMapper = objectMapper;
+        this.retryTemplate = RetryTemplate.builder()
+                .maxAttempts(config.getMaxAttempts())
+                .exponentialBackoff(200, 2.0, 2_000)
+                .build();
+    }
 
     @Transactional(readOnly = true)
     @Override
@@ -194,16 +209,17 @@ class DefaultUserDataStoreService implements UserDataStoreService {
     }
 
     Void callCreateDocument(final DocumentCreateRequest request, final RetryContext context) throws UserDataStoreClientException {
+        final int maxAttempts = config.getMaxAttempts();
         final int attempt = context.getRetryCount() + 1;
         logger.info("action: callCreateDocument, state: initiated, userId: {}, externalId: {}, documentType: {}, dataType: {}, attempt {}/{}",
-                request.userId(), request.externalId(), request.documentType(), request.dataType(), attempt, MAX_ATTEMPTS);
+                request.userId(), request.externalId(), request.documentType(), request.dataType(), attempt, maxAttempts);
 
         try {
             final var response = userDataStoreClient.createDocument(request);
             logger.info("action: callCreateDocument, state: succeeded, documentId: {}, photoIds: {}", response.id(), collectPhotoIds(response));
             return null;
         } catch (final UserDataStoreClientException e) {
-            logger.warn("action: callCreateDocument, state: failed, attempt {}/{}, errorMessage: {}", attempt, MAX_ATTEMPTS, e.getMessage(), e);
+            logger.warn("action: callCreateDocument, state: failed, attempt {}/{}, errorMessage: {}", attempt, maxAttempts, e.getMessage(), e);
             throw e;
         }
     }

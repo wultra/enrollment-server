@@ -58,6 +58,11 @@ class UserDataStoreConfigProperties {
     private boolean storeDocumentImageScan;
 
     /**
+     * Maximum number of attempts to store a document via the user data store client.
+     */
+    private int maxAttempts;
+
+    /**
      * Document type filtering.
      */
     enum DocumentType {
