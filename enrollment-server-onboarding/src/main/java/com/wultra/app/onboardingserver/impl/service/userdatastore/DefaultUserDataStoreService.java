@@ -102,7 +102,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
             return List.of();
         }
 
-        final List<DocumentCreateRequest> documentRequests = new ArrayList<>();
+        final var documentRequests = new ArrayList<DocumentCreateRequest>();
         documentRequests.add(createTrustedDocumentRequest(process, documentVerifications.primaryDocuments()));
 
         for (final var entry : documentVerifications.otherDocuments().entrySet()) {
