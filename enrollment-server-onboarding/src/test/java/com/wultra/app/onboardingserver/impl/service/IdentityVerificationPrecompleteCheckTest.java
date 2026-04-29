@@ -378,6 +378,82 @@ class IdentityVerificationPrecompleteCheckTest {
         assertFalse(result.isSuccessful());
     }
 
+    @Test
+    void testEvaluate_approvalAndOtpEnabled_checkPass() throws Exception {
+        final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-approval-branch");
+        idVerification.setActivationId("activation-1");
+        idVerification.setPhase(ONBOARDING_APPROVAL);
+        idVerification.setStatus(ACCEPTED);
+
+        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
+        documentVerification.setStatus(DocumentStatus.ACCEPTED);
+
+        final ScaResultEntity scaResult = new ScaResultEntity();
+        scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
+
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder ->
+                builder.approvalEnabled(true)
+                        .otpForIdentityVerification(true));
+
+        when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
+                .thenReturn(List.of(documentVerification));
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-approval-branch")))
+                .thenReturn(true);
+        when(onboardingProcessRepository.findById("process-approval-branch"))
+                .thenReturn(Optional.of(process));
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-approval-branch", OtpType.USER_VERIFICATION))
+                .thenReturn(Optional.of(createOtp()));
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-approval-branch", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
+        when(activationService.fetchActivationStatus("activation-1"))
+                .thenReturn(ActivationStatus.ACTIVE);
+        when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
+                .thenReturn(Optional.of(scaResult));
+
+        final var result = tested.evaluate(idVerification);
+
+        assertTrue(result.isSuccessful());
+    }
+
+    @Test
+    void testEvaluate_approvalDisabledAndOtpEnabled_checkPass() throws Exception {
+        final IdentityVerificationEntity idVerification = new IdentityVerificationEntity();
+        idVerification.setProcessId("process-otp-branch");
+        idVerification.setActivationId("activation-1");
+        idVerification.setPhase(OTP_VERIFICATION);
+        idVerification.setStatus(VERIFICATION_PENDING);
+
+        final DocumentVerificationEntity documentVerification = new DocumentVerificationEntity();
+        documentVerification.setStatus(DocumentStatus.ACCEPTED);
+
+        final ScaResultEntity scaResult = new ScaResultEntity();
+        scaResult.setScaResult(ScaResultEntity.Result.SUCCESS);
+
+        final OnboardingProcessEntity process = createProcessWithConfiguration(builder ->
+                builder.approvalEnabled(false)
+                        .otpForIdentityVerification(true));
+
+        when(documentVerificationRepository.findAllDocumentVerifications(idVerification, DocumentStatus.ALL_PROCESSED))
+                .thenReturn(List.of(documentVerification));
+        when(requiredDocumentTypesCheck.evaluate(any(), eq("process-otp-branch")))
+                .thenReturn(true);
+        when(onboardingProcessRepository.findById("process-otp-branch"))
+                .thenReturn(Optional.of(process));
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-otp-branch", OtpType.USER_VERIFICATION))
+                .thenReturn(Optional.of(createOtp()));
+        when(onboardingOtpRepository.findNewestByProcessIdAndType("process-otp-branch", OtpType.ACTIVATION))
+                .thenReturn(Optional.of(createOtp()));
+        when(activationService.fetchActivationStatus("activation-1"))
+                .thenReturn(ActivationStatus.ACTIVE);
+        when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(idVerification))
+                .thenReturn(Optional.of(scaResult));
+
+        final var result = tested.evaluate(idVerification);
+
+        assertTrue(result.isSuccessful());
+    }
+
     private static OnboardingOtpEntity createOtp() {
         final OnboardingOtpEntity otp = new OnboardingOtpEntity();
         otp.setStatus(OtpStatus.VERIFIED);
