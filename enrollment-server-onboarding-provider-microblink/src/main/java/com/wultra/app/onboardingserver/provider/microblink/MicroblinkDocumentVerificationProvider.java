@@ -796,12 +796,11 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .map(String::toLowerCase)
                 .orElse(null);
 
-        final var dateOfBirthResult = documentExtractedData.stream()
+        final var dateOfBirth = documentExtractedData.stream()
                 .filter(r -> "DateOfBirth".equals(r.field()))
                 .findFirst()
+                .map(MicroblinkDocumentVerificationProvider::parseDate)
                 .orElse(null);
-
-        final var dateOfBirth = parseDate(dateOfBirthResult);
 
         return DocumentCrosscheckData.builder()
                 .firstName(firstName)
@@ -812,7 +811,9 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
     private static LocalDate parseDate(final DocumentVerificationResponse.Result result) {
         try {
-            return LocalDate.of(result.year(), result.month(), result.day());
+            return Optional.ofNullable(result)
+                    .map(it -> LocalDate.of(it.year(), it.month(), it.day()))
+                    .orElse(null);
         } catch (final RuntimeException e) {
             logger.warn("Exception when parsing date", e);
             return null;
