@@ -15,23 +15,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
-import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * Empty implementation {@link UserDataStoreService}.
+ * Configuration for User Data Store when integration is disabled.
  *
- * @author Lubos Racansky, lubos.racansky@wultra.com
+ * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
+@Configuration
 @Slf4j
-class NoOpUserDataStoreService implements UserDataStoreService {
+class UserDataStoreNoOpConfig {
 
-    @Override
-    public void storeDocumentData(final List<DocumentCreateRequest> documentRequests) {
-        logger.info("action: storeDocumentData, state: skipped");
+    @ConditionalOnMissingBean(UserDataStoreService.class)
+    @Bean
+    public UserDataStoreService userDataStoreService() {
+        logger.info("Initializing NoOpUserDataStoreService.");
+        return new NoOpUserDataStoreService();
     }
 }
+
