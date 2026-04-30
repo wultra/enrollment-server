@@ -59,7 +59,6 @@ public class OnboardingCompletedAcceptedListener {
             logger.info("action: onOnboardingCompletedAccepted, state: succeeded, storedDocumentCount: {}", documentData.size());
         } catch (final UserDataStoreClientException | RuntimeException e) {
             logger.warn("action: onOnboardingCompletedAccepted, state: failed", e);
-            logger.info("action: onOnboardingCompletedAccepted, state: failed, errorMessage: {}", e.getMessage());
         }
     }
 }
