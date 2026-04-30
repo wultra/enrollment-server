@@ -40,7 +40,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -48,21 +47,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -473,7 +466,6 @@ class DefaultUserDataStoreServiceTest {
             classes = EnrollmentServerTestApplication.class,
             properties = {
                     "enrollment-server-onboarding.user-data-store.enabled=true",
-                    "enrollment-server-onboarding.user-data-store.rest-client-config.base-url=http://localhost:18089/user-data-store",
                     "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-enabled=true",
                     "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-username=user",
                     "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-password=password"
@@ -481,26 +473,33 @@ class DefaultUserDataStoreServiceTest {
     )
     @ActiveProfiles("test")
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class ClientTest {
 
         private static final String DOCUMENT_DATA = """
                 {"surname":"Doe","givenNames":"John","dateOfBirth":"1997-06-14","placeOfBirth":"Ostrava","sex":"M","nationality":"Czech","personalNumber":"123456789","documentNumber":"AB123456","dateOfIssue":"2019-12-27","dateOfExpiry":"2029-11-30","authority":"City Hall","country":"CZE"}""";
 
+        private static MockWebServer mockWebServer;
+
         @Autowired
         private UserDataStoreService tested;
 
-        private MockWebServer mockWebServer;
-
         @BeforeAll
-        void beforeAll() throws Exception {
+        static void beforeAll() throws Exception {
             mockWebServer = new MockWebServer();
-            mockWebServer.start(18089);
+            mockWebServer.start(0);
         }
 
         @AfterAll
-        void afterAll() throws Exception {
+        static void afterAll() throws Exception {
             mockWebServer.shutdown();
+        }
+
+        @DynamicPropertySource
+        static void dynamicProperties(final DynamicPropertyRegistry registry) {
+            registry.add(
+                    "enrollment-server-onboarding.user-data-store.rest-client-config.base-url",
+                    () -> "http://localhost:" + mockWebServer.getPort() + "/user-data-store"
+            );
         }
 
         @Test
