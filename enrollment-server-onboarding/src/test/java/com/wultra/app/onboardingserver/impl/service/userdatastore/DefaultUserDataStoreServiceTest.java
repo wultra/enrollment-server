@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.impl.service.userdatastore;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
+import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
@@ -28,24 +29,33 @@ import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
+import com.wultra.security.userdatastore.client.model.request.EmbeddedPhotoCreateRequest;
 import com.wultra.security.userdatastore.client.model.response.DocumentCreateResponse;
+import okhttp3.Credentials;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.json.JSONException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -451,4 +461,144 @@ class DefaultUserDataStoreServiceTest {
             assertEquals(Boolean.TRUE, result.get(0).attributes().get("trustedImage"));
         }
     }
+
+    @SpringBootTest(
+            classes = EnrollmentServerTestApplication.class,
+            properties = {
+                    "enrollment-server-onboarding.user-data-store.enabled=true",
+                    "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-enabled=true",
+                    "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-username=user",
+                    "enrollment-server-onboarding.user-data-store.rest-client-config.http-basic-auth-password=password"
+            }
+    )
+    @ActiveProfiles("test")
+    @Nested
+    class ClientTest {
+
+        private static final String DOCUMENT_DATA = """
+                {"surname":"Doe","givenNames":"John","dateOfBirth":"1997-06-14","placeOfBirth":"Ostrava","sex":"M","nationality":"Czech","personalNumber":"123456789","documentNumber":"AB123456","dateOfIssue":"2019-12-27","dateOfExpiry":"2029-11-30","authority":"City Hall","country":"CZE"}""";
+
+        private static MockWebServer mockWebServer;
+
+        @Autowired
+        private UserDataStoreService tested;
+
+        @BeforeAll
+        static void beforeAll() throws Exception {
+            mockWebServer = new MockWebServer();
+            mockWebServer.start(0);
+        }
+
+        @AfterAll
+        static void afterAll() throws Exception {
+            mockWebServer.shutdown();
+        }
+
+        @DynamicPropertySource
+        static void dynamicProperties(final DynamicPropertyRegistry registry) {
+            registry.add(
+                    "enrollment-server-onboarding.user-data-store.rest-client-config.base-url",
+                    () -> "http://localhost:" + mockWebServer.getPort() + "/user-data-store"
+            );
+        }
+
+        @Test
+        void testStoreDocumentData_correctHttpRequest() throws Exception {
+            final var request = buildRequest();
+            mockWebServer.enqueue(buildResponse());
+
+            tested.storeDocumentData(List.of(request));
+
+            final var recordedRequest = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
+            assertRecordedRequest(recordedRequest);
+        }
+
+        private DocumentCreateRequest buildRequest() {
+            return DocumentCreateRequest.builder()
+                    .userId("admin")
+                    .documentType("personal_id")
+                    .dataType("claims")
+                    .externalId("test-process-1")
+                    .documentData(DOCUMENT_DATA)
+                    .attributes(Map.of("trustedImage", true))
+                    .photos(List.of(
+                            EmbeddedPhotoCreateRequest.builder()
+                                    .photoType("person")
+                                    .photoData("ZmFjZVBob3Rv")
+                                    .externalId("1")
+                                    .build(),
+                            EmbeddedPhotoCreateRequest.builder()
+                                    .photoType("document_front_side")
+                                    .photoData("aWRDYXJkRnJvbnQ=")
+                                    .externalId("2")
+                                    .build(),
+                            EmbeddedPhotoCreateRequest.builder()
+                                    .photoType("document_back_side")
+                                    .photoData("aWRDYXJkQmFjaw==")
+                                    .externalId("3")
+                                    .build()
+                    ))
+                    .build();
+        }
+
+        private MockResponse buildResponse() {
+            return new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("""
+                            {
+                                "status": "OK",
+                                "responseObject": {
+                                    "id": "16f63774-2c6d-4827-be4b-7b8cc066d971",
+                                    "documentDataId": null,
+                                    "photos": [
+                                        {
+                                            "id": "22f2ac50-1caa-433b-8f20-692089dcec42"
+                                        },
+                                        {
+                                            "id": "d065a2f2-fc3d-4476-b960-85e58ab8a3f4"
+                                        },
+                                        {
+                                            "id": "d334f7b1-2a50-4ab3-8558-22fc7f0a6c29"
+                                        }
+                                    ],
+                                    "attachments": []
+                                }
+                            }""");
+        }
+
+        private void assertRecordedRequest(final RecordedRequest recordedRequest) throws JSONException {
+            assertNotNull(recordedRequest);
+            assertEquals("POST", recordedRequest.getMethod());
+
+            final var expectedAuth = Credentials.basic("user", "password", StandardCharsets.UTF_8);
+            final var actualAuth = recordedRequest.getHeader("Authorization");
+            assertEquals(expectedAuth, actualAuth);
+
+            final var body = recordedRequest.getBody().readUtf8();
+            JSONAssert.assertEquals(buildExpectedRequestBody(), body, false);
+        }
+
+        private String buildExpectedRequestBody() {
+            return """
+                {
+                    "requestObject": {
+                      "userId": "admin",
+                      "documentType": "personal_id",
+                      "dataType": "claims",
+                      "externalId": "test-process-1",
+                      "documentData": "%s",
+                      "attributes": {
+                        "trustedImage": true
+                      },
+                      "photos": [
+                        { "photoType": "person", "externalId": "1", "photoData": "ZmFjZVBob3Rv" },
+                        { "photoType": "document_front_side", "externalId": "2", "photoData": "aWRDYXJkRnJvbnQ=" },
+                        { "photoType": "document_back_side", "externalId": "3", "photoData": "aWRDYXJkQmFjaw==" }
+                      ]
+                    }
+                }""".formatted(DOCUMENT_DATA.replace("\"", "\\\""));
+        }
+    }
+
 }
