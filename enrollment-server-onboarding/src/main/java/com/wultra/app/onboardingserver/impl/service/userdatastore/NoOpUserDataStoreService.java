@@ -19,8 +19,6 @@ package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -29,8 +27,6 @@ import java.util.List;
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@ConditionalOnMissingBean(UserDataStoreService.class)
-@Service
 @Slf4j
 class NoOpUserDataStoreService implements UserDataStoreService {
 

@@ -27,6 +27,8 @@ import com.wultra.security.userdatastore.UserDataStoreRestClient;
 import com.wultra.security.userdatastore.client.UserDataStoreClient;
 import com.wultra.security.userdatastore.client.model.error.UserDataStoreClientException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,31 +39,45 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
 @Configuration
-@EnableConfigurationProperties(UserDataStoreConfigProperties.class)
 @Slf4j
 class UserDataStoreConfig {
 
-    @Bean
-    public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigProperties config) throws UserDataStoreClientException {
-        final var clientConfig = config.getRestClientConfig();
+    /**
+     * Configuration when User Data Store is enabled.
+     */
+    @Configuration
+    @ConditionalOnProperty(name = "enrollment-server-onboarding.user-data-store.enabled", havingValue = "true")
+    @EnableConfigurationProperties(UserDataStoreConfigProperties.class)
+    static class EnabledConfig {
 
-        logger.info("Registering UserDataStore client with url: {}", clientConfig.getBaseUrl());
-        return new UserDataStoreRestClient(clientConfig);
+        @Bean
+        public UserDataStoreClient userDataStoreClient(final UserDataStoreConfigProperties config) throws UserDataStoreClientException {
+            final var clientConfig = config.getRestClientConfig();
+
+            logger.info("Registering UserDataStore client with url: {}", clientConfig.getBaseUrl());
+            return new UserDataStoreRestClient(clientConfig);
+        }
+
+        @Bean
+        public UserDataStoreService userDataStoreService(
+                final UserDataStoreClient client,
+                final UserDataStoreConfigProperties config,
+                final OnboardingProcessRepository onboardingProcessRepository,
+                final IdentityVerificationRepository identityVerificationRepository,
+                final ProcessedDocumentDataRepository processedDocumentDataRepository,
+                final DocumentVerificationRepository documentVerificationRepository,
+                final ObjectMapper objectMapper) {
+
+            logger.info("Initializing DefaultUserDataStoreService.");
+            return new DefaultUserDataStoreService(client, config, onboardingProcessRepository, identityVerificationRepository, processedDocumentDataRepository, documentVerificationRepository, objectMapper);
+        }
     }
 
+    @ConditionalOnMissingBean(UserDataStoreService.class)
     @Bean
-    public UserDataStoreService userDataStoreService(
-            final UserDataStoreClient client,
-            final UserDataStoreConfigProperties config,
-            final OnboardingProcessRepository onboardingProcessRepository,
-            final IdentityVerificationRepository identityVerificationRepository,
-            final ProcessedDocumentDataRepository processedDocumentDataRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final ObjectMapper objectMapper) {
-
-        logger.info("Initializing DefaultUserDataStoreService.");
-        return new DefaultUserDataStoreService(client, config, onboardingProcessRepository, identityVerificationRepository, processedDocumentDataRepository, documentVerificationRepository, objectMapper);
+    public UserDataStoreService noOpUserDataStoreService() {
+        logger.info("Initializing NoOpUserDataStoreService.");
+        return new NoOpUserDataStoreService();
     }
 }
