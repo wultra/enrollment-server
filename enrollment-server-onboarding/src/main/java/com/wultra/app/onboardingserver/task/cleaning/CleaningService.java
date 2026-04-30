@@ -163,6 +163,16 @@ class CleaningService {
     }
 
     /**
+     * Clean personal data from document results.
+     *
+     * @return Number of document result records with cleaned personal data.
+     */
+    @Transactional
+    public int cleanupDocumentResultPersonalData() {
+        return documentResultRepository.cleanPersonalData(getPersonalDataRetentionTime());
+    }
+
+    /**
      * Terminate expired document verifications.
      */
     @Transactional
@@ -201,7 +211,8 @@ class CleaningService {
 
     private Date getPersonalDataRetentionTime() {
         final var processExpirationTime = onboardingConfig.getProcessExpirationTime();
-        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime();
+        final var dataRetentionTime = identityVerificationConfig.getDataRetentionTime()
+                .orElseThrow(() -> new IllegalStateException("Property 'dataRetentionTime' is not set"));
         return DateUtil.convertExpirationToCreatedDate(processExpirationTime.plus(dataRetentionTime));
     }
 
@@ -255,7 +266,6 @@ class CleaningService {
 
     private void terminateAndAuditDocuments(final List<String> documentVerificationIds, final Date now, final String errorDetail, final ErrorOrigin errorOrigin) {
         documentVerificationRepository.terminate(documentVerificationIds, now, errorDetail, errorOrigin);
-        documentResultRepository.clean(documentVerificationIds);
 
         final var documentVerifications = documentVerificationRepository.findAllById(documentVerificationIds);
         for (final var documentVerification : documentVerifications) {

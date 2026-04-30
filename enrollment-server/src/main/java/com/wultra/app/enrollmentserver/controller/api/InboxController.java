@@ -39,6 +39,7 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenticationException;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -50,7 +51,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 
 import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
-import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller with facade for Inbox services in Push server.
@@ -123,13 +123,17 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
-    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(@RequestBody ObjectRequest<GetInboxDetailRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+    public ObjectResponse<GetInboxDetailResponse> fetchMessageDetail(
+            @Valid @RequestBody final ObjectRequest<GetInboxDetailRequest> objectRequest,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+
+        final GetInboxDetailRequest request = objectRequest.getRequestObject();
         logger.info("action: fetchMessageDetail, state: initiated, activationId: {}, messageId: {}",
-                extractActivationId(apiAuthentication), extractRequest(objectRequest).map(GetInboxDetailRequest::getId).orElse(null));
+                extractActivationId(apiAuthentication), request.getId());
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
-        final GetInboxDetailRequest request = objectRequest.getRequestObject();
+
         try {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
             logger.info("action: fetchMessageDetail, state: succeeded");
@@ -147,13 +151,17 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_BIOMETRY,
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
-    public Response readMessage(@RequestBody ObjectRequest<InboxReadRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+    public Response readMessage(
+            @Valid @RequestBody final ObjectRequest<InboxReadRequest> objectRequest,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
+
+        final InboxReadRequest request = objectRequest.getRequestObject();
         logger.info("action: readMessage, state: initiated, activationId: {}, messageId: {}",
-                extractActivationId(apiAuthentication), extractRequest(objectRequest).map(InboxReadRequest::getId).orElse(null));
+                extractActivationId(apiAuthentication), request.getId());
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
-        final InboxReadRequest request = objectRequest.getRequestObject();
+
         try {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
             if (!messageDetail.isRead()) {

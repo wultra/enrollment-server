@@ -37,7 +37,6 @@ import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
-import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.core.rest.model.base.response.Response;
 import com.wultra.security.powerauth.client.model.enumeration.ActivationStatus;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
@@ -122,7 +121,7 @@ class IdentityVerificationRestServiceTest {
     @Test
     void testSubmitDocuments_validRequest_identityVerificationServiceCalled() throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException, DocumentVerificationException {
         // given
-        final var requestObject = buildRequestObject();
+        final var request = buildRequest();
         final var encryptionContext = new EncryptionContext(null, ACTIVATION_ID, null, null, null);
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
 
@@ -143,7 +142,7 @@ class IdentityVerificationRestServiceTest {
         when(dataExtractionService.extractDocuments(new byte[] { 1, 2 })).thenReturn(List.of(extractedIdCardFront, extractedIdCardBack));
 
         // when
-        tested.submitDocuments(requestObject, encryptionContext, apiAuthentication);
+        tested.submitDocuments(request, encryptionContext, apiAuthentication);
 
         // then
         final var expectedRequest = buildDocumentSubmitV2Request();
@@ -236,7 +235,7 @@ class IdentityVerificationRestServiceTest {
         ));
     }
 
-    private static ObjectRequest<DocumentSubmitRequest> buildRequestObject() {
+    private static DocumentSubmitRequest buildRequest() {
         final var idCardFrontMetadata = new DocumentSubmitRequest.DocumentMetadata();
         idCardFrontMetadata.setOriginalDocumentId(ID_CARD_FRONT_ORIGINAL_ID);
         idCardFrontMetadata.setType(DocumentType.ID_CARD);
@@ -255,7 +254,7 @@ class IdentityVerificationRestServiceTest {
         request.setDocuments(List.of(idCardFrontMetadata, idCardBackMetadata));
         request.setData(new byte[] { 1, 2 });
 
-        return new ObjectRequest<>(request);
+        return request;
     }
 
     private static DocumentSubmitV2Request buildDocumentSubmitV2Request() {

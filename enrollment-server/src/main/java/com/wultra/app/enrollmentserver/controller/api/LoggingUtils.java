@@ -17,7 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.controller.api;
 
-import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import org.jspecify.annotations.Nullable;
@@ -36,24 +35,11 @@ final class LoggingUtils {
     }
 
     /**
-     * Extract request object from request.
-     *
-     * @param request request
-     * @return request object as optional
-     * @param <T> request type
-     */
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of encryptionContext made implicit
-    public static <T> Optional<T> extractRequest(final ObjectRequest<T> request) {
-        return Optional.ofNullable(request).map(ObjectRequest::getRequestObject);
-    }
-
-    /**
      * Extract activation ID from authentication.
      *
      * @param apiAuthentication authentication
      * @return activation ID or {@code null} if not available
      */
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
     public static @Nullable String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
         return Optional.ofNullable(apiAuthentication)
                 .map(PowerAuthApiAuthentication::getActivationContext)

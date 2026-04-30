@@ -37,10 +37,6 @@ ALTER TABLE es_document_data DROP COLUMN identity_verification_id;
 ALTER TABLE es_document_data DROP COLUMN filename;
 
 -- Changeset enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml::6::Michal Rozehnal
--- Add index for table es_document_data column timestamp_created
-CREATE INDEX es_document_data_timestamp_created_idx ON es_document_data(timestamp_created);
-
--- Changeset enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml::7::Michal Rozehnal
 -- Add index for table es_document_verification column upload_id
 CREATE INDEX es_document_verification_upload_id_idx ON es_document_verification(upload_id);
 
@@ -126,3 +122,15 @@ ALTER TABLE audit_log ADD subject_id VARCHAR(256);
 -- Changeset enrollment-server-onboarding/2.1.x/20260330-audit-subject-id.xml::2::Pavel Sindelar
 -- Create a new index on audit_log(subject_id)
 CREATE INDEX audit_log_subject_id_idx ON audit_log(subject_id);
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::1::Michal Rozehnal
+-- Add column anonymized into table es_document_result
+ALTER TABLE es_document_result ADD anonymized BOOLEAN DEFAULT TRUE NOT NULL;
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::2::Michal Rozehanal
+-- Change default value of es_document_result.anonymized to false
+ALTER TABLE es_document_result ALTER COLUMN  anonymized SET DEFAULT FALSE;
+
+-- Changeset enrollment-server-onboarding/2.1.x/20260423-document-result-anonymized-column.xml::3::Michal Rozehnal
+-- Add index on anonymized column in es_document_result table
+CREATE INDEX es_document_result_anonymized_idx ON es_document_result(anonymized);

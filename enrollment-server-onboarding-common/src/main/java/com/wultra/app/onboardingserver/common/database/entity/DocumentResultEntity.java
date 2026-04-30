@@ -112,6 +112,12 @@ public class DocumentResultEntity implements Serializable {
     @Column(name = "timestamp_created", nullable = false)
     private Date timestampCreated;
 
+    /**
+     * Whether the personal data was cleaned up.
+     */
+    @Column(name = "anonymized", nullable = false)
+    private boolean anonymized;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

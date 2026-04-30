@@ -4,5 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <include file="20260330-audit-subject-id.xml" relativeToChangelogFile="true" />
+    <include file="20260423-document-result-anonymized-column.xml" relativeToChangelogFile="true" />
+    <include file="20260424-add-tag-2.1.0.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

@@ -35,7 +35,6 @@ import com.wultra.security.powerauth.rest.api.spring.annotation.EncryptedRequest
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuth;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthEncryption;
 import com.wultra.security.powerauth.rest.api.spring.annotation.PowerAuthToken;
-import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthActivation;
 import com.wultra.security.powerauth.rest.api.spring.authentication.PowerAuthApiAuthentication;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionContext;
 import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
@@ -59,8 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivation;
-import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
+import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractActivationId;
 
 /**
  * Controller publishing REST services for identity document verification.
@@ -124,7 +122,7 @@ public class IdentityVerificationController {
             final @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, RemoteCommunicationException, OnboardingProcessException {
 
-        logger.info("action: checkIdentityVerificationStatus, state: initiated, activationId: {}", extractActivation(apiAuthentication).map(PowerAuthActivation::getActivationId).orElse(null));
+        logger.info("action: checkIdentityVerificationStatus, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
         final var response = identityVerificationRestService.checkIdentityVerificationStatus(request.getRequestObject(), apiAuthentication);
         logger.info("action: checkIdentityVerificationStatus, state: succeeded, phase: {}, status: {}",
                 response.getResponseObject().getIdentityVerificationPhase(), response.getResponseObject().getIdentityVerificationStatus());
@@ -155,13 +153,15 @@ public class IdentityVerificationController {
     @PowerAuthToken(authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
-    public Response submitDocuments(@EncryptedRequestBody ObjectRequest<DocumentSubmitRequest> request,
-                                                                  @Parameter(hidden = true) EncryptionContext encryptionContext,
-                                                                  @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+    public Response submitDocuments(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<DocumentSubmitRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, PowerAuthEncryptionException, DocumentSubmitException, OnboardingProcessException, IdentityVerificationLimitException, RemoteCommunicationException, IdentityVerificationException, OnboardingProcessLimitException {
 
-        logger.info("action: submitDocuments, state: initiated, processId: {}", extractRequest(request).map(DocumentSubmitRequest::getProcessId).orElse(null));
-        final Response response = identityVerificationRestService.submitDocuments(request, encryptionContext, apiAuthentication);
+        final DocumentSubmitRequest requestObject = request.getRequestObject();
+        logger.info("action: submitDocuments, state: initiated, processId: {}", requestObject.getProcessId());
+        final Response response = identityVerificationRestService.submitDocuments(requestObject, encryptionContext, apiAuthentication);
         logger.info("action: submitDocuments, state: succeeded");
         return response;
     }
@@ -218,13 +218,14 @@ public class IdentityVerificationController {
             PowerAuthCodeType.POSSESSION
     })
     public ObjectResponse<DocumentVerificationSdkInitResponse> initVerificationSdk(
-            @EncryptedRequestBody ObjectRequest<DocumentVerificationSdkInitRequest> request,
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<DocumentVerificationSdkInitRequest> request,
             @Parameter(hidden = true) EncryptionContext encryptionContext,
             @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
             throws PowerAuthAuthenticationException, DocumentVerificationException, PowerAuthEncryptionException, OnboardingProcessException, RemoteCommunicationException {
 
-        logger.info("action: initVerificationSdk, state: initiated, processId: {}", extractRequest(request).map(DocumentVerificationSdkInitRequest::getProcessId).orElse(null));
-        final var response = identityVerificationRestService.initVerificationSdk(request, encryptionContext, apiAuthentication);
+        final DocumentVerificationSdkInitRequest requestObject = request.getRequestObject();
+        logger.info("action: initVerificationSdk, state: initiated, processId: {}", requestObject.getProcessId());
+        final var response = identityVerificationRestService.initVerificationSdk(requestObject, encryptionContext, apiAuthentication);
         logger.info("action: initVerificationSdk, state: succeeded");
         return response;
     }
@@ -246,13 +247,15 @@ public class IdentityVerificationController {
     @PowerAuth(resourceId = "/api/identity/presence-check/init", authenticationCodeType = {
             PowerAuthCodeType.POSSESSION
     })
-    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(@EncryptedRequestBody ObjectRequest<PresenceCheckInitRequest> request,
-                                                      @Parameter(hidden = true) EncryptionContext encryptionContext,
-                                                      @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication)
+    public ResponseEntity<ObjectResponse<PresenceCheckInitResponse>> initPresenceCheck(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<PresenceCheckInitRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication)
             throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, OnboardingProcessException {
 
-        logger.info("action: initPresenceCheck, state: initiated, processId: {}", extractRequest(request).map(PresenceCheckInitRequest::getProcessId).orElse(null));
-        final var response = identityVerificationRestService.initPresenceCheck(request, encryptionContext, apiAuthentication);
+        final PresenceCheckInitRequest requestObject = request.getRequestObject();
+        logger.info("action: initPresenceCheck, state: initiated, processId: {}", requestObject.getProcessId());
+        final var response = identityVerificationRestService.initPresenceCheck(requestObject, encryptionContext, apiAuthentication);
         logger.info("action: initPresenceCheck, state: succeeded");
         return response;
     }
@@ -312,12 +315,14 @@ public class IdentityVerificationController {
      */
     @PostMapping("otp/verify")
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
-    public ObjectResponse<OtpVerifyResponse> verifyOtp(@EncryptedRequestBody ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
-                                                       @Parameter(hidden = true) EncryptionContext encryptionContext)
+    public ObjectResponse<OtpVerifyResponse> verifyOtp(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<IdentityVerificationOtpVerifyRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext)
             throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        logger.info("action: verifyOtp, state: initiated, processId: {}", extractRequest(request).map(IdentityVerificationOtpVerifyRequest::getProcessId).orElse(null));
-        final var response = identityVerificationRestService.verifyOtp(request, encryptionContext);
+        final IdentityVerificationOtpVerifyRequest requestObject = request.getRequestObject();
+        logger.info("action: verifyOtp, state: initiated, processId: {}", requestObject.getProcessId());
+        final var response = identityVerificationRestService.verifyOtp(requestObject, encryptionContext);
         logger.info("action: verifyOtp, state: succeeded");
         return response;
     }
@@ -419,11 +424,12 @@ public class IdentityVerificationController {
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuthToken(authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public ObjectResponse<CreateTargetActivationResponse> createTargetActivation(
-            final @EncryptedRequestBody @Valid ObjectRequest<CreateTargetActivationRequest> request,
-            final @Parameter(hidden = true) @NotNull PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, RemoteCommunicationException {
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<CreateTargetActivationRequest> request,
+            @Parameter(hidden = true) @NotNull final PowerAuthApiAuthentication apiAuthentication) throws OnboardingProcessException, RemoteCommunicationException {
 
-        logger.info("action: createTargetActivation, state: initiated, processId: {}", request.getRequestObject().processId());
-        final CreateTargetActivationResponse response = identityVerificationTargetActivationService.createTargetActivation(request.getRequestObject(), apiAuthentication);
+        final CreateTargetActivationRequest requestObject = request.getRequestObject();
+        logger.info("action: createTargetActivation, state: initiated, processId: {}", requestObject.processId());
+        final CreateTargetActivationResponse response = identityVerificationTargetActivationService.createTargetActivation(requestObject, apiAuthentication);
         logger.info("action: createTargetActivation, state: succeeded");
 
         return new ObjectResponse<>(response);

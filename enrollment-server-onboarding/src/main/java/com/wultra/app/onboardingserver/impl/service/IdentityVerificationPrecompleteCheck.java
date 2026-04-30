@@ -234,12 +234,12 @@ class IdentityVerificationPrecompleteCheck {
 
         } else {
 
-            if (verificationOtpEnabled) {
-                return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING);
-            }
-
             if (approvalEnabled) {
                 return (phase == ONBOARDING_APPROVAL && status == ACCEPTED);
+            }
+
+            if (verificationOtpEnabled) {
+                return (phase == OTP_VERIFICATION && status == VERIFICATION_PENDING);
             }
 
             if (identityVerificationConfig.isPresenceCheckEnabled()) {
