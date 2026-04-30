@@ -59,7 +59,6 @@ class UserDataStoreConfig {
             return new UserDataStoreRestClient(clientConfig);
         }
 
-        @ConditionalOnBean(UserDataStoreClient.class)
         @Bean
         public UserDataStoreService userDataStoreService(
                 final UserDataStoreClient client,
