@@ -193,7 +193,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
                 OnboardingState.CLIENT_EVALUATION_IN_PROGRESS,
                 OnboardingState.CLIENT_EVALUATION_REJECTED,
                 OnboardingState.CLIENT_EVALUATION_FAILED,
-                OnboardingState.COMPLETED_ACCEPTED,
                 OnboardingState.COMPLETED_FAILED);
 
         for (final OnboardingState state : states) {
@@ -221,7 +220,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
     }
 
     private void registerPublishEventFunction(final StateConfigurer<OnboardingState, OnboardingEvent> configurer) {
-        configurer.stateEntryFunction(OnboardingState.COMPLETED_ACCEPTED, publishCompletedAcceptedEvent());
+        // For COMPLETED_ACCEPTED we have to combine the persist and publish entry functions into a single
+        // entry function. Spring State Machine only keeps the last function registered via stateEntryFunction()
+        // for a given state, so registering them separately would cause one of them to be silently dropped.
+        final var persist = persistState(OnboardingState.COMPLETED_ACCEPTED);
+        final var publish = publishCompletedAcceptedEvent();
+        configurer.stateEntryFunction(
+                OnboardingState.COMPLETED_ACCEPTED,
+                context -> persist.apply(context).then(publish.apply(context)));
     }
 
     private Function<StateContext<OnboardingState, OnboardingEvent>, Mono<Void>> publishCompletedAcceptedEvent() {

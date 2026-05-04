@@ -22,13 +22,12 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
 import com.wultra.app.onboardingserver.impl.service.userdatastore.UserDataStoreService;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,17 +73,15 @@ class OnboardingCompletedAcceptedListenerIntTest {
     private IdentityVerificationService identityVerificationService;
 
     @MockitoBean
-    private TargetActivationFinishedGuard targetActivationFinishedGuard;
+    private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     @MockitoBean
-    private VerificationProcessResultAction verificationProcessResultAction;
+    private VerificationResultService verificationResultService;
 
     @MockitoBean
     private UserDataStoreService userDataStoreService;
 
     @Test
-    // TODO (racansky, 2026-05-04 need to be fixed after refactoring of state machine service and guards
-    @Disabled("need to be fixed after refactoring of state machine service and guards")
     void testOnOnboardingCompletedAccepted_eventIsAccepted() throws Exception {
         // given
         final var ownerId = createOwnerId();
@@ -92,7 +89,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
 
         final ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor =
@@ -119,7 +118,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
 
         final var transactionTemplate = new TransactionTemplate(transactionManager);
 
@@ -134,8 +135,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
     }
 
     @Test
-    // TODO (racansky, 2026-05-04 need to be fixed after refactoring of state machine service and guards
-    @Disabled("need to be fixed after refactoring of state machine service and guards")
     void testOnOnboardingCompletedAccepted_userDataIsStored() throws Exception {
         // given
         final var ownerId = createOwnerId();
@@ -144,7 +143,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(documentCreateRequests);
 
         // when
