@@ -27,7 +27,6 @@ import com.wultra.app.onboardingserver.impl.service.userdatastore.UserDataStoreS
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import org.junit.jupiter.api.Test;
@@ -81,9 +80,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
     private VerificationProcessResultAction verificationProcessResultAction;
 
     @MockitoBean
-    private StatusAcceptedGuard statusAcceptedGuard;
-
-    @MockitoBean
     private UserDataStoreService userDataStoreService;
 
     @Test
@@ -95,7 +91,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
 
         final ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor =
@@ -123,7 +118,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
 
         final var transactionTemplate = new TransactionTemplate(transactionManager);
 
@@ -147,7 +141,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(documentCreateRequests);
 
         // when
