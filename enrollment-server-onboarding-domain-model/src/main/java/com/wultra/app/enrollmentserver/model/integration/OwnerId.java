@@ -23,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ import java.util.Date;
  */
 @Data
 @ToString(of = {"activationId", "userId"})
+@Slf4j
 public class OwnerId {
 
     /**
@@ -88,6 +90,7 @@ public class OwnerId {
         try {
             return Hash.sha256(source);
         } catch (CryptoProviderException e) {
+            logger.error("Failed to compute SHA-256 hash", e);
             throw new IllegalStateException("Failed to compute SHA-256 hash", e);
         }
     }
