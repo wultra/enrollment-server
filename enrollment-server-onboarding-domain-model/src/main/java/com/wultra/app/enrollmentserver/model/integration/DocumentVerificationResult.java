@@ -17,21 +17,15 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * Result of verification of a single identity-related document.
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-// TODO (michal-rozehnal-w, 2026-04-15, #1712) Use only builder for creating instances
-@Data
+@Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class DocumentVerificationResult {
 
     private String uploadId;
