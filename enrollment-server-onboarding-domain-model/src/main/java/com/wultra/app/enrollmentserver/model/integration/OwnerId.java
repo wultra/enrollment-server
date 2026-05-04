@@ -88,7 +88,7 @@ public class OwnerId {
         try {
             return Hash.sha256(source);
         } catch (CryptoProviderException e) {
-            throw new IllegalStateException("sha256 is not supported", e);
+            throw new IllegalStateException("Failed to compute SHA-256 hash", e);
         }
     }
 }
