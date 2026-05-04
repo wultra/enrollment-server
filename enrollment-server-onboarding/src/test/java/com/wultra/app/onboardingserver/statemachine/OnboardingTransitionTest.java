@@ -31,6 +31,7 @@ import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationRe
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import com.wultra.app.onboardingserver.statemachine.guard.ConsentResolvedGuard;
 import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -63,6 +64,9 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @MockitoBean
     private ProcessIdentifierGuard processIdentifierGuard;
+
+    @MockitoBean
+    private ConsentResolvedGuard consentResolvedGuard;
 
     @MockitoBean
     private IdentityVerificationService identityVerificationService;
@@ -109,6 +113,8 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
     @Test
     void testInitialToDocumentUploaded() throws Exception {
         when(processIdentifierGuard.evaluate(any()))
+                .thenReturn(true);
+        when(consentResolvedGuard.evaluate(any()))
                 .thenReturn(true);
 
         final List<OnboardingState> visitedStates = new LinkedList<>();
