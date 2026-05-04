@@ -17,6 +17,7 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
+import com.wultra.security.powerauth.crypto.lib.model.exception.CryptoProviderException;
 import com.wultra.security.powerauth.crypto.lib.util.Hash;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -74,7 +75,7 @@ public class OwnerId {
             throw new IllegalStateException("Missing userId value");
         }
         if (userIdSecured == null) {
-            userIdSecured = new String(Base32.encode(Hash.sha256(userId)), StandardCharsets.UTF_8)
+            userIdSecured = new String(Base32.encode(sha256(userId)), StandardCharsets.UTF_8)
                     .replace("=", "");
             if (userIdSecured.length() > USER_ID_MAX_LENGTH) {
                 userIdSecured = userIdSecured.substring(0, USER_ID_MAX_LENGTH);
@@ -83,4 +84,11 @@ public class OwnerId {
         return userIdSecured;
     }
 
+    private static byte[] sha256(final String source) {
+        try {
+            return Hash.sha256(source);
+        } catch (CryptoProviderException e) {
+            throw new IllegalStateException("sha256 is not supported", e);
+        }
+    }
 }
