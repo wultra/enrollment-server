@@ -7,6 +7,7 @@
 - [Configuration Properties](./Configuration-Properties.md)
 - [Monitoring](./PowerAuth-Enrollment-Server-Monitoring.md)
 - [Documentation for Onboarding Server](./onboarding/Home.md)
+- [Artifact Signing](./Artifact-Signing.md)
 
 **Mobile Token**
 
