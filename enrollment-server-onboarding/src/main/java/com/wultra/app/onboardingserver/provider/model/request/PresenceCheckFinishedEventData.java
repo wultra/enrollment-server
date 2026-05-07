@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,12 +18,12 @@
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
 /**
- * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
+ * {@link EventData} for {@link EventType#PRESENCE_CHECK_FINISHED}.
+ * Contains the results of the presence check verification provider.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -32,30 +32,30 @@ import lombok.*;
 @ToString
 @PublicApi
 @EqualsAndHashCode
-public final class ProcessEventRequest {
+public final class PresenceCheckFinishedEventData implements EventData {
 
     @NonNull
-    private String processId;
+    private String status;
+
+    private String rejectReason;
+
+    private String errorDetail;
 
     @NonNull
-    private String processType;
+    private String provider;
 
     @NonNull
-    private String userId;
+    private Integer score;
 
-    /**
-     * User ID in the external system, which is used by the provider.
-     * It can be the same as {@code userId} or different, depending on the provider implementation.
-     */
-    @NonNull
-    private String externalUserId;
+    private PresenceCheckResult presenceCheckResult;
 
-    @NonNull
-    private String identityVerificationId;
+    @Builder
+    @Getter
+    @ToString
+    @PublicApi
+    @EqualsAndHashCode
+    public static class PresenceCheckResult {
 
-    @NonNull
-    private EventType type;
-
-    @NonNull
-    private EventData eventData;
+        private String frame;
+    }
 }

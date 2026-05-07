@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,27 +17,28 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import lombok.Data;
+import lombok.Builder;
 
 /**
- * Request object for processing event.
+ * {@link EventDataDto} for {@link EventTypeDto#PRESENCE_CHECK_FINISHED}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ProcessEventRequestDto {
+@Builder
+record PresenceCheckFinishedEventDataDto(PresenceCheck presenceCheck) implements EventDataDto {
 
-    private String processId;
+    @Builder
+    public record PresenceCheck(
+            String status,
+            String rejectReason,
+            String errorDetail,
+            String provider,
+            Integer score,
+            PresenceCheckResult presenceCheckResult
+    ) {}
 
-    private String processType;
-
-    private String identityVerificationId;
-
-    private String userId;
-
-    private String externalUserId;
-
-    private EventTypeDto type;
-
-    private EventDataDto eventData;
+    @Builder
+    public record PresenceCheckResult(
+            String frame
+    ) {}
 }

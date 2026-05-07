@@ -57,3 +57,15 @@ New format (event `PROCESS_FINISHED`)
 ```
 
 All details are described in [Events Documentation](./Events.md).
+
+No database changes are required.
+
+
+## Configuration
+
+
+### Events
+
+A new property`enrollment-server-onboarding.onboarding-process.process-event.types` has been added to the configuration.
+It contains a list of event types that are supported to be published.
+The default value is `PROCESS_FINISHED`, `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, and `PRESENCE_CHECK_FINISHED`

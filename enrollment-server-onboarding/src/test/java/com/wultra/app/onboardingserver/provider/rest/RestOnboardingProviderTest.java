@@ -22,6 +22,9 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
+import com.wultra.app.onboardingserver.provider.model.request.EventType;
+import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
+import com.wultra.app.onboardingserver.provider.model.request.ProcessFinishedEventData;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
@@ -57,6 +62,9 @@ class RestOnboardingProviderTest {
 
     @Captor
     private ArgumentCaptor<ClientEvaluateRequestDto> clientEvaluateRequestDtoArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<ProcessEventRequestDto> processEventRequestDtoArgumentCaptor;
 
     private RestOnboardingProvider tested;
 
@@ -111,6 +119,59 @@ class RestOnboardingProviderTest {
 
         // then
         assertRequestDtoWithoutExtractedData(clientEvaluateRequestDtoArgumentCaptor.getValue());
+    }
+
+    @Test
+    void testProcessEvent_processFinished_correctRequestBody() throws OnboardingProviderException, RestClientException {
+        final var request = ProcessEventRequest.builder()
+                .processId("dummyProcessId")
+                .processType("dummyProcessType")
+                .userId("dummyUserId")
+                .externalUserId("dummyExternalUserId")
+                .identityVerificationId("dummyIdentityVerificationId")
+                .type(EventType.PROCESS_FINISHED)
+                .eventData(ProcessFinishedEventData.builder()
+                        .status("FINISHED")
+                        .mobileData(ProcessFinishedEventData.MobileData.builder()
+                                .locale(Locale.ENGLISH)
+                                .clientIPAddress("127.0.0.1")
+                                .httpUserAgent("Mozilla/5.0")
+                                .fdsData(Map.of("fdsIdentifier", "42"))
+                                .build())
+                        .build())
+                .build();
+
+        when(restClient.post(
+                eq("/process/event"),
+                processEventRequestDtoArgumentCaptor.capture(),
+                isNull(),
+                ArgumentMatchers.any(),
+                ArgumentMatchers.<ParameterizedTypeReference<ProcessEventResponseDto>>any()
+        )).thenReturn(ResponseEntity.ok(new ProcessEventResponseDto()));
+
+        tested.processEvent(request);
+
+        final ProcessEventRequestDto requestDto = processEventRequestDtoArgumentCaptor.getValue();
+        assertEquals("dummyProcessId", requestDto.getProcessId());
+        assertEquals("dummyProcessType", requestDto.getProcessType());
+        assertEquals("dummyUserId", requestDto.getUserId());
+        assertEquals("dummyExternalUserId", requestDto.getExternalUserId());
+        assertEquals("dummyIdentityVerificationId", requestDto.getIdentityVerificationId());
+        assertEquals(EventTypeDto.PROCESS_FINISHED, requestDto.getType());
+
+        final var expected = ProcessFinishedEventDataDto.builder()
+                .process(ProcessFinishedEventDataDto.Process.builder()
+                        .status("FINISHED")
+                        .errorDetail(null)
+                        .mobileData(ProcessFinishedEventDataDto.MobileData.builder()
+                                .locale("EN")
+                                .clientIPAddress("127.0.0.1")
+                                .httpUserAgent("Mozilla/5.0")
+                                .fdsData(Map.of("fdsIdentifier", "42"))
+                                .build())
+                        .build())
+                .build();
+        assertEquals(expected, requestDto.getEventData());
     }
 
     private static EvaluateClientRequest buildRequestWithExtractedData() {

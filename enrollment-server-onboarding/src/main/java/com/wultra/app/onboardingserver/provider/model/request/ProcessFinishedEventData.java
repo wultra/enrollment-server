@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,12 +18,14 @@
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
 import lombok.*;
 
+import java.util.Locale;
+import java.util.Map;
+
 /**
- * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
+ * Specialization of {@link EventData} for {@link EventType#PROCESS_FINISHED}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
@@ -32,30 +34,30 @@ import lombok.*;
 @ToString
 @PublicApi
 @EqualsAndHashCode
-public final class ProcessEventRequest {
+public final class ProcessFinishedEventData implements EventData {
 
     @NonNull
-    private String processId;
+    private String status;
+
+    private String errorDetail;
 
     @NonNull
-    private String processType;
+    private MobileData mobileData;
 
-    @NonNull
-    private String userId;
+    @Builder
+    @Getter
+    @ToString
+    @PublicApi
+    @EqualsAndHashCode
+    public static class MobileData {
 
-    /**
-     * User ID in the external system, which is used by the provider.
-     * It can be the same as {@code userId} or different, depending on the provider implementation.
-     */
-    @NonNull
-    private String externalUserId;
+        @NonNull
+        private Locale locale;
 
-    @NonNull
-    private String identityVerificationId;
+        private String clientIPAddress;
 
-    @NonNull
-    private EventType type;
+        private String httpUserAgent;
 
-    @NonNull
-    private EventData eventData;
+        private Map<String, Object> fdsData;
+    }
 }

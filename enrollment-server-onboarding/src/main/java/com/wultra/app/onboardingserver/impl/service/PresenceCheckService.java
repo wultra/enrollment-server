@@ -71,6 +71,7 @@ public class PresenceCheckService {
     private final ImageProcessor imageProcessor;
     private final ScaResultRepository scaResultRepository;
     private final SelfieRepository selfieRepository;
+    private final OnboardingEventService onboardingEventService;
 
     /**
      * Initializes presence check process.
@@ -359,6 +360,16 @@ public class PresenceCheckService {
                     throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
+
+        publishEvent(ownerId, idVerification, result);
+    }
+
+    private void publishEvent(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
+        if (result.getStatus() == PresenceCheckStatus.IN_PROGRESS) {
+            return;
+        }
+
+        onboardingEventService.publishPresenceCheckFinished(idVerification, result, ownerId);
     }
 
     private void processFailedPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final String errorDetail) {

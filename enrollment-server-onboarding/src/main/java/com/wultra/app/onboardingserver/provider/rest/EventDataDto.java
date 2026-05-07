@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,27 +17,15 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import lombok.Data;
-
 /**
- * Request object for processing event.
+ * Marker interface for event data DTOs.
+ * The shape of the JSON differs per {@link EventTypeDto}.
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ProcessEventRequestDto {
-
-    private String processId;
-
-    private String processType;
-
-    private String identityVerificationId;
-
-    private String userId;
-
-    private String externalUserId;
-
-    private EventTypeDto type;
-
-    private EventDataDto eventData;
+sealed interface EventDataDto
+        permits ProcessFinishedEventDataDto,
+                DocumentVerificationFinishedEventDataDto,
+                FinalDocumentVerificationFinishedEventDataDto,
+                PresenceCheckFinishedEventDataDto {
 }
