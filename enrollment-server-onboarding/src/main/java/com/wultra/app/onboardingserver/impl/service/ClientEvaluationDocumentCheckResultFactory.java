@@ -203,8 +203,8 @@ public class ClientEvaluationDocumentCheckResultFactory {
 
     private static DocumentResultEntity selectLatestDocumentResult(final DocumentVerificationEntity documentVerificationEntity) {
         return documentVerificationEntity.getResults().stream()
-                .max(Comparator.comparing(DocumentResultEntity::getTimestampCreated))
-                .orElseThrow(() -> new IllegalStateException("Missing document result for documentVerificationId: %s".formatted(documentVerificationEntity.getId())));
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Missing document result for documentVerificationId: " + documentVerificationEntity.getId()));
     }
 
     private DocumentExtractedDataValue parseExtractedData(final DocumentResultEntity documentResult) {

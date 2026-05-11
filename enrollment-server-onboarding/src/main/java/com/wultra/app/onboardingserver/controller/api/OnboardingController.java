@@ -41,13 +41,13 @@ import com.wultra.security.powerauth.rest.api.spring.encryption.EncryptionScope;
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import static com.wultra.app.onboardingserver.controller.api.LoggingUtils.extractRequest;
 
 /**
  * Controller publishing REST services for the onboarding process.
@@ -78,23 +78,20 @@ public class OnboardingController {
     @PostMapping("start")
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
     public ObjectResponse<OnboardingStartResponse> startOnboarding(
-            @EncryptedRequestBody ObjectRequest<OnboardingStartRequest> request,
-            @Parameter(hidden = true) EncryptionContext encryptionContext,
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStartRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
             final HttpServletRequest servletRequest) throws OnboardingProcessException, OnboardingOtpDeliveryException, PowerAuthEncryptionException, TooManyProcessesException, InvalidRequestObjectException, RemoteCommunicationException {
 
-        logger.info("action: start, state: initiated, processType: {}", extractRequest(request).map(OnboardingStartRequest::processType).orElse(null));
+        final OnboardingStartRequest requestObject = request.getRequestObject();
+        logger.info("action: start, state: initiated, processType: {}", requestObject.processType());
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during onboarding");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received during onboarding");
-        }
-
         final RequestContext requestContext = RequestContextConverter.convert(servletRequest);
 
-        final OnboardingStartResponse response = onboardingService.startOnboarding(request.getRequestObject(), requestContext, encryptionContext);
+        final OnboardingStartResponse response = onboardingService.startOnboarding(requestObject, requestContext, encryptionContext);
         logger.info("action: start, state: succeeded");
         return new ObjectResponse<>(response);
     }
@@ -111,20 +108,19 @@ public class OnboardingController {
      */
     @PostMapping("otp/resend")
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
-    public Response resendOtp(@EncryptedRequestBody ObjectRequest<OnboardingOtpResendRequest> request,
-                              @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
+    public Response resendOtp(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingOtpResendRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext)
+            throws PowerAuthEncryptionException, OnboardingProcessException, OnboardingOtpDeliveryException {
 
-        logger.info("action: resendOtp, state: initiated, processId: {}", extractRequest(request).map(OnboardingOtpResendRequest::getProcessId).orElse(null));
+        final OnboardingOtpResendRequest requestObject = request.getRequestObject();
+        logger.info("action: resendOtp, state: initiated, processId: {}", requestObject.getProcessId());
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while resending OTP code");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received while resending OTP code");
-        }
-
-        final Response response = onboardingService.resendOtp(request.getRequestObject());
+        final Response response = onboardingService.resendOtp(requestObject);
         logger.info("action: resendOtp, state: succeeded");
         return response;
     }
@@ -140,21 +136,19 @@ public class OnboardingController {
      */
     @PostMapping("status")
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
-    public ObjectResponse<OnboardingStatusResponse> getStatus(@EncryptedRequestBody ObjectRequest<OnboardingStatusRequest> request,
-                                                              @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
+    public ObjectResponse<OnboardingStatusResponse> getStatus(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingStatusRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        logger.info("action: status, state: initiated, processId: {}", extractRequest(request).map(OnboardingStatusRequest::getProcessId).orElse(null));
+        final OnboardingStatusRequest requestObject = request.getRequestObject();
+        logger.info("action: status, state: initiated, processId: {}", requestObject.getProcessId());
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed while getting status");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received while getting status");
-        }
-
-        logger.debug("Onboarding process will not be locked, {}", request.getRequestObject().getProcessId());
-        final OnboardingStatusResponse response = onboardingService.getStatus(request.getRequestObject());
+        logger.debug("Onboarding process will not be locked, {}", requestObject.getProcessId());
+        final OnboardingStatusResponse response = onboardingService.getStatus(requestObject);
         logger.info("action: status, state: succeeded");
         return new ObjectResponse<>(response);
     }
@@ -170,20 +164,18 @@ public class OnboardingController {
      */
     @PostMapping("cleanup")
     @PowerAuthEncryption(scope = EncryptionScope.APPLICATION_SCOPE)
-    public Response performCleanup(@EncryptedRequestBody ObjectRequest<OnboardingCleanupRequest> request,
-                                   @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
+    public Response performCleanup(
+            @NotNull @EncryptedRequestBody @Valid final ObjectRequest<OnboardingCleanupRequest> request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, OnboardingProcessException {
 
-        logger.info("action: cleanup, state: initiated, processId: {}", extractRequest(request).map(OnboardingCleanupRequest::getProcessId).orElse(null));
+        final OnboardingCleanupRequest requestObject = request.getRequestObject();
+        logger.info("action: cleanup, state: initiated, processId: {}", requestObject.getProcessId());
         // Check if the request was correctly decrypted
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed during cleanup");
         }
 
-        if (request == null || request.getRequestObject() == null) {
-            throw new PowerAuthEncryptionException("Invalid request received during cleanup");
-        }
-
-        final Response response = onboardingService.performCleanup(request.getRequestObject());
+        final Response response = onboardingService.performCleanup(requestObject);
         logger.info("action: cleanup, state: succeeded");
         return response;
     }

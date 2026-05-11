@@ -265,10 +265,6 @@ ALTER TABLE es_document_data DROP COLUMN identity_verification_id;
 ALTER TABLE es_document_data DROP COLUMN filename;
 
 -- Changeset enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml::6::Michal Rozehnal
--- Add index for table es_document_data column timestamp_created
-CREATE INDEX es_document_data_timestamp_created_idx ON es_document_data(timestamp_created);
-
--- Changeset enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml::7::Michal Rozehnal
 -- Add index for table es_document_verification column upload_id
 CREATE INDEX es_document_verification_upload_id_idx ON es_document_verification(upload_id);
 

@@ -205,32 +205,6 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
     }
 
     @Test
-    void testCreate_manyDocumentResults_theLatestOneIsUsed() {
-        // given
-        final var documentResults = List.of(
-                createDocumentResult(createExtractedDataJson(NATIONALITY, DATE_OF_EXPIRY), LocalDateTime.now(), VERIFICATION_RESULT),
-                createDocumentResult("{}", LocalDateTime.now().minusHours(1), VERIFICATION_RESULT));
-        final var documentVerifications = Set.of(
-                createDocumentVerification(new HashSet<>(documentResults), PHOTO_ID, null, SCORE));
-
-        final var processedDocuments = List.of(createProcessedDocument());
-        when(processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(DOCUMENT_VERIFICATION_ID))).thenReturn(processedDocuments);
-
-        // when
-        final var result = tested.create(documentVerifications, true);
-
-        // then
-        final var expected = createExpectedResult(
-                createExpectedDocumentData(),
-                createExpectedImages(),
-                createExpectedPerson(),
-                SCORE,
-                VERIFICATION_RESULT,
-                COUNTRY);
-        assertEquals(expected, result);
-    }
-
-    @Test
     void testCreate_extractedDataParsingError() {
         // given
         final var documentResults = Set.of(

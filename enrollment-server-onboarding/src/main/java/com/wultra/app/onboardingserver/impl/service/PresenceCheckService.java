@@ -319,20 +319,12 @@ public class PresenceCheckService {
         return docsWithPhoto;
     }
 
-    private DocumentVerificationEntity getPreferredDocWithPhoto(final List<DocumentVerificationEntity> docsWithPhoto,
-                                                                final OwnerId ownerId) {
-
-        for (DocumentType documentType : DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO) {
-            Optional<DocumentVerificationEntity> docEntity = docsWithPhoto.stream()
-                    .filter(value -> value.getType() == documentType)
-                    .findFirst();
-            if (docEntity.isPresent()) {
-                return docEntity.get();
-            }
-        }
-
-        logger.warn("Unable to select a source of person photo to initialize presence check, {}", ownerId);
-        return docsWithPhoto.get(0);
+    private DocumentVerificationEntity getPreferredDocWithPhoto(final List<DocumentVerificationEntity> docsWithPhoto, final OwnerId ownerId) {
+        return DocumentVerificationEntity.filterPreferredDocumentWithPhoto(docsWithPhoto)
+                .orElseGet(() -> {
+                    logger.warn("Unable to select a preferred source of person photo, selecting the first one, {}", ownerId);
+                    return docsWithPhoto.get(0);
+                });
     }
 
     private void evaluatePresenceCheckResult(OwnerId ownerId,

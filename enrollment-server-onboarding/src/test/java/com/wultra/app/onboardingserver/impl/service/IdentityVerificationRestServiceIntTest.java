@@ -32,7 +32,6 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
-import com.wultra.core.rest.model.base.request.ObjectRequest;
 import com.wultra.security.powerauth.client.model.request.ListActivationFlagsRequest;
 import com.wultra.security.powerauth.client.model.response.ListActivationFlagsResponse;
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
@@ -111,14 +110,13 @@ class IdentityVerificationRestServiceIntTest {
                 ))
                 .build();
 
-        final var requestObject = new ObjectRequest<>(request);
         final var encryptionContext = new EncryptionContext(null, "b7717831-4ed3-4597-88c1-b4646b91a76f", null, null, null);
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
 
         when(documentVerificationProvider.submitDocuments(any(OwnerId.class), anyList())).thenReturn(new DocumentsSubmitResult());
 
         // when
-        final var response = tested.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
+        final var response = tested.submitDocumentsV2(request, encryptionContext, apiAuthentication);
 
         // then
         assertEquals("OK", response.getStatus());
@@ -148,14 +146,13 @@ class IdentityVerificationRestServiceIntTest {
                 ))
                 .build();
 
-        final var requestObject = new ObjectRequest<>(request);
         final var encryptionContext = new EncryptionContext(null, "8e4a0b0a-84f3-4c71-9cc0-c9ac7b3f6593", null, null, null);
         final var apiAuthentication = new PowerAuthApiAuthenticationImpl();
 
         when(documentVerificationProvider.submitDocuments(any(OwnerId.class), anyList())).thenReturn(new DocumentsSubmitResult());
 
         // when
-        final var response = tested.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
+        final var response = tested.submitDocumentsV2(request, encryptionContext, apiAuthentication);
 
         // then
         assertEquals("OK", response.getStatus());

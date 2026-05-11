@@ -8,6 +8,7 @@
 - [Configuration of Verification Providers](./Configuration-Verification-Providers.md)
 - [Configuration of Onboarding Process](./Configuration-Onboarding-Process.md)
 - [Database Structure](./Database-Structure.md)
+- [Process Metrics](./Process-Metrics.md)
 - [Audit](./Audit.md)
 
 **Overview**
