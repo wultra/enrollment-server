@@ -19,7 +19,7 @@ For manual changes use SQL scripts:
 A new table `es_onboarding_process_configuration` has been added.
 Also added a foreign key `process_config_id` to the table `es_onboarding_process`.
 
-You have to insert at least one row into the table `es_onboarding_process_configuration`, and configure property `enrollment-server-onboarding.onboarding-process.default-type` (or ENV `ONBOARDING_PROCESS_DEFAULT_TYPE`) to work as a default process type.
+You have to insert at least one row into the table `es_onboarding_process_configuration`, and configure property `enrollment-server-onboarding.onboarding-process.default-type` (or ENV `ENROLLMENT_SERVER_ONBOARDING_PROCESS_DEFAULT_TYPE`) to work as a default process type.
 
 
 ### Onboarding Process
