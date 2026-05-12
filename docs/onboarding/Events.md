@@ -31,7 +31,7 @@ This is the generic part of the event, which is common to all event types.
 
 ## Event data for different event types
  
-Different event `type` has different structure in `eventData`.
+Different event types have different structures in `eventData`.
 
 ### Event data for DOCUMENT_VERIFICATION_FINISHED
 
