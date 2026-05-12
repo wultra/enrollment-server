@@ -19,6 +19,7 @@
 package com.wultra.app.onboardingserver.common.database.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -49,6 +50,7 @@ public class OnboardingProcessConfigurationEntity implements Serializable {
     private String processType;
 
     @Column(name = "config", nullable = false, columnDefinition = "TEXT")
+    @Valid
     @Convert(converter = OnboardingProcessConfigurationValueConverter.class)
     private OnboardingProcessConfigurationValue configuration;
 
