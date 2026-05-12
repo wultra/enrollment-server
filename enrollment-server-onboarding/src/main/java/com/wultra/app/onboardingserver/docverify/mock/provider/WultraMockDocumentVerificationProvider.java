@@ -135,59 +135,53 @@ public class WultraMockDocumentVerificationProvider implements DocumentVerificat
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) {
         final String verificationId = UUID.randomUUID().toString();
-
-        final DocumentsVerificationResult result;
-        if (asyncProcessingEnabled) {
-            result = new DocumentsVerificationResult();
-            result.setStatus(DocumentVerificationStatus.IN_PROGRESS);
-            result.setVerificationId(verificationId);
-        } else {
-            result = createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
-        }
-
         verificationUploadIds.put(verificationId, uploadIds);
 
         logger.info("Mock - verifying documents uploadIds={}, asyncProcessingEnabled={}, {}", uploadIds, asyncProcessingEnabled, id);
-        return result;
+
+        if (asyncProcessingEnabled) {
+            return DocumentsVerificationResult.builder()
+                    .status(DocumentVerificationStatus.IN_PROGRESS)
+                    .verificationId(verificationId)
+                    .build();
+        } else {
+            return createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
+        }
     }
 
     @Override
     public DocumentsVerificationResult getVerificationResult(OwnerId id, String verificationId) {
-        final DocumentsVerificationResult result;
+        logger.info("Mock - getting verification result verificationId={}, {}", verificationId, id);
         final List<String> uploadIds = verificationUploadIds.getIfPresent(verificationId);
         if (uploadIds == null) {
-            result = new DocumentsVerificationResult();
-            result.setStatus(DocumentVerificationStatus.FAILED);
-            result.setErrorDetail("not existing verificationId: " + verificationId);
+            return DocumentsVerificationResult.builder()
+                    .status(DocumentVerificationStatus.FAILED)
+                    .errorDetail("not existing verificationId: " + verificationId)
+                    .build();
         } else {
-            result = createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
+            return createSuccessfulDocumentsVerificationResult(verificationId, uploadIds);
         }
-
-        logger.info("Mock - getting verification result verificationId={}, {}", verificationId, id);
-        return result;
     }
 
     private static DocumentsVerificationResult createSuccessfulDocumentsVerificationResult(final String verificationId, final List<String> uploadIds) {
-        final DocumentsVerificationResult result = new DocumentsVerificationResult();
-
         final List<DocumentVerificationResult> verificationResults = uploadIds.stream()
                 .map(WultraMockDocumentVerificationProvider::createDocumentVerificationResult)
                 .toList();
 
-        result.setResults(verificationResults);
-        result.setStatus(DocumentVerificationStatus.ACCEPTED);
-        result.setVerificationId(verificationId);
-
-        return result;
+        return DocumentsVerificationResult.builder()
+                .results(verificationResults)
+                .status(DocumentVerificationStatus.ACCEPTED)
+                .verificationId(verificationId)
+                .build();
     }
 
     private static DocumentVerificationResult createDocumentVerificationResult(final String uploadId) {
-        final DocumentVerificationResult verificationResult = new DocumentVerificationResult();
-        verificationResult.setExtractedData("{\"extracted\": \"data-" + uploadId + "\"}");
-        verificationResult.setUploadId(uploadId);
-        verificationResult.setVerificationResult("{\"verificationResult\": \"data-" + uploadId + "\"}");
-        verificationResult.setVerificationScore(10);
-        return verificationResult;
+        return DocumentVerificationResult.builder()
+                .extractedData("{\"extracted\": \"data-" + uploadId + "\"}")
+                .uploadId(uploadId)
+                .verificationResult("{\"verificationResult\": \"data-" + uploadId + "\"}")
+                .verificationScore(10)
+                .build();
     }
 
     @Override
