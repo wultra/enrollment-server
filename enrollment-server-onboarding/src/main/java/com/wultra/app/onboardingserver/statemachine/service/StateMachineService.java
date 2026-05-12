@@ -41,13 +41,9 @@ import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /**
  * State machine service
@@ -68,8 +64,6 @@ public class StateMachineService {
 
     private final IdentityVerificationService identityVerificationService;
 
-    private final TransactionTemplate transactionTemplate;
-
     private final OnboardingProcessRepository onboardingProcessRepository;
 
     @Transactional
@@ -83,6 +77,28 @@ public class StateMachineService {
         sendEventMessage(stateMachine, message);
 
         return stateMachine;
+    }
+
+    @SuppressWarnings("java:S6809") // New transaction is always created in this method, so @Transactional on the method processStateMachineEvent shouldn't cause any issue
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
+        final var processId = identityVerification.getProcessId();
+        final var ownerId = new OwnerId();
+        ownerId.setActivationId(identityVerification.getActivationId());
+        ownerId.setUserId(identityVerification.getUserId());
+        logger.debug("Changing state of machine for process ID: {}", processId);
+
+        try {
+            lockAndVerifyProcess(processId);
+            processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            return true;
+        } catch (IdentityVerificationException e) {
+            logger.warn("Unable to change state for process ID: {}", processId, e);
+        } catch (final OnboardingProcessException e) {
+            logger.warn("Process with ID {} not found", processId, e);
+        }
+
+        return false;
     }
 
     public StateMachine<OnboardingState, OnboardingEvent> prepareStateMachine(
@@ -121,39 +137,6 @@ public class StateMachineService {
                 .build();
     }
 
-    /**
-     * Change machine states in batch.
-     */
-    @Transactional(readOnly = true)
-    public void changeMachineStatesInBatch() {
-        final AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
-            stream.forEach(identityVerification -> {
-                final String processId = identityVerification.getProcessId();
-                final OwnerId ownerId = new OwnerId();
-                ownerId.setActivationId(identityVerification.getActivationId());
-                ownerId.setUserId(identityVerification.getUserId());
-                logger.debug("Changing state of machine for process ID: {}", processId);
-
-                transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                transactionTemplate.executeWithoutResult(status -> {
-                    try {
-                        lockAndVerifyProcess(processId);
-                        processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-                        countFinished.incrementAndGet();
-                    } catch (IdentityVerificationException e) {
-                        logger.warn("Unable to change state for process ID: {}", processId, e);
-                    } catch (final OnboardingProcessException e) {
-                        logger.warn("Process with ID {} not found", processId, e);
-                    }
-                });
-            });
-        }
-        if (countFinished.get() > 0) {
-            logger.debug("Changed state of {} identity verifications", countFinished.get());
-        }
-    }
-
     private void sendEventMessage(
             StateMachine<OnboardingState, OnboardingEvent> stateMachine,
             Message<OnboardingEvent> message) {
@@ -175,5 +158,4 @@ public class StateMachineService {
                 .filter(p -> OnboardingStatus.NOT_YET_COMPLETED.contains(p.getStatus()))
                 .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found for process ID: " + processId));
     }
-
 }

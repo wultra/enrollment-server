@@ -35,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SpringBootTest(classes = EnrollmentServerTestApplication.class)
 @ActiveProfiles("test")
-class StateMachineServiceTest {
+class StateMachineBatchServiceTest {
 
     @Autowired
-    private StateMachineService tested;
+    private StateMachineBatchService tested;
 
     @Autowired
     private IdentityVerificationRepository repository;

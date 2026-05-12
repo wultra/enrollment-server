@@ -42,7 +42,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,7 +96,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var identityVerification = createIdentityVerification();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
         when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
@@ -122,7 +121,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var identityVerification = createIdentityVerification();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
         when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
 
@@ -146,7 +145,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var documentCreateRequests = createDocumentCreateRequests();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
         when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(documentCreateRequests);
