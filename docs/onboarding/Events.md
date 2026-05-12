@@ -20,7 +20,7 @@ This is the generic part of the event, which is common to all event types.
 |:-------------------------|:-------|:-----------------------------------------------------------------------------------------------------------------------------------------|
 | `id`                     | String | Event ID                                                                                                                                 |
 | `timestamp`              | String | Timestamp, when the action happened                                                                                                      |
-| `type`                   | String | Event type. Currently supported types are `documentVerificationFinished` `finalDocumentVerificationFinished` and `presenceCheckFinished` |
+| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` and `PRESENCE_CHECK_FINISHED` |
 | `userId`                 | String | UUID of the user                                                                                                                         |
 | `processId`              | String | UUID of the process                                                                                                                      |
 | `processType`            | String | Name of the process, e.g. `onboarding`                                                                                                   |
@@ -31,7 +31,7 @@ This is the generic part of the event, which is common to all event types.
  
 Different event `type` has different structure in `eventData`.
 
-### Event data for documentVerificationFinished
+### Event data for DOCUMENT_VERIFICATION_FINISHED
 
 This contains the results from the verification provider. Each document is sent separately.
 
@@ -84,7 +84,7 @@ This contains the results from the verification provider. Each document is sent 
 | `score`                  | String | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                        |
 | `documentCheckResult`    | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationData.document.rawData`. |
 
-### Event data for finalDocumentVerificationFinished
+### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
 
 This contains the overall document check result for all documents combined.
 
@@ -108,7 +108,7 @@ Additional checks:
 }
 ```
 
-### Event data for presenceCheckFinished
+### Event data for PRESENCE_CHECK_FINISHED
 
 This contains the results of the verification provider.
 
