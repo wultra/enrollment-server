@@ -39,39 +39,39 @@ This contains the results from the verification provider. Each document is sent 
 
 ```json
 {
-	"documentVerification": {
-		"documentVerificationId": "String",
-		"documentId": "String",
-	    "status": "String",
-	    "rejectReason": null,
-	    "errorDetail": null,
-    	"provider": "String",
-		"score": Number,
-		"documentCheckResult": {
-		    "type": "String",
-		    "country": "String",
-		    "data": {
-		        "surname": "String",
-		        "givenNames": "String",
-		        "dateOfBirth": "String",
-		        "placeOfBirth": "String",
-		        "sex": "String",
-		        "nationality": "String",
-		        "personalNumber": "String",
-		        "documentNumber": "String",
-		        "dateOfIssue": "String",
-		        "dateOfExpiry": "String",
-		        "authority": "String"
-		    },
-		    "images": [
-		        {
-		            "type": "String",
-		            "data": "String"
-		        }
-		    ],
-		    "rawData": Object
-		}		
-	}
+    "documentVerification": {
+        "documentVerificationId": "String",
+        "documentId": "String",
+        "status": "String",
+        "rejectReason": null,
+        "errorDetail": null,
+        "provider": "String",
+        "score": Number,
+        "documentCheckResult": {
+            "type": "String",
+            "country": "String",
+            "data": {
+                "surname": "String",
+                "givenNames": "String",
+                "dateOfBirth": "String",
+                "placeOfBirth": "String",
+                "sex": "String",
+                "nationality": "String",
+                "personalNumber": "String",
+                "documentNumber": "String",
+                "dateOfIssue": "String",
+                "dateOfExpiry": "String",
+                "authority": "String"
+            },
+            "images": [
+                {
+                    "type": "String",
+                    "data": "String"
+                }
+            ],
+            "rawData": Object
+        }       
+    }
 }
 ```
 
@@ -99,14 +99,14 @@ Additional checks:
 
 ```json
 {
-	"finalDocumentVerification": {
-		"documentVerificationId": "String",
-	    "status": "String",
-	    "rejectReason": null,
-	    "errorDetail": null,
-    	"provider": "String",
-		"documentIds": ["String","String"]
-	}
+    "finalDocumentVerification": {
+        "documentVerificationId": "String",
+        "status": "String",
+        "rejectReason": null,
+        "errorDetail": null,
+        "provider": "String",
+        "documentIds": ["String","String"]
+    }
 }
 ```
 
@@ -116,19 +116,43 @@ This contains the results of the verification provider.
 
 ```json
 {
-	"presenceCheck": {
-	    "status": "ACCEPTED",
-	    "rejectReason": null,
-	    "errorDetail": null,
-    	"provider": "IPROOV",
-		"score": Number,
-	    "presenceCheckResult": {
-	      "frame": "String"
-	    }
-	}
+    "presenceCheck": {
+        "status": "ACCEPTED",
+        "rejectReason": null,
+        "errorDetail": null,
+        "provider": "IPROOV",
+        "score": Number,
+        "presenceCheckResult": {
+          "frame": "String"
+        }
+    }
 }
 ```
 
 ### Event data for PROCESS_FINISHED
 
-Event doesn't contain any specific event data.
+This contains final process data.
+
+```json
+{
+    "process": {
+        "status": "FINISHED",
+        "errorDetail": null,
+        "mobileData": {
+            "locale": "EN",
+            "clientIPAddress": null,
+            "httpUserAgent": null,
+            "fdsData": Object
+        }
+    }
+}
+```
+
+| Attribute                    | Type   | Description                                                                                                          |
+|:-----------------------------|:-------|:---------------------------------------------------------------------------------------------------------------------|
+| `status`                     | String | Status of the process. Supported values are `FINISHED` and `FAILED`.                                                 |
+| `errorDetail`                | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                   |
+| `mobileData.locale`          | String | Client locale.                                                                                                       |
+| `mobileData.clientIPAddress` | String | Client IP address.                                                                                                   |
+| `mobileData.httpUserAgent`   | String | Client User-Agent.                                                                                                   |
+| `mobileData.fdsData`         | Object | Optional FDS data sent from the mobile device during Onboarding initialization using `/api/onboarding/start` method. |
