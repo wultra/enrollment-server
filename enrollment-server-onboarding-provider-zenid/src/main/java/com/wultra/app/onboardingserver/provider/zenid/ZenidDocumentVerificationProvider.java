@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -43,6 +40,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
@@ -317,7 +317,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         final List<ZenidWebInvestigationValidatorResponse> validations;
         try {
             validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when parsing verification result data from " + docResult, e);
         }
 
@@ -523,7 +523,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 String verificationResultData;
                 try {
                     verificationResultData = objectMapper.writeValueAsString(validations);
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     throw new DocumentVerificationException("Unexpected error when processing verification result data, " + id, e);
                 }
 
@@ -565,7 +565,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     private String toExtractedData(OwnerId id, ZenidSharedMineAllResult minedData) throws DocumentVerificationException {
         try {
             return objectMapper.writeValueAsString(minedData);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when processing extracted data, " + id, e);
         }
     }

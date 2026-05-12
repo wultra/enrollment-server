@@ -17,13 +17,14 @@
  */
 package com.wultra.app.enrollmentserver.mockutils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformerV2;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

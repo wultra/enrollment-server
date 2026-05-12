@@ -17,12 +17,12 @@
  */
 package com.wultra.app.onboardingserver.impl.service.internal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service class used for JSON serialization.
@@ -45,7 +45,7 @@ public class JsonSerializationService {
     public <T> T deserialize(String json, Class<T> cls) {
         try {
             return objectMapper.readValue(json, cls);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.error("JSON serialization failed due to an error", e);
             return null;
         }
@@ -59,7 +59,7 @@ public class JsonSerializationService {
     public String serialize(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.error("JSON serialization failed due to an error", e);
             return null;
         }

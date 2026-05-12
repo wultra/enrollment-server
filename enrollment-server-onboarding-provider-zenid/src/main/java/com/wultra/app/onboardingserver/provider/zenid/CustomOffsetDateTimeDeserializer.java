@@ -17,12 +17,11 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ext.javatime.deser.InstantDeserializer;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -35,10 +34,10 @@ import java.time.format.DateTimeFormatter;
  *     The ZenID returns simple ISO data on some date elements which are expected to be date-time (e.g. BirthDate)
  * </p>
  */
-class CustomOffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
+class CustomOffsetDateTimeDeserializer extends ValueDeserializer<OffsetDateTime> {
 
     @Override
-    public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+    public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) {
         if (parser.getText() != null && parser.getText().length() == 10) { // yyyy-MM-dd
             return LocalDate.parse(parser.getText(), DateTimeFormatter.ISO_DATE)
                     .atStartOfDay(ZoneId.of("UTC"))

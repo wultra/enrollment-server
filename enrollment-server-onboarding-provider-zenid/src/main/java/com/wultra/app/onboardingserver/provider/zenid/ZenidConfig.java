@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -31,6 +29,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 import java.time.OffsetDateTime;
 
@@ -51,22 +52,45 @@ class ZenidConfig {
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid(final ZenidConfigProps configProps) {
-        final JavaTimeModule javaTimeModule = createJavaTimeModule();
+        final SimpleModule timeModule = createJavaTimeModule();
+        final JsonMapper.Builder builder = JsonMapper.builder()
+                .addModule(timeModule);
+        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration =
+                configProps.getRestClientConfig().getJacksonConfiguration();
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(javaTimeModule);
-        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration = configProps.getRestClientConfig().getJacksonConfiguration();
-        Assert.state(jacksonConfiguration != null, "Jackson configuration is expected to ZenId working properly");
-        jacksonConfiguration.getDeserialization().forEach(mapper::configure);
-        jacksonConfiguration.getSerialization().forEach(mapper::configure);
+        Assert.state(
+                jacksonConfiguration != null,
+                "Jackson configuration is expected for ZenID working properly"
+        );
+
+        final ObjectMapper mapper = builder.build();
+        jacksonConfiguration.getDeserialization()
+                .forEach((feature, state) -> {
+                    if (state) {
+                        builder.enable(feature);
+                    } else {
+                        builder.disable(feature);
+                    }
+                });
+        jacksonConfiguration.getSerialization()
+                .forEach((feature, state) -> {
+                    if (state) {
+                        builder.enable(feature);
+                    } else {
+                        builder.disable(feature);
+                    }
+                });
         return mapper;
     }
 
-    private static JavaTimeModule createJavaTimeModule() {
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
+    private static SimpleModule createJavaTimeModule() {
+        SimpleModule timeModule = new SimpleModule();
         // Add custom deserialization to support also the ISO DATE format data where ISO DATE TIME expected (ZenID bug?)
-        javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
-        return javaTimeModule;
+        timeModule.addDeserializer(
+                OffsetDateTime.class,
+                new CustomOffsetDateTimeDeserializer()
+        );
+        return timeModule;
     }
 
     /**

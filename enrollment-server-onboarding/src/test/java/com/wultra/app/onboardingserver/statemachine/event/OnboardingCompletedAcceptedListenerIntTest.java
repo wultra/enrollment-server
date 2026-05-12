@@ -32,7 +32,6 @@ import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -87,9 +86,6 @@ class OnboardingCompletedAcceptedListenerIntTest {
     @MockitoBean
     private UserDataStoreService userDataStoreService;
 
-    @Captor
-    private ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor;
-
     @Test
     void testOnOnboardingCompletedAccepted_eventIsAccepted() throws Exception {
         // given
@@ -101,6 +97,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
         when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
         when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
+
+        final ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor =
+                ArgumentCaptor.forClass(OnboardingCompletedAcceptedEvent.class);
 
         // when
         stateMachineService.processStateMachineEvent(ownerId, PROCESS_ID, OnboardingEvent.EVENT_NEXT_STATE);

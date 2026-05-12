@@ -17,8 +17,8 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity.attributes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 

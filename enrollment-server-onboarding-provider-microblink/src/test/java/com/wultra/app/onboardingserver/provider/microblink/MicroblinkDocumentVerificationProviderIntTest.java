@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -44,6 +41,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -274,23 +274,33 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Test
     void testSubmitDocuments_documentWith2SidesUploaded_correctResponseIsReturned() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
-        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
-
+        final var submittedDocuments =
+                buildSubmittedDocuments(List.of(
+                        idCardFrontDocument,
+                        idCardBackDocument
+                ));
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
                 .setHeader("Content-Type", "application/json")
                 .setBody(microblinkIdCardPassResponseBody));
-
         // when
-        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
-
+        final var result =
+                microblinkDocumentVerificationProvider.submitDocuments(
+                        ownerId,
+                        submittedDocuments
+                );
         // then
         assertIdCardPassSubmitResult(result);
     }
 
+
     @Test
     void testSubmitDocuments_documentWith2SidesUploaded_documentDataAreSaved() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -351,6 +361,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Test
     void testSubmitDocuments_requestContainsConfiguredOptionsAndUseCase() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -414,6 +426,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Test
     void testSubmitDocuments_microblinkRejectResponse_correctResponseIsReturned() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
@@ -765,10 +779,12 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     private void preparePhotoInDatabase() {
+        final var documentVerification = prepareIdCardFrontDocumentVerificationInDatabase();
         final var entity = new ProcessedDocumentDataEntity();
         entity.setId(ID_CARD_FACE_PHOTO_ID);
         entity.setData(Base64.getDecoder().decode(idCardFacePhotoBase64));
         entity.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
+        entity.setDocumentVerificationId(documentVerification.getId());
         entity.setTimestampCreated(new Date());
 
         processedDocumentDataRepository.save(entity);

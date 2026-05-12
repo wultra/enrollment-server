@@ -18,15 +18,15 @@
 
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -82,7 +82,7 @@ public class MicroblinkExtractedDataParser {
                     .build();
 
             return mapper.writeValueAsString(extractedDataValue);
-        } catch (final JsonProcessingException e) {
+        } catch (final JacksonException e) {
             logger.warn("Serialization of normalized extracted data failed", e);
             return null;
         }

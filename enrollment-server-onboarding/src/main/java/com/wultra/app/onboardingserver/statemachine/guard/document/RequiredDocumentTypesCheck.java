@@ -16,8 +16,6 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.document;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
@@ -29,6 +27,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -196,7 +196,7 @@ public class RequiredDocumentTypesCheck {
 
             return objectMapper.readValue(extractedData, DocumentExtractedDataValue.class)
                     .country();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
             return null;
         }

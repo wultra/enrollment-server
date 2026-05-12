@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
@@ -36,6 +33,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -398,7 +398,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     private <T> String serializeToString(T src) throws DocumentVerificationException {
         try {
             return objectMapper.writeValueAsString(src);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when serializing data", e);
         }
     }
@@ -406,7 +406,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     private <T> T deserializeFromString(String src) throws DocumentVerificationException {
         try {
             return objectMapper.readValue(src, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when deserializing data", e);
         }
     }

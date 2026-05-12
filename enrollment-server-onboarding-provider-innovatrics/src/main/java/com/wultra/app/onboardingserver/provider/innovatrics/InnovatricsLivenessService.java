@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
@@ -35,6 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service providing Innovatrics business features beyond {@link InnovatricsPresenceCheckProvider}.
@@ -117,7 +117,7 @@ class InnovatricsLivenessService {
         final SessionInfo sessionInfo;
         try {
             sessionInfo = new ObjectMapper().readValue(sessionInfoString, SessionInfo.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IdentityVerificationException("Unable to deserialize session info", e);
         }
 

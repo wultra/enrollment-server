@@ -17,9 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.controller.api.admin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.api.model.enrollment.response.TemplateListResponse;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.impl.service.OperationTemplateService;
@@ -31,6 +28,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -85,7 +85,7 @@ public class AdminController {
 
         try {
             return objectMapper.readValue(source, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.warn("Unable to convert resultTexts, returning an empty collection", e);
             return Map.of();
         }
@@ -98,7 +98,7 @@ public class AdminController {
 
         try {
             return objectMapper.readValue(source, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.warn("Unable to convert attributes, returning an empty collection", e);
             return List.of();
         }

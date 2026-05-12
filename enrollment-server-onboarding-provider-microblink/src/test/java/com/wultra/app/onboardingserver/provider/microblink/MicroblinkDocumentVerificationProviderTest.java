@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -54,6 +51,10 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -192,8 +193,9 @@ class MicroblinkDocumentVerificationProviderTest {
                 List.of(),
                 new DocumentVerificationResponse.ExtractionClassInfo("Id", null));
 
-        final var objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        final var objectMapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
 
         when(microblinkConfigProperties.getMobileSdkConfigs()).thenReturn(MOBILE_SDK_CONFIGS);
 
@@ -429,7 +431,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkRejectResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JsonProcessingException {
+    void testSubmitDocuments_microblinkRejectResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -463,7 +465,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JsonProcessingException {
+    void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -1141,7 +1143,7 @@ class MicroblinkDocumentVerificationProviderTest {
         return entities;
     }
 
-    private void assertResultForRejectResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JsonProcessingException {
+    private void assertResultForRejectResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JacksonException {
         assertEquals("Rejected documents: [id-card-front, id-card-back]", result.getRejectReason());
         assertNull(result.getErrorDetail());
 
@@ -1173,14 +1175,14 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
 
-    private static String buildExpectedValidationResult(final String json) throws JsonProcessingException {
+    private static String buildExpectedValidationResult(final String json) throws JacksonException {
         final var result = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(json)
                 .replaceAll("");
 
         return new ObjectMapper().readTree(result).toString();
     }
 
-    private void assertResultForPassResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JsonProcessingException {
+    private void assertResultForPassResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JacksonException {
         assertNull(result.getRejectReason());
         assertNull(result.getErrorDetail());
 

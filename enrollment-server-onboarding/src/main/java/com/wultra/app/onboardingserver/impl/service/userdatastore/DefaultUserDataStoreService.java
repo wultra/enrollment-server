@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service.userdatastore;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
@@ -40,6 +38,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.function.Function;
@@ -265,7 +265,7 @@ class DefaultUserDataStoreService implements UserDataStoreService {
 
         try {
             return objectMapper.writeValueAsString(mergedData);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.warn("Failed to write extracted data, source: {}", mergedData, e);
             return null;
         }

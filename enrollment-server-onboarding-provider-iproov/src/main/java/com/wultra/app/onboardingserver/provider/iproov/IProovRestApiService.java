@@ -147,8 +147,8 @@ class IProovRestApiService {
         });
         bodyBuilder.part("token", token);
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap httpHeaders = new LinkedMultiValueMap();
+        httpHeaders.set("Content-Type", MediaType.MULTIPART_FORM_DATA_VALUE);
 
         logger.debug("Calling /claim/enroll/image token={}, {}", token, id);
         return restClient.post("/claim/enrol/image", bodyBuilder.build(), EMPTY_QUERY_PARAMS, httpHeaders, STRING_TYPE_REFERENCE);

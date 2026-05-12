@@ -28,8 +28,8 @@ import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
@@ -248,7 +248,7 @@ public class RestOnboardingProvider implements OnboardingProvider {
     }
 
     private MultiValueMap<String, String> createHeaders() {
-        final HttpHeaders headers = new HttpHeaders();
+        final MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add(correlationHeaderName, UUID.randomUUID().toString());
         headers.add(requestIdHeaderName, UUID.randomUUID().toString());
         return headers;
