@@ -20,15 +20,15 @@ This is the generic part of the event, which is common to all event types.
 
 | Attribute                | Type   | Description                                                                                                                                                                                      |
 |:-------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`                     | String | Event ID                                                                                                                                                                                         |
-| `timestamp`              | String | Timestamp, when the action happened                                                                                                                                                              |
-| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`                               |
-| `userId`                 | String | UUID of the user                                                                                                                                                                                 |
-| `externalUserId`         | String | UUID of the user. We introduced an External User ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
-| `processId`              | String | UUID of the process                                                                                                                                                                              |
-| `processType`            | String | Name of the process, e.g. `onboarding`                                                                                                                                                           |
-| `identityVerificationId` | String | UUID of the identity verification stage. Can be `null` if the event is not related to the identity verification stage.                                                                           |
-| `eventData`              | Object | Object with structure different for each `type`                                                                                                                                                  |
+| `id`                     | String | Event ID.                                                                                                                                                                                        |
+| `timestamp`              | String | Timestamp, when the action happened.                                                                                                                                                             |
+| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`.                              |
+| `userId`                 | String | User ID.                                                                                                                                                                                         |
+| `externalUserId`         | String | External User ID. We introduced an External User ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
+| `processId`              | String | Process ID.                                                                                                                                                                                      |
+| `processType`            | String | Name of the process, e.g. `onboarding`.                                                                                                                                                          |
+| `identityVerificationId` | String | Identity Verification ID. Can be `null` if the event is not related to the identity verification stage.                                                                                          |
+| `eventData`              | Object | Object with structure different for each `type`.                                                                                                                                                 |
 
 ## Event data for different event types
  
@@ -78,8 +78,8 @@ This contains the results from the verification provider. Each document is sent 
 
 | Attribute                    | Type   | Description                                                                                                                                                                                                                                                 |
 |:-----------------------------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `documentVerificationId`     | String | UUID of the document verification                                                                                                                                                                                                                           |
-| `documentId`                 | String | UUID of the document                                                                                                                                                                                                                                        |
+| `documentVerificationId`     | String | Document Verification ID.                                                                                                                                                                                                                                   |
+| `documentId`                 | String | Document ID.                                                                                                                                                                                                                                                |
 | `status`                     | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                       |
 | `rejectReason`               | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                                                                                                                                                                                       |
 | `errorDetail`                | String | Reject reason in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
@@ -121,7 +121,7 @@ This contains the results of the verification provider.
         "status": "ACCEPTED",
         "rejectReason": null,
         "errorDetail": null,
-        "provider": "IPROOV",
+        "provider": "iProov",
         "score": Number,
         "presenceCheckResult": {
           "frame": "String"
