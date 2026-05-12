@@ -96,6 +96,8 @@ public class StateMachineService {
             logger.warn("Unable to change state for process ID: {}", processId, e);
         } catch (final OnboardingProcessException e) {
             logger.warn("Process with ID {} not found", processId, e);
+        } catch (final RuntimeException e) {
+            logger.warn("Exception when changing state for process ID: {}", processId, e);
         }
 
         return false;

@@ -19,14 +19,19 @@ package com.wultra.app.onboardingserver.statemachine.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
+import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doThrow;
 
 /**
  * Test for {@link StateMachineService}
@@ -40,15 +45,28 @@ class StateMachineBatchServiceTest {
     @Autowired
     private StateMachineBatchService tested;
 
+    @MockitoSpyBean
+    private OnboardingProcessRepository onboardingProcessRepository;
+
     @Autowired
-    private IdentityVerificationRepository repository;
+    private DocumentVerificationRepository documentVerificationRepository;
+
+    @Autowired
+    private IdentityVerificationRepository identityVerificationRepository;
+
+    @AfterEach
+    void cleanUp() {
+        documentVerificationRepository.deleteAll();
+        identityVerificationRepository.deleteAll();
+        onboardingProcessRepository.deleteAll();
+    }
 
     @Test
     @Sql
     void testChangeMachineStatesInBatch() {
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, repository.findById("v1").get().getStatus());
+        assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, identityVerificationRepository.findById("v1").get().getStatus());
     }
 
     @Test
@@ -56,7 +74,7 @@ class StateMachineBatchServiceTest {
     void testChangeMachineStatesInBatch_submitting() {
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, repository.findById("v2").get().getStatus());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v2").get().getStatus());
     }
 
     @Test
@@ -64,7 +82,25 @@ class StateMachineBatchServiceTest {
     void testChangeMachineStatesInBatch_noDocuments() {
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, repository.findById("v3").get().getStatus());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v3").get().getStatus());
     }
 
+    /**
+     * Tests that {@link RuntimeException} is handled. Propagated exception would break the for loop.
+     */
+    @Test
+    @Sql
+    void testChangeMachineStatesInBatch_exception() {
+        doThrow(new RuntimeException("Test exception"))
+                .when(onboardingProcessRepository)
+                .findByIdWithLock("p_fail");
+
+        tested.changeMachineStatesInBatch();
+
+        final var actualIdentityStatus = identityVerificationRepository.findById("v_fail")
+                .orElseThrow()
+                .getStatus();
+
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, actualIdentityStatus);
+    }
 }
