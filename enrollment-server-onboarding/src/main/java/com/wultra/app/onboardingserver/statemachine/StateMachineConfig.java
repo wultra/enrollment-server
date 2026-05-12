@@ -119,7 +119,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<Onboar
 
     private final PresenceCheckEnabledGuard presenceCheckEnabledGuard;
 
-
     private final StatusAcceptedGuard statusAcceptedGuard;
 
     private final StatusFailedGuard statusFailedGuard;
