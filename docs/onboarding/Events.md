@@ -23,7 +23,7 @@ This is the generic part of the event, which is common to all event types.
 | `timestamp`              | String | Timestamp, when the action happened                                                                                                                                                         |
 | `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`                          |
 | `userId`                 | String | UUID of the user                                                                                                                                                                            |
-| `externalUserId`             | String | UUID of the user. We introduced an External ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
+| `externalUserId`         | String | UUID of the user. We introduced an External ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
 | `processId`              | String | UUID of the process                                                                                                                                                                         |
 | `processType`            | String | Name of the process, e.g. `onboarding`                                                                                                                                                      |
 | `identityVerificationId` | String | UUID of the identity verification stage. Can be `null` if the event is not related to the identity verification stage.                                                                      |
@@ -47,7 +47,7 @@ This contains the results from the verification provider. Each document is sent 
         "errorDetail": null,
         "provider": "String",
         "score": Number,
-        "documentCheckResult": {
+        "documentVerificationResult": {
             "type": "String",
             "country": "String",
             "data": {
@@ -75,16 +75,16 @@ This contains the results from the verification provider. Each document is sent 
 }
 ```
 
-| Attribute                | Type   | Description                                                                                                                                                                                                                                                        |
-|:-------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `documentVerificationId` | String | UUID of the document verification                                                                                                                                                                                                                                  |
-| `documentId`             | String | UUID of the document                                                                                                                                                                                                                                               |
-| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                              |
-| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                                                                                                                                                                                              |
-| `errorDetail`            | String | Reject reason in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                                |
-| `provider`               | String | Name of the configured external biometry provider. For example, `iProov` or `Microblink`.                                                                                                                                                                          |
-| `score`                  | String | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                        |
-| `documentCheckResult`    | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationData.document.rawData`. |
+| Attribute                    | Type   | Description                                                                                                                                                                                                                                                 |
+|:-----------------------------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `documentVerificationId`     | String | UUID of the document verification                                                                                                                                                                                                                           |
+| `documentId`                 | String | UUID of the document                                                                                                                                                                                                                                        |
+| `status`                     | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`.                                                                                                                                                                       |
+| `rejectReason`               | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                                                                                                                                                                                       |
+| `errorDetail`                | String | Reject reason in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                         |
+| `provider`                   | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                               |
+| `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                 |
+| `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
 
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
 
