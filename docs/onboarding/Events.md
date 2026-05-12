@@ -21,7 +21,7 @@ This is the generic part of the event, which is common to all event types.
 |:-------------------------|:-------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `id`                     | String | Event ID                                                                                                                                                                                    |
 | `timestamp`              | String | Timestamp, when the action happened                                                                                                                                                         |
-| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` and `PRESENCE_CHECK_FINISHED`                                             |
+| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`                          |
 | `userId`                 | String | UUID of the user                                                                                                                                                                            |
 | `externalId`             | String | UUID of the user. We introduced an External ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
 | `processId`              | String | UUID of the process                                                                                                                                                                         |
@@ -128,3 +128,7 @@ This contains the results of the verification provider.
 	}
 }
 ```
+
+### Event data for PROCESS_FINISHED
+
+Event doesn't contain any specific event data.
