@@ -9,6 +9,7 @@ This is the generic part of the event, which is common to all event types.
     "timestamp": "2026-04-23T14:30:00Z",
     "type": "documentVerification",
     "userId": "40405309-6406-4d6b-b4ef-642e52ac44f4",
+    "externalId": "629199e8-aa0d-4fc0-911c-089d53e0f608",
     "processId": "8b2dfae4-d955-4d8f-a95b-2d9c5a4b0e26",
     "processType": "onboarding",
     "identityVerificationId": "d3827099-3b6c-4df9-887d-4eac402fc4f9",
