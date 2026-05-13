@@ -8,6 +8,7 @@ List of event types:
 - PRESENCE_CHECK_FINISHED
 - PROCESS_FINISHED
 
+
 ## Structure
 
 This is the generic part of the event, which is common to all event types.
@@ -38,9 +39,11 @@ This is the generic part of the event, which is common to all event types.
 | `identityVerificationId` | String | Identity Verification ID. Can be `null` if the event is not related to the identity verification stage.                                                                                                                                   |
 | `eventData`              | Object | Object with structure different for each `type`.                                                                                                                                                                                          |
 
+
 ## Event data for different event types
  
 Different event types have different structures in `eventData`.
+
 
 ### Event data for DOCUMENT_VERIFICATION_FINISHED
 
@@ -95,6 +98,7 @@ This contains the results from the verification provider. Each document is sent 
 | `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                 |
 | `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
 
+
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
 
 This contains the overall document check result for all documents combined.
@@ -128,6 +132,7 @@ Additional checks:
 | `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.         |
 | `documentIds`            | String | Array of verified Document IDs.                                                       |
 
+
 ### Event data for PRESENCE_CHECK_FINISHED
 
 This contains the results of the verification provider.
@@ -155,6 +160,7 @@ This contains the results of the verification provider.
 | `provider`                  | String | Name of the configured external document provider. For example, `iProov`.             |
 | `score`                     | Number | Outcome confidence of the verification check on scale 0-10.                           |
 | `presenceCheckResult.frame` | String | Photo/image from the biometry session, encoded in base64.                             |
+
 
 ### Event data for PROCESS_FINISHED
 
