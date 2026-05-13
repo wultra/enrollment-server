@@ -1,5 +1,13 @@
 # Events
 
+This page describes the event types produced by the Enrollment Server Onboarding.
+
+List of event types:
+- DOCUMENT_VERIFICATION_FINISHED
+- FINAL_DOCUMENT_VERIFICATION_FINISHED
+- PRESENCE_CHECK_FINISHED
+- PROCESS_FINISHED
+
 ## Structure
 
 This is the generic part of the event, which is common to all event types.
