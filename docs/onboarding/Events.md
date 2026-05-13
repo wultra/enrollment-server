@@ -26,17 +26,17 @@ This is the generic part of the event, which is common to all event types.
 }
 ```
 
-| Attribute                | Type   | Description                                                                                                                                                                                      |
-|:-------------------------|:-------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`                     | String | Event ID.                                                                                                                                                                                        |
-| `timestamp`              | String | Timestamp, when the action happened.                                                                                                                                                             |
-| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED` `FINAL_DOCUMENT_VERIFICATION_FINISHED` `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`.                              |
-| `userId`                 | String | User ID.                                                                                                                                                                                         |
-| `externalUserId`         | String | External User ID. We introduced an External User ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers. |
-| `processId`              | String | Process ID.                                                                                                                                                                                      |
-| `processType`            | String | Name of the process, e.g. `onboarding`.                                                                                                                                                          |
-| `identityVerificationId` | String | Identity Verification ID. Can be `null` if the event is not related to the identity verification stage.                                                                                          |
-| `eventData`              | Object | Object with structure different for each `type`.                                                                                                                                                 |
+| Attribute                | Type   | Description                                                                                                                                                                                                                               |
+|:-------------------------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `id`                     | String | Event ID.                                                                                                                                                                                                                                 |
+| `timestamp`              | String | Timestamp, when the action happened.                                                                                                                                                                                                      |
+| `type`                   | String | Event type. Currently supported types are `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, `PRESENCE_CHECK_FINISHED`, and `PROCESS_FINISHED`.                                                                   |
+| `userId`                 | String | User ID.                                                                                                                                                                                                                                  |
+| `externalUserId`         | String | External User ID. We introduced an External User ID because the standard `userId` can change if we use the onboarding process with temporary activation. Used mainly for verification providers.                                          |
+| `processId`              | String | Process ID.                                                                                                                                                                                                                               |
+| `processType`            | String | Name of the process, e.g. `onboarding`.                                                                                                                                                                                                   |
+| `identityVerificationId` | String | Identity Verification ID. Can be `null` if the event is not related to the identity verification stage.                                                                                                                                   |
+| `eventData`              | Object | Object with structure different for each `type`.                                                                                                                                                                                          |
 
 ## Event data for different event types
  
