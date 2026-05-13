@@ -111,6 +111,15 @@ Additional checks:
 }
 ```
 
+| Attribute                | Type   | Description                                                                           |
+|:-------------------------|:-------|:--------------------------------------------------------------------------------------|
+| `documentVerificationId` | String | Document Verification ID.                                                             |
+| `status`                 | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`. |
+| `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
+| `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
+| `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.         |
+| `documentIds`            | String | Array of verified Document IDs.                                                       |
+
 ### Event data for PRESENCE_CHECK_FINISHED
 
 This contains the results of the verification provider.
@@ -129,6 +138,15 @@ This contains the results of the verification provider.
     }
 }
 ```
+
+| Attribute                   | Type   | Description                                                                           |
+|:----------------------------|:-------|:--------------------------------------------------------------------------------------|
+| `status`                    | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`. |
+| `rejectReason`              | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
+| `errorDetail`               | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
+| `provider`                  | String | Name of the configured external document provider. For example, `iProov`.             |
+| `score`                     | Number | Outcome confidence of the verification check on scale 0-10.                           |
+| `presenceCheckResult.frame` | String | Photo/image from the biometry session, encoded in base64.                             |
 
 ### Event data for PROCESS_FINISHED
 
