@@ -69,6 +69,14 @@ public class StateMachineService {
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
             throws IdentityVerificationException {
+        return processStateMachineEventInternal(ownerId, processId, event);
+    }
+
+    private StateMachine<OnboardingState, OnboardingEvent> processStateMachineEventInternal(
+            OwnerId ownerId,
+            String processId,
+            OnboardingEvent event
+    ) throws IdentityVerificationException {
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 OnboardingEvent.IDENTITY_VERIFICATION_INIT == event ?
                 prepareStateMachine(processId, OnboardingState.INITIAL, null) :
@@ -79,7 +87,6 @@ public class StateMachineService {
         return stateMachine;
     }
 
-    @SuppressWarnings("java:S6809") // New transaction is always created in this method, so @Transactional on the method processStateMachineEvent shouldn't cause any issue
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
         final var processId = identityVerification.getProcessId();
@@ -90,7 +97,7 @@ public class StateMachineService {
 
         try {
             lockAndVerifyProcess(processId);
-            processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
             return true;
         } catch (IdentityVerificationException e) {
             logger.warn("Unable to change state for process ID: {}", processId, e);

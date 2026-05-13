@@ -44,13 +44,13 @@ public class StateMachineBatchService {
      */
     public void changeMachineStatesInBatch() {
         final var countFinished = identityVerificationService.findAllIdentityVerificationsToChangeState()
-                .parallelStream()
+                .stream()
                 .map(stateMachineService::changeMachineState)
                 .filter(result -> result)
                 .count();
 
         if (countFinished > 0) {
-            logger.debug("Changed state of {} identity verifications", countFinished);
+            logger.info("Changed state of {} identity verifications", countFinished);
         }
     }
 }
