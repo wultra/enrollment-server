@@ -35,6 +35,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Admin controller.
  *
@@ -53,10 +55,10 @@ public class AdminController {
 
     @GetMapping("/template")
     public ObjectResponse<TemplateListResponse> templates() {
-        logger.info("action: templates, state: initiated");
+        logger.info("", kv("action", "templates"), kv("state", "initiated"));
         final TemplateListResponse response = new TemplateListResponse();
         response.addAll(convert(operationTemplateService.findAll()));
-        logger.info("action: templates, state: succeeded");
+        logger.info("", kv("action", "templates"), kv("state", "succeeded"));
         return new ObjectResponse<>(response);
     }
 

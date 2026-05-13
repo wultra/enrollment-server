@@ -25,6 +25,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Listener for {@link OnboardingCompletedAcceptedEvent}.
  *
@@ -47,18 +49,15 @@ public class OnboardingCompletedAcceptedListener {
     public void onOnboardingCompletedAccepted(final OnboardingCompletedAcceptedEvent event) {
         final var processId = event.getProcessId();
 
-        logger.info("action: onOnboardingCompletedAccepted, state: initiated, processId: {}, userId: {}, activationId: {}",
-                processId,
-                event.getOwnerId().getUserId(),
-                event.getOwnerId().getActivationId());
+        logger.info("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "initiated"), kv("processId", processId), kv("userId", event.getOwnerId().getUserId()), kv("activationId", event.getOwnerId().getActivationId()));
 
         try {
             final var documentData = userDataStoreService.collectDocumentData(processId);
             userDataStoreService.storeDocumentData(documentData);
 
-            logger.info("action: onOnboardingCompletedAccepted, state: succeeded, storedDocumentCount: {}", documentData.size());
+            logger.info("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "succeeded"), kv("storedDocumentCount", documentData.size()));
         } catch (final UserDataStoreClientException | RuntimeException e) {
-            logger.warn("action: onOnboardingCompletedAccepted, state: failed", e);
+            logger.warn("", kv("action", "onOnboardingCompletedAccepted"), kv("state", "failed"), e);
         }
     }
 }

@@ -40,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Base64;
 import java.util.Date;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Onboarding approval service.
  *
@@ -105,17 +107,17 @@ public class OnboardingApprovalService {
                     .image(loadImage(identityVerification))
                     .build();
 
-            logger.info("action: callApproveClient, state: initiated");
+            logger.info("", kv("action", "callApproveClient"), kv("state", "initiated"));
             final ApproveClientResponse response = onboardingProvider.approveClient(request);
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             final String resultReason = response.resultReason();
-            logger.info("action: callApproveClient, state: succeeded, approvalResult: {}, resultReason: {}", approvalResult, resultReason);
+            logger.info("", kv("action", "callApproveClient"), kv("state", "succeeded"), kv("approvalResult", approvalResult), kv("resultReason", resultReason));
             persistRejectReason(response, identityVerification);
 
             auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
             return approvalResult;
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            logger.warn("action: callApproveClient, state: failed, exceptionMessage: {}", e.getMessage(), e);
+            logger.warn("", kv("action", "callApproveClient"), kv("state", "failed"), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return null;
         }

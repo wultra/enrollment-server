@@ -48,6 +48,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Identity Verification V2 REST API Controller.
  *
@@ -102,15 +104,15 @@ class IdentityVerificationV2Controller {
     ) throws OnboardingProcessException, RemoteCommunicationException, IdentityVerificationLimitException, DocumentSubmitException, PowerAuthEncryptionException, IdentityVerificationException, OnboardingProcessLimitException, PowerAuthAuthenticationException {
 
         final DocumentSubmitV2Request requestObject = request.getRequestObject();
-        logger.info("action: submitDocumentsV2, state: initiated, processId: {}", requestObject.processId());
+        logger.info("", kv("action", "submitDocumentsV2"), kv("state", "initiated"), kv("processId", requestObject.processId()));
 
         try {
             final var response = identityVerificationRestService.submitDocumentsV2(requestObject, encryptionContext, apiAuthentication);
 
-            logger.info("action: submitDocumentsV2, state: succeeded");
+            logger.info("", kv("action", "submitDocumentsV2"), kv("state", "succeeded"));
             return response;
         } catch (final Exception e) {
-            logger.error("action: submitDocumentsV2, state: failed, error: {}", e.getMessage());
+            logger.error("", kv("action", "submitDocumentsV2"), kv("state", "failed"));
             throw e;
         }
     }

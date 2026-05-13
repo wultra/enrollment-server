@@ -36,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Controller with services related to Push Server registration.
  *
@@ -69,9 +71,9 @@ public class PushRegistrationController {
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("action: registerDeviceDefault, state: initiated, userId: {}", apiAuthentication.getUserId());
+        logger.info("", kv("action", "registerDeviceDefault"), kv("state", "initiated"), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("action: registerDeviceDefault, state: succeeded");
+        logger.info("", kv("action", "registerDeviceDefault"), kv("state", "succeeded"));
         return response;
     }
 
@@ -94,9 +96,9 @@ public class PushRegistrationController {
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("action: registerDeviceToken, state: initiated, userId: {}", apiAuthentication.getUserId());
+        logger.info("", kv("action", "registerDeviceToken"), kv("state", "initiated"), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("action: registerDeviceToken, state: succeeded");
+        logger.info("", kv("action", "registerDeviceToken"), kv("state", "succeeded"));
         return response;
     }
 

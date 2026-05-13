@@ -268,8 +268,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public @ResponseBody ErrorResponse handleNoResourceFoundException(final NoResourceFoundException e) {
-        logger.warn("Error occurred when calling an API: {}", e.getMessage());
-        logger.debug("Exception detail: ", e);
+        logger.warn("Error occurred when calling an API", e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
     }
 
@@ -282,8 +281,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(Base64DeserializationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleBase64DeserializationException(final Base64DeserializationException e) {
-        logger.warn("Base64 deserialization exception: {}", e.getMessage());
-        logger.debug("Exception detail: ", e);
+        logger.warn("Base64 deserialization exception", e);
         return new ErrorResponse(INVALID_REQUEST, "Deserialization of base64 value failed.");
     }
 }

@@ -70,6 +70,11 @@
             <artifactId>http-common</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.wultra.core</groupId>
+            <artifactId>logging-support</artifactId>
+        </dependency>
+
         <!-- Spring Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

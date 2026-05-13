@@ -45,6 +45,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Configuration controller.
  *
@@ -71,7 +73,7 @@ public class ConfigurationController {
             @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, InvalidRequestObjectException {
 
         final String processType = request.getRequestObject().processType();
-        logger.info("action: fetchConfiguration, state: initiated, processType: {}", processType);
+        logger.info("", kv("action", "fetchConfiguration"), kv("state", "initiated"), kv("processType", processType));
 
         if (encryptionContext == null) {
             throw new PowerAuthEncryptionException("ECIES decryption failed");
@@ -84,8 +86,8 @@ public class ConfigurationController {
                 .otpResendPeriodSeconds(onboardingConfig.getOtpResendPeriod().getSeconds())
                 .build();
 
-        logger.info("action: fetchConfiguration, state: succeeded");
-        logger.debug("action: fetchConfiguration, state: succeeded, result: {}", result);
+        logger.info("", kv("action", "fetchConfiguration"), kv("state", "succeeded"));
+        logger.debug("", kv("action", "fetchConfiguration"), kv("state", "succeeded"), kv("result", result));
 
         return new ObjectResponse<>(result);
     }
