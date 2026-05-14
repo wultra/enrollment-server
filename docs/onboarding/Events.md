@@ -157,7 +157,7 @@ This contains the results of the verification provider.
 | `status`                    | String | Status of the verification. Supported values are `ACCEPTED`, `REJECTED` and `FAILED`. |
 | `rejectReason`              | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
 | `errorDetail`               | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
-| `provider`                  | String | Name of the configured external document provider. For example, `iProov`.             |
+| `provider`                  | String | Name of the configured external presence check provider. For example, `iProov`.       |
 | `score`                     | Number | Outcome confidence of the verification check on scale 0-10.                           |
 | `presenceCheckResult.frame` | String | Photo/image from the biometry session, encoded in base64.                             |
 
