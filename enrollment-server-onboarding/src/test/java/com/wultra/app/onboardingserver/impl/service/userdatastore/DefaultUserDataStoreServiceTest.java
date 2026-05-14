@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -544,7 +545,7 @@ class DefaultUserDataStoreServiceTest {
         private MockResponse buildResponse() {
             return new MockResponse()
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody("""
                             {
                                 "status": "OK",

@@ -53,7 +53,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.*;
@@ -1179,7 +1178,7 @@ class MicroblinkDocumentVerificationProviderTest {
         final var result = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(json)
                 .replaceAll("");
 
-        return new ObjectMapper().readTree(result).toString();
+        return JsonMapper.builder().build().readTree(result).toString();
     }
 
     private void assertResultForPassResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JacksonException {

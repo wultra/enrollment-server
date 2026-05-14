@@ -52,18 +52,16 @@ class ZenidConfig {
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid(final ZenidConfigProps configProps) {
-        final SimpleModule timeModule = createJavaTimeModule();
-        final JsonMapper.Builder builder = JsonMapper.builder()
-                .addModule(timeModule);
         final RestClientConfiguration.JacksonConfiguration jacksonConfiguration =
                 configProps.getRestClientConfig().getJacksonConfiguration();
-
         Assert.state(
                 jacksonConfiguration != null,
                 "Jackson configuration is expected for ZenID working properly"
         );
 
-        final ObjectMapper mapper = builder.build();
+        final JsonMapper.Builder builder = JsonMapper.builder()
+                .addModule(createJavaTimeModule());
+
         jacksonConfiguration.getDeserialization()
                 .forEach((feature, state) -> {
                     if (state) {
@@ -80,7 +78,7 @@ class ZenidConfig {
                         builder.disable(feature);
                     }
                 });
-        return mapper;
+        return builder.build();
     }
 
     private static SimpleModule createJavaTimeModule() {

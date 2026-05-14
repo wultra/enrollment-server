@@ -183,7 +183,7 @@ class InnovatricsApiService {
         final String apiPath = "/api/v1/customers/%s/liveness/records".formatted(customerId);
 
         final MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
-        httpHeaders.set("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
         try {
             logger.info("Calling liveness record creation, {}", ownerId);

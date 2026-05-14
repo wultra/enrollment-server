@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Service class used for JSON serialization.
@@ -34,7 +35,7 @@ public class JsonSerializationService {
 
     private static final Logger logger = LoggerFactory.getLogger(JsonSerializationService.class);
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     /**
      * Deserialize an object from JSON.

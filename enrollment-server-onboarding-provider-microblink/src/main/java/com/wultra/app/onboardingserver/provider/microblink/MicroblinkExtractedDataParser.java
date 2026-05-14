@@ -92,7 +92,7 @@ public class MicroblinkExtractedDataParser {
         final var result = new EnumMap<ExtractedDataField, ExtractedValue>(ExtractedDataField.class);
 
         for (final var node : root) {
-            final var microblinkField = node.path("field").asText(null);
+            final var microblinkField = node.path("field").asString(null);
             final var field = ExtractedDataField.fromMicroblinkField(microblinkField);
 
             if (field == null) {
@@ -110,7 +110,7 @@ public class MicroblinkExtractedDataParser {
 
     private static ExtractedValue extractValue(final JsonNode node) {
         if (node.hasNonNull("value")) {
-            return new ExtractedValue.Text(node.path("value").asText(null));
+            return new ExtractedValue.Text(node.path("value").asString(null));
         } else if (isSuccessfullyParsed(node)) {
             final int year = node.path("year").asInt(0);
             final int month = node.path("month").asInt(0);

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Service providing Innovatrics business features beyond {@link InnovatricsPresenceCheckProvider}.
@@ -112,11 +113,13 @@ class InnovatricsLivenessService {
         return ownerId;
     }
 
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
+
     private static String fetchCustomerId(final OwnerId id, final IdentityVerificationEntity identityVerification) throws IdentityVerificationException {
         final String sessionInfoString = StringUtils.defaultIfEmpty(identityVerification.getSessionInfo(), "{}");
         final SessionInfo sessionInfo;
         try {
-            sessionInfo = new ObjectMapper().readValue(sessionInfoString, SessionInfo.class);
+            sessionInfo = OBJECT_MAPPER.readValue(sessionInfoString, SessionInfo.class);
         } catch (JacksonException e) {
             throw new IdentityVerificationException("Unable to deserialize session info", e);
         }

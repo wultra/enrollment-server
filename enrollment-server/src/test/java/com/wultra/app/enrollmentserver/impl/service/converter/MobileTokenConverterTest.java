@@ -26,7 +26,7 @@ import com.wultra.security.powerauth.lib.mtoken.model.entity.*;
 import com.wultra.security.powerauth.lib.mtoken.model.entity.attributes.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
-import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class MobileTokenConverterTest {
 
-    private final MobileTokenConverter tested = new MobileTokenConverter(new ObjectMapper());
+    private final MobileTokenConverter tested = new MobileTokenConverter(JsonMapper.builder().build());
 
     @Test
     void testConvertUiNull() throws Exception {

@@ -24,6 +24,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
@@ -57,7 +58,7 @@ class RestUserInfoProviderTest {
     @Test
     void testFetchUserClaimsForUserId() throws Exception {
         mockWebServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", MediaType.APPLICATION_JSON)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .setBody("""
                         {
                           "status": "OK",

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 import java.util.Locale;
@@ -46,7 +47,7 @@ public final class OnboardingProcessEntityWrapper {
 
     private final OnboardingProcessEntity entity;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = JsonMapper.builder().build();
 
     public OnboardingProcessEntityWrapper(final OnboardingProcessEntity entity) {
         this.entity = entity;
