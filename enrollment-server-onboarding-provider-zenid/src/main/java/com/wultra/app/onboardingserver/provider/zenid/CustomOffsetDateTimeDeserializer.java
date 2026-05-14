@@ -38,8 +38,9 @@ class CustomOffsetDateTimeDeserializer extends ValueDeserializer<OffsetDateTime>
 
     @Override
     public OffsetDateTime deserialize(JsonParser parser, DeserializationContext context) {
-        if (parser.getText() != null && parser.getText().length() == 10) { // yyyy-MM-dd
-            return LocalDate.parse(parser.getText(), DateTimeFormatter.ISO_DATE)
+        final String text = parser.getString();
+        if (text != null && text.length() == 10) { // yyyy-MM-dd
+            return LocalDate.parse(text, DateTimeFormatter.ISO_DATE)
                     .atStartOfDay(ZoneId.of("UTC"))
                     .toOffsetDateTime();
         }
