@@ -64,7 +64,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -99,11 +98,10 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     private final ConfigurationDataDto integrationConfigDto;
 
-    // Special instance of ObjectMapper for normalized serialization of identification data
+    // Special instance of ObjectMapper for normalized serialization of identification data.
     private final ObjectMapper normalizedMapper = JsonMapper
             .builder()
             .enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
             .enable(SerializationFeature.INDENT_OUTPUT)
             .defaultDateFormat(new SimpleDateFormat(IDENTIFICATION_DATA_DATE_FORMAT))

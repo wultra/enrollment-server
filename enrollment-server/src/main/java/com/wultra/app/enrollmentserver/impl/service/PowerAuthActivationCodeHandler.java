@@ -25,7 +25,6 @@ import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -46,9 +45,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
 
     private final PowerAuthClient powerAuthClient;
 
-    private final ObjectMapper objectMapper = JsonMapper.builder()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Override
     public DelegatingActivationCodeHandler.TransferConfigurationResponse fetchTransferConfiguration(final DelegatingActivationCodeHandler.TransferConfigurationRequest request) throws ActivationCodeException {

@@ -52,7 +52,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.*;
@@ -192,9 +191,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 List.of(),
                 new DocumentVerificationResponse.ExtractionClassInfo("Id", null));
 
-        final var objectMapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+        final var objectMapper = JsonMapper.builder().build();
 
         when(microblinkConfigProperties.getMobileSdkConfigs()).thenReturn(MOBILE_SDK_CONFIGS);
 

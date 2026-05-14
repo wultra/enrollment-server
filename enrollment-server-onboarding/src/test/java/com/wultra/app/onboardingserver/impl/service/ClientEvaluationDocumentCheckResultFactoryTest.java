@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -63,9 +62,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
     private static final String COUNTRY = "CZE";
     private static final String DOCUMENT_VERIFICATION_ID = "03e059b0-ff6f-40ab-8ba3-a62e65c0f31d";
 
-    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
     @Mock
     private ProcessedDocumentDataRepository processedDocumentDataRepository;

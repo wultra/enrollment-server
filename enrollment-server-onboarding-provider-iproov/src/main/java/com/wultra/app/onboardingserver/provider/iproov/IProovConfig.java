@@ -54,9 +54,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.transport.ProxyProvider;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
@@ -81,10 +79,7 @@ class IProovConfig {
      */
     @Bean("objectMapperIproov")
     public ObjectMapper objectMapperIproov() {
-        return JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                .build();
+        return JsonMapper.builder().build();
     }
 
     /**

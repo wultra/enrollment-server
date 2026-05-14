@@ -28,8 +28,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.util.Assert;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
 
@@ -52,32 +52,19 @@ class ZenidConfig {
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid(final ZenidConfigProps configProps) {
+        final RestClientConfiguration restClientConfig = configProps.getRestClientConfig();
         final RestClientConfiguration.JacksonConfiguration jacksonConfiguration =
-                configProps.getRestClientConfig().getJacksonConfiguration();
-        Assert.state(
-                jacksonConfiguration != null,
-                "Jackson configuration is expected for ZenID working properly"
-        );
+                restClientConfig != null ? restClientConfig.getJacksonConfiguration() : null;
 
         final JsonMapper.Builder builder = JsonMapper.builder()
-                .addModule(createJavaTimeModule());
+                .addModule(createJavaTimeModule())
+                .enable(DateTimeFeature.WRITE_DATES_WITH_ZONE_ID)
+                .disable(DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
 
-        jacksonConfiguration.getDeserialization()
-                .forEach((feature, state) -> {
-                    if (state) {
-                        builder.enable(feature);
-                    } else {
-                        builder.disable(feature);
-                    }
-                });
-        jacksonConfiguration.getSerialization()
-                .forEach((feature, state) -> {
-                    if (state) {
-                        builder.enable(feature);
-                    } else {
-                        builder.disable(feature);
-                    }
-                });
+        if (jacksonConfiguration != null) {
+            jacksonConfiguration.getDeserialization().forEach(builder::configure);
+            jacksonConfiguration.getSerialization().forEach(builder::configure);
+        }
         return builder.build();
     }
 
@@ -106,7 +93,9 @@ class ZenidConfig {
         headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig() != null
+                ? configProps.getRestClientConfig()
+                : new RestClientConfiguration();
         restClientConfiguration.setBaseUrl(serviceBaseUrl);
         restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration, createJavaTimeModule());

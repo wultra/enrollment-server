@@ -27,9 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
@@ -46,10 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ExtendWith(MockitoExtension.class)
 class MicroblinkExtractedDataParserTest {
 
-    private static final ObjectMapper MAPPER = JsonMapper.builder()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .build();
+    private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
     private static final String EXTRACTED_DATA_JSON = loadExtractedDataJson();
 
