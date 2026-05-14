@@ -96,7 +96,7 @@ This contains the results from the verification provider. Each document is sent 
 | `errorDetail`                | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                                                                                                                                                          |
 | `provider`                   | String | Name of the configured external biometry provider. For example, `Microblink`.                                                                                                                                                                               |
 | `score`                      | Number | Outcome confidence of the verification check on scale 0-10.                                                                                                                                                                                                 |
-| `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only in if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`. |
+| `documentVerificationResult` | Object | Contains some details about the document and extracted data. Object is present only if the `status` is `ACCEPTED` or `REJECTED`. Otherwise is `null`. Complete response from verification provider can be found in `documentVerificationResult.rawData`.    |
 
 
 ### Event data for FINAL_DOCUMENT_VERIFICATION_FINISHED
