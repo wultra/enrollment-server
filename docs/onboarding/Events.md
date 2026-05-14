@@ -187,5 +187,5 @@ This contains final process data.
 | `errorDetail`              | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                                                   |
 | `deviceData.locale`        | String | Client locale recorded during process initialization.                                                                                                       |
 | `deviceData.ipAddress`     | String | Client IP address. Keep in mind that IP Address can change during Onboarding process.                                |
-| `deviceData.httpUserAgent` | String | Client User-Agent recorded during process initialization..                                                                                                   |
+| `deviceData.httpUserAgent` | String | Client User-Agent recorded during process initialization.                                                                                                    |
 | `deviceData.fdsData`       | Object | Optional FDS data sent from the mobile device during Onboarding initialization using `/api/onboarding/start` method. |
