@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.iproov;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.wultra.app.onboardingserver.provider.iproov.model.api.AuthTokenResponse;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
@@ -57,6 +54,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.transport.ProxyProvider;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
 import java.util.Map;
@@ -80,10 +79,7 @@ class IProovConfig {
      */
     @Bean("objectMapperIproov")
     public ObjectMapper objectMapperIproov() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        return mapper;
+        return JsonMapper.builder().build();
     }
 
     /**
@@ -117,7 +113,7 @@ class IProovConfig {
     }
 
     private static AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager authorizedClientServiceReactiveOAuth2AuthorizedClientManager(final IProovConfigProps configProps) {
-        final String tokenUri = UriComponentsBuilder.fromHttpUrl(configProps.getServiceBaseUrl() + "/{apiKey}/access_token")
+        final String tokenUri = UriComponentsBuilder.fromUriString(configProps.getServiceBaseUrl() + "/{apiKey}/access_token")
                 .buildAndExpand(configProps.getApiKey())
                 .toUriString();
         logger.debug("Resolved tokenUri: {}", tokenUri);

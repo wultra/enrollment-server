@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -82,7 +83,7 @@ class ZenidRestApiServiceTest {
         assertNotNull(tested);
 
         mockWebServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", MediaType.APPLICATION_JSON)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 // Anonymized real data taken from ZenID
                 .setBody("""
                         {

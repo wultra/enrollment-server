@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -78,7 +79,7 @@ class InnovatricsRestApiServiceTest {
     void testCreateCustomer() throws Exception {
         final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", MediaType.APPLICATION_JSON)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 // Real response to POST /api/v1/customers
                 .setBody("""
                         {
@@ -99,7 +100,7 @@ class InnovatricsRestApiServiceTest {
     void testErrorResponse() {
         final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", MediaType.APPLICATION_JSON)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 // Real response to uploading a page without previous document resource creation
                 .setBody("""
                         {
@@ -116,7 +117,7 @@ class InnovatricsRestApiServiceTest {
     void testNonMatchingPageType() throws Exception {
         final OwnerId ownerId = createOwnerId();
         mockWebServer.enqueue(new MockResponse()
-                .setHeader("Content-Type", MediaType.APPLICATION_JSON)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 // Real response to uploading a second page that is different from the first one
                 .setBody("""
                         {

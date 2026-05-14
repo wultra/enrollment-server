@@ -182,8 +182,8 @@ class InnovatricsApiService {
     public CreateCustomerLivenessRecordResponse createLivenessRecord(final String customerId, final byte[] requestData, final OwnerId ownerId) throws RemoteCommunicationException{
         final String apiPath = "/api/v1/customers/%s/liveness/records".formatted(customerId);
 
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        final MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
         try {
             logger.info("Calling liveness record creation, {}", ownerId);

@@ -17,8 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.security.powerauth.client.model.response.GetApplicationConfigResponse;
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import org.junit.jupiter.api.Test;
@@ -26,6 +24,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PowerAuthActivationCodeHandlerTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Mock
     private PowerAuthClient powerAuthClient;
@@ -121,7 +122,7 @@ class PowerAuthActivationCodeHandlerTest {
         assertNull(result);
     }
 
-    private GetApplicationConfigResponse createResponse() throws JsonProcessingException {
+    private GetApplicationConfigResponse createResponse() throws JacksonException {
         final String json = """
                 {
                   "applicationId": "source-1",

@@ -18,9 +18,6 @@
 
 package com.wultra.app.enrollmentserver.impl.service.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateEntity;
 import com.wultra.app.enrollmentserver.database.entity.OperationTemplateParam;
 import com.wultra.app.enrollmentserver.errorhandling.MobileTokenConfigurationException;
@@ -36,6 +33,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -110,7 +110,7 @@ public class MobileTokenConverter {
             operation.setFormData(formData);
 
             return operation;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.debug("Unable to parse JSON with operation template parameters: {}", e.getMessage());
             logger.debug("Exception detail", e);
             throw new MobileTokenConfigurationException("ERR_CONFIG", "Invalid JSON structure for the configuration: " + e.getMessage());
@@ -120,7 +120,7 @@ public class MobileTokenConverter {
     private FormData prepareFormData(
             final OperationTemplateEntity operationTemplate,
             final Map<String, String> parameters,
-            final UnaryOperator<String> substitutor) throws JsonProcessingException {
+            final UnaryOperator<String> substitutor) throws JacksonException {
 
         final FormData formData = new FormData();
         formData.setTitle(substitutor.apply(operationTemplate.getTitle()));
@@ -143,7 +143,7 @@ public class MobileTokenConverter {
         return formData;
     }
 
-    private ResultTexts convert(final String source) throws JsonProcessingException {
+    private ResultTexts convert(final String source) throws JacksonException {
         if (!StringUtils.hasText(source)) {
             return null;
         }
@@ -164,7 +164,7 @@ public class MobileTokenConverter {
     private UiExtensions convertUiExtension(
             final OperationDetailResponse operationDetail,
             final OperationTemplateEntity operationTemplate,
-            final UnaryOperator<String> substitutor) throws JsonProcessingException {
+            final UnaryOperator<String> substitutor) throws JacksonException {
 
         if (StringUtils.hasText(operationTemplate.getUi())) {
             final String uiJsonString = substitutor.apply(operationTemplate.getUi());
@@ -200,7 +200,7 @@ public class MobileTokenConverter {
         }
     }
 
-    private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JsonProcessingException {
+    private UiExtensions deserializeUiExtensions(final String uiJsonString, final OperationDetailResponse operationDetail) throws JacksonException {
         final UiExtensions uiExtensions = objectMapper.readValue(uiJsonString, UiExtensions.class);
         if (uiExtensions.getPreApprovalScreen() != null
                 && uiExtensions.getPreApprovalScreen().getType() == PreApprovalScreenV1.ScreenType.QR_SCAN

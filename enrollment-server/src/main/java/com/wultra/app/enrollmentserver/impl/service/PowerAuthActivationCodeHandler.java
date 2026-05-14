@@ -17,9 +17,6 @@
  */
 package com.wultra.app.enrollmentserver.impl.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.errorhandling.ActivationCodeException;
 import com.wultra.security.powerauth.client.model.entity.ApplicationConfigurationItem;
 import com.wultra.security.powerauth.client.model.error.PowerAuthClientException;
@@ -27,6 +24,9 @@ import com.wultra.security.powerauth.client.model.response.GetApplicationConfigR
 import com.wultra.security.powerauth.client.v4.PowerAuthClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +45,7 @@ class PowerAuthActivationCodeHandler implements DelegatingActivationCodeHandler 
 
     private final PowerAuthClient powerAuthClient;
 
-    private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Override
     public DelegatingActivationCodeHandler.TransferConfigurationResponse fetchTransferConfiguration(final DelegatingActivationCodeHandler.TransferConfigurationRequest request) throws ActivationCodeException {

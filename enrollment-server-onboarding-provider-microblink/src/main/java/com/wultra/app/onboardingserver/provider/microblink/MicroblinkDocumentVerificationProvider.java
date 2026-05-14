@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -47,6 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.CollectionUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -371,7 +371,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
             final var responseJson = objectMapper.readTree(responseBodyJson);
 
             return Optional.of(new DocumentVerificationResponseBundle(parsedResponseBody, (ObjectNode) responseJson));
-        } catch (final JsonProcessingException e) {
+        } catch (final JacksonException e) {
             final var traceId = Optional.ofNullable(responseBodyJson)
                     .map(json -> MICROBLINK_TRACE_ID_PATTERN.matcher(responseBodyJson))
                     .filter(Matcher::find)
