@@ -86,7 +86,7 @@ public class DocumentVerificationService {
             documentsVerificationResult = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         } catch (RemoteCommunicationException | DocumentVerificationException e) {
             logger.error("action: executeFinalDocumentVerification, state: failed, exceptionMessage: {}", e.getMessage(), e);
-            return FinalDocumentVerificationResult.FAILED;
+            return fail(identityVerification, e.getMessage(), documentVerifications, ownerId);
         }
 
         final String verificationId = documentsVerificationResult.getVerificationId();
@@ -101,7 +101,7 @@ public class DocumentVerificationService {
 
         final var result = switch (status) {
             case ACCEPTED -> accept(identityVerification, documentVerifications);
-            case FAILED -> fail(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
+            case FAILED -> fail(identityVerification, documentsVerificationResult.getErrorDetail(), documentVerifications, ownerId);
             case REJECTED -> reject(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
             // Only sync mode is supported
             case IN_PROGRESS -> FinalDocumentVerificationResult.FAILED;
@@ -156,22 +156,22 @@ public class DocumentVerificationService {
 
     private FinalDocumentVerificationResult fail(
             final IdentityVerificationEntity identityVerification,
-            final DocumentsVerificationResult result,
+            final String errorDetail,
             final List<DocumentVerificationEntity> documentVerifications,
             final OwnerId ownerId) {
 
         documentVerifications.forEach(docVerification -> {
             docVerification.setStatus(DocumentStatus.FAILED);
-            docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
+            docVerification.setErrorDetail(errorDetail);
             docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
-            logger.info("Document verification ID: {}, failed: {}, {}", docVerification.getId(), result.getErrorDetail(), ownerId);
+            logger.info("Document verification ID: {}, failed: {}, {}", docVerification.getId(), errorDetail, ownerId);
             auditService.audit(docVerification, "Document failed at final verification for user: {}", identityVerification.getUserId());
         });
 
-        identityVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
+        identityVerification.setErrorDetail(errorDetail);
         identityVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
-        logger.info("Identity verification ID: {}, failed: {}, {}", identityVerification.getId(), result.getErrorDetail(), ownerId);
+        logger.info("Identity verification ID: {}, failed: {}, {}", identityVerification.getId(), errorDetail, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
         return FinalDocumentVerificationResult.FAILED;
