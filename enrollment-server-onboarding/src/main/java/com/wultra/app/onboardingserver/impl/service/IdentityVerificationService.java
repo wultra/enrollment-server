@@ -319,6 +319,7 @@ public class IdentityVerificationService {
             logger.debug("All required document types are present for identity verification ID: {}", identityVerificationId);
         }
 
+        // TODO (racansky, 2026-05-15, #1783) right now all documents must be accepted to move forward, failed must be resumbitted
         if (docVerificationsToProcess.stream()
                 .map(DocumentVerificationEntity::getStatus)
                 .allMatch(it -> it == DocumentStatus.ACCEPTED)) {
