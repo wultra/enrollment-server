@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine.action.verification;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import com.wultra.app.onboardingserver.statemachine.NullObject;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -51,7 +50,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         final var result = identityVerificationService.startDocumentVerification(ownerId, identityVerification);
-        context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
     }
 
     /**

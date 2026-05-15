@@ -25,8 +25,6 @@ import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.impl.service.*;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
-import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import com.wultra.app.onboardingserver.statemachine.action.otp.OtpVerificationResendAction;
 import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationInitAction;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -152,7 +150,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
         when(clientEvaluationService.processClientEvaluation(any(), any()))
-                .thenReturn(EvaluateClientResponse.EvaluationResult.OK);
+                .thenReturn(ClientEvaluationService.ClientEvaluationResult.OK);
 
         sendMessage(OnboardingEvent.DOCUMENT_UPLOADED, stateMachine);
 
@@ -402,7 +400,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
                 .thenReturn(true);
 
         when(onboardingApprovalService.approve(any()))
-                .thenReturn(ApproveClientResponse.ApprovalResult.OK);
+                .thenReturn(OnboardingApprovalService.ApprovalResult.OK);
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
@@ -429,7 +427,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
                 .thenReturn(true);
 
         when(onboardingApprovalService.approve(any()))
-                .thenReturn(ApproveClientResponse.ApprovalResult.WAIT);
+                .thenReturn(OnboardingApprovalService.ApprovalResult.WAIT);
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
@@ -490,7 +488,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
                 .thenReturn(true);
         when(onboardingApprovalService.approve(any()))
-                .thenReturn(ApproveClientResponse.ApprovalResult.NOK);
+                .thenReturn(OnboardingApprovalService.ApprovalResult.NOK);
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 
@@ -515,7 +513,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         when(onboardingApprovalService.isOnboardingApprovalEnabled(any()))
                 .thenReturn(true);
         when(onboardingApprovalService.approve(any()))
-                .thenReturn(null);
+                .thenReturn(OnboardingApprovalService.ApprovalResult.FAILED);
 
         sendMessage(OnboardingEvent.OTP_VERIFIED, stateMachine);
 

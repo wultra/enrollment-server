@@ -32,7 +32,6 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryPolicy;
@@ -111,7 +110,7 @@ public class ClientEvaluationService {
      * @param identityVerification identity verification to process
      * @param ownerId Owner identification.
      */
-    public @Nullable EvaluateClientResponse.EvaluationResult processClientEvaluation(
+    public ClientEvaluationResult processClientEvaluation(
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId
     ) {
@@ -143,11 +142,19 @@ public class ClientEvaluationService {
             final AtomicInteger attemptCounter = new AtomicInteger();
             final EvaluateClientResponse response = retryTemplate.execute(() -> callEvaluateClient(request, attemptCounter));
             processEvaluationResponse(identityVerification, ownerId, response);
-            return response.getEvaluationResult();
+            return convert(response.getEvaluationResult());
         } catch (final RetryException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
-            return null;
+            return ClientEvaluationResult.FAILED;
         }
+    }
+
+    private static ClientEvaluationResult convert(final EvaluateClientResponse.EvaluationResult source) {
+        return switch (source) {
+            case OK -> ClientEvaluationResult.OK;
+            case NOK -> ClientEvaluationResult.NOK;
+            case WAIT -> ClientEvaluationResult.WAIT;
+        };
     }
 
     private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final AtomicInteger attemptCounter) throws OnboardingProviderException {
@@ -219,5 +226,22 @@ public class ClientEvaluationService {
         } else { // WAIT
             logger.info("Client evaluation waiting for identity verification id: {}", identityVerificationId);
         }
+    }
+
+    public enum ClientEvaluationResult {
+
+        OK,
+
+        /**
+         * Business negative result.
+         */
+        NOK,
+
+        WAIT,
+
+        /**
+         * Technical failure.
+         */
+        FAILED
     }
 }

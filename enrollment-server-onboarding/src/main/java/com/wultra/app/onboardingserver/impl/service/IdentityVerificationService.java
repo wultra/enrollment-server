@@ -45,7 +45,6 @@ import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocum
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -181,10 +180,10 @@ public class IdentityVerificationService {
      *
      * @param ownerId Owner identification.
      * @param identityVerification Identity verification.
-     * @return Document evaluation status or {@code null} if the verification process failed at document verification provider.
+     * @return Document evaluation status.
      */
     @Transactional
-    public @Nullable DocumentEvaluationStatus startDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) {
+    public DocumentEvaluationStatus startDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) {
         logger.info("action: startDocumentVerification, state: initiated");
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
@@ -211,7 +210,7 @@ public class IdentityVerificationService {
             result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         } catch (RemoteCommunicationException | DocumentVerificationException e) {
             logger.warn("action: startDocumentVerification, state: failed, exceptionMessage: {}", e.getMessage(), e);
-            return null;
+            return DocumentEvaluationStatus.FAILED;
         }
 
         final String verificationId = result.getVerificationId();
@@ -582,6 +581,8 @@ public class IdentityVerificationService {
          * Some documents are not accepted or not all required documents are accepted yet.
          */
         NOK,
+
+        FAILED
     }
 
     public enum FinalVerificationResult {

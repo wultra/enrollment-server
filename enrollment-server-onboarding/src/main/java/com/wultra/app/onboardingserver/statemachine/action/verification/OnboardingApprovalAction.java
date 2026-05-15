@@ -18,8 +18,6 @@ package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.OnboardingApprovalService;
-import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
-import com.wultra.app.onboardingserver.statemachine.NullObject;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -46,8 +44,8 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        final ApproveClientResponse.ApprovalResult result = onboardingApprovalService.approve(identityVerification);
-        context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
+        final OnboardingApprovalService.ApprovalResult result = onboardingApprovalService.approve(identityVerification);
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
     }
 
     /**
@@ -56,7 +54,7 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
      * @return guard returning {@code true} if the approval result is OK
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
-        return isResult(ApproveClientResponse.ApprovalResult.OK);
+        return isResult(OnboardingApprovalService.ApprovalResult.OK);
     }
 
     /**
@@ -65,7 +63,7 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
      * @return guard returning {@code true} if the approval result is NOK
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultRejected() {
-        return isResult(ApproveClientResponse.ApprovalResult.NOK);
+        return isResult(OnboardingApprovalService.ApprovalResult.NOK);
     }
 
     /**
@@ -74,17 +72,17 @@ public class OnboardingApprovalAction implements Action<OnboardingState, Onboard
      * @return guard returning {@code true} if the approval result is WAIT
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
-        return isResult(ApproveClientResponse.ApprovalResult.WAIT);
+        return isResult(OnboardingApprovalService.ApprovalResult.WAIT);
     }
 
-    private static Guard<OnboardingState, OnboardingEvent> isResult(ApproveClientResponse.ApprovalResult expectedResult) {
+    private static Guard<OnboardingState, OnboardingEvent> isResult(OnboardingApprovalService.ApprovalResult expectedResult) {
         return context -> evaluateResult(context, expectedResult);
     }
 
-    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final ApproveClientResponse.ApprovalResult expectedResult) {
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final OnboardingApprovalService.ApprovalResult expectedResult) {
         final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
 
-        if (contextValue instanceof ApproveClientResponse.ApprovalResult result) {
+        if (contextValue instanceof OnboardingApprovalService.ApprovalResult result) {
             return expectedResult == result;
         }
 
