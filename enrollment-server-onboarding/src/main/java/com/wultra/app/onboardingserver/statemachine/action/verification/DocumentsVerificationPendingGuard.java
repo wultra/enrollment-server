@@ -48,11 +48,7 @@ public class DocumentsVerificationPendingGuard implements Guard<OnboardingState,
 
         final boolean pendingVerificationDocumentPresent = documentVerificationService.hasDocumentsVerificationPending(identityVerification);
 
-        if (pendingVerificationDocumentPresent) {
-            logger.info("Pending verification document present for {}, {}", identityVerification, ownerId);
-        } else {
-            logger.debug("No pending verification document present for {}, {}", identityVerification, ownerId);
-        }
+        logger.info("Pending verification document present: {} for {}, {}", pendingVerificationDocumentPresent, identityVerification, ownerId);
 
         return pendingVerificationDocumentPresent;
     }
