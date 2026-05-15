@@ -116,9 +116,7 @@ public class PresenceCheckService {
             return result;
         } catch (final PresenceCheckException | RemoteCommunicationException e) {
             logger.warn("action: checkPresenceVerification, state: failed, identityVerificationId: {}, exceptionMessage: {}", identityVerification.getId(), e.getMessage(), e);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
-            identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-            identityVerification.setTimestampFailed(ownerId.getTimestamp());
+            processFailedPresenceCheck(ownerId, identityVerification, e.getMessage());
             return PresenceCheckStatus.FAILED;
         }
     }
@@ -349,13 +347,7 @@ public class PresenceCheckService {
         switch (result.getStatus()) {
             case ACCEPTED -> // The timestampFinished parameter is not set yet, there may be other steps ahead
                     saveScaResult(ScaResultEntity.Result.SUCCESS, idVerification, ownerId);
-            case FAILED -> {
-                idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
-                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-                idVerification.setTimestampFailed(ownerId.getTimestamp());
-                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
-                saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
-            }
+            case FAILED -> processFailedPresenceCheck(ownerId, idVerification, result.getErrorDetail());
             case REJECTED -> {
                 idVerification.setRejectReason(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
@@ -367,6 +359,14 @@ public class PresenceCheckService {
                     throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
+    }
+
+    private void processFailedPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final String errorDetail) {
+        idVerification.setErrorDetail(errorDetail);
+        idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
+        idVerification.setTimestampFailed(ownerId.getTimestamp());
+        logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, errorDetail);
+        saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
     }
 
     private void saveScaResult(final ScaResultEntity.Result presenceCheckResult, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
