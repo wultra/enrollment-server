@@ -59,7 +59,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
      * @return guard returning {@code true} if all documents are accepted
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
-        return isResult(IdentityVerificationService.DocumentEvaluationStatus.OK);
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.ALL_DOCUMENTS_ACCEPTED);
     }
 
     /**
@@ -68,17 +68,17 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
      * @return guard returning {@code true} if some documents are not accepted or not all required documents are accepted yet
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
-        return isResult(IdentityVerificationService.DocumentEvaluationStatus.NOK);
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS);
     }
 
-    private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.VerificationDocumentActionResult expectedResult) {
         return context -> evaluateResult(context, expectedResult);
     }
 
-    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.DocumentEvaluationStatus expectedResult) {
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.VerificationDocumentActionResult expectedResult) {
         final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
 
-        if (contextValue instanceof IdentityVerificationService.DocumentEvaluationStatus result) {
+        if (contextValue instanceof IdentityVerificationService.VerificationDocumentActionResult result) {
             return expectedResult == result;
         }
 

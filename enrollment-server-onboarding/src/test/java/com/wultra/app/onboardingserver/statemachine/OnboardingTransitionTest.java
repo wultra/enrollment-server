@@ -135,7 +135,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
-                .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.OK);
+                .thenReturn(IdentityVerificationService.VerificationDocumentActionResult.ALL_DOCUMENTS_ACCEPTED);
 
         when(documentVerificationService.hasDocumentsVerificationPending(any()))
                 .thenReturn(true);
@@ -174,7 +174,7 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
         when(identityVerificationService.startDocumentVerification(any(), any()))
-                .thenReturn(IdentityVerificationService.DocumentEvaluationStatus.NOK);
+                .thenReturn(IdentityVerificationService.VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS);
 
         when(documentVerificationService.hasDocumentsVerificationPending(any()))
                 .thenReturn(true);

@@ -183,7 +183,7 @@ public class IdentityVerificationService {
      * @return Document evaluation status.
      */
     @Transactional
-    public DocumentEvaluationStatus startDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) {
+    public VerificationDocumentActionResult startDocumentVerification(OwnerId ownerId, IdentityVerificationEntity identityVerification) {
         logger.info("action: startDocumentVerification, state: initiated");
         List<DocumentVerificationEntity> docVerifications =
                 documentVerificationRepository.findAllDocumentVerifications(identityVerification,
@@ -210,7 +210,7 @@ public class IdentityVerificationService {
             result = documentVerificationProvider.verifyDocuments(ownerId, uploadIds);
         } catch (RemoteCommunicationException | DocumentVerificationException e) {
             logger.warn("action: startDocumentVerification, state: failed, exceptionMessage: {}", e.getMessage(), e);
-            return DocumentEvaluationStatus.FAILED;
+            return VerificationDocumentActionResult.FAILED;
         }
 
         final String verificationId = result.getVerificationId();
@@ -301,7 +301,7 @@ public class IdentityVerificationService {
         return result.isSuccessful() ? FinalVerificationResult.OK : FinalVerificationResult.FAILED;
     }
 
-    private DocumentEvaluationStatus evaluateDocuments(
+    private VerificationDocumentActionResult evaluateDocuments(
             final IdentityVerificationEntity idVerification,
             final List<DocumentVerificationEntity> docVerificationsToProcess,
             final OwnerId ownerId) {
@@ -325,16 +325,16 @@ public class IdentityVerificationService {
             // The timestampFinished parameter is not set yet, there may be other steps ahead
             if (allRequiredDocumentsChecked) {
                 logger.debug("All required documents are accepted");
-                return DocumentEvaluationStatus.OK;
+                return VerificationDocumentActionResult.ALL_DOCUMENTS_ACCEPTED;
             } else {
                 logger.debug("Not all required documents are accepted, allow submission of additional documents");
-                return DocumentEvaluationStatus.NOK;
+                return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS;
             }
         } else {
             logger.debug("Some documents are not accepted, allow re-submission of failed documents");
             handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.FAILED, ownerId);
             handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.REJECTED, ownerId);
-            return DocumentEvaluationStatus.NOK;
+            return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS;
         }
     }
 
@@ -571,16 +571,17 @@ public class IdentityVerificationService {
         logger.info("All document data successfully deleted");
     }
 
-    public enum DocumentEvaluationStatus {
+    public enum VerificationDocumentActionResult {
+
         /**
          * All documents are accepted.
          */
-        OK,
+        ALL_DOCUMENTS_ACCEPTED,
 
         /**
          * Some documents are not accepted or not all required documents are accepted yet.
          */
-        NOK,
+        INSUFFICIENT_DOCUMENTS,
 
         FAILED
     }
