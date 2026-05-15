@@ -34,12 +34,15 @@ import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequ
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryException;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toSet;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -78,10 +81,13 @@ public class ClientEvaluationService {
         this.onboardingService = onboardingService;
         this.clientEvaluationDocumentCheckResultFactory = clientEvaluationDocumentCheckResultFactory;
 
-        this.retryTemplate = RetryTemplate.builder()
-                .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
-                .exponentialBackoff(200, 2.0, 2_000)
-                .build();
+        this.retryTemplate = new RetryTemplate(
+                RetryPolicy.builder()
+                        .maxRetries(Math.max(0, config.getClientEvaluationMaxFailedAttempts() - 1))
+                        .delay(Duration.ofMillis(200))
+                        .multiplier(2.0)
+                        .maxDelay(Duration.ofMillis(2_000))
+                        .build());
     }
 
     /**
@@ -134,18 +140,19 @@ public class ClientEvaluationService {
                 .build();
 
         try {
-            final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
+            final AtomicInteger attemptCounter = new AtomicInteger();
+            final EvaluateClientResponse response = retryTemplate.execute(() -> callEvaluateClient(request, attemptCounter));
             processEvaluationResponse(identityVerification, ownerId, response);
             return response.getEvaluationResult();
-        } catch (final OnboardingProviderException | RuntimeException e) {
+        } catch (final RetryException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
             return null;
         }
     }
 
-    private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final RetryContext context) throws OnboardingProviderException {
+    private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final AtomicInteger attemptCounter) throws OnboardingProviderException {
         final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
-        final int attempt = context.getRetryCount() + 1;
+        final int attempt = attemptCounter.incrementAndGet();
 
         logger.info("", kv("action", "callEvaluateClient"), kv("state", "initiated"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 

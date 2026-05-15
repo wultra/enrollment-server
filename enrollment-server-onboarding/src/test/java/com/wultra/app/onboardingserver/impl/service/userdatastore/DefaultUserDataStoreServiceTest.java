@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.retry.RetryException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -124,7 +125,9 @@ class DefaultUserDataStoreServiceTest {
 
             final var result = assertThrows(UserDataStoreClientException.class, () -> tested.storeDocumentData(List.of(request)));
 
-            assertEquals("error 3", result.getMessage());
+            assertEquals("Too many attempts to create document", result.getMessage());
+            assertInstanceOf(RetryException.class, result.getCause());
+            assertEquals("error 3", result.getCause().getCause().getMessage());
             verify(userDataStoreClient, times(3)).createDocument(any());
         }
 
