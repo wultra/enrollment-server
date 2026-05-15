@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Controller to acknowledge asynchronous actions. These endpoints are private and secured.
  *
@@ -50,10 +52,10 @@ class PrivateClientController {
      */
     @PostMapping("approve")
     public AcknowledgeApproveClientResponse acknowledgeApproveClient(final @Valid @RequestBody AcknowledgeApproveClientRequest request) {
-        logger.info("action: acknowledgeApproveClient, state: initiated, processId: {}", request.processId());
+        logger.info("", kv("action", "acknowledgeApproveClient"), kv("state", "initiated"), kv("processId", request.processId()));
 
         if (request.approvalResult() == AcknowledgeApproveClientRequest.ApprovalResult.WAIT) {
-            logger.info("action: acknowledgeApproveClient, state: skipped, reason: approvalResult is WAIT");
+            logger.info("", kv("action", "acknowledgeApproveClient"), kv("state", "skipped"), kv("reason", "approvalResult is WAIT"));
             return AcknowledgeApproveClientResponse.builder()
                     .result(AcknowledgeApproveClientResponse.Result.OK)
                     .build();
@@ -62,9 +64,9 @@ class PrivateClientController {
         final AcknowledgeApproveClientResponse response = acknowledgeService.acknowledgeApproveClient(request);
 
         if (response.result() == AcknowledgeApproveClientResponse.Result.OK) {
-            logger.info("action: acknowledgeApproveClient, state: succeeded");
+            logger.info("", kv("action", "acknowledgeApproveClient"), kv("state", "succeeded"));
         } else {
-            logger.info("action: acknowledgeApproveClient, state: failed, reason: {}", response.resultReason());
+            logger.info("", kv("action", "acknowledgeApproveClient"), kv("state", "failed"), kv("reason", response.resultReason()));
         }
 
         return response;
@@ -72,10 +74,10 @@ class PrivateClientController {
 
     @PostMapping("evaluate")
     public AcknowledgeEvaluationClientResponse acknowledgeEvaluationClient(final @Valid @RequestBody AcknowledgeEvaluationClientRequest request) {
-        logger.info("action: acknowledgeEvaluationClient, state: initiated, processId: {}", request.processId());
+        logger.info("", kv("action", "acknowledgeEvaluationClient"), kv("state", "initiated"), kv("processId", request.processId()));
 
         if (request.evaluationResult() == AcknowledgeEvaluationClientRequest.EvaluationResult.WAIT) {
-            logger.info("action: acknowledgeEvaluationClient, state: skipped, reason: evaluationResult is WAIT");
+            logger.info("", kv("action", "acknowledgeEvaluationClient"), kv("state", "skipped"), kv("reason", "evaluationResult is WAIT"));
             return AcknowledgeEvaluationClientResponse.builder()
                     .result(AcknowledgeEvaluationClientResponse.Result.OK)
                     .build();
@@ -84,9 +86,9 @@ class PrivateClientController {
         final AcknowledgeEvaluationClientResponse response = acknowledgeService.acknowledgeEvaluationClient(request);
 
         if (response.result() == AcknowledgeEvaluationClientResponse.Result.OK) {
-            logger.info("action: acknowledgeEvaluationClient, state: succeeded");
+            logger.info("", kv("action", "acknowledgeEvaluationClient"), kv("state", "succeeded"));
         } else {
-            logger.info("action: acknowledgeEvaluationClient, state: failed, reason: {}", response.resultReason());
+            logger.info("", kv("action", "acknowledgeEvaluationClient"), kv("state", "failed"), kv("reason", response.resultReason()));
         }
 
         return response;

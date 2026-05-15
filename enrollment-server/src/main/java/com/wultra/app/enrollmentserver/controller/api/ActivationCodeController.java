@@ -47,6 +47,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Controller publishing REST services for obtaining a new activation code.
  *
@@ -99,7 +101,7 @@ public class ActivationCodeController {
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, ActivationCodeException, PowerAuthEncryptionException {
 
         final ActivationCodeRequest requestObject = request.getRequestObject();
-        logger.info("action: requestActivationCode, state: initiated, applicationId: {}", requestObject.getApplicationId());
+        logger.info("", kv("action", "requestActivationCode"), kv("state", "initiated"), kv("applicationId", requestObject.getApplicationId()));
         // Check if the authentication object is present
         if (apiAuthentication == null) {
             logger.error("Unable to verify device registration when fetching activation code");
@@ -113,7 +115,7 @@ public class ActivationCodeController {
         }
 
         final ActivationCodeResponse response = activationCodeService.requestActivationCode(requestObject, apiAuthentication);
-        logger.info("action: requestActivationCode, state: succeeded");
+        logger.info("", kv("action", "requestActivationCode"), kv("state", "succeeded"));
         return new ObjectResponse<>(response);
     }
 }

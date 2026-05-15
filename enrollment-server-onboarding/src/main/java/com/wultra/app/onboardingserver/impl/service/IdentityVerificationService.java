@@ -374,8 +374,7 @@ public class IdentityVerificationService {
             try {
                 process = processService.findProcess(idVerification.getProcessId());
             } catch (OnboardingProcessException e) {
-                logger.trace("Onboarding process not found, {}", ownerId, e);
-                logger.warn("Onboarding process not found, {}, {}", e.getMessage(), ownerId);
+                logger.warn("Onboarding process not found, {}", ownerId, e);
                 return;
             }
 

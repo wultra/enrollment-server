@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toSet;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * Service for client evaluation features.
@@ -153,14 +154,14 @@ public class ClientEvaluationService {
         final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
         final int attempt = attemptCounter.incrementAndGet();
 
-        logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}", attempt, maxAttempts);
+        logger.info("", kv("action", "callEvaluateClient"), kv("state", "initiated"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 
         try {
             final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
-            logger.info("action: callEvaluateClient, state: succeeded, evaluationResult: {}, resultReason: {}", response.getEvaluationResult(), response.getResultReason());
+            logger.info("", kv("action", "callEvaluateClient"), kv("state", "succeeded"), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
             return response;
         } catch (final Exception e) {
-            logger.warn("action: callEvaluateClient, state: failed, attempt {}/{}, exceptionMessage: {}", attempt, maxAttempts, e.getMessage(), e);
+            logger.warn("", kv("action", "callEvaluateClient"), kv("state", "failed"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
             throw e;
         }
     }
@@ -193,8 +194,7 @@ public class ClientEvaluationService {
     }
 
     private void processVerificationIdError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Exception e) {
-        logger.warn("Client evaluation failed to get verificationId for {}, {} - {}", identityVerification, ownerId, e.getMessage());
-        logger.debug("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
+        logger.warn("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
         identityVerification.setErrorDetail(ERROR_VERIFICATION_ID);
         identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());

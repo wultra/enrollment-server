@@ -190,6 +190,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.wultra.core</groupId>
+                <artifactId>logging-support</artifactId>
+                <version>${wultra-core.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.wultra.security</groupId>
                 <artifactId>powerauth-java-crypto</artifactId>
                 <version>${powerauth-crypto.version}</version>

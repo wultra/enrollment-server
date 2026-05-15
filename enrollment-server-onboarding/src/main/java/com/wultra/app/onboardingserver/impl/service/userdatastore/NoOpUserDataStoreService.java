@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * Empty implementation {@link UserDataStoreService}.
  *
@@ -32,6 +34,6 @@ class NoOpUserDataStoreService implements UserDataStoreService {
 
     @Override
     public void storeDocumentData(final List<DocumentCreateRequest> documentRequests) {
-        logger.info("action: storeDocumentData, state: skipped");
+        logger.info("", kv("action", "storeDocumentData"), kv("state", "skipped"));
     }
 }
