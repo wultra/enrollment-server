@@ -36,6 +36,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.json.JSONException;
+import org.springframework.core.retry.RetryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -124,7 +125,9 @@ class DefaultUserDataStoreServiceTest {
 
             final var result = assertThrows(UserDataStoreClientException.class, () -> tested.storeDocumentData(List.of(request)));
 
-            assertEquals("error 3", result.getMessage());
+            assertEquals("Too many attempts to create document", result.getMessage());
+            assertInstanceOf(RetryException.class, result.getCause());
+            assertEquals("error 3", result.getCause().getCause().getMessage());
             verify(userDataStoreClient, times(3)).createDocument(any());
         }
 

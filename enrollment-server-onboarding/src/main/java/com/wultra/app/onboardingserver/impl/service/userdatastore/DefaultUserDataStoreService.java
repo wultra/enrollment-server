@@ -35,13 +35,16 @@ import com.wultra.security.userdatastore.client.model.response.EmbeddedPhotoCrea
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryException;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -89,10 +92,13 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         this.processedDocumentDataRepository = processedDocumentDataRepository;
         this.documentVerificationRepository = documentVerificationRepository;
         this.objectMapper = objectMapper;
-        this.retryTemplate = RetryTemplate.builder()
-                .maxAttempts(config.getMaxAttempts())
-                .exponentialBackoff(200, 2.0, 2_000)
-                .build();
+        this.retryTemplate = new RetryTemplate(
+                RetryPolicy.builder()
+                        .maxRetries(Math.max(0, config.getMaxAttempts() - 1))
+                        .delay(Duration.ofMillis(200))
+                        .multiplier(2.0)
+                        .maxDelay(Duration.ofMillis(2_000))
+                        .build());
     }
 
     @Transactional(readOnly = true)
@@ -134,7 +140,12 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         logger.info("action: storeDocumentData, state: initiated, count: {}", requests.size());
 
         for (final var request : requests) {
-            retryTemplate.execute(context -> callCreateDocument(request, context));
+            final AtomicInteger attemptCounter = new AtomicInteger();
+            try {
+                retryTemplate.execute(() -> callCreateDocument(request, attemptCounter));
+            } catch (final RetryException e) {
+                throw new UserDataStoreClientException("Too many attempts to create document", e);
+            }
         }
         logger.info("action: storeDocumentData, state: finished");
     }
@@ -208,9 +219,9 @@ class DefaultUserDataStoreService implements UserDataStoreService {
         };
     }
 
-    Void callCreateDocument(final DocumentCreateRequest request, final RetryContext context) throws UserDataStoreClientException {
+    Void callCreateDocument(final DocumentCreateRequest request, final AtomicInteger attemptCounter) throws UserDataStoreClientException {
         final int maxAttempts = config.getMaxAttempts();
-        final int attempt = context.getRetryCount() + 1;
+        final int attempt = attemptCounter.incrementAndGet();
         logger.info("action: callCreateDocument, state: initiated, userId: {}, externalId: {}, documentType: {}, dataType: {}, attempt {}/{}",
                 request.userId(), request.externalId(), request.documentType(), request.dataType(), attempt, maxAttempts);
 
