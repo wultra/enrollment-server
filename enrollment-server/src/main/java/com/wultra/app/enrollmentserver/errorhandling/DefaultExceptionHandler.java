@@ -112,7 +112,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(MobileTokenException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleMobileTokenException(MobileTokenException ex) {
-        logger.warn("Mobile token operation failed: {}", ex.getMessage(), ex);
+        logger.warn("Mobile token operation failed", ex);
         return new ErrorResponse(ex.getCode(), ex.getMessage());
     }
 
@@ -124,7 +124,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(MobileTokenAuthException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public @ResponseBody ErrorResponse handleMobileTokenAuthException(MobileTokenAuthException ex) {
-        logger.warn("Mobile token operation failed due to authorization error: {}", ex.getMessage(), ex);
+        logger.warn("Mobile token operation failed due to authorization error", ex);
         return new ErrorResponse(ex.getCode(), ex.getMessage());
     }
 
@@ -136,7 +136,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(MobileTokenConfigurationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public @ResponseBody ErrorResponse handleMobileTokenConfigurationException(MobileTokenConfigurationException ex) {
-        logger.warn("Mobile token back-end is incorrectly configured: {}", ex.getMessage(), ex);
+        logger.warn("Mobile token back-end is incorrectly configured", ex);
         return new ErrorResponse(ex.getCode(), ex.getMessage());
     }
 
@@ -185,7 +185,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public @ResponseBody ErrorResponse handleNoResourceFoundException(final NoResourceFoundException e) {
-        logger.warn("Error occurred when calling an API: {}", e.getMessage(), e);
+        logger.warn("Error occurred when calling an API", e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
     }
 

@@ -82,6 +82,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.wultra.core</groupId>
+            <artifactId>logging-support</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>user-data-store-rest-client</artifactId>
         </dependency>

@@ -111,8 +111,6 @@ public class MobileTokenConverter {
 
             return operation;
         } catch (JacksonException e) {
-            logger.debug("Unable to parse JSON with operation template parameters: {}", e.getMessage());
-            logger.debug("Exception detail", e);
             throw new MobileTokenConfigurationException("ERR_CONFIG", "Invalid JSON structure for the configuration: " + e.getMessage());
         }
     }
