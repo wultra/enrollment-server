@@ -11,7 +11,8 @@ The previous event was connected with the end of the identity verification stage
 The event is triggered if the process ends in a `FINISHED` or `FAILED` state (see `eventData.process.status`).
 
 Old format (event `FINISHED`)
-```
+
+```json
 {
     "type": "FINISHED",
     "userId": "",
@@ -29,7 +30,8 @@ Old format (event `FINISHED`)
 ```
 
 New format (event `PROCESS_FINISHED`)
-```
+
+```json
 {
     "id": "",
     "timestamp": "",
@@ -50,7 +52,6 @@ New format (event `PROCESS_FINISHED`)
                 "fdsData": {}
             }
         }
-    }
     }
 }
 ```
