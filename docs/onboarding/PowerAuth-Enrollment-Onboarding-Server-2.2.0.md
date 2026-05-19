@@ -35,7 +35,7 @@ New format (event `PROCESS_FINISHED`)
     "timestamp": "",
     "type": "PROCESS_FINISHED",
     "userId": "",
-    "externalUserId": "",
+    "externalUserId": ""
     "processId": "",
     "processType": "",
     "identityVerificationId": "",
