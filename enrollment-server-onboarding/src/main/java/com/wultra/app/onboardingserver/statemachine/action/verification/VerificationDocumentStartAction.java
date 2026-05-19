@@ -59,7 +59,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
      * @return guard returning {@code true} if all documents are accepted
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
-        return isResult(IdentityVerificationService.VerificationDocumentActionResult.ALL_DOCUMENTS_ACCEPTED);
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED);
     }
 
     /**
@@ -68,7 +68,7 @@ public class VerificationDocumentStartAction implements Action<OnboardingState, 
      * @return guard returning {@code true} if some documents are not accepted or not all required documents are accepted yet
      */
     public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
-        return isResult(IdentityVerificationService.VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS);
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT);
     }
 
     private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.VerificationDocumentActionResult expectedResult) {

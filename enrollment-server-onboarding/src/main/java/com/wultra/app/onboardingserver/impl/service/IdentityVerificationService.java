@@ -325,16 +325,16 @@ public class IdentityVerificationService {
             // The timestampFinished parameter is not set yet, there may be other steps ahead
             if (allRequiredDocumentsChecked) {
                 logger.debug("All required documents are accepted");
-                return VerificationDocumentActionResult.ALL_DOCUMENTS_ACCEPTED;
+                return VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED;
             } else {
                 logger.debug("Not all required documents are accepted, allow submission of additional documents");
-                return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS;
+                return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT;
             }
         } else {
             logger.debug("Some documents are not accepted, allow re-submission of failed documents");
             handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.FAILED, ownerId);
             handleDocumentStatus(docVerificationsToProcess, idVerification, DocumentStatus.REJECTED, ownerId);
-            return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENTS;
+            return VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT;
         }
     }
 
@@ -576,12 +576,12 @@ public class IdentityVerificationService {
         /**
          * All documents are accepted.
          */
-        ALL_DOCUMENTS_ACCEPTED,
+        REQUIRED_DOCUMENTS_VERIFIED,
 
         /**
          * Some documents are not accepted or not all required documents are accepted yet.
          */
-        INSUFFICIENT_DOCUMENTS,
+        INSUFFICIENT_DOCUMENT_COUNT,
 
         FAILED
     }
