@@ -230,6 +230,9 @@ public class ClientEvaluationService {
 
     public enum ClientEvaluationResult {
 
+        /**
+         * Business positive result.
+         */
         OK,
 
         /**
@@ -237,6 +240,9 @@ public class ClientEvaluationService {
          */
         NOK,
 
+        /**
+         * Wait, still not decided.
+         */
         WAIT,
 
         /**
