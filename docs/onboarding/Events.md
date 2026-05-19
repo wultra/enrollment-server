@@ -130,7 +130,7 @@ Additional checks:
 | `rejectReason`           | String | Reject reason in case of `status` is `REJECTED`. Otherwise is `null`.                 |
 | `errorDetail`            | String | Error detail in case of `status` is `FAILED`. Otherwise is `null`.                    |
 | `provider`               | String | Name of the configured external biometry provider. For example, `Microblink`.         |
-| `documentIds`            | String | Array of verified Document IDs.                                                       |
+| `documentIds`            | Array  | Array of verified Document IDs.                                                       |
 
 
 ### Event data for PRESENCE_CHECK_FINISHED
