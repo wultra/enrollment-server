@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.*;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -39,14 +36,20 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -140,7 +143,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     static {
         try {
-            final var mapper = new ObjectMapper();
+            final var mapper = JsonMapper.builder().build();
 
             // ID card
             idCardFrontImage = Image.builder()
@@ -172,9 +175,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
             final var passResponseTree = mapper.readTree(microblinkIdCardPassResponseBody);
 
             idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
-                    .filter(node -> "FaceImage".equals(node.path("name").asText()))
+                    .filter(node -> "FaceImage".equals(node.path("name").asString()))
                     .findFirst()
-                    .map(node -> node.path("base64").asText())
+                    .map(node -> node.path("base64").asString())
                     .orElseThrow();
 
             idCardPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passResponseTree.toString())
@@ -273,29 +276,39 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Test
     void testSubmitDocuments_documentWith2SidesUploaded_correctResponseIsReturned() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
-        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
-
+        final var submittedDocuments =
+                buildSubmittedDocuments(List.of(
+                        idCardFrontDocument,
+                        idCardBackDocument
+                ));
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkIdCardPassResponseBody));
-
         // when
-        final var result = microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
-
+        final var result =
+                microblinkDocumentVerificationProvider.submitDocuments(
+                        ownerId,
+                        submittedDocuments
+                );
         // then
         assertIdCardPassSubmitResult(result);
     }
 
+
     @Test
     void testSubmitDocuments_documentWith2SidesUploaded_documentDataAreSaved() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
@@ -315,7 +328,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
@@ -335,7 +348,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkIdCardPassResponseBody));
 
         // when
@@ -346,6 +359,36 @@ class MicroblinkDocumentVerificationProviderIntTest {
         assertNotNull(auditData);
         assertEquals(1, auditData.size());
         assertEquals(idCardResponseWithoutPersonalDataJson, auditData.get(DocumentType.ID_CARD));
+    }
+
+    @Test
+    void testSubmitDocuments_requestContainsConfiguredOptionsAndUseCase() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
+        // given
+        final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
+
+        mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
+                .setResponseCode(200)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setBody(microblinkIdCardPassResponseBody));
+
+        // when
+        microblinkDocumentVerificationProvider.submitDocuments(ownerId, submittedDocuments);
+
+        // then
+        final var actualRequest = mockWebServer.takeRequest(3, TimeUnit.SECONDS);
+        assertNotNull(actualRequest);
+
+        final var requestBodyJson = JsonMapper.builder().build().readTree(actualRequest.getBody().readUtf8());
+
+        final var requestOptions = requestBodyJson.path("options");
+        assertTrue(requestOptions.path("returnFaceImage").asBoolean());
+        assertEquals("Jpg", requestOptions.path("returnImageFormat").asString());
+        assertTrue(requestOptions.path("returnFullDocumentImage").asBoolean());
+
+        final var requestUseCase = requestBodyJson.path("useCase");
+        assertEquals("Strict", requestUseCase.path("documentVerificationPolicy").asString());
     }
 
     @Test
@@ -373,7 +416,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkPassportPassResponseBody));
 
         // when
@@ -385,12 +428,14 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     @Test
     void testSubmitDocuments_microblinkRejectResponse_correctResponseIsReturned() throws Exception {
+        prepareIdCardFrontDocumentVerificationInDatabase();
+        prepareIdCardBackDocumentVerificationInDatabase();
         // given
         final var submittedDocuments = buildSubmittedDocuments(List.of(idCardFrontDocument, idCardBackDocument));
 
         mockWebServer.enqueue(new okhttp3.mockwebserver.MockResponse()
                 .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(microblinkIdCardRejectResponseBody));
 
         // when
@@ -736,10 +781,12 @@ class MicroblinkDocumentVerificationProviderIntTest {
     }
 
     private void preparePhotoInDatabase() {
+        final var documentVerification = prepareIdCardFrontDocumentVerificationInDatabase();
         final var entity = new ProcessedDocumentDataEntity();
         entity.setId(ID_CARD_FACE_PHOTO_ID);
         entity.setData(Base64.getDecoder().decode(idCardFacePhotoBase64));
         entity.setDataType(ProcessedDocumentDataType.FACE_IMAGE);
+        entity.setDocumentVerificationId(documentVerification.getId());
         entity.setTimestampCreated(new Date());
 
         processedDocumentDataRepository.save(entity);

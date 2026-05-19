@@ -31,11 +31,15 @@ import com.wultra.security.powerauth.rest.api.spring.service.oidc.OidcApplicatio
 import com.wultra.security.powerauth.rest.api.spring.service.oidc.OidcConfigurationQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * Controller that provides application configuration.
@@ -66,19 +70,14 @@ public class ApplicationConfigurationController {
             description = "Fetch OIDC application configuration."
     )
     public ObjectResponse<OidcApplicationConfigurationResponse> fetchOidcConfiguration(
-            @EncryptedRequestBody OidcApplicationConfigurationRequest request,
-            @Parameter(hidden = true) EncryptionContext encryptionContext) throws PowerAuthEncryptionException, PowerAuthApplicationConfigurationException {
+            @NotNull @EncryptedRequestBody @Valid final OidcApplicationConfigurationRequest request,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, PowerAuthApplicationConfigurationException {
 
-        logger.info("action: fetchOidcConfiguration, state: initiated, providerId: {}", request != null ? request.getProviderId() : null);
+        logger.info("", kv("action", "fetchOidcConfiguration"), kv("state", "initiated"), kv("providerId", request != null ? request.getProviderId() : null));
 
         if (encryptionContext == null) {
-            logger.error("action: fetchOidcConfiguration, state: failed, reason: encryptionFailed");
+            logger.error("", kv("action", "fetchOidcConfiguration"), kv("state", "failed"), kv("reason", "encryptionFailed"));
             throw new PowerAuthEncryptionException("Encryption failed");
-        }
-
-        if (request == null) {
-            logger.error("action: fetchOidcConfiguration, state: failed, reason: invalidRequest");
-            throw new PowerAuthEncryptionException("Invalid request");
         }
 
         final OidcApplicationConfiguration oidcApplicationConfiguration = oidcApplicationConfigurationService.fetchOidcApplicationConfiguration(OidcConfigurationQuery.builder()
@@ -86,7 +85,7 @@ public class ApplicationConfigurationController {
                 .applicationKey(encryptionContext.getApplicationKey())
                 .build());
         final OidcApplicationConfigurationResponse result = convert(oidcApplicationConfiguration);
-        logger.info("action: fetchOidcConfiguration, state: succeeded");
+        logger.info("", kv("action", "fetchOidcConfiguration"), kv("state", "succeeded"));
         return new ObjectResponse<>(result);
     }
 

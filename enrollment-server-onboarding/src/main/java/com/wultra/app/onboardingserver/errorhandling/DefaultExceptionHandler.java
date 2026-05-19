@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -43,6 +44,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @ControllerAdvice
 @Slf4j
 public class DefaultExceptionHandler {
+
+    private static final String INVALID_REQUEST = "INVALID_REQUEST";
 
     /**
      * Default exception handler, for unexpected errors.
@@ -65,7 +68,7 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleInvalidRequestException(InvalidRequestObjectException ex) {
         logger.warn("Error occurred when processing request object.", ex);
-        return new ErrorResponse("INVALID_REQUEST", "Invalid request object.");
+        return new ErrorResponse(INVALID_REQUEST, "Invalid request object.");
     }
 
     /**
@@ -236,7 +239,24 @@ public class DefaultExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleInvalidRequestException(final Exception e) {
         logger.warn("Error occurred.", e);
-        return new ErrorResponse("INVALID_REQUEST", "Invalid request sent.");
+        // TODO (racansky, 2026-04-17) consider returning validation errors in response
+        return new ErrorResponse(INVALID_REQUEST, "Invalid request sent.");
+    }
+
+    /**
+     * Exception handler for invalid request exception.
+     * <p>
+     * Handles for example {@code @NotNull @EncryptedRequestBody @Valid ObjectRequest<T>}.
+     *
+     * @param e Exception.
+     * @return Response with error details.
+     */
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public @ResponseBody ErrorResponse handleInvalidRequestException(final HandlerMethodValidationException e) {
+        logger.warn("Validation error occurred in method {}: {}", e.getMethod().getName(), e.getParameterValidationResults(), e);
+        // TODO (racansky, 2026-04-17) consider returning validation errors in response
+        return new ErrorResponse(INVALID_REQUEST, "Invalid request sent.");
     }
 
     /**
@@ -248,8 +268,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public @ResponseBody ErrorResponse handleNoResourceFoundException(final NoResourceFoundException e) {
-        logger.warn("Error occurred when calling an API: {}", e.getMessage());
-        logger.debug("Exception detail: ", e);
+        logger.warn("Error occurred when calling an API", e);
         return new ErrorResponse("ERROR_NOT_FOUND", "Resource not found.");
     }
 
@@ -262,8 +281,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(Base64DeserializationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handleBase64DeserializationException(final Base64DeserializationException e) {
-        logger.warn("Base64 deserialization exception: {}", e.getMessage());
-        logger.debug("Exception detail: ", e);
-        return new ErrorResponse("INVALID_REQUEST", "Deserialization of base64 value failed.");
+        logger.warn("Base64 deserialization exception", e);
+        return new ErrorResponse(INVALID_REQUEST, "Deserialization of base64 value failed.");
     }
 }

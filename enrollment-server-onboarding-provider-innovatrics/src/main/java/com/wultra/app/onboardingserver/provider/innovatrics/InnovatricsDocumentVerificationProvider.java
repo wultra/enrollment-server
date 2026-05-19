@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
@@ -36,6 +33,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -119,30 +119,35 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
 
     @Override
     public DocumentsVerificationResult verifyDocuments(OwnerId id, List<String> uploadIds) throws RemoteCommunicationException, DocumentVerificationException {
-        final DocumentsVerificationResult results = new DocumentsVerificationResult();
-        results.setResults(new ArrayList<>());
+        final var resultsBuilder = DocumentsVerificationResult.builder();
+
+        final List<DocumentVerificationResult> documentVerificationResults = new ArrayList<>();
 
         // Pages of the same document have same uploadId (= customerId), no reason to generate verification for each one.
         final List<String> distinctUploadIds = uploadIds.stream().distinct().toList();
         for (String customerId : distinctUploadIds) {
             final DocumentVerificationResult result = createVerificationResult(customerId, id);
-            results.getResults().add(result);
+            documentVerificationResults.add(result);
         }
 
-        final String rejectReasons = results.getResults().stream()
+
+        final String rejectReasons = documentVerificationResults.stream()
                 .map(DocumentVerificationResult::getRejectReason)
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.joining(";"));
         if (StringUtils.isNotBlank(rejectReasons)) {
             logger.debug("Some documents were rejected: rejectReasons={}, {}", rejectReasons, id);
-            results.setStatus(DocumentVerificationStatus.REJECTED);
-            results.setRejectReason(rejectReasons);
+            resultsBuilder.status(DocumentVerificationStatus.REJECTED)
+                    .rejectReason(rejectReasons);
         } else {
             logger.debug("All documents accepted, {}", id);
-            results.setStatus(DocumentVerificationStatus.ACCEPTED);
+            resultsBuilder.status(DocumentVerificationStatus.ACCEPTED);
         }
-        results.setVerificationId(UUID.randomUUID().toString());
-        return results;
+
+        return resultsBuilder
+                .results(documentVerificationResults)
+                .verificationId(UUID.randomUUID().toString())
+                .build();
     }
 
     @Override
@@ -333,15 +338,15 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
             });
         }
 
-        final DocumentVerificationResult result = new DocumentVerificationResult();
-        result.setUploadId(customerId);
-        result.setVerificationResult(serializeToString(response));
-        // TODO (racansky, 2026-02-24) so far sending constant 10 as 100 percent confidence, possible future extension point
-        result.setVerificationScore(10);
+        final var resultBuilder = DocumentVerificationResult.builder()
+                .uploadId(customerId)
+                .verificationResult(serializeToString(response))
+                // TODO (racansky, 2026-02-24) so far sending constant 10 as 100 percent confidence, possible future extension point
+                .verificationScore(10);
         if (!rejectionReasons.isEmpty()) {
-            result.setRejectReason(serializeToString(rejectionReasons));
+            resultBuilder.rejectReason(serializeToString(rejectionReasons));
         }
-        return result;
+        return resultBuilder.build();
     }
 
     /**
@@ -393,7 +398,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     private <T> String serializeToString(T src) throws DocumentVerificationException {
         try {
             return objectMapper.writeValueAsString(src);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when serializing data", e);
         }
     }
@@ -401,7 +406,7 @@ public class InnovatricsDocumentVerificationProvider implements DocumentVerifica
     private <T> T deserializeFromString(String src) throws DocumentVerificationException {
         try {
             return objectMapper.readValue(src, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when deserializing data", e);
         }
     }

@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.common.database.entity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
@@ -50,7 +51,7 @@ public record OnboardingProcessConfigurationValue(
         boolean otpForIdentityVerification,
         boolean useTemporaryActivation,
         @Valid Documents documents,
-        ActivationType activationType,
+        @NotNull ActivationType activationType,
         boolean approvalEnabled,
         boolean clientEvaluationEnabled,
         boolean verifyPresenceWithOtp,
@@ -132,7 +133,7 @@ public record OnboardingProcessConfigurationValue(
     @Jacksonized
     @Builder
     public record Document(
-            DocumentType type,
+            @NotNull DocumentType type,
             @Min(1) @Max(2) byte sideCount,
             String country
     ) implements Serializable {

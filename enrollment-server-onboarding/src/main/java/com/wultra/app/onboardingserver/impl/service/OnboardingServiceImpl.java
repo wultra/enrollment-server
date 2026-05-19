@@ -17,12 +17,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.wultra.app.enrollmentserver.api.model.onboarding.request.*;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingConsentTextResponse;
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OnboardingStartResponse;
@@ -69,6 +63,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -100,16 +98,14 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
      */
     private final ConfigurationDataDto integrationConfigDto;
 
-    // Special instance of ObjectMapper for normalized serialization of identification data
+    // Special instance of ObjectMapper for normalized serialization of identification data.
     private final ObjectMapper normalizedMapper = JsonMapper
             .builder()
             .enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
             .enable(SerializationFeature.INDENT_OUTPUT)
-            .build()
-            .setDateFormat(new SimpleDateFormat(IDENTIFICATION_DATA_DATE_FORMAT))
-            .setSerializationInclusion(JsonInclude.Include.ALWAYS);
+            .defaultDateFormat(new SimpleDateFormat(IDENTIFICATION_DATA_DATE_FORMAT))
+            .build();
 
     private final OnboardingProvider onboardingProvider;
 
@@ -648,7 +644,7 @@ public class OnboardingServiceImpl extends CommonOnboardingService {
     private String parseIdentificationData(final Map<String, Object> identification) throws InvalidRequestObjectException {
         try {
             return normalizedMapper.writeValueAsString(identification);
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             throw new InvalidRequestObjectException("Invalid identification data: " + identification, ex);
         }
     }

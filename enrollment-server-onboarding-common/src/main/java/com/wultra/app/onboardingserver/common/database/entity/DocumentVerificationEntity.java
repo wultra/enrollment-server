@@ -29,6 +29,8 @@ import org.hibernate.annotations.UuidGenerator;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Entity representing a document verification record.
@@ -224,4 +226,23 @@ public class DocumentVerificationEntity implements Serializable {
         return Objects.hash(type, side, filename, timestampCreated);
     }
 
+    /**
+     * Filter the list of document verifications to find the preferred document with a photo.
+     *
+     * @param documentVerifications List of document verifications to filter.
+     * @return Optional containing the preferred document or empty if not found.
+     */
+    public static Optional<DocumentVerificationEntity> filterPreferredDocumentWithPhoto(final List<DocumentVerificationEntity> documentVerifications) {
+        final Map<DocumentType, DocumentVerificationEntity> documentVerificationsGroupedByType = documentVerifications.stream()
+                .collect(Collectors.toMap(
+                        DocumentVerificationEntity::getType,
+                        Function.identity(),
+                        (first, second) -> first
+                ));
+
+        return DocumentType.PREFERRED_SOURCE_OF_PERSON_PHOTO.stream()
+                .map(documentVerificationsGroupedByType::get)
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
 }

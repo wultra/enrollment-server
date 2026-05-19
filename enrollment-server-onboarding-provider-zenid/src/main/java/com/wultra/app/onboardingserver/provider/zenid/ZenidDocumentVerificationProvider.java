@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -43,6 +40,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
@@ -317,7 +317,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
         final List<ZenidWebInvestigationValidatorResponse> validations;
         try {
             validations = objectMapper.readValue(docResult.getVerificationResult(), new TypeReference<>() { });
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when parsing verification result data from " + docResult, e);
         }
 
@@ -461,12 +461,14 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
 
     private DocumentsVerificationResult toResult(OwnerId id, ZenidWebInvestigateResponse response, List<String> knownSampleIds)
             throws DocumentVerificationException {
-        DocumentsVerificationResult result = new DocumentsVerificationResult();
-        result.setVerificationId(String.valueOf(response.getInvestigationID()));
+        final var resultBuilder = DocumentsVerificationResult.builder()
+                .verificationId(String.valueOf(response.getInvestigationID()));
 
+        final List<DocumentVerificationResult> verificationResults;
         if (response.getErrorCode() != null) {
-            result.setErrorDetail("ZenID error: " + response.getErrorCode() +
+            resultBuilder.errorDetail("ZenID error: " + response.getErrorCode() +
                     (response.getErrorText() != null ? ", " + response.getErrorText() : ""));
+            verificationResults = null;
         } else {
             Map<String, List<ZenidWebInvestigationValidatorResponse>> sampleIdsValidations = new HashMap<>();
             // Only sampleIds with failed validations are in the response, prefill with all known sampleIds
@@ -495,16 +497,16 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 }
             }
 
-            List<DocumentVerificationResult> verificationResults = new ArrayList<>();
+            verificationResults = new ArrayList<>();
 
             String extractedData = toExtractedData(id, response.getMinedData());
             for (var entry : sampleIdsValidations.entrySet()) {
                 // TODO Consider using an object instead of simple array (call for a standard json)
                 List<ZenidWebInvestigationValidatorResponse> validations = new ArrayList<>(entry.getValue());
 
-                final DocumentVerificationResult verificationResult = new DocumentVerificationResult();
-                verificationResult.setExtractedData(extractedData);
-                verificationResult.setUploadId(entry.getKey());
+                final var verificationResultBuilder = DocumentVerificationResult.builder()
+                        .extractedData(extractedData)
+                        .uploadId(entry.getKey());
 
                 // Find a first failed validation, use its description as the rejected reason for the document
                 Optional<ZenidWebInvestigationValidatorResponse> failedValidation = validations.stream()
@@ -514,39 +516,40 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
                 if (failedValidation.isPresent()) {
                     final String rejectReason = failedValidation.get().getIssues().get(0).getIssueDescription();
                     logger.debug("Document rejected in ZenID, {}, {}", rejectReason, id);
-                    verificationResult.setRejectReason(rejectReason);
+                    verificationResultBuilder.rejectReason(rejectReason);
                 }
 
                 validations.addAll(globalValidations);
                 String verificationResultData;
                 try {
                     verificationResultData = objectMapper.writeValueAsString(validations);
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     throw new DocumentVerificationException("Unexpected error when processing verification result data, " + id, e);
                 }
 
-                verificationResult.setVerificationResult(verificationResultData);
+                verificationResultBuilder.verificationResult(verificationResultData)
                 // TODO (racansky, 2026-02-24) so far sending constant 10 as 100 percent confidence, possible future extension point
-                verificationResult.setVerificationScore(10);
-                verificationResults.add(verificationResult);
+                        .verificationScore(10);
+                verificationResults.add(verificationResultBuilder.build());
             }
-            result.setResults(verificationResults);
+            resultBuilder.results(verificationResults);
         }
 
         DocumentVerificationStatus verificationStatus = toStatus(response.getState());
-        if (result.getResults() != null) {
+        if (verificationResults != null) {
             // Check the results if there is no rejected validation
-            Optional<DocumentVerificationResult> optionalFailedVerification = result.getResults()
+            Optional<DocumentVerificationResult> optionalFailedVerification = verificationResults
                     .stream()
                     .filter(value -> StringUtils.isNotBlank(value.getRejectReason()))
                     .findAny();
             if (optionalFailedVerification.isPresent()) {
                 verificationStatus = DocumentVerificationStatus.REJECTED;
-                result.setRejectReason(optionalFailedVerification.get().getRejectReason());
+                resultBuilder.rejectReason(optionalFailedVerification.get().getRejectReason());
             }
         }
-        result.setStatus(verificationStatus);
-        return result;
+        return resultBuilder
+                .status(verificationStatus)
+                .build();
     }
 
     private ZenidWebInvestigationValidatorResponse copyOf(ZenidWebInvestigationValidatorResponse value) {
@@ -562,7 +565,7 @@ public class ZenidDocumentVerificationProvider implements DocumentVerificationPr
     private String toExtractedData(OwnerId id, ZenidSharedMineAllResult minedData) throws DocumentVerificationException {
         try {
             return objectMapper.writeValueAsString(minedData);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new DocumentVerificationException("Unexpected error when processing extracted data, " + id, e);
         }
     }

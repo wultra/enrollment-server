@@ -78,8 +78,7 @@ public class LookupUserService {
             }
             return Optional.of(response);
         } catch (final OnboardingProviderException e) {
-            logger.info("User lookup failed, using null user ID, error: {}", e.getMessage());
-            logger.debug("User lookup failed, using null user ID", e);
+            logger.info("User lookup failed, using null user ID", e);
             return Optional.empty();
         }
     }

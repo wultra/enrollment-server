@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.iproov;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
@@ -41,6 +39,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Base64;
 
@@ -239,7 +239,7 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     private <T> T parseResponse(String body, Class<T> cls) throws PresenceCheckException {
         try {
             return objectMapper.readValue(body, cls);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new PresenceCheckException(String.format("Unable to parse JSON response %s to %s", body, cls), e);
         }
     }

@@ -17,9 +17,9 @@
  */
 package com.wultra.app.enrollmentserver.model.integration;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import lombok.Data;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.List;

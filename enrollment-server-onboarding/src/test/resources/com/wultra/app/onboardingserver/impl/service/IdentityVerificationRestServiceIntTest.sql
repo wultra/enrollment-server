@@ -44,10 +44,10 @@ VALUES ('c8bf612b-6718-4614-b150-ce17bc39221c', E'\\x'::bytea, '2026-03-02 12:08
        ('03a2785a-a563-4feb-bde4-3ce0367e4e9d', E'\\x'::bytea, '2026-03-02 12:08:19.545000'),
        ('62338ec9-ff2f-4751-9762-e09d34c62796', E'\\x'::bytea, '2026-03-02 12:08:28.926000');
 
-INSERT INTO es_document_result (id, document_verification_id, phase, verification_result, extracted_data, timestamp_created)
-VALUES (3592, '897f4d47-7962-43af-8c5d-b4b142e02085', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:19.539000'),
-       (3593, '7a56e1fb-5cc7-4850-ba7e-2b9c4d754d16', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:19.539000'),
-       (3594, '40e7f9a6-6cbe-478e-b1ee-98b8ad797b9e', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:28.922000');
+INSERT INTO es_document_result (id, document_verification_id, phase, verification_result, extracted_data, timestamp_created, anonymized)
+VALUES (3592, '897f4d47-7962-43af-8c5d-b4b142e02085', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:19.539000', false),
+       (3593, '7a56e1fb-5cc7-4850-ba7e-2b9c4d754d16', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:19.539000', false),
+       (3594, '40e7f9a6-6cbe-478e-b1ee-98b8ad797b9e', 'UPLOAD', '{}', '{}', '2026-03-02 12:08:28.922000', false);
 
 INSERT INTO es_selfie (id, image, identity_verification_id, timestamp_created)
 VALUES (1, E'\\x'::bytea, '08923a0a-5f4c-41dc-acda-75bb921c75a4', '2026-03-02 12:08:19.545000');

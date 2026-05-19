@@ -115,8 +115,7 @@ public class DocumentProcessingService {
             try {
                 submittedDocuments.add(createSubmittedDocument(ownerId, document, docVerification));
             } catch (DocumentSubmitException e) {
-                logger.warn("Document verification ID: {}, failed: {}", docVerification.getId(), e.getMessage());
-                logger.debug("Document verification ID: {}, failed", docVerification.getId(), e);
+                logger.warn("Document verification ID: {}, failed", docVerification.getId(), e);
                 docVerification.setStatus(DocumentStatus.FAILED);
                 docVerification.setErrorDetail(ErrorDetail.DOCUMENT_VERIFICATION_FAILED);
                 docVerification.setErrorOrigin(ErrorOrigin.DOCUMENT_VERIFICATION);
@@ -230,7 +229,7 @@ public class DocumentProcessingService {
             auditVerificationResponse(results, identityVerification, ownerId);
             return results;
         } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            logger.warn("Document verification ID: {}, failed: {}", docVerificationIds, e.getMessage(), e);
+            logger.warn("Document verification ID: {}, failed", docVerificationIds, e);
             final DocumentsSubmitResult results = new DocumentsSubmitResult();
             submittedDocs.forEach(doc -> {
                 final DocumentSubmitResult result = new DocumentSubmitResult();

@@ -17,13 +17,15 @@
  */
 package com.wultra.app.enrollmentserver.mockutils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformerV2;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +35,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
+
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private final Map<OtpKey, String> otpStore = new ConcurrentHashMap<>();
 
     @Override
@@ -74,7 +79,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
 
             return new ResponseDefinitionBuilder()
                     .withStatus(404)
-                    .withHeader("Content-Type", "application/json")
+                    .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("""
                         {
                           "error": "Unsupported endpoint for otp-store-transformer"
@@ -85,7 +90,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
         } catch (BadRequestException e) {
             return new ResponseDefinitionBuilder()
                     .withStatus(400)
-                    .withHeader("Content-Type", "application/json")
+                    .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("""
                         {
                           "error": "%s"
@@ -96,7 +101,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
         } catch (Exception e) {
             return new ResponseDefinitionBuilder()
                     .withStatus(500)
-                    .withHeader("Content-Type", "application/json")
+                    .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("""
                         {
                           "error": "Internal transformer error",
@@ -118,7 +123,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
 
         return new ResponseDefinitionBuilder()
                 .withStatus(200)
-                .withHeader("Content-Type", "application/json")
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .withBody("""
                     {
                       "otpSent": true
@@ -138,7 +143,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
         if (otpCode == null) {
             return new ResponseDefinitionBuilder()
                     .withStatus(400)
-                    .withHeader("Content-Type", "application/json")
+                    .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("""
                         {
                           "error": "OTP not found for given processId and otpType"
@@ -149,7 +154,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
 
         return new ResponseDefinitionBuilder()
                 .withStatus(200)
-                .withHeader("Content-Type", "application/json")
+                .withHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .withBody("""
                     {
                       "processId": "%s",
@@ -164,7 +169,7 @@ public class OtpStoreTransformer implements ResponseDefinitionTransformerV2 {
                 .build();
     }
 
-    private <T> T readBody(Request request, Class<T> clazz) throws Exception {
+    private <T> T readBody(Request request, Class<T> clazz) {
         String body = request.getBodyAsString();
         if (body == null || body.isBlank()) {
             throw new BadRequestException("Request body is empty");

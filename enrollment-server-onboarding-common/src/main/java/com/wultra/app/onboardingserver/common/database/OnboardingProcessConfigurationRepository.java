@@ -19,8 +19,10 @@
 package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
+import jakarta.validation.Valid;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Optional;
 
@@ -30,7 +32,15 @@ import java.util.Optional;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Repository
+@Validated
 public interface OnboardingProcessConfigurationRepository extends CrudRepository<OnboardingProcessConfigurationEntity, Long> {
 
-    Optional<OnboardingProcessConfigurationEntity> findByProcessType(String processType);
+    /**
+     * Find configuration by process type.
+     *
+     * @param processType process type
+     * @return process configuration or empty if not found
+     * @implSpec configuration is inserted manually in the database, let's validate it when reading to fail fast in case of invalid configuration.
+     */
+    Optional<@Valid OnboardingProcessConfigurationEntity> findByProcessType(String processType);
 }

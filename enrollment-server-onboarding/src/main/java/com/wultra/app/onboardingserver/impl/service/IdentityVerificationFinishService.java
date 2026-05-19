@@ -132,8 +132,7 @@ public class IdentityVerificationFinishService {
             }
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
-            logger.info("Unable to publish finished event to the onboarding adapter: {}", e.getMessage());
-            logger.debug("Unable to publish finished event to the onboarding adapter", e);
+            logger.info("Unable to publish finished event to the onboarding adapter", e);
         }
     }
 

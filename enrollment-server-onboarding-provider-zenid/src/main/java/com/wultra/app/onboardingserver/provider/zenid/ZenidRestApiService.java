@@ -117,8 +117,8 @@ class ZenidRestApiService {
                 }
         );
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE);
 
         final ResponseEntity<ZenidWebUploadSampleResponse> response =
                 restClient.post("/api/sample", bodyBuilder.build(), queryParams, httpHeaders, RESPONSE_TYPE_REFERENCE_UPLOAD_SAMPLE);
@@ -187,8 +187,8 @@ class ZenidRestApiService {
      */
     public ResponseEntity<byte[]> getImage(String imageHash) throws RestClientException {
         final String apiPath = String.format("/History/Image/%s", imageHash);
-        final HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setAccept(List.of(MediaType.APPLICATION_OCTET_STREAM));
+        final MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
+        httpHeaders.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_OCTET_STREAM_VALUE);
         final ResponseEntity<byte[]> result = restClient.get(apiPath, EMPTY_QUERY_PARAMS, httpHeaders, RESPONSE_TYPE_BYTE_ARRAY);
         logger.debug("{} called", apiPath);
         return result;

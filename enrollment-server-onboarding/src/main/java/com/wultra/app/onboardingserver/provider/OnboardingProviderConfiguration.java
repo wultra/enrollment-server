@@ -58,8 +58,8 @@ class OnboardingProviderConfiguration {
         logger.info("Initializing onboarding adapter RestClient for url={}", url);
 
         final HttpHeaders headers = new HttpHeaders();
-        headers.add("Accept", MimeTypeUtils.APPLICATION_JSON_VALUE);
-        headers.add("Content-Type", MimeTypeUtils.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE);
 
         for (final Map.Entry<String, String> entry : configuration.getHeaders().entrySet()) {
             headers.add(entry.getKey(), entry.getValue());

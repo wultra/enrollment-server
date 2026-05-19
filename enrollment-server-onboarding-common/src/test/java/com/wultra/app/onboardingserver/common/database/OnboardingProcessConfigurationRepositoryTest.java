@@ -19,16 +19,20 @@ package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.validation.autoconfigure.ValidationAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test for {@link OnboardingProcessConfigurationRepository}.
@@ -36,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @DataJpaTest
+@ImportAutoConfiguration(ValidationAutoConfiguration.class)
 @ActiveProfiles("test")
 @Sql
 class OnboardingProcessConfigurationRepositoryTest {
@@ -60,6 +65,20 @@ class OnboardingProcessConfigurationRepositoryTest {
 
         assertEquals(expectedConfiguration, result);
     }
+
+    @Test
+    void testJsonMapping_beanValidation() {
+        final ConstraintViolationException exception = assertThrows(ConstraintViolationException.class,
+                () -> tested.findByProcessType("invalid"));
+
+        final var constraintViolations = exception.getConstraintViolations();
+        assertEquals(1, constraintViolations.size());
+
+        final var constraintViolation = constraintViolations.iterator().next();
+        assertEquals("findByProcessType.<return value>.configuration.documents.groups[].items[].sideCount", constraintViolation.getPropertyPath().toString());
+        assertEquals("{jakarta.validation.constraints.Min.message}", constraintViolation.getMessageTemplate());
+    }
+
 
     private static OnboardingProcessConfigurationValue buildExpectedConfiguration() {
         return OnboardingProcessConfigurationValue.builder()

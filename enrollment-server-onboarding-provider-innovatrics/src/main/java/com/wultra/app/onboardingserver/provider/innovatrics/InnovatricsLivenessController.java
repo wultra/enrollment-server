@@ -32,6 +32,7 @@ import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthAuthenti
 import com.wultra.security.powerauth.rest.api.spring.exception.PowerAuthEncryptionException;
 import com.wultra.security.powerauth.rest.api.spring.exception.authentication.PowerAuthTokenInvalidException;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -40,6 +41,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 
 /**
@@ -72,11 +75,11 @@ class InnovatricsLivenessController {
     @PowerAuthEncryption(scope = EncryptionScope.ACTIVATION_SCOPE)
     @PowerAuth(resourceId = "/api/identity/presence-check/upload", authenticationCodeType = PowerAuthCodeType.POSSESSION)
     public Response upload(
-            @EncryptedRequestBody byte[] requestData,
-            @Parameter(hidden = true) EncryptionContext encryptionContext,
-            @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
+            @NotNull @EncryptedRequestBody final byte[] requestData,
+            @Parameter(hidden = true) final EncryptionContext encryptionContext,
+            @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
 
-        logger.info("action: upload, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
+        logger.info("", kv("action", "upload"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
         if (apiAuthentication == null) {
             throw new PowerAuthTokenInvalidException("Unable to verify device registration when uploading liveness");
         }
@@ -85,16 +88,12 @@ class InnovatricsLivenessController {
             throw new PowerAuthEncryptionException("ECIES encryption failed when uploading liveness");
         }
 
-        if (requestData == null) {
-            throw new PowerAuthEncryptionException("Invalid request received when uploading liveness");
-        }
-
         innovatricsLivenessService.upload(requestData, encryptionContext);
-        logger.info("action: upload, state: succeeded");
+        logger.info("", kv("action", "upload"), kv("state", "succeeded"));
         return new Response();
     }
 
-    // TODO (racansky, 2026-02-25, #1589) remove when validation of apiAuthentication made implicit
+    // TODO (racansky, 2026-02-25, #1722) remove when validation of apiAuthentication made implicit
     private static String extractActivationId(final PowerAuthApiAuthentication apiAuthentication) {
         return Optional.ofNullable(apiAuthentication).map(PowerAuthApiAuthentication::getActivationContext).map(PowerAuthActivation::getActivationId).orElse(null);
     }

@@ -17,9 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.microblink;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
@@ -45,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -53,6 +51,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -191,8 +191,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 List.of(),
                 new DocumentVerificationResponse.ExtractionClassInfo("Id", null));
 
-        final var objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        final var objectMapper = JsonMapper.builder().build();
 
         when(microblinkConfigProperties.getMobileSdkConfigs()).thenReturn(MOBILE_SDK_CONFIGS);
 
@@ -428,7 +427,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkRejectResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JsonProcessingException {
+    void testSubmitDocuments_microblinkRejectResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -462,7 +461,7 @@ class MicroblinkDocumentVerificationProviderTest {
     }
 
     @Test
-    void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JsonProcessingException {
+    void testSubmitDocuments_microblinkPassResponse_correctResponse() throws RestClientException, DocumentVerificationException, RemoteCommunicationException, JacksonException {
         // given
         final var submittedDocuments = List.of(submittedDocumentIdCardFront, submittedDocumentIdCardBack);
 
@@ -830,6 +829,29 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals(expectedResult, result.getStatus());
     }
 
+    @ParameterizedTest
+    @MethodSource("provideInvalidDateOfBirthTestCases")
+    void testVerifyDocuments_parseInvalidDateOfBirth(final String overallExtractionJson) {
+        // given
+        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
+
+        final var documentResult = new DocumentResultEntity();
+        documentResult.setVerificationResult(
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, overallExtractionJson, "[]", "[]", null)
+        );
+
+        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
+        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
+
+        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
+
+        // when
+        final var result = provider.verifyDocuments(ownerId, uploadIds);
+
+        // then
+        assertEquals("[Document data crosscheck failed for fields: [firstName, lastName, dateOfBirth]]", result.getRejectReason());
+    }
+
     @Test
     void testCleanupDocuments_verificationDataDoesNotExists_exceptionIsNotThrown() {
         // given
@@ -912,13 +934,11 @@ class MicroblinkDocumentVerificationProviderTest {
         options.setReturnFaceImage(true);
         options.setReturnFullDocumentImage(true);
 
-        final var useCase = new DocumentVerificationUseCaseOptions();
-
         final var request = new DocumentVerificationRequest();
         request.setImageFront(frontImageSource);
         request.setImageBack(backImageSource);
         request.setOptions(options);
-        request.setUseCase(useCase);
+        request.setUseCase(null);
         return request;
     }
 
@@ -1119,7 +1139,7 @@ class MicroblinkDocumentVerificationProviderTest {
         return entities;
     }
 
-    private void assertResultForRejectResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JsonProcessingException {
+    private void assertResultForRejectResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JacksonException {
         assertEquals("Rejected documents: [id-card-front, id-card-back]", result.getRejectReason());
         assertNull(result.getErrorDetail());
 
@@ -1151,14 +1171,14 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[]", backDocumentResult.getExtractedData());
     }
 
-    private static String buildExpectedValidationResult(final String json) throws JsonProcessingException {
+    private static String buildExpectedValidationResult(final String json) throws JacksonException {
         final var result = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(json)
                 .replaceAll("");
 
-        return new ObjectMapper().readTree(result).toString();
+        return JsonMapper.builder().build().readTree(result).toString();
     }
 
-    private void assertResultForPassResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JsonProcessingException {
+    private void assertResultForPassResponse(final DocumentsSubmitResult result, final String microblinkResponseJson) throws JacksonException {
         assertNull(result.getRejectReason());
         assertNull(result.getErrorDetail());
 
@@ -1228,5 +1248,31 @@ class MicroblinkDocumentVerificationProviderTest {
         } catch (JSONException e) {
             fail("JSON comparison failed", e);
         }
+    }
+
+    private static Stream<String> provideInvalidDateOfBirthTestCases() {
+        return Stream.of(
+                // DateOfBirth with only month and year (day missing)
+                """
+                [{
+                    "field": "DateOfBirth",
+                    "month": 2,
+                    "year": 1990
+                }]
+                """,
+
+                // DateOfBirth with invalid month (22 > 12)
+                """
+                [{
+                    "field": "DateOfBirth",
+                    "day": 1,
+                    "month": 22,
+                    "year": 1990
+                }]
+                """,
+
+                // Empty extraction data
+                "[]"
+        );
     }
 }

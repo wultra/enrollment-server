@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.innovatrics;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
@@ -35,6 +33,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -132,7 +132,7 @@ class InnovatricsDocumentVerificationProviderTest {
     @Test
     void testParseRejectionReason() throws Exception {
         final DocumentResultEntity entity = new DocumentResultEntity();
-        entity.setRejectReason(new ObjectMapper().writeValueAsString(List.of("Reason1", "Reason2")));
+        entity.setRejectReason(JsonMapper.builder().build().writeValueAsString(List.of("Reason1", "Reason2")));
         assertEquals(List.of("Reason1", "Reason2"), tested.parseRejectionReasons(entity));
     }
 
@@ -163,7 +163,7 @@ class InnovatricsDocumentVerificationProviderTest {
 
         final DocumentsVerificationResult result = tested.verifyDocuments(ownerId, List.of("c123"));
         assertEquals(DocumentVerificationStatus.REJECTED, result.getStatus());
-        assertEquals(List.of("Document expired."), new ObjectMapper().readValue(result.getRejectReason(), new TypeReference<List<String>>() {}));
+        assertEquals(List.of("Document expired."), JsonMapper.builder().build().readValue(result.getRejectReason(), new TypeReference<List<String>>() {}));
         assertEquals("c123", result.getResults().get(0).getUploadId());
         assertNotNull(result.getVerificationId());
     }
