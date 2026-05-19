@@ -56,4 +56,4 @@ New format (event `PROCESS_FINISHED`)
 }
 ```
 
-All details are described in [Events Documentation](./Events).
+All details are described in [Events Documentation](./Events.md).
