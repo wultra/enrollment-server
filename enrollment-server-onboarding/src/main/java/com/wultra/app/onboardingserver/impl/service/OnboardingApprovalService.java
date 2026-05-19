@@ -31,7 +31,6 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.ApproveClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.ApproveClientResponse;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -88,7 +87,7 @@ public class OnboardingApprovalService {
      * @return approval result; {@code null} is returned if the approval failed and represents a FAILED evaluation state
      */
     @Transactional
-    public @Nullable ApproveClientResponse.ApprovalResult approve(final IdentityVerificationEntity identityVerification) {
+    public ApprovalResult approve(final IdentityVerificationEntity identityVerification) {
         try {
             final OnboardingProcessEntity process = onboardingService.findProcess(identityVerification.getProcessId());
 
@@ -115,12 +114,20 @@ public class OnboardingApprovalService {
             persistRejectReason(response, identityVerification);
 
             auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
-            return approvalResult;
+            return convert(approvalResult);
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
             logger.warn("", kv("action", "callApproveClient"), kv("state", "failed"), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
-            return null;
+            return ApprovalResult.FAILED;
         }
+    }
+
+    private static ApprovalResult convert(final ApproveClientResponse.ApprovalResult source) {
+        return switch (source) {
+            case OK -> ApprovalResult.OK;
+            case NOK -> ApprovalResult.NOK;
+            case WAIT -> ApprovalResult.WAIT;
+        };
     }
 
     private void persistRejectReason(final ApproveClientResponse response, final IdentityVerificationEntity identityVerification) {
@@ -146,5 +153,22 @@ public class OnboardingApprovalService {
             case SUCCESS -> ApproveClientRequest.Status.SUCCESS;
             case FAILED -> ApproveClientRequest.Status.FAILURE;
         };
+    }
+
+    public enum ApprovalResult {
+
+        OK,
+
+        /**
+         * Business negative result.
+         */
+        NOK,
+
+        WAIT,
+
+        /**
+         * Technical failure.
+         */
+        FAILED
     }
 }

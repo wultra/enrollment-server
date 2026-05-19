@@ -20,11 +20,11 @@ import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPha
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
@@ -33,7 +33,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for transitions in {@link OnboardingState#ACTIVATION_FINISH_IN_PROGRESS} state.
@@ -49,10 +50,7 @@ class ActivationFinishTransitionsTest extends AbstractStateMachineTest {
     private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     @MockitoBean
-    private VerificationProcessResultAction verificationProcessResultAction;
-
-    @MockitoBean
-    private StatusAcceptedGuard statusAcceptedGuard;
+    private VerificationResultService verificationResultService;
 
     @Test
     void testActivationFinishInProgress_completed() throws Exception {
@@ -60,9 +58,9 @@ class ActivationFinishTransitionsTest extends AbstractStateMachineTest {
 
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = createStateMachine(idVerification);
 
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
-                .thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any()))
                 .thenReturn(true);
 
         final Message<OnboardingEvent> nextEventMessage =
@@ -74,7 +72,5 @@ class ActivationFinishTransitionsTest extends AbstractStateMachineTest {
                 .and()
                 .build()
                 .test();
-
-        verify(verificationProcessResultAction).execute(any());
     }
 }

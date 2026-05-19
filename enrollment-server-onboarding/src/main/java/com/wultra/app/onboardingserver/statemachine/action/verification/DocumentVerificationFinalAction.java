@@ -18,18 +18,16 @@ package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,25 +36,52 @@ import org.springframework.stereotype.Component;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
+@AllArgsConstructor
 @Slf4j
 public class DocumentVerificationFinalAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final DocumentVerificationService documentVerificationService;
+    private static final String RESULT_KEY = "DOCUMENT_VERIFICATION_FINAL_RESULT";
 
-    @Autowired
-    public DocumentVerificationFinalAction(final DocumentVerificationService documentVerificationService) {
-        this.documentVerificationService = documentVerificationService;
-    }
+    private final DocumentVerificationService documentVerificationService;
 
     @Override
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        try {
-            documentVerificationService.executeFinalDocumentVerification(identityVerification, ownerId);
-        } catch (RemoteCommunicationException | DocumentVerificationException | OnboardingProcessException e) {
-            context.getStateMachine().setStateMachineError(e);
+        final var result = documentVerificationService.executeFinalDocumentVerification(identityVerification, ownerId);
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
+    }
+
+    /**
+     * Guard that checks if the final document verification result is OK.
+     *
+     * @return guard returning {@code true} if the final document verification result is OK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(DocumentVerificationService.FinalDocumentVerificationResult.OK);
+    }
+
+    /**
+     * Guard that checks if the final document verification result is REJECTED.
+     *
+     * @return guard returning {@code true} if the final document verification result is REJECTED
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultRejected() {
+        return isResult(DocumentVerificationService.FinalDocumentVerificationResult.REJECTED);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final DocumentVerificationService.FinalDocumentVerificationResult expectedResult) {
+        return context -> evaluateResult(context, expectedResult);
+    }
+
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final DocumentVerificationService.FinalDocumentVerificationResult expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof DocumentVerificationService.FinalDocumentVerificationResult result) {
+            return expectedResult == result;
         }
+
+        return false;
     }
 }

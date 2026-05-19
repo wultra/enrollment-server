@@ -137,7 +137,7 @@ class ClientEvaluationServiceTest {
 
         final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
-        assertEquals(EvaluateClientResponse.EvaluationResult.OK, result);
+        assertEquals(ClientEvaluationService.ClientEvaluationResult.OK, result);
     }
 
     @Test
@@ -192,7 +192,7 @@ class ClientEvaluationServiceTest {
 
         final var result = tested.processClientEvaluation(identityVerification, ownerId);
 
-        assertNull(result);
+        assertEquals(ClientEvaluationService.ClientEvaluationResult.FAILED, result);
         assertEquals("maxFailedAttemptsClientEvaluation", identityVerification.getErrorDetail());
         assertEquals(ErrorOrigin.PROCESS_LIMIT_CHECK, identityVerification.getErrorOrigin());
     }

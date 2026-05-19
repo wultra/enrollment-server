@@ -104,12 +104,24 @@ public class PresenceCheckService {
      * </p>
      *
      * @param ownerId Owner identifier.
-     * @param idVerification Identity verification entity.
-     * @throws PresenceCheckException In case of business logic error.
-     * @throws RemoteCommunicationException In case of remote communication error.
+     * @param identityVerification Identity verification entity.
      */
     @Transactional
-    public void checkPresenceVerification(
+    public PresenceCheckStatus checkPresenceVerification(final OwnerId ownerId, final IdentityVerificationEntity identityVerification) {
+        logger.info("action: checkPresenceVerification, state: initiated, identityVerificationId: {}", identityVerification.getId());
+
+        try {
+            final var result = checkPresenceVerificationInternal(ownerId, identityVerification);
+            logger.info("action: checkPresenceVerification, state: succeeded, identityVerificationId: {}, result: {}", identityVerification.getId(), result);
+            return result;
+        } catch (final PresenceCheckException | RemoteCommunicationException e) {
+            logger.warn("action: checkPresenceVerification, state: failed, identityVerificationId: {}, exceptionMessage: {}", identityVerification.getId(), e.getMessage(), e);
+            processFailedPresenceCheck(ownerId, identityVerification, e.getMessage());
+            return PresenceCheckStatus.FAILED;
+        }
+    }
+
+    private PresenceCheckStatus checkPresenceVerificationInternal(
             final OwnerId ownerId,
             final IdentityVerificationEntity idVerification) throws PresenceCheckException, RemoteCommunicationException {
 
@@ -136,6 +148,8 @@ public class PresenceCheckService {
         }
 
         evaluatePresenceCheckResult(ownerId, idVerification, result);
+
+        return result.getStatus();
     }
 
     private void storeSelfiePhoto(final Image image, final IdentityVerificationEntity idVerification) {
@@ -282,7 +296,6 @@ public class PresenceCheckService {
         auditService.auditPresenceCheckProvider(idVerification, "Presence check started for user: {}", ownerId.getUserId());
 
         final SessionInfo updatedSessionInfo = updateSessionInfo(ownerId, idVerification, sessionInfo.getSessionAttributes());
-        identityVerificationService.moveToPhaseAndStatus(idVerification, PRESENCE_CHECK, IN_PROGRESS, ownerId);
 
         return updatedSessionInfo;
     }
@@ -331,35 +344,29 @@ public class PresenceCheckService {
                                              IdentityVerificationEntity idVerification,
                                              PresenceCheckResult result) {
 
-        final IdentityVerificationPhase phase = idVerification.getPhase();
         switch (result.getStatus()) {
-            case ACCEPTED -> {
-                // The timestampFinished parameter is not set yet, there may be other steps ahead
-                saveScaResult(ScaResultEntity.Result.SUCCESS, idVerification, ownerId);
-                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, ACCEPTED, ownerId);
-            }
-            case FAILED -> {
-                idVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
-                idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-                idVerification.setTimestampFailed(ownerId.getTimestamp());
-                logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, result.getErrorDetail());
-                saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
-                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, FAILED, ownerId);
-            }
-            case IN_PROGRESS ->
-                    logger.debug("Presence check still in progress, {}", ownerId);
+            case ACCEPTED -> // The timestampFinished parameter is not set yet, there may be other steps ahead
+                    saveScaResult(ScaResultEntity.Result.SUCCESS, idVerification, ownerId);
+            case FAILED -> processFailedPresenceCheck(ownerId, idVerification, result.getErrorDetail());
             case REJECTED -> {
                 idVerification.setRejectReason(IdentityVerificationEntity.PRESENCE_CHECK_REJECTED);
                 idVerification.setRejectOrigin(RejectOrigin.PRESENCE_CHECK);
                 idVerification.setTimestampFinished(ownerId.getTimestamp());
                 logger.info("Presence check rejected, {}, rejectReason: '{}'", ownerId, result.getRejectReason());
                 saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
-                identityVerificationService.moveToPhaseAndStatus(idVerification, phase, REJECTED, ownerId);
             }
             default ->
                     throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
+    }
+
+    private void processFailedPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final String errorDetail) {
+        idVerification.setErrorDetail(errorDetail);
+        idVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
+        idVerification.setTimestampFailed(ownerId.getTimestamp());
+        logger.warn("Presence check failed, {}, errorDetail: '{}'", ownerId, errorDetail);
+        saveScaResult(ScaResultEntity.Result.FAILED, idVerification, ownerId);
     }
 
     private void saveScaResult(final ScaResultEntity.Result presenceCheckResult, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {

@@ -18,22 +18,17 @@ package com.wultra.app.onboardingserver.statemachine.action.verification;
 
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
-
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
  * Action to start the verification process
@@ -41,29 +36,52 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@Slf4j
+@AllArgsConstructor
 public class VerificationDocumentStartAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(VerificationDocumentStartAction.class);
+    private static final String RESULT_KEY = "DOCUMENT_VERIFICATION_RESULT";
 
     private final IdentityVerificationService identityVerificationService;
 
-    @Autowired
-    public VerificationDocumentStartAction(IdentityVerificationService identityVerificationService) {
-        this.identityVerificationService = identityVerificationService;
-    }
-
     @Override
     public void execute(StateContext<OnboardingState, OnboardingEvent> context) {
-        OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
+        final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
+        final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        try {
-            identityVerificationService.startVerification(ownerId, identityVerification);
-            logger.info("Started document verification process of {}", identityVerification);
-        } catch (DocumentVerificationException | RemoteCommunicationException e) {
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, DOCUMENT_VERIFICATION, FAILED, ownerId);
-            logger.warn("Verification start failed, {}", ownerId, e);
-        }
+        final var result = identityVerificationService.startDocumentVerification(ownerId, identityVerification);
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
     }
 
+    /**
+     * Guard that checks if all documents are accepted.
+     *
+     * @return guard returning {@code true} if all documents are accepted
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.REQUIRED_DOCUMENTS_VERIFIED);
+    }
+
+    /**
+     * Guard that checks if the documents are not accepted or not all required documents are accepted yet
+     *
+     * @return guard returning {@code true} if some documents are not accepted or not all required documents are accepted yet
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
+        return isResult(IdentityVerificationService.VerificationDocumentActionResult.INSUFFICIENT_DOCUMENT_COUNT);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final IdentityVerificationService.VerificationDocumentActionResult expectedResult) {
+        return context -> evaluateResult(context, expectedResult);
+    }
+
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final IdentityVerificationService.VerificationDocumentActionResult expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof IdentityVerificationService.VerificationDocumentActionResult result) {
+            return expectedResult == result;
+        }
+
+        return false;
+    }
 }

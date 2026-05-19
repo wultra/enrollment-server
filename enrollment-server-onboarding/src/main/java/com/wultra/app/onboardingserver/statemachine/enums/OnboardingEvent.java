@@ -25,13 +25,17 @@ public enum OnboardingEvent {
 
     IDENTITY_VERIFICATION_INIT,
 
-    OTP_VERIFICATION_RESEND,
+    OTP_RESEND,
+
+    OTP_VERIFIED,
 
     PRESENCE_CHECK_INIT,
 
     PRESENCE_CHECK_SUBMITTED,
 
     EVENT_NEXT_STATE,
+
+    DOCUMENT_UPLOADED,
 
     /**
      * Onboarding approval acknowledged event, success. Used if the approval is in async mode.

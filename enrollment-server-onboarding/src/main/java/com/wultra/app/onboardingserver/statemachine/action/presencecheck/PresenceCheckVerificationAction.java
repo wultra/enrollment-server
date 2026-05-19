@@ -16,12 +16,9 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.presencecheck;
 
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
-import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.PresenceCheckService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
@@ -31,9 +28,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
-
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
 /**
  * Action to process verification result.
@@ -45,24 +41,48 @@ import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerifica
 @Slf4j
 public class PresenceCheckVerificationAction implements Action<OnboardingState, OnboardingEvent> {
 
-    private final PresenceCheckService presenceCheckService;
+    private static final String RESULT_KEY = "PRESENCE_CHECK_RESULT";
 
-    private final IdentityVerificationService identityVerificationService;
+    private final PresenceCheckService presenceCheckService;
 
     @Override
     public void execute(final StateContext<OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        try {
-            presenceCheckService.checkPresenceVerification(ownerId, identityVerification);
-        } catch (PresenceCheckException | RemoteCommunicationException e) {
-            logger.error("Checking presence verification failed, {}", ownerId, e);
-            identityVerification.setErrorDetail(IdentityVerificationEntity.PRESENCE_CHECK_FAILED);
-            identityVerification.setErrorOrigin(ErrorOrigin.PRESENCE_CHECK);
-            identityVerification.setTimestampFailed(ownerId.getTimestamp());
-            identityVerificationService.moveToPhaseAndStatus(identityVerification, identityVerification.getPhase(), FAILED, ownerId);
-        }
+        final var result = presenceCheckService.checkPresenceVerification(ownerId, identityVerification);
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
     }
 
+    /**
+     * Guard that checks if presence check result is OK.
+     *
+     * @return guard returning {@code true} if presence check result is OK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(PresenceCheckStatus.ACCEPTED);
+    }
+
+    /**
+     * Guard that checks if presence check result is REJECTED.
+     *
+     * @return guard returning {@code true} if presence check result is REJECTED
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultRejected() {
+        return isResult(PresenceCheckStatus.REJECTED);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final PresenceCheckStatus expectedResult) {
+        return context -> evaluateResult(context, expectedResult);
+    }
+
+    private static boolean evaluateResult(final StateContext<OnboardingState, OnboardingEvent> context, final PresenceCheckStatus expectedResult) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof PresenceCheckStatus result) {
+            return expectedResult == result;
+        }
+
+        return false;
+    }
 }
