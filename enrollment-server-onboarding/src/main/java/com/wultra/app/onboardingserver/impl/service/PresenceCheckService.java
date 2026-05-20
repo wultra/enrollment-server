@@ -365,10 +365,6 @@ public class PresenceCheckService {
     }
 
     private void publishEvent(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
-        if (result.getStatus() == PresenceCheckStatus.IN_PROGRESS) {
-            return;
-        }
-
         onboardingEventService.publishPresenceCheckFinished(idVerification, result, ownerId);
     }
 

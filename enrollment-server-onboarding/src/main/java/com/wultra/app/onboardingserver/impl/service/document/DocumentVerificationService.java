@@ -16,10 +16,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -103,7 +100,7 @@ public class DocumentVerificationService {
         });
 
         final var result = switch (status) {
-            case ACCEPTED -> accept(identityVerification, documentVerifications);
+            case ACCEPTED -> accept(identityVerification, documentVerifications, ownerId);
             case FAILED -> fail(identityVerification, documentsVerificationResult.getErrorDetail(), documentVerifications, ownerId);
             case REJECTED -> reject(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
             // Only sync mode is supported
@@ -128,11 +125,13 @@ public class DocumentVerificationService {
 
     private FinalDocumentVerificationResult accept(
             final IdentityVerificationEntity identityVerification,
-            final List<DocumentVerificationEntity> documentVerifications) {
+            final List<DocumentVerificationEntity> documentVerifications,
+            final OwnerId ownerId) {
+
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
+        onboardingEventService.publishFinalDocumentVerificationFinished(identityVerification, IdentityVerificationStatus.ACCEPTED, null, null, ownerId);
         return FinalDocumentVerificationResult.OK;
-        onboardingEventService.publishFinalDocumentVerificationFinished(identityVerification, ACCEPTED, null, null, ownerId);
     }
 
     private FinalDocumentVerificationResult reject(
@@ -157,7 +156,7 @@ public class DocumentVerificationService {
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
 
         onboardingEventService.publishFinalDocumentVerificationFinished(
-                identityVerification, REJECTED, ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, null, ownerId);
+                identityVerification, IdentityVerificationStatus.REJECTED, ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, null, ownerId);
         return FinalDocumentVerificationResult.REJECTED;
     }
 
@@ -183,7 +182,7 @@ public class DocumentVerificationService {
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
 
         onboardingEventService.publishFinalDocumentVerificationFinished(
-                identityVerification, FAILED, null, ErrorDetail.DOCUMENT_VERIFICATION_FAILED, ownerId);
+                identityVerification, IdentityVerificationStatus.FAILED, null, ErrorDetail.DOCUMENT_VERIFICATION_FAILED, ownerId);
         return FinalDocumentVerificationResult.FAILED;
     }
 
