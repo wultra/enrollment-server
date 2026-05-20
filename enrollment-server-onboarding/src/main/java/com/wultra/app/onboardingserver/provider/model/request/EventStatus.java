@@ -14,48 +14,24 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
-import com.wultra.core.annotations.PublicApi;
-import lombok.*;
-
 /**
- * {@link EventData} for {@link EventType#PRESENCE_CHECK_FINISHED}.
- * Contains the results of the presence check verification provider.
+ * Status reported by event data.
+ * <p>
+ * Each event type uses only a subset of the values:
+ * <ul>
+ *     <li>{@link EventType#DOCUMENT_VERIFICATION_FINISHED}, {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED},
+ *         {@link EventType#PRESENCE_CHECK_FINISHED} – {@link #ACCEPTED}, {@link #REJECTED}, {@link #FAILED}.</li>
+ *     <li>{@link EventType#PROCESS_FINISHED} – {@link #FINISHED}, {@link #FAILED}.</li>
+ * </ul>
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Builder
-@Getter
-@ToString
-@PublicApi
-@EqualsAndHashCode
-public final class PresenceCheckFinishedEventData implements EventData {
-
-    @NonNull
-    private EventStatus status;
-
-    private String rejectReason;
-
-    private String errorDetail;
-
-    @NonNull
-    private String provider;
-
-    @NonNull
-    private Integer score;
-
-    private PresenceCheckResult presenceCheckResult;
-
-    @Builder
-    @Getter
-    @ToString
-    @PublicApi
-    @EqualsAndHashCode
-    public static class PresenceCheckResult {
-
-        private String frame;
-    }
+public enum EventStatus {
+    ACCEPTED,
+    REJECTED,
+    FAILED,
+    FINISHED
 }

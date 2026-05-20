@@ -41,7 +41,7 @@ public final class FinalDocumentVerificationFinishedEventData implements EventDa
     private String documentVerificationId;
 
     @NonNull
-    private String status;
+    private EventStatus status;
 
     private String rejectReason;
 

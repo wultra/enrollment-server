@@ -18,30 +18,19 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.provider.model.request.DocumentVerificationFinishedEventData;
-import com.wultra.app.onboardingserver.provider.model.request.EventData;
-import com.wultra.app.onboardingserver.provider.model.request.EventType;
-import com.wultra.app.onboardingserver.provider.model.request.FinalDocumentVerificationFinishedEventData;
-import com.wultra.app.onboardingserver.provider.model.request.PresenceCheckFinishedEventData;
-import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
-import com.wultra.app.onboardingserver.provider.model.request.ProcessFinishedEventData;
+import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,19 +105,54 @@ public class OnboardingEventService {
     }
 
     /**
-     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with the overall
-     * outcome of the document checks (cross-check, type, country).
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#ACCEPTED}.
      *
      * @param identityVerification Identity verification entity.
-     * @param status Resulting identity verification status after the final document verification
-     *               (typically {@code ACCEPTED}, {@code REJECTED} or {@code FAILED}).
-     * @param rejectReason Reject reason when {@code status} is {@code REJECTED}, otherwise {@code null}.
-     * @param errorDetail Error detail when {@code status} is {@code FAILED}, otherwise {@code null}.
      * @param ownerId Owner identification (used only for logging).
      */
-    public void publishFinalDocumentVerificationFinished(
+    public void publishFinalDocumentVerificationAccepted(
             final IdentityVerificationEntity identityVerification,
-            final IdentityVerificationStatus status,
+            final OwnerId ownerId) {
+
+        publishFinalDocumentVerification(identityVerification, EventStatus.ACCEPTED, null, null, ownerId);
+    }
+
+    /**
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#REJECTED}.
+     *
+     * @param identityVerification Identity verification entity.
+     * @param rejectReason Reason why the documents were rejected.
+     * @param ownerId Owner identification (used only for logging).
+     */
+    public void publishFinalDocumentVerificationRejected(
+            final IdentityVerificationEntity identityVerification,
+            final String rejectReason,
+            final OwnerId ownerId) {
+
+        publishFinalDocumentVerification(identityVerification, EventStatus.REJECTED, rejectReason, null, ownerId);
+    }
+
+    /**
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#FAILED}.
+     *
+     * @param identityVerification Identity verification entity.
+     * @param errorDetail Error detail describing the failure.
+     * @param ownerId Owner identification (used only for logging).
+     */
+    public void publishFinalDocumentVerificationFailed(
+            final IdentityVerificationEntity identityVerification,
+            final String errorDetail,
+            final OwnerId ownerId) {
+
+        publishFinalDocumentVerification(identityVerification, EventStatus.FAILED, null, errorDetail, ownerId);
+    }
+
+    private void publishFinalDocumentVerification(
+            final IdentityVerificationEntity identityVerification,
+            final EventStatus status,
             final String rejectReason,
             final String errorDetail,
             final OwnerId ownerId) {
@@ -212,7 +236,7 @@ public class OnboardingEventService {
     private static EventData createProcessFinishedEventData(final OnboardingProcessEntity process) {
         final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
         return ProcessFinishedEventData.builder()
-                .status(process.getStatus().name())
+                .status(convert(process.getStatus()))
                 .errorDetail(process.getErrorDetail())
                 .deviceData(ProcessFinishedEventData.DeviceData.builder()
                         .locale(processWrapper.getLocale())
@@ -223,34 +247,51 @@ public class OnboardingEventService {
                 .build();
     }
 
-    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity doc) {
-        final DocumentStatus status = doc.getStatus();
-        final boolean detailsApplicable = status == DocumentStatus.ACCEPTED || status == DocumentStatus.REJECTED;
+    private static EventStatus convert(final OnboardingStatus source) {
+        return switch (source) {
+            case FINISHED -> EventStatus.ACCEPTED;
+            case FAILED -> EventStatus.FAILED;
+            default -> throw new IllegalArgumentException("Unsupported onboarding status: " + source);
+        };
+    }
 
-        final DocumentResultEntity latestResult = doc.getResults().stream()
+    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document) {
+        final DocumentStatus documentStatus = document.getStatus();
+        final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
+
+        final DocumentResultEntity latestResult = document.getResults().stream()
                 .findFirst()
                 .orElse(null);
 
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
-                        .type(doc.getType() == null ? null : doc.getType().name())
-                        .country(doc.getCountry())
+                        .type(document.getType() == null ? null : document.getType().name())
+                        .country(document.getCountry())
                         .data(buildDocumentData(latestResult))
-                        .images(buildImages(doc))
+                        .images(buildImages(document))
                         .rawData(latestResult == null ? null : latestResult.getVerificationResult())
                         .build()
                 : null;
 
         return DocumentVerificationFinishedEventData.builder()
-                .documentVerificationId(doc.getId())
-                .documentId(doc.getUploadId() != null ? doc.getUploadId() : doc.getId())
-                .status(status.name())
-                .rejectReason(doc.getRejectReason())
-                .errorDetail(doc.getErrorDetail())
+                .documentVerificationId(document.getId())
+                .documentId(document.getUploadId() != null ? document.getUploadId() : document.getId())
+                .status(convert(documentStatus))
+                .rejectReason(document.getRejectReason())
+                .errorDetail(document.getErrorDetail())
                 .provider(identityVerificationConfig.getDocumentVerificationProvider())
-                .score(doc.getVerificationScore() != null ? doc.getVerificationScore() : 0)
+                .score(document.getVerificationScore() != null ? document.getVerificationScore() : 0)
                 .documentVerificationResult(result)
                 .build();
+    }
+
+    private static EventStatus convert(final DocumentStatus source) {
+        return switch (source) {
+            case ACCEPTED -> EventStatus.ACCEPTED;
+            case REJECTED -> EventStatus.REJECTED;
+            case FAILED -> EventStatus.FAILED;
+            default -> throw new IllegalArgumentException("Unknown document status: " + source);
+        };
     }
 
     private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
@@ -299,7 +340,7 @@ public class OnboardingEventService {
 
     private EventData createFinalDocumentVerificationFinishedEventData(
             final IdentityVerificationEntity identityVerification,
-            final IdentityVerificationStatus status,
+            final EventStatus status,
             final String rejectReason,
             final String errorDetail) {
 
@@ -310,7 +351,7 @@ public class OnboardingEventService {
 
         return FinalDocumentVerificationFinishedEventData.builder()
                 .documentVerificationId(identityVerification.getId())
-                .status(status.name())
+                .status(status)
                 .rejectReason(rejectReason)
                 .errorDetail(errorDetail)
                 .provider(identityVerificationConfig.getDocumentVerificationProvider())
@@ -326,12 +367,20 @@ public class OnboardingEventService {
                         .frame(Base64.getEncoder().encodeToString(photo.getData()))
                         .build();
         return PresenceCheckFinishedEventData.builder()
-                .status(result.getStatus().name())
+                .status(convert(result.getStatus()))
                 .rejectReason(result.getRejectReason())
                 .errorDetail(result.getErrorDetail())
                 .provider(identityVerificationConfig.getPresenceCheckProvider())
                 .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
                 .presenceCheckResult(presenceCheckResult)
                 .build();
+    }
+
+    private static EventStatus convert(final PresenceCheckStatus source) {
+        return switch (source) {
+            case ACCEPTED -> EventStatus.ACCEPTED;
+            case FAILED -> EventStatus.FAILED;
+            case REJECTED -> EventStatus.REJECTED;
+        };
     }
 }

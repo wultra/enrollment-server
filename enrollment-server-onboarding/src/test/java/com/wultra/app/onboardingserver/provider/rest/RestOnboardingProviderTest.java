@@ -25,6 +25,7 @@ import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequ
 import com.wultra.app.onboardingserver.provider.model.request.EventType;
 import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
 import com.wultra.app.onboardingserver.provider.model.request.ProcessFinishedEventData;
+import com.wultra.app.onboardingserver.provider.model.request.EventStatus;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,7 +132,7 @@ class RestOnboardingProviderTest {
                 .identityVerificationId("dummyIdentityVerificationId")
                 .type(EventType.PROCESS_FINISHED)
                 .eventData(ProcessFinishedEventData.builder()
-                        .status("FINISHED")
+                        .status(EventStatus.FINISHED)
                         .deviceData(ProcessFinishedEventData.DeviceData.builder()
                                 .locale(Locale.ENGLISH)
                                 .ipAddress("127.0.0.1")

@@ -130,7 +130,7 @@ public class DocumentVerificationService {
 
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
-        onboardingEventService.publishFinalDocumentVerificationFinished(identityVerification, IdentityVerificationStatus.ACCEPTED, null, null, ownerId);
+        onboardingEventService.publishFinalDocumentVerificationAccepted(identityVerification, ownerId);
         return FinalDocumentVerificationResult.OK;
     }
 
@@ -155,8 +155,8 @@ public class DocumentVerificationService {
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
 
-        onboardingEventService.publishFinalDocumentVerificationFinished(
-                identityVerification, IdentityVerificationStatus.REJECTED, ErrorDetail.DOCUMENT_VERIFICATION_REJECTED, null, ownerId);
+        onboardingEventService.publishFinalDocumentVerificationRejected(
+                identityVerification, result.getRejectReason(), ownerId);
         return FinalDocumentVerificationResult.REJECTED;
     }
 
@@ -181,8 +181,8 @@ public class DocumentVerificationService {
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
 
-        onboardingEventService.publishFinalDocumentVerificationFinished(
-                identityVerification, IdentityVerificationStatus.FAILED, null, ErrorDetail.DOCUMENT_VERIFICATION_FAILED, ownerId);
+        onboardingEventService.publishFinalDocumentVerificationFailed(
+                identityVerification, errorDetail, ownerId);
         return FinalDocumentVerificationResult.FAILED;
     }
 

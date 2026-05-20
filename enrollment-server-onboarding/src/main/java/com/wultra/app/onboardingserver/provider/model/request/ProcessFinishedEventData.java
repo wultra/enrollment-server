@@ -37,7 +37,7 @@ import java.util.Map;
 public final class ProcessFinishedEventData implements EventData {
 
     @NonNull
-    private String status;
+    private EventStatus status;
 
     private String errorDetail;
 

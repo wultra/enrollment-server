@@ -43,7 +43,7 @@ public final class DocumentVerificationFinishedEventData implements EventData {
     private String documentId;
 
     @NonNull
-    private String status;
+    private EventStatus status;
 
     private String rejectReason;
 
