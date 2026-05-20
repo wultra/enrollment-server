@@ -23,7 +23,7 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.*;
-import com.wultra.app.onboardingserver.provider.rest.ProcessFinishedEventDataDto.MobileData;
+import com.wultra.app.onboardingserver.provider.rest.ProcessFinishedEventDataDto.DeviceData;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -269,15 +269,15 @@ public class RestOnboardingProvider implements OnboardingProvider {
                 .process(ProcessFinishedEventDataDto.Process.builder()
                         .status(source.getStatus())
                         .errorDetail(source.getErrorDetail())
-                        .mobileData(convert(source.getMobileData()))
+                        .deviceData(convert(source.getDeviceData()))
                         .build())
                 .build();
     }
 
-    private static MobileData convert(final ProcessFinishedEventData.MobileData source) {
-        return MobileData.builder()
+    private static DeviceData convert(final ProcessFinishedEventData.DeviceData source) {
+        return DeviceData.builder()
                 .locale(source.getLocale().getLanguage().toUpperCase(Locale.ROOT))
-                .clientIPAddress(source.getClientIPAddress())
+                .ipAddress(source.getIpAddress())
                 .httpUserAgent(source.getHttpUserAgent())
                 .fdsData(source.getFdsData())
                 .build();

@@ -48,9 +48,9 @@ class ProcessEventRequestDtoSerializationTest {
                 .process(ProcessFinishedEventDataDto.Process.builder()
                         .status("FINISHED")
                         .errorDetail(null)
-                        .mobileData(ProcessFinishedEventDataDto.MobileData.builder()
+                        .deviceData(ProcessFinishedEventDataDto.DeviceData.builder()
                                 .locale("EN")
-                                .clientIPAddress(null)
+                                .ipAddress(null)
                                 .httpUserAgent(null)
                                 .fdsData(Map.of("fdsIdentifier", "42"))
                                 .build())
@@ -69,9 +69,9 @@ class ProcessEventRequestDtoSerializationTest {
                     "process": {
                       "status": "FINISHED",
                       "errorDetail": null,
-                      "mobileData": {
+                      "deviceData": {
                         "locale": "EN",
-                        "clientIPAddress": null,
+                        "ipAddress": null,
                         "httpUserAgent": null,
                         "fdsData": {"fdsIdentifier": "42"}
                       }

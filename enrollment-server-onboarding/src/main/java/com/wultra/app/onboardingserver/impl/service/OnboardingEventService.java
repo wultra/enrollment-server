@@ -19,13 +19,17 @@ package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
+import com.wultra.app.enrollmentserver.model.integration.Image;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
+import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
@@ -42,8 +46,13 @@ import com.wultra.app.onboardingserver.provider.model.response.ProcessEventRespo
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service that publishes lifecycle events of the identity verification process to the configured
@@ -61,6 +70,8 @@ public class OnboardingEventService {
     private final OnboardingProvider onboardingProvider;
     private final IdentityVerificationConfig identityVerificationConfig;
     private final CommonOnboardingService commonOnboardingService;
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * Publish a {@link EventType#PROCESS_FINISHED} event.
@@ -203,9 +214,9 @@ public class OnboardingEventService {
         return ProcessFinishedEventData.builder()
                 .status(process.getStatus().name())
                 .errorDetail(process.getErrorDetail())
-                .mobileData(ProcessFinishedEventData.MobileData.builder()
+                .deviceData(ProcessFinishedEventData.DeviceData.builder()
                         .locale(processWrapper.getLocale())
-                        .clientIPAddress(processWrapper.getIpAddress())
+                        .ipAddress(processWrapper.getIpAddress())
                         .httpUserAgent(processWrapper.getUserAgent())
                         .fdsData(processWrapper.getFdsData())
                         .build())
@@ -216,14 +227,17 @@ public class OnboardingEventService {
         final DocumentStatus status = doc.getStatus();
         final boolean detailsApplicable = status == DocumentStatus.ACCEPTED || status == DocumentStatus.REJECTED;
 
+        final DocumentResultEntity latestResult = doc.getResults().stream()
+                .findFirst()
+                .orElse(null);
+
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
                         .type(doc.getType() == null ? null : doc.getType().name())
                         .country(doc.getCountry())
-                        .rawData(doc.getResults().stream()
-                                .findFirst()
-                                .map(DocumentResultEntity::getVerificationResult)
-                                .orElse(null))
+                        .data(buildDocumentData(latestResult))
+                        .images(buildImages(doc))
+                        .rawData(latestResult == null ? null : latestResult.getVerificationResult())
                         .build()
                 : null;
 
@@ -237,6 +251,50 @@ public class OnboardingEventService {
                 .score(doc.getVerificationScore() != null ? doc.getVerificationScore() : 0)
                 .documentVerificationResult(result)
                 .build();
+    }
+
+    private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
+        if (result == null || result.getExtractedData() == null) {
+            return null;
+        }
+        final DocumentExtractedDataValue value;
+        try {
+            value = objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
+        } catch (JacksonException e) {
+            logger.warn("Unable to parse extracted data for documentResultId={}: {}", result.getId(), e.getMessage());
+            return null;
+        }
+        return DocumentVerificationFinishedEventData.DocumentData.builder()
+                .surname(value.surname())
+                .givenNames(value.givenNames())
+                .dateOfBirth(formatDate(value.dateOfBirth()))
+                .placeOfBirth(value.placeOfBirth())
+                .sex(value.sex())
+                .nationality(value.nationality())
+                .personalNumber(value.personalNumber())
+                .documentNumber(value.documentNumber())
+                .dateOfIssue(formatDate(value.dateOfIssue()))
+                .dateOfExpiry(formatDate(value.dateOfExpiry()))
+                .authority(value.authority())
+                .build();
+    }
+
+    private List<DocumentVerificationFinishedEventData.Image> buildImages(final DocumentVerificationEntity doc) {
+        final List<ProcessedDocumentDataEntity> entities =
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
+        if (entities.isEmpty()) {
+            return null;
+        }
+        return entities.stream()
+                .map(e -> DocumentVerificationFinishedEventData.Image.builder()
+                        .type(e.getDataType().name())
+                        .data(Base64.getEncoder().encodeToString(e.getData()))
+                        .build())
+                .toList();
+    }
+
+    private static String formatDate(final LocalDate date) {
+        return date == null ? null : date.toString();
     }
 
     private EventData createFinalDocumentVerificationFinishedEventData(
@@ -261,12 +319,19 @@ public class OnboardingEventService {
     }
 
     private EventData createPresenceCheckFinishedEventData(final PresenceCheckResult result) {
+        final Image photo = result.getPhoto();
+        final PresenceCheckFinishedEventData.PresenceCheckResult presenceCheckResult = (photo == null || photo.getData() == null)
+                ? null
+                : PresenceCheckFinishedEventData.PresenceCheckResult.builder()
+                        .frame(Base64.getEncoder().encodeToString(photo.getData()))
+                        .build();
         return PresenceCheckFinishedEventData.builder()
                 .status(result.getStatus().name())
                 .rejectReason(result.getRejectReason())
                 .errorDetail(result.getErrorDetail())
                 .provider(identityVerificationConfig.getPresenceCheckProvider())
-                .score(0) // TODO Lubos fill score
+                .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                .presenceCheckResult(presenceCheckResult)
                 .build();
     }
 }

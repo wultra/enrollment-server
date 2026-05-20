@@ -42,19 +42,19 @@ public final class ProcessFinishedEventData implements EventData {
     private String errorDetail;
 
     @NonNull
-    private MobileData mobileData;
+    private DeviceData deviceData;
 
     @Builder
     @Getter
     @ToString
     @PublicApi
     @EqualsAndHashCode
-    public static class MobileData {
+    public static class DeviceData {
 
         @NonNull
         private Locale locale;
 
-        private String clientIPAddress;
+        private String ipAddress;
 
         private String httpUserAgent;
 

@@ -33,13 +33,13 @@ record ProcessFinishedEventDataDto(Process process) implements EventDataDto {
     public record Process(
             String status,
             String errorDetail,
-            MobileData mobileData
+            DeviceData deviceData
     ) {}
 
     @Builder
-    public record MobileData(
+    public record DeviceData(
             String locale,
-            String clientIPAddress,
+            String ipAddress,
             String httpUserAgent,
             Map<String, Object> fdsData
     ) {}
