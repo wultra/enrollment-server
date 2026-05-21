@@ -249,7 +249,7 @@ public class OnboardingEventService {
 
     private static EventStatus convert(final OnboardingStatus source) {
         return switch (source) {
-            case FINISHED -> EventStatus.ACCEPTED;
+            case FINISHED -> EventStatus.FINISHED;
             case FAILED -> EventStatus.FAILED;
             default -> throw new IllegalArgumentException("Unsupported onboarding status: " + source);
         };
