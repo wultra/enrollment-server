@@ -318,12 +318,12 @@ public class OnboardingEventService {
         final List<ProcessedDocumentDataEntity> entities =
                 processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
         if (entities.isEmpty()) {
-            return null;
+            return List.of();
         }
         return entities.stream()
-                .map(e -> DocumentVerificationFinishedEventData.Image.builder()
-                        .type(e.getDataType().name())
-                        .data(Base64.getEncoder().encodeToString(e.getData()))
+                .map(it -> DocumentVerificationFinishedEventData.Image.builder()
+                        .type(it.getDataType().name())
+                        .data(Base64.getEncoder().encodeToString(it.getData()))
                         .build())
                 .toList();
     }
@@ -340,7 +340,7 @@ public class OnboardingEventService {
 
         final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
-                .map(doc -> doc.getUploadId() != null ? doc.getUploadId() : doc.getId())
+                .map(it -> it.getUploadId() != null ? it.getUploadId() : it.getId())
                 .toList();
 
         return FinalDocumentVerificationFinishedEventData.builder()
