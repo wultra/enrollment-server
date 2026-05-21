@@ -24,8 +24,10 @@ import com.wultra.app.enrollmentserver.model.integration.SessionInfo;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +39,7 @@ import java.util.Optional;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.NOT_INITIALIZED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -61,6 +64,9 @@ class PresenceCheckServiceTest {
 
     @MockitoBean
     private PresenceCheckProvider presenceCheckProvider;
+
+    @MockitoBean
+    private OnboardingProcessRepository onboardingProcessRepository;
 
     @Autowired
     private PresenceCheckService tested;
@@ -133,20 +139,28 @@ class PresenceCheckServiceTest {
         page3.setPhotoId("driving_license_portrait");
 
         when(presenceCheckProvider.trustedPhotoSource()).thenReturn(PresenceCheckProvider.TrustedPhotoSource.REFERENCE);
+        when(presenceCheckProvider.getExternalUserId(ownerId)).thenReturn("iproov-user-123");
 
         final IdentityVerificationEntity identityVerification = new IdentityVerificationEntity();
         identityVerification.setPhase(PRESENCE_CHECK);
         identityVerification.setStatus(NOT_INITIALIZED);
+        identityVerification.setProcessId("p1");
+
+        final OnboardingProcessEntity process = new OnboardingProcessEntity();
+        process.setId("p1");
 
         when(documentVerificationRepository.findAllWithPhoto(identityVerification)).thenReturn(List.of(page1, page2, page3));
         when(identityVerificationService.findByOptional(ownerId)).thenReturn(Optional.of(identityVerification));
         when(presenceCheckProvider.startPresenceCheck(ownerId)).thenReturn(new SessionInfo());
+        when(onboardingProcessRepository.findById("p1")).thenReturn(Optional.of(process));
 
         tested.init(ownerId, "p1");
 
         assertTrue(identityVerification.getSessionInfo().contains("\"primaryDocumentReference\":\"id_card_portrait\""));
         assertTrue(identityVerification.getSessionInfo().contains("\"otherDocumentsReferences\":[\"driving_license_portrait\"]"));
         verify(presenceCheckProvider).initPresenceCheck(ownerId, null);
+        assertEquals("iproov-user-123", process.getExternalUserId());
+        verify(onboardingProcessRepository).save(process);
     }
 
 }

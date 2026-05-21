@@ -212,7 +212,7 @@ public class OnboardingEventService {
         sendEvent(request, ownerId, "presence check finished");
     }
 
-    private ProcessEventRequest.ProcessEventRequestBuilder baseRequestBuilder(
+    private static ProcessEventRequest.ProcessEventRequestBuilder baseRequestBuilder(
             final OnboardingProcessEntity process,
             final IdentityVerificationEntity identityVerification) {
 
@@ -220,7 +220,7 @@ public class OnboardingEventService {
                 .processId(process.getId())
                 .processType(process.getProcessConfiguration().getProcessType())
                 .userId(identityVerification.getUserId())
-                .externalUserId(process.getUserId()) // TODO Lubos store and get iProov userId
+                .externalUserId(process.getExternalUserId())
                 .identityVerificationId(identityVerification.getId());
     }
 

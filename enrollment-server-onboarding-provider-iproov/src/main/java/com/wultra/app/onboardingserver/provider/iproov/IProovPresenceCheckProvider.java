@@ -132,6 +132,11 @@ class IProovPresenceCheckProvider implements PresenceCheckProvider {
     }
 
     @Override
+    public String getExternalUserId(final OwnerId id) {
+        return iProovRestApiService.getUserId(id);
+    }
+
+    @Override
     public SessionInfo startPresenceCheck(OwnerId id) throws PresenceCheckException, RemoteCommunicationException {
         final ResponseEntity<String> responseEntity;
         try {

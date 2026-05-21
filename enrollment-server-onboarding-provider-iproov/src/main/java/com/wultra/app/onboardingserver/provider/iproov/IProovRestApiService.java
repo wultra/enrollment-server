@@ -274,7 +274,13 @@ class IProovRestApiService {
         return value;
     }
 
-    private String getUserId(OwnerId id) {
+    /**
+     * Computes the iProov user identifier for the given owner identification.
+     *
+     * @param id Owner identification.
+     * @return iProov user identifier.
+     */
+    String getUserId(final OwnerId id) {
         if (configProps.isEnsureUserIdValueEnabled()) {
             return ensureValidUserIdValue(id.getUserIdSecured());
         } else {

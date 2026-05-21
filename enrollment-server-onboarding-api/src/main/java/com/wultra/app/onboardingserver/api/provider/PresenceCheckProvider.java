@@ -73,6 +73,19 @@ public interface PresenceCheckProvider {
     PresenceCheckResult getResult(OwnerId id, SessionInfo sessionInfo) throws PresenceCheckException, RemoteCommunicationException;
 
     /**
+     * Returns the external user identifier used by the presence check provider for the given owner.
+     * <p>
+     * The default implementation returns {@link  OwnerId#getUserId()} if the provider does not implement specific behavior.
+     * Providers that derive a stable, provider-specific user identifier (e.g. iProov) should override this method.
+     *
+     * @param id Owner identification.
+     * @return External user identifier.
+     */
+    default String getExternalUserId(final OwnerId id) {
+        return id.getUserId();
+    }
+
+    /**
      * Cleans up all presence check data related to the identity.
      *
      * @param id Owner identification.
