@@ -259,7 +259,7 @@ public class OnboardingEventService {
 
         final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
                 ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
-                        .type(document.getType() == null ? null : document.getType().name())
+                        .type(document.getType().name())
                         .country(document.getCountry())
                         .data(buildDocumentData(latestResult))
                         .images(buildImages(document))
