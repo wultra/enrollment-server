@@ -21,7 +21,6 @@ import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
 import com.wultra.app.enrollmentserver.model.integration.Image;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.*;
@@ -43,6 +42,8 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * Service that publishes lifecycle events of the identity verification process to the configured
@@ -69,13 +70,8 @@ public class OnboardingEventService {
      *
      * @param process Onboarding process that has just finished.
      * @param identityVerification Related identity verification entity.
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishProcessFinished(
-            final OnboardingProcessEntity process,
-            final IdentityVerificationEntity identityVerification,
-            final OwnerId ownerId) {
-
+    public void publishProcessFinished(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification) {
         if (isEventTypeNotEnabled(EventType.PROCESS_FINISHED)) {
             return;
         }
@@ -84,19 +80,15 @@ public class OnboardingEventService {
                 .type(EventType.PROCESS_FINISHED)
                 .eventData(createProcessFinishedEventData(process))
                 .build();
-        sendEvent(request, ownerId, "process finished");
+        sendEvent(request);
     }
 
     /**
      * Publish a {@link EventType#DOCUMENT_VERIFICATION_FINISHED} event for a single document.
      *
      * @param documentVerification Document verification entity whose verification has finished.
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishDocumentVerificationFinished(
-            final DocumentVerificationEntity documentVerification,
-            final OwnerId ownerId) {
-
+    public void publishDocumentVerificationFinished(final DocumentVerificationEntity documentVerification) {
         if (isEventTypeNotEnabled(EventType.DOCUMENT_VERIFICATION_FINISHED)) {
             return;
         }
@@ -111,7 +103,7 @@ public class OnboardingEventService {
                 .type(EventType.DOCUMENT_VERIFICATION_FINISHED)
                 .eventData(createDocumentVerificationFinishedEventData(documentVerification))
                 .build();
-        sendEvent(request, ownerId, "document verification finished");
+        sendEvent(request);
     }
 
     /**
@@ -119,13 +111,9 @@ public class OnboardingEventService {
      * {@link EventStatus#ACCEPTED}.
      *
      * @param identityVerification Identity verification entity.
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishFinalDocumentVerificationAccepted(
-            final IdentityVerificationEntity identityVerification,
-            final OwnerId ownerId) {
-
-        publishFinalDocumentVerification(identityVerification, EventStatus.ACCEPTED, null, null, ownerId);
+    public void publishFinalDocumentVerificationAccepted(final IdentityVerificationEntity identityVerification) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.ACCEPTED, null, null);
     }
 
     /**
@@ -134,14 +122,9 @@ public class OnboardingEventService {
      *
      * @param identityVerification Identity verification entity.
      * @param rejectReason Reason why the documents were rejected.
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishFinalDocumentVerificationRejected(
-            final IdentityVerificationEntity identityVerification,
-            final String rejectReason,
-            final OwnerId ownerId) {
-
-        publishFinalDocumentVerification(identityVerification, EventStatus.REJECTED, rejectReason, null, ownerId);
+    public void publishFinalDocumentVerificationRejected(final IdentityVerificationEntity identityVerification, final String rejectReason) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.REJECTED, rejectReason, null);
     }
 
     /**
@@ -150,22 +133,16 @@ public class OnboardingEventService {
      *
      * @param identityVerification Identity verification entity.
      * @param errorDetail Error detail describing the failure.
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishFinalDocumentVerificationFailed(
-            final IdentityVerificationEntity identityVerification,
-            final String errorDetail,
-            final OwnerId ownerId) {
-
-        publishFinalDocumentVerification(identityVerification, EventStatus.FAILED, null, errorDetail, ownerId);
+    public void publishFinalDocumentVerificationFailed(final IdentityVerificationEntity identityVerification, final String errorDetail) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.FAILED, null, errorDetail);
     }
 
     private void publishFinalDocumentVerification(
             final IdentityVerificationEntity identityVerification,
             final EventStatus status,
             final String rejectReason,
-            final String errorDetail,
-            final OwnerId ownerId) {
+            final String errorDetail) {
 
         if (isEventTypeNotEnabled(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)) {
             return;
@@ -180,7 +157,7 @@ public class OnboardingEventService {
                 .type(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)
                 .eventData(createFinalDocumentVerificationFinishedEventData(identityVerification, status, rejectReason, errorDetail))
                 .build();
-        sendEvent(request, ownerId, "final document verification finished");
+        sendEvent(request);
     }
 
     /**
@@ -189,13 +166,8 @@ public class OnboardingEventService {
      *
      * @param identityVerification Identity verification entity.
      * @param result Presence check result returned by the provider (terminal state expected).
-     * @param ownerId Owner identification (used only for logging).
      */
-    public void publishPresenceCheckFinished(
-            final IdentityVerificationEntity identityVerification,
-            final PresenceCheckResult result,
-            final OwnerId ownerId) {
-
+    public void publishPresenceCheckFinished(final IdentityVerificationEntity identityVerification, final PresenceCheckResult result) {
         if (isEventTypeNotEnabled(EventType.PRESENCE_CHECK_FINISHED)) {
             return;
         }
@@ -209,7 +181,7 @@ public class OnboardingEventService {
                 .type(EventType.PRESENCE_CHECK_FINISHED)
                 .eventData(createPresenceCheckFinishedEventData(result))
                 .build();
-        sendEvent(request, ownerId, "presence check finished");
+        sendEvent(request);
     }
 
     private static ProcessEventRequest.ProcessEventRequestBuilder baseRequestBuilder(
@@ -243,20 +215,15 @@ public class OnboardingEventService {
         }
     }
 
-    private void sendEvent(final ProcessEventRequest request, final OwnerId ownerId, final String eventLabel) {
+    private void sendEvent(final ProcessEventRequest request) {
         try {
-            logger.info("Publishing {} event, type={}, processId={}, {}", eventLabel, request.getType(), request.getProcessId(), ownerId);
+            logger.info("", kv("action", "sendEvent"), kv("state", "initiated"), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
             logger.debug("Got {} for processId={}", response, request.getProcessId());
-            if (response.isErrorOccurred()) {
-                logger.info("{} event failed to be published: {}, {}", eventLabel, response.getErrorDetail(), ownerId);
-            } else {
-                logger.info("{} event published, {}", eventLabel, ownerId);
-            }
+            logger.info("", kv("action", "sendEvent"), kv("state", "succeeded"), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
-            logger.info("Unable to publish {} event to the onboarding adapter: {}", eventLabel, e.getMessage());
-            logger.debug("Unable to publish {} event to the onboarding adapter", eventLabel, e);
+            logger.warn("", kv("action", "sendEvent"), kv("state", "failed"), kv("exceptionMessage", e.getMessage()), e);
         }
     }
 

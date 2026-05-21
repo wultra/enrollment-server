@@ -378,11 +378,11 @@ public class PresenceCheckService {
                         result.getStatus(), idVerification.getId()));
         }
 
-        publishEvent(ownerId, idVerification, result);
+        publishEvent(idVerification, result);
     }
 
-    private void publishEvent(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
-        onboardingEventService.publishPresenceCheckFinished(idVerification, result, ownerId);
+    private void publishEvent(final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
+        onboardingEventService.publishPresenceCheckFinished(idVerification, result);
     }
 
     private void processFailedPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final String errorDetail) {

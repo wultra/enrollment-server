@@ -80,6 +80,6 @@ public class IdentityVerificationFinishService {
         onboardingService.updateProcess(processEntity);
         auditService.audit(processEntity, identityVerification, "Process finished for user: {}", processEntity.getUserId());
 
-        onboardingEventService.publishProcessFinished(processEntity, identityVerification, ownerId);
+        onboardingEventService.publishProcessFinished(processEntity, identityVerification);
     }
 }

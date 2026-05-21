@@ -100,7 +100,7 @@ public class DocumentVerificationService {
         });
 
         final var result = switch (status) {
-            case ACCEPTED -> accept(identityVerification, documentVerifications, ownerId);
+            case ACCEPTED -> accept(identityVerification, documentVerifications);
             case FAILED -> fail(identityVerification, documentsVerificationResult.getErrorDetail(), documentVerifications, ownerId);
             case REJECTED -> reject(identityVerification, documentsVerificationResult, documentVerifications, ownerId);
             // Only sync mode is supported
@@ -125,12 +125,11 @@ public class DocumentVerificationService {
 
     private FinalDocumentVerificationResult accept(
             final IdentityVerificationEntity identityVerification,
-            final List<DocumentVerificationEntity> documentVerifications,
-            final OwnerId ownerId) {
+            final List<DocumentVerificationEntity> documentVerifications) {
 
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
-        onboardingEventService.publishFinalDocumentVerificationAccepted(identityVerification, ownerId);
+        onboardingEventService.publishFinalDocumentVerificationAccepted(identityVerification);
         return FinalDocumentVerificationResult.OK;
     }
 
@@ -155,8 +154,7 @@ public class DocumentVerificationService {
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
 
-        onboardingEventService.publishFinalDocumentVerificationRejected(
-                identityVerification, result.getRejectReason(), ownerId);
+        onboardingEventService.publishFinalDocumentVerificationRejected(identityVerification, result.getRejectReason());
         return FinalDocumentVerificationResult.REJECTED;
     }
 
@@ -181,8 +179,7 @@ public class DocumentVerificationService {
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
 
-        onboardingEventService.publishFinalDocumentVerificationFailed(
-                identityVerification, errorDetail, ownerId);
+        onboardingEventService.publishFinalDocumentVerificationFailed(identityVerification, errorDetail);
         return FinalDocumentVerificationResult.FAILED;
     }
 

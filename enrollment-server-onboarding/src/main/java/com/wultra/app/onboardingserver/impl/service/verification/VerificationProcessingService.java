@@ -99,7 +99,7 @@ public class VerificationProcessingService {
                 }
             }
             documentVerificationRepository.save(docVerification);
-            onboardingEventService.publishDocumentVerificationFinished(docVerification, ownerId);
+            onboardingEventService.publishDocumentVerificationFinished(docVerification);
         }
     }
 
