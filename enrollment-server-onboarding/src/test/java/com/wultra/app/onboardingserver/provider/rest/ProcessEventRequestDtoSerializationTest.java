@@ -17,8 +17,9 @@
  */
 package com.wultra.app.onboardingserver.provider.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ProcessEventRequestDtoSerializationTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @Test
     void testSerializeProcessFinished() throws Exception {
