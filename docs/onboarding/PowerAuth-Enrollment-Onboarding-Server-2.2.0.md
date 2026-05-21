@@ -58,7 +58,22 @@ New format (event `PROCESS_FINISHED`)
 
 All details are described in [Events Documentation](./Events.md).
 
-No database changes are required.
+
+## Database Changes
+
+For convenience, you can use liquibase for your database migration.
+
+For manual changes use SQL scripts:
+
+- [PostgreSQL script](./../sql/postgresql/onboarding/migration_2.1.0_2.2.0.sql)
+- [Oracle script](./../sql/oracle/onboarding/migration_2.1.0_2.2.0.sql)
+
+
+### External User ID
+
+A new column `external_user_id` was added to the `es_onboarding_process` table.
+The column stores an external user identifier used by the presence check provider (e.g. iProov).
+It is `NULL` at the start of the process and set during the presence check phase.
 
 
 ## Configuration

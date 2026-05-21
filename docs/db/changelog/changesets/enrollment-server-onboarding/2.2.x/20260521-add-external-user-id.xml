@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="1" logicalFilePath="enrollment-server-onboarding/2.2.x/20260521-add-external-user-id.xml" author="Lubos Racansky">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="es_onboarding_process" columnName="external_user_id"/>
+            </not>
+        </preConditions>
+        <comment>Add external_user_id column to es_onboarding_process table</comment>
+        <addColumn tableName="es_onboarding_process">
+            <column name="external_user_id" type="varchar(256)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
