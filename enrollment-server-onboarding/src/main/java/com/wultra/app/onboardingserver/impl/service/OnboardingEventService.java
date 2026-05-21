@@ -209,8 +209,8 @@ public class OnboardingEventService {
         try {
             return commonOnboardingService.findProcess(identityVerification.getProcessId());
         } catch (OnboardingProcessException e) {
-            logger.warn("Unable to publish {} event - onboarding process not found, identityVerificationId={}, processId={}: {}",
-                    eventType, identityVerification.getId(), identityVerification.getProcessId(), e.getMessage());
+            logger.warn("Unable to publish {} event - onboarding process not found, identityVerificationId={}, processId={}, exceptionMessage={}",
+                    eventType, identityVerification.getId(), identityVerification.getProcessId(), e.getMessage(), e);
             return null;
         }
     }
