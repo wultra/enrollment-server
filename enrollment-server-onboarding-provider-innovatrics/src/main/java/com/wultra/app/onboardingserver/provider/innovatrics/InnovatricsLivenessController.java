@@ -42,6 +42,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 
 /**
  * Controller publishing REST services for uploading Innovatrics liveness data.
@@ -77,7 +79,7 @@ class InnovatricsLivenessController {
             @Parameter(hidden = true) final EncryptionContext encryptionContext,
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
 
-        logger.info("action: upload, state: initiated, activationId: {}", extractActivationId(apiAuthentication));
+        logger.info("", kv("action", "upload"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
         if (apiAuthentication == null) {
             throw new PowerAuthTokenInvalidException("Unable to verify device registration when uploading liveness");
         }
@@ -87,7 +89,7 @@ class InnovatricsLivenessController {
         }
 
         innovatricsLivenessService.upload(requestData, encryptionContext);
-        logger.info("action: upload, state: succeeded");
+        logger.info("", kv("action", "upload"), kv("state", "succeeded"));
         return new Response();
     }
 

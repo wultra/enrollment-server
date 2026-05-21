@@ -25,11 +25,6 @@ package com.wultra.app.enrollmentserver.model.enumeration;
 public enum PresenceCheckStatus {
 
     /**
-     * User presence is being checked.
-     */
-    IN_PROGRESS,
-
-    /**
      * User presence check was accepted.
      */
     ACCEPTED,

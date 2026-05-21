@@ -32,16 +32,19 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.EvaluateClientRequest;
 import com.wultra.app.onboardingserver.provider.model.response.EvaluateClientResponse;
-import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryException;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.stream.Collectors.toSet;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * Service for client evaluation features.
@@ -77,10 +80,13 @@ public class ClientEvaluationService {
         this.onboardingService = onboardingService;
         this.clientEvaluationDocumentCheckResultFactory = clientEvaluationDocumentCheckResultFactory;
 
-        this.retryTemplate = RetryTemplate.builder()
-                .maxAttempts(config.getClientEvaluationMaxFailedAttempts())
-                .exponentialBackoff(200, 2.0, 2_000)
-                .build();
+        this.retryTemplate = new RetryTemplate(
+                RetryPolicy.builder()
+                        .maxRetries(Math.max(0, config.getClientEvaluationMaxFailedAttempts() - 1))
+                        .delay(Duration.ofMillis(200))
+                        .multiplier(2.0)
+                        .maxDelay(Duration.ofMillis(2_000))
+                        .build());
     }
 
     /**
@@ -104,7 +110,7 @@ public class ClientEvaluationService {
      * @param identityVerification identity verification to process
      * @param ownerId Owner identification.
      */
-    public @Nullable EvaluateClientResponse.EvaluationResult processClientEvaluation(
+    public ClientEvaluationResult processClientEvaluation(
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId
     ) {
@@ -133,27 +139,36 @@ public class ClientEvaluationService {
                 .build();
 
         try {
-            final EvaluateClientResponse response = retryTemplate.execute(context -> callEvaluateClient(request, context));
+            final AtomicInteger attemptCounter = new AtomicInteger();
+            final EvaluateClientResponse response = retryTemplate.execute(() -> callEvaluateClient(request, attemptCounter));
             processEvaluationResponse(identityVerification, ownerId, response);
-            return response.getEvaluationResult();
-        } catch (final OnboardingProviderException | RuntimeException e) {
+            return convert(response.getEvaluationResult());
+        } catch (final RetryException e) {
             processTooManyEvaluationError(identityVerification, ownerId);
-            return null;
+            return ClientEvaluationResult.FAILED;
         }
     }
 
-    private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final RetryContext context) throws OnboardingProviderException {
-        final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
-        final int attempt = context.getRetryCount() + 1;
+    private static ClientEvaluationResult convert(final EvaluateClientResponse.EvaluationResult source) {
+        return switch (source) {
+            case OK -> ClientEvaluationResult.OK;
+            case NOK -> ClientEvaluationResult.NOK;
+            case WAIT -> ClientEvaluationResult.WAIT;
+        };
+    }
 
-        logger.info("action: callEvaluateClient, state: initiated, attempt {}/{}", attempt, maxAttempts);
+    private EvaluateClientResponse callEvaluateClient(final EvaluateClientRequest request, final AtomicInteger attemptCounter) throws OnboardingProviderException {
+        final var maxAttempts = config.getClientEvaluationMaxFailedAttempts();
+        final int attempt = attemptCounter.incrementAndGet();
+
+        logger.info("", kv("action", "callEvaluateClient"), kv("state", "initiated"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
 
         try {
             final EvaluateClientResponse response = onboardingProvider.evaluateClient(request);
-            logger.info("action: callEvaluateClient, state: succeeded, evaluationResult: {}, resultReason: {}", response.getEvaluationResult(), response.getResultReason());
+            logger.info("", kv("action", "callEvaluateClient"), kv("state", "succeeded"), kv("evaluationResult", response.getEvaluationResult()), kv("resultReason", response.getResultReason()));
             return response;
         } catch (final Exception e) {
-            logger.warn("action: callEvaluateClient, state: failed, attempt {}/{}, exceptionMessage: {}", attempt, maxAttempts, e.getMessage(), e);
+            logger.warn("", kv("action", "callEvaluateClient"), kv("state", "failed"), kv("attempt", attempt), kv("maxAttempts", maxAttempts));
             throw e;
         }
     }
@@ -186,8 +201,7 @@ public class ClientEvaluationService {
     }
 
     private void processVerificationIdError(final IdentityVerificationEntity identityVerification, final OwnerId ownerId, final Exception e) {
-        logger.warn("Client evaluation failed to get verificationId for {}, {} - {}", identityVerification, ownerId, e.getMessage());
-        logger.debug("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
+        logger.warn("Client evaluation failed to get verificationId for {}, {}", identityVerification, ownerId, e);
         identityVerification.setErrorDetail(ERROR_VERIFICATION_ID);
         identityVerification.setErrorOrigin(ErrorOrigin.CLIENT_EVALUATION);
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
@@ -212,5 +226,28 @@ public class ClientEvaluationService {
         } else { // WAIT
             logger.info("Client evaluation waiting for identity verification id: {}", identityVerificationId);
         }
+    }
+
+    public enum ClientEvaluationResult {
+
+        /**
+         * Business positive result.
+         */
+        OK,
+
+        /**
+         * Business negative result.
+         */
+        NOK,
+
+        /**
+         * Wait, still not decided.
+         */
+        WAIT,
+
+        /**
+         * Technical failure.
+         */
+        FAILED
     }
 }

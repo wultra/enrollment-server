@@ -18,10 +18,6 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.app.enrollmentserver.model.enumeration.CardSide;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.enrollmentserver.model.enumeration.ProcessedDocumentDataType;
@@ -35,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,10 +62,7 @@ class ClientEvaluationDocumentCheckResultFactoryTest {
     private static final String COUNTRY = "CZE";
     private static final String DOCUMENT_VERIFICATION_ID = "03e059b0-ff6f-40ab-8ba3-a62e65c0f31d";
 
-    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
     @Mock
     private ProcessedDocumentDataRepository processedDocumentDataRepository;

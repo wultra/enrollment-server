@@ -65,11 +65,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
         when(documentVerificationRepository.findAllUsedForVerification(idVerification))
                 .thenReturn(Collections.emptyList());
 
-        Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
-
         prepareTest(stateMachine)
-                .sendEvent(message)
                 .expectState(OnboardingState.DOCUMENT_UPLOAD_IN_PROGRESS)
                 .and()
                 .build()
@@ -93,7 +89,7 @@ class DocumentUploadTransitionsTest extends AbstractStateMachineTest {
                 .thenReturn(Optional.of(createOnboardingProcessEntity()));
 
         Message<OnboardingEvent> message =
-                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.EVENT_NEXT_STATE);
+                stateMachineService.createMessage(OWNER_ID, idVerification.getProcessId(), OnboardingEvent.DOCUMENT_UPLOADED);
 
         prepareTest(stateMachine)
                 .sendEvent(message)

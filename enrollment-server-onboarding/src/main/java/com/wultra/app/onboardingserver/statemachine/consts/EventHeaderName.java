@@ -21,10 +21,13 @@ package com.wultra.app.onboardingserver.statemachine.consts;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-public class EventHeaderName {
+public final class EventHeaderName {
 
     public static final String OWNER_ID = "ownerId";
 
     public static final String PROCESS_ID = "processId";
 
+    private EventHeaderName() {
+        throw new IllegalStateException("Should not be instantiated.");
+    }
 }

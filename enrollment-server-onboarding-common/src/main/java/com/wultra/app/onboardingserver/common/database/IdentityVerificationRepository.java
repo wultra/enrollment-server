@@ -62,26 +62,8 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
     @Query("""
             SELECT id
                 FROM IdentityVerificationEntity id
-                WHERE ((id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD
+                WHERE (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.ACTIVATION_FINISH
                     AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_UPLOAD
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.DOCUMENT_VERIFICATION_FINAL
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.CLIENT_EVALUATION
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.ONBOARDING_APPROVAL
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED)
-                   OR (id.phase = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.ACTIVATION_FINISH
-                    AND id.status = com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.IN_PROGRESS))
                    AND EXISTS (
                        SELECT 1
                        FROM id.documentVerifications documentVerification

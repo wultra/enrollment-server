@@ -17,8 +17,9 @@
  */
 package com.wultra.security.powerauth.lib.mtoken.model.entity.attributes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
 
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class AmountConversionAttributeTest {
 
     @Test
-    void testSerializeToJson() throws Exception {
+    void testSerializeToJson() {
         final String expectedResult = """
                 {
                   "type" : "AMOUNT_CONVERSION",
@@ -68,9 +69,9 @@ class AmountConversionAttributeTest {
                 .targetValueFormatted("$1,710.98")
                 .build();
 
-        final String result = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(tested);
+        final String result = JsonMapper.builder().build().writerWithDefaultPrettyPrinter().writeValueAsString(tested);
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = JsonMapper.builder().build();
         assertEquals(
                 mapper.readTree(expectedResult),
                 mapper.readTree(result)
@@ -78,7 +79,7 @@ class AmountConversionAttributeTest {
     }
 
     @Test
-    void testDeserializeFromJson() throws Exception {
+    void testDeserializeFromJson() {
         final String input = """
                 {
                   "type" : "AMOUNT_CONVERSION",
@@ -113,7 +114,7 @@ class AmountConversionAttributeTest {
                 .targetValueFormatted("$1,710.98")
                 .build();
 
-        final Attribute result = new ObjectMapper().readValue(input, Attribute.class);
+        final Attribute result = JsonMapper.builder().build().readValue(input, Attribute.class);
 
         assertNotNull(result);
         assertEquals(expectedResult, result);

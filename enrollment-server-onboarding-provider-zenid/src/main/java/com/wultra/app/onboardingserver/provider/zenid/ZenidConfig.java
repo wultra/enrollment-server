@@ -17,8 +17,6 @@
  */
 package com.wultra.app.onboardingserver.provider.zenid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.wultra.core.rest.client.base.DefaultRestClient;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientConfiguration;
@@ -30,7 +28,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.util.Assert;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 import java.time.OffsetDateTime;
 
@@ -51,22 +52,30 @@ class ZenidConfig {
      */
     @Bean("objectMapperZenid")
     public ObjectMapper objectMapperZenid(final ZenidConfigProps configProps) {
-        final JavaTimeModule javaTimeModule = createJavaTimeModule();
+        final RestClientConfiguration restClientConfig = configProps.getRestClientConfig();
+        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration =
+                restClientConfig != null ? restClientConfig.getJacksonConfiguration() : null;
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(javaTimeModule);
-        final RestClientConfiguration.JacksonConfiguration jacksonConfiguration = configProps.getRestClientConfig().getJacksonConfiguration();
-        Assert.state(jacksonConfiguration != null, "Jackson configuration is expected to ZenId working properly");
-        jacksonConfiguration.getDeserialization().forEach(mapper::configure);
-        jacksonConfiguration.getSerialization().forEach(mapper::configure);
-        return mapper;
+        final JsonMapper.Builder builder = JsonMapper.builder()
+                .addModule(createJavaTimeModule())
+                .enable(DateTimeFeature.WRITE_DATES_WITH_ZONE_ID)
+                .disable(DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+
+        if (jacksonConfiguration != null) {
+            jacksonConfiguration.getDeserialization().forEach(builder::configure);
+            jacksonConfiguration.getSerialization().forEach(builder::configure);
+        }
+        return builder.build();
     }
 
-    private static JavaTimeModule createJavaTimeModule() {
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
+    private static SimpleModule createJavaTimeModule() {
+        SimpleModule timeModule = new SimpleModule();
         // Add custom deserialization to support also the ISO DATE format data where ISO DATE TIME expected (ZenID bug?)
-        javaTimeModule.addDeserializer(OffsetDateTime.class, new CustomOffsetDateTimeDeserializer());
-        return javaTimeModule;
+        timeModule.addDeserializer(
+                OffsetDateTime.class,
+                new CustomOffsetDateTimeDeserializer()
+        );
+        return timeModule;
     }
 
     /**
@@ -84,7 +93,9 @@ class ZenidConfig {
         headers.add(HttpHeaders.AUTHORIZATION, "api_key " + configProps.getApiKey());
         headers.add(HttpHeaders.USER_AGENT, configProps.getServiceUserAgent());
 
-        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig();
+        final RestClientConfiguration restClientConfiguration = configProps.getRestClientConfig() != null
+                ? configProps.getRestClientConfig()
+                : new RestClientConfiguration();
         restClientConfiguration.setBaseUrl(serviceBaseUrl);
         restClientConfiguration.setDefaultHttpHeaders(headers);
         return new DefaultRestClient(restClientConfiguration, createJavaTimeModule());

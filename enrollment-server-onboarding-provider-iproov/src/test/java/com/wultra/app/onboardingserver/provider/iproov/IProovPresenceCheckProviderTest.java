@@ -95,7 +95,7 @@ class IProovPresenceCheckProviderTest {
 
         PresenceCheckResult result = provider.getResult(ownerId, sessionInfo);
 
-        assertEquals(PresenceCheckStatus.IN_PROGRESS, result.getStatus());
+        assertEquals(PresenceCheckStatus.ACCEPTED, result.getStatus());
     }
 
     @Test

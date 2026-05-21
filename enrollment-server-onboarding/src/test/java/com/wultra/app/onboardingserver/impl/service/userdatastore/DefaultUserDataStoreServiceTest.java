@@ -42,9 +42,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.retry.RetryException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -123,7 +125,9 @@ class DefaultUserDataStoreServiceTest {
 
             final var result = assertThrows(UserDataStoreClientException.class, () -> tested.storeDocumentData(List.of(request)));
 
-            assertEquals("error 3", result.getMessage());
+            assertEquals("Too many attempts to create document", result.getMessage());
+            assertInstanceOf(RetryException.class, result.getCause());
+            assertEquals("error 3", result.getCause().getCause().getMessage());
             verify(userDataStoreClient, times(3)).createDocument(any());
         }
 
@@ -544,7 +548,7 @@ class DefaultUserDataStoreServiceTest {
         private MockResponse buildResponse() {
             return new MockResponse()
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody("""
                             {
                                 "status": "OK",

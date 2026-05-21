@@ -82,6 +82,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.wultra.core</groupId>
+            <artifactId>logging-support</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.wultra.security</groupId>
             <artifactId>user-data-store-rest-client</artifactId>
         </dependency>
@@ -107,11 +112,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
         </dependency>
 
         <dependency>

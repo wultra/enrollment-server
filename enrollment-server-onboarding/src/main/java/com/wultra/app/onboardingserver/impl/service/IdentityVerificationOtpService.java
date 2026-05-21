@@ -18,7 +18,10 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.api.model.onboarding.response.OtpVerifyResponse;
-import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OtpType;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
@@ -41,10 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.OTP_VERIFICATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.PRESENCE_CHECK;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.NOT_INITIALIZED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.VERIFICATION_PENDING;
 
 /**
  * Service implementing OTP delivery and verification during identity verification.
@@ -94,7 +95,6 @@ public class IdentityVerificationOtpService {
      */
     @Transactional
     public void sendOtp(IdentityVerificationEntity identityVerification, OwnerId ownerId) throws OnboardingProcessException, OnboardingOtpDeliveryException {
-        identityVerificationService.moveToPhaseAndStatus(identityVerification, OTP_VERIFICATION, VERIFICATION_PENDING, ownerId);
         sendOtpCode(identityVerification.getProcessId(), false);
     }
 

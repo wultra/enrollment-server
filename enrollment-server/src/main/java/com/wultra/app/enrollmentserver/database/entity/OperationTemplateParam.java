@@ -39,6 +39,6 @@ public class OperationTemplateParam implements Serializable {
     private String type;
     private String id;
     private String text;
-    private final Map<String, String> params = new LinkedHashMap<>();
+    private Map<String, String> params = new LinkedHashMap<>();
 
 }

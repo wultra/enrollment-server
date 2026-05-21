@@ -19,7 +19,6 @@ package com.wultra.app.onboardingserver.statemachine.action.clientevaluation;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.ClientEvaluationService;
-import com.wultra.app.onboardingserver.statemachine.NullObject;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
@@ -27,6 +26,7 @@ import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import lombok.AllArgsConstructor;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class ClientEvaluationAction implements Action<OnboardingState, OnboardingEvent> {
 
-    public static final String RESULT_KEY = "EVALUATION_RESULT";
+    private static final String RESULT_KEY = "EVALUATION_RESULT";
 
     private final ClientEvaluationService clientEvaluationService;
 
@@ -48,6 +48,47 @@ public class ClientEvaluationAction implements Action<OnboardingState, Onboardin
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
         final var result = clientEvaluationService.processClientEvaluation(identityVerification, ownerId);
-        context.getExtendedState().getVariables().put(RESULT_KEY, result != null ? result : new NullObject());
+        context.getExtendedState().getVariables().put(RESULT_KEY, result);
+    }
+
+    /**
+     * Guard that checks if the evaluation result is OK.
+     *
+     * @return guard returning {@code true} if the evaluation result is OK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultOk() {
+        return isResult(ClientEvaluationService.ClientEvaluationResult.OK);
+    }
+
+    /**
+     * Guard that checks if the evaluation result is NOK.
+     *
+     * @return guard returning {@code true} if the evaluation result is NOK
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultRejected() {
+        return isResult(ClientEvaluationService.ClientEvaluationResult.NOK);
+    }
+
+    /**
+     * Guard that checks if the evaluation result is WAIT.
+     *
+     * @return guard returning {@code true} if the evaluation result is WAIT
+     */
+    public static Guard<OnboardingState, OnboardingEvent> isResultInProgress() {
+        return isResult(ClientEvaluationService.ClientEvaluationResult.WAIT);
+    }
+
+    private static Guard<OnboardingState, OnboardingEvent> isResult(final ClientEvaluationService.ClientEvaluationResult expectedResult) {
+        return context -> evaluateResult(expectedResult, context);
+    }
+
+    private static boolean evaluateResult(final ClientEvaluationService.ClientEvaluationResult expectedResult, final StateContext<OnboardingState, OnboardingEvent> context) {
+        final var contextValue = context.getExtendedState().getVariables().get(RESULT_KEY);
+
+        if (contextValue instanceof ClientEvaluationService.ClientEvaluationResult result) {
+            return expectedResult == result;
+        }
+
+        return false;
     }
 }

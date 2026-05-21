@@ -16,11 +16,8 @@
  */
 package com.wultra.app.onboardingserver.statemachine.guard.otp;
 
-import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessConfigurationValue;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.impl.service.OtpServiceImpl;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
@@ -40,18 +37,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class OtpVerificationEnabledGuard implements Guard<OnboardingState, OnboardingEvent> {
 
-    private final OnboardingProcessRepository onboardingProcessRepository;
+    private final OtpServiceImpl otpService;
 
     @Override
-    public boolean evaluate(StateContext<OnboardingState, OnboardingEvent> context) {
+    public boolean evaluate(final StateContext<OnboardingState, OnboardingEvent> context) {
         IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-        final String processId = identityVerification.getProcessId();
-        final boolean result = onboardingProcessRepository.findById(processId)
-                .map(OnboardingProcessEntity::getProcessConfiguration)
-                .map(OnboardingProcessConfigurationEntity::getConfiguration)
-                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
-                .isPresent();
-        logger.debug("Otp verification is enabled: {} for processId: {}", result, processId);
+        final var result = otpService.isOtpVerificationEnabled(identityVerification);
+        logger.debug("Otp verification is enabled: {} for processId: {}", result, identityVerification.getProcessId());
         return result;
     }
 

@@ -44,6 +44,17 @@
         </dependency>
 
         <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.wultra.core</groupId>
+            <artifactId>logging-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>mockwebserver</artifactId>
             <scope>test</scope>
@@ -52,6 +63,12 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-el</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -82,6 +99,7 @@
                                 <modelPackage>com.wultra.app.onboardingserver.provider.innovatrics.model.api</modelPackage>
                                 <useJakartaEe>true</useJakartaEe>
                                 <openApiNullable>false</openApiNullable>
+                                <useJackson3>true</useJackson3>
                             </configOptions>
                         </configuration>
                     </execution>

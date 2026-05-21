@@ -18,21 +18,17 @@ package com.wultra.app.onboardingserver.statemachine.interceptor;
 
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
-import com.wultra.app.onboardingserver.errorhandling.*;
-import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingOtpDeliveryException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckLimitException;
+import com.wultra.app.onboardingserver.errorhandling.PresenceCheckNotEnabledException;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.core.rest.model.base.response.ErrorResponse;
 import com.wultra.core.rest.model.base.response.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.stereotype.Component;
@@ -45,16 +41,8 @@ import java.util.Map;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Component
+@Slf4j
 public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapter<OnboardingState, OnboardingEvent> {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomStateMachineInterceptor.class);
-
-    private final EnrollmentStateProvider enrollmentStateProvider;
-
-    @Autowired
-    public CustomStateMachineInterceptor(EnrollmentStateProvider enrollmentStateProvider) {
-        this.enrollmentStateProvider = enrollmentStateProvider;
-    }
 
     @Override
     public Exception stateMachineError(StateMachine<OnboardingState, OnboardingEvent> stateMachine, Exception e) {
@@ -62,33 +50,27 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
         Response response;
 
         if (e instanceof OnboardingProcessException) {
-            logger.warn("Onboarding process failed: {}", e.getMessage());
-            logger.debug("Onboarding process failed", e);
+            logger.warn("Onboarding process failed", e);
             response = new ErrorResponse("ONBOARDING_FAILED", "Onboarding process failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof OnboardingOtpDeliveryException) {
-            logger.warn("Onboarding process failed: {}", e.getMessage());
-            logger.debug("Onboarding process failed", e);
+            logger.warn("Onboarding process failed", e);
             response = new ErrorResponse("ONBOARDING_OTP_FAILED", "Onboarding OTP delivery failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckNotEnabledException) {
-            logger.warn("Presence check transition with a not enabled presence check service: {}", e.getMessage());
-            logger.debug("Presence check transition with a not enabled presence check service", e);
+            logger.warn("Presence check transition with a not enabled presence check service", e);
             response = new ErrorResponse("PRESENCE_CHECK_NOT_ENABLED", "Presence check is not enabled.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckException) {
-            logger.warn("Presence check failed: {}", e.getMessage());
-            logger.debug("Presence check failed", e);
+            logger.warn("Presence check failed", e);
             response = new ErrorResponse("PRESENCE_CHECK_FAILED", "Presence check failed.");
             status = HttpStatus.BAD_REQUEST;
         } else if (e instanceof PresenceCheckLimitException) {
-            logger.warn("Presence check limit reached: {}", e.getMessage());
-            logger.debug("Presence check limit reached", e);
+            logger.warn("Presence check limit reached", e);
             response = new ErrorResponse("PRESENCE_CHECK_LIMIT_REACHED", "Presence check limit reached.");
             status = HttpStatus.TOO_MANY_REQUESTS;
         } else if (e instanceof DocumentVerificationException) {
-            logger.warn("Document verification failed: {}", e.getMessage());
-            logger.debug("Document verification failed", e);
+            logger.warn("Document verification failed", e);
             response = new ErrorResponse("DOCUMENT_VERIFICATION_FAILED", "Document verification failed.");
             status = HttpStatus.BAD_REQUEST;
         } else {
@@ -103,37 +85,4 @@ public class CustomStateMachineInterceptor extends StateMachineInterceptorAdapte
 
         return e;
     }
-
-    @Override
-    public StateContext<OnboardingState, OnboardingEvent> postTransition(StateContext<OnboardingState, OnboardingEvent> context) {
-        IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
-
-        OnboardingState targetState = context.getTarget().getId();
-        if (targetState.isChoiceState()) {
-            logger.debug("Transition to a choice state {} for {}", targetState, identityVerification);
-            return context;
-        }
-
-        if (OnboardingState.UNEXPECTED_STATE == targetState) {
-            logger.debug("Transition to unexpected state for {}", identityVerification);
-            return context;
-        }
-
-        OnboardingState expectedState;
-        try {
-            expectedState = enrollmentStateProvider.findByPhaseAndStatus(identityVerification.getPhase(), identityVerification.getStatus());
-        } catch (IdentityVerificationException e) {
-            logger.error("Failed post transition check: {}, {}", e.getMessage(), identityVerification);
-            return context;
-        }
-
-        if (expectedState != targetState) {
-            logger.error("Unexpected targetState={} when expectedState={}, {}", targetState, expectedState, identityVerification);
-        } else {
-            logger.debug("Transition to targetState={}, {}", targetState, identityVerification);
-        }
-
-        return context;
-    }
-
 }

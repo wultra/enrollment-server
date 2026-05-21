@@ -80,9 +80,8 @@ public class ActivationFlagService {
 
             updateActivationFlags(ownerId, activationFlags);
         } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
         }
     }
 
@@ -105,9 +104,8 @@ public class ActivationFlagService {
 
             updateActivationFlags(ownerId, activationFlags);
         } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
         }
     }
 
@@ -127,9 +125,8 @@ public class ActivationFlagService {
             // Remove flag VERIFICATION_IN_PROGRESS
             removeActivationFlags(ownerId, Collections.singletonList(ACTIVATION_FLAG_VERIFICATION_IN_PROGRESS));
         } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
         }
     }
 
@@ -145,9 +142,8 @@ public class ActivationFlagService {
             final List<String> flags = listActivationFlagsInternal(activationId);
             return flags.contains(ACTIVATION_FLAG_VERIFICATION_PENDING);
         } catch (PowerAuthClientException ex) {
-            logger.warn("Activation flag request failed, error: {}", ex.getMessage());
-            logger.debug(ex.getMessage(), ex);
-            throw new RemoteCommunicationException("Communication with PowerAuth server failed");
+            logger.warn("Activation flag request failed");
+            throw new RemoteCommunicationException("Communication with PowerAuth server failed", ex);
         }
     }
 

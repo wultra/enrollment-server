@@ -18,8 +18,6 @@
 
 package com.wultra.app.onboardingserver.impl.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentType;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentExtractedDataValue;
@@ -32,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -214,7 +214,7 @@ public class ClientEvaluationDocumentCheckResultFactory {
             return StringUtils.hasLength(extractedData) ?
                     mapper.readValue(extractedData, DocumentExtractedDataValue.class) :
                     null;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             logger.warn("Failed to parse extracted data for document result id {}", documentResult.getId(), e);
             return null;
         }

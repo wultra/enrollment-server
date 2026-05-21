@@ -16,23 +16,18 @@
  */
 package com.wultra.app.onboardingserver.statemachine.action.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.impl.service.document.DocumentVerificationService;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
 import com.wultra.app.onboardingserver.statemachine.consts.ExtendedStateVariable;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Guard for presence of document verification in status {@code VERIFICATION_PENDING}.
@@ -40,37 +35,20 @@ import java.util.List;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Component
+@AllArgsConstructor
 @Slf4j
 public class DocumentsVerificationPendingGuard implements Guard<OnboardingState, OnboardingEvent> {
 
-    private final DocumentVerificationRepository documentVerificationRepository;
-
-    @Autowired
-    public DocumentsVerificationPendingGuard(final DocumentVerificationRepository documentVerificationRepository) {
-        this.documentVerificationRepository = documentVerificationRepository;
-    }
+    private final DocumentVerificationService documentVerificationService;
 
     @Override
-    @Transactional(readOnly = true)
     public boolean evaluate(final StateContext<OnboardingState, OnboardingEvent> context) {
         final OwnerId ownerId = (OwnerId) context.getMessageHeader(EventHeaderName.OWNER_ID);
         final IdentityVerificationEntity identityVerification = context.getExtendedState().get(ExtendedStateVariable.IDENTITY_VERIFICATION, IdentityVerificationEntity.class);
 
-        final List<DocumentVerificationEntity> documentVerifications = documentVerificationRepository.findAllUsedForVerification(identityVerification);
-        if (documentVerifications.isEmpty()) {
-            logger.debug("No document uploaded yet for {}, {}", identityVerification, ownerId);
-            return false;
-        }
+        final boolean pendingVerificationDocumentPresent = documentVerificationService.hasDocumentsVerificationPending(identityVerification);
 
-        final boolean pendingVerificationDocumentPresent = documentVerifications.stream()
-                .map(DocumentVerificationEntity::getStatus)
-                .anyMatch(it -> it == DocumentStatus.VERIFICATION_PENDING);
-
-        if (pendingVerificationDocumentPresent) {
-            logger.info("Pending verification document present for {}, {}", identityVerification, ownerId);
-        } else {
-            logger.debug("No pending verification document present for {}, {}", identityVerification, ownerId);
-        }
+        logger.info("Pending verification document present: {} for {}, {}", pendingVerificationDocumentPresent, identityVerification, ownerId);
 
         return pendingVerificationDocumentPresent;
     }

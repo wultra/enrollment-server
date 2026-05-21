@@ -4,8 +4,7 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,16 +22,14 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
 import com.wultra.app.onboardingserver.impl.service.userdatastore.UserDataStoreService;
-import com.wultra.app.onboardingserver.statemachine.action.verification.VerificationProcessResultAction;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
-import com.wultra.app.onboardingserver.statemachine.guard.TargetActivationFinishedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.status.StatusAcceptedGuard;
 import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
 import com.wultra.security.userdatastore.client.model.request.DocumentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -75,19 +72,13 @@ class OnboardingCompletedAcceptedListenerIntTest {
     private IdentityVerificationService identityVerificationService;
 
     @MockitoBean
-    private TargetActivationFinishedGuard targetActivationFinishedGuard;
+    private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
 
     @MockitoBean
-    private VerificationProcessResultAction verificationProcessResultAction;
-
-    @MockitoBean
-    private StatusAcceptedGuard statusAcceptedGuard;
+    private VerificationResultService verificationResultService;
 
     @MockitoBean
     private UserDataStoreService userDataStoreService;
-
-    @Captor
-    private ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor;
 
     @Test
     void testOnOnboardingCompletedAccepted_eventIsAccepted() throws Exception {
@@ -97,9 +88,13 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(List.of());
+
+        final ArgumentCaptor<OnboardingCompletedAcceptedEvent> onboardingCompletedAcceptedEventCaptor =
+                ArgumentCaptor.forClass(OnboardingCompletedAcceptedEvent.class);
 
         // when
         stateMachineService.processStateMachineEvent(ownerId, PROCESS_ID, OnboardingEvent.EVENT_NEXT_STATE);
@@ -122,8 +117,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
 
         final var transactionTemplate = new TransactionTemplate(transactionManager);
 
@@ -146,8 +142,9 @@ class OnboardingCompletedAcceptedListenerIntTest {
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
         doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
-        when(targetActivationFinishedGuard.evaluate(any())).thenReturn(true);
-        when(statusAcceptedGuard.evaluate(any())).thenReturn(true);
+        when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
         when(userDataStoreService.collectDocumentData(any())).thenReturn(documentCreateRequests);
 
         // when

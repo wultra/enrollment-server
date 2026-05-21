@@ -55,6 +55,7 @@ public enum OnboardingState {
     CLIENT_EVALUATION_FAILED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.FAILED),
     CLIENT_EVALUATION_REJECTED(IdentityVerificationPhase.CLIENT_EVALUATION, IdentityVerificationStatus.REJECTED),
 
+    PRESENCE_CHECK_ACCEPTED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.ACCEPTED),
     PRESENCE_CHECK_IN_PROGRESS(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS),
     PRESENCE_CHECK_FAILED(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.FAILED),
 
@@ -75,11 +76,8 @@ public enum OnboardingState {
 
     COMPLETED_ACCEPTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.ACCEPTED),
     COMPLETED_FAILED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.FAILED),
-    COMPLETED_REJECTED(IdentityVerificationPhase.COMPLETED, IdentityVerificationStatus.REJECTED),
 
     CHOICE_CLIENT_EVALUATION_PROCESSING,
-
-    CHOICE_DOCUMENT_UPLOAD,
 
     CHOICE_ONBOARDING_CLIENT_EVALUATION_ENABLED,
     CHOICE_ONBOARDING_CLIENT_EVALUATION_RESULT,
@@ -91,6 +89,7 @@ public enum OnboardingState {
     CHOICE_CLIENT_EVALUATION_ACCEPTED,
 
     CHOICE_DOCUMENT_VERIFICATION_PROCESSING,
+    CHOICE_DOCUMENT_FINAL_VERIFICATION_PROCESSING,
 
     CHOICE_OTP_VERIFICATION,
 
@@ -112,9 +111,7 @@ public enum OnboardingState {
 
     CHOICE_VERIFY_PRESENCE_WITH_OTP_PROCESSING,
 
-    CHOICE_COMPLETED_STATE,
-
-    UNEXPECTED_STATE;
+    CHOICE_COMPLETED_STATE;
 
     private boolean choiceState = false;
 

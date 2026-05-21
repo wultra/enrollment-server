@@ -39,7 +39,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link OnboardingApprovalService}.
@@ -94,9 +95,9 @@ class OnboardingApprovalServiceTest {
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(any()))
                 .thenReturn(Optional.of(scaResult));
 
-        final ApproveClientResponse.ApprovalResult result = tested.approve(identityVerification);
+        final OnboardingApprovalService.ApprovalResult result = tested.approve(identityVerification);
 
-        assertEquals(ApproveClientResponse.ApprovalResult.OK, result);
+        assertEquals(OnboardingApprovalService.ApprovalResult.OK, result);
 
         verify(onboardingProvider).approveClient(any());
         verify(selfieRepository).findTopByIdentityVerificationOrderByTimestampCreatedDesc(identityVerification);
@@ -129,9 +130,9 @@ class OnboardingApprovalServiceTest {
         when(scaResultRepository.findTopByIdentityVerificationOrderByTimestampCreatedDesc(any()))
                 .thenReturn(Optional.of(scaResult));
 
-        final ApproveClientResponse.ApprovalResult result = tested.approve(identityVerification);
+        final OnboardingApprovalService.ApprovalResult result = tested.approve(identityVerification);
 
-        assertEquals(ApproveClientResponse.ApprovalResult.NOK, result);
+        assertEquals(OnboardingApprovalService.ApprovalResult.NOK, result);
 
         final ArgumentCaptor<IdentityVerificationEntity> argumentCaptor = ArgumentCaptor.forClass(IdentityVerificationEntity.class);
 

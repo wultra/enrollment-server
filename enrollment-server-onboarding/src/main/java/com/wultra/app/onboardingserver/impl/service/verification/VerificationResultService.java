@@ -16,7 +16,6 @@
  */
 package com.wultra.app.onboardingserver.impl.service.verification;
 
-import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
@@ -24,7 +23,8 @@ import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessExc
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationFinishService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,19 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
 @Service
+@AllArgsConstructor
+@Slf4j
 public class VerificationResultService {
 
     private final IdentityVerificationService identityVerificationService;
 
     private final IdentityVerificationFinishService identityVerificationFinishService;
-
-    @Autowired
-    public VerificationResultService(
-            final IdentityVerificationService identityVerificationService,
-            final IdentityVerificationFinishService identityVerificationFinishService) {
-        this.identityVerificationService = identityVerificationService;
-        this.identityVerificationFinishService = identityVerificationFinishService;
-    }
 
     /**
      * Process verification result.
@@ -54,16 +48,21 @@ public class VerificationResultService {
      *
      * @param ownerId Owner identification.
      * @param identityVerification Identity verification entity.
-     * @throws IdentityVerificationException Thrown when identity verification is already finished.
-     * @throws OnboardingProcessException Thrown when onboarding process termination fails.
-     * @throws RemoteCommunicationException Thrown when communication with PowerAuth server fails.
+     * @return final verification result
      */
     @Transactional
-    public void processVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification)
-            throws IdentityVerificationException, OnboardingProcessException, RemoteCommunicationException {
-        identityVerificationService.processVerificationResult(ownerId, identityVerification);
-        if (identityVerification.getStatus() == IdentityVerificationStatus.ACCEPTED) {
+    public IdentityVerificationService.FinalVerificationResult processVerificationResult(OwnerId ownerId, IdentityVerificationEntity identityVerification) {
+        logger.info("action: processVerificationResult, state: initiated, identityVerificationId: {}", identityVerification.getId());
+        try {
+            final var result = identityVerificationService.processVerificationResult(ownerId, identityVerification);
+            if (result == IdentityVerificationService.FinalVerificationResult.OK) {
                 identityVerificationFinishService.finishIdentityVerification(ownerId);
+            }
+            logger.info("action: processVerificationResult, state: succeeded, identityVerificationId: {}, result: {}", identityVerification.getId(), result);
+            return result;
+        } catch (IdentityVerificationException | OnboardingProcessException | RemoteCommunicationException e) {
+            logger.error("action: processVerificationResult, state: failed, exceptionMessage: {}", e.getMessage(), e);
+            return IdentityVerificationService.FinalVerificationResult.FAILED;
         }
     }
 

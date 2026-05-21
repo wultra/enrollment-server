@@ -25,9 +25,7 @@ import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingOtpRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
-import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingOtpEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.CommonOtpService;
@@ -39,6 +37,7 @@ import com.wultra.app.onboardingserver.impl.service.internal.OtpGeneratorService
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Calendar;
@@ -198,5 +197,21 @@ public class OtpServiceImpl extends CommonOtpService {
 
     public OtpVerifyResponse verifyOtpUserVerificationCode(String processId, OwnerId ownerId, String otpCode) throws OnboardingProcessException {
         return super.verifyOtpCode(processId, ownerId, otpCode, OtpType.USER_VERIFICATION);
+    }
+
+    /**
+     * Checks whether OTP verification is enabled.
+     *
+     * @param identityVerification Identity verification entity
+     * @return {@code true} if OTP verification is enabled, {@code false} otherwise
+     */
+    @Transactional(readOnly = true)
+    public boolean isOtpVerificationEnabled(final IdentityVerificationEntity identityVerification) {
+        final String processId = identityVerification.getProcessId();
+        return onboardingProcessRepository.findById(processId)
+                .map(OnboardingProcessEntity::getProcessConfiguration)
+                .map(OnboardingProcessConfigurationEntity::getConfiguration)
+                .filter(OnboardingProcessConfigurationValue::otpForIdentityVerification)
+                .isPresent();
     }
 }

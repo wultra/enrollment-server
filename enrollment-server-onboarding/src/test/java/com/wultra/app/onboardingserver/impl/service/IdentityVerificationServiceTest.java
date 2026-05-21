@@ -18,16 +18,12 @@
 package com.wultra.app.onboardingserver.impl.service;
 
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
-import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
-import com.wultra.app.onboardingserver.common.service.AuditService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,14 +31,13 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.COMPLETED;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase.OTP_VERIFICATION;
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.ACCEPTED;
-import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link IdentityVerificationService}.
@@ -56,13 +51,7 @@ class IdentityVerificationServiceTest {
     private IdentityVerificationRepository identityVerificationRepository;
 
     @Mock
-    private AuditService auditService;
-
-    @Mock
     private IdentityVerificationPrecompleteCheck identityVerificationPrecompleteCheck;
-
-    @Mock
-    private DocumentVerificationProvider documentVerificationProvider;
 
     @InjectMocks
     private IdentityVerificationService tested;
@@ -76,14 +65,9 @@ class IdentityVerificationServiceTest {
         when(identityVerificationPrecompleteCheck.evaluate(idVerification))
                 .thenReturn(IdentityVerificationPrecompleteCheck.Result.successful());
 
-        tested.processVerificationResult(new OwnerId(), idVerification);
+        final var result = tested.processVerificationResult(new OwnerId(), idVerification);
 
-        final ArgumentCaptor<IdentityVerificationEntity> argumentCaptor = ArgumentCaptor.forClass(IdentityVerificationEntity.class);
-        verify(identityVerificationRepository, atLeastOnce()).save(argumentCaptor.capture());
-        final IdentityVerificationEntity savedIdentityVerification = argumentCaptor.getValue();
-
-        assertThat(savedIdentityVerification.getPhase(), equalTo(COMPLETED));
-        assertThat(savedIdentityVerification.getStatus(), equalTo(ACCEPTED));
+        assertThat(result, equalTo(IdentityVerificationService.FinalVerificationResult.OK));
     }
 
     @Test
@@ -95,16 +79,9 @@ class IdentityVerificationServiceTest {
         when(identityVerificationPrecompleteCheck.evaluate(idVerification))
                 .thenReturn(IdentityVerificationPrecompleteCheck.Result.failed("Not valid OTP"));
 
-        tested.processVerificationResult(new OwnerId(), idVerification);
+        final var result = tested.processVerificationResult(new OwnerId(), idVerification);
 
-        final ArgumentCaptor<IdentityVerificationEntity> argumentCaptor = ArgumentCaptor.forClass(IdentityVerificationEntity.class);
-        verify(identityVerificationRepository, atLeastOnce()).save(argumentCaptor.capture());
-        final IdentityVerificationEntity savedIdentityVerification = argumentCaptor.getValue();
-
-        assertThat(savedIdentityVerification.getPhase(), equalTo(COMPLETED));
-        assertThat(savedIdentityVerification.getStatus(), equalTo(FAILED));
-        assertThat(savedIdentityVerification.getErrorDetail(), equalTo("Not valid OTP"));
-        assertThat(savedIdentityVerification.getErrorOrigin(), equalTo(ErrorOrigin.FINAL_VALIDATION));
+        assertThat(result, equalTo(IdentityVerificationService.FinalVerificationResult.FAILED));
     }
 
     @Test
