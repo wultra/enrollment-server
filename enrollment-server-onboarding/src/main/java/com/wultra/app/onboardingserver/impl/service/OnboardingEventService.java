@@ -28,6 +28,7 @@ import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
 import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
 import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
@@ -61,6 +62,7 @@ public class OnboardingEventService {
     private final CommonOnboardingService commonOnboardingService;
     private final ProcessedDocumentDataRepository processedDocumentDataRepository;
     private final ObjectMapper objectMapper;
+    private final OnboardingConfig onboardingConfig;
 
     /**
      * Publish a {@link EventType#PROCESS_FINISHED} event.
@@ -73,6 +75,10 @@ public class OnboardingEventService {
             final OnboardingProcessEntity process,
             final IdentityVerificationEntity identityVerification,
             final OwnerId ownerId) {
+
+        if (isEventTypeNotEnabled(EventType.PROCESS_FINISHED)) {
+            return;
+        }
 
         final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
                 .type(EventType.PROCESS_FINISHED)
@@ -90,6 +96,10 @@ public class OnboardingEventService {
     public void publishDocumentVerificationFinished(
             final DocumentVerificationEntity documentVerification,
             final OwnerId ownerId) {
+
+        if (isEventTypeNotEnabled(EventType.DOCUMENT_VERIFICATION_FINISHED)) {
+            return;
+        }
 
         final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.DOCUMENT_VERIFICATION_FINISHED);
@@ -157,6 +167,10 @@ public class OnboardingEventService {
             final String errorDetail,
             final OwnerId ownerId) {
 
+        if (isEventTypeNotEnabled(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)) {
+            return;
+        }
+
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED);
         if (process == null) {
             return;
@@ -182,6 +196,10 @@ public class OnboardingEventService {
             final PresenceCheckResult result,
             final OwnerId ownerId) {
 
+        if (isEventTypeNotEnabled(EventType.PRESENCE_CHECK_FINISHED)) {
+            return;
+        }
+
         final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.PRESENCE_CHECK_FINISHED);
         if (process == null) {
             return;
@@ -204,6 +222,15 @@ public class OnboardingEventService {
                 .userId(identityVerification.getUserId())
                 .externalUserId(process.getUserId()) // TODO Lubos store and get iProov userId
                 .identityVerificationId(identityVerification.getId());
+    }
+
+    private boolean isEventTypeNotEnabled(final EventType eventType) {
+        final List<EventType> enabled = onboardingConfig.getEventTypes();
+        if (enabled == null || !enabled.contains(eventType)) {
+            logger.debug("Skipping {} event - not configured in onboardingConfig.eventTypes", eventType);
+            return true;
+        }
+        return false;
     }
 
     private OnboardingProcessEntity findProcessSafely(final IdentityVerificationEntity identityVerification, final EventType eventType) {
