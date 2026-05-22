@@ -21,8 +21,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -34,10 +32,7 @@ import java.util.Date;
 @Setter
 @Entity
 @Table(name = "es_selfie")
-public class SelfieEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = -7134510504507334015L;
+public class SelfieEntity {
 
     @SequenceGenerator(name = "es_selfie", sequenceName = "es_selfie_seq")
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "es_selfie")

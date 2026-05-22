@@ -26,8 +26,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
@@ -41,10 +39,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_processed_document_data")
-public class ProcessedDocumentDataEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 7685715667785423080L;
+public class ProcessedDocumentDataEntity {
 
     /**
      * ID of the processed document data.
