@@ -41,6 +41,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -354,12 +355,12 @@ public class OnboardingEventService {
     }
 
     private EventData createPresenceCheckFinishedEventData(final PresenceCheckResult result) {
-        final Image photo = result.getPhoto();
-        final PresenceCheckFinishedEventData.PresenceCheckResult presenceCheckResult = (photo == null || photo.getData() == null)
-                ? null
-                : PresenceCheckFinishedEventData.PresenceCheckResult.builder()
-                        .frame(Base64.getEncoder().encodeToString(photo.getData()))
-                        .build();
+        final PresenceCheckFinishedEventData.PresenceCheckResult presenceCheckResult = Optional.ofNullable(result.getPhoto())
+                .map(Image::getData)
+                .map(data -> PresenceCheckFinishedEventData.PresenceCheckResult.builder()
+                        .frame(Base64.getEncoder().encodeToString(data))
+                        .build())
+                .orElse(null);
         return PresenceCheckFinishedEventData.builder()
                 .status(convert(result.getStatus()))
                 .rejectReason(result.getRejectReason())
