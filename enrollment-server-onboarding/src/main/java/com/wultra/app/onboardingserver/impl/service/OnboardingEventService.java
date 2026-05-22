@@ -270,7 +270,7 @@ public class OnboardingEventService {
 
         return DocumentVerificationFinishedEventData.builder()
                 .documentVerificationId(document.getId())
-                .documentId(document.getUploadId() != null ? document.getUploadId() : document.getId())
+                .documentId(resolveDocumentId(document))
                 .status(convert(documentStatus))
                 .rejectReason(document.getRejectReason())
                 .errorDetail(document.getErrorDetail())
@@ -333,6 +333,21 @@ public class OnboardingEventService {
         return date == null ? null : date.toString();
     }
 
+    /**
+     * Resolve document identifier to be used in events.
+     * Returns {@code uploadId} — the ID assigned by the external verification provider.
+     * At event time, this should always be set (documents must pass through provider submission before verification finishes).
+     * Logs a warning if missing.
+     */
+    private static String resolveDocumentId(final DocumentVerificationEntity documentVerification) {
+        final String uploadId = documentVerification.getUploadId();
+        if (uploadId == null) {
+            logger.warn("DocumentVerification#uploadId is null which is unexpected at verification-finished phase, documentVerificationId={}, type={}",
+                    documentVerification.getId(), documentVerification.getType());
+        }
+        return uploadId;
+    }
+
     private EventData createFinalDocumentVerificationFinishedEventData(
             final IdentityVerificationEntity identityVerification,
             final EventStatus status,
@@ -341,7 +356,7 @@ public class OnboardingEventService {
 
         final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
                 .filter(DocumentVerificationEntity::isUsedForVerification)
-                .map(it -> it.getUploadId() != null ? it.getUploadId() : it.getId())
+                .map(OnboardingEventService::resolveDocumentId)
                 .toList();
 
         return FinalDocumentVerificationFinishedEventData.builder()
