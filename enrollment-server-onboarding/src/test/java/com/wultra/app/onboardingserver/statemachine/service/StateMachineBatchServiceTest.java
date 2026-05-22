@@ -17,21 +17,27 @@
  */
 package com.wultra.app.onboardingserver.statemachine.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
+import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for {@link StateMachineService}
@@ -48,6 +54,12 @@ class StateMachineBatchServiceTest {
     @MockitoSpyBean
     private OnboardingProcessRepository onboardingProcessRepository;
 
+    @MockitoBean
+    private IdentityVerificationTargetActivationService identityVerificationTargetActivationService;
+
+    @MockitoBean
+    private VerificationResultService verificationResultService;
+
     @Autowired
     private DocumentVerificationRepository documentVerificationRepository;
 
@@ -63,10 +75,16 @@ class StateMachineBatchServiceTest {
 
     @Test
     @Sql
-    void testChangeMachineStatesInBatch() {
+    void testChangeMachineStatesInBatch() throws Exception {
+        when(identityVerificationTargetActivationService.isTargetActivationFinished("p1")).thenReturn(true);
+        when(verificationResultService.processVerificationResult(any(), any()))
+                .thenReturn(com.wultra.app.onboardingserver.impl.service.IdentityVerificationService.FinalVerificationResult.OK);
+
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.VERIFICATION_PENDING, identityVerificationRepository.findById("v1").get().getStatus());
+        final var identityVerification = identityVerificationRepository.findById("v1").orElseThrow();
+        assertEquals(IdentityVerificationPhase.COMPLETED, identityVerification.getPhase());
+        assertEquals(IdentityVerificationStatus.ACCEPTED, identityVerification.getStatus());
     }
 
     @Test
@@ -74,7 +92,7 @@ class StateMachineBatchServiceTest {
     void testChangeMachineStatesInBatch_submitting() {
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v2").get().getStatus());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v2").orElseThrow().getStatus());
     }
 
     @Test
@@ -82,7 +100,7 @@ class StateMachineBatchServiceTest {
     void testChangeMachineStatesInBatch_noDocuments() {
         tested.changeMachineStatesInBatch();
 
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v3").get().getStatus());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerificationRepository.findById("v3").orElseThrow().getStatus());
     }
 
     /**

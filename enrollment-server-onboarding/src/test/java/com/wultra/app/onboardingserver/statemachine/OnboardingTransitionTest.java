@@ -30,7 +30,6 @@ import com.wultra.app.onboardingserver.statemachine.action.verification.Verifica
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingState;
 import com.wultra.app.onboardingserver.statemachine.guard.ConsentResolvedGuard;
-import com.wultra.app.onboardingserver.statemachine.guard.ProcessIdentifierGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
@@ -59,9 +58,6 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Slf4j
 class OnboardingTransitionTest extends AbstractStateMachineTest {
-
-    @MockitoBean
-    private ProcessIdentifierGuard processIdentifierGuard;
 
     @MockitoBean
     private ConsentResolvedGuard consentResolvedGuard;
@@ -110,8 +106,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testInitialToDocumentUploaded() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
         when(consentResolvedGuard.evaluate(any()))
                 .thenReturn(true);
 
@@ -128,9 +122,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testDocumentUploadToPresenceCheckNotInitialized() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -167,9 +158,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testDocumentUploadInProgress_documentsPending() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.DOCUMENT_UPLOAD, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -190,9 +178,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testPresenceCheckNotInitializedToInProgress() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.NOT_INITIALIZED, visitedStates);
 
@@ -209,9 +194,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testPresenceCheckInProgressToAccepted() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -233,9 +215,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testPresenceCheckInProgressToNotInitialized() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.PRESENCE_CHECK, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -255,9 +234,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPendingToActivationFinishInProgress() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
@@ -283,9 +259,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPending_failed() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
@@ -302,9 +275,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPending_resend() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         when(otpServiceImpl.isOtpVerificationEnabled(any()))
                 .thenReturn(true);
 
@@ -321,9 +291,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testActivationFinishInProgressToCompletedAccepted() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
                 .thenReturn(true);
 
@@ -343,9 +310,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testActivationFinishInProgressToCompletedFailed() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
                 .thenReturn(true);
 
@@ -365,9 +329,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testActivationFinishInProgress_notFinishedStayInProgress() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID))
                 .thenReturn(false);
 
@@ -384,9 +345,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPendingToOnboardingApprovalAccepted() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
@@ -413,9 +371,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPendingToOnboardingApprovalInProgress() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
@@ -439,9 +394,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOnboardingApprovalInProgressToAccepted() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -459,9 +411,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOnboardingApprovalInProgressToRejected() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.ONBOARDING_APPROVAL, IdentityVerificationStatus.IN_PROGRESS, visitedStates);
 
@@ -475,9 +424,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPendingToOnboardingApprovalRejected() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
@@ -500,9 +446,6 @@ class OnboardingTransitionTest extends AbstractStateMachineTest {
 
     @Test
     void testOtpVerificationPendingToOnboardingApprovalFailed() throws Exception {
-        when(processIdentifierGuard.evaluate(any()))
-                .thenReturn(true);
-
         final List<OnboardingState> visitedStates = new LinkedList<>();
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine = startStateMachine(IdentityVerificationPhase.OTP_VERIFICATION, IdentityVerificationStatus.VERIFICATION_PENDING, visitedStates);
 
