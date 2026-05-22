@@ -23,8 +23,6 @@ import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * Entity representing configuration of the onboarding process.
@@ -35,10 +33,7 @@ import java.io.Serializable;
 @Setter
 @Entity
 @Table(name = "es_onboarding_process_configuration")
-public class OnboardingProcessConfigurationEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 382525509835056799L;
+public class OnboardingProcessConfigurationEntity {
 
     @Id
     @SequenceGenerator(name = "es_onboarding_process_configuration", sequenceName = "es_onboarding_process_configuration_seq")

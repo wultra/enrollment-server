@@ -29,8 +29,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -44,10 +42,7 @@ import java.util.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_identity_verification")
-public class IdentityVerificationEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 6307591849271145826L;
+public class IdentityVerificationEntity {
 
     public static final String ERROR_MAX_FAILED_ATTEMPTS_DOCUMENT_UPLOAD = "maxFailedAttemptsDocumentUpload";
     public static final String ERROR_MAX_FAILED_ATTEMPTS_PRESENCE_CHECK = "maxFailedAttemptsPresenceCheck";
