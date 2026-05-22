@@ -22,8 +22,6 @@ import lombok.*;
 
 import jakarta.persistence.*;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -37,10 +35,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 @Table(name = "es_operation_template")
-public class OperationTemplateEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 5914420785283118800L;
+public class OperationTemplateEntity {
 
     @Id
     @SequenceGenerator(name = "es_operation_template", sequenceName = "es_operation_template_seq", allocationSize = 1)

@@ -24,8 +24,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Set;
 
 /**
@@ -56,10 +54,7 @@ public record OnboardingProcessConfigurationValue(
         boolean clientEvaluationEnabled,
         boolean verifyPresenceWithOtp,
         boolean consentRequired
-) implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1995035336074261422L;
+) {
 
     public static class OnboardingProcessConfigurationValueBuilder {
         OnboardingProcessConfigurationValueBuilder() {
@@ -86,10 +81,7 @@ public record OnboardingProcessConfigurationValue(
     public record Documents(
             byte totalRequiredDocumentsCount,
             @Valid Set<Group> groups
-    ) implements Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 1968756136278137531L;
+    ) {
 
         public static class DocumentsBuilder {
             DocumentsBuilder() {
@@ -110,10 +102,7 @@ public record OnboardingProcessConfigurationValue(
     public record Group(
             byte requiredDocumentsCount,
             @Valid Set<Document> items
-    ) implements Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 5873241902384756123L;
+    ) {
 
         public static class GroupBuilder {
             GroupBuilder() {
@@ -136,10 +125,7 @@ public record OnboardingProcessConfigurationValue(
             @NotNull DocumentType type,
             @Min(1) @Max(2) byte sideCount,
             String country
-    ) implements Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 191805503079489928L;
+    ) {
 
         public static class DocumentBuilder {
             DocumentBuilder() {
