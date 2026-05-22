@@ -197,12 +197,12 @@ public class OnboardingEventService {
     }
 
     private boolean isEventTypeNotEnabled(final EventType eventType) {
-        final List<EventType> enabled = onboardingConfig.getEventTypes();
-        if (enabled == null || !enabled.contains(eventType)) {
+        if (onboardingConfig.getEventTypes().contains(eventType)) {
+            return false;
+        } else {
             logger.debug("Skipping {} event - not configured in onboardingConfig.eventTypes", eventType);
             return true;
         }
-        return false;
     }
 
     private OnboardingProcessEntity findProcessSafely(final IdentityVerificationEntity identityVerification, final EventType eventType) {
