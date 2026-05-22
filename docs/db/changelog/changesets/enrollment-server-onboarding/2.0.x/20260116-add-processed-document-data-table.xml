@@ -64,7 +64,7 @@
     </changeSet>
 
     <changeSet id="6" logicalFilePath="enrollment-server-onboarding/2.0.x/20260116-add-processed-document-data-table.xml" author="Michal Rozehnal">
-        <preConditions>
+        <preConditions onFail="MARK_RAN">
             <not>
                 <indexExists tableName="es_document_verification" indexName="es_document_verification_upload_id_idx"/>
             </not>
