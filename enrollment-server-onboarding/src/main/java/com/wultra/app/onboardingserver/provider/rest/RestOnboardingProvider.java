@@ -267,33 +267,33 @@ public class RestOnboardingProvider implements OnboardingProvider {
     private static ProcessFinishedEventDataDto convert(final ProcessFinishedEventData source) {
         return ProcessFinishedEventDataDto.builder()
                 .process(ProcessFinishedEventDataDto.Process.builder()
-                        .status(source.getStatus().name())
-                        .errorDetail(source.getErrorDetail())
-                        .deviceData(convert(source.getDeviceData()))
+                        .status(source.status().name())
+                        .errorDetail(source.errorDetail())
+                        .deviceData(convert(source.deviceData()))
                         .build())
                 .build();
     }
 
     private static DeviceData convert(final ProcessFinishedEventData.DeviceData source) {
         return DeviceData.builder()
-                .locale(source.getLocale().getLanguage().toUpperCase(Locale.ROOT))
-                .ipAddress(source.getIpAddress())
-                .httpUserAgent(source.getHttpUserAgent())
-                .fdsData(source.getFdsData())
+                .locale(source.locale().getLanguage().toUpperCase(Locale.ROOT))
+                .ipAddress(source.ipAddress())
+                .httpUserAgent(source.httpUserAgent())
+                .fdsData(source.fdsData())
                 .build();
     }
 
     private static DocumentVerificationFinishedEventDataDto convert(final DocumentVerificationFinishedEventData source) {
         return DocumentVerificationFinishedEventDataDto.builder()
                 .documentVerification(DocumentVerificationFinishedEventDataDto.DocumentVerification.builder()
-                        .documentVerificationId(source.getDocumentVerificationId())
-                        .documentId(source.getDocumentId())
-                        .status(source.getStatus().name())
-                        .rejectReason(source.getRejectReason())
-                        .errorDetail(source.getErrorDetail())
-                        .provider(source.getProvider())
-                        .score(source.getScore())
-                        .documentVerificationResult(convert(source.getDocumentVerificationResult()))
+                        .documentVerificationId(source.documentVerificationId())
+                        .documentId(source.documentId())
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .score(source.score())
+                        .documentVerificationResult(convert(source.documentVerificationResult()))
                         .build())
                 .build();
     }
@@ -304,15 +304,15 @@ public class RestOnboardingProvider implements OnboardingProvider {
         if (source == null) {
             return null;
         }
-        final var images = source.getImages() == null ? null : source.getImages().stream()
+        final var images = source.images() == null ? null : source.images().stream()
                 .map(RestOnboardingProvider::convert)
                 .toList();
         return DocumentVerificationFinishedEventDataDto.DocumentVerificationResult.builder()
-                .type(source.getType())
-                .country(source.getCountry())
-                .data(convert(source.getData()))
+                .type(source.type())
+                .country(source.country())
+                .data(convert(source.data()))
                 .images(images)
-                .rawData(source.getRawData())
+                .rawData(source.rawData())
                 .build();
     }
 
@@ -323,17 +323,17 @@ public class RestOnboardingProvider implements OnboardingProvider {
             return null;
         }
         return DocumentVerificationFinishedEventDataDto.DocumentData.builder()
-                .surname(source.getSurname())
-                .givenNames(source.getGivenNames())
-                .dateOfBirth(source.getDateOfBirth())
-                .placeOfBirth(source.getPlaceOfBirth())
-                .sex(source.getSex())
-                .nationality(source.getNationality())
-                .personalNumber(source.getPersonalNumber())
-                .documentNumber(source.getDocumentNumber())
-                .dateOfIssue(source.getDateOfIssue())
-                .dateOfExpiry(source.getDateOfExpiry())
-                .authority(source.getAuthority())
+                .surname(source.surname())
+                .givenNames(source.givenNames())
+                .dateOfBirth(source.dateOfBirth())
+                .placeOfBirth(source.placeOfBirth())
+                .sex(source.sex())
+                .nationality(source.nationality())
+                .personalNumber(source.personalNumber())
+                .documentNumber(source.documentNumber())
+                .dateOfIssue(source.dateOfIssue())
+                .dateOfExpiry(source.dateOfExpiry())
+                .authority(source.authority())
                 .build();
     }
 
@@ -341,36 +341,36 @@ public class RestOnboardingProvider implements OnboardingProvider {
             final DocumentVerificationFinishedEventData.Image source) {
 
         return DocumentVerificationFinishedEventDataDto.Image.builder()
-                .type(source.getType())
-                .data(source.getData())
+                .type(source.type())
+                .data(source.data())
                 .build();
     }
 
     private static FinalDocumentVerificationFinishedEventDataDto convert(final FinalDocumentVerificationFinishedEventData source) {
         return FinalDocumentVerificationFinishedEventDataDto.builder()
                 .finalDocumentVerification(FinalDocumentVerificationFinishedEventDataDto.FinalDocumentVerification.builder()
-                        .documentVerificationId(source.getDocumentVerificationId())
-                        .status(source.getStatus().name())
-                        .rejectReason(source.getRejectReason())
-                        .errorDetail(source.getErrorDetail())
-                        .provider(source.getProvider())
-                        .documentIds(source.getDocumentIds())
+                        .documentVerificationId(source.documentVerificationId())
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .documentIds(source.documentIds())
                         .build())
                 .build();
     }
 
     private static PresenceCheckFinishedEventDataDto convert(final PresenceCheckFinishedEventData source) {
-        final var result = source.getPresenceCheckResult() == null ? null
+        final var result = source.presenceCheckResult() == null ? null
                 : PresenceCheckFinishedEventDataDto.PresenceCheckResult.builder()
-                        .frame(source.getPresenceCheckResult().getFrame())
+                        .frame(source.presenceCheckResult().frame())
                         .build();
         return PresenceCheckFinishedEventDataDto.builder()
                 .presenceCheck(PresenceCheckFinishedEventDataDto.PresenceCheck.builder()
-                        .status(source.getStatus().name())
-                        .rejectReason(source.getRejectReason())
-                        .errorDetail(source.getErrorDetail())
-                        .provider(source.getProvider())
-                        .score(source.getScore())
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .score(source.score())
                         .presenceCheckResult(result)
                         .build())
                 .build();

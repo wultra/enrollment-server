@@ -19,7 +19,8 @@
 package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.core.annotations.PublicApi;
-import lombok.*;
+import lombok.Builder;
+import lombok.NonNull;
 
 import java.util.Locale;
 import java.util.Map;
@@ -30,34 +31,19 @@ import java.util.Map;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
 @PublicApi
-@EqualsAndHashCode
-public final class ProcessFinishedEventData implements EventData {
-
-    @NonNull
-    private EventStatus status;
-
-    private String errorDetail;
-
-    @NonNull
-    private DeviceData deviceData;
+public record ProcessFinishedEventData(
+        @NonNull EventStatus status,
+        String errorDetail,
+        @NonNull DeviceData deviceData
+) implements EventData {
 
     @Builder
-    @Getter
-    @ToString
     @PublicApi
-    @EqualsAndHashCode
-    public static class DeviceData {
-
-        @NonNull
-        private Locale locale;
-
-        private String ipAddress;
-
-        private String httpUserAgent;
-
-        private Map<String, Object> fdsData;
-    }
+    public record DeviceData(
+            @NonNull Locale locale,
+            String ipAddress,
+            String httpUserAgent,
+            Map<String, Object> fdsData
+    ) {}
 }

@@ -19,7 +19,8 @@
 package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.core.annotations.PublicApi;
-import lombok.*;
+import lombok.Builder;
+import lombok.NonNull;
 
 import java.util.List;
 
@@ -31,25 +32,13 @@ import java.util.List;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
 @PublicApi
-@EqualsAndHashCode
-public final class FinalDocumentVerificationFinishedEventData implements EventData {
-
-    @NonNull
-    private String documentVerificationId;
-
-    @NonNull
-    private EventStatus status;
-
-    private String rejectReason;
-
-    private String errorDetail;
-
-    @NonNull
-    private String provider;
-
-    @NonNull
-    private List<String> documentIds;
+public record FinalDocumentVerificationFinishedEventData(
+        @NonNull String documentVerificationId,
+        @NonNull EventStatus status,
+        String rejectReason,
+        String errorDetail,
+        @NonNull String provider,
+        @NonNull List<String> documentIds
+) implements EventData {
 }

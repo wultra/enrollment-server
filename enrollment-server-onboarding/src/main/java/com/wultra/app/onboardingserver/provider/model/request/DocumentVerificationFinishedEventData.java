@@ -19,7 +19,8 @@
 package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.core.annotations.PublicApi;
-import lombok.*;
+import lombok.Builder;
+import lombok.NonNull;
 
 import java.util.List;
 
@@ -30,86 +31,52 @@ import java.util.List;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
 @PublicApi
-@EqualsAndHashCode
-public final class DocumentVerificationFinishedEventData implements EventData {
-
-    @NonNull
-    private String documentVerificationId;
-
-    @NonNull
-    private String documentId;
-
-    @NonNull
-    private EventStatus status;
-
-    private String rejectReason;
-
-    private String errorDetail;
-
-    @NonNull
-    private String provider;
-
-    @NonNull
-    private Integer score;
+public record DocumentVerificationFinishedEventData(
+        @NonNull String documentVerificationId,
+        @NonNull String documentId,
+        @NonNull EventStatus status,
+        String rejectReason,
+        String errorDetail,
+        @NonNull String provider,
+        @NonNull Integer score,
+        DocumentVerificationResult documentVerificationResult
+) implements EventData {
 
     /**
      * Optional details about the document and extracted data.
      * Present only when {@code status} is {@code ACCEPTED} or {@code REJECTED}.
      */
-    private DocumentVerificationResult documentVerificationResult;
+    @Builder
+    @PublicApi
+    public record DocumentVerificationResult(
+            String type,
+            String country,
+            DocumentData data,
+            List<Image> images,
+            Object rawData
+    ) {}
 
     @Builder
-    @Getter
-    @ToString
     @PublicApi
-    @EqualsAndHashCode
-    public static class DocumentVerificationResult {
-
-        private String type;
-
-        private String country;
-
-        private DocumentData data;
-
-        private List<Image> images;
-
-        private Object rawData;
-    }
+    public record DocumentData(
+            String surname,
+            String givenNames,
+            String dateOfBirth,
+            String placeOfBirth,
+            String sex,
+            String nationality,
+            String personalNumber,
+            String documentNumber,
+            String dateOfIssue,
+            String dateOfExpiry,
+            String authority
+    ) {}
 
     @Builder
-    @Getter
-    @ToString
     @PublicApi
-    @EqualsAndHashCode
-    public static class DocumentData {
-
-        private String surname;
-        private String givenNames;
-        private String dateOfBirth;
-        private String placeOfBirth;
-        private String sex;
-        private String nationality;
-        private String personalNumber;
-        private String documentNumber;
-        private String dateOfIssue;
-        private String dateOfExpiry;
-        private String authority;
-    }
-
-    @Builder
-    @Getter
-    @ToString
-    @PublicApi
-    @EqualsAndHashCode
-    public static class Image {
-
-        @NonNull
-        private String type;
-
-        @NonNull
-        private String data;
-    }
+    public record Image(
+            @NonNull String type,
+            @NonNull String data
+    ) {}
 }

@@ -19,7 +19,8 @@
 package com.wultra.app.onboardingserver.provider.model.request;
 
 import com.wultra.core.annotations.PublicApi;
-import lombok.*;
+import lombok.Builder;
+import lombok.NonNull;
 
 /**
  * {@link EventData} for {@link EventType#PRESENCE_CHECK_FINISHED}.
@@ -28,34 +29,19 @@ import lombok.*;
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
 @PublicApi
-@EqualsAndHashCode
-public final class PresenceCheckFinishedEventData implements EventData {
-
-    @NonNull
-    private EventStatus status;
-
-    private String rejectReason;
-
-    private String errorDetail;
-
-    @NonNull
-    private String provider;
-
-    @NonNull
-    private Integer score;
-
-    private PresenceCheckResult presenceCheckResult;
+public record PresenceCheckFinishedEventData(
+        @NonNull EventStatus status,
+        String rejectReason,
+        String errorDetail,
+        @NonNull String provider,
+        @NonNull Integer score,
+        PresenceCheckResult presenceCheckResult
+) implements EventData {
 
     @Builder
-    @Getter
-    @ToString
     @PublicApi
-    @EqualsAndHashCode
-    public static class PresenceCheckResult {
-
-        private String frame;
-    }
+    public record PresenceCheckResult(
+            String frame
+    ) {}
 }
