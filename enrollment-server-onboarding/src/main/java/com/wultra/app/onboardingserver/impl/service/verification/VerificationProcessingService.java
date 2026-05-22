@@ -18,20 +18,20 @@
 package com.wultra.app.onboardingserver.impl.service.verification;
 
 import com.wultra.app.enrollmentserver.model.enumeration.*;
+import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
+import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
+import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
 import com.wultra.app.onboardingserver.common.database.DocumentResultRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ErrorDetail;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
-import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
-import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
-import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,10 +42,10 @@ import java.util.Optional;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
+@AllArgsConstructor
+@Slf4j
 @Service
 public class VerificationProcessingService {
-
-    private static final Logger logger = LoggerFactory.getLogger(VerificationProcessingService.class);
 
     private final DocumentResultRepository documentResultRepository;
 
@@ -53,23 +53,7 @@ public class VerificationProcessingService {
 
     private final AuditService auditService;
 
-    /**
-     * Service constructor.
-     *
-     * @param documentResultRepository Document result repository.
-     * @param documentVerificationRepository Document verification repository.
-     * @param auditService Audit service.
-     */
-    @Autowired
-    public VerificationProcessingService(
-            final DocumentResultRepository documentResultRepository,
-            final DocumentVerificationRepository documentVerificationRepository,
-            final AuditService auditService) {
-
-        this.documentResultRepository = documentResultRepository;
-        this.documentVerificationRepository = documentVerificationRepository;
-        this.auditService = auditService;
-    }
+    private final OnboardingEventService onboardingEventService;
 
     /**
      * Processes documents verification result and updates the tracked verification state
@@ -115,6 +99,7 @@ public class VerificationProcessingService {
                 }
             }
             documentVerificationRepository.save(docVerification);
+            onboardingEventService.publishDocumentVerificationFinished(docVerification);
         }
     }
 

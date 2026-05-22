@@ -23,10 +23,12 @@ import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationExc
 import com.wultra.app.onboardingserver.api.errorhandling.PresenceCheckException;
 import com.wultra.app.onboardingserver.api.provider.PresenceCheckProvider;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.ScaResultRepository;
 import com.wultra.app.onboardingserver.common.database.SelfieRepository;
 import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
 import com.wultra.app.onboardingserver.common.database.entity.ScaResultEntity;
 import com.wultra.app.onboardingserver.common.database.entity.SelfieEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
@@ -71,6 +73,8 @@ public class PresenceCheckService {
     private final ImageProcessor imageProcessor;
     private final ScaResultRepository scaResultRepository;
     private final SelfieRepository selfieRepository;
+    private final OnboardingEventService onboardingEventService;
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     /**
      * Initializes presence check process.
@@ -251,8 +255,22 @@ public class PresenceCheckService {
             presenceCheckProvider.initPresenceCheck(ownerId, photo.orElse(null));
             logger.info("Presence check initialized, {}", ownerId);
             updateSessionInfo(ownerId, idVerification, Map.of(SessionInfo.ATTRIBUTE_IMAGE_UPLOADED, true));
+            storeExternalUserId(ownerId, idVerification);
             auditService.auditPresenceCheckProvider(idVerification, "Presence check initialized for user: {}", ownerId.getUserId());
         }
+    }
+
+    private void storeExternalUserId(final OwnerId ownerId, final IdentityVerificationEntity idVerification) {
+        final OnboardingProcessEntity process = onboardingProcessRepository.findById(idVerification.getProcessId()).orElse(null);
+        if (process == null) {
+            logger.warn("Unable to store externalUserId - onboarding process not found, processId={}", idVerification.getProcessId());
+            return;
+        }
+
+        final String externalUserId = presenceCheckProvider.getExternalUserId(ownerId);
+        process.setExternalUserId(externalUserId);
+        process.setTimestampLastUpdated(new Date());
+        onboardingProcessRepository.save(process);
     }
 
     private Optional<Image> fetchTrustedPhoto(final OwnerId ownerId, final IdentityVerificationEntity idVerification) throws DocumentVerificationException, RemoteCommunicationException, PresenceCheckException {
@@ -359,6 +377,12 @@ public class PresenceCheckService {
                     throw new IllegalStateException(String.format("Unexpected presence check result status: %s, identity verification ID: %s",
                         result.getStatus(), idVerification.getId()));
         }
+
+        publishEvent(idVerification, result);
+    }
+
+    private void publishEvent(final IdentityVerificationEntity idVerification, final PresenceCheckResult result) {
+        onboardingEventService.publishPresenceCheckFinished(idVerification, result);
     }
 
     private void processFailedPresenceCheck(final OwnerId ownerId, final IdentityVerificationEntity idVerification, final String errorDetail) {

@@ -77,6 +77,13 @@ public class OnboardingProcessEntity {
     @Column(name = "user_id")
     private String userId;
 
+    /**
+     * External user identifier used by the presence check provider (e.g. iProov).
+     * Is {@code null} at the start of the process and set during the presence check phase.
+     */
+    @Column(name = "external_user_id")
+    private String externalUserId;
+
     @Column(name = "activation_id")
     private String activationId;
 

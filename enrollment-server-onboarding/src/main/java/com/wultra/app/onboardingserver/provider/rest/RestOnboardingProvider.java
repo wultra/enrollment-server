@@ -23,6 +23,7 @@ import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException
 import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.app.onboardingserver.provider.model.request.*;
 import com.wultra.app.onboardingserver.provider.model.response.*;
+import com.wultra.app.onboardingserver.provider.rest.ProcessFinishedEventDataDto.DeviceData;
 import com.wultra.core.rest.client.base.RestClient;
 import com.wultra.core.rest.client.base.RestClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -228,23 +230,150 @@ public class RestOnboardingProvider implements OnboardingProvider {
         };
     }
 
-    private static ProcessEventRequestDto convert(final ProcessEventRequest source) throws OnboardingProviderException {
+    private static ProcessEventRequestDto convert(final ProcessEventRequest source) {
         final ProcessEventRequestDto target = new ProcessEventRequestDto();
         target.setProcessId(source.getProcessId());
         target.setProcessType(source.getProcessType());
         target.setIdentityVerificationId(source.getIdentityVerificationId());
         target.setUserId(source.getUserId());
+        target.setExternalUserId(source.getExternalUserId());
         target.setType(convert(source.getType()));
-        target.setData(source.getEventData().asMap());
+        target.setEventData(convert(source.getEventData()));
         return target;
     }
 
-    private static ProcessEventRequestDto.EventType convert(ProcessEventRequest.EventType source) throws OnboardingProviderException {
-        if (source == ProcessEventRequest.EventType.FINISHED) {
-            return ProcessEventRequestDto.EventType.FINISHED;
-        } else {
-            throw new OnboardingProviderException("No mapping for " + source);
+    private static EventTypeDto convert(final EventType source) {
+        return switch (source) {
+            case PROCESS_FINISHED -> EventTypeDto.PROCESS_FINISHED;
+            case DOCUMENT_VERIFICATION_FINISHED -> EventTypeDto.DOCUMENT_VERIFICATION_FINISHED;
+            case FINAL_DOCUMENT_VERIFICATION_FINISHED -> EventTypeDto.FINAL_DOCUMENT_VERIFICATION_FINISHED;
+            case PRESENCE_CHECK_FINISHED -> EventTypeDto.PRESENCE_CHECK_FINISHED;
+        };
+    }
+
+    private static EventDataDto convert(final EventData source) {
+        if (source instanceof ProcessFinishedEventData data) {
+            return convert(data);
+        } else if (source instanceof DocumentVerificationFinishedEventData data) {
+            return convert(data);
+        } else if (source instanceof FinalDocumentVerificationFinishedEventData data) {
+            return convert(data);
+        } else if (source instanceof PresenceCheckFinishedEventData data) {
+            return convert(data);
         }
+        throw new IllegalArgumentException("Unsupported event data type: " + source.getClass());
+    }
+
+    private static ProcessFinishedEventDataDto convert(final ProcessFinishedEventData source) {
+        return ProcessFinishedEventDataDto.builder()
+                .process(ProcessFinishedEventDataDto.Process.builder()
+                        .status(source.status().name())
+                        .errorDetail(source.errorDetail())
+                        .deviceData(convert(source.deviceData()))
+                        .build())
+                .build();
+    }
+
+    private static DeviceData convert(final ProcessFinishedEventData.DeviceData source) {
+        return DeviceData.builder()
+                .locale(source.locale().getLanguage().toUpperCase(Locale.ROOT))
+                .ipAddress(source.ipAddress())
+                .httpUserAgent(source.httpUserAgent())
+                .fdsData(source.fdsData())
+                .build();
+    }
+
+    private static DocumentVerificationFinishedEventDataDto convert(final DocumentVerificationFinishedEventData source) {
+        return DocumentVerificationFinishedEventDataDto.builder()
+                .documentVerification(DocumentVerificationFinishedEventDataDto.DocumentVerification.builder()
+                        .documentVerificationId(source.documentVerificationId())
+                        .documentId(source.documentId())
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .score(source.score())
+                        .documentVerificationResult(convert(source.documentVerificationResult()))
+                        .build())
+                .build();
+    }
+
+    private static DocumentVerificationFinishedEventDataDto.DocumentVerificationResult convert(
+            final DocumentVerificationFinishedEventData.DocumentVerificationResult source) {
+
+        if (source == null) {
+            return null;
+        }
+        final var images = source.images() == null ? null : source.images().stream()
+                .map(RestOnboardingProvider::convert)
+                .toList();
+        return DocumentVerificationFinishedEventDataDto.DocumentVerificationResult.builder()
+                .type(source.type())
+                .country(source.country())
+                .data(convert(source.data()))
+                .images(images)
+                .rawData(source.rawData())
+                .build();
+    }
+
+    private static DocumentVerificationFinishedEventDataDto.DocumentData convert(
+            final DocumentVerificationFinishedEventData.DocumentData source) {
+
+        if (source == null) {
+            return null;
+        }
+        return DocumentVerificationFinishedEventDataDto.DocumentData.builder()
+                .surname(source.surname())
+                .givenNames(source.givenNames())
+                .dateOfBirth(source.dateOfBirth())
+                .placeOfBirth(source.placeOfBirth())
+                .sex(source.sex())
+                .nationality(source.nationality())
+                .personalNumber(source.personalNumber())
+                .documentNumber(source.documentNumber())
+                .dateOfIssue(source.dateOfIssue())
+                .dateOfExpiry(source.dateOfExpiry())
+                .authority(source.authority())
+                .build();
+    }
+
+    private static DocumentVerificationFinishedEventDataDto.Image convert(
+            final DocumentVerificationFinishedEventData.Image source) {
+
+        return DocumentVerificationFinishedEventDataDto.Image.builder()
+                .type(source.type())
+                .data(source.data())
+                .build();
+    }
+
+    private static FinalDocumentVerificationFinishedEventDataDto convert(final FinalDocumentVerificationFinishedEventData source) {
+        return FinalDocumentVerificationFinishedEventDataDto.builder()
+                .finalDocumentVerification(FinalDocumentVerificationFinishedEventDataDto.FinalDocumentVerification.builder()
+                        .documentVerificationId(source.documentVerificationId())
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .documentIds(source.documentIds())
+                        .build())
+                .build();
+    }
+
+    private static PresenceCheckFinishedEventDataDto convert(final PresenceCheckFinishedEventData source) {
+        final var result = source.presenceCheckResult() == null ? null
+                : PresenceCheckFinishedEventDataDto.PresenceCheckResult.builder()
+                        .frame(source.presenceCheckResult().frame())
+                        .build();
+        return PresenceCheckFinishedEventDataDto.builder()
+                .presenceCheck(PresenceCheckFinishedEventDataDto.PresenceCheck.builder()
+                        .status(source.status().name())
+                        .rejectReason(source.rejectReason())
+                        .errorDetail(source.errorDetail())
+                        .provider(source.provider())
+                        .score(source.score())
+                        .presenceCheckResult(result)
+                        .build())
+                .build();
     }
 
     private MultiValueMap<String, String> createHeaders() {

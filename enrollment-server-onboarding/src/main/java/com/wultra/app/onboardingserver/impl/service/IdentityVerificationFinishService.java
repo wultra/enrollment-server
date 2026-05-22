@@ -21,23 +21,17 @@ import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntity;
-import com.wultra.app.onboardingserver.common.database.entity.OnboardingProcessEntityWrapper;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
 import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.ActivationFlagService;
 import com.wultra.app.onboardingserver.common.service.AuditService;
-import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
-import com.wultra.app.onboardingserver.provider.model.request.ProcessEventRequest;
-import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.UUID;
 
 /**
  * Service implementing finishing of identity verification.
@@ -46,38 +40,16 @@ import java.util.UUID;
  * @author Roman Strobl, roman.strobl@wultra.com
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 public class IdentityVerificationFinishService {
 
     private final OnboardingServiceImpl onboardingService;
     private final IdentityVerificationService identityVerificationService;
     private final ActivationFlagService activationFlagService;
-    private final OnboardingProvider onboardingProvider;
+    private final OnboardingEventService onboardingEventService;
 
     private final AuditService auditService;
-
-    /**
-     * Service constructor.
-     * @param onboardingService Onboarding service.
-     * @param identityVerificationService Identity verification service.
-     * @param activationFlagService Activation flags service.
-     * @param onboardingProvider Onboarding provider.
-     * @param auditService audit service.
-     */
-    @Autowired
-    public IdentityVerificationFinishService(
-            final OnboardingServiceImpl onboardingService,
-            final IdentityVerificationService identityVerificationService,
-            final ActivationFlagService activationFlagService,
-            final OnboardingProvider onboardingProvider,
-            final AuditService auditService) {
-
-        this.onboardingService = onboardingService;
-        this.identityVerificationService = identityVerificationService;
-        this.activationFlagService = activationFlagService;
-        this.onboardingProvider = onboardingProvider;
-        this.auditService = auditService;
-    }
 
     /**
      * Finish identity verification by removing the VERIFICATION_IN_PROGRESS flag.
@@ -108,42 +80,6 @@ public class IdentityVerificationFinishService {
         onboardingService.updateProcess(processEntity);
         auditService.audit(processEntity, identityVerification, "Process finished for user: {}", processEntity.getUserId());
 
-        sendFinishedEvent(processEntity, identityVerification, ownerId);
-    }
-
-    private void sendFinishedEvent(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification, final OwnerId ownerId) {
-        final ProcessEventRequest request = ProcessEventRequest.builder()
-                .type(ProcessEventRequest.EventType.FINISHED)
-                .userId(identityVerification.getUserId())
-                .processId(process.getId())
-                .processType(process.getProcessConfiguration().getProcessType())
-                .identityVerificationId(identityVerification.getId())
-                .eventData(createFinishEventData(process))
-                .build();
-
-        try {
-            logger.info("Publishing finish event, {}", ownerId);
-            final ProcessEventResponse response = onboardingProvider.processEvent(request);
-            logger.debug("Got {} for processId={}", response, request.getProcessId());
-            if (response.isErrorOccurred()) {
-                logger.info("Finish event failed to published: {}, {}", response.getErrorDetail(), ownerId);
-            } else {
-                logger.info("Finish event published, {}", ownerId);
-            }
-        } catch (OnboardingProviderException e) {
-            // unsuccessful event publishing does not stop the process
-            logger.info("Unable to publish finished event to the onboarding adapter", e);
-        }
-    }
-
-    private static ProcessEventRequest.EventData createFinishEventData(final OnboardingProcessEntity process) {
-        final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
-        return ProcessEventRequest.DefaultFinishedEventData.builder()
-                .locale(processWrapper.getLocale())
-                .clientIPAddress(processWrapper.getIpAddress())
-                .httpUserAgent(processWrapper.getUserAgent())
-                .requestId(UUID.randomUUID().toString())
-                .fdsData(processWrapper.getFdsData())
-                .build();
+        onboardingEventService.publishProcessFinished(processEntity, identityVerification);
     }
 }

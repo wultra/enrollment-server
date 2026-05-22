@@ -18,12 +18,14 @@
 package com.wultra.app.onboardingserver.configuration;
 
 import com.wultra.app.onboardingserver.common.configuration.CommonOnboardingConfig;
+import com.wultra.app.onboardingserver.provider.model.request.EventType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Identity verification configuration.
@@ -59,4 +61,9 @@ public class OnboardingConfig extends CommonOnboardingConfig {
     @Value("${enrollment-server-onboarding.onboarding-process.default-type:}")
     private String defaultProcessType;
 
+    /**
+     * Event types to publish.
+     */
+    @Value("${enrollment-server-onboarding.onboarding-process.process-event.types}")
+    private List<EventType> eventTypes;
 }

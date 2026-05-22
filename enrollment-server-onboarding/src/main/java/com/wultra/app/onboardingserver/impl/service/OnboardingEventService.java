@@ -1,0 +1,396 @@
+/*
+ * PowerAuth Enrollment Server
+ * Copyright (C) 2026 Wultra s.r.o.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.wultra.app.onboardingserver.impl.service;
+
+import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
+import com.wultra.app.enrollmentserver.model.enumeration.PresenceCheckStatus;
+import com.wultra.app.enrollmentserver.model.integration.Image;
+import com.wultra.app.enrollmentserver.model.integration.PresenceCheckResult;
+import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
+import com.wultra.app.onboardingserver.common.database.entity.*;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
+import com.wultra.app.onboardingserver.common.service.CommonOnboardingService;
+import com.wultra.app.onboardingserver.configuration.IdentityVerificationConfig;
+import com.wultra.app.onboardingserver.configuration.OnboardingConfig;
+import com.wultra.app.onboardingserver.errorhandling.OnboardingProviderException;
+import com.wultra.app.onboardingserver.provider.OnboardingProvider;
+import com.wultra.app.onboardingserver.provider.model.request.*;
+import com.wultra.app.onboardingserver.provider.model.response.ProcessEventResponse;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.LocalDate;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
+/**
+ * Service that publishes lifecycle events of the identity verification process to the configured
+ * {@link OnboardingProvider}.
+ * <p>
+ * Failures during event publishing never abort the underlying process; they are only logged.
+ *
+ * @author Lubos Racansky, lubos.racansky@wultra.com
+ */
+@Service
+@Slf4j
+@AllArgsConstructor
+public class OnboardingEventService {
+
+    private final OnboardingProvider onboardingProvider;
+    private final IdentityVerificationConfig identityVerificationConfig;
+    private final CommonOnboardingService commonOnboardingService;
+    private final ProcessedDocumentDataRepository processedDocumentDataRepository;
+    private final ObjectMapper objectMapper;
+    private final OnboardingConfig onboardingConfig;
+
+    /**
+     * Publish a {@link EventType#PROCESS_FINISHED} event.
+     *
+     * @param process Onboarding process that has just finished.
+     * @param identityVerification Related identity verification entity.
+     */
+    public void publishProcessFinished(final OnboardingProcessEntity process, final IdentityVerificationEntity identityVerification) {
+        if (isEventTypeNotEnabled(EventType.PROCESS_FINISHED)) {
+            return;
+        }
+
+        final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
+                .type(EventType.PROCESS_FINISHED)
+                .eventData(createProcessFinishedEventData(process))
+                .build();
+        sendEvent(request);
+    }
+
+    /**
+     * Publish a {@link EventType#DOCUMENT_VERIFICATION_FINISHED} event for a single document.
+     *
+     * @param documentVerification Document verification entity whose verification has finished.
+     */
+    public void publishDocumentVerificationFinished(final DocumentVerificationEntity documentVerification) {
+        if (isEventTypeNotEnabled(EventType.DOCUMENT_VERIFICATION_FINISHED)) {
+            return;
+        }
+
+        final IdentityVerificationEntity identityVerification = documentVerification.getIdentityVerification();
+        final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.DOCUMENT_VERIFICATION_FINISHED);
+        if (process == null) {
+            return;
+        }
+
+        final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
+                .type(EventType.DOCUMENT_VERIFICATION_FINISHED)
+                .eventData(createDocumentVerificationFinishedEventData(documentVerification))
+                .build();
+        sendEvent(request);
+    }
+
+    /**
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#ACCEPTED}.
+     *
+     * @param identityVerification Identity verification entity.
+     */
+    public void publishFinalDocumentVerificationAccepted(final IdentityVerificationEntity identityVerification) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.ACCEPTED, null, null);
+    }
+
+    /**
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#REJECTED}.
+     *
+     * @param identityVerification Identity verification entity.
+     * @param rejectReason Reason why the documents were rejected.
+     */
+    public void publishFinalDocumentVerificationRejected(final IdentityVerificationEntity identityVerification, final String rejectReason) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.REJECTED, rejectReason, null);
+    }
+
+    /**
+     * Publish a {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED} event with status
+     * {@link EventStatus#FAILED}.
+     *
+     * @param identityVerification Identity verification entity.
+     * @param errorDetail Error detail describing the failure.
+     */
+    public void publishFinalDocumentVerificationFailed(final IdentityVerificationEntity identityVerification, final String errorDetail) {
+        publishFinalDocumentVerification(identityVerification, EventStatus.FAILED, null, errorDetail);
+    }
+
+    private void publishFinalDocumentVerification(
+            final IdentityVerificationEntity identityVerification,
+            final EventStatus status,
+            final String rejectReason,
+            final String errorDetail) {
+
+        if (isEventTypeNotEnabled(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)) {
+            return;
+        }
+
+        final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED);
+        if (process == null) {
+            return;
+        }
+
+        final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
+                .type(EventType.FINAL_DOCUMENT_VERIFICATION_FINISHED)
+                .eventData(createFinalDocumentVerificationFinishedEventData(identityVerification, status, rejectReason, errorDetail))
+                .build();
+        sendEvent(request);
+    }
+
+    /**
+     * Publish a {@link EventType#PRESENCE_CHECK_FINISHED} event with the result of the presence
+     * check verification provider.
+     *
+     * @param identityVerification Identity verification entity.
+     * @param result Presence check result returned by the provider (terminal state expected).
+     */
+    public void publishPresenceCheckFinished(final IdentityVerificationEntity identityVerification, final PresenceCheckResult result) {
+        if (isEventTypeNotEnabled(EventType.PRESENCE_CHECK_FINISHED)) {
+            return;
+        }
+
+        final OnboardingProcessEntity process = findProcessSafely(identityVerification, EventType.PRESENCE_CHECK_FINISHED);
+        if (process == null) {
+            return;
+        }
+
+        final ProcessEventRequest request = baseRequestBuilder(process, identityVerification)
+                .type(EventType.PRESENCE_CHECK_FINISHED)
+                .eventData(createPresenceCheckFinishedEventData(result))
+                .build();
+        sendEvent(request);
+    }
+
+    private static ProcessEventRequest.ProcessEventRequestBuilder baseRequestBuilder(
+            final OnboardingProcessEntity process,
+            final IdentityVerificationEntity identityVerification) {
+
+        return ProcessEventRequest.builder()
+                .processId(process.getId())
+                .processType(process.getProcessConfiguration().getProcessType())
+                .userId(identityVerification.getUserId())
+                .externalUserId(process.getExternalUserId())
+                .identityVerificationId(identityVerification.getId());
+    }
+
+    private boolean isEventTypeNotEnabled(final EventType eventType) {
+        if (onboardingConfig.getEventTypes().contains(eventType)) {
+            return false;
+        } else {
+            logger.debug("Skipping {} event - not configured in onboardingConfig.eventTypes", eventType);
+            return true;
+        }
+    }
+
+    private OnboardingProcessEntity findProcessSafely(final IdentityVerificationEntity identityVerification, final EventType eventType) {
+        try {
+            return commonOnboardingService.findProcess(identityVerification.getProcessId());
+        } catch (OnboardingProcessException e) {
+            logger.warn("Unable to publish {} event - onboarding process not found, identityVerificationId={}, processId={}, exceptionMessage={}",
+                    eventType, identityVerification.getId(), identityVerification.getProcessId(), e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private void sendEvent(final ProcessEventRequest request) {
+        try {
+            logger.info("", kv("action", "sendEvent"), kv("state", "initiated"), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
+            final ProcessEventResponse response = onboardingProvider.processEvent(request);
+            logger.debug("Got {} for processId={}", response, request.getProcessId());
+            logger.info("", kv("action", "sendEvent"), kv("state", "succeeded"), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
+        } catch (OnboardingProviderException e) {
+            // unsuccessful event publishing does not stop the process
+            logger.warn("", kv("action", "sendEvent"), kv("state", "failed"), kv("exceptionMessage", e.getMessage()), e);
+        }
+    }
+
+    private static EventData createProcessFinishedEventData(final OnboardingProcessEntity process) {
+        final OnboardingProcessEntityWrapper processWrapper = new OnboardingProcessEntityWrapper(process);
+        return ProcessFinishedEventData.builder()
+                .status(convert(process.getStatus()))
+                .errorDetail(process.getErrorDetail())
+                .deviceData(ProcessFinishedEventData.DeviceData.builder()
+                        .locale(processWrapper.getLocale())
+                        .ipAddress(processWrapper.getIpAddress())
+                        .httpUserAgent(processWrapper.getUserAgent())
+                        .fdsData(processWrapper.getFdsData())
+                        .build())
+                .build();
+    }
+
+    private static EventStatus convert(final OnboardingStatus source) {
+        return switch (source) {
+            case FINISHED -> EventStatus.FINISHED;
+            case FAILED -> EventStatus.FAILED;
+            default -> throw new IllegalArgumentException("Unsupported onboarding status: " + source);
+        };
+    }
+
+    private EventData createDocumentVerificationFinishedEventData(final DocumentVerificationEntity document) {
+        final DocumentStatus documentStatus = document.getStatus();
+        final boolean detailsApplicable = documentStatus == DocumentStatus.ACCEPTED || documentStatus == DocumentStatus.REJECTED;
+
+        final DocumentResultEntity latestResult = document.getResults().stream()
+                .findFirst()
+                .orElse(null);
+
+        final DocumentVerificationFinishedEventData.DocumentVerificationResult result = detailsApplicable
+                ? DocumentVerificationFinishedEventData.DocumentVerificationResult.builder()
+                        .type(document.getType().name())
+                        .country(document.getCountry())
+                        .data(buildDocumentData(latestResult))
+                        .images(buildImages(document))
+                        .rawData(latestResult == null ? null : latestResult.getVerificationResult())
+                        .build()
+                : null;
+
+        return DocumentVerificationFinishedEventData.builder()
+                .documentVerificationId(document.getId())
+                .documentId(resolveDocumentId(document))
+                .status(convert(documentStatus))
+                .rejectReason(document.getRejectReason())
+                .errorDetail(document.getErrorDetail())
+                .provider(identityVerificationConfig.getDocumentVerificationProvider())
+                .score(document.getVerificationScore() != null ? document.getVerificationScore() : 0)
+                .documentVerificationResult(result)
+                .build();
+    }
+
+    private static EventStatus convert(final DocumentStatus source) {
+        return switch (source) {
+            case ACCEPTED -> EventStatus.ACCEPTED;
+            case REJECTED -> EventStatus.REJECTED;
+            case FAILED -> EventStatus.FAILED;
+            default -> throw new IllegalArgumentException("Unknown document status: " + source);
+        };
+    }
+
+    private DocumentVerificationFinishedEventData.DocumentData buildDocumentData(final DocumentResultEntity result) {
+        if (result == null || result.getExtractedData() == null) {
+            return null;
+        }
+        final DocumentExtractedDataValue value;
+        try {
+            value = objectMapper.readValue(result.getExtractedData(), DocumentExtractedDataValue.class);
+        } catch (JacksonException e) {
+            logger.warn("Unable to parse extracted data for documentResultId={}: {}", result.getId(), e.getMessage());
+            return null;
+        }
+        return DocumentVerificationFinishedEventData.DocumentData.builder()
+                .surname(value.surname())
+                .givenNames(value.givenNames())
+                .dateOfBirth(formatDate(value.dateOfBirth()))
+                .placeOfBirth(value.placeOfBirth())
+                .sex(value.sex())
+                .nationality(value.nationality())
+                .personalNumber(value.personalNumber())
+                .documentNumber(value.documentNumber())
+                .dateOfIssue(formatDate(value.dateOfIssue()))
+                .dateOfExpiry(formatDate(value.dateOfExpiry()))
+                .authority(value.authority())
+                .build();
+    }
+
+    private List<DocumentVerificationFinishedEventData.Image> buildImages(final DocumentVerificationEntity doc) {
+        final List<ProcessedDocumentDataEntity> entities =
+                processedDocumentDataRepository.findAllByDocumentVerificationIds(Set.of(doc.getId()));
+        if (entities.isEmpty()) {
+            return List.of();
+        }
+        return entities.stream()
+                .map(it -> DocumentVerificationFinishedEventData.Image.builder()
+                        .type(it.getDataType().name())
+                        .data(Base64.getEncoder().encodeToString(it.getData()))
+                        .build())
+                .toList();
+    }
+
+    private static String formatDate(final LocalDate date) {
+        return date == null ? null : date.toString();
+    }
+
+    /**
+     * Resolve document identifier to be used in events.
+     * Returns {@code uploadId} — the ID assigned by the external verification provider.
+     * At event time, this should always be set (documents must pass through provider submission before verification finishes).
+     * Logs a warning if missing.
+     */
+    private static String resolveDocumentId(final DocumentVerificationEntity documentVerification) {
+        final String uploadId = documentVerification.getUploadId();
+        if (uploadId == null) {
+            logger.warn("DocumentVerification#uploadId is null which is unexpected at verification-finished phase, documentVerificationId={}, type={}",
+                    documentVerification.getId(), documentVerification.getType());
+        }
+        return uploadId;
+    }
+
+    private EventData createFinalDocumentVerificationFinishedEventData(
+            final IdentityVerificationEntity identityVerification,
+            final EventStatus status,
+            final String rejectReason,
+            final String errorDetail) {
+
+        final List<String> documentIds = identityVerification.getDocumentVerifications().stream()
+                .filter(DocumentVerificationEntity::isUsedForVerification)
+                .map(OnboardingEventService::resolveDocumentId)
+                .toList();
+
+        return FinalDocumentVerificationFinishedEventData.builder()
+                .documentVerificationId(identityVerification.getId())
+                .status(status)
+                .rejectReason(rejectReason)
+                .errorDetail(errorDetail)
+                .provider(identityVerificationConfig.getDocumentVerificationProvider())
+                .documentIds(documentIds)
+                .build();
+    }
+
+    private EventData createPresenceCheckFinishedEventData(final PresenceCheckResult result) {
+        final PresenceCheckFinishedEventData.PresenceCheckResult presenceCheckResult = Optional.ofNullable(result.getPhoto())
+                .map(Image::getData)
+                .map(data -> PresenceCheckFinishedEventData.PresenceCheckResult.builder()
+                        .frame(Base64.getEncoder().encodeToString(data))
+                        .build())
+                .orElse(null);
+        return PresenceCheckFinishedEventData.builder()
+                .status(convert(result.getStatus()))
+                .rejectReason(result.getRejectReason())
+                .errorDetail(result.getErrorDetail())
+                .provider(identityVerificationConfig.getPresenceCheckProvider())
+                .score(10) // so far sending constant 10 as 100 percent confidence, possible future extension point
+                .presenceCheckResult(presenceCheckResult)
+                .build();
+    }
+
+    private static EventStatus convert(final PresenceCheckStatus source) {
+        return switch (source) {
+            case ACCEPTED -> EventStatus.ACCEPTED;
+            case FAILED -> EventStatus.FAILED;
+            case REJECTED -> EventStatus.REJECTED;
+        };
+    }
+}

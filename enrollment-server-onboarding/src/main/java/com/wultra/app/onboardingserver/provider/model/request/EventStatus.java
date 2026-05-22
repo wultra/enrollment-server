@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,29 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wultra.app.onboardingserver.provider.rest;
-
-import lombok.Data;
+package com.wultra.app.onboardingserver.provider.model.request;
 
 /**
- * Request object for processing event.
+ * Status reported by event data.
+ * <p>
+ * Each event type uses only a subset of the values:
+ * <ul>
+ *     <li>{@link EventType#DOCUMENT_VERIFICATION_FINISHED}, {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED},
+ *         {@link EventType#PRESENCE_CHECK_FINISHED} – {@link #ACCEPTED}, {@link #REJECTED}, {@link #FAILED}.</li>
+ *     <li>{@link EventType#PROCESS_FINISHED} – {@link #FINISHED}, {@link #FAILED}.</li>
+ * </ul>
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
-@Data
-class ProcessEventRequestDto {
-
-    private String processId;
-
-    private String processType;
-
-    private String identityVerificationId;
-
-    private String userId;
-
-    private String externalUserId;
-
-    private EventTypeDto type;
-
-    private EventDataDto eventData;
+public enum EventStatus {
+    ACCEPTED,
+    REJECTED,
+    FAILED,
+    FINISHED
 }

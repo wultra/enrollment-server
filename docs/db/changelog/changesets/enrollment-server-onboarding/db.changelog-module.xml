@@ -17,5 +17,6 @@
     <include file="1.7.x/db.changelog-version.xml" relativeToChangelogFile="true" />
     <include file="2.0.x/db.changelog-version.xml" relativeToChangelogFile="true" />
     <include file="2.1.x/db.changelog-version.xml" relativeToChangelogFile="true" />
+    <include file="2.2.x/db.changelog-version.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>

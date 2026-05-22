@@ -1,6 +1,6 @@
 /*
  * PowerAuth Enrollment Server
- * Copyright (C) 2023 Wultra s.r.o.
+ * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,44 +18,27 @@
  */
 package com.wultra.app.onboardingserver.provider.model.request;
 
-import com.wultra.app.onboardingserver.provider.OnboardingProvider;
 import com.wultra.core.annotations.PublicApi;
-import lombok.*;
+import lombok.Builder;
+import lombok.NonNull;
+
+import java.util.List;
 
 /**
- * Request object for {@link OnboardingProvider#processEvent(ProcessEventRequest)}.
+ * {@link EventData} for {@link EventType#FINAL_DOCUMENT_VERIFICATION_FINISHED}.
+ * Contains the overall document check result for all documents combined,
+ * including additional checks (document crosscheck, document type, document country).
  *
  * @author Lubos Racansky, lubos.racansky@wultra.com
  */
 @Builder
-@Getter
-@ToString
 @PublicApi
-@EqualsAndHashCode
-public final class ProcessEventRequest {
-
-    @NonNull
-    private String processId;
-
-    @NonNull
-    private String processType;
-
-    @NonNull
-    private String userId;
-
-    /**
-     * User ID in the external system, which is used by the provider.
-     * It can be the same as {@code userId} or different, depending on the provider implementation.
-     */
-    @NonNull
-    private String externalUserId;
-
-    @NonNull
-    private String identityVerificationId;
-
-    @NonNull
-    private EventType type;
-
-    @NonNull
-    private EventData eventData;
+public record FinalDocumentVerificationFinishedEventData(
+        @NonNull String documentVerificationId,
+        @NonNull EventStatus status,
+        String rejectReason,
+        String errorDetail,
+        @NonNull String provider,
+        @NonNull List<String> documentIds
+) implements EventData {
 }

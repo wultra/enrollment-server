@@ -16,10 +16,7 @@
  */
 package com.wultra.app.onboardingserver.impl.service.document;
 
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
-import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
-import com.wultra.app.enrollmentserver.model.enumeration.RejectOrigin;
+import com.wultra.app.enrollmentserver.model.enumeration.*;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.api.errorhandling.DocumentVerificationException;
@@ -34,6 +31,7 @@ import com.wultra.app.onboardingserver.common.enumeration.OnboardingProcessError
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.common.service.AuditService;
 import com.wultra.app.onboardingserver.common.service.OnboardingProcessLimitService;
+import com.wultra.app.onboardingserver.impl.service.OnboardingEventService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,6 +59,8 @@ public class DocumentVerificationService {
     private final OnboardingProcessLimitService processLimitService;
 
     private final AuditService auditService;
+
+    private final OnboardingEventService onboardingEventService;
 
     /**
      * Execute final document verification of the given identity verification.
@@ -126,8 +126,10 @@ public class DocumentVerificationService {
     private FinalDocumentVerificationResult accept(
             final IdentityVerificationEntity identityVerification,
             final List<DocumentVerificationEntity> documentVerifications) {
+
         documentVerifications.forEach(docVerification ->
             auditService.audit(docVerification, "Document accepted at final verification for user: {}", identityVerification.getUserId()));
+        onboardingEventService.publishFinalDocumentVerificationAccepted(identityVerification);
         return FinalDocumentVerificationResult.OK;
     }
 
@@ -151,6 +153,8 @@ public class DocumentVerificationService {
         identityVerification.setTimestampFailed(ownerId.getTimestamp());
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_REJECTED, ownerId);
+
+        onboardingEventService.publishFinalDocumentVerificationRejected(identityVerification, result.getRejectReason());
         return FinalDocumentVerificationResult.REJECTED;
     }
 
@@ -174,6 +178,8 @@ public class DocumentVerificationService {
         logger.info("Identity verification ID: {}, failed: {}, {}", identityVerification.getId(), errorDetail, ownerId);
 
         incrementErrorScore(identityVerification, OnboardingProcessError.ERROR_DOCUMENT_VERIFICATION_FAILED, ownerId);
+
+        onboardingEventService.publishFinalDocumentVerificationFailed(identityVerification, errorDetail);
         return FinalDocumentVerificationResult.FAILED;
     }
 
