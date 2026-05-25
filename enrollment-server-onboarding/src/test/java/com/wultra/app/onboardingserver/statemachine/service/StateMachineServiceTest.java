@@ -21,7 +21,6 @@ package com.wultra.app.onboardingserver.statemachine.service;
 import com.wultra.app.enrollmentserver.model.enumeration.DocumentVerificationStatus;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationPhase;
 import com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus;
-import com.wultra.app.enrollmentserver.model.integration.DocumentVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.DocumentsVerificationResult;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
 import com.wultra.app.onboardingserver.EnrollmentServerTestApplication;
@@ -29,6 +28,7 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.IdentityVerificationRepository;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationTargetActivationService;
+import com.wultra.app.onboardingserver.impl.service.verification.VerificationProcessingService;
 import com.wultra.app.onboardingserver.impl.service.verification.VerificationResultService;
 import com.wultra.app.onboardingserver.statemachine.enums.OnboardingEvent;
 import org.junit.jupiter.api.Test;
@@ -39,11 +39,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.UnexpectedRollbackException;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 
@@ -71,6 +70,9 @@ class StateMachineServiceTest {
     @MockitoBean
     private DocumentVerificationProvider documentVerificationProvider;
 
+    @MockitoBean
+    private VerificationProcessingService verificationProcessingService;
+
     @Sql
     @Test
     void testProcessStateMachineEvent_fail() throws Exception {
@@ -78,8 +80,10 @@ class StateMachineServiceTest {
                 .thenReturn(DocumentsVerificationResult.builder()
                         .verificationId("verification-id-1")
                         .status(DocumentVerificationStatus.ACCEPTED)
-                        .results(List.of(DocumentVerificationResult.builder().uploadId(null).build()))
                         .build());
+
+        doThrow(new RuntimeException("Test exception"))
+                .when(verificationProcessingService).processVerificationResult(any(), any(), any());
 
         final OwnerId ownerId = new OwnerId();
         ownerId.setActivationId("a1");
@@ -89,7 +93,9 @@ class StateMachineServiceTest {
                 () -> tested.processStateMachineEvent(ownerId, "p1", OnboardingEvent.DOCUMENT_UPLOADED));
 
         // Transaction is rolled back, so identity verification remains in its original status.
-        assertEquals(IdentityVerificationStatus.IN_PROGRESS, repository.findById("v1").orElseThrow().getStatus());
+        final var identityVerification = repository.findById("v1").orElseThrow();
+        assertEquals(IdentityVerificationPhase.DOCUMENT_UPLOAD, identityVerification.getPhase());
+        assertEquals(IdentityVerificationStatus.IN_PROGRESS, identityVerification.getStatus());
     }
 
     @Sql
