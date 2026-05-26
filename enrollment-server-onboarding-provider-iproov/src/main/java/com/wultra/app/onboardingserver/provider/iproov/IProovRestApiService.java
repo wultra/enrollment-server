@@ -76,7 +76,7 @@ class IProovRestApiService {
      */
     private static final Pattern USER_ID_REGEX_PATTERN = Pattern.compile("[a-zA-Z0-9'+_@.-]{1,256}");
 
-    private static final String I_PROOV_RESOURCE_CONTEXT = "presence_check/";
+    private static final String I_PROOV_RESOURCE = "nrollment-onboarding-server";
 
     /**
      * Configuration properties.
@@ -254,7 +254,7 @@ class IProovRestApiService {
         request.setApiKey(configProps.getApiKey());
         request.setSecret(configProps.getApiSecret());
         request.setAssuranceType(configProps.getAssuranceType());
-        request.setResource(I_PROOV_RESOURCE_CONTEXT + id.getActivationId());
+        request.setResource(I_PROOV_RESOURCE);
         request.setRiskProfile(configProps.getRiskProfile());
 
         final String userId = getUserId(id);

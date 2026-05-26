@@ -3,12 +3,14 @@
 
 ## 2.2.0
 
+
 ### Changed
 
-- [#1751](https://github.com/wultra/enrollment-server/issues/1751) - Publishing event types of `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED`
-- [#1425](https://github.com/wultra/enrollment-server/issues/1425) - Removed `Serializable` from JPA entities.
-- [#1592](https://github.com/wultra/enrollment-server/issues/1592) - Refactor state machine configuration, limit `EVENT_NEXT_STATE` and speed up processing.
-- [#1775](https://github.com/wultra/enrollment-server/issues/1775) - Migrated to Spring Boot 4 and Jackson 3.
+- Change iProov `resource` attribute value [(1791)](https://github.com/wultra/enrollment-server/issues/1791)
+- Publishing event types of `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED` [#1751](https://github.com/wultra/enrollment-server/issues/1751)
+- Removed `Serializable` from JPA entities. [(1425)](https://github.com/wultra/enrollment-server/issues/1425)
+- Refactor state machine configuration, limit `EVENT_NEXT_STATE` and speed up processing. [#1592](https://github.com/wultra/enrollment-server/issues/1592)
+- Migrated to Spring Boot 4 and Jackson 3. [(1775)](https://github.com/wultra/enrollment-server/issues/1775)
 
 
 ### Removed
