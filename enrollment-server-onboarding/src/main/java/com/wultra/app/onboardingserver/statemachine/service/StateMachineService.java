@@ -45,6 +45,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 /**
  * State machine service
  *
@@ -90,21 +92,23 @@ public class StateMachineService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
         final var processId = identityVerification.getProcessId();
+        logger.info("", kv("action", "changeMachineState"), kv("state", "initiated"), kv("processId", processId));
+
         final var ownerId = new OwnerId();
         ownerId.setActivationId(identityVerification.getActivationId());
         ownerId.setUserId(identityVerification.getUserId());
-        logger.debug("Changing state of machine for process ID: {}", processId);
 
         try {
             lockAndVerifyProcess(processId);
             processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            logger.info("", kv("action", "changeMachineState"), kv("state", "succeeded"));
             return true;
         } catch (IdentityVerificationException e) {
-            logger.warn("Unable to change state for process ID: {}", processId, e);
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Unable to change state for process"), e);
         } catch (final OnboardingProcessException e) {
-            logger.warn("Process with ID {} not found", processId, e);
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Process not found"), e);
         } catch (final RuntimeException e) {
-            logger.warn("Exception when changing state for process ID: {}", processId, e);
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Exception when changing state of process"), e);
         }
 
         return false;
