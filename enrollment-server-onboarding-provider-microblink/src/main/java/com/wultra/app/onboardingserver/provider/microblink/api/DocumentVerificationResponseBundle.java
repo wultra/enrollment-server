@@ -38,9 +38,7 @@ public class DocumentVerificationResponseBundle {
 
     private static final String IMAGES_FIELD = "images";
     private static final String EXTRACTION_FIELD = "extraction";
-    private static final String VIZ_FIELD = "viz";
-    private static final String FRONT_FIELD = "front";
-    private static final String BACK_FIELD = "back";
+    private static final String OVERALL_FIELD = "overall";
 
     private final DocumentVerificationResponse parsedResponseBody;
 
@@ -55,17 +53,9 @@ public class DocumentVerificationResponseBundle {
         return copyWithoutFields(IMAGES_FIELD).toString();
     }
 
-    public String getExtractionFront() {
+    public String getOverallExtraction() {
         return responseBodyJson.path(EXTRACTION_FIELD)
-                .path(VIZ_FIELD)
-                .path(FRONT_FIELD)
-                .toString();
-    }
-
-    public String getExtractionBack() {
-        return responseBodyJson.path(EXTRACTION_FIELD)
-                .path(VIZ_FIELD)
-                .path(BACK_FIELD)
+                .path(OVERALL_FIELD)
                 .toString();
     }
 

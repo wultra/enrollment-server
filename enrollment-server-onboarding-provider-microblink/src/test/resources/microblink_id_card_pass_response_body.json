@@ -30,6 +30,13 @@
     "overall": [
       {
         "side": "Unknown",
+        "script": "Cyrillic",
+        "value": "ОКТАВИАН",
+        "type": "DetailedStringResult",
+        "field": "FirstName"
+      },
+      {
+        "side": "Unknown",
         "script": "Latin",
         "value": "PRENUMELE",
         "type": "DetailedStringResult",

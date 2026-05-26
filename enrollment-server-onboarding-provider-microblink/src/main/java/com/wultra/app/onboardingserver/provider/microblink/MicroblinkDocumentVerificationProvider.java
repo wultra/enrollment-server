@@ -27,10 +27,7 @@ import com.wultra.app.onboardingserver.api.provider.DocumentVerificationProvider
 import com.wultra.app.onboardingserver.common.database.DocumentDataRepository;
 import com.wultra.app.onboardingserver.common.database.DocumentVerificationRepository;
 import com.wultra.app.onboardingserver.common.database.ProcessedDocumentDataRepository;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentDataEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentResultEntity;
-import com.wultra.app.onboardingserver.common.database.entity.DocumentVerificationEntity;
-import com.wultra.app.onboardingserver.common.database.entity.ProcessedDocumentDataEntity;
+import com.wultra.app.onboardingserver.common.database.entity.*;
 import com.wultra.app.onboardingserver.common.errorhandling.RemoteCommunicationException;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponse;
 import com.wultra.app.onboardingserver.provider.microblink.api.DocumentVerificationResponseBundle;
@@ -379,13 +376,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         for (final var documentVerificationData : documentsVerificationData) {
             final var microblinkResponse = microblinkResponseByDocumentType.get(documentVerificationData.type());
 
-            final var extractedData = switch (documentVerificationData.side()) {
-                case FRONT -> microblinkResponse.getExtractionFront();
-                case BACK -> microblinkResponse.getExtractionBack();
-            };
-
+            final var extractedData = microblinkResponse.getOverallExtraction();
             final var responseBody = microblinkResponse.getParsedResponseBody();
-
             final var extractedDataValue = microblinkExtractedDataParser.parseExtractedData(extractedData, responseBody.extraction());
 
             final var result = new DocumentSubmitResult();
@@ -692,6 +684,8 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                     .map(DocumentVerificationResponse.ExtractionClassInfo::type)
                     .orElse(null);
 
+            final var extractedData = documentResult.getExtractedData();
+
             final var isDocumentTypeValid = verifyDocumentType(uploadId, documentType, extractedType);
 
             if (!isDocumentTypeValid) {
@@ -699,13 +693,10 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
 
                 documentVerificationResultBuilder.rejectReason(rejectReason);
                 documentVerificationResultBuilder.verificationResult(documentResult.getVerificationResult());
-                documentVerificationResultBuilder.extractedData(documentResult.getExtractedData());
+                documentVerificationResultBuilder.extractedData(extractedData);
                 documentVerificationResultBuilder.verificationScore(score);
                 return createDocumentVerificationResultBundle(documentVerificationResultBuilder, null);
             }
-
-            final var extractedData = extraction.map(DocumentVerificationResponse.Extraction::overall)
-                    .orElse(List.of());
 
             final var crosscheckData = buildCrosscheckData(extractedData);
             return createDocumentVerificationResultBundle(documentVerificationResultBuilder, crosscheckData);
@@ -767,25 +758,18 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         return request;
     }
 
-    private static DocumentCrosscheckData buildCrosscheckData(final List<DocumentVerificationResponse.Result> documentExtractedData) {
-        final var firstName = documentExtractedData.stream()
-                .filter(r -> "FirstName".equals(r.field()))
-                .findFirst()
-                .map(DocumentVerificationResponse.Result::value)
+    private DocumentCrosscheckData buildCrosscheckData(final String extractedData) {
+        final var extractedDataValue = parseExtractedDataValue(extractedData);
+
+        final var firstName = extractedDataValue.map(DocumentExtractedDataValue::givenNames)
                 .map(String::toLowerCase)
                 .orElse(null);
 
-        final var lastName = documentExtractedData.stream()
-                .filter(r -> "LastName".equals(r.field()))
-                .findFirst()
-                .map(DocumentVerificationResponse.Result::value)
+        final var lastName = extractedDataValue.map(DocumentExtractedDataValue::surname)
                 .map(String::toLowerCase)
                 .orElse(null);
 
-        final var dateOfBirth = documentExtractedData.stream()
-                .filter(r -> "DateOfBirth".equals(r.field()))
-                .findFirst()
-                .map(MicroblinkDocumentVerificationProvider::parseDate)
+        final var dateOfBirth = extractedDataValue.map(DocumentExtractedDataValue::dateOfBirth)
                 .orElse(null);
 
         return DocumentCrosscheckData.builder()
@@ -795,14 +779,13 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
                 .build();
     }
 
-    private static LocalDate parseDate(final DocumentVerificationResponse.Result result) {
+    private Optional<DocumentExtractedDataValue> parseExtractedDataValue(final String extractedData) {
         try {
-            return Optional.ofNullable(result)
-                    .map(it -> LocalDate.of(it.year(), it.month(), it.day()))
-                    .orElse(null);
-        } catch (final RuntimeException e) {
-            logger.warn("Exception when parsing date", e);
-            return null;
+            final var parsedValue = objectMapper.readValue(extractedData, DocumentExtractedDataValue.class);
+            return Optional.of(parsedValue);
+        } catch (final JacksonException e) {
+            logger.warn("Failed to parse extracted data value", e);
+            return Optional.empty();
         }
     }
 

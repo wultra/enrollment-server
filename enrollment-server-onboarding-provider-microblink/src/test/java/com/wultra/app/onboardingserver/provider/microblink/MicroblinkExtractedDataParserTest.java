@@ -101,7 +101,19 @@ class MicroblinkExtractedDataParserTest {
         final var result = tested.parseExtractedData(EXTRACTED_DATA_JSON, buildExtraction());
 
         // then
-        assertEquals(buildExpectedEmptyResultWithAllValues(), result);
+        assertEquals(buildExpectedResultWithAllValues(), result);
+    }
+
+    @Test
+    void testParseExtractedData_valueWithLatinScriptIsPreferred() {
+        // given
+        // -
+
+        // when
+        final var result = tested.parseExtractedData(overallExtractedDataMultipleScripts(), buildExtraction());
+
+        // then
+        assertEquals(buildExpectedResultLatinPreferred(), result);
     }
 
     private static String buildExpectedEmptyResult() {
@@ -109,7 +121,7 @@ class MicroblinkExtractedDataParserTest {
                 {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":null,"sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 
-    private static String buildExpectedEmptyResultWithAllValues() {
+    private static String buildExpectedResultWithAllValues() {
         return """
                 {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":"1999-12-24","placeOfBirth":"Prague","country":"MDA","sex":"X","nationality":"Moldovan","personalNumber":"816008/0610","documentNumber":"EA0000000","dateOfIssue":"2012-01-10","dateOfExpiry":"2025-10-13","authority":"Chisinau A"}""";
     }
@@ -121,6 +133,31 @@ class MicroblinkExtractedDataParserTest {
                 .path("extraction")
                 .path("overall")
                 .toString();
+    }
+
+    private static String overallExtractedDataMultipleScripts() {
+        return """
+                [
+                    {
+                        "side": "Unknown",
+                        "script": "Cyrillic",
+                        "value": "ОКТАВИАН",
+                        "type": "DetailedStringResult",
+                        "field": "FirstName"
+                    },
+                    {
+                        "side": "Unknown",
+                        "script": "Latin",
+                        "value": "OCTAVIAN",
+                        "type": "DetailedStringResult",
+                        "field": "FirstName"
+                    }
+                ]""";
+    }
+
+    private static String buildExpectedResultLatinPreferred() {
+        return """
+                {"givenNames":"OCTAVIAN","surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 
     private static DocumentVerificationResponse.Extraction buildExtraction() {

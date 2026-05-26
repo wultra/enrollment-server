@@ -101,6 +101,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
     private static final String FACE_PHOTO_ID = "c1a4f5e2-3b6d-4f8e-9a1b-2c3d4e5f6a7b";
     private static final byte[] FACE_PHOTO_DATA = Base64.getDecoder().decode("dGVzdF9mYWNlX2ltYWdlX2RhdGE=");
+    private static final String EXTRACTED_DATA_JSON = "[{\"testField\":\"testValue\"}]";
 
     private static final long TIMESTAMP_ASSERT_DELTA_MS = 1_000;
 
@@ -448,8 +449,7 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
-        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
-        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
 
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
@@ -482,8 +482,7 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
-        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
-        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
 
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
@@ -1157,7 +1156,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[Test microblink message]", frontDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
-        assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, frontDocumentResult.getExtractedData());
 
         final var backDocumentResult = documentsResult.stream()
                 .filter(d -> DOCUMENT_ID_CARD_BACK_ID.equals(d.getDocumentId()))
@@ -1168,7 +1167,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[Test microblink message]", backDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
-        assertEquals("[]", backDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, backDocumentResult.getExtractedData());
     }
 
     private static String buildExpectedValidationResult(final String json) throws JacksonException {
@@ -1196,7 +1195,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(frontDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
-        assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, frontDocumentResult.getExtractedData());
 
         final var backDocumentResult = documentsResult.stream()
                 .filter(d -> DOCUMENT_ID_CARD_BACK_ID.equals(d.getDocumentId()))
@@ -1207,7 +1206,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(backDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
-        assertEquals("[]", backDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, backDocumentResult.getExtractedData());
     }
 
     private static void assertSavedProcessedDocumentData(final List<ProcessedDocumentDataEntity> entities) {

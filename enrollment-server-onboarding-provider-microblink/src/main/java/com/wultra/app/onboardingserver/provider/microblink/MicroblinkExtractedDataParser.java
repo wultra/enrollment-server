@@ -102,7 +102,10 @@ public class MicroblinkExtractedDataParser {
             final ExtractedValue value = extractValue(node);
 
             if (value != null) {
-                result.put(field, value);
+                final ExtractedValue existingValue = result.get(field);
+                if (existingValue == null || isLatinScript(value)) {
+                    result.put(field, value);
+                }
             }
         }
         return result;
@@ -110,7 +113,10 @@ public class MicroblinkExtractedDataParser {
 
     private static ExtractedValue extractValue(final JsonNode node) {
         if (node.hasNonNull("value")) {
-            return new ExtractedValue.Text(node.path("value").asString(null));
+            return new ExtractedValue.Text(
+                    node.path("value").asString(null),
+                    node.path("script").asString(null)
+            );
         } else if (isSuccessfullyParsed(node)) {
             final int year = node.path("year").asInt(0);
             final int month = node.path("month").asInt(0);
@@ -126,6 +132,10 @@ public class MicroblinkExtractedDataParser {
         return node.path("successfullyParsed").asBoolean(false);
     }
 
+    private static boolean isLatinScript(final ExtractedValue value) {
+        return (value instanceof ExtractedValue.Text text) && "Latin".equalsIgnoreCase(text.script());
+    }
+
     private static String asText(final ExtractedValue source) {
         return (source instanceof ExtractedValue.Text target) ? target.value() : null;
     }
@@ -135,7 +145,7 @@ public class MicroblinkExtractedDataParser {
     }
 
     private sealed interface ExtractedValue permits ExtractedValue.Text, ExtractedValue.Date {
-        record Text(String value) implements ExtractedValue {}
+        record Text(String value, String script) implements ExtractedValue {}
         record Date(LocalDate value) implements ExtractedValue {}
     }
 }
