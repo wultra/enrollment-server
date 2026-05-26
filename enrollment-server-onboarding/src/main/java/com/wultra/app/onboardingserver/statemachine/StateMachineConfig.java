@@ -37,7 +37,6 @@ import com.wultra.app.onboardingserver.statemachine.util.StateContextUtil;
 import com.wultra.core.rest.model.base.response.Response;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,10 +62,6 @@ import java.util.function.Function;
  *
  * @author Lukas Lukovsky, lukas.lukovsky@wultra.com
  */
-@ConditionalOnProperty(
-        value = "enrollment-server-onboarding.identity-verification.enabled",
-        havingValue = "true"
-)
 @Configuration
 @AllArgsConstructor
 @Slf4j

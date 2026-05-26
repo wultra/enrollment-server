@@ -32,7 +32,6 @@ import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachi
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ExtendedState;
@@ -55,7 +54,6 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 @Service
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
 public class StateMachineService {
 
     private final EnrollmentStateProvider enrollmentStateProvider;

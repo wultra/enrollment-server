@@ -21,7 +21,6 @@ package com.wultra.app.onboardingserver.statemachine.service;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
 public class StateMachineBatchService {
 
     private final StateMachineService stateMachineService;
