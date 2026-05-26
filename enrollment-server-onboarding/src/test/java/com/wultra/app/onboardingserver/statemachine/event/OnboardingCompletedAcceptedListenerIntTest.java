@@ -39,7 +39,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,7 +87,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var identityVerification = createIdentityVerification();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
@@ -117,7 +116,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var identityVerification = createIdentityVerification();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
@@ -142,7 +141,7 @@ class OnboardingCompletedAcceptedListenerIntTest {
         final var documentCreateRequests = createDocumentCreateRequests();
 
         when(identityVerificationService.findBy(any())).thenReturn(identityVerification);
-        doReturn(Stream.empty()).when(identityVerificationService).streamAllIdentityVerificationsToChangeState();
+        doReturn(List.of()).when(identityVerificationService).findAllIdentityVerificationsToChangeState();
         when(identityVerificationTargetActivationService.isTargetActivationFinished(PROCESS_ID)).thenReturn(true);
         when(verificationResultService.processVerificationResult(any(), any()))
                 .thenReturn(IdentityVerificationService.FinalVerificationResult.OK);
