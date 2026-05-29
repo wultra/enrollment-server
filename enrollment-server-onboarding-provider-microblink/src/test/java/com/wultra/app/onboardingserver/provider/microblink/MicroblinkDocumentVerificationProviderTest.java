@@ -589,7 +589,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -647,7 +647,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildExtractedDataJson("John"), "[]", buildMessage(), null)
+                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildVerificationResultJson("John"), "[]", buildMessage(), null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -668,7 +668,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, null, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, null, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -691,7 +691,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.HEALTH_INSURANCE_CARD, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.HEALTH_INSURANCE_CARD, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -798,8 +798,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var idCardDocumentResult = new DocumentResultEntity();
         idCardDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildExtractedDataJson(idCardFirstName), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson(idCardFirstName), "[]", "[]", null)
         );
+        idCardDocumentResult.setExtractedData(buildExtractedDataJson(idCardFirstName));
 
         final var idCardVerifications = buildDocumentVerifications(
                 List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack),
@@ -807,8 +808,9 @@ class MicroblinkDocumentVerificationProviderTest {
         );
         final var drivingLicenseDocumentResult = new DocumentResultEntity();
         drivingLicenseDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, buildVerificationResultJson("John"), "[]", "[]", null)
         );
+        drivingLicenseDocumentResult.setExtractedData(buildExtractedDataJson("John"));
 
         final var drivingLicenseVerifications = buildDocumentVerifications(
                 List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack),
@@ -988,7 +990,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 """.formatted(checkResult, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
     }
 
-    private static String buildExtractedDataJson(final String firstName) {
+    private static String buildVerificationResultJson(final String firstName) {
         return """
                 [
                     {
@@ -1007,6 +1009,19 @@ class MicroblinkDocumentVerificationProviderTest {
                     }
                 ]
                 """.formatted(firstName);
+    }
+
+    private static String buildExtractedDataJson(final String firstName) {
+        final var firstNameJsonValue = Optional.ofNullable(firstName)
+                .map(it -> "\"" + it + "\"")
+                .orElse(null);
+
+        return """
+                {
+                    "givenNames": %s,
+                    "surname": "Doe",
+                    "dateOfBirth": "1990-02-01"
+                }""".formatted(firstNameJsonValue);
     }
 
     private static String buildFaceImageJson() {

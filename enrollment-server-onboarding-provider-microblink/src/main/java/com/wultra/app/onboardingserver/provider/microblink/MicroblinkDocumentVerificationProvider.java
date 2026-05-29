@@ -783,7 +783,7 @@ public class MicroblinkDocumentVerificationProvider implements DocumentVerificat
         try {
             final var parsedValue = objectMapper.readValue(extractedData, DocumentExtractedDataValue.class);
             return Optional.of(parsedValue);
-        } catch (final JacksonException e) {
+        } catch (final RuntimeException e) {
             logger.warn("Failed to parse extracted data value", e);
             return Optional.empty();
         }
