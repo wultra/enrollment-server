@@ -20,6 +20,7 @@ package com.wultra.app.onboardingserver.common.database;
 
 import com.wultra.app.enrollmentserver.model.enumeration.ErrorOrigin;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -70,7 +71,7 @@ public interface IdentityVerificationRepository extends CrudRepository<IdentityV
                    )
             """
     )
-    Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState(final String documentVerificationProvider);
+    List<IdentityVerificationEntity> findAllIdentityVerificationsToChangeState(final String documentVerificationProvider, final Pageable pageable);
 
     /**
      * Return identity verification IDs by the given process ID. Include only not yet finished entities.

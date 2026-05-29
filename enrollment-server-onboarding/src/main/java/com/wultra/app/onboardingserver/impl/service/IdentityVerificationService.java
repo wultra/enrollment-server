@@ -45,6 +45,7 @@ import com.wultra.app.onboardingserver.statemachine.guard.document.RequiredDocum
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -52,7 +53,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.wultra.app.enrollmentserver.model.enumeration.IdentityVerificationStatus.FAILED;
 
@@ -512,12 +512,15 @@ public class IdentityVerificationService {
     }
 
     /**
-     * Return all identity verifications eligible for change to next state.
+     * Return all identity verifications eligible for change to the next state.
      *
      * @return identity verifications
      */
-    public Stream<IdentityVerificationEntity> streamAllIdentityVerificationsToChangeState() {
-        return identityVerificationRepository.streamAllIdentityVerificationsToChangeState(identityVerificationConfig.getDocumentVerificationProvider());
+    public List<IdentityVerificationEntity> findAllIdentityVerificationsToChangeState() {
+        final var provider = identityVerificationConfig.getDocumentVerificationProvider();
+        final var batchSize = identityVerificationConfig.getNextStateBatchSize();
+
+        return identityVerificationRepository.findAllIdentityVerificationsToChangeState(provider, Pageable.ofSize(batchSize));
     }
 
     /**

@@ -50,7 +50,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.statemachine.StateMachine;
@@ -66,10 +65,6 @@ import java.util.stream.Collectors;
  *
  * @author Roman Strobl, roman.strobl@wultra.com
  */
-@ConditionalOnProperty(
-        value = "enrollment-server-onboarding.identity-verification.enabled",
-        havingValue = "true"
-)
 @Service
 @RequiredArgsConstructor
 @Slf4j

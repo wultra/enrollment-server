@@ -17,12 +17,12 @@
  */
 package com.wultra.app.onboardingserver.task;
 
-import com.wultra.app.onboardingserver.statemachine.service.StateMachineService;
+import com.wultra.app.onboardingserver.statemachine.service.StateMachineBatchService;
 import com.wultra.app.onboardingserver.task.consts.SchedulerLockNames;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -35,14 +35,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
+@AllArgsConstructor
 public class StateMachineTask {
 
-    private final StateMachineService stateMachineService;
-
-    public StateMachineTask(final StateMachineService stateMachineService) {
-        this.stateMachineService = stateMachineService;
-    }
+    private final StateMachineBatchService stateMachineBatchService;
 
     /**
      * Scheduled task to change machine state.
@@ -52,6 +48,6 @@ public class StateMachineTask {
     public void changeMachineState() {
         LockAssert.assertLocked();
         logger.debug("Changing machine states in batch");
-        stateMachineService.changeMachineStatesInBatch();
+        stateMachineBatchService.changeMachineStatesInBatch();
     }
 }

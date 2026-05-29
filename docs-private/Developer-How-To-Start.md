@@ -264,7 +264,6 @@ spring.datasource.username=powerauth
 spring.datasource.password=
 powerauth.service.url=http://localhost:8080/powerauth-java-server/rest
 enrollment-server-onboarding.security.auth-type=BASIC_AUTH
-enrollment-server-onboarding.identity-verification.enabled=true
 enrollment-server-onboarding.document-verification.provider=mock
 ```
 

@@ -16,9 +16,12 @@
  */
 package com.wultra.app.onboardingserver.statemachine.service;
 
+import com.wultra.app.enrollmentserver.model.enumeration.OnboardingStatus;
 import com.wultra.app.enrollmentserver.model.integration.OwnerId;
+import com.wultra.app.onboardingserver.common.database.OnboardingProcessRepository;
 import com.wultra.app.onboardingserver.common.database.entity.IdentityVerificationEntity;
 import com.wultra.app.onboardingserver.common.errorhandling.IdentityVerificationException;
+import com.wultra.app.onboardingserver.common.errorhandling.OnboardingProcessException;
 import com.wultra.app.onboardingserver.impl.service.IdentityVerificationService;
 import com.wultra.app.onboardingserver.statemachine.EnrollmentStateProvider;
 import com.wultra.app.onboardingserver.statemachine.consts.EventHeaderName;
@@ -29,23 +32,19 @@ import com.wultra.app.onboardingserver.statemachine.interceptor.CustomStateMachi
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachineEventResult;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 /**
  * State machine service
@@ -55,7 +54,6 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 @AllArgsConstructor
-@ConditionalOnProperty(value = "enrollment-server-onboarding.identity-verification.enabled", havingValue = "true")
 public class StateMachineService {
 
     private final EnrollmentStateProvider enrollmentStateProvider;
@@ -66,11 +64,19 @@ public class StateMachineService {
 
     private final IdentityVerificationService identityVerificationService;
 
-    private final TransactionTemplate transactionTemplate;
+    private final OnboardingProcessRepository onboardingProcessRepository;
 
     @Transactional
     public StateMachine<OnboardingState, OnboardingEvent> processStateMachineEvent(OwnerId ownerId, String processId, OnboardingEvent event)
             throws IdentityVerificationException {
+        return processStateMachineEventInternal(ownerId, processId, event);
+    }
+
+    private StateMachine<OnboardingState, OnboardingEvent> processStateMachineEventInternal(
+            OwnerId ownerId,
+            String processId,
+            OnboardingEvent event
+    ) throws IdentityVerificationException {
         final StateMachine<OnboardingState, OnboardingEvent> stateMachine =
                 OnboardingEvent.IDENTITY_VERIFICATION_INIT == event ?
                 prepareStateMachine(processId, OnboardingState.INITIAL, null) :
@@ -79,6 +85,31 @@ public class StateMachineService {
         sendEventMessage(stateMachine, message);
 
         return stateMachine;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    boolean changeMachineState(final IdentityVerificationEntity identityVerification) {
+        final var processId = identityVerification.getProcessId();
+        logger.info("", kv("action", "changeMachineState"), kv("state", "initiated"), kv("processId", processId));
+
+        final var ownerId = new OwnerId();
+        ownerId.setActivationId(identityVerification.getActivationId());
+        ownerId.setUserId(identityVerification.getUserId());
+
+        try {
+            lockAndVerifyProcess(processId);
+            processStateMachineEventInternal(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
+            logger.info("", kv("action", "changeMachineState"), kv("state", "succeeded"));
+            return true;
+        } catch (IdentityVerificationException e) {
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Unable to change state for process"), e);
+        } catch (final OnboardingProcessException e) {
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Process not found"), e);
+        } catch (final RuntimeException e) {
+            logger.warn("", kv("action", "changeMachineState"), kv("state", "failed"), kv("errorMessage", "Exception when changing state of process"), e);
+        }
+
+        return false;
     }
 
     public StateMachine<OnboardingState, OnboardingEvent> prepareStateMachine(
@@ -117,40 +148,10 @@ public class StateMachineService {
                 .build();
     }
 
-    /**
-     * Change machine states in batch.
-     */
-    @Transactional(readOnly = true)
-    public void changeMachineStatesInBatch() {
-        final AtomicInteger countFinished = new AtomicInteger(0);
-        try (Stream<IdentityVerificationEntity> stream = identityVerificationService.streamAllIdentityVerificationsToChangeState().parallel()) {
-            stream.forEach(identityVerification -> {
-                final String processId = identityVerification.getProcessId();
-                final OwnerId ownerId = new OwnerId();
-                ownerId.setActivationId(identityVerification.getActivationId());
-                ownerId.setUserId(identityVerification.getUserId());
-                logger.debug("Changing state of machine for process ID: {}", processId);
-
-                transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                transactionTemplate.executeWithoutResult(status -> {
-                    try {
-                        processStateMachineEvent(ownerId, processId, OnboardingEvent.EVENT_NEXT_STATE);
-                        countFinished.incrementAndGet();
-                    } catch (IdentityVerificationException e) {
-                        logger.warn("Unable to change state for process ID: {}", processId, e);
-                    }
-                });
-            });
-        }
-        if (countFinished.get() > 0) {
-            logger.debug("Changed state of {} identity verifications", countFinished.get());
-        }
-    }
-
-    private StateMachineEventResult<OnboardingState, OnboardingEvent> sendEventMessage(
+    private void sendEventMessage(
             StateMachine<OnboardingState, OnboardingEvent> stateMachine,
             Message<OnboardingEvent> message) {
-        return stateMachine.sendEvent(Mono.just(message)).blockLast();
+        stateMachine.sendEvent(Mono.just(message)).blockLast();
     }
 
     private StateMachine<OnboardingState, OnboardingEvent> fetchStateMachine(
@@ -163,4 +164,9 @@ public class StateMachineService {
         return prepareStateMachine(processId, onboardingState, identityVerification);
     }
 
+    private void lockAndVerifyProcess(final String processId) throws OnboardingProcessException {
+        onboardingProcessRepository.findByIdWithLock(processId)
+                .filter(p -> OnboardingStatus.NOT_YET_COMPLETED.contains(p.getStatus()))
+                .orElseThrow(() -> new OnboardingProcessException("Onboarding process not found for process ID: " + processId));
+    }
 }
