@@ -100,15 +100,14 @@ class MicroblinkDocumentVerificationProviderIntTest {
     private static final String idCardFacePhotoBase64;
     private static final String microblinkIdCardRejectResponseBody;
     private static final String microblinkIdCardPassResponseBody;
-    private static final String idCardFrontExtractionJson;
-    private static final String idCardBackExtractionJson;
+    private static final String idCardNormalizedExtractedDataJson;
     private static final String idCardPassValidationResult;
     private static final String idCardRejectValidationResult;
     private static final JsonNode idCardResponseWithoutPersonalDataJson;
 
     private static final Image passportImage;
     private static final String microblinkPassportPassResponseBody;
-    private static final String passportPassExtractionJson;
+    private static final String passportNormalizedExtractedDataJson;
     private static final String passportPassValidationResult;
 
     private MicroblinkDocumentVerificationProvider.DocumentVerificationData idCardFrontDocument;
@@ -162,17 +161,10 @@ class MicroblinkDocumentVerificationProviderIntTest {
             idCardRejectValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(rejectResponseTree.toString())
                     .replaceAll("");
 
-            idCardFrontExtractionJson = rejectResponseTree.path("extraction")
-                    .path("viz")
-                    .path("front")
-                    .toString();
-            idCardBackExtractionJson = rejectResponseTree.path("extraction")
-                    .path("viz")
-                    .path("back")
-                    .toString();
-
             microblinkIdCardPassResponseBody = new ClassPathResource("microblink_id_card_pass_response_body.json").getContentAsString(StandardCharsets.UTF_8);
             final var passResponseTree = mapper.readTree(microblinkIdCardPassResponseBody);
+
+            idCardNormalizedExtractedDataJson = buildIdCardNormalizedExtractedDataJson();
 
             idCardFacePhotoBase64 = StreamSupport.stream(passResponseTree.path("images").spliterator(), false)
                     .filter(node -> "FaceImage".equals(node.path("name").asString()))
@@ -197,10 +189,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
             passportPassValidationResult = MICROBLINK_RESPONSE_IMAGE_PATTERN.matcher(passportResponseTree.toString())
                     .replaceAll("");
 
-            passportPassExtractionJson = passportResponseTree.path("extraction")
-                    .path("viz")
-                    .path("front")
-                    .toString();
+            passportNormalizedExtractedDataJson = buildPassportNormalizedExtractedDataJson();
         } catch (final IOException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -479,7 +468,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         // given
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
-        preparePassportVerificationDataInDatabase(passportPassValidationResult);
+        preparePassportVerificationDataInDatabase(passportNormalizedExtractedDataJson);
 
         final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
 
@@ -496,11 +485,11 @@ class MicroblinkDocumentVerificationProviderIntTest {
         prepareIdCardFrontVerificationDataInDatabase();
         prepareIdCardBackVerificationDataInDatabase();
 
-        final var passportValidationResult = passportPassValidationResult.replaceAll(
-                "\"value\"\\s*:\\s*\"PRENUMELE\"",
-                "\"value\": \"INCORRECT_FIRSTNAME\""
+        final var extractedDataJson = passportNormalizedExtractedDataJson.replaceAll(
+                "\"givenNames\"\\s*:\\s*\"PRENUMELE\"",
+                "\"givenNames\":\"INCORRECT_FIRSTNAME\""
         );
-        preparePassportVerificationDataInDatabase(passportValidationResult);
+        preparePassportVerificationDataInDatabase(extractedDataJson);
 
         final var uploadIds = List.of(ID_CARD_FRONT_UPLOAD_ID, ID_CARD_BACK_UPLOAD_ID, PASSPORT_UPLOAD_ID);
 
@@ -538,11 +527,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
-        final var frontNormalizedExtractedData = buildIdCardFrontNormalizedExtractedDataJson();
-
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertNull(frontDocument.getRejectReason());
-        assertEquals(frontNormalizedExtractedData, frontDocument.getExtractedData());
+        assertEquals(idCardNormalizedExtractedDataJson, frontDocument.getExtractedData());
         assertJsonEquals(idCardPassValidationResult, frontDocument.getValidationResult());
 
         final var backDocument = actualDocuments.stream()
@@ -550,11 +537,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
-        final var backNormalizedExtractedData = buildIdCardBackNormalizedExtractedDataJson();
-
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertNull(backDocument.getRejectReason());
-        assertEquals(backNormalizedExtractedData, backDocument.getExtractedData());
+        assertEquals(idCardNormalizedExtractedDataJson, backDocument.getExtractedData());
         assertJsonEquals(idCardPassValidationResult, backDocument.getValidationResult());
     }
 
@@ -571,7 +556,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
-        final var frontNormalizedExtractedData = buildIdCardFrontNormalizedExtractedDataJson();
+        final var frontNormalizedExtractedData = buildIdCardRejectNormalizedExtractedDataJson();
 
         assertDoesNotThrow(() -> UUID.fromString(frontDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", frontDocument.getRejectReason());
@@ -583,7 +568,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
                 .findFirst()
                 .orElseThrow();
 
-        final var backNormalizedExtractedData = buildIdCardBackNormalizedExtractedDataJson();
+        final var backNormalizedExtractedData = buildIdCardRejectNormalizedExtractedDataJson();
 
         assertDoesNotThrow(() -> UUID.fromString(backDocument.getUploadId()));
         assertEquals("[The provided document is fully cropped which is not in line with BlinkID Verify image quality guidelines.]", backDocument.getRejectReason());
@@ -675,7 +660,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var documentResult = new DocumentResultEntity();
         documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
         documentResult.setVerificationResult(idCardPassValidationResult);
-        documentResult.setExtractedData(idCardFrontExtractionJson);
+        documentResult.setExtractedData(idCardNormalizedExtractedDataJson);
         documentResult.setDocumentVerification(documentVerification);
         documentResult.setTimestampCreated(new Date());
 
@@ -696,7 +681,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var documentResult = new DocumentResultEntity();
         documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
         documentResult.setVerificationResult(idCardPassValidationResult);
-        documentResult.setExtractedData(idCardBackExtractionJson);
+        documentResult.setExtractedData(idCardNormalizedExtractedDataJson);
         documentResult.setDocumentVerification(documentVerification);
         documentResult.setTimestampCreated(new Date());
 
@@ -705,7 +690,7 @@ class MicroblinkDocumentVerificationProviderIntTest {
         documentResultRepository.save(documentResult);
     }
 
-    private void preparePassportVerificationDataInDatabase(final String validationResultJson) {
+    private void preparePassportVerificationDataInDatabase(final String extractedDataJson) {
         final var documentData = new DocumentDataEntity();
         documentData.setId(PASSPORT_UPLOAD_ID);
         documentData.setData(new byte[] { 5, 6 });
@@ -730,8 +715,8 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setPhase(DocumentProcessingPhase.VERIFICATION);
-        documentResult.setVerificationResult(validationResultJson);
-        documentResult.setExtractedData(passportPassExtractionJson);
+        documentResult.setVerificationResult(passportPassValidationResult);
+        documentResult.setExtractedData(extractedDataJson);
         documentResult.setTimestampCreated(new Date());
         documentResult.setDocumentVerification(savedDocumentVerification);
 
@@ -801,9 +786,9 @@ class MicroblinkDocumentVerificationProviderIntTest {
         final var documentResults = result.getResults();
         assertEquals(3, documentResults.size());
 
-        assertDocumentVerificationResult(documentResults, ID_CARD_FRONT_UPLOAD_ID, idCardPassValidationResult, idCardFrontExtractionJson);
-        assertDocumentVerificationResult(documentResults, ID_CARD_BACK_UPLOAD_ID, idCardPassValidationResult, idCardBackExtractionJson);
-        assertDocumentVerificationResult(documentResults, PASSPORT_UPLOAD_ID, passportPassValidationResult, passportPassExtractionJson);
+        assertDocumentVerificationResult(documentResults, ID_CARD_FRONT_UPLOAD_ID, idCardPassValidationResult, idCardNormalizedExtractedDataJson);
+        assertDocumentVerificationResult(documentResults, ID_CARD_BACK_UPLOAD_ID, idCardPassValidationResult, idCardNormalizedExtractedDataJson);
+        assertDocumentVerificationResult(documentResults, PASSPORT_UPLOAD_ID, passportPassValidationResult, passportNormalizedExtractedDataJson);
     }
 
     private static void assertDocumentVerificationResult(
@@ -834,16 +819,16 @@ class MicroblinkDocumentVerificationProviderIntTest {
 
     private static String buildPassportNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-11-14","authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":"1999-12-24","placeOfBirth":null,"country":"MDA","sex":"X","nationality":"MDA ZZ LL AAAA","personalNumber":null,"documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 
-    private static String buildIdCardFrontNormalizedExtractedDataJson() {
+    private static String buildIdCardNormalizedExtractedDataJson() {
         return """
-                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":"Prague","country":"MDA","sex":"X","nationality":"Moldovan","personalNumber":"816008/0610","documentNumber":"EA0000000","dateOfIssue":null,"dateOfExpiry":"2025-10-13","authority":"Chisinau A"}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":"1999-12-24","placeOfBirth":"Prague","country":"MDA","sex":"X","nationality":"Moldovan","personalNumber":"816008/0610","documentNumber":"EA0000000","dateOfIssue":"2012-01-10","dateOfExpiry":"2025-10-13","authority":"Chisinau A"}""";
     }
 
-    private static String buildIdCardBackNormalizedExtractedDataJson() {
+    private static String buildIdCardRejectNormalizedExtractedDataJson() {
         return """
-                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
+                {"givenNames":"PRENUMELE","surname":"NUMELE","dateOfBirth":null,"placeOfBirth":"Prague","country":"MDA","sex":"X","nationality":"Moldovan","personalNumber":"816008/0610","documentNumber":"EA0000000","dateOfIssue":"2012-01-10","dateOfExpiry":"2025-10-13","authority":"Chisinau A"}""";
     }
 }
