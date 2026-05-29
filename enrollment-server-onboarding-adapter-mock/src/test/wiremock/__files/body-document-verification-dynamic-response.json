@@ -408,6 +408,13 @@
       },
       {
         "side": "Unknown",
+        "script": "Cyrillic",
+        "value": "АНДРЕА",
+        "type": "DetailedStringResult",
+        "field": "FirstName"
+      },
+      {
+        "side": "Unknown",
         "script": "Latin",
         "value": "RUIZ",
         "type": "DetailedStringResult",
