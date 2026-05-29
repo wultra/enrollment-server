@@ -43,7 +43,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,10 +54,6 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
  *
  * @author Michal Rozehnal, michal.rozehnal@wultra.com
  */
-@ConditionalOnProperty(
-        value = "enrollment-server-onboarding.identity-verification.enabled",
-        havingValue = "true"
-)
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "api/v2/identity")

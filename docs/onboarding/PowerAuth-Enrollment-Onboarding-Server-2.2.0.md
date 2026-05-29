@@ -85,6 +85,13 @@ It is `NULL` at the start of the process and set during the presence check phase
 ## Configuration
 
 
+### Removed Property `enrollment-server-onboarding.identity-verification.enabled`
+
+The property `enrollment-server-onboarding.identity-verification.enabled` has been removed.
+Identity verification is now always enabled; the previous behavior is equivalent to always setting the property to `true`.
+Remove this property from your configuration.
+
+
 ### Events
 
 A new property `enrollment-server-onboarding.onboarding-process.process-event.types` has been added to the configuration.
