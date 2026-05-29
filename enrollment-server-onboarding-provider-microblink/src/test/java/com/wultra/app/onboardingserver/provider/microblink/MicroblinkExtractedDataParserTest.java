@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
@@ -32,6 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -47,6 +49,9 @@ class MicroblinkExtractedDataParserTest {
     private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
     private static final String EXTRACTED_DATA_JSON = loadExtractedDataJson();
+
+    private static final String GIVEN_NAMES = "\"OCTAVIAN\"";
+    private static final String COUNTRY = "\"MDA\"";
 
     private MicroblinkExtractedDataParser tested;
 
@@ -89,7 +94,7 @@ class MicroblinkExtractedDataParserTest {
         final var result = tested.parseExtractedData("{}", null);
 
         // then
-        assertEquals(buildExpectedEmptyResult(), result);
+        assertEquals(buildExpectedResult(null, null, null), result);
     }
 
     @Test
@@ -113,12 +118,57 @@ class MicroblinkExtractedDataParserTest {
         final var result = tested.parseExtractedData(overallExtractedDataMultipleScripts(), buildExtraction());
 
         // then
-        assertEquals(buildExpectedResultLatinPreferred(), result);
+        assertEquals(buildExpectedResult(GIVEN_NAMES, COUNTRY, null), result);
     }
 
-    private static String buildExpectedEmptyResult() {
+    @ParameterizedTest
+    @MethodSource("provideInvalidDateTestCases")
+    void testParseExtractedData_invalidDate(final String dateExtractionJson) {
+        // given
+        final var overallExtractionJson = """
+                [
+                    %s,
+                    {
+                        "side": "Unknown",
+                        "script": "Latin",
+                        "value": "OCTAVIAN",
+                        "type": "DetailedStringResult",
+                        "field": "FirstName"
+                    }
+                ]""".formatted(dateExtractionJson);
+
+        // when
+        final var result = tested.parseExtractedData(overallExtractionJson, buildExtraction());
+
+        // then
+        assertEquals(buildExpectedResult(GIVEN_NAMES, COUNTRY, null), result);
+    }
+
+    private static Stream<String> provideInvalidDateTestCases() {
+        return Stream.of(
+                // DateOfBirth with only month and year (day missing)
+                """
+                {
+                    "field": "DateOfBirth",
+                    "month": 2,
+                    "year": 1990
+                }""",
+
+                // DateOfBirth with invalid month (22 > 12)
+                """
+                {
+                    "field": "DateOfBirth",
+                    "day": 1,
+                    "month": 22,
+                    "year": 1990
+                }"""
+        );
+    }
+
+    private static String buildExpectedResult(final String givenNames, final String country, final String dateOfBirth) {
         return """
-                {"givenNames":null,"surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":null,"sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
+                {"givenNames":%s,"surname":null,"dateOfBirth":%s,"placeOfBirth":null,"country":%s,"sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}"""
+                .formatted(givenNames, dateOfBirth, country);
     }
 
     private static String buildExpectedResultWithAllValues() {
@@ -153,11 +203,6 @@ class MicroblinkExtractedDataParserTest {
                         "field": "FirstName"
                     }
                 ]""";
-    }
-
-    private static String buildExpectedResultLatinPreferred() {
-        return """
-                {"givenNames":"OCTAVIAN","surname":null,"dateOfBirth":null,"placeOfBirth":null,"country":"MDA","sex":null,"nationality":null,"personalNumber":null,"documentNumber":null,"dateOfIssue":null,"dateOfExpiry":null,"authority":null}""";
     }
 
     private static DocumentVerificationResponse.Extraction buildExtraction() {
