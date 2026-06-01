@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.enrollmentserver.logging.StructuredLogging.*;
 
 /**
  * Controller with services related to Push Server registration.
@@ -71,9 +71,9 @@ public class PushRegistrationController {
     public Response registerDeviceDefault(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("", kv("action", "registerDeviceDefault"), kv("state", "initiated"), kv("userId", apiAuthentication.getUserId()));
+        logger.info("", action("registerDeviceDefault"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("", kv("action", "registerDeviceDefault"), kv("state", "succeeded"));
+        logger.info("", action("registerDeviceDefault"), stateSucceeded());
         return response;
     }
 
@@ -96,9 +96,9 @@ public class PushRegistrationController {
     public Response registerDeviceToken(@RequestBody ObjectRequest<PushRegisterRequest> request, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws PowerAuthAuthenticationException, InvalidRequestObjectException, PushRegistrationFailedException {
         validateApiAuthentication(apiAuthentication);
 
-        logger.info("", kv("action", "registerDeviceToken"), kv("state", "initiated"), kv("userId", apiAuthentication.getUserId()));
+        logger.info("", action("registerDeviceToken"), stateInitiated(), kv("userId", apiAuthentication.getUserId()));
         final Response response = pushRegistrationService.registerDevice(request, apiAuthentication);
-        logger.info("", kv("action", "registerDeviceToken"), kv("state", "succeeded"));
+        logger.info("", action("registerDeviceToken"), stateSucceeded());
         return response;
     }
 

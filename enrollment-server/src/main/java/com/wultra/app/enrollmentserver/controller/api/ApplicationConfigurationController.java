@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.enrollmentserver.logging.StructuredLogging.*;
 
 /**
  * Controller that provides application configuration.
@@ -73,10 +73,10 @@ public class ApplicationConfigurationController {
             @NotNull @EncryptedRequestBody @Valid final OidcApplicationConfigurationRequest request,
             @Parameter(hidden = true) final EncryptionContext encryptionContext) throws PowerAuthEncryptionException, PowerAuthApplicationConfigurationException {
 
-        logger.info("", kv("action", "fetchOidcConfiguration"), kv("state", "initiated"), kv("providerId", request != null ? request.getProviderId() : null));
+        logger.info("", action("fetchOidcConfiguration"), stateInitiated(), kv("providerId", request != null ? request.getProviderId() : null));
 
         if (encryptionContext == null) {
-            logger.error("", kv("action", "fetchOidcConfiguration"), kv("state", "failed"), kv("reason", "encryptionFailed"));
+            logger.error("", action("fetchOidcConfiguration"), stateFailed(), kv("reason", "encryptionFailed"));
             throw new PowerAuthEncryptionException("Encryption failed");
         }
 
@@ -85,7 +85,7 @@ public class ApplicationConfigurationController {
                 .applicationKey(encryptionContext.getApplicationKey())
                 .build());
         final OidcApplicationConfigurationResponse result = convert(oidcApplicationConfiguration);
-        logger.info("", kv("action", "fetchOidcConfiguration"), kv("state", "succeeded"));
+        logger.info("", action("fetchOidcConfiguration"), stateSucceeded());
         return new ObjectResponse<>(result);
     }
 

@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * Service that publishes lifecycle events of the identity verification process to the configured
@@ -218,13 +218,13 @@ public class OnboardingEventService {
 
     private void sendEvent(final ProcessEventRequest request) {
         try {
-            logger.info("", kv("action", "sendEvent"), kv("state", "initiated"), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
+            logger.info("", action("sendEvent"), stateInitiated(), kv("eventType", request.getType()), kv("processId", request.getProcessId()));
             final ProcessEventResponse response = onboardingProvider.processEvent(request);
             logger.debug("Got {} for processId={}", response, request.getProcessId());
-            logger.info("", kv("action", "sendEvent"), kv("state", "succeeded"), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
+            logger.info("", action("sendEvent"), stateSucceeded(), kv("errorOccurred", response.isErrorOccurred()), kv("errorDetail", response.getErrorDetail()));
         } catch (OnboardingProviderException e) {
             // unsuccessful event publishing does not stop the process
-            logger.warn("", kv("action", "sendEvent"), kv("state", "failed"), kv("exceptionMessage", e.getMessage()), e);
+            logger.warn("", action("sendEvent"), stateFailed(), kv("exceptionMessage", e.getMessage()), e);
         }
     }
 

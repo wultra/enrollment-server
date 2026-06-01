@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Base64;
 import java.util.Date;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * Onboarding approval service.
@@ -106,17 +106,17 @@ public class OnboardingApprovalService {
                     .image(loadImage(identityVerification))
                     .build();
 
-            logger.info("", kv("action", "callApproveClient"), kv("state", "initiated"));
+            logger.info("", action("callApproveClient"), stateInitiated());
             final ApproveClientResponse response = onboardingProvider.approveClient(request);
             final ApproveClientResponse.ApprovalResult approvalResult = response.result();
             final String resultReason = response.resultReason();
-            logger.info("", kv("action", "callApproveClient"), kv("state", "succeeded"), kv("approvalResult", approvalResult), kv("resultReason", resultReason));
+            logger.info("", action("callApproveClient"), stateSucceeded(), kv("approvalResult", approvalResult), kv("resultReason", resultReason));
             persistRejectReason(response, identityVerification);
 
             auditService.audit(identityVerification, "Onboarding approval result: {}, resultReason: {}", approvalResult, resultReason);
             return convert(approvalResult);
         } catch (final OnboardingProviderException | OnboardingProcessException | RuntimeException e) {
-            logger.warn("", kv("action", "callApproveClient"), kv("state", "failed"), e);
+            logger.warn("", action("callApproveClient"), stateFailed(), e);
             auditService.audit(identityVerification, "Onboarding approval result: FAILED");
             return ApprovalResult.FAILED;
         }

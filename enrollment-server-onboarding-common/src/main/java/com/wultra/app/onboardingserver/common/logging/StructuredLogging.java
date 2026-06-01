@@ -1,6 +1,5 @@
-
 /*
- * Liveness Check Proxy
+ * PowerAuth Enrollment Server
  * Copyright (C) 2026 Wultra s.r.o.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.wultra.app.onboardingserver.logging;
+package com.wultra.app.onboardingserver.common.logging;
 
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
@@ -70,7 +69,6 @@ public final class StructuredLogging {
      *
      * @return structured argument
      */
-    // TODO (racansky, 2026-05-29) consider cover all convenience methods or keep only state("xxx") uniformly when extracting to wultra-core
     public static StructuredArgument stateInitiated() {
         return state("initiated");
     }
@@ -92,5 +90,5 @@ public final class StructuredLogging {
     public static StructuredArgument stateSucceeded() {
         return state("succeeded");
     }
-}
 
+}

@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 
 import static com.wultra.app.enrollmentserver.controller.api.LoggingUtils.extractActivationId;
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.enrollmentserver.logging.StructuredLogging.*;
 
 /**
  * Controller with facade for Inbox services in Push server.
@@ -74,18 +74,18 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<GetInboxCountResponse> countUnreadMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
-        logger.info("", kv("action", "countUnreadMessages"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
+        logger.info("", action("countUnreadMessages"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         final GetInboxCountResponse response = new GetInboxCountResponse();
         try {
             final ObjectResponse<GetInboxMessageCountResponse> pushResponse = pushClient.fetchMessageCountForUser(userId, appId);
-            logger.info("", kv("action", "countUnreadMessages"), kv("state", "succeeded"));
+            logger.info("", action("countUnreadMessages"), stateSucceeded());
             response.setCountUnread(pushResponse.getResponseObject().getCountUnread());
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.warn("", kv("action", "countUnreadMessages"), kv("state", "failed"));
+            logger.warn("", action("countUnreadMessages"), stateFailed());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -97,7 +97,7 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public ObjectResponse<GetInboxListResponse> fetchMessageList(@RequestBody ObjectRequest<GetInboxListRequest> objectRequest, @Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
-        logger.info("", kv("action", "fetchMessageList"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
+        logger.info("", action("fetchMessageList"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -108,12 +108,12 @@ public class InboxController {
         try {
             final ObjectResponse<ListOfInboxMessages> pushResponse = pushClient.fetchMessageListForUser(
                     userId, Collections.singletonList(appId), onlyUnread, page, size);
-            logger.info("", kv("action", "fetchMessageList"), kv("state", "succeeded"));
+            logger.info("", action("fetchMessageList"), stateSucceeded());
             final GetInboxListResponse response = new GetInboxListResponse();
             pushResponse.getResponseObject().forEach(message -> response.add(convertMessageInList(message)));
             return new PagedResponse<>(response, page, size);
         } catch (PushServerClientException ex) {
-            logger.warn("", kv("action", "fetchMessageList"), kv("state", "failed"));
+            logger.warn("", action("fetchMessageList"), stateFailed());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -129,18 +129,18 @@ public class InboxController {
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
 
         final GetInboxDetailRequest request = objectRequest.getRequestObject();
-        logger.info("", kv("action", "fetchMessageDetail"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)), kv("messageId", request.getId()));
+        logger.info("", action("fetchMessageDetail"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)), kv("messageId", request.getId()));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
 
         try {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
-            logger.info("", kv("action", "fetchMessageDetail"), kv("state", "succeeded"));
+            logger.info("", action("fetchMessageDetail"), stateSucceeded());
             final GetInboxDetailResponse response = convertMessageDetail(messageDetail);
             return new ObjectResponse<>(response);
         } catch (PushServerClientException ex) {
-            logger.warn("", kv("action", "fetchMessageDetail"), kv("state", "failed"));
+            logger.warn("", action("fetchMessageDetail"), stateFailed());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -156,7 +156,7 @@ public class InboxController {
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
 
         final InboxReadRequest request = objectRequest.getRequestObject();
-        logger.info("", kv("action", "readMessage"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)), kv("messageId", request.getId()));
+        logger.info("", action("readMessage"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)), kv("messageId", request.getId()));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
@@ -165,13 +165,13 @@ public class InboxController {
             final GetInboxMessageDetailResponse messageDetail = fetchInboxMessageDetail(userId, appId, request.getId());
             if (!messageDetail.isRead()) {
                 pushClient.readMessage(request.getId());
-                logger.info("", kv("action", "readMessage"), kv("state", "succeeded"));
+                logger.info("", action("readMessage"), stateSucceeded());
             } else {
-                logger.info("", kv("action", "readMessage"), kv("state", "skipped"), kv("reason", "message is already marked as read"));
+                logger.info("", action("readMessage"), state("skipped"), kv("reason", "message is already marked as read"));
             }
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.warn("", kv("action", "readMessage"), kv("state", "failed"));
+            logger.warn("", action("readMessage"), stateFailed());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }
@@ -183,16 +183,16 @@ public class InboxController {
             PowerAuthCodeType.POSSESSION_KNOWLEDGE
     })
     public Response readAllMessages(@Parameter(hidden = true) PowerAuthApiAuthentication apiAuthentication) throws InboxException, PowerAuthAuthenticationException {
-        logger.info("", kv("action", "readAllMessages"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
+        logger.info("", action("readAllMessages"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)));
         checkApiAuthentication(apiAuthentication);
         final String userId = apiAuthentication.getUserId();
         final String appId = apiAuthentication.getApplicationId();
         try {
             pushClient.readAllMessages(userId, appId);
-            logger.info("", kv("action", "readAllMessages"), kv("state", "succeeded"));
+            logger.info("", action("readAllMessages"), stateSucceeded());
             return new Response();
         } catch (PushServerClientException ex) {
-            logger.warn("", kv("action", "readAllMessages"), kv("state", "failed"));
+            logger.warn("", action("readAllMessages"), stateFailed());
             throw new InboxException("Push server REST API call failed, error: " + ex.getMessage(), ex);
         }
     }

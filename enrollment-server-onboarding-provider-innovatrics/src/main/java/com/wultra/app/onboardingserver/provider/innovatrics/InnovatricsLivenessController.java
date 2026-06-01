@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 
 /**
@@ -79,7 +79,7 @@ class InnovatricsLivenessController {
             @Parameter(hidden = true) final EncryptionContext encryptionContext,
             @Parameter(hidden = true) final PowerAuthApiAuthentication apiAuthentication) throws IdentityVerificationException, PowerAuthAuthenticationException, PowerAuthEncryptionException, RemoteCommunicationException {
 
-        logger.info("", kv("action", "upload"), kv("state", "initiated"), kv("activationId", extractActivationId(apiAuthentication)));
+        logger.info("", action("upload"), stateInitiated(), kv("activationId", extractActivationId(apiAuthentication)));
         if (apiAuthentication == null) {
             throw new PowerAuthTokenInvalidException("Unable to verify device registration when uploading liveness");
         }
@@ -89,7 +89,7 @@ class InnovatricsLivenessController {
         }
 
         innovatricsLivenessService.upload(requestData, encryptionContext);
-        logger.info("", kv("action", "upload"), kv("state", "succeeded"));
+        logger.info("", action("upload"), stateSucceeded());
         return new Response();
     }
 

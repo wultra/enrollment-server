@@ -35,7 +35,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.enrollmentserver.logging.StructuredLogging.*;
 
 /**
  * Admin controller.
@@ -55,10 +55,10 @@ public class AdminController {
 
     @GetMapping("/template")
     public ObjectResponse<TemplateListResponse> templates() {
-        logger.info("", kv("action", "templates"), kv("state", "initiated"));
+        logger.info("", action("templates"), stateInitiated());
         final TemplateListResponse response = new TemplateListResponse();
         response.addAll(convert(operationTemplateService.findAll()));
-        logger.info("", kv("action", "templates"), kv("state", "succeeded"));
+        logger.info("", action("templates"), stateSucceeded());
         return new ObjectResponse<>(response);
     }
 

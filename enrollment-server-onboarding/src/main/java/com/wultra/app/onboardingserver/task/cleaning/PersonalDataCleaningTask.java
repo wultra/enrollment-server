@@ -26,7 +26,7 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import static net.logstash.logback.argument.StructuredArguments.kv;
+import static com.wultra.app.onboardingserver.common.logging.StructuredLogging.*;
 
 /**
  * Task to clean personal data stored during an onboarding process.
@@ -45,10 +45,10 @@ public class PersonalDataCleaningTask {
 	@Scheduled(fixedDelayString = "PT10M", initialDelayString = "PT20S")
 	@SchedulerLock(name = SchedulerLockNames.CLEANUP_SELFIES_LOCK, lockAtMostFor = "5m")
 	public void cleanupSelfies() {
-		logger.info("", kv("action", "cleanupSelfies"), kv("state", "initiated"));
+		logger.info("", action("cleanupSelfies"), stateInitiated());
 		LockAssert.assertLocked();
 		final int count = cleaningService.cleanSelfies();
-		logger.info("", kv("action", "cleanupSelfies"), kv("state", "succeeded"), kv("count", count));
+		logger.info("", action("cleanupSelfies"), stateSucceeded(), kv("count", count));
 	}
 
 	/**
@@ -58,9 +58,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupDocumentData() {
 		LockAssert.assertLocked();
-		logger.debug("", kv("action", "cleanupDocumentData"), kv("state", "initiated"));
+		logger.debug("", action("cleanupDocumentData"), stateInitiated());
 		final var count = cleaningService.cleanupDocumentData();
-		logger.debug("", kv("action", "cleanupDocumentData"), kv("state", "succeeded"), kv("cleanedRecords", count));
+		logger.debug("", action("cleanupDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 
 	/**
@@ -70,9 +70,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.DOCUMENT_RESULT_PERSONAL_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupDocumentResultPersonalData() {
 		LockAssert.assertLocked();
-		logger.debug("", kv("action", "cleanupDocumentResultPersonalData"), kv("state", "initiated"));
+		logger.debug("", action("cleanupDocumentResultPersonalData"), stateInitiated());
 		final var count = cleaningService.cleanupDocumentResultPersonalData();
-		logger.debug("", kv("action", "cleanupDocumentResultPersonalData"), kv("state", "succeeded"), kv("cleanedRecords", count));
+		logger.debug("", action("cleanupDocumentResultPersonalData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 
 	/**
@@ -82,9 +82,9 @@ public class PersonalDataCleaningTask {
 	@SchedulerLock(name = SchedulerLockNames.PROCESSED_DOCUMENT_DATA_LOCK, lockAtMostFor = "5m")
 	public void cleanupProcessedDocumentData() {
 		LockAssert.assertLocked();
-		logger.debug("", kv("action", "cleanupProcessedDocumentData"), kv("state", "initiated"));
+		logger.debug("", action("cleanupProcessedDocumentData"), stateInitiated());
 		final var count = cleaningService.cleanupProcessedDocumentData();
-		logger.debug("", kv("action", "cleanupProcessedDocumentData"), kv("state", "succeeded"), kv("cleanedRecords", count));
+		logger.debug("", action("cleanupProcessedDocumentData"), stateSucceeded(), kv("cleanedRecords", count));
 	}
 }
 

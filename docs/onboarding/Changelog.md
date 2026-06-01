@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Use `StructuredLogging` instead of `StructuredArguments` directly. [(1795)](https://github.com/wultra/enrollment-server/issues/1795)
 - Change iProov `resource` attribute value [(1791)](https://github.com/wultra/enrollment-server/issues/1791)
 - Publishing event types of `DOCUMENT_VERIFICATION_FINISHED`, `FINAL_DOCUMENT_VERIFICATION_FINISHED`, `PRESENCE_CHECK_FINISHED` and `PROCESS_FINISHED` [(1751)](https://github.com/wultra/enrollment-server/issues/1751)
 - Removed `Serializable` from JPA entities. [(1425)](https://github.com/wultra/enrollment-server/issues/1425)
