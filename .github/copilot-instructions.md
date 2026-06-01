@@ -82,7 +82,7 @@ The three SPIs to implement are `OnboardingProvider`, `DocumentVerificationProvi
 
 ### Database and migrations
 
-Flyway changelogs live under `docs/db/changelog/`. The master file is `docs/db/changelog/db.changelog-master.xml`; changesets for the onboarding module are under `docs/db/changelog/changesets/enrollment-server-onboarding/`. JPA entities live in `enrollment-server-onboarding-common` under `…/common/database/entity/`.
+Liquibase changelogs live under `docs/db/changelog/`. The master file is `docs/db/changelog/db.changelog-master.xml`; changesets for the onboarding module are under `docs/db/changelog/changesets/enrollment-server-onboarding/`. JPA entities live in `enrollment-server-onboarding-common` under `…/common/database/entity/`.
 
 
 ### REST response wrappers
