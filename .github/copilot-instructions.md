@@ -40,21 +40,21 @@ Tests that hit real third-party APIs are tagged `@Tag("external-service")` and u
 
 ### Module overview
 
-| Module | Purpose |
-|---|---|
-| `enrollment-server` | Core enrollment app: PowerAuth API, push registration, mobile token operations |
-| `enrollment-server-api-model` | DTOs for enrollment-server REST API |
-| `enrollment-server-onboarding` | Main onboarding WAR app; orchestrates the full KYC flow |
-| `enrollment-server-onboarding-api` | SPIs for document verification and presence check providers |
-| `enrollment-server-onboarding-api-model` | DTOs shared across the onboarding API |
-| `enrollment-server-onboarding-common` | Shared domain/service/repository layer (JPA entities, Flyway migrations) |
-| `enrollment-server-onboarding-domain-model` | Enums and domain value objects |
-| `enrollment-server-onboarding-adapter-mock` | Mock provider implementations for local development |
-| `enrollment-server-onboarding-provider-innovatrics` | Innovatrics integration (document verification + presence check) |
-| `enrollment-server-onboarding-provider-iproov` | iProov integration (presence check) |
-| `enrollment-server-onboarding-provider-microblink` | Microblink integration (document verification) |
-| `enrollment-server-onboarding-provider-zenid` | ZenID integration (document verification) |
-| `mtoken-model` | Mobile token model shared with other Wultra projects |
+| Module                                              | Purpose                                                                        |
+|-----------------------------------------------------|--------------------------------------------------------------------------------|
+| `enrollment-server`                                 | Core enrollment app: PowerAuth API, push registration, mobile token operations |
+| `enrollment-server-api-model`                       | DTOs for enrollment-server REST API                                            |
+| `enrollment-server-onboarding`                      | Main onboarding WAR app; orchestrates the full KYC flow                        |
+| `enrollment-server-onboarding-api`                  | SPIs for document verification and presence check providers                    |
+| `enrollment-server-onboarding-api-model`            | DTOs shared across the onboarding API                                          |
+| `enrollment-server-onboarding-common`               | Shared domain/service/repository layer (JPA entities, Flyway migrations)       |
+| `enrollment-server-onboarding-domain-model`         | Enums and domain value objects                                                 |
+| `enrollment-server-onboarding-adapter-mock`         | Mock provider implementations for local development                            |
+| `enrollment-server-onboarding-provider-innovatrics` | Innovatrics integration (document verification + presence check)               |
+| `enrollment-server-onboarding-provider-iproov`      | iProov integration (presence check)                                            |
+| `enrollment-server-onboarding-provider-microblink`  | Microblink integration (document verification)                                 |
+| `enrollment-server-onboarding-provider-zenid`       | ZenID integration (document verification)                                      |
+| `mtoken-model`                                      | Mobile token model shared with other Wultra projects                           |
 
 
 ### Provider activation
@@ -228,6 +228,7 @@ Follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/):
 
 **rtk** is a CLI proxy that filters and compresses command outputs, saving 60-90% tokens.
 
+
 ### Rule
 
 Always prefix shell commands with `rtk`:
@@ -240,6 +241,7 @@ cargo test                 rtk cargo test
 docker ps                  rtk docker ps
 kubectl get pods           rtk kubectl pods
 ```
+
 
 ### Meta commands (use directly)
 
