@@ -11,7 +11,7 @@
 - Removed `Serializable` from JPA entities. [(1425)](https://github.com/wultra/enrollment-server/issues/1425)
 - Refactor state machine configuration, limit `EVENT_NEXT_STATE` and speed up processing. [(1592)](https://github.com/wultra/enrollment-server/issues/1592)
 - Migrated to Spring Boot 4 and Jackson 3. [(1775)](https://github.com/wultra/enrollment-server/issues/1775)
-- Changed field for parsing Microblink document extracted data. [#1760](https://github.com/wultra/enrollment-server/issues/1760)
+- Changed field for parsing Microblink document extracted data. [(1760)](https://github.com/wultra/enrollment-server/issues/1760)
 
 
 ### Removed

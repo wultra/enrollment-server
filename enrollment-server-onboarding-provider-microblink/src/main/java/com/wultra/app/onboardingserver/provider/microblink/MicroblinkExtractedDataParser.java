@@ -43,6 +43,8 @@ import java.util.Optional;
 @Slf4j
 public class MicroblinkExtractedDataParser {
 
+    private static final String LATIN_SCRIPT = "Latin";
+
     private final ObjectMapper mapper;
 
     /**
@@ -133,7 +135,7 @@ public class MicroblinkExtractedDataParser {
     }
 
     private static boolean isLatinScript(final ExtractedValue value) {
-        return (value instanceof ExtractedValue.Text text) && "Latin".equalsIgnoreCase(text.script());
+        return (value instanceof ExtractedValue.Text text) && LATIN_SCRIPT.equalsIgnoreCase(text.script());
     }
 
     private static String asText(final ExtractedValue source) {
