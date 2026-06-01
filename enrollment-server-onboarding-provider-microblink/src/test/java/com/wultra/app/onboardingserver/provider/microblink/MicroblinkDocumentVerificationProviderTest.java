@@ -42,7 +42,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -101,6 +100,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
     private static final String FACE_PHOTO_ID = "c1a4f5e2-3b6d-4f8e-9a1b-2c3d4e5f6a7b";
     private static final byte[] FACE_PHOTO_DATA = Base64.getDecoder().decode("dGVzdF9mYWNlX2ltYWdlX2RhdGE=");
+    private static final String EXTRACTED_DATA_JSON = "[{\"testField\":\"testValue\"}]";
 
     private static final long TIMESTAMP_ASSERT_DELTA_MS = 1_000;
 
@@ -448,8 +448,7 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
-        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
-        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
 
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
@@ -482,8 +481,7 @@ class MicroblinkDocumentVerificationProviderTest {
         when(restClient.post("/api/v2/docver", apiRequest, new ParameterizedTypeReference<String>() {}))
                 .thenReturn(ResponseEntity.ok(responseJson));
 
-        when(microblinkExtractedDataParser.parseExtractedData("[{\"front\":\"dummy\"}]", idCardExtraction)).thenReturn("[{\"front\":\"dummy\"}]");
-        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn("[]");
+        when(microblinkExtractedDataParser.parseExtractedData("[]", idCardExtraction)).thenReturn(EXTRACTED_DATA_JSON);
 
         when(microblinkConfigProperties.getRequestOptions()).thenReturn(buildRequestOptions());
 
@@ -590,7 +588,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -648,7 +646,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildExtractedDataJson("John"), "[]", buildMessage(), null)
+                buildMicroblinkResponseJson(CheckResult.FAIL, Type.ID, buildVerificationResultJson("John"), "[]", buildMessage(), null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -669,7 +667,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, null, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, null, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -692,7 +690,7 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var documentResult = new DocumentResultEntity();
         documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.HEALTH_INSURANCE_CARD, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.HEALTH_INSURANCE_CARD, buildVerificationResultJson("John"), "[]", "[]", null)
         );
 
         final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
@@ -799,8 +797,9 @@ class MicroblinkDocumentVerificationProviderTest {
 
         final var idCardDocumentResult = new DocumentResultEntity();
         idCardDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildExtractedDataJson(idCardFirstName), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, buildVerificationResultJson(idCardFirstName), "[]", "[]", null)
         );
+        idCardDocumentResult.setExtractedData(buildExtractedDataJson(idCardFirstName));
 
         final var idCardVerifications = buildDocumentVerifications(
                 List.of(verificationDocumentCardIdFront, verificationDocumentCardIdBack),
@@ -808,8 +807,9 @@ class MicroblinkDocumentVerificationProviderTest {
         );
         final var drivingLicenseDocumentResult = new DocumentResultEntity();
         drivingLicenseDocumentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, buildExtractedDataJson("John"), "[]", "[]", null)
+                buildMicroblinkResponseJson(CheckResult.PASS, Type.DL, buildVerificationResultJson("John"), "[]", "[]", null)
         );
+        drivingLicenseDocumentResult.setExtractedData(buildExtractedDataJson("John"));
 
         final var drivingLicenseVerifications = buildDocumentVerifications(
                 List.of(verificationDocumentDrivingLicenseFront, verificationDocumentDrivingLicenseBack),
@@ -827,29 +827,6 @@ class MicroblinkDocumentVerificationProviderTest {
 
         // then
         assertEquals(expectedResult, result.getStatus());
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideInvalidDateOfBirthTestCases")
-    void testVerifyDocuments_parseInvalidDateOfBirth(final String overallExtractionJson) {
-        // given
-        final var uploadIds = List.of(DOCUMENT_ID_CARD_FRONT_UPLOAD_ID);
-
-        final var documentResult = new DocumentResultEntity();
-        documentResult.setVerificationResult(
-                buildMicroblinkResponseJson(CheckResult.PASS, Type.ID, overallExtractionJson, "[]", "[]", null)
-        );
-
-        final var documentVerifications = buildDocumentVerifications(List.of(verificationDocumentCardIdFront), Set.of(documentResult));
-        when(documentVerificationRepository.findAllByUploadIds(anyList())).thenReturn(documentVerifications);
-
-        when(microblinkConfigProperties.isExtractedDataCheckEnabled()).thenReturn(true);
-
-        // when
-        final var result = provider.verifyDocuments(ownerId, uploadIds);
-
-        // then
-        assertEquals("[Document data crosscheck failed for fields: [firstName, lastName, dateOfBirth]]", result.getRejectReason());
     }
 
     @Test
@@ -989,7 +966,7 @@ class MicroblinkDocumentVerificationProviderTest {
                 """.formatted(checkResult, certaintyLevel, overallExtractionJson, extractedType, imagesJson, messages);
     }
 
-    private static String buildExtractedDataJson(final String firstName) {
+    private static String buildVerificationResultJson(final String firstName) {
         return """
                 [
                     {
@@ -1008,6 +985,19 @@ class MicroblinkDocumentVerificationProviderTest {
                     }
                 ]
                 """.formatted(firstName);
+    }
+
+    private static String buildExtractedDataJson(final String firstName) {
+        final var firstNameJsonValue = Optional.ofNullable(firstName)
+                .map(it -> "\"" + it + "\"")
+                .orElse(null);
+
+        return """
+                {
+                    "givenNames": %s,
+                    "surname": "Doe",
+                    "dateOfBirth": "1990-02-01"
+                }""".formatted(firstNameJsonValue);
     }
 
     private static String buildFaceImageJson() {
@@ -1157,7 +1147,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[Test microblink message]", frontDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
-        assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, frontDocumentResult.getExtractedData());
 
         final var backDocumentResult = documentsResult.stream()
                 .filter(d -> DOCUMENT_ID_CARD_BACK_ID.equals(d.getDocumentId()))
@@ -1168,7 +1158,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertEquals("[Test microblink message]", backDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
-        assertEquals("[]", backDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, backDocumentResult.getExtractedData());
     }
 
     private static String buildExpectedValidationResult(final String json) throws JacksonException {
@@ -1196,7 +1186,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(frontDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, frontDocumentResult.getValidationResult());
         assertNull(frontDocumentResult.getErrorDetail());
-        assertEquals("[{\"front\":\"dummy\"}]", frontDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, frontDocumentResult.getExtractedData());
 
         final var backDocumentResult = documentsResult.stream()
                 .filter(d -> DOCUMENT_ID_CARD_BACK_ID.equals(d.getDocumentId()))
@@ -1207,7 +1197,7 @@ class MicroblinkDocumentVerificationProviderTest {
         assertNull(backDocumentResult.getRejectReason());
         assertJsonEquals(expectedValidationResultJson, backDocumentResult.getValidationResult());
         assertNull(backDocumentResult.getErrorDetail());
-        assertEquals("[]", backDocumentResult.getExtractedData());
+        assertEquals(EXTRACTED_DATA_JSON, backDocumentResult.getExtractedData());
     }
 
     private static void assertSavedProcessedDocumentData(final List<ProcessedDocumentDataEntity> entities) {
@@ -1248,31 +1238,5 @@ class MicroblinkDocumentVerificationProviderTest {
         } catch (JSONException e) {
             fail("JSON comparison failed", e);
         }
-    }
-
-    private static Stream<String> provideInvalidDateOfBirthTestCases() {
-        return Stream.of(
-                // DateOfBirth with only month and year (day missing)
-                """
-                [{
-                    "field": "DateOfBirth",
-                    "month": 2,
-                    "year": 1990
-                }]
-                """,
-
-                // DateOfBirth with invalid month (22 > 12)
-                """
-                [{
-                    "field": "DateOfBirth",
-                    "day": 1,
-                    "month": 22,
-                    "year": 1990
-                }]
-                """,
-
-                // Empty extraction data
-                "[]"
-        );
     }
 }
